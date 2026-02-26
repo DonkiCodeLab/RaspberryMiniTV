@@ -623,6 +623,7 @@ export const imagesMap = {
   "3x21.jpg": require("../../assets/carousel/3x21.jpg"),
   "3x22.jpg": require("../../assets/carousel/3x22.jpg"),
   "3x23.jpg": require("../../assets/carousel/3x23.jpg"),
+  "3x24.jpg": require("../../assets/carousel/3x24.jpg"),
   "4x01.jpg": require("../../assets/carousel/4x01.jpg"),
   "4x02.jpg": require("../../assets/carousel/4x02.jpg"),
   "4x03.jpg": require("../../assets/carousel/4x03.jpg"),

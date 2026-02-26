@@ -663,6 +663,17 @@ const data = {
           "synopsis": "Milhouse's relationship with a new beautiful girl at Springfield Elementary, Samantha Stankey, strains his friendship with Bart. Meanwhile, Marge orders a subliminal weight loss tape for Homer, but gets sent a vocabulary builder tape, which does nothing for Homer's appetite, but everything for his diction and word usage.",
           "titleEs": "El amigo de Bart se enamora",
           "synopsisEs": "La relación de Milhouse con una nueva y hermosa chica de la escuela primaria Springfield, Samantha Stankey, pone a prueba su amistad con Bart. Mientras tanto, Marge encarga una cinta subliminal de pérdida de peso para Homer, pero le envían una cinta para mejorar el vocabulario, que no hace nada por el apetito de Homer, pero sí por su dicción y uso de las palabras."
+        },
+        {
+          "id": "3x24",
+          "episodeNumber": 24,
+          "title": "Brother, Can You Spare Two Dimes?",
+          "duration": "24",
+          "airDate": "1992-05-07",
+          "image": "3x24.jpg",
+          "synopsis": "A company physical exam reveals that radiation from the nuclear plant has made Homer sterile, and Mr. Burns awards Homer $2,000 in an attempt to keep him from suing. Meanwhile, Homer's half-brother Herb Powell has been living as a bum since the loss of his car company (in 'Oh Brother, Where Art Thou?') and gets an idea for a baby translator, which could make him rich again. Herb is still bitter at Homer, but when he learns of Homer's award he goes to the Simpsons and asks for help.",
+          "titleEs": "Hermano, ¿me prestas 2 monedas?",
+          "synopsisEs": "El Sr. Burns descubre que Homer es estéril y lo compra con un premio presentado por Joe Frazier"
         }
       ],
       "titleEs": "Temporada 3"
