@@ -6,7 +6,7 @@ const data = {
     {
       "id": 1,
       "title": "Temporada 1",
-      "image": "Season_1_Icon.jpg",
+      "image": "simpsons_Season_1_Icon.jpg",
       "avgColor": "#748492",
       "episodes": [
         {
@@ -15,7 +15,7 @@ const data = {
           "title": "Simpsons Roasting on an Open Fire",
           "duration": "25",
           "airDate": "1989-12-17",
-          "image": "1x01.jpg",
+          "image": "simpsons_1x01.jpg",
           "synopsis": "When Mr. Burns announces that none of the workers will be getting Christmas bonuses and Marge reveals that she spent the extra Christmas gift money on getting Bart's \"Mother\" tattoo removed, Homer keeps his lack of funds for the holidays a secret and gets a job as a mall Santa.",
           "titleEs": "Los Simpson asándose a fuego abierto",
           "synopsisEs": "Cuando el Sr. Burns anuncia que ninguno de los trabajadores recibirá bonos de Navidad y Marge revela que gastó el dinero extra del regalo de Navidad en quitarle el tatuaje de \"Madre\" a Bart, Homer mantiene en secreto su falta de fondos para las fiestas y consigue un trabajo como Santa en un centro comercial."
@@ -26,7 +26,7 @@ const data = {
           "title": "Bart the Genius",
           "duration": "24",
           "airDate": "",
-          "image": "1x02.jpg",
+          "image": "simpsons_1x02.jpg",
           "synopsis": "To get back at class nerd/teacher's pet, Martin Prince, for ratting him out to Principal Skinner for vandalism on school property, Bart switches his own intelligence test with Martin's. During a parent/principal conference about the defaced wall, the school counselor, Dr. Pryor, announces that Bart is a genius and only acts out because public school isn't stimulating enough, so Bart is sent to a school for genius kids — and finds out just how painfully below average he is.",
           "titleEs": "Bart el genio",
           "synopsisEs": "Para vengarse del nerd de la clase y mascota del maestro, Martin Prince, por delatarlo con el director Skinner por vandalismo en la propiedad de la escuela, Bart cambia su propia prueba de inteligencia por la de Martin. Durante una conferencia entre padres y director sobre el muro desfigurado, el consejero escolar, el Dr. Pryor, anuncia que Bart es un genio y sólo se porta mal porque la escuela pública no es lo suficientemente estimulante, por lo que envían a Bart a una escuela para niños genios y descubre cuán dolorosamente por debajo del promedio está."
@@ -37,7 +37,7 @@ const data = {
           "title": "Homer's Odyssey",
           "duration": "24",
           "airDate": "",
-          "image": "1x03.jpg",
+          "image": "simpsons_1x03.jpg",
           "synopsis": "After being fired from his job at the nuclear plant and failing to find a new one, Homer becomes depressed and suicidal — but saving his family from getting hit by a truck prompts Homer to become a safety advocate for the entire town.",
           "titleEs": "La Odisea de Homero",
           "synopsisEs": "Después de ser despedido de su trabajo en la planta nuclear y no poder encontrar uno nuevo, Homer se deprime y se vuelve suicida, pero salvar a su familia de ser atropellado por un camión lleva a Homer a convertirse en un defensor de la seguridad de toda la ciudad."
@@ -48,7 +48,7 @@ const data = {
           "title": "There's No Disgrace Like Home",
           "duration": "24",
           "airDate": "",
-          "image": "1x04.jpg",
+          "image": "simpsons_1x04.jpg",
           "synopsis": "After being embarrassed by the rest of his family at a company picnic, Homer becomes overly obsessed with everyone in his family being perfect, up to the point where he takes his family to Dr. Marvin Monroe, an unorthodox counselor who uses shock therapy to \"cure\" them.",
           "titleEs": "No hay vergüenza como el hogar",
           "synopsisEs": "Después de pasar vergüenza por el resto de su familia en un picnic de la empresa, Homer se obsesiona demasiado con que todos los miembros de su familia sean perfectos, hasta el punto de llevar a su familia al Dr. Marvin Monroe, un consejero poco ortodoxo que utiliza terapia de shock para \"curarlos\"."
@@ -59,7 +59,7 @@ const data = {
           "title": "Bart the General",
           "duration": "24",
           "airDate": "unknown",
-          "image": "1x05.jpg",
+          "image": "simpsons_1x05.jpg",
           "synopsis": "After defending Lisa from school bully Nelson Muntz, Bart becomes Nelson's latest school bullying target. Having become sick and tired of the harassment and torment, Bart, Grampa Simpson, and Herman (a slightly deranged military antique store dealer with a missing arm) rally the town's children into fighting back against Nelson and his cronies with a couple hundred water balloons.",
           "titleEs": "bart el general",
           "synopsisEs": "Después de defender a Lisa del matón escolar Nelson Muntz, Bart se convierte en el último objetivo de acoso escolar de Nelson. Habiéndose cansado del acoso y el tormento, Bart, el abuelo Simpson y Herman (un comerciante de antigüedades militar ligeramente trastornado al que le falta un brazo) reúnen a los niños de la ciudad para que luchen contra Nelson y sus compinches con un par de cientos de globos de agua."
@@ -70,7 +70,7 @@ const data = {
           "title": "Moaning Lisa",
           "duration": "24",
           "airDate": "unknown",
-          "image": "1x06.jpg",
+          "image": "simpsons_1x06.jpg",
           "synopsis": "Lisa becomes depressed about life and meets a homeless jazz musician named Bleeding Gums Murphy. Meanwhile, Homer tries to beat Bart at a boxing video game.",
           "titleEs": "Lisa gimiendo",
           "synopsisEs": "Lisa se deprime por la vida y conoce a un músico de jazz sin hogar llamado Bleeding Gums Murphy. Mientras tanto, Homero intenta vencer a Bart en un videojuego de boxeo."
@@ -81,7 +81,7 @@ const data = {
           "title": "The Call of the Simpsons",
           "duration": "24",
           "airDate": "1990-02-18",
-          "image": "1x07.jpg",
+          "image": "simpsons_1x07.jpg",
           "synopsis": "The Simpsons go on vacation in a rickety RV — and end up lost in the woods when the RV goes over a cliff.",
           "titleEs": "La llamada de los Simpson",
           "synopsisEs": "Los Simpson se van de vacaciones en una casa rodante destartalada y terminan perdidos en el bosque cuando la casa rodante cae por un acantilado."
@@ -92,7 +92,7 @@ const data = {
           "title": "The Telltale Head",
           "duration": "24",
           "airDate": "unknown",
-          "image": "1x08.jpg",
+          "image": "simpsons_1x08.jpg",
           "synopsis": "While cornered by the entire town, Bart tells the story of how he cut off the head of the Jebediah Springfield statue to impress local thugs, Dolph, Jimbo Jones, and Kearney.",
           "titleEs": "La cabeza delatora",
           "synopsisEs": "Mientras está acorralado por toda la ciudad, Bart cuenta la historia de cómo cortó la cabeza de la estatua de Jebediah Springfield para impresionar a los matones locales, Dolph, Jimbo Jones y Kearney."
@@ -103,7 +103,7 @@ const data = {
           "title": "Life on the Fast Lane",
           "duration": "24",
           "airDate": "1990-03-18",
-          "image": "1x09.jpg",
+          "image": "simpsons_1x09.jpg",
           "synopsis": "Homer's thoughtless birthday gift to Marge causes the first of many marriage crises between them when Marge takes bowling lessons and is charmed by a French bowler named Jacques.",
           "titleEs": "La vida en el carril rápido",
           "synopsisEs": "El irreflexivo regalo de cumpleaños de Homero a Marge provoca la primera de muchas crisis matrimoniales entre ellos cuando Marge toma lecciones de bolos y queda encantada con un jugador de bolos francés llamado Jacques."
@@ -114,7 +114,7 @@ const data = {
           "title": "Homer's Night Out",
           "duration": "24",
           "airDate": "1990-03-25",
-          "image": "1x10.jpg",
+          "image": "simpsons_1x10.jpg",
           "synopsis": "While Marge and the kids go out to eat at a seafood restaurant, Bart (who just got a spy camera in the mail)  comes across a private bachelor party where Homer is dancing with a belly dancer known as Princess Kashmir, takes a photo of it, and passes it around the neighborhood. When Marge confronts Homer about the incriminating evidence, she throws him out for a day, then tells him that she will take him back — but only if he takes Bart to see the stripper and show that the dancer is more than just a sex object for horny men.",
           "titleEs": "La noche de fiesta de Homero",
           "synopsisEs": "Mientras Marge y los niños salen a comer a un restaurante de mariscos, Bart (que acaba de recibir una cámara espía por correo) se encuentra con una despedida de soltero privada donde Homero baila con una bailarina del vientre conocida como la Princesa Kashmir, le toma una foto y la pasa por el vecindario. Cuando Marge confronta a Homer por las pruebas incriminatorias, lo echa por un día y luego le dice que lo aceptará de regreso, pero solo si lleva a Bart a ver a la stripper y le demuestra que la bailarina es más que un simple objeto sexual para hombres cachondos."
@@ -125,7 +125,7 @@ const data = {
           "title": "The Crepes of Wrath",
           "duration": "24",
           "airDate": "1990-04-15",
-          "image": "1x11.jpg",
+          "image": "simpsons_1x11.jpg",
           "synopsis": "After getting in trouble for flushing a cherry bomb down the boys' room toilet (which leads to Principal Skinner's mother, Agnes, getting hurt), Bart is sent to France on a foreign-exchange program, where a pair of low-rent winemakers treat him like a slave. Meanwhile, the rest of the Simpson family host an Albanian boy named Adil whom Homer loves, but does Adil love Homer or is he using him to get information on the nuclear plant for his country?",
           "titleEs": "Los crepes de la ira",
           "synopsisEs": "Después de meterse en problemas por tirar una bomba de cereza por el inodoro del baño de los niños (lo que provoca que la madre del director Skinner, Agnes, resulte herida), Bart es enviado a Francia en un programa de intercambio de divisas, donde un par de enólogos de bajos ingresos lo tratan como a un esclavo. Mientras tanto, el resto de la familia Simpson recibe a un niño albanés llamado Adil a quien Homer ama, pero ¿Adil ama a Homer o lo está utilizando para obtener información sobre la planta nuclear de su país?"
@@ -136,7 +136,7 @@ const data = {
           "title": "Krusty Gets Busted",
           "duration": "25",
           "airDate": "1990-04-29",
-          "image": "1x12.jpg",
+          "image": "simpsons_1x12.jpg",
           "synopsis": "Bart and Lisa play amateur sleuth for their hero, Krusty the Clown, after he's accused of robbing the Kwik-E-Mart and Homer implicates him in the crime.",
           "titleEs": "Krusty es arrestado",
           "synopsisEs": "Bart y Lisa hacen de detectives aficionados para su héroe, Krusty el Payaso, después de que lo acusan de robar el Kwik-E-Mart y Homer lo implica en el crimen."
@@ -147,7 +147,7 @@ const data = {
           "title": "Some Enchanted Evening",
           "duration": "24",
           "airDate": "1990-05-13",
-          "image": "1x13.jpg",
+          "image": "simpsons_1x13.jpg",
           "synopsis": "After Marge calls a radio station psychiatrist and spills her guts on how uncaring Homer is, Homer makes up for it by taking Marge out on the town and leaving the kids with the only babysitter who isn't afraid of caring for the Simpson kids...who turns out to be a wanted fugitive.",
           "titleEs": "Una velada encantada",
           "synopsisEs": "Después de que Marge llama al psiquiatra de una estación de radio y le cuenta lo indiferente que es Homer, Homer lo compensa llevando a Marge a la ciudad y dejando a los niños con la única niñera que no tiene miedo de cuidar a los niños Simpson... quien resulta ser una fugitiva buscada."
@@ -158,7 +158,7 @@ const data = {
     {
       "id": 2,
       "title": "Temporada 2",
-      "image": "Season_2_Icon.jpg",
+      "image": "simpsons_Season_2_Icon.jpg",
       "avgColor": "#937FAD",
       "episodes": [
         {
@@ -167,7 +167,7 @@ const data = {
           "title": "Bart Gets an \"F\"",
           "duration": "24",
           "airDate": "1990-10-11",
-          "image": "2x01.jpg",
+          "image": "simpsons_2x01.jpg",
           "synopsis": "After fumbling through his book report on Treasure Island, Bart is ordered to study hard and pass his upcoming history exam — or he'll be in the fourth grade for another year.",
           "titleEs": "Bart obtiene una \"F\"",
           "synopsisEs": "Después de revisar a tientas el informe de su libro sobre La isla del tesoro, a Bart se le ordena que estudie mucho y apruebe su próximo examen de historia, o estará en cuarto grado un año más."
@@ -178,7 +178,7 @@ const data = {
           "title": "Simpson and Delilah",
           "duration": "24",
           "airDate": "1990-10-18",
-          "image": "2x02.jpg",
+          "image": "simpsons_2x02.jpg",
           "synopsis": "Homer tries a new hair growth formula — Dimoxinil — and wakes up with a full head of hair, which wins him a promotion at work. However, Homer's hair and success prove to be short-lived when it is revealed that he fraudulently charged the Dimoxinil to the company health plan.",
           "titleEs": "Simpson y Dalila",
           "synopsisEs": "Homer prueba una nueva fórmula para el crecimiento del cabello, Dimoxinil, y se despierta con la cabellera llena, lo que le permite ganar un ascenso en el trabajo. Sin embargo, el éxito y el éxito de Homer resultan de corta duración cuando se revela que cargó fraudulentamente el Dimoxinil al plan de salud de la empresa."
@@ -189,7 +189,7 @@ const data = {
           "title": "Treehouse of Horror",
           "duration": "25",
           "airDate": "1990-10-25",
-          "image": "2x03.jpg",
+          "image": "simpsons_2x03.jpg",
           "synopsis": "The first of the annual Halloween spook-fest where Bart and Lisa tell scary stories in their treehouse while Homer eavesdrops. In \"Bad Dream House\", the Simpsons move into a haunted house whose spirits urge them to kill each other. In \"Hungry Are the Damned\", The Simpsons get abducted by aliens who may or may not be fattening them up for dinner. Finally, Lisa tells her spin on Edgar Allan Poe's \"The Raven\", where the narrator (Homer) is haunted by a raven (Bart) while pining for his lost Lenore (Marge).",
           "titleEs": "La casa del árbol del terror",
           "synopsisEs": "El primero del festival anual de terror de Halloween en el que Bart y Lisa cuentan historias de miedo en su casa del árbol mientras Homer escucha a escondidas. En \"Bad Dream House\", los Simpson se mudan a una casa encantada cuyos espíritus los instan a matarse entre sí. En \"Hungry Are the Damned\", Los Simpson son abducidos por extraterrestres que pueden o no estar engordándolos para la cena. Finalmente, Lisa cuenta su versión de \"El cuervo\" de Edgar Allan Poe, donde el narrador (Homero) es perseguido por un cuervo (Bart) mientras suspira por su perdida Lenore (Marge)."
@@ -200,7 +200,7 @@ const data = {
           "title": "Two Cars in Every Garage and Three Eyes on Every Fish",
           "duration": "24",
           "airDate": "1990-11-01",
-          "image": "2x04.jpg",
+          "image": "simpsons_2x04.jpg",
           "synopsis": "Mr. Burns runs for governor of whatever state Springfield is in to keep his power plant from shutting down after Bart catches a three-eyed fish in the nearby river and the fish becomes headline news.",
           "titleEs": "Dos coches en cada garaje y tres ojos en cada pez",
           "synopsisEs": "El Sr. Burns se postula para gobernador de cualquier estado en el que se encuentre Springfield para evitar que su planta de energía se apague después de que Bart pesca un pez de tres ojos en el río cercano y el pez se convierte en noticia de primera plana."
@@ -211,7 +211,7 @@ const data = {
           "title": "Dancin' Homer",
           "duration": "24",
           "airDate": "1990-11-08",
-          "image": "2x05.jpg",
+          "image": "simpsons_2x05.jpg",
           "synopsis": "",
           "titleEs": "Homero bailando"
         },
@@ -221,7 +221,7 @@ const data = {
           "title": "Dead Putting Society",
           "duration": "24",
           "airDate": "1990-11-15",
-          "image": "2x06.jpg",
+          "image": "simpsons_2x06.jpg",
           "synopsis": "After feeling that his goody-two-shoes neighbor, Ned Flanders, is better than him in every way, Homer decides to prove his family's worth...by forcing Bart to compete in a mini-golf tournament with Ned's son, Todd.",
           "titleEs": "Sociedad de putt muerto",
           "synopsisEs": "Después de sentir que su vecino bueno, Ned Flanders, es mejor que él en todos los sentidos, Homer decide demostrar el valor de su familia... obligando a Bart a competir en un torneo de minigolf con el hijo de Ned, Todd."
@@ -232,7 +232,7 @@ const data = {
           "title": "Bart vs. Thanksgiving",
           "duration": "24",
           "airDate": "1990-11-22",
-          "image": "2x07.jpg",
+          "image": "simpsons_2x07.jpg",
           "synopsis": "Bart destroys Lisa's Thanksgiving centerpiece and runs away from home when he gets punished for refusing to apologize to her.",
           "titleEs": "Bart contra el Día de Acción de Gracias",
           "synopsisEs": "Bart destruye el centro de mesa de Acción de Gracias de Lisa y huye de casa cuando lo castigan por negarse a disculparse con ella."
@@ -243,7 +243,7 @@ const data = {
           "title": "Bart the Daredevil",
           "duration": "24",
           "airDate": "1990-12-06",
-          "image": "2x08.jpg",
+          "image": "simpsons_2x08.jpg",
           "synopsis": "A night at a monster truck rally featuring daredevil Lance Murdock prompts Bart to do daredevil tricks on his skateboard — and set his sights on jumping Springfield Gorge.",
           "titleEs": "Bart el Temerario",
           "synopsisEs": "Una noche en un rally de camiones monstruo con el temerario Lance Murdock, incita a Bart a hacer trucos temerarios en su patineta y se propone saltar Springfield Gorge."
@@ -254,7 +254,7 @@ const data = {
           "title": "Itchy & Scratchy & Marge",
           "duration": "24",
           "airDate": "1990-12-20",
-          "image": "2x09.jpg",
+          "image": "simpsons_2x09.jpg",
           "synopsis": "Marge leads a protest against The Itchy & Scratchy Show after Maggie whacks Homer on the head with a mallet, but viewer interest drops when the Itchy & Scratchy cartoons become mind-numbingly boring and Marge gets branded a hypocrite when her anti-TV violence group wants to go after Michaelangelo's David for depicting male frontal nudity, but Marge sees nothing wrong with the statue.",
           "titleEs": "Pica y pica y Marge",
           "synopsisEs": "Marge encabeza una protesta contra The Itchy & Scratchy Show después de que Maggie golpea a Homer en la cabeza con un mazo, pero el interés de los espectadores cae cuando las caricaturas de Itchy & Scratchy se vuelven terriblemente aburridas y Marge es tildada de hipócrita cuando su grupo de violencia contra la televisión quiere perseguir al David de Miguel Ángel por representar desnudez frontal masculina, pero Marge no ve nada malo en la estatua."
@@ -265,7 +265,7 @@ const data = {
           "title": "Bart Gets Hit by a Car",
           "duration": "24",
           "airDate": "1991-01-10",
-          "image": "2x10.jpg",
+          "image": "simpsons_2x10.jpg",
           "synopsis": "After Bart is run over by a car, his family tries to create a lawsuit against Mr. Burns. Both Burns and the Simpsons elaborate on the true story, which leads to yet another strain on Marge and Homer’s marriage.",
           "titleEs": "Bart es atropellado por un coche",
           "synopsisEs": "Después de que Bart es atropellado por un coche, su familia intenta presentar una demanda contra el Sr. Burns. Tanto Burns como los Simpson elaboran la historia real, lo que provoca otra tensión más en el matrimonio de Marge y Homero."
@@ -276,7 +276,7 @@ const data = {
           "title": "One Fish, Two Fish, Blowfish, Blue Fish",
           "duration": "24",
           "airDate": "1991-01-24",
-          "image": "2x11.jpg",
+          "image": "simpsons_2x11.jpg",
           "synopsis": "The Simpsons have dinner out at a new sushi restaurant, which turns deadly when Homer eats some improperly-cut fugu and is told by Dr. Hibbert that he has only 22 hours left to live.",
           "titleEs": "Un pez, dos peces, pez globo, pez azul",
           "synopsisEs": "Los Simpson cenan en un nuevo restaurante de sushi, lo que se vuelve mortal cuando Homer come un fugu mal cortado y el Dr. Hibbert le dice que solo le quedan 22 horas de vida."
@@ -287,7 +287,7 @@ const data = {
           "title": "The Way We Was",
           "duration": "24",
           "airDate": "1991-01-31",
-          "image": "2x12.jpg",
+          "image": "simpsons_2x12.jpg",
           "synopsis": "When the TV malfunctions, Marge and Homer plan to tell their children a story. After refusing to tell the story of how Bart was born (which would later be seen exactly one season later in Season 3's \"I Married Marge\"), they choose to tell the story of how Homer and Marge met in high school—and how Marge almost fell in love with a nerd named Artie Ziff.",
           "titleEs": "La forma en que éramos",
           "synopsisEs": "Cuando el televisor falla, Marge y Homer planean contarles una historia a sus hijos. Después de negarse a contar la historia de cómo nació Bart (que luego se vería exactamente una temporada después en \"Me casé con Marge\" de la temporada 3), eligen contar la historia de cómo Homero y Marge se conocieron en la escuela secundaria y cómo Marge casi se enamora de un nerd llamado Artie Ziff."
@@ -298,7 +298,7 @@ const data = {
           "title": "Homer vs. Lisa and the 8th Commandment",
           "duration": "24",
           "airDate": "1991-02-07",
-          "image": "2x13.jpg",
+          "image": "simpsons_2x13.jpg",
           "synopsis": "Homer becomes the most popular person in town, when he gets an illegal cable hookup. But Lisa doesn't approve and fears that Homer will go to hell for violating the Eighth Commandment (\"Thou shalt not steal\").",
           "titleEs": "Homero contra Lisa y el octavo mandamiento",
           "synopsisEs": "Homer se convierte en la persona más popular de la ciudad cuando recibe una conexión de cable ilegal. Pero Lisa no lo aprueba y teme que Homero vaya al infierno por violar el Octavo Mandamiento (\"No robarás\")."
@@ -309,7 +309,7 @@ const data = {
           "title": "Principal Charming",
           "duration": "24",
           "airDate": "1991-02-14",
-          "image": "2x14.jpg",
+          "image": "simpsons_2x14.jpg",
           "synopsis": "Worried that Selma is depressed over being single and childless, Marge orders Homer to find her sister a man — but ends up pairing Principal Skinner with Patty (who's celibate here, but later episodes would have her come out as a lesbian) by mistake. Meanwhile, Bart is sentenced to reseed the school's field with Groundskeeper Willie (in his first appearance) after spelling his name out on it with an herbicide he created in science class.",
           "titleEs": "Director encantador",
           "synopsisEs": "Preocupada porque Selma está deprimida por ser soltera y sin hijos, Marge le ordena a Homer que le encuentre un hombre a su hermana, pero termina emparejando al director Skinner con Patty (que es célibe aquí, pero en episodios posteriores se declararía lesbiana) por error. Mientras tanto, Bart es sentenciado a volver a sembrar el campo de la escuela con el jardinero Willie (en su primera aparición) después de deletrear su nombre con un herbicida que creó en la clase de ciencias."
@@ -320,7 +320,7 @@ const data = {
           "title": "Oh Brother, Where Art Thou?",
           "duration": "24",
           "airDate": "1991-02-21",
-          "image": "2x15.jpg",
+          "image": "simpsons_2x15.jpg",
           "synopsis": "Grampa suffers a heart attack while complaining about a bad McBain movie, and, worried that he may be dying soon, tells Homer that he has an illegitimate half-brother named Herb Powell, who turns out to be a rich, yet struggling car company owner in need of a million-dollar idea, but can Herb really count on the idiot half-brother whom he's never met?",
           "titleEs": "Oh hermano, ¿dónde estás?",
           "synopsisEs": "El abuelo sufre un ataque cardíaco mientras se queja de una mala película de McBain y, preocupado de morir pronto, le dice a Homer que tiene un medio hermano ilegítimo llamado Herb Powell, quien resulta ser un propietario de una compañía automotriz rico pero en apuros que necesita una idea de un millón de dólares, pero ¿puede Herb realmente contar con el medio hermano idiota a quien nunca ha conocido?"
@@ -331,7 +331,7 @@ const data = {
           "title": "Bart's Dog Gets an F",
           "duration": "25",
           "airDate": "1991-03-07",
-          "image": "2x16.jpg",
+          "image": "simpsons_2x16.jpg",
           "synopsis": "After Santa's Little Helper gets in trouble for destroying Homer's new sneakers, eating Homer's macadamia nut cookie, and tearing Marge's heirloom quilt, Bart enrolls the hound into an obedience school, which Santa's Little Helper must pass if he wants to continue being the Simpsons' pet.",
           "titleEs": "El perro de Bart obtiene una F",
           "synopsisEs": "Después de que el pequeño ayudante de Santa se mete en problemas por destruir las zapatillas nuevas de Homero, comerse la galleta de nueces de macadamia de Homero y romper la colcha de herencia de Marge, Bart inscribe al perro en una escuela de obediencia, que el pequeño ayudante de Santa debe aprobar si quiere seguir siendo la mascota de los Simpson."
@@ -342,7 +342,7 @@ const data = {
           "title": "Old Money",
           "duration": "24",
           "airDate": "1991-03-28",
-          "image": "2x17.jpg",
+          "image": "simpsons_2x17.jpg",
           "synopsis": "Grampa falls in love with an old woman named Beatrice, but when his family forces him to miss her birthday (and death), he disowns Homer — and gains Beatrice's inheritance.",
           "titleEs": "dinero viejo",
           "synopsisEs": "El abuelo se enamora de una anciana llamada Beatrice, pero cuando su familia lo obliga a perderse su cumpleaños (y su muerte), repudia a Homero y obtiene la herencia de Beatrice."
@@ -353,7 +353,7 @@ const data = {
           "title": "Brush with Greatness",
           "duration": "24",
           "airDate": "1991-04-11",
-          "image": "2x18.jpg",
+          "image": "simpsons_2x18.jpg",
           "synopsis": "Marge revives her passion for art after finding her old Ringo Starr portraits (which were rejected in high school by her art teacher) and is commissioned to create a portrait for Mr. Burns. Meanwhile, Homer decides to exercise after getting stuck in a water slide at Mt. Splashmore and being humiliated on the evening news.",
           "titleEs": "Pincel con grandeza",
           "synopsisEs": "Marge revive su pasión por el arte después de encontrar sus viejos retratos de Ringo Starr (que fueron rechazados en la escuela secundaria por su profesora de arte) y recibe el encargo de crear un retrato para el Sr. Burns. Mientras tanto, Homer decide hacer ejercicio después de quedarse atrapado en un tobogán de agua en Mt. Splashmore y ser humillado en las noticias de la noche."
@@ -364,7 +364,7 @@ const data = {
           "title": "Lisa's Substitute",
           "duration": "24",
           "airDate": "1991-04-25",
-          "image": "2x19.jpg",
+          "image": "simpsons_2x19.jpg",
           "synopsis": "After Ms. Hoover announces that she's on medical leave for Lyme disease, Lisa finds a kindred spirit in her substitute teacher, Mr. Bergstrom, but when he leaves and Ms. Hoover returns, Lisa is crushed and angry that Homer doesn't care. Meanwhile, Bart runs for class president.",
           "titleEs": "El sustituto de Lisa",
           "synopsisEs": "Después de que la Sra. Hoover anuncia que está de baja médica por la enfermedad de Lyme, Lisa encuentra un espíritu afín en su maestro sustituto, el Sr. Bergstrom, pero cuando él se va y la Sra. Hoover regresa, Lisa está destrozada y enojada porque a Homer no le importa. Mientras tanto, Bart se postula para presidente de la clase."
@@ -375,7 +375,7 @@ const data = {
           "title": "The War of the Simpsons",
           "duration": "24",
           "airDate": "1991-05-02",
-          "image": "2x20.jpg",
+          "image": "simpsons_2x20.jpg",
           "synopsis": "When Marge throws a dinner party, Homer gets drunk and makes a fool of himself (even going as far as tricking Maude Flanders into digging for nuts so he can ogle her cleavage) and Marge forces Homer to explain to Bart what he did and go on a marriage retreat (which Homer wants to abandon so he can go after a legendary catfish). Meanwhile, after their babysitter freaks out over memories of Bart trying to run her over with the family car, Grampa Simpson steps in to care for the kids — and Bart and Lisa take advantage of the old man by making him do whatever they want (eat ice cream instead of dinner, smoke cigars, drink coffee, and have a wild party).",
           "titleEs": "La guerra de los Simpson",
           "synopsisEs": "Cuando Marge organiza una cena, Homer se emborracha y hace el ridículo (llegando incluso a engañar a Maude Flanders para que busque nueces para poder comerse con los ojos su escote) y Marge obliga a Homer a explicarle a Bart lo que hizo e ir a un retiro matrimonial (que Homer quiere abandonar para poder ir tras un bagre legendario). Mientras tanto, después de que su niñera se asusta al recordar a Bart tratando de atropellarla con el auto familiar, el abuelo Simpson interviene para cuidar a los niños, y Bart y Lisa se aprovechan del anciano para obligarlo a hacer lo que quieran (comer helado en lugar de cenar, fumar cigarros, tomar café y tener una fiesta salvaje)."
@@ -386,7 +386,7 @@ const data = {
           "title": "Three Men and a Comic Book",
           "duration": "24",
           "airDate": "1991-05-09",
-          "image": "2x21.jpg",
+          "image": "simpsons_2x21.jpg",
           "synopsis": "Bart becomes obsessed with buying the first issue of Radioactive Man, but can't scrape together the $100 he needs to make it his own, even after working for the elderly Mrs. Glick, who hires him to do yardwork. Enlisting Milhouse (who was more interested in getting a baseball card) and Martin (who also wanted the first issue of Radioactive Man) Bart is finally able to buy the comic, but ends up fighting with his two best friends over who gets to keep it.",
           "titleEs": "Tres hombres y un cómic",
           "synopsisEs": "Bart se obsesiona con comprar el primer número de Radioactive Man, pero no puede reunir los 100 dólares que necesita para hacerlo suyo, incluso después de trabajar para la anciana señora Glick, quien lo contrata para trabajar en el jardín. Al reclutar a Milhouse (que estaba más interesado en conseguir una tarjeta de béisbol) y a Martin (que también quería el primer número de Radioactive Man), Bart finalmente puede comprar el cómic, pero termina peleando con sus dos mejores amigos sobre quién se lo queda."
@@ -397,7 +397,7 @@ const data = {
           "title": "Blood Feud",
           "duration": "24",
           "airDate": "1991-07-11",
-          "image": "2x22.jpg",
+          "image": "simpsons_2x22.jpg",
           "synopsis": "Homer discovers that Bart has a rare blood type that can save Mr. Burns' life, Homer convinces Bart (who was the only Springfieldian that has the blood type) to give blood (in the hopes that Burns will give the Simpsons a cash reward), but when all Burns gives Bart is a \"Thank You\" card, Homer writes a nasty letter to Burns which ends up getting sent to him by Bart.",
           "titleEs": "Enemistad de sangre",
           "synopsisEs": "Homer descubre que Bart tiene un tipo de sangre poco común que puede salvar la vida del Sr. Burns, Homer convence a Bart (que era el único de Springfield que tiene ese tipo de sangre) para que done sangre (con la esperanza de que Burns le dé a los Simpson una recompensa en efectivo), pero cuando todo lo que Burns le da a Bart es una tarjeta de \"gracias\", Homer le escribe una carta desagradable a Burns que termina siendo enviada por Bart."
@@ -408,7 +408,7 @@ const data = {
     {
       "id": 3,
       "title": "Temporada 3",
-      "image": "Season_3_Icon.jpg",
+      "image": "simpsons_Season_3_Icon.jpg",
       "avgColor": "#939F66",
       "episodes": [
         {
@@ -417,7 +417,7 @@ const data = {
           "title": "Stark Raving Dad",
           "duration": "24",
           "airDate": "1991-09-19",
-          "image": "3x01.jpg",
+          "image": "simpsons_3x01.jpg",
           "synopsis": "When Homer is declared insane after coming into work wearing a pink T-shirt (that turned pink after Bart put his lucky red cap in the wash) and having Bart fill out his psychiatric evaluation for him, Homer is committed to the New Bedlam Rest Home for the Emotionally Interesting and meets a big, bald mental patient who claims he's pop singer Michael Jackson. Meanwhile, Lisa is depressed over her upcoming eighth birthday.",
           "titleEs": "Papá delirante",
           "synopsisEs": "Cuando Homer es declarado loco después de llegar al trabajo con una camiseta rosa (que se volvió rosa después de que Bart puso su gorra roja de la suerte en la lavadora) y hacer que Bart complete su evaluación psiquiátrica por él, Homer se compromete con New Bedlam Rest Home for the Emotionally Interest Home y conoce a un paciente mental grande y calvo que dice ser el cantante pop Michael Jackson. Mientras tanto, Lisa está deprimida por su próximo octavo cumpleaños."
@@ -428,7 +428,7 @@ const data = {
           "title": "Mr. Lisa Goes to Washington",
           "duration": "24",
           "airDate": "1991-09-26",
-          "image": "3x02.jpg",
+          "image": "simpsons_3x02.jpg",
           "synopsis": "Thanks to Lisa's patriotic winning essay in a contest sponsored by Reading Digest magazine, the Simpsons win a trip to Washington, D.C. However, Lisa's faith in democracy is shaken when she sees her local representative taking a bribe for a permit to cut down the Springfield National Forest.",
           "titleEs": "El señor Lisa va a Washington",
           "synopsisEs": "Gracias al ensayo patriótico ganador de Lisa en un concurso patrocinado por la revista Reading Digest, los Simpson ganan un viaje a Washington, D.C. Sin embargo, la fe de Lisa en la democracia se tambalea cuando ve a su representante local aceptar un soborno para obtener un permiso para talar el Bosque Nacional de Springfield."
@@ -439,7 +439,7 @@ const data = {
           "title": "When Flanders Failed",
           "duration": "24",
           "airDate": "1991-10-03",
-          "image": "3x03.jpg",
+          "image": "simpsons_3x03.jpg",
           "synopsis": "When Ned Flanders announces at a barbecue that he is starting his own general store catering to the left-handed, Homer wishes that his goody-goody neighbor will suffer financial ruin. Meanwhile, Bart takes karate class but ends up cutting the activity when he realizes that the task was not as exciting as it was cracked up to be.",
           "titleEs": "Cuando Flandes fracasó",
           "synopsisEs": "Cuando Ned Flanders anuncia en una barbacoa que va a abrir su propia tienda de comestibles para zurdos, Homer desea que su buen vecino sufra la ruina financiera. Mientras tanto, Bart toma clases de kárate, pero termina interrumpiendo la actividad cuando se da cuenta de que la tarea no era tan emocionante como parecía."
@@ -450,7 +450,7 @@ const data = {
           "title": "Bart the Murderer",
           "duration": "24",
           "airDate": "1991-10-10",
-          "image": "3x04.jpg",
+          "image": "simpsons_3x04.jpg",
           "synopsis": "After suffering from bad luck, Bart accidentally stumbles into the Legitimate Businessman's Social Club, a mobster front. He becomes their bartender, but when he shows up late at work and blames Principal Skinner, Fat Tony then goes to confront Skinner. The next day when Bart comes to school, he discovers that Skinner is missing.",
           "titleEs": "Bart el asesino",
           "synopsisEs": "Después de sufrir mala suerte, Bart tropieza accidentalmente con el Club Social del Empresario Legítimo, una fachada de mafiosos. Se convierte en su barman, pero cuando llega tarde al trabajo y culpa al director Skinner, Fat Tony va a confrontar a Skinner. Al día siguiente, cuando Bart llega a la escuela, descubre que Skinner ha desaparecido."
@@ -461,7 +461,7 @@ const data = {
           "title": "Homer Defined",
           "duration": "24",
           "airDate": "1991-10-17",
-          "image": "3x05.jpg",
+          "image": "simpsons_3x05.jpg",
           "synopsis": "During a near-fatal meltdown at the Springfield Nuclear Power Plant, Homer frantically presses buttons on his console until he hits the right combination and saves the day. Homer becomes a hero even though he realizes in his heart that what he did was a fluke. Meanwhile, Bart's friendship with Milhouse has changed when Luann won't let him play with Bart anymore because she says that Bart is a bad influence on her son and has banned Milhouse from seeing Bart.",
           "titleEs": "Homero definido",
           "synopsisEs": "Durante una fusión casi fatal en la planta de energía nuclear de Springfield, Homer presiona frenéticamente botones en su consola hasta que encuentra la combinación correcta y salva el día. Homero se convierte en un héroe a pesar de que en su corazón se da cuenta de que lo que hizo fue una casualidad. Mientras tanto, la amistad de Bart con Milhouse ha cambiado cuando Luann no le deja jugar más con Bart porque dice que Bart es una mala influencia para su hijo y le ha prohibido a Milhouse ver a Bart."
@@ -472,7 +472,7 @@ const data = {
           "title": "Like Father, Like Clown",
           "duration": "24",
           "airDate": "1991-10-24",
-          "image": "3x06.jpg",
+          "image": "simpsons_3x06.jpg",
           "synopsis": "Krusty the Clown has dinner with The Simpsons (as a thank-you to Bart for clearing his name in \"Krusty Gets Busted\"), but the fun turns to tears when Krusty confesses that he's Jewish and that his rabbi father has disowned him for wanting to go into showbiz.",
           "titleEs": "De tal padre, tal payaso",
           "synopsisEs": "Krusty el Payaso cena con Los Simpson (como agradecimiento a Bart por limpiar su nombre en \"Krusty Gets Busted\"), pero la diversión se convierte en lágrimas cuando Krusty confiesa que es judío y que su padre rabino lo ha repudiado por querer dedicarse al mundo del espectáculo."
@@ -483,7 +483,7 @@ const data = {
           "title": "Treehouse of Horror II",
           "duration": "24",
           "airDate": "1991-10-31",
-          "image": "3x07.jpg",
+          "image": "simpsons_3x07.jpg",
           "synopsis": "The sequel to the original Treehouse of Horror, where the three tales of terror for this year come from Lisa, Bart, and Homer eating too much candy before bed on Halloween night. In \"Lisa's Dream: The Monkey's Paw\", Homer's monkey paw souvenir from Morocco makes wishes come true for his family — and misfortune to befall everyone else; in \"Bart's Dream: The Bart Zone,\" Bart's omnipotence forces everyone in town to bow to his whims and think happy thoughts or incur his wrath; and in \"Homer's Dream: If I Only Had a Brain,\" Mr. Burns builds the perfect robot worker after firing Homer, but the experiment goes awry when Mr. Burns and Smithers go grave-robbing for a brain and happen upon Homer's (who is actually napping in a ditch at his new job as a grave digger).",
           "titleEs": "La casa del árbol del terror II",
           "synopsisEs": "La secuela de Treehouse of Horror original, donde las tres historias de terror de este año provienen de Lisa, Bart y Homer comiendo demasiados dulces antes de acostarse en la noche de Halloween. En \"El sueño de Lisa: La pata del mono\", el recuerdo de la pata de mono de Homero en Marruecos hace que los deseos de su familia se hagan realidad y que la desgracia caiga sobre todos los demás; en \"El sueño de Bart: La zona de Bart\", la omnipotencia de Bart obliga a todos en la ciudad a ceder ante sus caprichos y tener pensamientos felices o provocar su ira; y en \"El sueño de Homer: Si tan solo tuviera un cerebro\", el Sr. Burns construye el robot trabajador perfecto después de despedir a Homer, pero el experimento sale mal cuando el Sr. Burns y Smithers van a robar tumbas en busca de un cerebro y se topan con el de Homer (que en realidad está durmiendo una siesta en una zanja en su nuevo trabajo como sepulturero)."
@@ -494,7 +494,7 @@ const data = {
           "title": "Lisa's Pony",
           "duration": "24",
           "airDate": "1991-11-07",
-          "image": "3x08.jpg",
+          "image": "simpsons_3x08.jpg",
           "synopsis": "Homer makes up for his latest example of fatherly ineptitude (failing to get Lisa a saxophone reed in time for the school talent show) by purchasing Lisa the one thing she has always wanted: a pony. However, the pony proves to be more expensive than first thought, so Homer takes a second job at the Kwik-E-Mart to keep Lisa happy.",
           "titleEs": "El pony de Lisa",
           "synopsisEs": "Homero compensa su último ejemplo de ineptitud paternal (no conseguirle a Lisa una caña de saxofón a tiempo para el concurso de talentos de la escuela) comprándole a Lisa lo único que siempre ha querido: un pony. Sin embargo, el pony resulta ser más caro de lo que se pensaba, por lo que Homer acepta un segundo trabajo en el Kwik-E-Mart para mantener feliz a Lisa."
@@ -505,7 +505,7 @@ const data = {
           "title": "Saturdays of Thunder",
           "duration": "24",
           "airDate": "1991-11-15",
-          "image": "3x09.jpg",
+          "image": "simpsons_3x09.jpg",
           "synopsis": "Bart becomes deeply immersed in competitive soapbox racing while Homer begins to realize that he is not as good a father as he thought. After attending a lecture at the National Fatherhood Institute, Homer becomes a more attentive father, helping Bart build the ultimate soapbox racer. But Bart chooses not to use it in his big race against Nelson, instead opting to borrow Martin's scientifically engineered aerodynamic racer.",
           "titleEs": "Sábados de trueno",
           "synopsisEs": "Bart se sumerge profundamente en las carreras competitivas mientras Homer comienza a darse cuenta de que no es tan buen padre como pensaba. Después de asistir a una conferencia en el Instituto Nacional de la Paternidad, Homer se convierte en un padre más atento y ayuda a Bart a construir el mejor corredor de carreras. Pero Bart decide no usarlo en su gran carrera contra Nelson, y en su lugar opta por tomar prestado el corredor aerodinámico científicamente diseñado de Martin."
@@ -516,7 +516,7 @@ const data = {
           "title": "Flaming Moe's",
           "duration": "24",
           "airDate": "1991-11-21",
-          "image": "3x10.jpg",
+          "image": "simpsons_3x10.jpg",
           "synopsis": "Homer tells Moe of creating a zesty drink called the Flaming Homer. It is so good that Moe steals Homer's recipe (which includes cough syrup), renames it the Flaming Moe and takes credit for inventing it. The Flaming Moe revitalizes business, turning Moe's Tavern into the hottest location in Springfield, and causing the relationship of Homer and Moe to splinter.",
           "titleEs": "Flaming Moe's",
           "synopsisEs": "Homer le cuenta a Moe sobre la creación de una bebida picante llamada Flaming Homer. Es tan bueno que Moe roba la receta de Homero (que incluye jarabe para la tos), le cambia el nombre a Flaming Moe y se atribuye el mérito de haberlo inventado. The Flaming Moe revitaliza el negocio, convirtiendo Moe's Tavern en el lugar más popular de Springfield y provocando que la relación entre Homer y Moe se rompa."
@@ -527,7 +527,7 @@ const data = {
           "title": "Burns Verkaufen der Kraftwerk (Burns to Sell the Power Plant)",
           "duration": "24",
           "airDate": "1991-12-05",
-          "image": "3x11.jpg",
+          "image": "simpsons_3x11.jpg",
           "synopsis": "Depressed over spending all his time at work and not enjoying life, Mr. Burns decides to sell the nuclear plant to fill his already fat wallet, and the German investors interested in the plant fire Homer for not being an efficient worker.",
           "titleEs": "Burns Verkaufen der Kraftwerk (Quema para vender la central eléctrica)",
           "synopsisEs": "Deprimido por pasar todo su tiempo en el trabajo y no disfrutar de la vida, el Sr. Burns decide vender la planta nuclear para llenar su ya abultada billetera, y los inversores alemanes interesados ​​en la planta despiden a Homer por no ser un trabajador eficiente."
@@ -538,7 +538,7 @@ const data = {
           "title": "I Married Marge",
           "duration": "24",
           "airDate": "1991-12-26",
-          "image": "3x12.jpg",
+          "image": "simpsons_3x12.jpg",
           "synopsis": "While Marge is at the doctor's to see whether or not she's pregnant for the fourth time, Homer tells the kids the story of his post-high school life with Marge, including how Bart was conceived at the mini-golf course, how Homer and Marge quickly got married at a roadside chapel, and how Homer provided for his new family by getting a job at the nuclear plant.",
           "titleEs": "Me casé con Marge",
           "synopsisEs": "Mientras Marge está en el médico para ver si está embarazada por cuarta vez, Homer les cuenta a los niños la historia de su vida con Marge después de la escuela secundaria, incluido cómo Bart fue concebido en el campo de minigolf, cómo Homer y Marge se casaron rápidamente en una capilla al borde de la carretera y cómo Homer mantuvo a su nueva familia consiguiendo un trabajo en la planta nuclear."
@@ -549,7 +549,7 @@ const data = {
           "title": "Radio Bart",
           "duration": "24",
           "airDate": "1992-01-09",
-          "image": "3x13.jpg",
+          "image": "simpsons_3x13.jpg",
           "synopsis": "Bart uses a radio microphone that he got on his birthday to trick the townspeople into thinking a little boy is stuck in the town's well, but when Bart goes to retrieve the radio, he's the one stuck in the well with no one to help him.",
           "titleEs": "Radio Bart",
           "synopsisEs": "Bart usa un micrófono de radio que le regalaron en su cumpleaños para engañar a la gente del pueblo haciéndoles creer que un niño pequeño está atrapado en el pozo del pueblo, pero cuando Bart va a recuperar la radio, es él quien está atrapado en el pozo sin nadie que lo ayude."
@@ -560,7 +560,7 @@ const data = {
           "title": "Lisa the Greek",
           "duration": "24",
           "airDate": "1992-01-24",
-          "image": "3x14.jpg",
+          "image": "simpsons_3x14.jpg",
           "synopsis": "Homer and Lisa find a way to bond approaching their different interests (and intellects), with Homer using Lisa's uncanny ability to accurately predict the winning team on football games to win a fortune under the guise of Sunday being \"Daddy-Daughter Day\". When Lisa realizes near the end of the football season that she was only being used, she gives Homer a final bet that could make or break their relationship. Meanwhile, Marge gets new clothes for Bart by going shopping together.",
           "titleEs": "Lisa la griega",
           "synopsisEs": "Homero y Lisa encuentran una manera de vincularse acercándose a sus diferentes intereses (e intelectos), y Homero usa la asombrosa habilidad de Lisa para predecir con precisión el equipo ganador en los partidos de fútbol para ganar una fortuna bajo el pretexto de que el domingo es el \"Día del Padre y la Hija\". Cuando Lisa se da cuenta, cerca del final de la temporada de fútbol, ​​de que solo la estaban utilizando, le hace a Homer una última apuesta que podría hacer o deshacer su relación. Mientras tanto, Marge consigue ropa nueva para Bart yendo de compras juntos."
@@ -571,7 +571,7 @@ const data = {
           "title": "Homer Alone",
           "duration": "24",
           "airDate": "1992-02-06",
-          "image": "3x15.jpg",
+          "image": "simpsons_3x15.jpg",
           "synopsis": "After suffering a mental breakdown while doing errands, Marge decides that a vacation away from the family will do her some good — but it ends up being bad for everyone else, including Maggie, who runs away to find her; Homer, who can't find his youngest daughter, and Bart and Lisa, who have to endure a weekend with the Gruesome Twosome, Patty and Selma.",
           "titleEs": "Homero solo",
           "synopsisEs": "Después de sufrir un colapso mental mientras hacía recados, Marge decide que unas vacaciones lejos de la familia le harán algún bien, pero terminan siendo malos para todos los demás, incluida Maggie, quien huye para buscarla; Homer, que no puede encontrar a su hija menor, y Bart y Lisa, que tienen que soportar un fin de semana con la Gruesome Twosome, Patty y Selma."
@@ -582,7 +582,7 @@ const data = {
           "title": "Bart the Lover",
           "duration": "24",
           "airDate": "1992-02-13",
-          "image": "3x16.jpg",
+          "image": "simpsons_3x16.jpg",
           "synopsis": "Bart creates a phony lover for a lonely Ms. Krabappel after Krabappel punishes Bart with detention for smashing the class fish tank with a yo-yo. Meanwhile, Homer curbs his profanity with a swear jar after Ned Flanders' son, Todd, picks up Homer's foul language.",
           "titleEs": "Bart el amante",
           "synopsisEs": "Bart crea un amante falso para la solitaria Sra. Krabappel después de que Krabappel castiga a Bart con detención por destrozar la pecera de la clase con un yo-yo. Mientras tanto, Homer frena sus malas palabras con un frasco de malas palabras después de que el hijo de Ned Flanders, Todd, aprende el lenguaje soez de Homer."
@@ -593,7 +593,7 @@ const data = {
           "title": "Homer at the Bat",
           "duration": "24",
           "airDate": "1992-02-20",
-          "image": "3x17.jpg",
+          "image": "simpsons_3x17.jpg",
           "synopsis": "The Springfield Nuclear Power Plant's softball team is surprisingly successful thanks to Homer, but Mr. Burns decides to call in Major League Baseball ringers (all of which voice themselves) for the championship game anyway especially after making a $1 million dollar bet that his team will win.",
           "titleEs": "Homero al bate",
           "synopsisEs": "El equipo de softbol de la planta de energía nuclear de Springfield tiene un éxito sorprendente gracias a Homer, pero el Sr. Burns decide llamar a los campaneros de las Grandes Ligas de Béisbol (todos los cuales hablan por sí mismos) para el juego de campeonato de todos modos, especialmente después de hacer una apuesta de $1 millón de dólares de que su equipo ganará."
@@ -604,7 +604,7 @@ const data = {
           "title": "Separate Vocations",
           "duration": "24",
           "airDate": "1992-02-27",
-          "image": "3x18.jpg",
+          "image": "simpsons_3x18.jpg",
           "synopsis": "When the results of Bart's vocational survey suggest he'd make a great cop and Lisa learns her dreams of becoming a professional sax player are doomed by genetics (she has stubby fingers, which would make saxophone playing impossible, even though she never exhibited any problems before this episode or since), their roles at Springfield Elementary are reversed: Bart becomes a hall monitor who cracks down on school misbehavior (after surviving a run-in with Snake during a police ride-along) while Lisa becomes a rebel who smokes with the bad kids, gets detention, and pulls off a teachers' edition textbook heist that could get her expelled.",
           "titleEs": "Vocaciones separadas",
           "synopsisEs": "Cuando los resultados de la encuesta vocacional de Bart sugieren que sería un gran policía y Lisa descubre que sus sueños de convertirse en saxofonista profesional están condenados al fracaso por la genética (tiene dedos rechonchos, lo que haría imposible tocar el saxofón, a pesar de que nunca mostró ningún problema antes de este episodio ni después), sus roles en la escuela primaria de Springfield se invierten: Bart se convierte en un monitor de pasillo que toma medidas enérgicas contra el mal comportamiento en la escuela (después de sobrevivir a un encontronazo con Snake durante un paseo policial), mientras que Lisa se convierte en una rebelde que fuma con los niños malos, es castigada y lleva a cabo un atraco a un libro de texto de edición para maestros que podría hacer que la expulsen."
@@ -615,7 +615,7 @@ const data = {
           "title": "Dog of Death",
           "duration": "24",
           "airDate": "1992-03-12",
-          "image": "3x19.jpg",
+          "image": "simpsons_3x19.jpg",
           "synopsis": "The Simpsons must make budget cuts in order to pay for Santa's Little Helper's stomach surgery, but Santa's Little Helper runs away after the family expresses resentment for having to give up their favorite things in order to pay for the vet bill. Meanwhile, everyone in Springfield is gunning for a chance at a $130 million-dollar lottery jackpot.",
           "titleEs": "perro de la muerte",
           "synopsisEs": "Los Simpson deben hacer recortes presupuestarios para poder pagar la cirugía de estómago del Pequeño Ayudante de Santa, pero el Pequeño Ayudante de Santa huye después de que la familia expresa resentimiento por tener que renunciar a sus cosas favoritas para poder pagar la factura del veterinario. Mientras tanto, todos en Springfield buscan la oportunidad de ganar un premio mayor de lotería de 130 millones de dólares."
@@ -626,7 +626,7 @@ const data = {
           "title": "Colonel Homer",
           "duration": "24",
           "airDate": "1992-03-26",
-          "image": "3x20.jpg",
+          "image": "simpsons_3x20.jpg",
           "synopsis": "After an embarrassing night at the movies with Marge, Homer gets the chance to manage an aspiring country music singer, Lurleen Lumpkin, but has to fight off her seductive charms and his own feelings for her to stay true to Marge.",
           "titleEs": "Coronel Homero",
           "synopsisEs": "Después de una noche embarazosa en el cine con Marge, Homer tiene la oportunidad de dirigir a una aspirante a cantante de música country, Lurleen Lumpkin, pero tiene que luchar contra sus encantos seductores y sus propios sentimientos para que ella se mantenga fiel a Marge."
@@ -637,7 +637,7 @@ const data = {
           "title": "Black Widower",
           "duration": "24",
           "airDate": "1992-04-09",
-          "image": "3x21.jpg",
+          "image": "simpsons_3x21.jpg",
           "synopsis": "The Simpsons are getting ready to have dinner with Patty, Selma and Selma's new boyfriend. Of course, one can imagine their surprise when he turns out to be none other than Sideshow Bob, fresh from his stay in prison after the events in \"Krusty Gets Busted\". While everyone is impressed at how much Bob has changed, Bart still fears that Bob is planning something sinister.",
           "titleEs": "viudo negro",
           "synopsisEs": "Los Simpson se están preparando para cenar con Patty, Selma y el nuevo novio de Selma. Por supuesto, uno puede imaginar su sorpresa cuando resulta ser nada menos que el actor secundario Bob, recién salido de su estancia en prisión después de los acontecimientos de \"Krusty Gets Busted\". Si bien todos están impresionados por lo mucho que ha cambiado Bob, Bart todavía teme que Bob esté planeando algo siniestro."
@@ -648,7 +648,7 @@ const data = {
           "title": "The Otto Show",
           "duration": "24",
           "airDate": "1992-04-23",
-          "image": "3x22.jpg",
+          "image": "simpsons_3x22.jpg",
           "synopsis": "After going to a Spinal Tap concert, Bart is fired up to be a rock star, but can't seem to master the electric guitar. Meanwhile, Otto ends up living with The Simpsons after losing his job (following a school bus crash and admitting to Principal Skinner and the local police that he somehow got a school bus driving job despite never getting a driver's license), failing his driver's test, and getting evicted from his apartment.",
           "titleEs": "El show de Otto",
           "synopsisEs": "Después de ir a un concierto de Spinal Tap, Bart está entusiasmado por ser una estrella de rock, pero parece que no puede dominar la guitarra eléctrica. Mientras tanto, Otto termina viviendo con Los Simpson después de perder su trabajo (después de un accidente de autobús escolar y admitir ante el director Skinner y la policía local que de alguna manera consiguió un trabajo como conductor de autobús escolar a pesar de nunca obtener una licencia de conducir), reprobar su examen de conducir y ser desalojado de su apartamento."
@@ -659,7 +659,7 @@ const data = {
           "title": "Bart's Friend Falls in Love",
           "duration": "24",
           "airDate": "1992-05-07",
-          "image": "3x23.jpg",
+          "image": "simpsons_3x23.jpg",
           "synopsis": "Milhouse's relationship with a new beautiful girl at Springfield Elementary, Samantha Stankey, strains his friendship with Bart. Meanwhile, Marge orders a subliminal weight loss tape for Homer, but gets sent a vocabulary builder tape, which does nothing for Homer's appetite, but everything for his diction and word usage.",
           "titleEs": "El amigo de Bart se enamora",
           "synopsisEs": "La relación de Milhouse con una nueva y hermosa chica de la escuela primaria Springfield, Samantha Stankey, pone a prueba su amistad con Bart. Mientras tanto, Marge encarga una cinta subliminal de pérdida de peso para Homer, pero le envían una cinta para mejorar el vocabulario, que no hace nada por el apetito de Homer, pero sí por su dicción y uso de las palabras."
@@ -670,7 +670,7 @@ const data = {
           "title": "Brother, Can You Spare Two Dimes?",
           "duration": "24",
           "airDate": "1992-05-07",
-          "image": "3x24.jpg",
+          "image": "simpsons_3x24.jpg",
           "synopsis": "A company physical exam reveals that radiation from the nuclear plant has made Homer sterile, and Mr. Burns awards Homer $2,000 in an attempt to keep him from suing. Meanwhile, Homer's half-brother Herb Powell has been living as a bum since the loss of his car company (in 'Oh Brother, Where Art Thou?') and gets an idea for a baby translator, which could make him rich again. Herb is still bitter at Homer, but when he learns of Homer's award he goes to the Simpsons and asks for help.",
           "titleEs": "Hermano, ¿me prestas 2 monedas?",
           "synopsisEs": "El Sr. Burns descubre que Homer es estéril y lo compra con un premio presentado por Joe Frazier"
@@ -681,7 +681,7 @@ const data = {
     {
       "id": 4,
       "title": "Temporada 4",
-      "image": "Season_4_Icon.jpg",
+      "image": "simpsons_Season_4_Icon.jpg",
       "avgColor": "#4E816E",
       "episodes": [
         {
@@ -690,7 +690,7 @@ const data = {
           "title": "Kamp Krusty",
           "duration": "24",
           "airDate": "1992-09-24",
-          "image": "4x01.jpg",
+          "image": "simpsons_4x01.jpg",
           "synopsis": "Bart and Lisa spend six weeks at Kamp Krusty, which turns out to be an abusive, squalid hellhole run by a heartless businessman named Mr. Black and Springfield's resident teenage thugs, Dolph, Jimbo, and Kearney. Meanwhile, Krusty goes on vacation in England while Homer and Marge fall in love all over again without the kids (except Maggie, who isn't seen much in the story anyway).",
           "titleEs": "Campamento Krusty",
           "synopsisEs": "Bart y Lisa pasan seis semanas en Kamp Krusty, que resulta ser un infierno abusivo y sórdido dirigido por un hombre de negocios desalmado llamado Sr. Black y los matones adolescentes residentes de Springfield, Dolph, Jimbo y Kearney. Mientras tanto, Krusty se va de vacaciones a Inglaterra mientras Homer y Marge se enamoran de nuevo sin los niños (excepto Maggie, a quien de todos modos no se ve mucho en la historia)."
@@ -701,7 +701,7 @@ const data = {
           "title": "A Streetcar Named Marge",
           "duration": "24",
           "airDate": "1992-10-01",
-          "image": "4x02.jpg",
+          "image": "simpsons_4x02.jpg",
           "synopsis": "Marge auditions for the role of Blanche in the local community theater's production of Oh, Streetcar!, a musical version of A Streetcar Named Desire, and gets it after the director notices how beaten-down and depressed she is whenever Homer orders her around. Meanwhile, Maggie is put in a daycare center modeled after the teachings of Ayn Rand and goes on a mission to liberate the daycare's supply of confiscated pacifiers.",
           "titleEs": "Un tranvía llamado Marge",
           "synopsisEs": "Marge hace una audición para el papel de Blanche en la producción del teatro comunitario local de Oh, Streetcar!, una versión musical de Un tranvía llamado deseo, y lo consigue después de que el director se da cuenta de lo golpeada y deprimida que está cada vez que Homero le da órdenes. Mientras tanto, Maggie es internada en una guardería inspirada en las enseñanzas de Ayn Rand y emprende una misión para liberar el suministro de chupetes confiscados de la guardería."
@@ -712,7 +712,7 @@ const data = {
           "title": "Homer the Heretic",
           "duration": "24",
           "airDate": "1992-10-08",
-          "image": "4x03.jpg",
+          "image": "simpsons_4x03.jpg",
           "synopsis": "Homer skips church for a Sunday due to the blistering cold weather and has such a great time, he decides to forgo mainstream religion in favor of his own self-invented theistic religion, which doesn't sit well with Marge.",
           "titleEs": "Homero el Hereje",
           "synopsisEs": "Homero falta a la iglesia un domingo debido al clima frío abrasador y se lo pasa tan bien que decide renunciar a la religión dominante en favor de su propia religión teísta, que él mismo inventó, lo que no le sienta bien a Marge."
@@ -723,7 +723,7 @@ const data = {
           "title": "Lisa the Beauty Queen",
           "duration": "24",
           "airDate": "1992-10-15",
-          "image": "4x04.jpg",
+          "image": "simpsons_4x04.jpg",
           "synopsis": "Upset over a caricature artist's picture of her, Lisa sinks into a depression about her appearance. To cheer her up, Homer sells his ride on the Duff Blimp (which he won in a school raffle) to pay for Lisa's entry fee in an upcoming child pageant for little girls aged seven to nine, but when Lisa wins the title of Little Miss Springfield, she discovers that the title is a scam to get a child spokesperson for Laramie Cigarettes.",
           "titleEs": "Lisa la reina de la belleza",
           "synopsisEs": "Molesta por la foto que un caricaturista hizo de ella, Lisa se hunde en una depresión por su apariencia. Para animarla, Homer vende su viaje en el Duff Blimp (que ganó en una rifa escolar) para pagar la entrada de Lisa en un próximo concurso infantil para niñas de siete a nueve años, pero cuando Lisa gana el título de Pequeña Señorita Springfield, descubre que el título es una estafa para conseguir un portavoz infantil para Laramie Cigarrillos."
@@ -734,7 +734,7 @@ const data = {
           "title": "Treehouse of Horror III",
           "duration": "24",
           "airDate": "1992-10-29",
-          "image": "4x05.jpg",
+          "image": "simpsons_4x05.jpg",
           "synopsis": "In the third annual Treehouse of Horror episode, the Simpsons are having a Halloween party for the neighborhood kids and decide to tell scary stories rather than go out trick-or-treating. In \"Clown Without Pity\" (Lisa's story), Homer buys Bart a talking Krusty doll that ends up trying to kill Homer; in \"King Homer\" (Grampa Simpson's story), Marge Bouvier goes on an island expedition with Mr. Burns and ends up the sacrifice to a giant ape who looks like Homer; and in \"Dial 'Z' for Zombie\" (Bart's story), Bart finds a book on the occult at the school library and uses a spell to raise the family's pet cat Snowball I from the dead, only to bring back dead humans and cause a zombie apocalypse in Springfield.",
           "titleEs": "La casa del árbol del terror III",
           "synopsisEs": "En el tercer episodio anual de Treehouse of Horror, los Simpson están organizando una fiesta de Halloween para los niños del vecindario y deciden contar historias de miedo en lugar de salir a pedir dulces. En \"Payaso sin piedad\" (la historia de Lisa), Homer le compra a Bart un muñeco Krusty parlante que termina intentando matar a Homer; en \"El rey Homero\" (la historia del abuelo Simpson), Marge Bouvier realiza una expedición a una isla con el señor Burns y termina sacrificando a un simio gigante que se parece a Homero; y en \"Dial 'Z' for Zombie\" (la historia de Bart), Bart encuentra un libro sobre lo oculto en la biblioteca de la escuela y usa un hechizo para resucitar al gato de la familia, Snowball I, de entre los muertos, solo para traer de vuelta a los humanos muertos y causar un apocalipsis zombie en Springfield."
@@ -745,7 +745,7 @@ const data = {
           "title": "Itchy & Scratchy: The Movie",
           "duration": "24",
           "airDate": "1992-11-03",
-          "image": "4x06.jpg",
+          "image": "simpsons_4x06.jpg",
           "synopsis": "Tired of Bart's constant misbehavior, Homer and Marge come up with the ultimate punishment: They forbid him from ever going to see the newly released Itchy & Scratchy movie.",
           "titleEs": "Pica y rasca: la película",
           "synopsisEs": "Cansados ​​del constante mal comportamiento de Bart, Homer y Marge proponen el castigo máximo: le prohíben ir a ver la recién estrenada película Itchy & Scratchy."
@@ -756,7 +756,7 @@ const data = {
           "title": "Marge Gets a Job",
           "duration": "24",
           "airDate": "1992-11-05",
-          "image": "4x07.jpg",
+          "image": "simpsons_4x07.jpg",
           "synopsis": "When the house needs expensive repairs, Marge is forced to get a job to help make ends meet. She is hired at the nuclear power plant and Mr. Burns quickly becomes attracted to her. Meanwhile, Bart tries his darnedest to get out of taking a test at school.",
           "titleEs": "Marge consigue un trabajo",
           "synopsisEs": "Cuando la casa necesita reparaciones costosas, Marge se ve obligada a conseguir un trabajo para ayudar a llegar a fin de mes. La contratan en la planta de energía nuclear y el Sr. Burns rápidamente se siente atraído por ella. Mientras tanto, Bart hace todo lo posible por evitar tener que tomar un examen en la escuela."
@@ -767,7 +767,7 @@ const data = {
           "title": "New Kid on the Block",
           "duration": "23",
           "airDate": "1992-11-12",
-          "image": "4x08.jpg",
+          "image": "simpsons_4x08.jpg",
           "synopsis": "Bart falls in love his new next-door neighbor, young teenager Laura Powers. But try as he might, Bart can't get Laura to take a interest in him romantically and is heartbroken when he finds out that Laura is in love with Jimbo Jones. Meanwhile, Homer tries to sue the restaurant, The Frying Dutchman, after finding out that it's an all-you-can-eat restaurant.",
           "titleEs": "Chico nuevo en la cuadra",
           "synopsisEs": "Bart se enamora de su nueva vecina de al lado, la joven adolescente Laura Powers. Pero por más que lo intenta, Bart no consigue que Laura se interese románticamente por él y se le rompe el corazón cuando descubre que Laura está enamorada de Jimbo Jones. Mientras tanto, Homer intenta demandar al restaurante The Frying Dutchman después de descubrir que es un restaurante de \"todo lo que puedas comer\"."
@@ -778,7 +778,7 @@ const data = {
           "title": "Mr. Plow",
           "duration": "24",
           "airDate": "1992-11-19",
-          "image": "4x09.jpg",
+          "image": "simpsons_4x09.jpg",
           "synopsis": "After Homer wrecks both of the family cars in a snowstorm, he purchases a snowplow truck and uses it to start a business as \"Mr. Plow,\" which proves to be surprisingly successful. Things go well for Homer until Barney starts his own snowplow business (\"The Plow King\"), competing with Homer, and steals all of Homer's customers.",
           "titleEs": "señor arado",
           "synopsisEs": "Después de que Homer destroza los dos coches de la familia en una tormenta de nieve, compra un camión quitanieves y lo utiliza para iniciar un negocio como \"Mr. Plow\", que resulta sorprendentemente exitoso. Las cosas le van bien a Homer hasta que Barney comienza su propio negocio de quitanieves (\"The Plow King\"), compitiendo con Homer y le roba a todos los clientes."
@@ -789,7 +789,7 @@ const data = {
           "title": "Lisa's First Word",
           "duration": "24",
           "airDate": "1992-12-03",
-          "image": "4x10.jpg",
+          "image": "simpsons_4x10.jpg",
           "synopsis": "While trying to get Maggie to say her first words, Marge recalls what happened a few years back when Lisa was born, when they first moved into their present home, and what Lisa's first word was.",
           "titleEs": "La primera palabra de Lisa",
           "synopsisEs": "Mientras intenta que Maggie diga sus primeras palabras, Marge recuerda lo que sucedió hace unos años cuando nació Lisa, cuando se mudaron por primera vez a su casa actual y cuál fue la primera palabra de Lisa."
@@ -800,7 +800,7 @@ const data = {
           "title": "Homer's Triple Bypass",
           "duration": "24",
           "airDate": "1992-12-17",
-          "image": "4x11.jpg",
+          "image": "simpsons_4x11.jpg",
           "synopsis": "Homer is diagnosed with clogged arteries and needs triple bypass heart surgery. But the $40,000 price tag on the operation forces Homer to turn to Dr. Nick as a cheap alternative.",
           "titleEs": "El triple bypass de Homero",
           "synopsisEs": "A Homer le diagnostican arterias obstruidas y necesita una cirugía cardíaca de triple bypass. Pero el precio de 40.000 dólares de la operación obliga a Homer a recurrir al Dr. Nick como una alternativa barata."
@@ -811,7 +811,7 @@ const data = {
           "title": "Marge vs. the Monorail",
           "duration": "24",
           "airDate": "1993-01-14",
-          "image": "4x12.jpg",
+          "image": "simpsons_4x12.jpg",
           "synopsis": "After collecting a $3 million fine from Mr. Burns (for illegal disposal of nuclear waste), Springfield holds a town meeting to choose what to do with the money. Marge suggests they use it to fix Main Street, but a smooth-talking stranger named Lyle Lanley convinces the townspeople into spending the money on a needless monorail... which is built from shoddy materials. However, his slick salesmanship doesn't win over Lisa and Marge, both of whom suspect he is a con artist.",
           "titleEs": "Marge contra el monorraíl",
           "synopsisEs": "Después de cobrar una multa de 3 millones de dólares al Sr. Burns (por eliminación ilegal de desechos nucleares), Springfield celebra una reunión municipal para elegir qué hacer con el dinero. Marge sugiere que lo usen para arreglar Main Street, pero un extraño llamado Lyle Lanley convence a la gente del pueblo para que gasten el dinero en un monorraíl innecesario... que está construido con materiales de mala calidad. Sin embargo, su hábil habilidad para vender no convence a Lisa y Marge, quienes sospechan que es un estafador."
@@ -822,7 +822,7 @@ const data = {
           "title": "Selma's Choice",
           "duration": "24",
           "airDate": "1993-01-21",
-          "image": "4x13.jpg",
+          "image": "simpsons_4x13.jpg",
           "synopsis": "Selma continues her quest to raise a family and not die alone after her aunt Gladys dies, and her maternal instincts are put to the test when she has to take Bart and Lisa to Duff Gardens after Homer gets food poisoning.",
           "titleEs": "La elección de Selma",
           "synopsisEs": "Selma continúa su búsqueda para formar una familia y no morir sola después de la muerte de su tía Gladys, y sus instintos maternos se ponen a prueba cuando tiene que llevar a Bart y Lisa a Duff Gardens después de que Homer sufriera una intoxicación alimentaria."
@@ -833,7 +833,7 @@ const data = {
           "title": "Brother from the Same Planet",
           "duration": "24",
           "airDate": "1993-02-04",
-          "image": "4x14.jpg",
+          "image": "simpsons_4x14.jpg",
           "synopsis": "Fed up with being neglected by Homer, Bart joins the Big Brother program posing as an orphan in order to find a better father figure. However, Homer finds out about Bart's new friend Tom and exacts his revenge by donating his time as a big brother to a real orphan named Pepi. Meanwhile, Lisa tries to break her addiction to calling a hotline where pretty boy teen idol Corey talks to girls.",
           "titleEs": "Hermano del mismo planeta",
           "synopsisEs": "Harto de ser abandonado por Homero, Bart se une al programa Gran Hermano haciéndose pasar por huérfano para encontrar una mejor figura paterna. Sin embargo, Homer se entera del nuevo amigo de Bart, Tom, y se venga donando su tiempo como hermano mayor a una verdadera huérfana llamada Pepi. Mientras tanto, Lisa intenta romper su adicción a llamar a una línea directa donde el lindo ídolo adolescente Corey habla con chicas."
@@ -844,7 +844,7 @@ const data = {
           "title": "I Love Lisa",
           "duration": "24",
           "airDate": "1993-02-11",
-          "image": "4x15.jpg",
+          "image": "simpsons_4x15.jpg",
           "synopsis": "On Valentine's Day, Lisa takes pity on Ralph and gives him a valentine when she sees that he hasn't received any. But Ralph reads too much into Lisa's gesture and, much to Lisa's dismay, relentlessly pursues her.",
           "titleEs": "Amo a Lisa",
           "synopsisEs": "El día de San Valentín, Lisa se apiada de Ralph y le regala una tarjeta de San Valentín cuando ve que él no ha recibido ninguna. Pero Ralph interpreta demasiado el gesto de Lisa y, para consternación de Lisa, la persigue implacablemente."
@@ -855,7 +855,7 @@ const data = {
           "title": "Duffless",
           "duration": "24",
           "airDate": "1993-02-18",
-          "image": "4x16.jpg",
+          "image": "simpsons_4x16.jpg",
           "synopsis": "Homer is arrested for drunk driving, and Marge persuades him to swear off beer for a month, which gives Homer a whole new outlook on life. Meanwhile, after Bart ruins Lisa's science fair project, she comes up with a new experiment: To determine which is smarter, Bart or a hamster.",
           "titleEs": "Bolsa de viaje",
           "synopsisEs": "Homer es arrestado por conducir ebrio y Marge lo convence de que deje de beber cerveza durante un mes, lo que le da a Homer una perspectiva completamente nueva de la vida. Mientras tanto, después de que Bart arruina el proyecto de Lisa para la feria de ciencias, a ella se le ocurre un nuevo experimento: determinar quién es más inteligente, Bart o un hámster."
@@ -866,7 +866,7 @@ const data = {
           "title": "Last Exit to Springfield",
           "duration": "24",
           "airDate": "1993-03-11",
-          "image": "4x17.jpg",
+          "image": "simpsons_4x17.jpg",
           "synopsis": "When the company dental plan is dropped, Homer becomes the new head of the workers' union to get it reinstated for the sake of Lisa, who wants invisible braces, but has to settle for rusted-out headgear that makes her look like a freak.",
           "titleEs": "Última salida a Springfield",
           "synopsisEs": "Cuando se cancela el plan dental de la empresa, Homer se convierte en el nuevo líder del sindicato de trabajadores para restablecerlo por el bien de Lisa, que quiere aparatos ortopédicos invisibles, pero tiene que conformarse con un casco oxidado que la hace parecer un bicho raro."
@@ -877,7 +877,7 @@ const data = {
           "title": "So It's Come to This: A Simpsons Clip Show",
           "duration": "24",
           "airDate": "1993-04-01",
-          "image": "4x18.jpg",
+          "image": "simpsons_4x18.jpg",
           "synopsis": "Bart's April Fools' prank lands Homer in the hospital. While waiting for Homer to come out, the family reminisces about all the struggles they've gone through so far.",
           "titleEs": "Así que llegamos a esto: un programa de clips de Los Simpson",
           "synopsisEs": "La broma del Día de los Inocentes de Bart lleva a Homer al hospital. Mientras espera que salga Homero, la familia recuerda todas las luchas por las que han pasado hasta ahora."
@@ -888,7 +888,7 @@ const data = {
           "title": "The Front",
           "duration": "24",
           "airDate": "1993-04-15",
-          "image": "4x19.jpg",
+          "image": "simpsons_4x19.jpg",
           "synopsis": "After watching a terrible episode of The Itchy & Scratchy Show, Bart and Lisa agree they can write better episodes themselves, but when they get rejected by Roger Meyers, Jr., the pair use Grampa Simpson's real name (Abraham J. Simpson) to be taken more seriously, leading Grampa to be hired as an I&S writer. Meanwhile, Homer and Marge go to their high school reunion, and Homer must go back so he can pass remedial science 1-A.",
           "titleEs": "El frente",
           "synopsisEs": "Después de ver un episodio terrible de The Itchy & Scratchy Show, Bart y Lisa acuerdan que ellos mismos pueden escribir mejores episodios, pero cuando Roger Meyers, Jr. los rechaza, la pareja usa el nombre real del abuelo Simpson (Abraham J. Simpson) para que los tomen más en serio, lo que lleva al abuelo a ser contratado como escritor de I&S. Mientras tanto, Homer y Marge van a su reunión de la escuela secundaria, y Homer debe regresar para poder aprobar ciencias de recuperación 1-A."
@@ -899,7 +899,7 @@ const data = {
           "title": "Whacking Day",
           "duration": "24",
           "airDate": "1993-04-29",
-          "image": "4x20.jpg",
+          "image": "simpsons_4x20.jpg",
           "synopsis": "Bart's latest stunt (driving Groundskeeper Willie's tractor into Superintendent Chalmers' posterior) lands him an explusion from Springfield Elementary. When moving to a private religious school doesn't help, Marge decides to home-school her son. Meanwhile, Lisa protests a local holiday where snakes get chased into the middle of town and whacked to death and enlists the help of Barry White (and Bart) to help the snakes escape abuse.",
           "titleEs": "Día de la paliza",
           "synopsisEs": "El último truco de Bart (conducir el tractor del jardinero Willie contra el trasero del superintendente Chalmers) le provoca una expulsión de la escuela primaria Springfield. Cuando mudarse a una escuela religiosa privada no ayuda, Marge decide educar a su hijo en casa. Mientras tanto, Lisa protesta contra un feriado local donde las serpientes son perseguidas hasta el centro de la ciudad y asesinadas a golpes, y solicita la ayuda de Barry White (y Bart) para ayudar a las serpientes a escapar del abuso."
@@ -910,7 +910,7 @@ const data = {
           "title": "Marge in Chains",
           "duration": "24",
           "airDate": "1993-05-06",
-          "image": "4x21.jpg",
+          "image": "simpsons_4x21.jpg",
           "synopsis": "While shopping for her family in the midst of an Asian flu epidemic, Marge gets arrested for shoplifting, which the town initially celebrates...until they realize that her marshmallow squares for the bake sale are sorely missed.",
           "titleEs": "Marge encadenada",
           "synopsisEs": "Mientras compraba para su familia en medio de una epidemia de gripe asiática, Marge es arrestada por robar en una tienda, lo que la ciudad inicialmente celebra... hasta que se dan cuenta de que extrañan profundamente sus cuadrados de malvavisco para la venta de pasteles."
@@ -921,7 +921,7 @@ const data = {
           "title": "Krusty Gets Kancelled",
           "duration": "24",
           "airDate": "1993-05-13",
-          "image": "4x22.jpg",
+          "image": "simpsons_4x22.jpg",
           "synopsis": "A new kids' show starring Gabbo, a sarcastic ventriloquist dummy, and Arthur Crandall, his straitlaced ventriloquist becomes more popular than The Krusty the Clown Show. After several failed attempts to compete with The Gabbo Show, Krusty's show gets canceled and he spirals into depression. It's up to Bart, Lisa, and Krusty's celebrity friends (Hugh Hefner, Bette Midler, Krusty's half-brother, Luke Perry; The Red Hot Chili Peppers, Elizabeth Taylor, and Johnny Carson) to save the clown's show with a star-studded comeback special.",
           "titleEs": "Krusty es cancelado",
           "synopsisEs": "Un nuevo espectáculo infantil protagonizado por Gabbo, un sarcástico muñeco de ventrílocuo, y Arthur Crandall, su puritano ventrílocuo, se vuelve más popular que The Krusty the Clown Show. Después de varios intentos fallidos de competir con The Gabbo Show, el programa de Krusty es cancelado y cae en una espiral de depresión. Depende de Bart, Lisa y los amigos famosos de Krusty (Hugh Hefner, Bette Midler, el medio hermano de Krusty, Luke Perry; The Red Hot Chili Peppers, Elizabeth Taylor y Johnny Carson) salvar el espectáculo del payaso con un especial de regreso repleto de estrellas."
@@ -932,7 +932,7 @@ const data = {
     {
       "id": 5,
       "title": "Temporada 5",
-      "image": "Season_5_Icon.jpg",
+      "image": "simpsons_Season_5_Icon.jpg",
       "avgColor": "#9D883D",
       "episodes": [
         {
@@ -941,7 +941,7 @@ const data = {
           "title": "Homer's Barbershop Quartet",
           "duration": "24",
           "airDate": "1993-09-30",
-          "image": "5x01.jpg",
+          "image": "simpsons_5x01.jpg",
           "synopsis": "While at a swap meet, Bart finds an album cover with Homer's face on it. While driving home (and a little bit after that), Homer tells the story of how he, Apu, Principal Skinner, and Chief Wiggum (later replaced by Barney) became a Beatles-esque sensation in the mid-1980s.",
           "titleEs": "El cuarteto de barbería de Homero",
           "synopsisEs": "Mientras está en una reunión de intercambio, Bart encuentra la portada de un álbum con la cara de Homero. Mientras conduce a casa (y un poco después), Homer cuenta la historia de cómo él, Apu, el director Skinner y el jefe Wiggum (posteriormente reemplazado por Barney) se convirtieron en una sensación al estilo de los Beatles a mediados de los años 1980."
@@ -952,7 +952,7 @@ const data = {
           "title": "Cape Feare",
           "duration": "24",
           "airDate": "1993-09-30",
-          "image": "5x02.jpg",
+          "image": "simpsons_5x02.jpg",
           "synopsis": "Sideshow Bob is paroled and out for Bart's blood again, so the Simpsons go into Witness Protection/Relocation and become The Thompsons.",
           "titleEs": "Cabo del miedo",
           "synopsisEs": "El actor secundario Bob obtiene la libertad condicional y vuelve a buscar la sangre de Bart, por lo que los Simpson entran en Protección/Reubicación de testigos y se convierten en Los Thompson."
@@ -963,7 +963,7 @@ const data = {
           "title": "Homer Goes to College",
           "duration": "24",
           "airDate": "1993-10-14",
-          "image": "5x03.jpg",
+          "image": "simpsons_5x03.jpg",
           "synopsis": "After Homer fails a competency test at the plant, Mr. Burns is forced to put Homer in college so he can keep his job. Too bad Homer thinks college life is similar to what most viewers have seen in National Lampoon's Animal House and other raunchy campus comedies...",
           "titleEs": "Homero va a la universidad",
           "synopsisEs": "Después de que Homer reprueba una prueba de competencia en la planta, el Sr. Burns se ve obligado a enviar a Homer a la universidad para que pueda conservar su trabajo. Lástima que Homer piense que la vida universitaria es similar a lo que la mayoría de los espectadores han visto en National Lampoon's Animal House y otras comedias obscenas del campus..."
@@ -974,7 +974,7 @@ const data = {
           "title": "Rosebud",
           "duration": "24",
           "airDate": "1993-10-21",
-          "image": "5x04.jpg",
+          "image": "simpsons_5x04.jpg",
           "synopsis": "It's Mr. Charles Montgomery Burns's birthday, but, despite getting everything a cold, loveless billionaire could ever want (including King Arthur's Excalibur, the only existing nude painting of Mark Twain, a unicorn, all of Australia spelling his name in lights, the unrequited love of his assistant, Smithers; and an early draft of the U.S. Constitution with the word \"suckers\" in it), all Mr. Burns really wants is Bobo, the teddy bear he abandoned the day he was adopted into wealth a la Charles Foster Kane. And when The Simpsons discover the bear inside a bag of ice that Bart bought from the Kwik-E-Mart, Mr. Burns does whatever he can to reclaim his childhood toy.",
           "titleEs": "Capullo de rosa",
           "synopsisEs": "Es el cumpleaños del Sr. Charles Montgomery Burns, pero, a pesar de tener todo lo que un multimillonario frío y sin amor podría desear (incluyendo la Excalibur del Rey Arturo, el único desnudo existente de Mark Twain, un unicornio, toda Australia deletreando su nombre con luces, el amor no correspondido de su asistente, Smithers; y un primer borrador de la Constitución de los Estados Unidos con la palabra \"tontos\"), todo lo que el Sr. Burns realmente quiere es Bobo, el osito de peluche que abandonó el día que fue adoptado en la riqueza a la Charles Foster Kane. Y cuando Los Simpson descubren el oso dentro de una bolsa de hielo que Bart compró en el Kwik-E-Mart, el Sr. Burns hace todo lo posible para recuperar el juguete de su infancia."
@@ -985,7 +985,7 @@ const data = {
           "title": "Treehouse of Horror IV",
           "duration": "24",
           "airDate": "1993-10-28",
-          "image": "5x05.jpg",
+          "image": "simpsons_5x05.jpg",
           "synopsis": "This go-around is done in the style of Night Gallery with Bart hosting the in-betweens while babysitting Maggie as Marge goes to get gift-shop earrings, but not before telling Bart that this year's Halloween special may be too scary for some viewers.",
           "titleEs": "La casa del árbol del terror IV",
           "synopsisEs": "Esta vuelta se realiza al estilo de Night Gallery con Bart hospedando a los intermedios mientras cuida a Maggie mientras Marge va a comprar aretes de la tienda de regalos, no sin antes decirle a Bart que el especial de Halloween de este año puede ser demasiado aterrador para algunos espectadores."
@@ -996,7 +996,7 @@ const data = {
           "title": "Marge on the Lam",
           "duration": "24",
           "airDate": "1993-11-04",
-          "image": "5x06.jpg",
+          "image": "simpsons_5x06.jpg",
           "synopsis": "Marge makes friends with Ruth Powers (the divorced mother from \"New Kid on the Block\") after Homer bails on taking her to the ballet. However, one night with Ruth leads to a Thelma & Louise-style run from the law when Ruth confesses that she stole her husband's car as revenge for him not paying child support. Meanwhile, Homer tries to have fun without Marge and ends up with Chief Wiggum when he goes after Marge and Ruth, while Lionel Hutz babysits the Simpson kids after Homer finds him rooting through their garbage.",
           "titleEs": "Marge en fuga",
           "synopsisEs": "Marge se hace amiga de Ruth Powers (la madre divorciada de \"New Kid on the Block\") después de que Homer renuncia a llevarla al ballet. Sin embargo, una noche con Ruth conduce a una huida de la ley al estilo Thelma y Louise cuando Ruth confiesa que robó el auto de su marido como venganza por no pagar la manutención de los hijos. Mientras tanto, Homer intenta divertirse sin Marge y termina con el Jefe Wiggum cuando va tras Marge y Ruth, mientras Lionel Hutz cuida a los niños Simpson después de que Homer lo encuentra hurgando en la basura."
@@ -1007,7 +1007,7 @@ const data = {
           "title": "Bart's Inner Child",
           "duration": "24",
           "airDate": "1993-11-11",
-          "image": "5x07.jpg",
+          "image": "simpsons_5x07.jpg",
           "synopsis": "After Homer brings home a trampoline for the kids to play with (and the trampoline causes every kid in town to get injured), Marge realizes that she's a boring nag and her sisters recommend that Marge listen to a local motivational speaker named Brad Goodman, who encourages everyone in town to act like Bart during his latest motivational seminar.",
           "titleEs": "El niño interior de Bart",
           "synopsisEs": "Después de que Homero trae a casa un trampolín para que jueguen los niños (y el trampolín hace que todos los niños de la ciudad se lastimen), Marge se da cuenta de que es una molesta aburrida y sus hermanas recomiendan que Marge escuche a un orador motivacional local llamado Brad Goodman, quien anima a todos en la ciudad a actuar como Bart durante su último seminario motivacional."
@@ -1018,7 +1018,7 @@ const data = {
           "title": "Boy-Scoutz 'n the Hood",
           "duration": "24",
           "airDate": "1993-11-19",
-          "image": "5x08.jpg",
+          "image": "simpsons_5x08.jpg",
           "synopsis": "After Bart and Milhouse go on a sugar bender after finding a $20 bill (that Homer found under the couch while looking for a peanut and lost when he slipped on the very peanut he was trying to find) and spending most of the money on a Squishee made of syrup, Bart wakes to find that he's a member of the geekiest club known to man: The Junior Campers (not affiliated with The Boy Scouts of America).",
           "titleEs": "Boy-Scoutz 'n the Hood",
           "synopsisEs": "Después de que Bart y Milhouse se vuelven locos después de encontrar un billete de $20 (que Homer encontró debajo del sofá mientras buscaba un maní y perdió cuando se resbaló en el mismo maní que estaba tratando de encontrar) y gastar la mayor parte del dinero en un Squishee hecho de almíbar, Bart se despierta y descubre que es miembro del club más geek conocido por el hombre: The Junior Campers (no afiliado a The Boy Scouts of America)."
@@ -1029,7 +1029,7 @@ const data = {
           "title": "The Last Temptation of Homer",
           "duration": "24",
           "airDate": "1993-12-09",
-          "image": "5x09.jpg",
+          "image": "simpsons_5x09.jpg",
           "synopsis": "Mindy Simmons, a sexy new employee at the Springfield Nuclear Power Plant, proves alarmingly compatible with Homer, who worries that his attraction to her may mean danger for his marriage. Meanwhile, Bart becomes a nerd after being fitted for glasses and prescribed medicated hair salve, orthopedic shoes, and throat spray that makes him sound like Jerry Lewis from The Nutty Professor.",
           "titleEs": "La última tentación de Homero",
           "synopsisEs": "Mindy Simmons, una sexy nueva empleada de la planta de energía nuclear de Springfield, resulta alarmantemente compatible con Homer, a quien le preocupa que su atracción por ella pueda significar un peligro para su matrimonio. Mientras tanto, Bart se vuelve un nerd después de que le colocaron gafas y le recetaron un ungüento para el cabello medicinal, zapatos ortopédicos y un spray para la garganta que lo hace sonar como Jerry Lewis de El profesor chiflado."
@@ -1040,7 +1040,7 @@ const data = {
           "title": "$pringfield (Or, How I Learned to Stop Worrying and Love Legalized Gambling)",
           "duration": "24",
           "airDate": "1993-12-16",
-          "image": "5x10.jpg",
+          "image": "simpsons_5x10.jpg",
           "synopsis": "Legalized gambling comes to Springfield as a new revenue stream after news hits that the town's economy is on the down slope. When Mr. Burns constructs a casino, Homer gets a job as a blackjack dealer, Marge finds herself addicted to the slots, Bart opens up his own treehouse casino to show up a teenaged worker who had him thrown out for being underaged, Mr. Burns' constant surveillance of the casino turns him into Howard Hughes in his later years, and poor Lisa can't find anyone to help her make her Florida costume for the school state pageant.",
           "titleEs": "$pringfield (o cómo aprendí a dejar de preocuparme y amar los juegos de azar legalizados)",
           "synopsisEs": "El juego legalizado llega a Springfield como una nueva fuente de ingresos después de que llega la noticia de que la economía de la ciudad está en declive. Cuando el Sr. Burns construye un casino, Homer consigue un trabajo como croupier de blackjack, Marge se vuelve adicta a las tragamonedas, Bart abre su propio casino en la casa del árbol para descubrir a un trabajador adolescente que lo despidió por ser menor de edad, la vigilancia constante del casino por parte del Sr. Burns lo convierte en Howard Hughes en sus últimos años, y la pobre Lisa no puede encontrar a nadie que la ayude a hacer su disfraz de Florida para el concurso escolar estatal."
@@ -1051,7 +1051,7 @@ const data = {
           "title": "Homer the Vigilante",
           "duration": "24",
           "airDate": "1994-01-06",
-          "image": "5x11.jpg",
+          "image": "simpsons_5x11.jpg",
           "synopsis": "While the Simpsons sleep, their house is invaded by the Springfield Cat Burglar, who leaves a calling card in exchange for such valuables as Marge's pearls (even though Marge has a large ball of replacement pearl necklaces in a drawer), Bart's stamp collection and portable TV, and Lisa's saxophone. It's up to Homer and his newly-formed vigilante group to catch their man — if only they would cease bullying everyone in town.",
           "titleEs": "Homero el Vigilante",
           "synopsisEs": "Mientras los Simpson duermen, su casa es invadida por el gato ladrón de Springfield, quien deja una tarjeta de visita a cambio de objetos de valor como las perlas de Marge (aunque Marge tiene una gran bola de collares de perlas de repuesto en un cajón), la colección de sellos y el televisor portátil de Bart y el saxofón de Lisa. Depende de Homer y su recién formado grupo de vigilantes atrapar a su hombre, si tan solo dejaran de intimidar a todos en la ciudad."
@@ -1062,7 +1062,7 @@ const data = {
           "title": "Bart Gets Famous",
           "duration": "24",
           "airDate": "1994-02-03",
-          "image": "5x12.jpg",
+          "image": "simpsons_5x12.jpg",
           "synopsis": "While on a boring field trip to the box factory, Bart makes a break for it to Channel 6 Studios, home of Bart's favorite show, Krusty the Clown, and gets a job as Krusty's assistant — then becomes an accidental star after screwing up during a live sketch and blurting, \"I didn't do it!\"",
           "titleEs": "Bart se vuelve famoso",
           "synopsisEs": "Durante una aburrida excursión a la fábrica de cajas, Bart hace una pausa para ir a Channel 6 Studios, sede del programa favorito de Bart, Krusty el Payaso, y consigue un trabajo como asistente de Krusty; luego se convierte en una estrella accidental después de cometer un error durante un sketch en vivo y soltar: \"¡Yo no lo hice!\"."
@@ -1073,7 +1073,7 @@ const data = {
           "title": "Homer and Apu",
           "duration": "24",
           "airDate": "1994-02-10",
-          "image": "5x13.jpg",
+          "image": "simpsons_5x13.jpg",
           "synopsis": "Apu loses his job at the Kwik-E-Mart after he sells Homer expired meat. Homer feels bad, and lets Apu live at the Simpsons' home while he is unemployed. In an attempt to get his job back, Apu travels to India with Homer to convince the head of the Kwik-E-Mart corporation. Meanwhile, James Woods fills in Apu's position.",
           "titleEs": "Homero y Apu",
           "synopsisEs": "Apu pierde su trabajo en el Kwik-E-Mart después de vender carne caducada a Homer. Homero se siente mal y deja que Apu viva en la casa de los Simpson mientras él está desempleado. En un intento por recuperar su trabajo, Apu viaja a la India con Homer para convencer al director de la corporación Kwik-E-Mart. Mientras tanto, James Woods ocupa el puesto de Apu."
@@ -1084,7 +1084,7 @@ const data = {
           "title": "Lisa vs. Malibu Stacy",
           "duration": "24",
           "airDate": "1994-02-17",
-          "image": "5x14.jpg",
+          "image": "simpsons_5x14.jpg",
           "synopsis": "Lisa is disappointed that the new Talking Malibu Stacy doll spouts phrases that make girls and women out to be vapid, shallow sex objects. With the help of Smithers, Lisa finds the original creator of Malibu Stacy and teams up with her to make a talking doll that actually empowers and encourages little girls. Meanwhile, Grampa Simpson worries over his lost youth after seeing Andy Griffith (Matlock) at the grand opening of the Center for Geriatric Medicine, so he takes a job at Krusty Burger.",
           "titleEs": "Lisa contra Malibú Stacy",
           "synopsisEs": "Lisa está decepcionada de que la nueva muñeca Talking Malibu Stacy pronuncie frases que convierten a las niñas y mujeres en objetos sexuales insípidos y superficiales. Con la ayuda de Smithers, Lisa encuentra a la creadora original de Malibu Stacy y se une a ella para hacer una muñeca parlante que realmente empodera y anima a las niñas. Mientras tanto, el abuelo Simpson se preocupa por su juventud perdida después de ver a Andy Griffith (Matlock) en la gran inauguración del Centro de Medicina Geriátrica, por lo que acepta un trabajo en Krusty Burger."
@@ -1095,7 +1095,7 @@ const data = {
           "title": "Deep Space Homer",
           "duration": "24",
           "airDate": "1994-02-24",
-          "image": "5x15.jpg",
+          "image": "simpsons_5x15.jpg",
           "synopsis": "After NASA discovers that people would rather watch blue-collar slobs (like Tim \"The Toolman\" Taylor on Home Improvement or Al Bundy on Married...With Children) than space launches on TV, they set out to find a blue-collar slob to go on a space mission...and Homer (feeling unappreciated after losing out on the \"Worker of the Week\" award) leaps at the chance after NASA officials choose Barney Gumble.",
           "titleEs": "Homero del espacio profundo",
           "synopsisEs": "Después de que la NASA descubre que la gente prefiere ver a los vagos obreros (como Tim \"The Toolman\" Taylor en Home Improvement o Al Bundy en Married... With Children) que los lanzamientos espaciales en la televisión, se proponen encontrar un vago obrero para ir a una misión espacial... y Homer (sintiéndose despreciado después de perder el premio al \"Trabajador de la semana\") aprovecha la oportunidad después de que los funcionarios de la NASA eligen a Barney Gumble."
@@ -1106,7 +1106,7 @@ const data = {
           "title": "Homer Loves Flanders",
           "duration": "24",
           "airDate": "1994-03-17",
-          "image": "5x16.jpg",
+          "image": "simpsons_5x16.jpg",
           "synopsis": "Homer loses out on winning tickets to an upcoming Springfield Atoms football game. What's worse, his goody-two-shoes neighbor, Ned Flanders, wins the last pair. After a failed attempt at bashing Flanders' skull in so he can take the tickets, Homer decides to spend the day with his neighbor at the game — and Homer realizes that Flanders is not such a bad guy after all...but all the time Homer spends with Ned puts a strain on both families.",
           "titleEs": "Homero ama Flandes",
           "synopsisEs": "Homer pierde las entradas ganadoras para el próximo partido de fútbol de los Springfield Atoms. Lo que es peor, su vecino de dos zapatos, Ned Flanders, gana el último par. Después de un intento fallido de romperle el cráneo a Flanders para poder quedarse con los boletos, Homer decide pasar el día con su vecino en el juego, y Homer se da cuenta de que Flanders no es tan malo después de todo... pero todo el tiempo que Homer pasa con Ned ejerce presión sobre ambas familias."
@@ -1117,7 +1117,7 @@ const data = {
           "title": "Bart Gets an Elephant",
           "duration": "24",
           "airDate": "1994-03-31",
-          "image": "5x17.jpg",
+          "image": "simpsons_5x17.jpg",
           "synopsis": "Bart wins a radio contest and picks the gag prize (a full-grown African elephant) instead of the cash prize ($10,000), which puts the family in financial turmoil once again.",
           "titleEs": "Bart consigue un elefante",
           "synopsisEs": "Bart gana un concurso de radio y elige el premio de broma (un elefante africano adulto) en lugar del premio en efectivo (10.000 dólares), lo que vuelve a poner a la familia en una crisis financiera."
@@ -1128,7 +1128,7 @@ const data = {
           "title": "Burns' Heir",
           "duration": "24",
           "airDate": "1994-04-14",
-          "image": "5x18.jpg",
+          "image": "simpsons_5x18.jpg",
           "synopsis": "While bathing, Mr. Burns almost kills himself and chooses to find an heir. He sees it in the form of Bart Simpson and coerces the young Simpson into staying with him.",
           "titleEs": "Heredero de quemaduras",
           "synopsisEs": "Mientras se baña, el Sr. Burns casi se suicida y decide buscar un heredero. Lo ve en la forma de Bart Simpson y obliga al joven Simpson a quedarse con él."
@@ -1139,7 +1139,7 @@ const data = {
           "title": "Sweet Seymour Skinner's Baadasssss Song",
           "duration": "24",
           "airDate": "1994-04-28",
-          "image": "5x19.jpg",
+          "image": "simpsons_5x19.jpg",
           "synopsis": "Superintendent Chalmers fires Principal Skinner after a disaster at the elementary, so then Skinner reenlists in the Army. Bart, feeling partially responsible for Skinner losing his job, helps to get his old principal his job back, which is now being taken over by Ned Flanders.",
           "titleEs": "Canción Baadasssss de Sweet Seymour Skinner",
           "synopsisEs": "El superintendente Chalmers despide al director Skinner después de un desastre en la escuela primaria, por lo que Skinner se vuelve a alistar en el ejército. Bart, sintiéndose parcialmente responsable de que Skinner perdiera su trabajo, ayuda a su antiguo director a recuperar su trabajo, que ahora será asumido por Ned Flanders."
@@ -1150,7 +1150,7 @@ const data = {
           "title": "The Boy Who Knew Too Much",
           "duration": "24",
           "airDate": "1994-05-05",
-          "image": "5x20.jpg",
+          "image": "simpsons_5x20.jpg",
           "synopsis": "Bart sneaks out of school and finds himself at a party for Mayor Quimby's nephew, Freddy — but when Freddy gets in trouble for allegedly assaulting a French waiter, Bart must choose between keeping his mouth shut about the ordeal or exposing the truth and admitting that he cut school to see it happen.",
           "titleEs": "El niño que sabía demasiado",
           "synopsisEs": "Bart se escapa de la escuela y se encuentra en una fiesta para Freddy, el sobrino del alcalde Quimby, pero cuando Freddy se mete en problemas por presuntamente agredir a un camarero francés, Bart debe elegir entre mantener la boca cerrada sobre la terrible experiencia o exponer la verdad y admitir que faltó a la escuela para ver cómo sucede."
@@ -1161,7 +1161,7 @@ const data = {
           "title": "Lady Bouvier's Lover",
           "duration": "24",
           "airDate": "1994-05-12",
-          "image": "5x21.jpg",
+          "image": "simpsons_5x21.jpg",
           "synopsis": "Grampa Simpson falls in love with Marge's mother, Jacqueline, but Mr. Burns whisks her away from him and plans to marry her. Meanwhile, Bart steals Homer's credit card so he can buy an Itchy & Scratchy Show animation cel, which turns out to be just an arm drawn on a sheet of plastic.",
           "titleEs": "El amante de Lady Bouvier",
           "synopsisEs": "El abuelo Simpson se enamora de la madre de Marge, Jacqueline, pero el señor Burns se la aleja y planea casarse con ella. Mientras tanto, Bart roba la tarjeta de crédito de Homer para poder comprar un celular de animación de Itchy & Scratchy Show, que resulta ser solo un brazo dibujado en una hoja de plástico."
@@ -1172,7 +1172,7 @@ const data = {
           "title": "Secrets of a Successful Marriage",
           "duration": "24",
           "airDate": "1994-05-19",
-          "image": "5x22.jpg",
+          "image": "simpsons_5x22.jpg",
           "synopsis": "Worried that he may be slow, Homer attempts to enrol in an adult education class at the Learning Annex, and ends up holding a class of his own- teaching losers in love how to keep their relationships together. But it goes awry when he shares intimate details of his relationship with Marge to keep his class interested and Marge throws Homer out the house after inviting his class to dinner.",
           "titleEs": "Secretos de un matrimonio exitoso",
           "synopsisEs": "Preocupado por ser lento, Homero intenta inscribirse en una clase de educación para adultos en el Anexo de Aprendizaje y termina dando una clase propia, enseñando a los perdedores enamorados cómo mantener unidas sus relaciones. Pero todo sale mal cuando comparte detalles íntimos de su relación con Marge para mantener el interés de su clase y Marge echa a Homer de la casa después de invitar a su clase a cenar."
@@ -1183,7 +1183,7 @@ const data = {
     {
       "id": 6,
       "title": "Temporada 6",
-      "image": "Season_6_Icon.jpg",
+      "image": "simpsons_Season_6_Icon.jpg",
       "avgColor": "#59AF9A",
       "episodes": [
         {
@@ -1192,7 +1192,7 @@ const data = {
           "title": "Bart of Darkness",
           "duration": "24",
           "airDate": "1994-09-04",
-          "image": "6x01.jpg",
+          "image": "simpsons_6x01.jpg",
           "synopsis": "In a parody of Alfred Hitchcock's Rear Window, a summer heatwave hits Springfield, so the Simpsons build a pool to beat the heat. But when a high-dive goes wrong and Bart breaks his leg, he ends up confined to his room, which only gets worse when Lisa gives him a telescope and Bart spies on everyone in town, including a possible murder at the Flanders' house.",
           "titleEs": "Bart de la oscuridad",
           "synopsisEs": "En una parodia de La ventana indiscreta de Alfred Hitchcock, una ola de calor de verano azota Springfield, por lo que los Simpson construyen una piscina para combatir el calor. Pero cuando una inmersión sale mal y Bart se rompe una pierna, termina confinado en su habitación, lo que solo empeora cuando Lisa le da un telescopio y Bart espía a todos en la ciudad, incluido un posible asesinato en la casa de los Flanders."
@@ -1203,7 +1203,7 @@ const data = {
           "title": "Lisa's Rival",
           "duration": "24",
           "airDate": "1994-09-11",
-          "image": "6x02.jpg",
+          "image": "simpsons_6x02.jpg",
           "synopsis": "In a parody of Alfred Hitchcock's Rear Window, a summer heatwave hits Springfield, so the Simpsons build a pool to beat the heat. But when a high-dive goes wrong and Bart breaks his leg, he ends up confined to his room, which only gets worse when Lisa gives him a telescope and Bart spies on everyone in town, including a possible murder at the Flanders' house.",
           "titleEs": "La rival de Lisa",
           "synopsisEs": "En una parodia de La ventana indiscreta de Alfred Hitchcock, una ola de calor de verano azota Springfield, por lo que los Simpson construyen una piscina para combatir el calor. Pero cuando una inmersión sale mal y Bart se rompe una pierna, termina confinado en su habitación, lo que solo empeora cuando Lisa le da un telescopio y Bart espía a todos en la ciudad, incluido un posible asesinato en la casa de los Flanders."
@@ -1214,7 +1214,7 @@ const data = {
           "title": "Another Simpsons Clip Show",
           "duration": "24",
           "airDate": "1994-09-25",
-          "image": "6x03.jpg",
+          "image": "simpsons_6x03.jpg",
           "synopsis": "After Marge reads The Bridges of Madison County, she calls for a family meeting the next day to discuss romance...and soon finds that the kids have dealt with heartbreak and she and Homer nearly cheated on each other.",
           "titleEs": "Otro clip de Los Simpson",
           "synopsisEs": "Después de que Marge lee Los puentes del condado de Madison, convoca una reunión familiar al día siguiente para hablar sobre el romance... y pronto descubre que los niños han lidiado con la angustia y que ella y Homero casi se engañan el uno al otro."
@@ -1225,7 +1225,7 @@ const data = {
           "title": "Itchy & Scratchy Land",
           "duration": "24",
           "airDate": "1994-10-02",
-          "image": "6x04.jpg",
+          "image": "simpsons_6x04.jpg",
           "synopsis": "The family's trip to Itchy & Scratchy Land, the \"violent-est place on earth,\" proves heavenly until the Itchy & Scratchy robots want to keep the family there for real.",
           "titleEs": "Tierra que pica y pica",
           "synopsisEs": "El viaje de la familia a Itchy & Scratchy Land, el \"lugar más violento del mundo\", resulta celestial hasta que los robots Itchy & Scratchy quieren mantener a la familia allí de verdad."
@@ -1236,7 +1236,7 @@ const data = {
           "title": "Sideshow Bob Roberts",
           "duration": "24",
           "airDate": "1994-10-09",
-          "image": "6x05.jpg",
+          "image": "simpsons_6x05.jpg",
           "synopsis": "Thanks to a radio talk show host, Mayor Quimby is pressured into releasing Sideshow Bob from prison. Once out, Bob promptly runs against the mayor and wins. Bart and Lisa set out to prove Mayor Bob did not legally win.",
           "titleEs": "El actor secundario Bob Roberts",
           "synopsisEs": "Gracias a un locutor de un programa de radio, el alcalde Quimby es presionado para que libere a Sideshow Bob de prisión. Una vez fuera, Bob rápidamente se enfrenta al alcalde y gana. Bart y Lisa se propusieron demostrar que el alcalde Bob no ganó legalmente."
@@ -1247,7 +1247,7 @@ const data = {
           "title": "Treehouse of Horror V",
           "duration": "24",
           "airDate": "1994-10-30",
-          "image": "6x06.jpg",
+          "image": "simpsons_6x06.jpg",
           "synopsis": "In this, the fifth Treehouse of Horror (and the first one to not have a framing device and the last one to have Marge's viewer advisory introduction and the funny tombstones), The Simpsons house-sit for Mr. Burns and Homer comes down with a nasty case of murderous cabin fever in \"The Shinning\", Homer's attempt at fixing the toaster takes him back in time where anything he does in the past affects the future in \"Time and Punishment\", and the Springfield Elementary School staff resort to cannibalizing the students as a means to solve their food budget and class overcrowding crises in \"Nightmare Cafeteria\".",
           "titleEs": "La casa del árbol del terror V",
           "synopsisEs": "En esta, la quinta Casa del Árbol del Terror (y la primera que no tiene un dispositivo de encuadre y la última que tiene la introducción de Marge para el espectador y las divertidas lápidas), la casa de Los Simpson para el Sr. Burns y Homero sufre un desagradable caso de fiebre de cabaña asesina en \"El resplandor\", el intento de Homero de arreglar la tostadora lo lleva atrás en el tiempo donde cualquier cosa que haga en el pasado afecta el futuro en \"Tiempo y castigo\", y el personal de la Escuela Primaria de Springfield recurre a canibalizar a los estudiantes como un medio para resolver su presupuesto de alimentos y las crisis de hacinamiento en las clases en \"Nightmare Cafeteria\"."
@@ -1258,7 +1258,7 @@ const data = {
           "title": "Bart's Girlfriend",
           "duration": "24",
           "airDate": "1994-11-06",
-          "image": "6x07.jpg",
+          "image": "simpsons_6x07.jpg",
           "synopsis": "Reverend Lovejoy's preteen daughter, Jessica, comes to town, and she and Bart strike up a relationship that proves more than he can handle.",
           "titleEs": "La novia de Bart",
           "synopsisEs": "Jessica, la hija preadolescente del reverendo Lovejoy, llega a la ciudad y ella y Bart entablan una relación que demuestra más de lo que él puede soportar."
@@ -1269,7 +1269,7 @@ const data = {
           "title": "Lisa on Ice",
           "duration": "24",
           "airDate": "1994-11-13",
-          "image": "6x08.jpg",
+          "image": "simpsons_6x08.jpg",
           "synopsis": "When test scores hit an all-time low at Springfield Elementary, Principal Skinner instates academic alerts (little slips of paper warning a student that they're failing one or more subjects) — and Lisa discovers that she's on the academic alert list for failing gym class. After trying and failing at basketball and volleyball, Apu discovers that Lisa has a talent for blocking/parrying objects, and makes her goalie for his pee-wee hockey team...which puts her in direct sibling rivalry with Bart, who's on Chief Wiggum's team.",
           "titleEs": "Lisa sobre hielo",
           "synopsisEs": "Cuando los puntajes de los exámenes alcanzan su punto más bajo en la escuela primaria Springfield, el director Skinner establece alertas académicas (pequeños trozos de papel que advierten a un estudiante que está reprobando una o más materias) y Lisa descubre que está en la lista de alerta académica por reprobar la clase de gimnasia. Después de intentar y fracasar en baloncesto y voleibol, Apu descubre que Lisa tiene talento para bloquear y parar objetos, y la convierte en portera de su equipo de hockey... lo que la pone en rivalidad fraternal directa con Bart, que está en el equipo del Jefe Wiggum."
@@ -1280,7 +1280,7 @@ const data = {
           "title": "Homer Badman",
           "duration": "24",
           "airDate": "1994-11-27",
-          "image": "6x09.jpg",
+          "image": "simpsons_6x09.jpg",
           "synopsis": "After stealing a rare gummi candy (one shaped like the Venus de Milo) from a confection convention, Homer loses it — and finds it on the butt of the babysitter he hired (a feminist university student) while driving her home, but his successful grab turns into a media circus and women's rights/anti-sexual harassment protest after Homer is accused of inappropriately grabbing the babysitter.",
           "titleEs": "Homero Badman",
           "synopsisEs": "Después de robar un raro caramelo de goma (uno con la forma de la Venus de Milo) de una convención de dulces, Homer lo pierde y lo encuentra en el trasero de la niñera que contrató (una estudiante universitaria feminista) mientras la llevaba a casa, pero su éxito se convierte en un circo mediático y una protesta por los derechos de las mujeres y el acoso sexual después de que Homer es acusado de agarrar inapropiadamente a la niñera."
@@ -1291,7 +1291,7 @@ const data = {
           "title": "Grampa vs. Sexual Inadequacy",
           "duration": "24",
           "airDate": "1994-12-04",
-          "image": "6x10.jpg",
+          "image": "simpsons_6x10.jpg",
           "synopsis": "Homer and Marge's sex life is on the rocks, due to outside obligations. When Grampa Simpson's love tonic he once made as a cheap substitute for holy water cures it, Homer and Grampa decide to make money off it, which ends up ruining Homer's relationship with his father. Meanwhile, Bart, who has been acting very paranoid over UFOs and conspiracy theories, thinks all the adults in town are plotting to eliminate dinner time, not knowing that they bought Grampa's love tonic and are leaving the kids to fend for themselves while they have sex.",
           "titleEs": "El abuelo contra la insuficiencia sexual",
           "synopsisEs": "La vida sexual de Homer y Marge está en crisis debido a obligaciones externas. Cuando el tónico del amor del abuelo Simpson, que una vez hizo como sustituto barato del agua bendita, lo cura, Homer y el abuelo deciden ganar dinero con él, lo que termina arruinando la relación de Homer con su padre. Mientras tanto, Bart, que ha estado actuando muy paranoico con los ovnis y las teorías de conspiración, cree que todos los adultos de la ciudad están conspirando para eliminar la hora de la cena, sin saber que compraron el tónico de amor del abuelo y están dejando que los niños se las arreglen solos mientras tienen relaciones sexuales."
@@ -1302,7 +1302,7 @@ const data = {
           "title": "Fear of Flying",
           "duration": "24",
           "airDate": "1994-12-18",
-          "image": "6x11.jpg",
+          "image": "simpsons_6x11.jpg",
           "synopsis": "Homer gets banned from Moe's Tavern after playing a lame prank, and uses an airport bar as his new watering hole, but when Homer is mistaken for a pilot and causes an accident, the head of the airline pays him off with a vacation to anywhere in the United States (except for the freak states, Alaska and Hawaii). However, the trip is short-lived, when Marge has a mental breakdown before the flight. Marge assures the family that she's fine, but when her erratic behavior begins unnerving the family, Marge goes into therapy to find out why she's afraid of flying.",
           "titleEs": "Miedo a volar",
           "synopsisEs": "A Homer se le prohíbe la entrada a Moe's Tavern después de gastar una broma tonta y usa un bar del aeropuerto como su nuevo abrevadero, pero cuando Homer es confundido con un piloto y causa un accidente, el jefe de la aerolínea le paga con unas vacaciones a cualquier lugar de los Estados Unidos (excepto a los estados extraños, Alaska y Hawaii). Sin embargo, el viaje dura poco, cuando Marge sufre un colapso mental antes del vuelo. Marge le asegura a la familia que está bien, pero cuando su comportamiento errático comienza a poner nerviosa a la familia, Marge va a terapia para descubrir por qué tiene miedo de volar."
@@ -1313,7 +1313,7 @@ const data = {
           "title": "Homer the Great",
           "duration": "24",
           "airDate": "1995-01-08",
-          "image": "6x12.jpg",
+          "image": "simpsons_6x12.jpg",
           "synopsis": "After noticing that his buddies Lenny and Carl are privy to a lot of perks, Homer spies on them — and discovers that they're part of a Freemasons-esque secret society called \"The Stonecutters.\"",
           "titleEs": "Homero el grande",
           "synopsisEs": "Después de darse cuenta de que sus amigos Lenny y Carl tienen muchos beneficios, Homer los espía y descubre que son parte de una sociedad secreta al estilo masón llamada \"Los Canteros\"."
@@ -1324,7 +1324,7 @@ const data = {
           "title": "And Maggie Makes Three",
           "duration": "24",
           "airDate": "1995-01-22",
-          "image": "6x13.jpg",
+          "image": "simpsons_6x13.jpg",
           "synopsis": "Lisa wonders why there aren't any photos of Maggie in the family album. Homer answers by telling the story of how he had to give up his dream job when Maggie was born.",
           "titleEs": "Y Maggie hace tres",
           "synopsisEs": "Lisa se pregunta por qué no hay fotos de Maggie en el álbum familiar. Homero responde contando la historia de cómo tuvo que dejar el trabajo de sus sueños cuando nació Maggie."
@@ -1335,7 +1335,7 @@ const data = {
           "title": "Bart's Comet",
           "duration": "24",
           "airDate": "1995-02-05",
-          "image": "6x14.jpg",
+          "image": "simpsons_6x14.jpg",
           "synopsis": "Springfield's days are numbered when Bart discovers a comet is heading straight for them. Now they must choose who will brave the comet's arrival and who can stay in the Flanders' bomb shelter.",
           "titleEs": "El cometa de Bart",
           "synopsisEs": "Los días de Springfield están contados cuando Bart descubre que un cometa se dirige directamente hacia ellos. Ahora deben elegir quién desafiará la llegada del cometa y quién podrá permanecer en el refugio antiaéreo de Flandes."
@@ -1346,7 +1346,7 @@ const data = {
           "title": "Homie the Clown",
           "duration": "24",
           "airDate": "1995-02-12",
-          "image": "6x15.jpg",
+          "image": "simpsons_6x15.jpg",
           "synopsis": "After observing a billboard for clown college, Homer cannot resist becoming an official Krusty the Clown impersonator. Homer then runs into some trouble with the mob.",
           "titleEs": "homie el payaso",
           "synopsisEs": "Después de observar un cartel publicitario de la universidad de payasos, Homer no puede resistirse a convertirse en un imitador oficial de Krusty el Payaso. Homero luego tiene problemas con la mafia."
@@ -1357,7 +1357,7 @@ const data = {
           "title": "Bart vs. Australia",
           "duration": "24",
           "airDate": "1995-02-19",
-          "image": "6x16.jpg",
+          "image": "simpsons_6x16.jpg",
           "synopsis": "After Bart crank-calls a child in Australia in order to prove to Lisa that the Coriolis effect does affect draining water, the Simpsons are going to Australia, where Bart must make a public apology.",
           "titleEs": "Bart contra Australia",
           "synopsisEs": "Después de que Bart llama a un niño en Australia para demostrarle a Lisa que el efecto Coriolis sí afecta el drenaje del agua, los Simpson se van a Australia, donde Bart debe disculparse públicamente."
@@ -1368,7 +1368,7 @@ const data = {
           "title": "Homer vs. Patty and Selma",
           "duration": "24",
           "airDate": "1995-02-26",
-          "image": "6x17.jpg",
+          "image": "simpsons_6x17.jpg",
           "synopsis": "When Homer loses all his money in pumpkin stocks, he turns to Patty and Selma to help bail him out, and the Gruesome Twosome end up blackmailing Homer into doing whatever they want. Meanwhile, Bart comes in late to school on the day that the Springfield Elementary School kids get to pick their favorite sport/physical activity to play and ends up taking a ballet class.",
           "titleEs": "Homero contra Patty y Selma",
           "synopsisEs": "Cuando Homer pierde todo su dinero en acciones de calabazas, recurre a Patty y Selma para que lo ayuden a rescatarlo, y la pareja espantosa termina chantajeando a Homer para que haga lo que quieran. Mientras tanto, Bart llega tarde a la escuela el día en que los niños de la escuela primaria de Springfield pueden elegir su deporte/actividad física favorita para jugar y termina tomando una clase de ballet."
@@ -1379,7 +1379,7 @@ const data = {
           "title": "A Star is Burns",
           "duration": "24",
           "airDate": "1995-03-05",
-          "image": "6x18.jpg",
+          "image": "simpsons_6x18.jpg",
           "synopsis": "To combat news that the town is the most anti-intellectual city in the United States (so anti-intellectual, in fact, that they still burn people at the stake for believing in science), Marge suggests that Springfield hold a film festival, prompting everyone in town to create their own short films. Jay Sherman from the ABC sitcom The Critic flies down to Springfield to be one of the judges after reading Marge's fan letter (and to escape Rainier Wolfcastle after Sherman insulted him during an interview on Coming Attractions). Homer, out of jealousy, urges Marge to be on the film jury as well, but things get sticky when Homer must choose between a beautiful, yet tragic movie about Barney Gumble's alcoholism and a crudely funny short film showing Hans Moleman getting hit in the groin by a football. Meanwhile, Mr. Burns uses the film festival as an opportunity to boost his massive ego with a self-indulgent epic movie of his own. Unfortunately for him, it backfires.",
           "titleEs": "Una estrella arde",
           "synopsisEs": "Para combatir la noticia de que la ciudad es la más antiintelectual de los Estados Unidos (tan antiintelectual, de hecho, que todavía queman a la gente en la hoguera por creer en la ciencia), Marge sugiere que Springfield celebre un festival de cine, lo que incita a todos en la ciudad a crear sus propios cortometrajes. Jay Sherman de la comedia de ABC The Critic vuela a Springfield para ser uno de los jueces después de leer la carta de un fan de Marge (y para escapar de Rainier Wolfcastle después de que Sherman lo insultara durante una entrevista en Coming Atracciones). Homero, por celos, insta a Marge a formar parte del jurado de la película también, pero las cosas se ponen difíciles cuando Homero debe elegir entre una hermosa pero trágica película sobre el alcoholismo de Barney Gumble y un cortometraje crudamente divertido que muestra a Hans Moleman siendo golpeado en la ingle con una pelota de fútbol. Mientras tanto, el Sr. Burns utiliza el festival de cine como una oportunidad para estimular su enorme ego con su propia película épica autoindulgente. Desafortunadamente para él, resulta contraproducente."
@@ -1390,7 +1390,7 @@ const data = {
           "title": "Lisa's Wedding",
           "duration": "24",
           "airDate": "1995-03-19",
-          "image": "6x19.jpg",
+          "image": "simpsons_6x19.jpg",
           "synopsis": "Lisa visits with a mysterious fortune teller at the Renaissance Fair who tells of Lisa's future courtship in 2010 with an Englishman she meets at college named Hugh Parkfield.",
           "titleEs": "La boda de Lisa",
           "synopsisEs": "Lisa visita a un misterioso adivino en la Feria del Renacimiento, quien le cuenta sobre el futuro noviazgo de Lisa en 2010 con un inglés que conoce en la universidad llamado Hugh Parkfield."
@@ -1401,7 +1401,7 @@ const data = {
           "title": "Two Dozen and One Greyhounds",
           "duration": "24",
           "airDate": "1995-04-09",
-          "image": "6x20.jpg",
+          "image": "simpsons_6x20.jpg",
           "synopsis": "Santa's Little Helper's frisky nature nets the Simpsons a new dog and 25 spanking new puppies. When Mr. Burns steals the young greyhounds, Bart and Lisa set out to discover why he wants them.",
           "titleEs": "Dos docenas y un galgo",
           "synopsisEs": "La naturaleza juguetona del pequeño ayudante de Santa les da a los Simpson un nuevo perro y 25 nuevos cachorros. Cuando el señor Burns roba los jóvenes galgos, Bart y Lisa se proponen descubrir por qué los quiere."
@@ -1412,7 +1412,7 @@ const data = {
           "title": "The PTA Disbands",
           "duration": "24",
           "airDate": "1995-04-16",
-          "image": "6x21.jpg",
+          "image": "simpsons_6x21.jpg",
           "synopsis": "After a disastrous field trip, Edna and the teachers of Springfield Elementary agree to go on strike as they have had it with Skinner cutting the school's budget to the point that he's selling the kids' futures short (even though Skinner points out that the children have no future). While Bart revels in the strike by making mischief, Lisa suffers from not being in a classroom setting, Milhouse gets home-schooled by a professional tutor and becomes smarter than he thought possible, and the PTA decides to hire neighborhood people (one of which is Marge) as scab teachers.",
           "titleEs": "La PTA se disuelve",
           "synopsisEs": "Después de una desastrosa excursión, Edna y los maestros de la escuela primaria Springfield acuerdan ir a la huelga, ya que Skinner recortó el presupuesto de la escuela hasta el punto de vender a corto plazo el futuro de los niños (a pesar de que Skinner señala que los niños no tienen futuro). Mientras Bart disfruta de la huelga haciendo travesuras, Lisa sufre por no estar en un salón de clases, Milhouse recibe educación en casa con un tutor profesional y se vuelve más inteligente de lo que creía posible, y la PTA decide contratar gente del vecindario (una de las cuales es Marge) como maestros esquiroles."
@@ -1423,7 +1423,7 @@ const data = {
           "title": "'Round Springfield",
           "duration": "24",
           "airDate": "1995-04-30",
-          "image": "6x22.jpg",
+          "image": "simpsons_6x22.jpg",
           "synopsis": "Lisa discovers that her friend and jazz mentor, Bleeding Gums Murphy, is in the hospital, and when he dies on the night of her recital, Lisa works to keep the musician's memory alive. Meanwhile, Bart comes down with appendicitis from eating Krusty the Clown's new cereal, which comes with a jagged metal \"O\", and sues the clown for personal harm.",
           "titleEs": "'Springfield redondo",
           "synopsisEs": "Lisa descubre que su amigo y mentor de jazz, Bleeding Gums Murphy, está en el hospital, y cuando él muere la noche de su recital, Lisa trabaja para mantener viva la memoria del músico. Mientras tanto, Bart sufre apendicitis por comer el nuevo cereal de Krusty el Payaso, que viene con una \"O\" de metal dentada, y demanda al payaso por daños personales."
@@ -1434,7 +1434,7 @@ const data = {
           "title": "The Springfield Connection",
           "duration": "24",
           "airDate": "1995-05-07",
-          "image": "6x23.jpg",
+          "image": "simpsons_6x23.jpg",
           "synopsis": "After nearly getting attacked by Snake in an alley after exposing his three-card monte scam, Marge gets a much-needed surge of adrenaline in her hum-drum life and decides to join the Springfield Police Force, which unsettles Homer (until he takes unfair advantage of being the husband of a female cop).",
           "titleEs": "La conexión de Springfield",
           "synopsisEs": "Después de casi ser atacada por Snake en un callejón después de exponer su estafa de monte de tres cartas, Marge recibe una muy necesaria descarga de adrenalina en su aburrida vida y decide unirse a la policía de Springfield, lo que inquieta a Homer (hasta que se aprovecha injustamente de ser el marido de una policía)."
@@ -1445,7 +1445,7 @@ const data = {
           "title": "Lemon of Troy",
           "duration": "24",
           "airDate": "1995-05-14",
-          "image": "6x24.jpg",
+          "image": "simpsons_6x24.jpg",
           "synopsis": "The children of Springfield wage war on Shelbyville after their beloved lemon tree is stolen. The parents of the Springfield children take Ned's RV to search for their boys, and when they find them, the children convince them to help recover the stolen tree from an impound lot.",
           "titleEs": "Limón de Troya",
           "synopsisEs": "Los niños de Springfield hacen la guerra a Shelbyville después de que le roban su amado limonero. Los padres de los niños de Springfield toman la casa rodante de Ned para buscar a sus hijos y, cuando los encuentran, los niños los convencen para que ayuden a recuperar el árbol robado de un lote incautado."
@@ -1456,7 +1456,7 @@ const data = {
           "title": "Who Shot Mr. Burns? (Part One)",
           "duration": "24",
           "airDate": "1995-05-21",
-          "image": "6x25.jpg",
+          "image": "simpsons_6x25.jpg",
           "synopsis": "Mr. Burns's greed soars to new heights when the elementary school strikes oil, culminating in his blocking out the sun to keep the town in the dark and dependent on his power plant — and someone tries to stop him by gunning him down. But who?",
           "titleEs": "¿Quién disparó al Sr. Burns? (Primera parte)",
           "synopsisEs": "La codicia del Sr. Burns se eleva a nuevas alturas cuando la escuela primaria encuentra petróleo, lo que culmina cuando bloquea el sol para mantener la ciudad a oscuras y dependiente de su planta de energía, y alguien intenta detenerlo disparándolo. ¿Pero quién?"
@@ -1467,7 +1467,7 @@ const data = {
     {
       "id": 7,
       "title": "Temporada 7",
-      "image": "Season_7_Icon.jpg",
+      "image": "simpsons_Season_7_Icon.jpg",
       "avgColor": "#B36D9D",
       "episodes": [
         {
@@ -1476,7 +1476,7 @@ const data = {
           "title": "Who Shot Mr. Burns? (Part Two)",
           "duration": "25",
           "airDate": "1995-09-17",
-          "image": "7x01.jpg",
+          "image": "simpsons_7x01.jpg",
           "synopsis": "In the thrilling conclusion to the sixth season finale, Mr. Burns is in the hospital after being shot, and the Springfield Police begin searching for something (anything) that leads to the attempted murderer. But when all signs point to Homer, can Lisa prove that Homer is an innocent man?",
           "titleEs": "¿Quién disparó al Sr. Burns? (Segunda parte)",
           "synopsisEs": "En la emocionante conclusión del final de la sexta temporada, el Sr. Burns está en el hospital después de recibir un disparo, y la policía de Springfield comienza a buscar algo (cualquier cosa) que conduzca al intento de asesinato. Pero cuando todas las señales apuntan a Homer, ¿podrá Lisa demostrar que Homer es un hombre inocente?"
@@ -1487,7 +1487,7 @@ const data = {
           "title": "Radioactive Man",
           "duration": "24",
           "airDate": "1995-09-24",
-          "image": "7x02.jpg",
+          "image": "simpsons_7x02.jpg",
           "synopsis": "A movie based on comic book character Radioactive Man is filmed in Springfield. Much to Bart's chagrin, the coveted part of the hero's sidekick, Fallout Boy, goes to not him, but to his best friend Milhouse, who immediately hates the idea of being a movie star.",
           "titleEs": "Hombre radiactivo",
           "synopsisEs": "En Springfield se filma una película basada en el personaje de cómic Radioactive Man. Para disgusto de Bart, el codiciado papel del compañero del héroe, Fallout Boy, no es para él, sino para su mejor amigo Milhouse, quien inmediatamente odia la idea de ser una estrella de cine."
@@ -1498,7 +1498,7 @@ const data = {
           "title": "Home Sweet Homediddly-Dum-Doodily",
           "duration": "24",
           "airDate": "1995-10-01",
-          "image": "7x03.jpg",
+          "image": "simpsons_7x03.jpg",
           "synopsis": "Thanks to Bart catching lice from Milhouse's pet monkey, Lisa getting her perscription shoes taken by bullying girls, Grampa being left alone to babysit Maggie, and Homer and Marge going to a day spa, the  local child welfare office unfairly takes the Simpson kids out of their home and places them with the Flanders family. While Homer and Marge are forced to take court-ordered parenting classes in order to get their kids back, Bart and Lisa worry that Maggie may like being a Flanders more than a Simpson.",
           "titleEs": "Hogar, dulce hogardiddly-Dum-Doodily",
           "synopsisEs": "Gracias a que Bart contrajo piojos del mono mascota de Milhouse, a Lisa las chicas acosadoras le quitaron sus zapatos recetados, al abuelo se le dejó solo cuidando a Maggie y a Homer y Marge fueron a un spa, la oficina local de bienestar infantil saca injustamente a los niños Simpson de su casa y los coloca con la familia Flanders. Mientras Homero y Marge se ven obligados a tomar clases para padres ordenadas por la corte para poder recuperar a sus hijos, Bart y Lisa temen que a Maggie le guste más ser un Flanders que un Simpson."
@@ -1509,7 +1509,7 @@ const data = {
           "title": "Bart Sells His Soul",
           "duration": "24",
           "airDate": "1995-10-08",
-          "image": "7x04.jpg",
+          "image": "simpsons_7x04.jpg",
           "synopsis": "To prove to Milhouse that the soul doesn't exist, Bart sells his to Milhouse for five dollars, and a string of strange events make Bart regret his decision. Meanwhile, Moe converts his drab bar into a cheery family restaurant.",
           "titleEs": "Bart vende su alma",
           "synopsisEs": "Para demostrarle a Milhouse que el alma no existe, Bart le vende la suya por cinco dólares, y una serie de extraños acontecimientos hacen que Bart se arrepienta de su decisión. Mientras tanto, Moe convierte su monótono bar en un alegre restaurante familiar."
@@ -1520,7 +1520,7 @@ const data = {
           "title": "Lisa the Vegetarian",
           "duration": "24",
           "airDate": "1995-10-15",
-          "image": "7x05.jpg",
+          "image": "simpsons_7x05.jpg",
           "synopsis": "After Lisa cuddles with the animals at the Storytown Village petting zoo, she feels bad for eating meat and becomes a vegetarian, which nobody is willing to accept, least of all Homer. Meanwhile, Homer holds his own barbecue after seeing Flanders have one of his own (which is actually a family reunion).",
           "titleEs": "Lisa la vegetariana",
           "synopsisEs": "Después de que Lisa se acurruca con los animales en el zoológico de Storytown Village, se siente mal por comer carne y se vuelve vegetariana, algo que nadie está dispuesto a aceptar, y menos Homer. Mientras tanto, Homer organiza su propia barbacoa después de ver a Flanders tener una propia (que en realidad es una reunión familiar)."
@@ -1531,7 +1531,7 @@ const data = {
           "title": "Treehouse of Horror VI",
           "duration": "24",
           "airDate": "1995-10-29",
-          "image": "7x06.jpg",
+          "image": "simpsons_7x06.jpg",
           "synopsis": "Intro: Krusty the Clown is the Headless Horseman who throws his decapitated head at the screen; a couch gag where The Simpsons are hanging around...by their necks on nooses.",
           "titleEs": "La casa del árbol del terror VI",
           "synopsisEs": "Introducción: Krusty el Payaso es el Jinete sin Cabeza que arroja su cabeza decapitada a la pantalla; un chiste de sofá en el que Los Simpson andan por ahí... atados al cuello con sogas."
@@ -1542,7 +1542,7 @@ const data = {
           "title": "King-Size Homer",
           "duration": "24",
           "airDate": "1995-11-05",
-          "image": "7x07.jpg",
+          "image": "simpsons_7x07.jpg",
           "synopsis": "To get out of the daily grind (and Mr. Burns' new exercise program for his employees), Homer looks for a way to get on disability so he can work from home. When injuring himself on the job doesn't work, he turns to one of his greatest loves (eating) to become morbidly obese.",
           "titleEs": "Homero tamaño king",
           "synopsisEs": "Para salir de la rutina diaria (y del nuevo programa de ejercicios del Sr. Burns para sus empleados), Homer busca una manera de superar la discapacidad para poder trabajar desde casa. Cuando lesionarse en el trabajo no funciona, recurre a uno de sus mayores amores (comer) para padecer obesidad mórbida."
@@ -1553,7 +1553,7 @@ const data = {
           "title": "Mother Simpson",
           "duration": "24",
           "airDate": "1995-11-19",
-          "image": "7x08.jpg",
+          "image": "simpsons_7x08.jpg",
           "synopsis": "After faking his own death and getting the mistake cleared up at the town courthouse, Homer makes a discovery: his mother, Mona is still alive. However, the joyous reunion at the cemetery is cut short when the FBI comes after Mona for something she did in the 1960s, which is connected to Mr. Burns and is why she abandoned Abe and Homer.",
           "titleEs": "Madre Simpson",
           "synopsisEs": "Después de fingir su propia muerte y aclarar el error en el juzgado de la ciudad, Homer hace un descubrimiento: su madre, Mona, todavía está viva. Sin embargo, la alegre reunión en el cementerio se ve interrumpida cuando el FBI persigue a Mona por algo que hizo en la década de 1960, que está relacionado con el Sr. Burns y es la razón por la que abandonó a Abe y Homer."
@@ -1564,7 +1564,7 @@ const data = {
           "title": "Sideshow Bob's Last Gleaming",
           "duration": "24",
           "airDate": "1995-11-26",
-          "image": "7x09.jpg",
+          "image": "simpsons_7x09.jpg",
           "synopsis": "Tired of mind-numbing television in prison, Sideshow Bob manages to steal a nuclear bomb and threatens to destroy Springfield if TV is not completely banned from town.",
           "titleEs": "El último brillo del actor secundario Bob",
           "synopsisEs": "Cansado de la televisión adormecedora en prisión, Sideshow Bob logra robar una bomba nuclear y amenaza con destruir Springfield si no se prohíbe completamente la televisión en la ciudad."
@@ -1575,7 +1575,7 @@ const data = {
           "title": "The Simpsons 138th Episode Spectacular",
           "duration": "24",
           "airDate": "1995-12-03",
-          "image": "7x10.jpg",
+          "image": "simpsons_7x10.jpg",
           "synopsis": "In this spoof of anniversary shows and sitcom retrospective clip show episodes, Troy McClure, whom you may remember from such Fox Network specials as Alien Nose Job and Five Fabulous Weeks of The Chevy Chase Show, hosts a behind-the-scenes look at The Simpsons, which includes clips from their humble beginnings as filler on The Tracy Ullman Show, answers to popular fan questions, and never-before-seen deleted scenes, including the alternate ending to the \"Who Shot Mr. Burns?\" two-parter.",
           "titleEs": "Espectacular episodio 138 de Los Simpson",
           "synopsisEs": "En esta parodia de programas de aniversario y episodios de clips retrospectivos de comedias de situación, Troy McClure, a quien quizás recuerdes de especiales de Fox Network como Alien Nose Job y Five Fabulous Weeks of The Chevy Chase Show, presenta una mirada detrás de escena de Los Simpson, que incluye clips de sus humildes comienzos como relleno en The Tracy Ullman Show, respuestas a preguntas populares de los fanáticos y escenas eliminadas nunca antes vistas, incluido el final alternativo de \"Who Shot\". ¿Señor Burns? de dos partes."
@@ -1586,7 +1586,7 @@ const data = {
           "title": "Marge Be Not Proud",
           "duration": "24",
           "airDate": "1995-12-17",
-          "image": "7x11.jpg",
+          "image": "simpsons_7x11.jpg",
           "synopsis": "Bart gets busted for shoplifting the season's must-have video game, and Marge decides to ban him from everything the family is doing for Christmas as a brutal punishment for his misdemeanor. Which gives Bart the realization that he's not the little boy she loves anymore.",
           "titleEs": "Marge no esté orgullosa",
           "synopsisEs": "Bart es arrestado por robar en una tienda el videojuego imprescindible de la temporada, y Marge decide prohibirle todo lo que la familia esté haciendo en Navidad como un castigo brutal por su delito menor. Lo que hace que Bart se dé cuenta de que ya no es el niño que ella ama."
@@ -1597,7 +1597,7 @@ const data = {
           "title": "Team Homer",
           "duration": "24",
           "airDate": "1996-01-07",
-          "image": "7x12.jpg",
+          "image": "simpsons_7x12.jpg",
           "synopsis": "In order to play on League Night at Barney's Bowl-A-Rama, Homer assembles a ragtag group of bowlers (Apu, Moe, and Otto the bus driver) to play, but when he can't pony up the $500 fee, he asks Mr. Burns for the money, who is so high on ether that he thinks Homer is The Pillsbury Doughboy (Poppin' Fresh). Meanwhile, Bart buys the latest issue of MAD magazine and finds an iron-on T-shirt decal that reads \"Down with Homework\", which he wears to school — and the ensuing riot leads Springfield Elementary to implement a uniforms-only dress code that slowly turns the kids into boring shells of their former selves.",
           "titleEs": "Equipo Homero",
           "synopsisEs": "Para jugar en League Night en Barney's Bowl-A-Rama, Homer reúne a un grupo heterogéneo de jugadores de bolos (Apu, Moe y Otto, el conductor del autobús) para jugar, pero cuando no puede pagar la tarifa de $ 500, le pide el dinero al Sr. Burns, quien está tan drogado con éter que cree que Homer es The Pillsbury Doughboy (Poppin' Fresh). Mientras tanto, Bart compra el último número de la revista MAD y encuentra una calcomanía termoadhesiva en una camiseta que dice \"Abajo la tarea\", que usa para ir a la escuela, y el disturbio resultante lleva a la escuela primaria Springfield a implementar un código de vestimenta de solo uniformes que poco a poco convierte a los niños en aburridos caparazones de lo que eran antes."
@@ -1608,7 +1608,7 @@ const data = {
           "title": "Two Bad Neighbors",
           "duration": "24",
           "airDate": "1996-01-14",
-          "image": "7x13.jpg",
+          "image": "simpsons_7x13.jpg",
           "synopsis": "During a neighborhood rummage sale, Homer sees a moving van at a vacant house across the street from his home and learns that the new neighbors are former President George H.W. Bush and ex-First Lady Barbara Bush, whom everyone (except Bart and Homer) welcomes with open arms.",
           "titleEs": "Dos malos vecinos",
           "synopsisEs": "Durante una venta de artículos usados ​​en el vecindario, Homer ve una camioneta de mudanzas en una casa vacía frente a su casa y descubre que los nuevos vecinos son el ex presidente George H.W. Bush y la ex Primera Dama Barbara Bush, a quienes todos (excepto Bart y Homer) reciben con los brazos abiertos."
@@ -1619,7 +1619,7 @@ const data = {
           "title": "Scenes from the Class Struggle in Springfield",
           "duration": "24",
           "airDate": "1996-02-04",
-          "image": "7x14.jpg",
+          "image": "simpsons_7x14.jpg",
           "synopsis": "While the Simpsons visit Ogdenville's Outlet Mall to buy a new TV (that looks just like the old one), Marge finds a fancy Chanel suit and begins wearing it around the house and around town so she can feel like a rich housewife — and an old friend from high school sets out to make Marge's wish of being high-class come true by inviting her to a country club. Meanwhile, Mr. Burns challenges Homer to a golf game at the same country club for modeling children and perfect dancers for young girls, Marge is trying to get into, and Homer discovers how Mr. Burns wins at golf despite being a decrepit, old man.",
           "titleEs": "Escenas de la lucha de clases en Springfield",
           "synopsisEs": "Mientras los Simpson visitan el Outlet Mall de Ogdenville para comprar un televisor nuevo (que se parece al viejo), Marge encuentra un elegante traje Chanel y comienza a usarlo en la casa y en la ciudad para sentirse como una ama de casa rica, y una vieja amiga de la escuela secundaria se propone hacer realidad el deseo de Marge de ser de clase alta invitándola a un club de campo. Mientras tanto, el Sr. Burns desafía a Homer a un juego de golf en el mismo club de campo para niños modelos y bailarinas perfectas para niñas, Marge está tratando de entrar, y Homer descubre cómo el Sr. Burns gana en el golf a pesar de ser un anciano decrépito."
@@ -1630,7 +1630,7 @@ const data = {
           "title": "Bart the Fink",
           "duration": "24",
           "airDate": "1996-02-11",
-          "image": "7x15.jpg",
+          "image": "simpsons_7x15.jpg",
           "synopsis": "While doling out checks to everyone he knows after opening a bank account with money he got from an inheritance, Bart accidentally reveals that Krusty the Klown has been hiding his earnings in an illegal offshore account in the Cayman Islands, resulting in his hero's financial ruin (after the IRS seize his assets) and suicide by airplane crash.",
           "titleEs": "Bart el Fink",
           "synopsisEs": "Mientras reparte cheques a todos sus conocidos después de abrir una cuenta bancaria con dinero que recibió de una herencia, Bart revela accidentalmente que Krusty el Payaso ha estado ocultando sus ganancias en una cuenta offshore ilegal en las Islas Caimán, lo que resultó en la ruina financiera de su héroe (después de que el IRS confisque sus activos) y el suicidio en un accidente aéreo."
@@ -1641,7 +1641,7 @@ const data = {
           "title": "Lisa the Iconoclast",
           "duration": "24",
           "airDate": "1996-02-18",
-          "image": "7x16.jpg",
+          "image": "simpsons_7x16.jpg",
           "synopsis": "On the days before Springfield's Founders' Day, Lisa discovers that Jebediah Springfield was actually a pirate who tried to murder George Washington and changed his name to dodge authorities, but no one (not even her own mother) wants to hear the truth — except for Homer, who risks his role as town crier for the Founders' Day parade to help his daughter.",
           "titleEs": "Lisa la iconoclasta",
           "synopsisEs": "En los días previos al Día de los Fundadores de Springfield, Lisa descubre que Jebediah Springfield era en realidad un pirata que intentó asesinar a George Washington y cambió su nombre para esquivar a las autoridades, pero nadie (ni siquiera su propia madre) quiere escuchar la verdad, excepto Homer, quien arriesga su papel de pregonero en el desfile del Día de los Fundadores para ayudar a su hija."
@@ -1652,7 +1652,7 @@ const data = {
           "title": "Homer the Smithers",
           "duration": "24",
           "airDate": "1996-02-25",
-          "image": "7x17.jpg",
+          "image": "simpsons_7x17.jpg",
           "synopsis": "Smithers goes on vacation after having a mental breakdown over not being able to save Burns from being harassed by a drunken Lenny. Homer takes Smithers' place as Mr. Burns' assistant, but all the abuse Homer takes from Mr. Burns causes him to snap and punch the old man in the face, which drives Mr. Burns to be more self-reliant.",
           "titleEs": "Homero los Smithers",
           "synopsisEs": "Smithers se va de vacaciones después de sufrir un colapso mental por no poder salvar a Burns del acoso de un Lenny borracho. Homer toma el lugar de Smithers como asistente del Sr. Burns, pero todo el abuso que Homer recibe del Sr. Burns hace que golpee al anciano en la cara, lo que lleva al Sr. Burns a ser más autosuficiente."
@@ -1663,7 +1663,7 @@ const data = {
           "title": "The Day the Violence Died",
           "duration": "24",
           "airDate": "1996-03-17",
-          "image": "7x18.jpg",
+          "image": "simpsons_7x18.jpg",
           "synopsis": "Bart meets a homeless man named Chester J. Lampwick, who claims to have created \"Itchy\", one half of the popular Itchy and Scratchy cartoon duo, but was left penniless when the idea was stolen by Roger Meyers, Sr. With Bart's help, he successfully sues the studio and wins, but at the cost of I&S Studios shutting down due to bankruptcy.",
           "titleEs": "El día que murió la violencia",
           "synopsisEs": "Bart conoce a un vagabundo llamado Chester J. Lampwick, quien afirma haber creado \"Itchy\", la mitad del popular dúo de dibujos animados Itchy y Scratchy, pero se quedó sin un centavo cuando Roger Meyers, Sr. le robó la idea. Con la ayuda de Bart, demanda con éxito al estudio y gana, pero a costa de que I&S Studios cierre debido a la quiebra."
@@ -1674,7 +1674,7 @@ const data = {
           "title": "A Fish Called Selma",
           "duration": "24",
           "airDate": "1996-03-24",
-          "image": "7x19.jpg",
+          "image": "simpsons_7x19.jpg",
           "synopsis": "When Troy McClure is sentenced to renew his driver's license after getting pulled over for erratic driving, he meets Selma (who is still looking for a man so she can have a family and not die alone) and decides to marry her to revive his moribund movie career, which fizzled out due to bad project choices, his alcoholism, and the possibly very true rumor that Troy is sexually attracted to fish and once committed an unspeakable act at the Springfield Aquarium. Selma is okay with being Troy's sham wife, but things get complicated when Troy's agent wants Troy to have sex with Selma so she can have a baby.",
           "titleEs": "Un pez llamado Selma",
           "synopsisEs": "Cuando Troy McClure es sentenciado a renovar su licencia de conducir después de ser detenido por conducir erráticamente, conoce a Selma (que todavía está buscando un hombre para poder tener una familia y no morir sola) y decide casarse con ella para revivir su moribunda carrera cinematográfica, que fracasó debido a malas elecciones de proyectos, su alcoholismo y el rumor posiblemente muy cierto de que Troy se siente atraído sexualmente por los peces y que una vez cometió un acto atroz en el Acuario de Springfield. Selma está de acuerdo con ser la falsa esposa de Troy, pero las cosas se complican cuando el agente de Troy quiere que Troy tenga relaciones sexuales con Selma para que ella pueda tener un bebé."
@@ -1685,7 +1685,7 @@ const data = {
           "title": "Bart on the Road",
           "duration": "24",
           "airDate": "1996-03-31",
-          "image": "7x20.jpg",
+          "image": "simpsons_7x20.jpg",
           "synopsis": "While stuck with Patty and Selma at the DMV as part of \"Go to Work With Your Parents Day\" (which Principal Skinner cooked up in order to accommodate his vacation to Hong Kong) Bart creates a fake driver's license that says he's 25 years old, and, with the help of Martin's $600 he got from his father the stockbroker, Bart, Martin, Milhouse, and Nelson go on a road trip. Meanwhile, Lisa and Homer spend time together at the nuclear plant, and Marge must deal with being left alone.",
           "titleEs": "Bart en el camino",
           "synopsisEs": "Mientras está atrapado con Patty y Selma en el DMV como parte del \"Día de ir a trabajar con tus padres\" (que el director Skinner preparó para acomodar sus vacaciones en Hong Kong), Bart crea una licencia de conducir falsa que dice que tiene 25 años y, con la ayuda de los $ 600 de Martin que recibió de su padre, el corredor de bolsa, Bart, Martin, Milhouse y Nelson se van de viaje. Mientras tanto, Lisa y Homer pasan tiempo juntos en la planta nuclear, y Marge debe lidiar con el hecho de que la dejen sola."
@@ -1696,7 +1696,7 @@ const data = {
           "title": "22 Short Films About Springfield",
           "duration": "24",
           "airDate": "1996-04-14",
-          "image": "7x21.jpg",
+          "image": "simpsons_7x21.jpg",
           "synopsis": "While spitting off the overpass, Bart wonders if anyone in Springfield has crazy adventures, leading to a Pulp Fiction-style interconnected story showing the antics of other Springfieldianites.",
           "titleEs": "22 cortometrajes sobre Springfield",
           "synopsisEs": "Mientras escupe el paso elevado, Bart se pregunta si alguien en Springfield tiene aventuras locas, lo que lleva a una historia interconectada al estilo Pulp Fiction que muestra las travesuras de otros habitantes de Springfield."
@@ -1707,7 +1707,7 @@ const data = {
           "title": "Raging Abe Simpson and His Grumbling Grandson in \"The Curse of the Flying Hellfish\"",
           "duration": "24",
           "airDate": "1996-04-28",
-          "image": "7x22.jpg",
+          "image": "simpsons_7x22.jpg",
           "synopsis": "Abe Simpson and Mr. Burns fight over who gets to be the rightful owner of a collection of paintings looted during World War II. Bart comes along for the ride after learning that this isn't one of Grampa's crazy stories brought on by senility and being desperate for attention.",
           "titleEs": "El furioso Abe Simpson y su nieto quejoso en \"La maldición del pez infernal volador\"",
           "synopsisEs": "Abe Simpson y el Sr. Burns pelean por quién será el propietario legítimo de una colección de pinturas saqueadas durante la Segunda Guerra Mundial. Bart se suma al viaje después de enterarse de que esta no es una de las historias locas del abuelo provocadas por la senilidad y la desesperación por llamar la atención."
@@ -1718,7 +1718,7 @@ const data = {
           "title": "Much Apu About Nothing",
           "duration": "24",
           "airDate": "1996-05-05",
-          "image": "7x23.jpg",
+          "image": "simpsons_7x23.jpg",
           "synopsis": "Anti-illegal immigrant fever sweeps town after taxes get raised over bear extermination, and Apu faces deportation unless Homer and company can help him pass his citizenship exam.",
           "titleEs": "Mucho Apu sobre nada",
           "synopsisEs": "La fiebre contra los inmigrantes ilegales arrasa la ciudad después de que aumentan los impuestos por el exterminio de osos, y Apu enfrenta la deportación a menos que Homer y compañía puedan ayudarlo a aprobar su examen de ciudadanía."
@@ -1729,7 +1729,7 @@ const data = {
           "title": "Homerpalooza",
           "duration": "24",
           "airDate": "1996-05-19",
-          "image": "7x24.jpg",
+          "image": "simpsons_7x24.jpg",
           "synopsis": "Feeling uncool, Homer decides to take Bart and Lisa to the Hullabalooza music festival. But, while feeling more out of place, Homer accidentally takes a cannonball to the stomach. This newfound skill makes him the sleeper hit of the festival, and a hero to Bart — but at what cost to his health?",
           "titleEs": "homerpalooza",
           "synopsisEs": "Sintiéndose fuera de onda, Homer decide llevar a Bart y Lisa al festival de música Hullabalooza. Pero, mientras se siente más fuera de lugar, Homero accidentalmente recibe una bala de cañón en el estómago. Esta nueva habilidad lo convierte en el éxito del festival y en un héroe para Bart, pero ¿a qué costo para su salud?"
@@ -1740,7 +1740,7 @@ const data = {
           "title": "Summer of 4 Ft. 2",
           "duration": "24",
           "airDate": "1996-05-19",
-          "image": "7x25.jpg",
+          "image": "simpsons_7x25.jpg",
           "synopsis": "After realizing that none of the kids considered her friends in school care enough to sign her yearbook, Lisa decides to use the Simpsons' family vacation to Ned Flanders' beach house as an opportunity to ditch her nerdy persona, and be a cool kid.",
           "titleEs": "Verano de 4 pies. 2",
           "synopsisEs": "Después de darse cuenta de que ninguno de los niños consideraba que sus amigos en la escuela fueran suficientes para firmar su anuario, Lisa decide aprovechar las vacaciones familiares de los Simpson en la casa de playa de Ned Flanders como una oportunidad para deshacerse de su personalidad nerd y ser una niña genial."
@@ -1751,7 +1751,7 @@ const data = {
     {
       "id": 8,
       "title": "Temporada 8",
-      "image": "Season_8_Icon.jpg",
+      "image": "simpsons_Season_8_Icon.jpg",
       "avgColor": "#C47463",
       "episodes": [
         {
@@ -1760,7 +1760,7 @@ const data = {
           "title": "Treehouse of Horror VII",
           "duration": "24",
           "airDate": "1996-10-27",
-          "image": "8x01.jpg",
+          "image": "simpsons_8x01.jpg",
           "synopsis": "This year's hilarious horror stories include:",
           "titleEs": "La casa del árbol del terror VII",
           "synopsisEs": "Las divertidas historias de terror de este año incluyen:"
@@ -1771,7 +1771,7 @@ const data = {
           "title": "You Only Move Twice",
           "duration": "24",
           "airDate": "1996-11-03",
-          "image": "8x02.jpg",
+          "image": "simpsons_8x02.jpg",
           "synopsis": "The Simpsons are moving to a town called Cypress Creek after Homer is offered a position at a nuclear plant run by a benevolent man who's actually an evil genius bent on world domination. While Homer is blissfully unaware of his boss's actions and happily adjusting to his new job, Marge tries to compete with a house that cleans itself, Lisa becomes allergic to the wildlife, and Bart is put in a class for special ed. kids after his teacher discovers that Bart doesn't know how to read cursive or do long division.",
           "titleEs": "Sólo te mueves dos veces",
           "synopsisEs": "Los Simpson se mudan a una ciudad llamada Cypress Creek después de que a Homero le ofrecieran un puesto en una planta nuclear dirigida por un hombre benevolente que en realidad es un genio malvado empeñado en dominar el mundo. Mientras Homero ignora felizmente las acciones de su jefe y se adapta felizmente a su nuevo trabajo, Marge intenta competir con una casa que se limpia sola, Lisa se vuelve alérgica a la vida silvestre y Bart ingresa en una clase de educación especial. niños después de que su maestra descubre que Bart no sabe leer cursiva ni hacer divisiones largas."
@@ -1782,7 +1782,7 @@ const data = {
           "title": "The Homer They Fall",
           "duration": "24",
           "airDate": "1996-11-10",
-          "image": "8x03.jpg",
+          "image": "simpsons_8x03.jpg",
           "synopsis": "After Bart gets mugged for his Star Trek belt by Dolph, Jimbo, and Kearney, Homer confronts their fathers and gets beat up as well — but ends up scaring them when he takes all of their punches and doesn't react, prompting Moe the bartender to train Homer to be a boxer.",
           "titleEs": "El Homero que caen",
           "synopsisEs": "Después de que Dolph, Jimbo y Kearney asaltan a Bart por su cinturón de Star Trek, Homer se enfrenta a sus padres y también recibe una paliza, pero termina asustándolos cuando recibe todos sus golpes y no reacciona, lo que llevó a Moe, el camarero, a entrenar a Homer para que sea boxeador."
@@ -1793,7 +1793,7 @@ const data = {
           "title": "Burns, Baby Burns",
           "duration": "24",
           "airDate": "1996-11-17",
-          "image": "8x04.jpg",
+          "image": "simpsons_8x04.jpg",
           "synopsis": "Mr. Burns is reunited with his illegitimate, boorish, middle-aged son, Larry, and when Mr. Burns disowns him, Homer comes up with a harebrained kidnapping plan to get Mr. Burns to take Larry back.",
           "titleEs": "Quemaduras, quemaduras de bebé",
           "synopsisEs": "El Sr. Burns se reencuentra con su hijo ilegítimo, grosero y de mediana edad, Larry, y cuando el Sr. Burns lo repudia, a Homer se le ocurre un descabellado plan de secuestro para lograr que el Sr. Burns se lleve a Larry de regreso."
@@ -1804,7 +1804,7 @@ const data = {
           "title": "Bart After Dark",
           "duration": "24",
           "airDate": "1996-11-24",
-          "image": "8x05.jpg",
+          "image": "simpsons_8x05.jpg",
           "synopsis": "While Lisa and Marge spend the day cleaning rocks after Captain MacCallister runs his ship aground, Bart gets in trouble for breaking the gargoyle of an old house, and the owner wants Bart to work for her to pay for it — by making him her right-hand man for her burlesque house.",
           "titleEs": "Bart después del anochecer",
           "synopsisEs": "Mientras Lisa y Marge pasan el día limpiando rocas después de que el Capitán MacCallister encalló su barco, Bart se mete en problemas por romper la gárgola de una casa antigua, y el propietario quiere que Bart trabaje para ella para pagarla, convirtiéndolo en su mano derecha para su casa burlesca."
@@ -1815,7 +1815,7 @@ const data = {
           "title": "A Milhouse Divided",
           "duration": "24",
           "airDate": "1996-12-01",
-          "image": "8x06.jpg",
+          "image": "simpsons_8x06.jpg",
           "synopsis": "After realizing how lazy and slovenly her family has become by dining each night in front of the TV (including Homer complaining about the dishes not being transparent and Bart being in his underwear), Marge decides to throw a dinner party, but it goes pear-shape when Milhouse's parents (Kirk and Luann) get into heated arguments about their lives and Luann announces that she wants a divorce. While Luann sees the split as a chance to reinvent herself and Milhouse doesn't really care one way or the other (though he did think Nelson would bully him over it), Homer worries the same will happen between him and Marge after seeing Kirk's life spiral without his wife.",
           "titleEs": "Un Milhouse dividido",
           "synopsisEs": "Después de darse cuenta de lo perezosa y descuidada que se ha vuelto su familia al cenar todas las noches frente al televisor (incluido Homer quejándose de que los platos no son transparentes y Bart está en ropa interior), Marge decide organizar una cena, pero todo sale mal cuando los padres de Milhouse (Kirk y Luann) entran en acaloradas discusiones sobre sus vidas y Luann anuncia que quiere el divorcio. Mientras que Luann ve la separación como una oportunidad para reinventarse y a Milhouse realmente no le importa de una forma u otra (aunque sí pensó que Nelson lo intimidaría por eso), a Homer le preocupa que suceda lo mismo entre él y Marge después de ver la vida de Kirk en espiral sin su esposa."
@@ -1826,7 +1826,7 @@ const data = {
           "title": "Lisa's Date with Density",
           "duration": "24",
           "airDate": "1996-12-15",
-          "image": "8x07.jpg",
+          "image": "simpsons_8x07.jpg",
           "synopsis": "After stealing Superintendent Chalmers' car emblem off his new Honda Accord, Nelson is sentenced to janitorial work. While Lisa is serving detention for snickering at Nelson spraying Groundskeeper Willie with a hose, she becomes fascinated with and develops a crush on the bully. Meanwhile, Homer takes an auto dialer that was recently used in a telemarketing scam and creates a telemarketing scam of his own.",
           "titleEs": "La cita de Lisa con la densidad",
           "synopsisEs": "Después de robar el emblema del auto del superintendente Chalmers de su nuevo Honda Accord, Nelson es sentenciado a trabajar como conserje. Mientras Lisa cumple detención por burlarse de Nelson rociando al jardinero Willie con una manguera, queda fascinada y se enamora del matón. Mientras tanto, Homer toma un marcador automático que se utilizó recientemente en una estafa de telemercadeo y crea su propia estafa de telemercadeo."
@@ -1837,7 +1837,7 @@ const data = {
           "title": "Hurricane Neddy",
           "duration": "24",
           "airDate": "1996-12-29",
-          "image": "8x08.jpg",
+          "image": "simpsons_8x08.jpg",
           "synopsis": "A hurricane blows through Springfield and spares the Simpsons, but unfortunately, the Flanders' house is the only one that takes damage, leaving the Flanders family homeless and reeling. Things get worse when everyone in town comes together to rebuild Ned's house (rather poorly) and Ned goes on the mother of all tirades, calling everyone including Homer out for their personality flaws, then commits himself to a mental hospital, where Ned's childhood therapist reveals why he lashed out.",
           "titleEs": "Huracán Neddy",
           "synopsisEs": "Un huracán azota Springfield y salva a los Simpson, pero desafortunadamente, la casa de los Flanders es la única que sufre daños, dejando a la familia Flanders sin hogar y tambaleándose. Las cosas empeoran cuando todos en la ciudad se unen para reconstruir la casa de Ned (bastante mal) y Ned lanza la madre de todas las diatribas, llamando a todos, incluido Homer, por sus defectos de personalidad, luego se interna en un hospital psiquiátrico, donde el terapeuta infantil de Ned revela por qué arremetió."
@@ -1848,7 +1848,7 @@ const data = {
           "title": "El Viaje Misterioso de Nuestro Jomer (The Mysterious Voyage of Homer)",
           "duration": "24",
           "airDate": "1997-01-05",
-          "image": "8x09.jpg",
+          "image": "simpsons_8x09.jpg",
           "synopsis": "Marge reluctantly takes Homer to the town's chili cook-off, on the grounds that Homer doesn't drink and make a fool of himself like he did the previous year. This year, however, Chief Wiggum has a secret ingredient to defeat Homer's discerning taste buds during the chili contest: Guatemalan insanity peppers, which cause Homer to lose his mind... and end up on a spirit quest to find his soulmate.",
           "titleEs": "El Viaje Misterioso de Nuestro Jomer (El viaje misterioso de Homero)",
           "synopsisEs": "Marge lleva a Homer a regañadientes al concurso de cocina de chili de la ciudad, con el argumento de que Homer no bebe ni hace el ridículo como lo hizo el año anterior. Este año, sin embargo, el Jefe Wiggum tiene un ingrediente secreto para derrotar las exigentes papilas gustativas de Homer durante el concurso de chile: los pimientos locos guatemaltecos, que hacen que Homer pierda la cabeza... y termine en una búsqueda espiritual para encontrar a su alma gemela."
@@ -1859,7 +1859,7 @@ const data = {
           "title": "The Springfield Files",
           "duration": "24",
           "airDate": "1997-01-12",
-          "image": "8x10.jpg",
+          "image": "simpsons_8x10.jpg",
           "synopsis": "In this tale narrated by Leonard Nimoy (last seen on season four's \"Marge vs. The Monorail\"), Homer sees an alien in the woods, and while everyone else writes it off as a drunken hallucination (since Homer tested \"Boris Yeltsin\" drunk on Moe's Breathalyzer), Agents Mulder and Scully from The X-Files come to Springfield to help Homer solve the case.",
           "titleEs": "Los archivos de Springfield",
           "synopsisEs": "En esta historia narrada por Leonard Nimoy (vista por última vez en \"Marge vs. The Monorail\" de la cuarta temporada), Homer ve un extraterrestre en el bosque, y mientras todos los demás lo descartan como una alucinación de borracho (ya que Homer probó a \"Boris Yeltsin\" borracho con el alcoholímetro de Moe), los agentes Mulder y Scully de Expediente X vienen a Springfield para ayudar a Homer a resolver el caso."
@@ -1870,7 +1870,7 @@ const data = {
           "title": "The Twisted World of Marge Simpson",
           "duration": "24",
           "airDate": "1997-01-19",
-          "image": "8x11.jpg",
+          "image": "simpsons_8x11.jpg",
           "synopsis": "Marge falls out with the Springfield Investorettes over their risky practices, and she invests in a fledging pretzel franchise out of spite. However, she struggles to stay in business, and Homer resorts to desperate measures to help her.",
           "titleEs": "El retorcido mundo de Marge Simpson",
           "synopsisEs": "Marge se pelea con las Springfield Investorettes por sus prácticas riesgosas y, por despecho, invierte en una incipiente franquicia de pretzels. Sin embargo, ella lucha por mantenerse en el negocio y Homer recurre a medidas desesperadas para ayudarla."
@@ -1881,7 +1881,7 @@ const data = {
           "title": "Mountain of Madness",
           "duration": "24",
           "airDate": "1997-02-02",
-          "image": "8x12.jpg",
+          "image": "simpsons_8x12.jpg",
           "synopsis": "After an extremely disappointing display of teamwork during a fire drill, Mr. Burns forces his workers to participate in a cabin race at a mountain retreat, where the last one to find the cabin will be fired.",
           "titleEs": "montaña de la locura",
           "synopsisEs": "Después de una demostración extremadamente decepcionante de trabajo en equipo durante un simulacro de incendio, el Sr. Burns obliga a sus trabajadores a participar en una carrera de cabañas en un refugio en la montaña, donde el último que encuentre la cabaña será despedido."
@@ -1892,7 +1892,7 @@ const data = {
           "title": "Simpsoncalifragilisticexpiala(Annoyed Grunt)cious",
           "duration": "24",
           "airDate": "1997-02-07",
-          "image": "8x13.jpg",
+          "image": "simpsons_8x13.jpg",
           "synopsis": "A British nanny known as \"Shari Bobbins\" is hired to shape up the Simpson family after Marge begins losing her hair to stress, only to learn that the lessons she teaches won't stick if she leaves — or stays.",
           "titleEs": "Simpsoncalifragilisticexpiala (gruñido molesto) cious",
           "synopsisEs": "Una niñera británica conocida como \"Shari Bobbins\" es contratada para darle forma a la familia Simpson después de que Marge comienza a perder el cabello debido al estrés, solo para descubrir que las lecciones que enseña no se mantendrán si se va o se queda."
@@ -1903,7 +1903,7 @@ const data = {
           "title": "The Itchy & Scratchy & Poochie Show",
           "duration": "24",
           "airDate": "1997-02-09",
-          "image": "8x14.jpg",
+          "image": "simpsons_8x14.jpg",
           "synopsis": "Following a slight fall in the ratings and Lisa telling Roger Meyers, Jr. that The Itchy & Scratchy Show might be getting a little stale, the staff at I&S Studios create a new character, Poochie the dog, and hire Homer to voice him. But when Poochie's premiere episode focuses on him to the exclusion of Itchy and Scratchy's normal violent antics and comes off as annoying and pandering, fans of the show get in an uproar and Homer feels that he's the only one who sees potential in the new character.",
           "titleEs": "El espectáculo de Itchy, Scratchy y Poochie",
           "synopsisEs": "Después de una ligera caída en los ratings y Lisa le dice a Roger Meyers, Jr. que The Itchy & Scratchy Show podría estar un poco obsoleto, el personal de I&S Studios crea un nuevo personaje, el perro Poochie, y contrata a Homer para que le dé voz. Pero cuando el primer episodio de Poochie se centra en él excluyendo las travesuras violentas normales de Itchy y Scratchy y resulta molesto y complaciente, los fanáticos del programa se alborotan y Homer siente que él es el único que ve potencial en el nuevo personaje."
@@ -1914,7 +1914,7 @@ const data = {
           "title": "Homer's Phobia",
           "duration": "24",
           "airDate": "1997-02-16",
-          "image": "8x15.jpg",
+          "image": "simpsons_8x15.jpg",
           "synopsis": "Homer makes friends with John, a kitschy antiques store dealer and lover of all things camp. However, when Marge tells Homer that John is a homosexual, Homer freaks out and, fearing that his son will emulate John, takes Bart on a misguided journey to make his son heterosexual.",
           "titleEs": "La fobia de Homero",
           "synopsisEs": "Homer se hace amigo de John, un cursi comerciante de antigüedades y amante de todo lo relacionado con el campamento. Sin embargo, cuando Marge le dice a Homer que John es homosexual, Homer se asusta y, temiendo que su hijo imite a John, lleva a Bart a un viaje equivocado para convertir a su hijo en heterosexual."
@@ -1925,7 +1925,7 @@ const data = {
           "title": "Brother from Another Series",
           "duration": "24",
           "airDate": "1997-02-23",
-          "image": "8x16.jpg",
+          "image": "simpsons_8x16.jpg",
           "synopsis": "Sideshow Bob is released from prison again for good behavior and put into the custody of his brother, Cecil, but Bart and Lisa still think Bob is out to kill them — until they learn that Cecil is just as evil as Bob.",
           "titleEs": "Hermano de otra serie",
           "synopsisEs": "El actor secundario Bob vuelve a salir de prisión por buen comportamiento y está bajo la custodia de su hermano, Cecil, pero Bart y Lisa todavía creen que Bob quiere matarlos, hasta que descubren que Cecil es tan malvado como Bob."
@@ -1936,7 +1936,7 @@ const data = {
           "title": "My Sister, My Sitter",
           "duration": "24",
           "airDate": "1997-03-02",
-          "image": "8x17.jpg",
+          "image": "simpsons_8x17.jpg",
           "synopsis": "Lisa decides to become a babysitter — and finds that her biggest challenge is her own brother, who she has to look after as Homer and Marge check out the new outdoor mall.",
           "titleEs": "Mi hermana, mi niñera",
           "synopsisEs": "Lisa decide convertirse en niñera y descubre que su mayor desafío es su propio hermano, a quien tiene que cuidar mientras Homer y Marge visitan el nuevo centro comercial al aire libre."
@@ -1947,7 +1947,7 @@ const data = {
           "title": "Homer vs. the Eighteenth Amendment",
           "duration": "24",
           "airDate": "1997-03-16",
-          "image": "8x18.jpg",
+          "image": "simpsons_8x18.jpg",
           "synopsis": "After Bart gets drunk at the annual St. Patrick's Day parade, Springfield enforces a Prohibition-era law banning all alcohol from being made and sold. As a result, Moe opens a speakeasy, Homer becomes a bootlegger, and a no-nonsense Elliot Ness-style lawman sets out to stop them.",
           "titleEs": "Homero contra la Decimoctava Enmienda",
           "synopsisEs": "Después de que Bart se emborracha en el desfile anual del Día de San Patricio, Springfield hace cumplir una ley de la era de la Prohibición que prohíbe la elaboración y venta de todo tipo de alcohol. Como resultado, Moe abre un bar clandestino, Homer se convierte en contrabandista y un agente de la ley sensato al estilo Elliot Ness se propone detenerlos."
@@ -1958,7 +1958,7 @@ const data = {
           "title": "Grade School Confidential",
           "duration": "24",
           "airDate": "1997-04-06",
-          "image": "8x19.jpg",
+          "image": "simpsons_8x19.jpg",
           "synopsis": "When Martin Prince's birthday party bombs due to food poisoning, Principal Skinner and Mrs. Krabappel hide out in the kiddie playhouse and fall for each other. However, Bart sees them making out and promises to keep quiet in exchange for having his permanent record switched with Milhouse's, but how long can the lovebirds keep Bart from singing to others about their affair?",
           "titleEs": "Confidencial de la escuela primaria",
           "synopsisEs": "Cuando la fiesta de cumpleaños de Martin Prince fracasa debido a una intoxicación alimentaria, el director Skinner y la señora Krabappel se esconden en la casa de juegos para niños y se enamoran el uno del otro. Sin embargo, Bart los ve besándose y promete guardar silencio a cambio de cambiar su disco permanente por el de Milhouse, pero ¿cuánto tiempo podrán los tortolitos evitar que Bart cante a los demás sobre su aventura?"
@@ -1969,7 +1969,7 @@ const data = {
           "title": "The Canine Mutiny",
           "duration": "24",
           "airDate": "1997-04-13",
-          "image": "8x20.jpg",
+          "image": "simpsons_8x20.jpg",
           "synopsis": "Bart commits credit card fraud again — this time, by filling out a credit card application under Santa's Little Helper's name and going on a catalogue shopping spree — which leads him to buy a wonder dog named Laddie and send Santa's Little Helper to the Repo Depot when everything he bought on the card gets taken back due to lack of payment.",
           "titleEs": "El motín canino",
           "synopsisEs": "Bart vuelve a cometer fraude con tarjetas de crédito, esta vez al completar una solicitud de tarjeta de crédito con el nombre de Santa's Little Helper y realizar compras por catálogo, lo que lo lleva a comprar un perro maravilloso llamado Laddie y enviar a Santa's Little Helper al Repo Depot cuando todo lo que compró con la tarjeta se le devuelve por falta de pago."
@@ -1980,7 +1980,7 @@ const data = {
           "title": "The Old Man and the Lisa",
           "duration": "24",
           "airDate": "1997-04-20",
-          "image": "8x21.jpg",
+          "image": "simpsons_8x21.jpg",
           "synopsis": "While Lisa champions a recycling program, Mr. Burns discovers that he's lost his fortune (and was never told this before because his accountants are sycophants/afraid of Mr. Burns' wrath) and now must live like a common man. With Lisa's help, Mr. Burns devises a plan to regain his fortune.",
           "titleEs": "El viejo y Lisa",
           "synopsisEs": "Mientras Lisa defiende un programa de reciclaje, el Sr. Burns descubre que ha perdido su fortuna (y nunca le habían dicho esto antes porque sus contadores son aduladores/temen la ira del Sr. Burns) y ahora debe vivir como un hombre común. Con la ayuda de Lisa, el señor Burns idea un plan para recuperar su fortuna."
@@ -1991,7 +1991,7 @@ const data = {
           "title": "In Marge We Trust",
           "duration": "24",
           "airDate": "1997-04-27",
-          "image": "8x22.jpg",
+          "image": "simpsons_8x22.jpg",
           "synopsis": "Marge volunteers at the church and becomes \"The Listen Lady\" who actually helps people with their problems, which doesn't sit well with Reverend Lovejoy. Meanwhile Homer, Lisa, and Bart solve the mystery of why Homer's face is on a dishwashing detergent box from Japan.",
           "titleEs": "En Marge confiamos",
           "synopsisEs": "Marge se ofrece como voluntaria en la iglesia y se convierte en \"La Señora que Escucha\", que en realidad ayuda a las personas con sus problemas, lo que no le sienta bien al Reverendo Lovejoy. Mientras tanto, Homer, Lisa y Bart resuelven el misterio de por qué la cara de Homer está en una caja de detergente para lavavajillas procedente de Japón."
@@ -2002,7 +2002,7 @@ const data = {
           "title": "Homer's Enemy",
           "duration": "24",
           "airDate": "1997-05-04",
-          "image": "8x23.jpg",
+          "image": "simpsons_8x23.jpg",
           "synopsis": "A new employee comes to hate Homer Simpson for being a lovable idiot who has everything good going for him and sets out to prove that Homer doesn't deserve his lot in life. Meanwhile, Bart buys an abandoned factory at auction and uses it as his own personal playground.",
           "titleEs": "El enemigo de Homero",
           "synopsisEs": "Un nuevo empleado llega a odiar a Homer Simpson por ser un idiota adorable que tiene todo a su favor y se propone demostrar que Homer no merece su suerte en la vida. Mientras tanto, Bart compra una fábrica abandonada en una subasta y la utiliza como su patio de recreo personal."
@@ -2013,7 +2013,7 @@ const data = {
           "title": "The Simpsons Spin-Off Showcase",
           "duration": "25",
           "airDate": "1997-05-11",
-          "image": "8x24.jpg",
+          "image": "simpsons_8x24.jpg",
           "synopsis": "In this special episode, Troy McClure presents three possible spin-off shows featuring the main and ancillary characters from The Simpsons: In \"Chief Wiggum: P.I.(G)\", Chief Wiggum and Principal Skinner are private detectives in New Orleans, Louisiana, who go after a kingpin named Big Daddy who has kidnapped Wiggum's son, Ralph, \"The Love-Matic Grampa\" sees Moe Szyslak taking dating advice from his Love Tester machine, which is now possessed by Abraham \"Grampa\" Simpson, and The Simpson family (save Lisa) and some secondary characters get their own cheesy late 1960s sketch show called, \"The Simpson Family Smile-Time Variety Hour\".",
           "titleEs": "Exhibición del spin-off de Los Simpson",
           "synopsisEs": "En este episodio especial, Troy McClure presenta tres posibles programas derivados con los personajes principales y secundarios de Los Simpson: En \"Chief Wiggum: P.I.(G)\", el jefe Wiggum y el director Skinner son detectives privados en Nueva Orleans, Luisiana, que persiguen a un capo llamado Big Daddy que ha secuestrado al hijo de Wiggum, Ralph, \"The Love-Matic Grampa\" ve a Moe Szyslak tomando consejos de citas de su máquina Love Tester, que ahora es poseído por Abraham \"Abuelo\" Simpson, y la familia Simpson (salvo Lisa) y algunos personajes secundarios obtienen su propio programa cursi de sketches de finales de los 60 llamado \"La hora de variedades en tiempo de sonrisa de la familia Simpson\"."
@@ -2024,7 +2024,7 @@ const data = {
           "title": "The Secret War of Lisa Simpson",
           "duration": "24",
           "airDate": "1997-05-18",
-          "image": "8x25.jpg",
+          "image": "simpsons_8x25.jpg",
           "synopsis": "Bart is shipped off to military school after a particularly destructive prank (lining up 15 police bullhorns and unleashing a soundwave that shatters all the glass in town) — and Lisa tags along (despite that the military school is boys-only and the other cadets don't take kindly to change) after finding public school education has become a grind.",
           "titleEs": "La guerra secreta de Lisa Simpson",
           "synopsisEs": "Bart es enviado a una escuela militar después de una broma particularmente destructiva (alinear 15 megáfonos de la policía y desatar una onda de sonido que rompe todos los cristales de la ciudad) y Lisa lo acompaña (a pesar de que la escuela militar es solo para niños y los otros cadetes no aceptan cambiar amablemente) después de descubrir que la educación en la escuela pública se ha convertido en una rutina."
@@ -2035,7 +2035,7 @@ const data = {
     {
       "id": 9,
       "title": "Temporada 9",
-      "image": "Season_9_Icon.jpg",
+      "image": "simpsons_Season_9_Icon.jpg",
       "avgColor": "#8C5870",
       "episodes": [
         {
@@ -2044,7 +2044,7 @@ const data = {
           "title": "The City of New York vs. Homer Simpson",
           "duration": "24",
           "airDate": "1997-09-21",
-          "image": "9x01.jpg",
+          "image": "simpsons_9x01.jpg",
           "synopsis": "The Simpsons are going to New York City, after a sober and insane Barney Gumble drives Homer's car to Manhattan and leaves it at the World Trade Center Twin Towers. While Homer has to wait by his car in order to get the boot off, Marge and the kids see the sights.",
           "titleEs": "La ciudad de Nueva York contra Homer Simpson",
           "synopsisEs": "Los Simpson van a la ciudad de Nueva York, después de que Barney Gumble, sobrio y loco, conduce el auto de Homero a Manhattan y lo deja en las Torres Gemelas del World Trade Center. Mientras Homer tiene que esperar junto a su auto para quitar el maletero, Marge y los niños ven el lugar."
@@ -2055,7 +2055,7 @@ const data = {
           "title": "The Principal and the Pauper",
           "duration": "24",
           "airDate": "1997-09-28",
-          "image": "9x02.jpg",
+          "image": "simpsons_9x02.jpg",
           "synopsis": "Principal Skinner's 20th anniversary as school principal is interrupted by a Vietnam vet who reveals that his name is Seymour Skinner and that the man posing as him is a reformed street punk named Armin Tamzarian.",
           "titleEs": "El director y el mendigo",
           "synopsisEs": "El vigésimo aniversario del director Skinner como director de escuela es interrumpido por un veterano de Vietnam que revela que su nombre es Seymour Skinner y que el hombre que se hace pasar por él es un punk callejero reformado llamado Armin Tamzarian."
@@ -2066,7 +2066,7 @@ const data = {
           "title": "Lisa's Sax",
           "duration": "24",
           "airDate": "1997-10-19",
-          "image": "9x03.jpg",
+          "image": "simpsons_9x03.jpg",
           "synopsis": "After Lisa's saxophone gets crushed in the street, Homer tells the story of how Lisa first discovered her musical talent — which coincides with the tragic tale of how Bart's first day of kindergarten turned him into the troublemaker he is today.",
           "titleEs": "El saxo de Lisa",
           "synopsisEs": "Después de que el saxofón de Lisa es aplastado en la calle, Homer cuenta la historia de cómo Lisa descubrió por primera vez su talento musical, lo que coincide con la trágica historia de cómo el primer día de jardín de infantes de Bart lo convirtió en el alborotador que es hoy."
@@ -2077,7 +2077,7 @@ const data = {
           "title": "Treehouse of Horror VIII",
           "duration": "24",
           "airDate": "1997-10-26",
-          "image": "9x04.jpg",
+          "image": "simpsons_9x04.jpg",
           "synopsis": "After Lisa's saxophone gets crushed in the street, Homer tells the story of how Lisa first discovered her musical talent — which coincides with the tragic tale of how Bart's first day of kindergarten turned him into the troublemaker he is today.",
           "titleEs": "La casa del árbol del terror VIII",
           "synopsisEs": "Después de que el saxofón de Lisa es aplastado en la calle, Homer cuenta la historia de cómo Lisa descubrió por primera vez su talento musical, lo que coincide con la trágica historia de cómo el primer día de jardín de infantes de Bart lo convirtió en el alborotador que es hoy."
@@ -2088,7 +2088,7 @@ const data = {
           "title": "The Cartridge Family",
           "duration": "24",
           "airDate": "1997-11-02",
-          "image": "9x05.jpg",
+          "image": "simpsons_9x05.jpg",
           "synopsis": "",
           "titleEs": "La familia de cartuchos"
         },
@@ -2098,7 +2098,7 @@ const data = {
           "title": "Bart Star",
           "duration": "24",
           "airDate": "1997-11-09",
-          "image": "9x06.jpg",
+          "image": "simpsons_9x06.jpg",
           "synopsis": "Peewee football comes to Springfield as a means to fight childhood obesity, and when Homer becomes the coach (after Flanders angrily gives him the position to keep Homer from heckling him), he promotes Bart to star player status despite the boy's lack of talent.",
           "titleEs": "Bart Estrella",
           "synopsisEs": "El fútbol americano Peewee llega a Springfield como un medio para luchar contra la obesidad infantil, y cuando Homer se convierte en entrenador (después de que Flanders, enojado, le da el puesto para evitar que Homer lo interrumpa), promueve a Bart al estatus de jugador estrella a pesar de la falta de talento del niño."
@@ -2109,7 +2109,7 @@ const data = {
           "title": "The Two Mrs. Nahasapeemapetilons",
           "duration": "24",
           "airDate": "1997-11-16",
-          "image": "9x07.jpg",
+          "image": "simpsons_9x07.jpg",
           "synopsis": "Apu's days as a swinging bachelor are numbered when he receives a lotus flower in the mail, a symbol that the arranged marriage his mom planned for him when he was a child (as seen on \"Much Apu About Nothing\") is nearing. To get out of it, Apu decides to lie to his mom that he's already married...to Marge Simpson.",
           "titleEs": "Las dos señoras Nahasapeemapetilons",
           "synopsisEs": "Los días de Apu como soltero están contados cuando recibe una flor de loto por correo, un símbolo de que el matrimonio concertado que su madre planeó para él cuando era niño (como se ve en \"Much Apu About Nothing\") se acerca. Para salir de esto, Apu decide mentirle a su mamá diciéndole que ya está casado... con Marge Simpson."
@@ -2120,7 +2120,7 @@ const data = {
           "title": "Lisa the Skeptic",
           "duration": "24",
           "airDate": "1997-11-23",
-          "image": "9x8.jpg",
+          "image": "simpsons_9x8.jpg",
           "synopsis": "When construction for a new mall threatens an area where a bunch of fossils were found, Lisa manages to convince Principal Skinner to schedule a school archaeological dig to find missing fossils. The field trip seems to have been futile, until Lisa finds a statue of a skeleton man with wings, which everyone in town believes is an angel and brings an apocalyptic message.",
           "titleEs": "Lisa la escéptica",
           "synopsisEs": "Cuando la construcción de un nuevo centro comercial amenaza un área donde se encontraron un montón de fósiles, Lisa logra convencer al director Skinner para programar una excavación arqueológica en la escuela para encontrar los fósiles perdidos. La excursión parece haber sido inútil, hasta que Lisa encuentra una estatua de un hombre esqueleto con alas, que todos en la ciudad creen que es un ángel y trae un mensaje apocalíptico."
@@ -2131,7 +2131,7 @@ const data = {
           "title": "Realty Bites",
           "duration": "24",
           "airDate": "1997-12-07",
-          "image": "9x09.jpg",
+          "image": "simpsons_9x09.jpg",
           "synopsis": "Feeling bored with life (once again), Marge takes a job in real estate but is uncomfortable having to bend the truth to make sales, especially when she wants to sell the Flanders a house with a violent history. Meanwhile, Homer buys Snake's car at a police auction and Snake breaks out of jail to get it back.",
           "titleEs": "Bocados de bienes raíces",
           "synopsisEs": "Sintiéndose aburrida de la vida (una vez más), Marge acepta un trabajo en el sector inmobiliario, pero se siente incómoda al tener que tergiversar la verdad para realizar ventas, especialmente cuando quiere vender a los Flanders una casa con una historia violenta. Mientras tanto, Homer compra el auto de Snake en una subasta policial y Snake escapa de la cárcel para recuperarlo."
@@ -2142,7 +2142,7 @@ const data = {
           "title": "Miracle on Evergreen Terrace",
           "duration": "24",
           "airDate": "1997-12-21",
-          "image": "9x10.jpg",
+          "image": "simpsons_9x10.jpg",
           "synopsis": "Bart accidentally destroys the family's Christmas presents and blames the disaster on a burglar, resulting in the rest of the town opening its hearts and wallets for them, but when Santa's Little Helper finds the melted wreckage and Bart confesses that he lied, the town shuns and harasses the family.",
           "titleEs": "Milagro en la Terraza Evergreen",
           "synopsisEs": "Bart destruye accidentalmente los regalos de Navidad de la familia y culpa del desastre a un ladrón, lo que hace que el resto de la ciudad abra sus corazones y billeteras por ellos, pero cuando el pequeño ayudante de Santa encuentra los restos derretidos y Bart confiesa que mintió, la ciudad evita y acosa a la familia."
@@ -2153,7 +2153,7 @@ const data = {
           "title": "All Singing, All Dancing",
           "duration": "24",
           "airDate": "1998-01-04",
-          "image": "9x11.jpg",
+          "image": "simpsons_9x11.jpg",
           "synopsis": "In yet another clip show episode, Homer is appalled that the movie he rented, Paint Your Wagon, is a campy, Western-themed musical and not a gritty, spaghetti Western. Marge and the family try to prove that musicals are part of their life (and the lives of the people of Springfield) through a collection of videos (read: past clips) showing The Simpsons' most memorable songs and musical moments, only to be interrupted by Snake Jailbird, who holds the family hostage.",
           "titleEs": "Todos cantando, todos bailando",
           "synopsisEs": "En otro episodio del programa, Homer está consternado de que la película que alquiló, Paint Your Wagon, sea un musical cursi de temática occidental y no un spaghetti western valiente. Marge y la familia intentan demostrar que los musicales son parte de su vida (y de la vida de la gente de Springfield) a través de una colección de videos (léase: clips anteriores) que muestran las canciones y momentos musicales más memorables de Los Simpson, solo para ser interrumpidos por Snake Jailbird, que mantiene a la familia como rehén."
@@ -2164,7 +2164,7 @@ const data = {
           "title": "Bart Carny",
           "duration": "24",
           "airDate": "1998-01-11",
-          "image": "9x12.jpg",
+          "image": "simpsons_9x12.jpg",
           "synopsis": "Bart and Homer are forced to work as carnies after Bart crashes the Mercedes convertible said to belong to Adolf Hitler, and befriend a father-son carny duo named Spud and Cooder, but when Homer brings Spud and Cooder to their home, it's the Simpsons that end up getting kicked out.",
           "titleEs": "Bart Carny",
           "synopsisEs": "Bart y Homer se ven obligados a trabajar como feriantes después de que Bart choca el Mercedes convertible que se dice pertenece a Adolf Hitler, y se hacen amigos de un dúo de feriantes de padre e hijo llamados Spud y Cooder, pero cuando Homero lleva a Spud y Cooder a su casa, son los Simpson los que terminan siendo expulsados."
@@ -2175,7 +2175,7 @@ const data = {
           "title": "The Joy of Sect",
           "duration": "24",
           "airDate": "1998-02-08",
-          "image": "9x13.jpg",
+          "image": "simpsons_9x13.jpg",
           "synopsis": "Homer and the rest of the town (save Marge, Reverend Lovejoy, the Flanders family, Mr. Burns, Smithers, Lenny, Cletus, Groundskeeper Willie, and the nameless crowd that showed up for Mr. Burns' cult event) are brainwashed into joining a cult known as the Movementarians. Meanwhile, Mr. Burns tries to start his own cult...with disastrous results.",
           "titleEs": "La alegría de la secta",
           "synopsisEs": "A Homer y el resto de la ciudad (excepto Marge, el reverendo Lovejoy, la familia Flanders, el Sr. Burns, Smithers, Lenny, Cletus, el jardinero Willie y la multitud anónima que se presentó en el evento de culto del Sr. Burns) se les lava el cerebro para que se unan a una secta conocida como los Movimentarios. Mientras tanto, el Sr. Burns intenta iniciar su propia secta... con resultados desastrosos."
@@ -2186,7 +2186,7 @@ const data = {
           "title": "Das Bus",
           "duration": "24",
           "airDate": "1998-02-15",
-          "image": "9x14.jpg",
+          "image": "simpsons_9x14.jpg",
           "synopsis": "Springfield Elementary's Model U.N. participants (including Bart and Lisa) wind up stranded on an island when their bus goes off a bridge. Meanwhile, Homer tries to start an Internet company — even though he has no business plan, no computer, and no knowledge of the Internet.",
           "titleEs": "El autobús",
           "synopsisEs": "Los participantes del Modelo de Naciones Unidas de la escuela primaria Springfield (incluidos Bart y Lisa) terminan varados en una isla cuando su autobús se cae de un puente. Mientras tanto, Homer intenta iniciar una empresa de Internet, aunque no tiene un plan de negocios, ni una computadora, ni ningún conocimiento de Internet."
@@ -2197,7 +2197,7 @@ const data = {
           "title": "The Last Temptation of Krust",
           "duration": "24",
           "airDate": "1998-02-22",
-          "image": "9x15.jpg",
+          "image": "simpsons_9x15.jpg",
           "synopsis": "At a charity comedy show, Krusty discovers that his brand of humor is out of step with modern stand-up comedy. After announcing his retirement and going on a drunken bender, Krusty wakes up at the Simpsons household and, with the help of Bart Simpson and special guest star, Jay Leno, Krusty becomes an anti-establishment stand-up comic (a la George Carlin, Denis Leary, Dennis Miller, and Bill Hicks), but must choose between his ethics and selling out when an agent offers him the chance to be the spokesman for a new SUV.",
           "titleEs": "La última tentación de Krust",
           "synopsisEs": "En un programa de comedia benéfico, Krusty descubre que su estilo de humor no está en sintonía con la comedia moderna. Después de anunciar su retiro y de irse de juerga borracho, Krusty se despierta en la casa de los Simpson y, con la ayuda de Bart Simpson y la estrella invitada especial, Jay Leno, Krusty se convierte en un comediante antisistema (al estilo de George Carlin, Denis Leary, Dennis Miller y Bill Hicks), pero debe elegir entre su ética y venderse cuando un agente le ofrece la oportunidad de ser el portavoz de un nuevo SUV."
@@ -2208,7 +2208,7 @@ const data = {
           "title": "Dumbbell Indemnity",
           "duration": "24",
           "airDate": "1998-03-01",
-          "image": "9x16.jpg",
+          "image": "simpsons_9x16.jpg",
           "synopsis": "Moe falls for a flower vendor named Renee, and commits insurance fraud (with help from Homer) so he can keep the money and the romance coming. But when Homer gets arrested, Moe let’s him take the fall.",
           "titleEs": "Indemnización con mancuernas",
           "synopsisEs": "Moe se enamora de una vendedora de flores llamada Renee y comete fraude de seguros (con la ayuda de Homer) para poder mantener el dinero y el romance. Pero cuando arrestan a Homer, Moe le deja cargar con la culpa."
@@ -2219,7 +2219,7 @@ const data = {
           "title": "Lisa the Simpson",
           "duration": "24",
           "airDate": "1998-03-08",
-          "image": "9x17.jpg",
+          "image": "simpsons_9x17.jpg",
           "synopsis": "After failing to immediately figure out a picture puzzle, forgetting her locker combination, and turning in a piss-poor school project, Lisa fears she's losing her brainpower, and things get worse when Grampa Simpson tells Lisa that she may have the Simpson Gene, which has already made Homer, Bart, and Grampa himself dumber with age. Meanwhile, Jasper Beardley uses the Kwik-E-Mart freezers to cryogenically preserve himself, and Apu deals with the situation the only way he knows how: by making a profit off it.",
           "titleEs": "lisa los simpson",
           "synopsisEs": "Después de no poder resolver de inmediato un rompecabezas con imágenes, olvidar la combinación de su casillero y entregar un proyecto escolar pobre, Lisa teme estar perdiendo su capacidad intelectual, y las cosas empeoran cuando el abuelo Simpson le dice a Lisa que puede tener el gen Simpson, que ya ha hecho que Homero, Bart y el propio abuelo se vuelvan más tontos con la edad. Mientras tanto, Jasper Beardley usa los congeladores de Kwik-E-Mart para preservarse criogénicamente, y Apu lidia con la situación de la única manera que sabe: obteniendo ganancias de ello."
@@ -2230,7 +2230,7 @@ const data = {
           "title": "This Little Wiggy",
           "duration": "24",
           "airDate": "1998-03-22",
-          "image": "9x18.jpg",
+          "image": "simpsons_9x18.jpg",
           "synopsis": "While on a day trip to a hands-on science museum, Marge feels sorry for Ralph Wiggum being bullied and suggests to Chief Wiggum that Ralph and Bart be play buddies, which Bart objects to — until he realizes that Ralph is the son of an incompetent police chief and has police equipment at his disposal (including a master key that opens up every lock in town, including one to an abandoned prison's electric chair).",
           "titleEs": "Este pequeño peluca",
           "synopsisEs": "Durante una excursión de un día a un museo de ciencias práctico, Marge siente pena por el acoso de Ralph Wiggum y le sugiere al jefe Wiggum que Ralph y Bart sean compañeros de juego, a lo que Bart se opone, hasta que se da cuenta de que Ralph es el hijo de un jefe de policía incompetente y tiene equipo policial a su disposición (incluida una llave maestra que abre todas las cerraduras de la ciudad, incluida una de la silla eléctrica de una prisión abandonada)."
@@ -2241,7 +2241,7 @@ const data = {
           "title": "Simpson Tide",
           "duration": "24",
           "airDate": "1998-03-29",
-          "image": "9x19.jpg",
+          "image": "simpsons_9x19.jpg",
           "synopsis": "Homer joins the Naval Reserve after getting fired again, with world-threatening results when he shoots his commanding officer out of the submarine and steers the sub into Russian waters. Meanwhile, Bart gets his ear pierced so he can be cool, but soon discovers that it doesn't work if every kid in school does the same thing.",
           "titleEs": "Marea Simpson",
           "synopsisEs": "Homer se une a la Reserva Naval después de ser despedido nuevamente, con resultados que amenazan al mundo cuando dispara a su oficial al mando fuera del submarino y dirige el submarino hacia aguas rusas. Mientras tanto, Bart se perfora la oreja para poder ser genial, pero pronto descubre que no funciona si todos los niños de la escuela hacen lo mismo."
@@ -2252,7 +2252,7 @@ const data = {
           "title": "The Trouble with Trillions",
           "duration": "24",
           "airDate": "1998-04-05",
-          "image": "9x20.jpg",
+          "image": "simpsons_9x20.jpg",
           "synopsis": "Homer (like practically every Springfieldianite who isn't a Flanders) waits until the last minute to file his tax return, and the IRS has jail time in store for Homer — unless Homer plays spy to retrieve a trillion-dollar bill that Mr. Burns was supposed to deliver to post-World War II Europe to pay for reconstruction and stimulate the economy.",
           "titleEs": "El problema de los billones",
           "synopsisEs": "Homer (como prácticamente todos los habitantes de Springfield que no son de Flandes) espera hasta el último minuto para presentar su declaración de impuestos, y el IRS tiene reservada una pena de cárcel para Homer, a menos que Homer juegue a ser espía para recuperar un billete de un billón de dólares que se suponía que el Sr. Burns entregaría a la Europa posterior a la Segunda Guerra Mundial para pagar la reconstrucción y estimular la economía."
@@ -2263,7 +2263,7 @@ const data = {
           "title": "Girly Edition",
           "duration": "24",
           "airDate": "1998-04-19",
-          "image": "9x21.jpg",
+          "image": "simpsons_9x21.jpg",
           "synopsis": "Because of the FCC's push for more educational programming for children, Krusty is forced to cut ten minutes (out of three hours) from his show for a kids' news program. Lisa is hired as the head anchor, but it's Bart who becomes famous when his over-the-top sports news segment gets him the co-anchor seat, and he uses his new position to report sappy human interest stories instead of news stories that matter. Meanwhile, Homer adopts a helper monkey named Mojo after seeing a wheelchair-bound Apu use one, but Homer ends up turning the monkey into a slob.",
           "titleEs": "Edición femenina",
           "synopsisEs": "Debido a la presión de la FCC por más programación educativa para niños, Krusty se ve obligado a recortar diez minutos (de tres horas) de su programa para un programa de noticias para niños. Lisa es contratada como presentadora principal, pero es Bart quien se vuelve famoso cuando su exagerado segmento de noticias deportivas le consigue el puesto de copresentador, y usa su nuevo puesto para informar historias cursis de interés humano en lugar de noticias importantes. Mientras tanto, Homer adopta un mono ayudante llamado Mojo después de ver a un Apu en silla de ruedas usar uno, pero Homer termina convirtiendo al mono en un vago."
@@ -2274,7 +2274,7 @@ const data = {
           "title": "Trash of the Titans",
           "duration": "24",
           "airDate": "1998-04-26",
-          "image": "9x22.jpg",
+          "image": "simpsons_9x22.jpg",
           "synopsis": "Homer's antics gets the family's garbage collection cut off, and Marge writes an apology to the garbagemen on Homer's behalf. Incensed that Marge would do something like this, Homer takes on sanitation commissioner Ray Patterson in an upcoming election and wins his seat with a campaign that promises more than it can deliver.",
           "titleEs": "Basura de titanes",
           "synopsisEs": "Las travesuras de Homer hacen que se corte la recolección de basura de la familia y Marge escribe una disculpa a los basureros en nombre de Homer. Indignado porque Marge haría algo como esto, Homer se enfrenta al comisionado de saneamiento Ray Patterson en las próximas elecciones y gana su escaño con una campaña que promete más de lo que puede cumplir."
@@ -2285,7 +2285,7 @@ const data = {
           "title": "King of the Hill",
           "duration": "24",
           "airDate": "1998-05-03",
-          "image": "9x23.jpg",
+          "image": "simpsons_9x23.jpg",
           "synopsis": "After embarrassing Bart during a game of Capture the Flag at a church picnic, Homer decides to get in shape (despite everyone else saying that Homer can't commit to a diet and exercise regimen), and his newly-sculpted muscles from an energy bar and exercise makes him the perfect candidate for a publicity stunt, in which he climbs the tallest mountain in Springfield, The Murderhorn.",
           "titleEs": "rey de la colina",
           "synopsisEs": "Después de avergonzar a Bart durante un juego de Captura la bandera en un picnic de la iglesia, Homer decide ponerse en forma (a pesar de que todos los demás dicen que Homer no puede comprometerse con una dieta y un régimen de ejercicio), y sus músculos recién esculpidos a partir de una barra energética y ejercicio lo convierten en el candidato perfecto para un truco publicitario, en el que escala la montaña más alta de Springfield, The Murderhorn."
@@ -2296,7 +2296,7 @@ const data = {
           "title": "Lost Our Lisa",
           "duration": "24",
           "airDate": "1998-05-10",
-          "image": "9x24.jpg",
+          "image": "simpsons_9x24.jpg",
           "synopsis": "When Marge has to back out of taking Lisa to an ancient Egyptian exhibit at the museum so she can take Bart to Dr. Hibbert's office, Lisa tricks Homer into letting her ride the bus, but she boards the wrong one and must find her way home through a series of unfamiliar neighborhoods.",
           "titleEs": "Perdimos a nuestra Lisa",
           "synopsisEs": "Cuando Marge tiene que dejar de llevar a Lisa a una exhibición del antiguo Egipto en el museo para poder llevar a Bart a la oficina del Dr. Hibbert, Lisa engaña a Homer para que la deje viajar en el autobús, pero ella aborda el autobús equivocado y debe encontrar el camino a casa a través de una serie de vecindarios desconocidos."
@@ -2307,7 +2307,7 @@ const data = {
           "title": "Natural Born Kissers",
           "duration": "24",
           "airDate": "1998-05-17",
-          "image": "9x25.jpg",
+          "image": "simpsons_9x25.jpg",
           "synopsis": "Once again, Marge and Homer worry that their sex life has gone stale, but after an impromptu trip inside a barn and a day at a bed and breakfast, they discover that the only way to keep the spice in their marriage is to have sex in public. Meanwhile, Bart and Lisa play around with Grampa Simpson's old metal detector from his Army days and uncover a film reel carrying the lost ending to the 1942 romantic drama, Casablanca.",
           "titleEs": "Besadores natos",
           "synopsisEs": "Una vez más, a Marge y Homer les preocupa que su vida sexual se haya estancado, pero después de un viaje improvisado al interior de un granero y un día en un bed and breakfast, descubren que la única forma de mantener el sabor de su matrimonio es tener relaciones sexuales en público. Mientras tanto, Bart y Lisa juegan con el viejo detector de metales del abuelo Simpson de sus días en el ejército y descubren un carrete de película que contiene el final perdido del drama romántico de 1942, Casablanca."
@@ -2318,7 +2318,7 @@ const data = {
     {
       "id": 10,
       "title": "Temporada 10",
-      "image": "Season_10_Icon.jpg",
+      "image": "simpsons_Season_10_Icon.jpg",
       "avgColor": "#7CADA0",
       "episodes": [
         {
@@ -2327,7 +2327,7 @@ const data = {
           "title": "Lard of the Dance",
           "duration": "24",
           "airDate": "1998-08-23",
-          "image": "10x01.jpg",
+          "image": "simpsons_10x01.jpg",
           "synopsis": "On the first day back to school from summer break, Lisa meets a girl her age who acts twice her age and wants Lisa and her friends to do the same. Meanwhile, Homer recruits Bart to help him make money off recycling grease.",
           "titleEs": "Manteca de la Danza",
           "synopsisEs": "El primer día de regreso a clases después de las vacaciones de verano, Lisa conoce a una niña de su edad que actúa con el doble de su edad y quiere que Lisa y sus amigos hagan lo mismo. Mientras tanto, Homero recluta a Bart para que le ayude a ganar dinero reciclando grasa."
@@ -2338,7 +2338,7 @@ const data = {
           "title": "The Wizard of Evergreen Terrace",
           "duration": "24",
           "airDate": "1998-09-20",
-          "image": "10x02.jpg",
+          "image": "simpsons_10x02.jpg",
           "synopsis": "Homer becomes an inventor after realizing his life is almost half over and he hasn't done anything that will be considered a legacy.",
           "titleEs": "El mago de Evergreen Terrace",
           "synopsisEs": "Homero se convierte en inventor después de darse cuenta de que su vida casi ha terminado y que no ha hecho nada que pueda considerarse un legado."
@@ -2349,7 +2349,7 @@ const data = {
           "title": "Bart the Mother",
           "duration": "24",
           "airDate": "1998-09-27",
-          "image": "10x03.jpg",
+          "image": "simpsons_10x03.jpg",
           "synopsis": "Bart shoots down a mother bird with the rifle that Nelson won at a family fun center. When Marge finds out, she becomes so mad that she (once again) neglects her son out of shame. In repentance, Bart decides to take care of the eggs in its nest — until he and the rest of the family discover that the abandoned baby birds are actually reptilian pests who feed off birds.",
           "titleEs": "bart la madre",
           "synopsisEs": "Bart derriba a una madre pájaro con el rifle que Nelson ganó en un centro de diversión familiar. Cuando Marge se entera, se enoja tanto que (una vez más) descuida a su hijo por vergüenza. Arrepentido, Bart decide cuidar los huevos de su nido, hasta que él y el resto de la familia descubren que los pajaritos abandonados son en realidad plagas de reptiles que se alimentan de pájaros."
@@ -2360,7 +2360,7 @@ const data = {
           "title": "Treehouse of Horror IX",
           "duration": "24",
           "airDate": "1998-10-25",
-          "image": "10x04.jpg",
+          "image": "simpsons_10x04.jpg",
           "synopsis": "Opening - A Halloween-themed opening sequence where the family arriving home takes a deadly turn.",
           "titleEs": "La casa del árbol del terror IX",
           "synopsisEs": "Apertura: una secuencia de apertura con temática de Halloween en la que la familia que llega a casa toma un giro mortal."
@@ -2371,7 +2371,7 @@ const data = {
           "title": "When You Dish Upon a Star",
           "duration": "24",
           "airDate": "1998-11-08",
-          "image": "10x05.jpg",
+          "image": "simpsons_10x05.jpg",
           "synopsis": "On a day trip at the lake, Homer winds up at the vacation home of Kim Basinger and Alec Baldwin, and they let him be their assistant if he keeps their location a secret.",
           "titleEs": "Cuando sirves sobre una estrella",
           "synopsisEs": "En una excursión de un día al lago, Homer termina en la casa de vacaciones de Kim Basinger y Alec Baldwin, y le permiten ser su asistente si mantiene su ubicación en secreto."
@@ -2382,7 +2382,7 @@ const data = {
           "title": "D'oh-in' in the Wind",
           "duration": "24",
           "airDate": "1998-11-15",
-          "image": "10x06.jpg",
+          "image": "simpsons_10x06.jpg",
           "synopsis": "After starring in an instructional video for the nuclear plant, Homer discovers while filling out his Screen Actors' Guild form that he doesn't know what the \"J\" in his middle name means, so Homer goes to a hippie commune (headed by two hippies turned businessmen named Seth and Munchie), finds his answer on a mural his mom painted — and decides to be as free and wild as the hippies of the 1960s were.",
           "titleEs": "D'oh-in' en el viento",
           "synopsisEs": "Después de protagonizar un video instructivo para la planta nuclear, Homer descubre, mientras completa su formulario del Screen Actors' Guild, que no sabe qué significa la \"J\" de su segundo nombre, por lo que Homer va a una comuna hippie (dirigida por dos hippies convertidos en empresarios llamados Seth y Munchie), encuentra la respuesta en un mural que pintó su madre y decide ser tan libre y salvaje como lo eran los hippies de los años 1960."
@@ -2393,7 +2393,7 @@ const data = {
           "title": "Lisa Gets an \"A\"",
           "duration": "24",
           "airDate": "1998-11-22",
-          "image": "10x07.jpg",
+          "image": "simpsons_10x07.jpg",
           "synopsis": "Lisa's A+++ grade she got on a test for the book The Wind in the Willows gives Springfield Elementary the grant money it sorely needs to update the school. The problem: Lisa cheated on the exam after spending her sick days from school playing video games instead of studying. Meanwhile, Homer raises a lobster to eat, but makes it his pet.",
           "titleEs": "Lisa obtiene una \"A\"",
           "synopsisEs": "La calificación A+++ de Lisa que obtuvo en un examen para el libro The Wind in the Willows le da a la escuela primaria Springfield la subvención que tanto necesita para actualizar la escuela. El problema: Lisa hizo trampa en el examen después de pasar sus días de enfermedad en la escuela jugando videojuegos en lugar de estudiar. Mientras tanto, Homero cría una langosta para comerla, pero la convierte en su mascota."
@@ -2404,7 +2404,7 @@ const data = {
           "title": "Homer Simpson in: \"Kidney Trouble\"",
           "duration": "24",
           "airDate": "1998-12-06",
-          "image": "10x08.jpg",
+          "image": "simpsons_10x08.jpg",
           "synopsis": "While driving home from an Old West tourist trap, Homer ignores Grampa Simpson's pleas to let him use the bathroom, which causes the old man to blow out both of his kidneys. With Grampa at death's door, Homer decides to give a kidney to his father — then runs off when he becomes afraid of what being an organ donor will do for him.",
           "titleEs": "Homero Simpson en: \"Problemas renales\"",
           "synopsisEs": "Mientras conduce a casa desde una trampa para turistas del Viejo Oeste, Homer ignora las súplicas del abuelo Simpson de que le permita usar el baño, lo que hace que el anciano le explote ambos riñones. Con el abuelo al borde de la muerte, Homer decide darle un riñón a su padre y luego sale corriendo cuando tiene miedo de lo que significará para él ser donante de órganos."
@@ -2415,7 +2415,7 @@ const data = {
           "title": "Mayored to the Mob",
           "duration": "24",
           "airDate": "1998-12-20",
-          "image": "10x09.jpg",
+          "image": "simpsons_10x09.jpg",
           "synopsis": "After Homer saves Mark Hamill and Mayor Quimby from a nerd riot at the Bi-Mon-Sci-Fi-Con, Mayor Quimby fires his usual bodyguards (who didn't save him because they were outside cloud-gazing) and makes Homer his new protector, but when Homer finds out that Mayor Quimby has mob ties and uncovers a plan to sell rat's milk to the public schools, Homer begins fearing for his life — and the Mayor's.",
           "titleEs": "Alcalde de la mafia",
           "synopsisEs": "Después de que Homer salva a Mark Hamill y al alcalde Quimby de un motín de nerds en la Bi-Mon-Sci-Fi-Con, el alcalde Quimby despide a sus guardaespaldas habituales (que no lo salvaron porque estaban afuera contemplando las nubes) y convierte a Homer en su nuevo protector, pero cuando Homer descubre que el alcalde Quimby tiene vínculos con la mafia y descubre un plan para vender leche de rata a las escuelas públicas, Homer comienza a temer por su vida y el La del alcalde."
@@ -2426,7 +2426,7 @@ const data = {
           "title": "Viva Ned Flanders",
           "duration": "24",
           "airDate": "1999-01-10",
-          "image": "10x10.jpg",
+          "image": "simpsons_10x10.jpg",
           "synopsis": "After Homer saves Mark Hamill and Mayor Quimby from a nerd riot at the Bi-Mon-Sci-Fi-Con, Mayor Quimby fires his usual bodyguards (who didn't save him because they were outside cloud-gazing) and makes Homer his new protector, but when Homer finds out that Mayor Quimby has mob ties and uncovers a plan to sell rat's milk to the public schools, Homer begins fearing for his life — and the Mayor's.",
           "titleEs": "Viva Ned Flandes",
           "synopsisEs": "Después de que Homer salva a Mark Hamill y al alcalde Quimby de un motín de nerds en la Bi-Mon-Sci-Fi-Con, el alcalde Quimby despide a sus guardaespaldas habituales (que no lo salvaron porque estaban afuera contemplando las nubes) y convierte a Homer en su nuevo protector, pero cuando Homer descubre que el alcalde Quimby tiene vínculos con la mafia y descubre un plan para vender leche de rata a las escuelas públicas, Homer comienza a temer por su vida y el La del alcalde."
@@ -2437,7 +2437,7 @@ const data = {
           "title": "Wild Barts Can't Be Broken",
           "duration": "24",
           "airDate": "1999-01-17",
-          "image": "10x11.jpg",
+          "image": "simpsons_10x11.jpg",
           "synopsis": "Chief Wiggum enforces a curfew on the town's children after blaming them for vandalizing the school (when, in fact, it was the fault of Homer and his drunken buddies, Lenny, Carl, and Barney, celebrating the Springfield Isotopes' first win in years), and the kids rebel by hosting a pirate radio show about the adults' embarrassing secrets.",
           "titleEs": "Los Barts salvajes no se pueden romper",
           "synopsisEs": "El jefe Wiggum impone un toque de queda a los niños de la ciudad después de culparlos por destrozar la escuela (cuando, en realidad, fue culpa de Homer y sus amigos borrachos, Lenny, Carl y Barney, que celebraban la primera victoria de los Isótopos de Springfield en años), y los niños se rebelan presentando un programa de radio pirata sobre los secretos vergonzosos de los adultos."
@@ -2448,7 +2448,7 @@ const data = {
           "title": "Sunday, Cruddy Sunday",
           "duration": "24",
           "airDate": "1999-01-31",
-          "image": "10x12.jpg",
+          "image": "simpsons_10x12.jpg",
           "synopsis": "Homer, his buddies, and Bart head out to see the Super Bowl while Marge and Lisa paint eggs with an old kit endorsed by Vincent Price.",
           "titleEs": "Domingo, domingo asqueroso",
           "synopsisEs": "Homero, sus amigos y Bart salen a ver el Super Bowl mientras Marge y Lisa pintan huevos con un viejo kit patrocinado por Vincent Price."
@@ -2459,7 +2459,7 @@ const data = {
           "title": "Homer to the Max",
           "duration": "24",
           "airDate": "1999-02-07",
-          "image": "10x13.jpg",
+          "image": "simpsons_10x13.jpg",
           "synopsis": "When a dashing officer named Homer Simpson becomes a bumbling sidekick on a new cop show, Homer petitions the court to have his name legally changed and takes advantage of the good life that comes with having a new name — until he gets roped into an environmental protest.",
           "titleEs": "Homero al máximo",
           "synopsisEs": "Cuando un apuesto oficial llamado Homer Simpson se convierte en un torpe compañero en un nuevo programa policial, Homer solicita al tribunal que cambie su nombre legalmente y aprovecha la buena vida que conlleva tener un nuevo nombre, hasta que se ve involucrado en una protesta ambiental."
@@ -2470,7 +2470,7 @@ const data = {
           "title": "I'm with Cupid",
           "duration": "24",
           "airDate": "1999-02-14",
-          "image": "10x14.jpg",
+          "image": "simpsons_10x14.jpg",
           "synopsis": "After being caught in a lie regarding American labor hours, Apu showers Manjula with extremely lavish gifts in the days leading up to Valentine's Day, which earns him the ire of the Springfield husbands.",
           "titleEs": "estoy con cupido",
           "synopsisEs": "Después de ser atrapado en una mentira sobre los horarios laborales estadounidenses, Apu colma a Manjula con obsequios extremadamente lujosos en los días previos al Día de San Valentín, lo que le granjea la ira de los maridos de Springfield."
@@ -2481,7 +2481,7 @@ const data = {
           "title": "Marge Simpson in: \"Screaming Yellow Honkers\"",
           "duration": "24",
           "airDate": "1999-02-21",
-          "image": "10x15.jpg",
+          "image": "simpsons_10x15.jpg",
           "synopsis": "Marge becomes the proud driver of an SUV made for women (after Homer buys it, thinking that it's for men), and develops road rage, which gets her in trouble with the law.",
           "titleEs": "Marge Simpson en: \"Gritando bocinazos amarillos\"",
           "synopsisEs": "Marge se convierte en la orgullosa conductora de un SUV hecho para mujeres (después de que Homer lo compra, pensando que es para hombres) y desarrolla ira al volante, lo que la mete en problemas con la ley."
@@ -2492,7 +2492,7 @@ const data = {
           "title": "Make Room for Lisa",
           "duration": "24",
           "airDate": "1999-02-28",
-          "image": "10x16.jpg",
+          "image": "simpsons_10x16.jpg",
           "synopsis": "Homer is forced to convert Lisa's room into a cellular phone tower to pay off damages done to the Bill of Rights at the local Smithsonian, and she hates him as a result. They try to reconcile with each other by trying sensory deprivation tanks, where Lisa sees what it's like to be Homer taking Lisa to an activity that he doesn't like just to make Lisa happy. Meanwhile, Marge gets addicted to eavesdropping after Maggie's baby monitor begins picking up cell phone calls.",
           "titleEs": "Haz espacio para Lisa",
           "synopsisEs": "Homer se ve obligado a convertir la habitación de Lisa en una torre de telefonía celular para pagar los daños causados ​​a la Declaración de Derechos en el Smithsonian local y, como resultado, ella lo odia. Intentan reconciliarse entre sí probando tanques de privación sensorial, donde Lisa ve lo que es ser Homero llevando a Lisa a una actividad que no le gusta solo para hacerla feliz. Mientras tanto, Marge se vuelve adicta a las escuchas ilegales después de que el monitor para bebés de Maggie comienza a atender llamadas de teléfono celular."
@@ -2503,7 +2503,7 @@ const data = {
           "title": "Maximum Homerdrive",
           "duration": "24",
           "airDate": "1999-03-28",
-          "image": "10x17.jpg",
+          "image": "simpsons_10x17.jpg",
           "synopsis": "When a steak-eating contest between Homer and a beloved trucker proves fatal for the latter, Homer (accompanied by Bart) decides to complete his final run for him, and discover a shady industry secret about truckers. Meanwhile, Lisa and Marge buy a new doorbell, but can't get anyone to ring it.",
           "titleEs": "Máximo impulso de Homero",
           "synopsisEs": "Cuando un concurso de comer bistec entre Homer y un querido camionero resulta fatal para este último, Homer (acompañado por Bart) decide completar su último viaje por él y descubre un turbio secreto de la industria sobre los camioneros. Mientras tanto, Lisa y Marge compran un timbre nuevo, pero no consiguen que nadie lo toque."
@@ -2514,7 +2514,7 @@ const data = {
           "title": "Simpsons Bible Stories",
           "duration": "24",
           "airDate": "1999-04-04",
-          "image": "10x18.jpg",
+          "image": "simpsons_10x18.jpg",
           "synopsis": "During an Easter Vigil, Reverend Lovejoy finds a chocolate bunny in the collection plate. Since no one in the congregation confesses to doing it (though it's shown that Homer did so), he punishes them with a thorough reading of the entire Bible, prompting four Simpsonized takes on popular Biblical tales: Homer and Marge are Adam and Eve (with Flanders as God and Snake as [what else?] the snake that tempts Eve into partaking of the forbidden fruit), Milhouse as Moses leading Egyptian slave children to the Promised Land, Homer as King Solomon presiding over a dispute over a pie, and Bart as David out to defeat Goliath Nelson.",
           "titleEs": "Historias bíblicas de los Simpson",
           "synopsisEs": "Durante la Vigilia Pascual, el Reverendo Lovejoy encuentra un conejito de chocolate en el plato de recolección. Como nadie en la congregación confiesa haberlo hecho (aunque se demuestra que Homero lo hizo), los castiga con una lectura exhaustiva de toda la Biblia, lo que provocó cuatro versiones simpsonizadas de cuentos bíblicos populares: Homero y Marge son Adán y Eva (con Flandes como Dios y la Serpiente como [¿qué más?] la serpiente que tienta a Eva a comer el fruto prohibido), Milhouse como Moisés guiando a los niños esclavos egipcios a la Tierra Prometida, Homero como el Rey Salomón presidiendo una disputa sobre una Pie, y Bart como David que intenta derrotar a Goliat Nelson."
@@ -2525,7 +2525,7 @@ const data = {
           "title": "Mom and Pop Art",
           "duration": "24",
           "airDate": "1999-04-11",
-          "image": "10x19.jpg",
+          "image": "simpsons_10x19.jpg",
           "synopsis": "Homer's failed attempt at building an outdoor barbecue leads him into the world of outsider art.",
           "titleEs": "Mamá y el arte pop",
           "synopsisEs": "El intento fallido de Homer de construir una barbacoa al aire libre lo lleva al mundo del arte outsider."
@@ -2536,7 +2536,7 @@ const data = {
           "title": "The Old Man and the \"C\" Student",
           "duration": "24",
           "airDate": "1999-04-25",
-          "image": "10x20.jpg",
+          "image": "simpsons_10x20.jpg",
           "synopsis": "Bart's offensive stand-up act for the International Olympic Committee costs Springfield the Games, and he is forced to work at the Springfield Retirement Home as punishment. Meanwhile, Homer tries to make use of the box of spring mascots he ordered that are now useless.",
           "titleEs": "El viejo y el estudiante \"C\"",
           "synopsisEs": "El acto ofensivo de Bart para el Comité Olímpico Internacional le cuesta a Springfield los Juegos, y se ve obligado a trabajar en la Casa de Retiro de Springfield como castigo. Mientras tanto, Homero intenta hacer uso de la caja de mascotas primaverales que encargó y que ahora son inútiles."
@@ -2547,7 +2547,7 @@ const data = {
           "title": "Monty Can't Buy Me Love",
           "duration": "24",
           "airDate": "1999-05-02",
-          "image": "10x21.jpg",
+          "image": "simpsons_10x21.jpg",
           "synopsis": "When the town becomes enamored with a Richard Branson-style millionaire who goes on crazy adventures and loves everyone, Mr. Burns realizes no one in Springfield likes, much less loves, him (save for Smithers, but Mr. Burns doesn't know or even care that his assistant has a crush on him) and enlists Homer's help in changing that — which leads them to Scotland to find the Loch Ness Monster.",
           "titleEs": "Monty no puede comprarme amor",
           "synopsisEs": "Cuando la ciudad se enamora de un millonario al estilo Richard Branson que emprende locas aventuras y ama a todos, el Sr. Burns se da cuenta de que a nadie en Springfield le agrada, y mucho menos lo ama (a excepción de Smithers, pero el Sr. Burns no sabe ni le importa que su asistente esté enamorado de él) y solicita la ayuda de Homer para cambiar eso, lo que los lleva a Escocia para encontrar el Monstruo del Lago Ness."
@@ -2558,7 +2558,7 @@ const data = {
           "title": "They Saved Lisa's Brain",
           "duration": "24",
           "airDate": "1999-05-09",
-          "image": "10x22.jpg",
+          "image": "simpsons_10x22.jpg",
           "synopsis": "After a riot breaks out at a local gross-out contest, Lisa writes an open letter to the town about the people's lack of intellectualism, which captures the attention of the local MENSA chapter, who end up running the town after Mayor Quimby flees Springfield, thinking MENSA is after him for a lottery winning scandal. Meanwhile, Homer steals runner-up prize from the gross-out contest: a boudoir photography session, which he tries to keep it hidden as the photographer tries to make a sex symbol out of a fat, ugly, balding man.",
           "titleEs": "Salvaron el cerebro de Lisa",
           "synopsisEs": "Después de que estalla un motín en un concurso local de asquerosidades, Lisa escribe una carta abierta a la ciudad sobre la falta de intelectualismo de la gente, lo que capta la atención del capítulo local de MENSA, que termina dirigiendo la ciudad después de que el alcalde Quimby huye de Springfield, pensando que MENSA lo persigue por un escándalo de ganar la lotería. Mientras tanto, Homer se roba el segundo premio del concurso: una sesión de fotografía boudoir, que intenta mantener oculta mientras el fotógrafo intenta convertir en un símbolo sexual a un hombre gordo, feo y calvo."
@@ -2569,7 +2569,7 @@ const data = {
           "title": "Thirty Minutes Over Tokyo",
           "duration": "24",
           "airDate": "1999-05-16",
-          "image": "10x23.jpg",
+          "image": "simpsons_10x23.jpg",
           "synopsis": "After being robbed of their savings by Snake at an Internet café, the Simpsons start scrounging for money for their family vacation. They soon learn they can get cheap plane tickets by booking last-minute flights to an unknown location. The flight they get onto flies to Tokyo, Japan, where the Simpsons take in Asian culture — and must compete on a game show in order to fly home.",
           "titleEs": "Treinta minutos sobre Tokio",
           "synopsisEs": "Después de que Snake les robara sus ahorros en un cibercafé, los Simpson comienzan a buscar dinero para sus vacaciones familiares. Pronto descubren que pueden conseguir billetes de avión baratos reservando vuelos de última hora a un lugar desconocido. El vuelo en el que toman vuela a Tokio, Japón, donde los Simpson se sumergen en la cultura asiática y deben competir en un programa de juegos para poder volar a casa."
@@ -2580,7 +2580,7 @@ const data = {
     {
       "id": 11,
       "title": "Temporada 11",
-      "image": "Season_11_Icon.jpg",
+      "image": "simpsons_Season_11_Icon.jpg",
       "avgColor": "#5E8594",
       "episodes": [
         {
@@ -2589,7 +2589,7 @@ const data = {
           "title": "Beyond Blunderdome",
           "duration": "24",
           "airDate": "1999-09-26",
-          "image": "11x01.jpg",
+          "image": "simpsons_11x01.jpg",
           "synopsis": "The Simpsons are going to Hollywood when Homer complains about Mel Gibson's remake of Mr. Smith Goes to Washington and Gibson teams up with him to improve it, as he's the only person during the Springfield test screening to be honest with him.",
           "titleEs": "Más allá del error",
           "synopsisEs": "Los Simpson se van a Hollywood cuando Homer se queja de la nueva versión de Mel Gibson de Mr. Smith Goes to Washington y Gibson se une a él para mejorarla, ya que es la única persona durante la proyección de prueba de Springfield que fue honesta con él."
@@ -2600,7 +2600,7 @@ const data = {
           "title": "Brother's Little Helper",
           "duration": "24",
           "airDate": "1999-10-03",
-          "image": "11x02.jpg",
+          "image": "simpsons_11x02.jpg",
           "synopsis": "Bart is diagnosed with ADD after his latest prank during a \"Fire Prevention Day\" assembly at school, but his new medication makes him paranoid over Major League Baseball spying on him.",
           "titleEs": "El pequeño ayudante del hermano",
           "synopsisEs": "A Bart le diagnostican TDA después de su última broma durante una asamblea del \"Día de Prevención de Incendios\" en la escuela, pero su nueva medicación lo vuelve paranoico porque las Grandes Ligas de Béisbol lo espian."
@@ -2611,7 +2611,7 @@ const data = {
           "title": "Guess Who's Coming to Criticize Dinner?",
           "duration": "24",
           "airDate": "1999-10-24",
-          "image": "11x03.jpg",
+          "image": "simpsons_11x03.jpg",
           "synopsis": "Homer becomes a food critic for the local newspaper following the retirement of the old one. But after showering every meal with praise, his fellow critics peer pressure him into becoming caustic in his reviews, which quickly causes the local restauranteurs to plot his murder.",
           "titleEs": "¿Adivina quién viene a criticar a Cena?",
           "synopsisEs": "Homer se convierte en crítico gastronómico del periódico local tras la jubilación del anterior. Pero después de colmar cada comida de elogios, sus compañeros críticos lo presionan para que se vuelva cáustico en sus críticas, lo que rápidamente hace que los restauranteros locales planeen su asesinato."
@@ -2622,7 +2622,7 @@ const data = {
           "title": "Treehouse of Horror X",
           "duration": "24",
           "airDate": "1999-10-31",
-          "image": "11x04.jpg",
+          "image": "simpsons_11x04.jpg",
           "synopsis": "Celebrate ten years of macabre, yet hilarious stories with these tales of terror:",
           "titleEs": "La casa del árbol del terror X",
           "synopsisEs": "Celebre diez años de historias macabras pero hilarantes con estos cuentos de terror:"
@@ -2633,7 +2633,7 @@ const data = {
           "title": "E-I-E-I-D'oh",
           "duration": "24",
           "airDate": "1999-11-07",
-          "image": "11x05.jpg",
+          "image": "simpsons_11x05.jpg",
           "synopsis": "Forced to skip town to get out of a duel, Homer moves back to the farmland he lived on as a kid and tries his hand at growing crops, all of which fail except for a tomato/tobacco hybrid plant that makes addicts of anyone who eats it.",
           "titleEs": "E-I-E-I-D'oh",
           "synopsisEs": "Obligado a abandonar la ciudad para salir de un duelo, Homer regresa a las tierras de cultivo en las que vivió cuando era niño y prueba suerte con los cultivos, todos los cuales fracasan excepto una planta híbrida de tomate y tabaco que convierte a cualquiera que la come en adicto."
@@ -2644,7 +2644,7 @@ const data = {
           "title": "Hello Gutter, Hello Fadder",
           "duration": "24",
           "airDate": "1999-11-14",
-          "image": "11x06.jpg",
+          "image": "simpsons_11x06.jpg",
           "synopsis": "Homer becomes a local celebrity for bowling a 300 game, but, soon, everyone tires of how overexposed he is and becomes yesterday's news. Despondent, Homer attempts suicide, but, after getting rescued by Otto the bus driver and seeing Ron Howard with his children, Homer decides to be a better father and lavishes attention on Maggie \"The Forgotten\" Simpson.",
           "titleEs": "Hola canalla, hola padre.",
           "synopsisEs": "Homero se convierte en una celebridad local por jugar a los bolos 300, pero, pronto, todos se cansan de lo sobreexpuesto que está y se convierte en noticia del ayer. Abatido, Homer intenta suicidarse, pero, después de ser rescatado por Otto el conductor del autobús y ver a Ron Howard con sus hijos, Homer decide ser un mejor padre y prodiga atención a Maggie \"La Olvidada\" Simpson."
@@ -2655,7 +2655,7 @@ const data = {
           "title": "Eight Misbehavin'",
           "duration": "24",
           "airDate": "1999-11-21",
-          "image": "11x07.jpg",
+          "image": "simpsons_11x07.jpg",
           "synopsis": "Apu and Manjula become the parents of octuplets (they were trying for one baby, but Manjula was given an excess of fertility pills by Dr. Hibbert and The Simpsons). But when the initial media frenzy blows over after a mom from Shelbyville has nontuplets (nine children at once), their only hope for financial aid is allowing the kids to become a zoo attraction.",
           "titleEs": "Ocho portándose mal",
           "synopsisEs": "Apu y Manjula se convierten en padres de octillizos (estaban intentando tener un bebé, pero el Dr. Hibbert y Los Simpson le dieron a Manjula un exceso de pastillas para la fertilidad). Pero cuando el frenesí mediático inicial pasa después de que una madre de Shelbyville no tiene hijos (nueve hijos a la vez), su única esperanza de obtener ayuda financiera es permitir que los niños se conviertan en una atracción del zoológico."
@@ -2666,7 +2666,7 @@ const data = {
           "title": "Take My Wife, Sleaze",
           "duration": "24",
           "airDate": "1999-11-28",
-          "image": "11x08.jpg",
+          "image": "simpsons_11x08.jpg",
           "synopsis": "Homer wins a vintage motorcycle in a dance competition at a '50s nostalgia diner and creates a biker gang called the Hell's Satans — until a real biker gang with the same name crashes at the Simpson house.",
           "titleEs": "Toma a mi esposa, sordidez",
           "synopsisEs": "Homer gana una motocicleta antigua en un concurso de baile en un restaurante nostálgico de los años 50 y crea una pandilla de motociclistas llamada Hell's Satans, hasta que una verdadera pandilla de motociclistas con el mismo nombre se estrella en la casa de los Simpson."
@@ -2677,7 +2677,7 @@ const data = {
           "title": "Grift of the Magi",
           "duration": "24",
           "airDate": "1999-12-19",
-          "image": "11x09.jpg",
+          "image": "simpsons_11x09.jpg",
           "synopsis": "Springfield Elementary blows its already-small budget on ramps to accommodate the wheelchair-bound Bart (who broke his coccyx while jumping on Homer's bed in drag), but the school ends up bankrupt and shut down after Bart is cured and after Principal Skinner discovers that the construction workers are mob-connected...and a toy company buys out the school and turns it into a focus group to create the next \"must-have\" Christmas gift.",
           "titleEs": "Grito de los Reyes Magos",
           "synopsisEs": "La escuela primaria Springfield gasta su ya pequeño presupuesto en rampas para acomodar a Bart en silla de ruedas (quien se rompió el cóccix mientras saltaba en la cama de Homer), pero la escuela termina en bancarrota y cierra después de que Bart se cura y después de que el director Skinner descubre que los trabajadores de la construcción están conectados con la mafia... y una compañía de juguetes compra la escuela y la convierte en un grupo focal para crear el próximo regalo de Navidad \"imprescindible\"."
@@ -2688,7 +2688,7 @@ const data = {
           "title": "Little Big Mom",
           "duration": "24",
           "airDate": "2000-01-09",
-          "image": "11x10.jpg",
+          "image": "simpsons_11x10.jpg",
           "synopsis": "The Simpsons are forced to go to a ski resort to make use of the skis they bought, but never used. While Homer gets hit in the groin by moguls after being distracted by the mental image of Flanders' butt in a skintight ski suit and Lisa nearly gets attacked by deer, Marge ends up the one being injured when a cuckoo clock falls on her leg. While Marge is laid up in the hospital, Lisa steps in as her replacement — and realizes that it's a lot of work in cleaning up after the slovenly Homer and Bart.",
           "titleEs": "Pequeña gran mamá",
           "synopsisEs": "Los Simpson se ven obligados a ir a una estación de esquí para hacer uso de los esquís que compraron, pero que nunca usaron. Mientras Homer es golpeado en la ingle por magnates después de distraerse con la imagen mental del trasero de Flanders con un traje de esquí ceñido y Lisa casi es atacada por un ciervo, Marge termina herida cuando un reloj de cuco cae sobre su pierna. Mientras Marge está internada en el hospital, Lisa interviene como su reemplazo y se da cuenta de que es mucho trabajo limpiar los desechos de los descuidados Homero y Bart."
@@ -2699,7 +2699,7 @@ const data = {
           "title": "Faith Off",
           "duration": "24",
           "airDate": "2000-01-16",
-          "image": "11x11.jpg",
+          "image": "simpsons_11x11.jpg",
           "synopsis": "Bart becomes a faith healer after removing a glued-on bucket from Homer's head at a church revival. Meanwhile, Homer builds a homecoming float from his alma mater.",
           "titleEs": "Fe apagada",
           "synopsisEs": "Bart se convierte en curandero después de quitar un cubo pegado a la cabeza de Homero en un avivamiento de la iglesia. Mientras tanto, Homer construye una carroza de regreso a casa en su alma mater."
@@ -2710,7 +2710,7 @@ const data = {
           "title": "The Mansion Family",
           "duration": "24",
           "airDate": "2000-01-23",
-          "image": "11x12.jpg",
+          "image": "simpsons_11x12.jpg",
           "synopsis": "After receiving an award for oldest citizen of Springfield, Mr. Burns checks into the Mayo Clinic, leaving The Simpsons in charge of his luxurious mansion, and Homer uses Mr. Burns' mansion and wealth to hold a booze cruise for his buddies.",
           "titleEs": "La familia de la mansión",
           "synopsisEs": "Después de recibir un premio por ser el ciudadano más viejo de Springfield, el Sr. Burns ingresa en la Clínica Mayo, dejando a Los Simpson a cargo de su lujosa mansión, y Homer usa la mansión y la riqueza del Sr. Burns para organizar un crucero de bebidas alcohólicas para sus amigos."
@@ -2721,7 +2721,7 @@ const data = {
           "title": "Saddlesore Galactica",
           "duration": "24",
           "airDate": "2000-02-06",
-          "image": "11x13.jpg",
+          "image": "simpsons_11x13.jpg",
           "synopsis": "Homer and Bart rescue a horse from a cruel sideshow attraction and train it to be a badass on the racetrack, which irks a secret society of jockey elves. Meanwhile, Lisa files a complaint to President Bill Clinton over an unfair judgment at the state fair's Battle of the Bands.",
           "titleEs": "Dolor de silla Galáctica",
           "synopsisEs": "Homero y Bart rescatan a un caballo de una cruel atracción secundaria y lo entrenan para que sea un tipo rudo en la pista de carreras, lo que irrita a una sociedad secreta de elfos jinetes. Mientras tanto, Lisa presenta una queja ante el presidente Bill Clinton por un juicio injusto en la Batalla de Bandas de la feria estatal."
@@ -2732,7 +2732,7 @@ const data = {
           "title": "Alone Again, Natura-Diddily",
           "duration": "24",
           "airDate": "2000-02-13",
-          "image": "11x14.jpg",
+          "image": "simpsons_11x14.jpg",
           "synopsis": "While enjoying a day at the races, Homer's shirtless antics inadvertently cause the death of Maude Flanders, and Ned's faith begins to falter when Homer bungles his way to helping his depressed neighbor.",
           "titleEs": "Solo otra vez, Natura-Diddily",
           "synopsisEs": "Mientras disfruta de un día en las carreras, las travesuras de Homer sin camisa causan inadvertidamente la muerte de Maude Flanders, y la fe de Ned comienza a flaquear cuando Homer fracasa en su intento de ayudar a su vecino deprimido."
@@ -2743,7 +2743,7 @@ const data = {
           "title": "Missionary: Impossible",
           "duration": "24",
           "airDate": "2000-02-20",
-          "image": "11x15.jpg",
+          "image": "simpsons_11x15.jpg",
           "synopsis": "Homer runs off to a South Pacific island to escape the wrath of PBS after promising them $10,000 during one of their pledge drives.",
           "titleEs": "Misionero: Imposible",
           "synopsisEs": "Homer huye a una isla del Pacífico Sur para escapar de la ira de PBS después de prometerles 10.000 dólares durante una de sus campañas de donación."
@@ -2754,7 +2754,7 @@ const data = {
           "title": "Pygmoelian",
           "duration": "24",
           "airDate": "2000-02-27",
-          "image": "11x16.jpg",
+          "image": "simpsons_11x16.jpg",
           "synopsis": "Realizing that he's ugly after his face gets censored on the new Duff calendar, Moe gets plastic surgery and gets back at everyone who thought he was too ugly — which lands him a role on Springfield's most popular soap opera, It Never Ends. Meanwhile, Bart and Lisa chase after Maggie's runaway pink elephant balloon.",
           "titleEs": "pigmoeliano",
           "synopsisEs": "Al darse cuenta de que es feo después de que su rostro haya sido censurado en el nuevo calendario de Duff, Moe se somete a una cirugía plástica y se venga de todos los que pensaban que era demasiado feo, lo que le permite conseguir un papel en la telenovela más popular de Springfield, It Never Ends. Mientras tanto, Bart y Lisa persiguen el globo elefante rosa desbocado de Maggie."
@@ -2765,7 +2765,7 @@ const data = {
           "title": "Bart to the Future",
           "duration": "24",
           "airDate": "2000-03-19",
-          "image": "11x17.jpg",
+          "image": "simpsons_11x17.jpg",
           "synopsis": "The Simpsons visit an Indian casino after their camping trip to Larval Lake gets canceled due to an insect infestation (that has eaten the comment book and stolen the park ranger's class ring — followed by the skin, fat, and muscle off his hand), where Bart gets a vision of his future as a DeVry Institute dropout looking to hit the big time as a musician, while Lisa is the first female President of the United States, trying to get the country back on track after Donald Trump's disastrous stint as President**.",
           "titleEs": "Bart hacia el futuro",
           "synopsisEs": "Los Simpson visitan un casino indio después de que su viaje de campamento al lago Larval fuera cancelado debido a una plaga de insectos (que se comió el libro de comentarios y robó el anillo de graduación del guardabosques, seguido de la piel, la grasa y los músculos de su mano), donde Bart tiene una visión de su futuro como un desertor del Instituto DeVry que busca alcanzar el gran momento como músico, mientras Lisa es la primera mujer presidenta de los Estados Unidos, tratando de volver a encarrilar al país después del desastroso período de Donald Trump como presidente. Presidente**."
@@ -2776,7 +2776,7 @@ const data = {
           "title": "Days of Wine and D'oh'ses",
           "duration": "24",
           "airDate": "2000-04-09",
-          "image": "11x18.jpg",
+          "image": "simpsons_11x18.jpg",
           "synopsis": "After seeing how much of a drunken loser he is on his birthday party video, Barney decides to give up drinking, much to the shock of Moe and Homer. Meanwhile, Lisa and Bart search for the perfect photo for a phone book contest.",
           "titleEs": "Días de Vino y D'oh'ses",
           "synopsisEs": "Después de ver lo borracho y perdedor que es en el vídeo de su fiesta de cumpleaños, Barney decide dejar de beber, para sorpresa de Moe y Homer. Mientras tanto, Lisa y Bart buscan la foto perfecta para un concurso de guías telefónicas."
@@ -2787,7 +2787,7 @@ const data = {
           "title": "Kill the Alligator and Run",
           "duration": "24",
           "airDate": "2000-04-30",
-          "image": "11x19.jpg",
+          "image": "simpsons_11x19.jpg",
           "synopsis": "The Simpsons are going on spring break in Florida to hopefully cure Homer of his insomnia-induced insanity and fear of dying caused by answering a magazine quiz...but find themselves on the run from the law for running down the town's mascot, Captain Jack.",
           "titleEs": "Mata al caimán y corre.",
           "synopsisEs": "Los Simpson se van de vacaciones de primavera a Florida para, con suerte, curar a Homer de su locura inducida por el insomnio y el miedo a morir causado por responder un cuestionario de una revista... pero se encuentran huyendo de la ley por atropellar a la mascota de la ciudad, el Capitán Jack."
@@ -2798,7 +2798,7 @@ const data = {
           "title": "Last Tap Dance in Springfield",
           "duration": "24",
           "airDate": "2000-05-07",
-          "image": "11x20.jpg",
+          "image": "simpsons_11x20.jpg",
           "synopsis": "After seeing a film about a shy, bookish, Spanish girl who becomes a tango dancer's partner in a contest, Lisa begs Marge to let her take tango lessons, but ends up taking tap lessons from a former 1930s child star modeled after Shirley Temple and tries to hide the fact that she's terrible at tap from Homer and Marge. Meanwhile, Homer gets laser eye surgery and Bart and Milhouse hide out at the mall after Nelson announces that he's going to summer camp with them.",
           "titleEs": "El último claqué en Springfield",
           "synopsisEs": "Después de ver una película sobre una chica española tímida y estudiosa que se convierte en compañera de un bailarín de tango en un concurso, Lisa le ruega a Marge que la deje tomar lecciones de tango, pero termina tomando lecciones de claqué de una ex estrella infantil de la década de 1930 inspirada en Shirley Temple y trata de ocultarles a Homero y Marge el hecho de que es terrible tocando el claqué. Mientras tanto, Homer se somete a una cirugía ocular con láser y Bart y Milhouse se esconden en el centro comercial después de que Nelson anuncia que irá a un campamento de verano con ellos."
@@ -2809,7 +2809,7 @@ const data = {
           "title": "It's a Mad, Mad, Mad, Mad Marge",
           "duration": "24",
           "airDate": "2000-05-14",
-          "image": "11x21.jpg",
+          "image": "simpsons_11x21.jpg",
           "synopsis": "Otto breaks up with his fiancée Becky at the altar, leaving her to stay at the Simpson's house, where Marge fears Becky will replace her as a better wife and mother. Meanwhile, Principal Skinner assigns Bart's class into making a video (so long as it's not a parody or rip-off of The Blair Witch Project), which the school was able to afford by cutting geography lessons from their budget.",
           "titleEs": "Es una Marge loca, loca, loca, loca",
           "synopsisEs": "Otto rompe con su prometida Becky en el altar, dejándola quedarse en la casa de los Simpson, donde Marge teme que Becky la reemplace como una mejor esposa y madre. Mientras tanto, el director Skinner asigna a la clase de Bart la tarea de hacer un vídeo (siempre que no sea una parodia o una copia de The Blair Witch Project), que la escuela pudo costear recortando las lecciones de geografía de su presupuesto."
@@ -2820,7 +2820,7 @@ const data = {
           "title": "Behind the Laughter",
           "duration": "24",
           "airDate": "2000-05-21",
-          "image": "11x22.jpg",
+          "image": "simpsons_11x22.jpg",
           "synopsis": "In a parody of VH1's Behind the Music (and other cable documentary shows, like E! True Hollywood Story, that chronicle the rise and fall of celebrities and casts of famed TV shows), The Simpsons are depicted as a real-life family who created a sitcom about their lives that becomes popular -- and with fame, comes drug addictions, behind-the-scenes feuds, tell-all book scandals, ego trips, poor investments, and run-ins with the law that are contributing to the show's decline in quality and jeopardizing its future.",
           "titleEs": "Detrás de la risa",
           "synopsisEs": "En una parodia de Behind the Music de VH1 (y otros programas documentales por cable, como E! True Hollywood Story, que narra el ascenso y la caída de celebridades y elencos de programas de televisión famosos), Los Simpson son representados como una familia de la vida real que creó una comedia sobre sus vidas que se vuelve popular, y con la fama, vienen las adicciones a las drogas, las disputas detrás de escena, los escándalos de libros reveladores, los viajes de ego, las malas inversiones y los enfrentamientos con la ley que están contribuyendo a la la calidad del espectáculo y poniendo en peligro su futuro."
@@ -2831,7 +2831,7 @@ const data = {
     {
       "id": 12,
       "title": "Temporada 12",
-      "image": "Season_12_Icon.jpg",
+      "image": "simpsons_Season_12_Icon.jpg",
       "avgColor": "#AB744F",
       "episodes": [
         {
@@ -2840,7 +2840,7 @@ const data = {
           "title": "Treehouse of Horror XI",
           "duration": "24",
           "airDate": "2000-11-01",
-          "image": "12x01.jpg",
+          "image": "simpsons_12x01.jpg",
           "synopsis": "This year's terrifying stories include:",
           "titleEs": "La casa del árbol del terror XI",
           "synopsisEs": "Las aterradoras historias de este año incluyen:"
@@ -2851,7 +2851,7 @@ const data = {
           "title": "A Tale of Two Springfields",
           "duration": "24",
           "airDate": "2000-11-05",
-          "image": "12x02.jpg",
+          "image": "simpsons_12x02.jpg",
           "synopsis": "When the Springfield Phone Company introduces a second area code, Homer, angry over being forced to remember three new digits, notices that the people who still have the original area code are all part of the affluent part of the town, and rallies every citizen who were given the new code into dividing the city.",
           "titleEs": "Una historia de dos Springfield",
           "synopsisEs": "Cuando la Compañía Telefónica de Springfield introduce un segundo código de área, Homer, enojado por verse obligado a recordar tres nuevos dígitos, se da cuenta de que las personas que todavía tienen el código de área original son parte de la parte acomodada de la ciudad y reúne a todos los ciudadanos a quienes se les dio el nuevo código para dividir la ciudad."
@@ -2862,7 +2862,7 @@ const data = {
           "title": "Insane Clown Poppy",
           "duration": "24",
           "airDate": "2000-11-12",
-          "image": "12x03.jpg",
+          "image": "simpsons_12x03.jpg",
           "synopsis": "The Simpsons visit the annual book festival, where Krusty is in attendance to sign copies of his new book (ghostwritten by John Updike), only for a young girl named Sophie to approach him and reveal herself to be the daughter he's never met. Completely unfamiliar with fatherhood, Krusty asks Homer for assistance with bonding with his daughter, but the relationship hits a snag when he bets Sophie's beloved violin in a high-stakes poker game with Fat Tony.",
           "titleEs": "Amapola payaso loco",
           "synopsisEs": "Los Simpson visitan el festival anual del libro, donde Krusty asiste para firmar copias de su nuevo libro (escrito por John Updike), solo para que una joven llamada Sophie se le acerque y le revele ser la hija que nunca conoció. Sin estar completamente familiarizado con la paternidad, Krusty le pide ayuda a Homer para establecer un vínculo con su hija, pero la relación se complica cuando apuesta el amado violín de Sophie en una partida de póquer de alto riesgo con Fat Tony."
@@ -2873,7 +2873,7 @@ const data = {
           "title": "Lisa the Tree Hugger",
           "duration": "24",
           "airDate": "2000-11-19",
-          "image": "12x04.jpg",
+          "image": "simpsons_12x04.jpg",
           "synopsis": "Lisa's crush on an environmentalist leads her to camp out on Springfield's tallest tree in protest over plans to have it felled, but when she takes a break to go home and sleep in her own house, she discovers the next day that the tree was destroyed by lightning and everyone thinks Lisa died.",
           "titleEs": "Lisa la abrazadora de árboles",
           "synopsisEs": "El enamoramiento de Lisa por un ambientalista la lleva a acampar en el árbol más alto de Springfield en protesta por los planes de talarlo, pero cuando se toma un descanso para regresar a casa y dormir en su propia casa, descubre al día siguiente que el árbol fue destruido por un rayo y todos piensan que Lisa murió."
@@ -2884,7 +2884,7 @@ const data = {
           "title": "Homer vs. Dignity",
           "duration": "24",
           "airDate": "2000-11-26",
-          "image": "12x05.jpg",
+          "image": "simpsons_12x05.jpg",
           "synopsis": "With the family in dire straits once again, Homer decides to ask Mr. Burns for a raise, but Burns has a better plan: hire Homer as his personal jester (or \"prank monkey\") while Smithers takes time off to go to New Mexico to star in a musical he wrote about Malibu Stacy. But when the pranks escalate to being gross and humiliating, Homer must choose between making money for his family or retaining his dignity.",
           "titleEs": "Homero contra la dignidad",
           "synopsisEs": "Con la familia en una situación desesperada una vez más, Homer decide pedirle un aumento al Sr. Burns, pero Burns tiene un plan mejor: contratar a Homer como su bufón personal (o \"mono de broma\") mientras Smithers se toma un tiempo libre para ir a Nuevo México a protagonizar un musical que escribió sobre Malibu Stacy. Pero cuando las bromas se vuelven groseras y humillantes, Homer debe elegir entre ganar dinero para su familia o conservar su dignidad."
@@ -2895,7 +2895,7 @@ const data = {
           "title": "The Computer Wore Menace Shoes",
           "duration": "24",
           "airDate": "2000-12-03",
-          "image": "12x06.jpg",
+          "image": "simpsons_12x06.jpg",
           "synopsis": "Homer gets into the Internet by becoming an online gossip columnist/conspiracy theorist, whose stories land him on a bizarre island for people who know too much (and is modeled after the one from the TV show The Prisoner).",
           "titleEs": "La computadora usaba zapatos amenazadores",
           "synopsisEs": "Homer ingresa a Internet al convertirse en un columnista de chismes y teórico de la conspiración, cuyas historias lo llevan a una isla extraña para personas que saben demasiado (y sigue el modelo del programa de televisión The Prisoner)."
@@ -2906,7 +2906,7 @@ const data = {
           "title": "The Great Money Caper",
           "duration": "24",
           "airDate": "2000-12-10",
-          "image": "12x07.jpg",
+          "image": "simpsons_12x07.jpg",
           "synopsis": "When the family car gets destroyed by a sturgeon that fell from space, Bart decides to make money by doing street performing, but when people see Homer abandon Bart in the street and give him money out of pity, Homer, Bart, and Grampa decide to become grifters.",
           "titleEs": "La gran travesura del dinero",
           "synopsisEs": "Cuando el auto familiar es destruido por un esturión que cayó del espacio, Bart decide ganar dinero actuando en la calle, pero cuando la gente ve a Homer abandonar a Bart en la calle y darle dinero por lástima, Homer, Bart y el abuelo deciden convertirse en estafadores."
@@ -2917,7 +2917,7 @@ const data = {
           "title": "Skinner's Sense of Snow",
           "duration": "24",
           "airDate": "2000-12-17",
-          "image": "12x08.jpg",
+          "image": "simpsons_12x08.jpg",
           "synopsis": "The kids of Springfield Elementary get snowed in the day before Christmas break, and Principal Skinner's skills as a drill sergeant fail when Bart leads a student revolution. Meanwhile, Homer \"borrows\" Flanders' car (and part of his roof) to make a makeshift snowplow to drive through the blizzard and rescue the kids.",
           "titleEs": "El sentido de la nieve de Skinner",
           "synopsisEs": "Los niños de la escuela primaria de Springfield quedan nevados el día antes de las vacaciones de Navidad, y las habilidades del director Skinner como sargento instructor fallan cuando Bart lidera una revolución estudiantil. Mientras tanto, Homer \"toma prestado\" el auto de Flanders (y parte de su techo) para hacer un quitanieves improvisado para atravesar la tormenta de nieve y rescatar a los niños."
@@ -2928,7 +2928,7 @@ const data = {
           "title": "HOMЯ",
           "duration": "24",
           "airDate": "2001-01-07",
-          "image": "12x09.jpg",
+          "image": "simpsons_12x09.jpg",
           "synopsis": "After losing the family's life savings in the stock market, Homer gets a job as a test subject for scientific experiments, one of which reveals the true reason behind his stupidity: a crayon that got stuck in his brain when he was a child. When Homer gets the crayon surgically removed, he becomes a more intelligent man — and soon learns that being smart doesn't equal being happy.",
           "titleEs": "HOMBRE",
           "synopsisEs": "Después de perder los ahorros de toda la familia en el mercado de valores, Homer consigue un trabajo como sujeto de pruebas para experimentos científicos, uno de los cuales revela la verdadera razón detrás de su estupidez: un crayón que se le quedó atrapado en el cerebro cuando era niño. Cuando a Homer le extraen quirúrgicamente el crayón, se convierte en un hombre más inteligente y pronto aprende que ser inteligente no equivale a ser feliz."
@@ -2939,7 +2939,7 @@ const data = {
           "title": "Pokey Mom",
           "duration": "24",
           "airDate": "2001-01-14",
-          "image": "12x10.jpg",
+          "image": "simpsons_12x10.jpg",
           "synopsis": "After visiting a prison rodeo, Marge volunteers to teach convicts how to be artists and befriends a prisoner Jack, who has artistic potential, but is a manipulative sociopath. Meanwhile, Homer starts his own chiropractic office by pushing people onto trash cans, only to get hunted down by real chiropractors.",
           "titleEs": "Mamá pequeña",
           "synopsisEs": "Después de visitar un rodeo en la prisión, Marge se ofrece como voluntaria para enseñar a los convictos cómo ser artistas y se hace amiga del prisionero Jack, que tiene potencial artístico, pero es un sociópata manipulador. Mientras tanto, Homer abre su propia oficina de quiropráctica empujando a la gente a los botes de basura, solo para ser perseguido por quiroprácticos reales."
@@ -2950,7 +2950,7 @@ const data = {
           "title": "Worst Episode Ever",
           "duration": "24",
           "airDate": "2001-02-04",
-          "image": "12x11.jpg",
+          "image": "simpsons_12x11.jpg",
           "synopsis": "The Comic Book Guy bans Bart and Milhouse from his store after they talk Martin's mom out of selling his rare Star Wars memorabilia, but is forced to take a sabbatical from working at the Android Dungeon after suffering a heart attack during a Tom Savini Q&A session. While Comic Book Guy navigates through the world of human interaction, Bart and Milhouse run The Android Dungeon, where they discover a secret basement of illegal videotapes and charge the kids in town to see them.",
           "titleEs": "El peor episodio de todos los tiempos",
           "synopsisEs": "El tipo de los cómics prohíbe a Bart y Milhouse la entrada a su tienda después de que convencieron a la madre de Martin de no vender sus raros recuerdos de Star Wars, pero se ve obligado a tomarse un año sabático de su trabajo en Android Dungeon después de sufrir un ataque cardíaco durante una sesión de preguntas y respuestas de Tom Savini. Mientras Comic Book Guy navega por el mundo de la interacción humana, Bart y Milhouse dirigen The Android Dungeon, donde descubren un sótano secreto lleno de cintas de vídeo ilegales y cobran a los niños de la ciudad por verlas."
@@ -2961,7 +2961,7 @@ const data = {
           "title": "Tennis the Menace",
           "duration": "24",
           "airDate": "2001-02-11",
-          "image": "12x12.jpg",
+          "image": "simpsons_12x12.jpg",
           "synopsis": "The Simpsons install a tennis court in their backyard after Homer is told that a mausoleum he wants for the still-alive Grampa Simpson would need enough concrete for a tennis court — and it (the tennis court) ends up tearing the family apart when Homer's goofing off becomes gossip fodder for the neighborhood and Marge decides to trade him in for Bart.",
           "titleEs": "Tenis la amenaza",
           "synopsisEs": "Los Simpson instalan una cancha de tenis en su patio trasero después de que le dicen a Homero que el mausoleo que quiere para el abuelo Simpson, aún vivo, necesitaría suficiente concreto para una cancha de tenis, y (la cancha de tenis) termina destrozando a la familia cuando las tonterías de Homero se convierten en materia de chismes para el vecindario y Marge decide cambiarlo por Bart."
@@ -2972,7 +2972,7 @@ const data = {
           "title": "Day of the Jackanapes",
           "duration": "24",
           "airDate": "2001-02-18",
-          "image": "12x13.jpg",
+          "image": "simpsons_12x13.jpg",
           "synopsis": "Once again, Krusty cancels his show (this time, because of executive meddling and the growing popularity of big-money game shows) and hosts a farewell special. And once again, Sideshow Bob (after hearing that Krusty erased all the episodes he did where Sideshow Bob was his sidekick rather than Sideshow Mel) returns to kill Bart and Krusty by brainwashing Bart into being a suicide bomber.",
           "titleEs": "Día de los Jackanapes",
           "synopsisEs": "Una vez más, Krusty cancela su programa (esta vez, debido a la intromisión de los ejecutivos y la creciente popularidad de los programas de juegos con mucho dinero) y presenta un especial de despedida. Y una vez más, Sideshow Bob (después de escuchar que Krusty borró todos los episodios que hizo en los que Sideshow Bob era su compañero en lugar de Sideshow Mel) regresa para matar a Bart y Krusty lavándole el cerebro a Bart para convertirlo en un terrorista suicida."
@@ -2983,7 +2983,7 @@ const data = {
           "title": "New Kids on the Blecch",
           "duration": "24",
           "airDate": "2001-02-25",
-          "image": "12x14.jpg",
+          "image": "simpsons_12x14.jpg",
           "synopsis": "After Bart cheats at the Springfield Marathon, he is recruited by record producer L.T. Smash alongside Milhouse, Nelson, and Ralph Wiggum to form a boy band: The Party Posse. However, when Lisa sees something strange in the band's newest music video, she discovers a shocking military conspiracy.",
           "titleEs": "Nuevos niños en el Blecch",
           "synopsisEs": "Después de que Bart hace trampa en el maratón de Springfield, es reclutado por el productor discográfico L.T. Aplasta junto a Milhouse, Nelson y Ralph Wiggum para formar una banda de chicos: The Party Posse. Sin embargo, cuando Lisa ve algo extraño en el vídeo musical más reciente de la banda, descubre una impactante conspiración militar."
@@ -2994,7 +2994,7 @@ const data = {
           "title": "Hungry, Hungry Homer",
           "duration": "24",
           "airDate": "2001-03-04",
-          "image": "12x15.jpg",
+          "image": "simpsons_12x15.jpg",
           "synopsis": "Homer, who has been on a Good Samaritan kick lately (helping Lisa get her missing Blocko piece on her Eiffel Tower model, saving Snake from getting beaten by the police, helping Bart get a date for the dance, and helping Marge get highlights in her hair), goes on a hunger strike to protest the Springfield Isotopes being moved.",
           "titleEs": "Homero hambriento, hambriento",
           "synopsisEs": "Homer, que últimamente ha estado en una patada de buen samaritano (ayudando a Lisa a conseguir la pieza de Blocko que le faltaba en su modelo de la Torre Eiffel, salvando a Snake de ser golpeada por la policía, ayudando a Bart a conseguir una cita para el baile y ayudando a Marge a ponerse mechas en el cabello), se declara en huelga de hambre para protestar por el traslado de los isótopos de Springfield."
@@ -3005,7 +3005,7 @@ const data = {
           "title": "Bye Bye Nerdie",
           "duration": "24",
           "airDate": "2001-03-11",
-          "image": "12x16.jpg",
+          "image": "simpsons_12x16.jpg",
           "synopsis": "Lisa discovers a biological reason as to why bullies pick on nerds after a new girl inexplicably targets her for beatings. Meanwhile, Homer becomes a babyproofer and puts baby- and child-related health services out of business.",
           "titleEs": "Adiós nerd",
           "synopsisEs": "Lisa descubre una razón biológica por la que los matones molestan a los nerds después de que una chica nueva inexplicablemente la ataca para golpearla. Mientras tanto, Homer se convierte en un protector de bebés y cierra los servicios de salud relacionados con bebés y niños."
@@ -3016,7 +3016,7 @@ const data = {
           "title": "Simpson Safari",
           "duration": "24",
           "airDate": "2001-04-01",
-          "image": "12x17.jpg",
+          "image": "simpsons_12x17.jpg",
           "synopsis": "After Homer's misbehavior at the supermarket causes a bag boy strike, the Simpsons are left without food — until they find a 1960s-era box of animal crackers advertising a contest where the winners get an African safari (which they get when Homer gets hit in the face with the box and the company -- which doesn't even sell animal crackers anymore -- gives them the vacation so Homer won't sue them).",
           "titleEs": "Safari Simpson",
           "synopsisEs": "Después de que el mal comportamiento de Homer en el supermercado provoca una huelga de vendedores de bolsas, los Simpson se quedan sin comida, hasta que encuentran una caja de galletas de animales de la década de 1960 que anuncia un concurso en el que los ganadores obtienen un safari africano (que obtienen cuando Homer recibe un golpe en la cara con la caja y la compañía, que ya ni siquiera vende galletas de animales, les da vacaciones para que Homer no los demande)."
@@ -3027,7 +3027,7 @@ const data = {
           "title": "Trilogy of Error",
           "duration": "24",
           "airDate": "2001-04-29",
-          "image": "12x18.jpg",
+          "image": "simpsons_12x18.jpg",
           "synopsis": "In this spoof of Go and Run, Lola, Run, viewers get to see how Homer's severed thumb, Lisa's race to school with her grammar-correcting robot, and Bart and Milhouse finding a fireworks stash and running afoul of Fat Tony are interconnected.",
           "titleEs": "Trilogía del error",
           "synopsisEs": "En esta parodia de Go and Run, Lola, Run, los espectadores pueden ver cómo el pulgar amputado de Homero, la carrera de Lisa a la escuela con su robot corrector gramatical y cómo Bart y Milhouse encuentran un alijo de fuegos artificiales y chocan con Fat Tony están interconectados."
@@ -3038,7 +3038,7 @@ const data = {
           "title": "I'm Goin' to Praiseland",
           "duration": "24",
           "airDate": "2001-05-06",
-          "image": "12x19.jpg",
+          "image": "simpsons_12x19.jpg",
           "synopsis": "Still not over the death of his wife, Maude, Ned Flanders tries to get in good with Rachel Jordan, but when his behavior creeps her out, Flanders enlists the Simpsons' help to get rid of anything that could remind him of Maude. However, Flanders discovers a sketchbook his wife had with plans for a Christian theme park called \"Praiseland\", which Flanders decides to build in her memory.",
           "titleEs": "Voy a Praiseland",
           "synopsisEs": "Aún sin superar la muerte de su esposa, Maude, Ned Flanders intenta llevarse bien con Rachel Jordan, pero cuando su comportamiento la asusta, Flanders solicita la ayuda de los Simpson para deshacerse de cualquier cosa que pueda recordarle a Maude. Sin embargo, Flanders descubre un cuaderno de bocetos que tenía su esposa con los planos de un parque temático cristiano llamado \"Praiseland\", que Flanders decide construir en su memoria."
@@ -3049,7 +3049,7 @@ const data = {
           "title": "Children of a Lesser Clod",
           "duration": "24",
           "airDate": "2001-05-13",
-          "image": "12x20.jpg",
+          "image": "simpsons_12x20.jpg",
           "synopsis": "Homer suffers a knee injury during a Springfield YMCA basketball game, and uses his free time to take care of the neighborhood kids after Flanders asks Homer to babysit Rod and Todd. Soon, he turns it into a daycare center and becomes a candidate for the Springfield Nice Guy Awards, while the resentful Bart and Lisa plot to expose Homer for the neglectful, abusive jerk he truly is.",
           "titleEs": "Hijos de un terrón menor",
           "synopsisEs": "Homer sufre una lesión en la rodilla durante un partido de baloncesto de la YMCA de Springfield y usa su tiempo libre para cuidar a los niños del vecindario después de que Flanders le pide a Homer que cuide a Rod y Todd. Pronto, lo convierte en una guardería y se convierte en candidato a los premios Springfield Nice Guy Awards, mientras que los resentidos Bart y Lisa planean exponer a Homer como el idiota negligente y abusivo que realmente es."
@@ -3060,7 +3060,7 @@ const data = {
           "title": "Simpsons Tall Tales",
           "duration": "24",
           "airDate": "2001-05-20",
-          "image": "12x21.jpg",
+          "image": "simpsons_12x21.jpg",
           "synopsis": "The family rides the rails to travel to Delaware. While on the train, a hobo tells them some famous tall tales, casting them and other Simpsons characters into the stories.",
           "titleEs": "Los cuentos de los Simpson",
           "synopsisEs": "La familia viaja en tren a Delaware. Mientras está en el tren, un vagabundo les cuenta algunos cuentos famosos, incluyéndolos a ellos y a otros personajes de Los Simpson en las historias."
@@ -3071,7 +3071,7 @@ const data = {
     {
       "id": 13,
       "title": "Temporada 13",
-      "image": "Season_13_Icon.jpg",
+      "image": "simpsons_Season_13_Icon.jpg",
       "avgColor": "#95828F",
       "episodes": [
         {
@@ -3080,7 +3080,7 @@ const data = {
           "title": "Treehouse of Horror XII",
           "duration": "24",
           "airDate": "2001-11-06",
-          "image": "13x01.jpg",
+          "image": "simpsons_13x01.jpg",
           "synopsis": "Opening - Mr. Burns scares the Simpsons on Halloween, thanks to his lucky bat ornament and the \"shocking\" death of his assistant, Waylon Smithers.",
           "titleEs": "La casa del árbol del terror XII",
           "synopsisEs": "Apertura: El Sr. Burns asusta a los Simpson en Halloween, gracias a su adorno de murciélago de la suerte y a la muerte \"impactante\" de su asistente, Waylon Smithers."
@@ -3091,7 +3091,7 @@ const data = {
           "title": "The Parent Rap",
           "duration": "24",
           "airDate": "2001-11-11",
-          "image": "13x02.jpg",
+          "image": "simpsons_13x02.jpg",
           "synopsis": "Bart appears in court to pay for an embarrassing joyride in the police chief's patrol car, but just before he is set free, a second, vindictive judge named Constance Harm assumes the case and sentences him to the worst kind of detention imaginable: being tethered to Homer around the clock.",
           "titleEs": "El rap de los padres",
           "synopsisEs": "Bart comparece ante el tribunal para pagar un vergonzoso paseo en la patrulla del jefe de policía, pero justo antes de ser liberado, una segunda jueza vengativa llamada Constance Harm asume el caso y lo sentencia al peor tipo de detención imaginable: estar atado a Homer las 24 horas del día."
@@ -3102,7 +3102,7 @@ const data = {
           "title": "Homer the Moe",
           "duration": "24",
           "airDate": "2001-11-18",
-          "image": "13x03.jpg",
+          "image": "simpsons_13x03.jpg",
           "synopsis": "When Moe visits his old bartending school to rediscover his passion for the business, Homer is charged with keeping tabs on Springfield's premiere watering hole. But when Moe decides to make his tavern over into something more hip and modern, a disgruntled Homer opens his own bar in the Simpson family garage.",
           "titleEs": "Homero el Moe",
           "synopsisEs": "Cuando Moe visita su antigua escuela de coctelería para redescubrir su pasión por el negocio, Homer se encarga de controlar el principal bar de Springfield. Pero cuando Moe decide convertir su taberna en algo más moderno y moderno, Homer descontento abre su propio bar en el garaje de la familia Simpson."
@@ -3113,7 +3113,7 @@ const data = {
           "title": "A Hunka Hunka Burns in Love",
           "duration": "24",
           "airDate": "2001-12-02",
-          "image": "13x04.jpg",
+          "image": "simpsons_13x04.jpg",
           "synopsis": "Homer's new job as the author of fortune cookies assures Mr. Burns that love is on the horizon. Mr. Burns finds it in a woman named Gloria, whom he loves so much that he wants to marry. But as he proposes to Gloria, her ex shows up - which happens to be Snake, and he has just escaped from the Springfield Penitentiary.",
           "titleEs": "Un Hunka Hunka arde enamorado",
           "synopsisEs": "El nuevo trabajo de Homer como autor de galletas de la fortuna le asegura al Sr. Burns que el amor está en el horizonte. El señor Burns lo encuentra en una mujer llamada Gloria, a quien ama tanto que quiere casarse. Pero cuando le propone matrimonio a Gloria, aparece su ex, que resulta ser Snake, y acaba de escapar de la Penitenciaría de Springfield."
@@ -3124,7 +3124,7 @@ const data = {
           "title": "The Blunder Years",
           "duration": "24",
           "airDate": "2001-12-09",
-          "image": "13x05.jpg",
+          "image": "simpsons_13x05.jpg",
           "synopsis": "Homer is hypnotized into remembering a traumatic experience that may have something to do with the death of Smithers' father.",
           "titleEs": "Los años del error",
           "synopsisEs": "Homero es hipnotizado para recordar una experiencia traumática que puede tener algo que ver con la muerte del padre de Smithers."
@@ -3135,7 +3135,7 @@ const data = {
           "title": "She of Little Faith",
           "duration": "24",
           "airDate": "2001-12-16",
-          "image": "13x06.jpg",
+          "image": "simpsons_13x06.jpg",
           "synopsis": "Desperate for money, the First Church of Springfield plans to rent out its wall space to local advertisers. Horrified at the living commercial the church has become, Lisa withdraws herself from the church and converts to Buddhism.",
           "titleEs": "La de poca fe",
           "synopsisEs": "Desesperada por conseguir dinero, la Primera Iglesia de Springfield planea alquilar su espacio en las paredes a anunciantes locales. Horrorizada por el comercio viviente en el que se ha convertido la iglesia, Lisa se retira de la iglesia y se convierte al budismo."
@@ -3146,7 +3146,7 @@ const data = {
           "title": "Brawl in the Family",
           "duration": "24",
           "airDate": "2002-01-06",
-          "image": "13x07.jpg",
+          "image": "simpsons_13x07.jpg",
           "synopsis": "When a Monopoly game goes sour, the Simpsons are forced to undergo the supervision of a social services officer to reinforce the ideals of a functional family, but strategies horribly backfire when Homer (and Ned's) Vegas wives return.",
           "titleEs": "Pelea en la familia",
           "synopsisEs": "Cuando un juego de Monopoly sale mal, los Simpson se ven obligados a someterse a la supervisión de un oficial de servicios sociales para reforzar los ideales de una familia funcional, pero las estrategias resultan terriblemente contraproducentes cuando las esposas de Homero (y Ned) en Las Vegas regresan."
@@ -3157,7 +3157,7 @@ const data = {
           "title": "Sweets and Sour Marge",
           "duration": "24",
           "airDate": "2002-01-20",
-          "image": "13x08.jpg",
+          "image": "simpsons_13x08.jpg",
           "synopsis": "When Springfield is named the \"World's Fattest Town\", thanks to a diabolical scheme by the Motherloving Sugar Corp., Marge takes it upon herself to rid the entire town of the sweet stuff. But after winning a case against Garth Motherloving, Judge Snyder bans all sugar products.",
           "titleEs": "Marge dulce y amarga",
           "synopsisEs": "Cuando Springfield es nombrada \"la ciudad más gorda del mundo\", gracias a un plan diabólico de Motherloving Sugar Corp., Marge se encarga de librar a toda la ciudad de esas cosas dulces. Pero después de ganar un caso contra Garth Motherloving, el juez Snyder prohíbe todos los productos azucarados."
@@ -3168,7 +3168,7 @@ const data = {
           "title": "Jaws Wired Shut",
           "duration": "24",
           "airDate": "2002-01-27",
-          "image": "13x09.jpg",
+          "image": "simpsons_13x09.jpg",
           "synopsis": "Homer breaks his jaw in an accident, requiring it to be wired shut for a month. His resulting inability to speak makes him a better listener, and he becomes closer to family and friends because of it. They all like the new Homer much better, but when the wires come off and Homer retains his new attitude, everyone begins to miss Homer's old antics.",
           "titleEs": "Mandíbulas cerradas con cable",
           "synopsisEs": "Homer se rompe la mandíbula en un accidente, por lo que debe permanecer cerrada con cables durante un mes. Su consiguiente incapacidad para hablar lo convierte en un mejor oyente y, gracias a ello, se vuelve más cercano a sus familiares y amigos. A todos les gusta mucho más el nuevo Homer, pero cuando los cables se desconectan y Homer conserva su nueva actitud, todos empiezan a extrañar las viejas travesuras de Homer."
@@ -3179,7 +3179,7 @@ const data = {
           "title": "Half-Decent Proposal",
           "duration": "24",
           "airDate": "2002-02-10",
-          "image": "13x10.jpg",
+          "image": "simpsons_13x10.jpg",
           "synopsis": "Marge, with a little help from Patty, Selma, and Jack (Daniels), e-mails Artie Ziff, who offers $1,000,000 for a weekend (\"no funny business\") alone with her - money they could use for an operation to make Homer stop snoring.",
           "titleEs": "Propuesta medio decente",
           "synopsisEs": "Marge, con un poco de ayuda de Patty, Selma y Jack (Daniels), envía un correo electrónico a Artie Ziff, quien le ofrece 1.000.000 de dólares por un fin de semana (\"no es nada divertido\") a solas con ella: dinero que podrían utilizar para una operación que haga que Homer deje de roncar."
@@ -3190,7 +3190,7 @@ const data = {
           "title": "The Bart Wants What it Wants",
           "duration": "24",
           "airDate": "2002-02-17",
-          "image": "13x11.jpg",
+          "image": "simpsons_13x11.jpg",
           "synopsis": "Bart develops a crush on Rainier Wolfcastle's daughter Greta. After hastily thinking he is not ready for love, Bart dumps her, only to have second thoughts later. But by then, Greta falls for Milhouse and a trip to the set of Rainier's latest movie in Canada isn't plenty for Bart to win her back.",
           "titleEs": "El Bart quiere lo que quiere",
           "synopsisEs": "Bart se enamora de Greta, la hija de Rainier Wolfcastle. Después de pensar apresuradamente que no está preparado para el amor, Bart la deja, sólo para pensarlo mejor más tarde. Pero para entonces, Greta se enamora de Milhouse y un viaje al set de la última película de Rainier en Canadá no es suficiente para que Bart la recupere."
@@ -3201,7 +3201,7 @@ const data = {
           "title": "The Lastest Gun in the West",
           "duration": "24",
           "airDate": "2002-02-24",
-          "image": "13x12.jpg",
+          "image": "simpsons_13x12.jpg",
           "synopsis": "Bart and Lisa meet a washed-up celebrity of westerns from the 1950s and attempt to revive his career by getting him to appear on the The Krusty the Clown Show. But years of alcohol abuse gets in the way.",
           "titleEs": "La última arma en Occidente",
           "synopsisEs": "Bart y Lisa conocen a una celebridad de los westerns de la década de 1950 e intentan revivir su carrera haciéndole aparecer en The Krusty the Clown Show. Pero años de abuso de alcohol se interponen en su camino."
@@ -3212,7 +3212,7 @@ const data = {
           "title": "The Old Man and the Key",
           "duration": "23",
           "airDate": "2002-03-10",
-          "image": "13x13.jpg",
+          "image": "simpsons_13x13.jpg",
           "synopsis": "Bart and Lisa meet a washed-up celebrity of westerns from the 1950s and attempt to revive his career by getting him to appear on the The Krusty the Clown Show. But years of alcohol abuse gets in the way.",
           "titleEs": "El viejo y la llave",
           "synopsisEs": "Bart y Lisa conocen a una celebridad de los westerns de la década de 1950 e intentan revivir su carrera haciéndole aparecer en The Krusty the Clown Show. Pero años de abuso de alcohol se interponen en su camino."
@@ -3223,7 +3223,7 @@ const data = {
           "title": "Tales from the Public Domain",
           "duration": "24",
           "airDate": "2002-03-17",
-          "image": "13x14.jpg",
+          "image": "simpsons_13x14.jpg",
           "synopsis": "Homer gets a letter from the library about an overdue book. He checked it out when Bart was born to have something to read to his child. Lisa suggests that he read them some stories from it.",
           "titleEs": "Cuentos del dominio público",
           "synopsisEs": "Homero recibe una carta de la biblioteca sobre un libro vencido. Lo comprobó cuando nació Bart para tener algo que leerle a su hijo. Lisa sugiere que les lea algunas historias."
@@ -3234,7 +3234,7 @@ const data = {
           "title": "Blame it on Lisa",
           "duration": "23",
           "airDate": "2002-03-31",
-          "image": "13x15.jpg",
+          "image": "simpsons_13x15.jpg",
           "synopsis": "Lisa sponsors a South American orphan - and when the child is reported missing, the Simpsons go to Brazil to search for him.",
           "titleEs": "Échale la culpa a Lisa",
           "synopsisEs": "Lisa patrocina a un huérfano sudamericano y cuando se denuncia la desaparición del niño, los Simpson van a Brasil a buscarlo."
@@ -3245,7 +3245,7 @@ const data = {
           "title": "Weekend at Burnsie's",
           "duration": "24",
           "airDate": "2002-04-07",
-          "image": "13x16.jpg",
+          "image": "simpsons_13x16.jpg",
           "synopsis": "Homer is prescribed medicinal marijuana after getting pecked in the eyes by a murder of crows. While his family and friends worry about the drug altering his personality, Homer becomes Mr. Burns' vice president after cracking up at Burns' antiquated jokes.",
           "titleEs": "Fin de semana en Burnsie's",
           "synopsisEs": "A Homer le recetan marihuana medicinal después de que un grupo de cuervos le picara en los ojos. Mientras su familia y amigos se preocupan de que la droga altere su personalidad, Homer se convierte en el vicepresidente del Sr. Burns después de reírse de los chistes anticuados de Burns."
@@ -3256,7 +3256,7 @@ const data = {
           "title": "Gump Roast",
           "duration": "23",
           "airDate": "2002-04-21",
-          "image": "13x17.jpg",
+          "image": "simpsons_13x17.jpg",
           "synopsis": "Homer is honored at a Friars' Club Roast and Kang and Kodos crash the ceremony to find out if humanity is worth saving.",
           "titleEs": "Asado De Gump",
           "synopsisEs": "Homero es honrado en un asado del Friars' Club y Kang y Kodos irrumpen en la ceremonia para descubrir si vale la pena salvar a la humanidad."
@@ -3267,7 +3267,7 @@ const data = {
           "title": "I Am Furious (Yellow)",
           "duration": "24",
           "airDate": "2002-04-28",
-          "image": "13x18.jpg",
+          "image": "simpsons_13x18.jpg",
           "synopsis": "After being inspired by a cartoonist during Career Day at Springfield Elementary, Bart creates an Internet cartoon based on Homer's anger problems called Angry Dad. Meanwhile, the Comic Book Guy has his hands full when legendary Marvel Comics creator Stan Lee begins harassing him and scaring off his customers.",
           "titleEs": "Estoy furioso (amarillo)",
           "synopsisEs": "Después de inspirarse en un dibujante durante el Día de la Carrera en la escuela primaria de Springfield, Bart crea una caricatura en Internet basada en los problemas de ira de Homer llamada Angry Dad. Mientras tanto, el chico de los cómics tiene las manos ocupadas cuando el legendario creador de Marvel Comics, Stan Lee, comienza a acosarlo y ahuyentar a sus clientes."
@@ -3278,7 +3278,7 @@ const data = {
           "title": "The Sweetest Apu",
           "duration": "23",
           "airDate": "2002-05-05",
-          "image": "13x19.jpg",
+          "image": "simpsons_13x19.jpg",
           "synopsis": "Homer stumbles upon an illicit affair between Apu and his Squishee delivery girl, and when Manjula finds out too, Apu is made to go on a \"12 Labors of Hercules\"-style journey to forgiveness.",
           "titleEs": "El Apu más dulce",
           "synopsisEs": "Homero se topa con una relación ilícita entre Apu y su repartidora de Squishee, y cuando Manjula también se entera, Apu debe emprender un viaje al estilo de los \"12 trabajos de Hércules\" hacia el perdón."
@@ -3289,7 +3289,7 @@ const data = {
           "title": "Little Girl in the Big Ten",
           "duration": "23",
           "airDate": "2002-05-12",
-          "image": "13x20.jpg",
+          "image": "simpsons_13x20.jpg",
           "synopsis": "Lisa poses as a college student after befriending college girls who can pass for elementary school students because of their height and girlish youth. Meanwhile, a Chinese mosquito infects Bart and he must live in a plastic bubble.",
           "titleEs": "Niña en el Big Ten",
           "synopsisEs": "Lisa se hace pasar por una estudiante universitaria después de hacerse amiga de chicas universitarias que pueden pasar por estudiantes de escuela primaria debido a su altura y juventud de niña. Mientras tanto, un mosquito chino infecta a Bart y éste debe vivir en una burbuja de plástico."
@@ -3300,7 +3300,7 @@ const data = {
           "title": "The Frying Game",
           "duration": "23",
           "airDate": "2002-05-19",
-          "image": "13x21.jpg",
+          "image": "simpsons_13x21.jpg",
           "synopsis": "After getting in trouble for almost killing a rare caterpillar, Homer and Marge are sentenced to community service where they must help an elderly woman in her home. When she ends up dead, Homer and Marge are charged with murder.",
           "titleEs": "El juego de freír",
           "synopsisEs": "Después de meterse en problemas por casi matar una rara oruga, Homer y Marge son sentenciados a servicio comunitario donde deben ayudar a una anciana en su casa. Cuando ella termina muerta, Homer y Marge son acusados ​​de asesinato."
@@ -3311,7 +3311,7 @@ const data = {
           "title": "Poppa's Got a Brand New Badge",
           "duration": "23",
           "airDate": "2002-05-22",
-          "image": "13x22.jpg",
+          "image": "simpsons_13x22.jpg",
           "synopsis": "Homer accidentally causes an electrical blackout in Springfield, and the residents begin looting the town's businesses. Chief Wiggum is useless at restoring order, so Homer takes the law into his own hands, starting a private police force, and becoming the \"chief of police\".",
           "titleEs": "Papá tiene una insignia nueva",
           "synopsisEs": "Homero provoca accidentalmente un apagón eléctrico en Springfield y los residentes comienzan a saquear los negocios de la ciudad. El jefe Wiggum es inútil a la hora de restablecer el orden, por lo que Homer toma la justicia por su mano, funda una fuerza policial privada y se convierte en el \"jefe de policía\"."
@@ -3322,7 +3322,7 @@ const data = {
     {
       "id": 14,
       "title": "Temporada 14",
-      "image": "Season_14_Icon.jpg",
+      "image": "simpsons_Season_14_Icon.jpg",
       "avgColor": "#727F5D",
       "episodes": [
         {
@@ -3331,7 +3331,7 @@ const data = {
           "title": "Treehouse of Horror XIII",
           "duration": "24",
           "airDate": "2002-11-03",
-          "image": "14x01.jpg",
+          "image": "simpsons_14x01.jpg",
           "synopsis": "This year's tales of terror include: a séance to bring Maude Flanders' spirit back to the mortal realm; Springfield being overrun by Homer clones thanks to a magic hammock; Lisa's call for gun control leading to zombie outlaws; and Dr. Hibbert running an island resort where the visitors get turned into animals.",
           "titleEs": "La casa del árbol del terror XIII",
           "synopsisEs": "Las historias de terror de este año incluyen: una sesión de espiritismo para devolver el espíritu de Maude Flanders al reino de los mortales; Springfield es invadida por clones de Homero gracias a una hamaca mágica; El llamado de Lisa al control de armas conduce a zombis forajidos; y el Dr. Hibbert dirige un resort en una isla donde los visitantes se convierten en animales."
@@ -3342,7 +3342,7 @@ const data = {
           "title": "How I Spent My Strummer Vacation",
           "duration": "24",
           "airDate": "2002-11-10",
-          "image": "14x02.jpg",
+          "image": "simpsons_14x02.jpg",
           "synopsis": "When Homer is secretly videotaped complaining about his family during an episode of Taxicab Conversations, they send him off to a rock and roll fantasy camp so he can regroup and try to live his dream.",
           "titleEs": "Cómo pasé mis vacaciones Strummer",
           "synopsisEs": "Cuando Homero es grabado en secreto quejándose de su familia durante un episodio de Taxicab Conversations, lo envían a un campamento de fantasía de rock and roll para que pueda reagruparse e intentar vivir su sueño."
@@ -3353,7 +3353,7 @@ const data = {
           "title": "Bart vs. Lisa vs. the Third Grade",
           "duration": "23",
           "airDate": "2002-11-17",
-          "image": "14x03.jpg",
+          "image": "simpsons_14x03.jpg",
           "synopsis": "After taking an aptitude test, Bart is held back a grade, and Lisa is skipped ahead, landing them in third grade at the same time, and in the same class. Tension develops between the pair, but they are forced to work together when they become lost on a school field trip.",
           "titleEs": "Bart contra Lisa contra el tercer grado",
           "synopsisEs": "Después de tomar una prueba de aptitud, Bart retrocede un grado y Lisa avanza, lo que los lleva a tercer grado al mismo tiempo y en la misma clase. La tensión surge entre la pareja, pero se ven obligados a trabajar juntos cuando se pierden en una excursión escolar."
@@ -3364,7 +3364,7 @@ const data = {
           "title": "Large Marge",
           "duration": "23",
           "airDate": "2002-11-24",
-          "image": "14x04.jpg",
+          "image": "simpsons_14x04.jpg",
           "synopsis": "Worried that Homer doesn't find her physically attractive anymore, Marge takes Manjula's advice and goes in for liposuction...only to end up with breast implants meant for one of Mayor Quimby's female interns. Meanwhile, Bart and Milhouse discover an old episode of the campy 1960s Batman that featured Krusty the Clown as a villain and imitate a stunt he did on the show, which lands the clown in trouble with media watchdog groups who think his antics are a bad influence on children.",
           "titleEs": "Marge grande",
           "synopsisEs": "Preocupada porque Homero ya no la encuentra físicamente atractiva, Marge sigue el consejo de Manjula y se somete a una liposucción... sólo para terminar con implantes mamarios destinados a una de las pasantes del alcalde Quimby. Mientras tanto, Bart y Milhouse descubren un viejo episodio del cursi Batman de los años 60 que presentaba a Krusty el Payaso como un villano e imitan un truco que hizo en el programa, lo que mete al payaso en problemas con los grupos de vigilancia de los medios que piensan que sus payasadas son una mala influencia para los niños."
@@ -3375,7 +3375,7 @@ const data = {
           "title": "Helter Shelter",
           "duration": "23",
           "airDate": "2002-12-01",
-          "image": "14x05.jpg",
+          "image": "simpsons_14x05.jpg",
           "synopsis": "The Simpsons' house has been inspected of having termites, and must temporarily live in a house that takes them back to 1895.",
           "titleEs": "Refugio Refugio",
           "synopsisEs": "La casa de los Simpson ha sido inspeccionada para detectar termitas y deben vivir temporalmente en una casa que los remonta al año 1895."
@@ -3386,7 +3386,7 @@ const data = {
           "title": "The Great Louse Detective",
           "duration": "24",
           "airDate": "2002-12-15",
-          "image": "14x06.jpg",
+          "image": "simpsons_14x06.jpg",
           "synopsis": "The Simpsons hire Sideshow Bob to help them find out who keeps trying to murder Homer.",
           "titleEs": "El gran detective piojo",
           "synopsisEs": "Los Simpson contratan a Sideshow Bob para que los ayude a descubrir quién sigue intentando asesinar a Homero."
@@ -3397,7 +3397,7 @@ const data = {
           "title": "Special Edna",
           "duration": "23",
           "airDate": "2003-01-05",
-          "image": "14x07.jpg",
+          "image": "simpsons_14x07.jpg",
           "synopsis": "Skinner constantly bails out on Edna for phone calls with his mother and Bart nominates her for the teacher of the year award.",
           "titleEs": "edna especial",
           "synopsisEs": "Skinner constantemente abandona a Edna por las llamadas telefónicas con su madre y Bart la nomina para el premio a maestra del año."
@@ -3408,7 +3408,7 @@ const data = {
           "title": "The Dad Who Knew Too Little",
           "duration": "23",
           "airDate": "2003-01-12",
-          "image": "14x08.jpg",
+          "image": "simpsons_14x08.jpg",
           "synopsis": "Lisa is miserable when she realizes how little Homer understands about her. This becomes even more apparent when Homer gets her an insensitive birthday gift. In an effort to get to realize Lisa, more Homer hires private investigator Dexter Colt.",
           "titleEs": "El papá que sabía muy poco",
           "synopsisEs": "Lisa se siente miserable cuando se da cuenta de lo poco que Homero entiende de ella. Esto se vuelve aún más evidente cuando Homero le regala un insensible regalo de cumpleaños. En un esfuerzo por conocer a Lisa, Homer contrata al investigador privado Dexter Colt."
@@ -3419,7 +3419,7 @@ const data = {
           "title": "The Strong Arms of the Ma",
           "duration": "23",
           "airDate": "2003-02-02",
-          "image": "14x09.jpg",
+          "image": "simpsons_14x09.jpg",
           "synopsis": "After Marge gets mugged by a hobo outside of the Kwik-E-Mart's bathroom, she turns into a recluse afraid to even leave her own basement. Eventually, she becomes bored, and starts turning to weight lifting (from some weights Homer bought at Rainier Wolfcastle's bankruptcy sale) to pass the time. After gaining the courage to go outside and beating up the hobo who mugged her, she becomes a bodybuilder, thanks to her old friend, Ruth Powers.",
           "titleEs": "Los brazos fuertes de la Ma",
           "synopsisEs": "Después de que Marge es asaltada por un vagabundo afuera del baño del Kwik-E-Mart, se convierte en una reclusa que teme incluso salir de su propio sótano. Con el tiempo, se aburre y comienza a levantar pesas (de algunas pesas que Homer compró en la venta de quiebra de Rainier Wolfcastle) para pasar el tiempo. Después de reunir el coraje para salir y golpear al vagabundo que la asaltó, se convierte en culturista gracias a su vieja amiga, Ruth Powers."
@@ -3430,7 +3430,7 @@ const data = {
           "title": "Pray Anything",
           "duration": "23",
           "airDate": "2003-02-09",
-          "image": "14x10.jpg",
+          "image": "simpsons_14x10.jpg",
           "synopsis": "Homer becomes jealous over Ned's incredible string of good luck. Homer chooses to pray just like Ned so God can reward him with such fortunate luck as well.",
           "titleEs": "orar cualquier cosa",
           "synopsisEs": "Homer se pone celoso por la increíble racha de buena suerte de Ned. Homer elige orar como Ned para que Dios pueda recompensarlo también con tanta suerte."
@@ -3441,7 +3441,7 @@ const data = {
           "title": "Barting Over",
           "duration": "23",
           "airDate": "2003-02-16",
-          "image": "14x11.jpg",
+          "image": "simpsons_14x11.jpg",
           "synopsis": "Bart discovers that he was once a child star in a string of embarrassing commercials, but when Homer reveals that all of Bart's money went to buying back incriminating photos, Bart petitions the court to have himself emancipated and moves to a loft apartment next to professional skateboarder Tony Hawk and pop-punk band blink-182.",
           "titleEs": "Barting terminado",
           "synopsisEs": "Bart descubre que alguna vez fue una estrella infantil en una serie de comerciales vergonzosos, pero cuando Homero revela que todo el dinero de Bart se destinó a recomprar fotografías incriminatorias, Bart solicita al tribunal que se emancipe y se muda a un apartamento tipo loft junto al patinador profesional Tony Hawk y la banda de pop-punk Blink-182."
@@ -3452,7 +3452,7 @@ const data = {
           "title": "I'm Spelling as Fast as I Can",
           "duration": "23",
           "airDate": "2003-02-16",
-          "image": "14x12.jpg",
+          "image": "simpsons_14x12.jpg",
           "synopsis": "On the first day back to school, Lisa wins a spelling bee and is thrilled to be in the Spellympics while Homer chases after a Krusty brand sandwich.",
           "titleEs": "Estoy deletreando lo más rápido que puedo",
           "synopsisEs": "El primer día de regreso a la escuela, Lisa gana un concurso de ortografía y está encantada de estar en los Juegos de Deletreo mientras Homer persigue un sándwich de la marca Krusty."
@@ -3463,7 +3463,7 @@ const data = {
           "title": "A Star is Born-Again",
           "duration": "23",
           "airDate": "2003-03-02",
-          "image": "14x13.jpg",
+          "image": "simpsons_14x13.jpg",
           "synopsis": "While at a cotillion after observing an annual phenomenon that happens on the third Tuesday of May known as the 'Returning of the Stinging Red Jellyfish,' Ned Flanders realizes he can no longer bear his single life and goes for a sad walk around the town to the tune of Debussy's Clair De Lune. Back at the Leftorium a woman enters the store and flatters Ned with an offer of a date using the pseudonym Selma Fitzgerald. Ned ventures out only to learn from a poster she is a sultry movie star named Sara Sloane; he then proclaims he has a date with a movie star much to the disbelief of an Irish mall guard. Homer then gives advice to Ned followed by the date, where she is confronted by Lenny asking for a mold of her breasts. On the pier front the new couple kiss.",
           "titleEs": "Una estrella ha nacido de nuevo",
           "synopsisEs": "Mientras está en un cotillón después de observar un fenómeno anual que ocurre el tercer martes de mayo conocido como el 'Regreso de la medusa roja que pica', Ned Flanders se da cuenta de que ya no puede soportar su vida de soltero y sale a dar un triste paseo por la ciudad al son de Clair De Lune de Debussy. De vuelta en Leftorium, una mujer entra a la tienda y halaga a Ned con una oferta de cita usando el seudónimo de Selma Fitzgerald. Ned se aventura solo para descubrir por un cartel que es una sensual estrella de cine llamada Sara Sloane; Luego proclama que tiene una cita con una estrella de cine, ante la incredulidad de un guardia del centro comercial irlandés. Luego, Homer le da un consejo a Ned seguido de la cita, donde Lenny la confronta y le pide un molde de sus senos. En el frente del muelle la nueva pareja se besa."
@@ -3474,7 +3474,7 @@ const data = {
           "title": "Mr. Spritz Goes to Washington",
           "duration": "23",
           "airDate": "2003-03-09",
-          "image": "14x14.jpg",
+          "image": "simpsons_14x14.jpg",
           "synopsis": "The Simpsons are watching an episode of \"The Three Stooges\", when the house begins to shake. Then they discover an airplane was flying dangerously close to their house; then they agree that the air traffic had been redirected. Homer and Marge complain to an airport official, who tells them that the airplanes were rerouted away from nature reserves, to help protect the animals. But they were really redirected by Mayor Quimby, so he can have peace when he is with his girlfriends, which he soon regrets when he finds out that Miss Springfield has an annoying voice. While Marge tries to suggest a method where both the family and the animals can be happy but the official just becomes offended.  He then bluntly tells them to learn to live with it and that the government's decision is final.",
           "titleEs": "El señor Spritz va a Washington",
           "synopsisEs": "Los Simpson están viendo un episodio de \"Los tres chiflados\", cuando la casa empieza a temblar. Luego descubren que un avión volaba peligrosamente cerca de su casa; luego coinciden en que el tráfico aéreo había sido desviado. Homer y Marge se quejan con un funcionario del aeropuerto, quien les dice que los aviones fueron desviados de las reservas naturales para ayudar a proteger a los animales. Pero en realidad fueron redirigidos por el alcalde Quimby, para que pueda tener paz cuando esté con sus amigas, lo cual pronto se arrepiente cuando descubre que la señorita Springfield tiene una voz molesta. Mientras Marge intenta sugerir un método donde tanto la familia como los animales puedan ser felices, el funcionario simplemente se ofende.  Luego les dice sin rodeos que aprendan a vivir con ello y que la decisión del gobierno es definitiva."
@@ -3485,7 +3485,7 @@ const data = {
           "title": "C.E. D'oh",
           "duration": "23",
           "airDate": "2003-03-16",
-          "image": "14x15.jpg",
+          "image": "simpsons_14x15.jpg",
           "synopsis": "Homer enrolls in a \"How to Succeed in Being You\" course and takes a new attitude to work, where he makes suggestions to improve safety at the Springfield Nuclear Power Plant. When Mr. Burns laughs at Homer's proposals, he and Lisa devise a plan to take the plant.",
           "titleEs": "CE D'oh",
           "synopsisEs": "Homer se inscribe en un curso \"Cómo tener éxito siendo tú mismo\" y adopta una nueva actitud en el trabajo, donde hace sugerencias para mejorar la seguridad en la planta de energía nuclear de Springfield. Cuando el señor Burns se ríe de las propuestas de Homer, él y Lisa idean un plan para apoderarse de la planta."
@@ -3496,7 +3496,7 @@ const data = {
           "title": "'Scuse Me While I Miss the Sky",
           "duration": "23",
           "airDate": "2003-03-30",
-          "image": "14x16.jpg",
+          "image": "simpsons_14x16.jpg",
           "synopsis": "When a man convinces Lisa that her life lacks direction, she plans to focus on astronomy, and her first aim is to make the city to turn off the lights to watch the falling stars.",
           "titleEs": "'Disculpe mientras extraño el cielo",
           "synopsisEs": "Cuando un hombre convence a Lisa de que su vida carece de rumbo, ella planea centrarse en la astronomía y su primer objetivo es obligar a la ciudad a apagar las luces para observar las estrellas fugaces."
@@ -3507,7 +3507,7 @@ const data = {
           "title": "Three Gays of the Condo",
           "duration": "23",
           "airDate": "2003-04-13",
-          "image": "14x17.jpg",
+          "image": "simpsons_14x17.jpg",
           "synopsis": "The Simpsons start a puzzle and finish it but are missing a piece. Homer then believes it is in Marge's memory chest and is sidetracked by a letter Marge wrote the day Moe's Tavern opened (the missing puzzle piece was actually under Maggie's eyelid). Marge was originally going to break up with Homer as he got drunk, causing Homer to react oversensitively at her every comment and, ultimately, break up with Marge himself. Homer plans to move out of home, first going to Kirk Van Houten's apartment, but leaving after realizing how depressing the lifestyle is in the entire apartment complex (populated entirely by lonesome divorced men like Kirk).",
           "titleEs": "Tres gays del condominio",
           "synopsisEs": "Los Simpson empiezan un rompecabezas y lo terminan pero les falta una pieza. Homero entonces cree que está en el cofre de recuerdos de Marge y se desvía por una carta que Marge escribió el día que abrió la Taberna de Moe (la pieza faltante del rompecabezas estaba en realidad debajo del párpado de Maggie). Originalmente, Marge iba a romper con Homer mientras él se emborrachaba, lo que provocó que Homer reaccionara de manera demasiado sensible ante cada comentario de ella y, en última instancia, rompiera con el propio Marge. Homer planea mudarse de casa, primero yendo al apartamento de Kirk Van Houten, pero saliendo después de darse cuenta de lo deprimente que es el estilo de vida en todo el complejo de apartamentos (poblado en su totalidad por hombres solitarios y divorciados como Kirk)."
@@ -3518,7 +3518,7 @@ const data = {
           "title": "Dude, Where's My Ranch?",
           "duration": "23",
           "airDate": "2003-04-27",
-          "image": "14x18.jpg",
+          "image": "simpsons_14x18.jpg",
           "synopsis": "Homer plans to write a Christmas carol and pens a tune called \"Everybody Hates Ned Flanders\", which brings him overwhelming success. When the popularity becomes unbearable, the family vacates to a dude ranch.",
           "titleEs": "Amigo, ¿dónde está mi rancho?",
           "synopsisEs": "Homero planea escribir un villancico y escribe una canción llamada \"Todo el mundo odia a Ned Flanders\", que le trae un éxito abrumador. Cuando la popularidad se vuelve insoportable, la familia se va a un rancho de vacaciones."
@@ -3529,7 +3529,7 @@ const data = {
           "title": "Old Yeller-Belly",
           "duration": "23",
           "airDate": "2003-05-04",
-          "image": "14x19.jpg",
+          "image": "simpsons_14x19.jpg",
           "synopsis": "When a fire engulfs Bart's new treehouse, Homer is pinned beneath an ice sculpture. Santa's Little Helper fails to help him and flees instead, leaving Snowball II to rescue him. Homer starts to hate the hound as a result, but has second thoughts when Santa's Little Helper becomes a mascot for Duff afterwards.",
           "titleEs": "Viejo Yeller-Belly",
           "synopsisEs": "Cuando un incendio devora la nueva casa en el árbol de Bart, Homer queda atrapado debajo de una escultura de hielo. El pequeño ayudante de Santa no logra ayudarlo y huye, dejando a Snowball II para rescatarlo. Como resultado, Homer comienza a odiar al perro, pero lo piensa mejor cuando el pequeño ayudante de Santa se convierte en la mascota de Duff."
@@ -3540,7 +3540,7 @@ const data = {
           "title": "Brake My Wife, Please",
           "duration": "23",
           "airDate": "2003-05-11",
-          "image": "14x20.jpg",
+          "image": "simpsons_14x20.jpg",
           "synopsis": "Homer loses his driver's license and Marge is forced to drive him around town. She grows positively furious when she starts having to chauffeur all of his friends, too.",
           "titleEs": "Frena a mi esposa, por favor.",
           "synopsisEs": "Homero pierde su licencia de conducir y Marge se ve obligada a llevarlo por la ciudad. Ella se enfurece cuando comienza a tener que conducir a todos sus amigos también."
@@ -3551,7 +3551,7 @@ const data = {
           "title": "The Bart of War",
           "duration": "23",
           "airDate": "2003-05-18",
-          "image": "14x21.jpg",
+          "image": "simpsons_14x21.jpg",
           "synopsis": "When Bart and Milhouse are caught wreaking havoc in Ned Flanders' home, Marge plans to enroll Bart into the Pre-Teen Braves, a club to keep kids off the streets.",
           "titleEs": "El bart de la guerra",
           "synopsisEs": "Cuando Bart y Milhouse son sorprendidos causando estragos en la casa de Ned Flanders, Marge planea inscribir a Bart en los Pre-Teen Braves, un club para mantener a los niños fuera de las calles."
@@ -3562,7 +3562,7 @@ const data = {
           "title": "Moe Baby Blues",
           "duration": "23",
           "airDate": "2003-05-18",
-          "image": "14x22.jpg",
+          "image": "simpsons_14x22.jpg",
           "synopsis": "Moe feels lonesome, but unintentionally saves Maggie's life while attempting to commit suicide. Maggie then takes a liking to Moe and he enjoys the new sense of responsibility for her, but becomes too obsessed with satisfying her needs.",
           "titleEs": "Moe melancolía posparto",
           "synopsisEs": "Moe se siente solo, pero sin querer salva la vida de Maggie mientras intenta suicidarse. Luego, a Maggie le gusta Moe y él disfruta del nuevo sentido de responsabilidad hacia ella, pero se obsesiona demasiado con satisfacer sus necesidades."
@@ -3573,7 +3573,7 @@ const data = {
     {
       "id": 15,
       "title": "Temporada 15",
-      "image": "Season_15_Icon.jpg",
+      "image": "simpsons_Season_15_Icon.jpg",
       "avgColor": "#989948",
       "episodes": [
         {
@@ -3582,7 +3582,7 @@ const data = {
           "title": "Treehouse of Horror XIV",
           "duration": "23",
           "airDate": "2003-11-02",
-          "image": "15x01.jpg",
+          "image": "simpsons_15x01.jpg",
           "synopsis": "In another annual Halloween special, we see Homer become the new Grim Reaper, Professor Frink brings his dad back to life, with interesting results, and Bart and Milhouse get a stopwatch that literally allows them to stop time.",
           "titleEs": "La casa del árbol del terror XIV",
           "synopsisEs": "En otro especial anual de Halloween, vemos a Homero convertirse en el nuevo Grim Reaper, el profesor Frink le devuelve la vida a su padre, con resultados interesantes, y Bart y Milhouse obtienen un cronómetro que literalmente les permite detener el tiempo."
@@ -3593,7 +3593,7 @@ const data = {
           "title": "My Mother the Carjacker",
           "duration": "23",
           "airDate": "2003-11-09",
-          "image": "15x02.jpg",
+          "image": "simpsons_15x02.jpg",
           "synopsis": "Homer's mother returns to Springfield, and after being cleared of all charges, is re-imprisoned on a technicality.",
           "titleEs": "Mi madre la ladrona de autos",
           "synopsisEs": "La madre de Homer regresa a Springfield y, después de ser absuelta de todos los cargos, es nuevamente encarcelada por un tecnicismo."
@@ -3604,7 +3604,7 @@ const data = {
           "title": "The President Wore Pearls",
           "duration": "23",
           "airDate": "2003-11-16",
-          "image": "15x03.jpg",
+          "image": "simpsons_15x03.jpg",
           "synopsis": "In this spoof of the musical Evita (which the writers explicitly state isn't it, due to legal reasons), Martin Prince resigns as student body president. While Nelson gains popularity, Lisa's \"Don't Cry for Me, Argentina\"-style plea to be a people's president for the students gets her elected...which leads the school staff to use her as a figurehead so they can get their controversial plans and budget cuts approved.",
           "titleEs": "El presidente llevaba perlas",
           "synopsisEs": "En esta parodia del musical Evita (que los escritores afirman explícitamente que no lo es, por razones legales), Martin Prince renuncia como presidente del cuerpo estudiantil. Mientras Nelson gana popularidad, la súplica al estilo \"No llores por mí, Argentina\" de Lisa para ser presidenta del pueblo para los estudiantes hace que ella sea elegida... lo que lleva al personal de la escuela a usarla como figura decorativa para poder aprobar sus controvertidos planes y recortes presupuestarios."
@@ -3615,7 +3615,7 @@ const data = {
           "title": "The Regina Monologues",
           "duration": "24",
           "airDate": "2003-11-16",
-          "image": "15x04.jpg",
+          "image": "simpsons_15x04.jpg",
           "synopsis": "When Bart finds $1000, Lisa is able to convince him to take the family on a vacation to England instead of spending it on himself. Homer, however, ruins the holiday by crashing his rental British Mini Cooper into the Royal Carriage with the Queen inside. He is put on trial and eventually jailed. Meanwhile, Grandpa attempts to search for his English love interest.",
           "titleEs": "Los monólogos de Regina",
           "synopsisEs": "Cuando Bart encuentra $1000, Lisa puede convencerlo de que se lleve a la familia de vacaciones a Inglaterra en lugar de gastarlos en él mismo. Homero, sin embargo, arruina las vacaciones al estrellar su Mini Cooper británico de alquiler contra el Royal Carriage con la Reina adentro. Es juzgado y finalmente encarcelado. Mientras tanto, el abuelo intenta buscar a su interés amoroso inglés."
@@ -3626,7 +3626,7 @@ const data = {
           "title": "The Fat and the Furriest",
           "duration": "22",
           "airDate": "2003-11-30",
-          "image": "15x05.jpg",
+          "image": "simpsons_15x05.jpg",
           "synopsis": "On Mothers' Day, Homer buys Marge the same thing as Bart and Maggie, so he goes to Sprawl-Mart, and he buys her a \"Kitchen Carnival\" on the advice of Patty and Selma, a machine that produces cotton candy, caramel and deep fried things. Eventually Homer uses it to make a giant ball of deep-fried, caramel-covered, cotton candy. The ball is much too big for the family to eat, and it gets dirty (as ants, birds, cats and the Flanders children get stuck to it). Finally Marge insists Homer get rid of it. He takes it to city the dump, and is confronted by a large, grizzly bear, from which he cowers. The bear eventually wanders off without attacking, apparently bored by Homer's crying.",
           "titleEs": "El gordo y el más peludo",
           "synopsisEs": "El Día de la Madre, Homero le compra a Marge lo mismo que Bart y Maggie, así que va a Sprawl-Mart y le compra un \"Carnaval de cocina\" siguiendo el consejo de Patty y Selma, una máquina que produce algodón de azúcar, caramelo y cosas fritas. Finalmente, Homero lo usa para hacer una bola gigante de algodón de azúcar frito y cubierto de caramelo. La pelota es demasiado grande para que la coma toda la familia y se ensucia (las hormigas, los pájaros, los gatos y los niños de Flandes se quedan pegados a ella). Finalmente Marge insiste en que Homero se deshaga de él. Lo lleva al basurero de la ciudad y se enfrenta a un gran oso grizzly, del cual se encoge de miedo. El oso finalmente se aleja sin atacar, aparentemente aburrido por el llanto de Homero."
@@ -3637,7 +3637,7 @@ const data = {
           "title": "Today, I Am a Clown",
           "duration": "23",
           "airDate": "2003-12-07",
-          "image": "15x06.jpg",
+          "image": "simpsons_15x06.jpg",
           "synopsis": "Maggie is locked in the bathroom and eventually gets freed, thanks to Lisa, trying a rescue solution a second time (\"I don't get why we only try ideas once\"). The family hears the doorbell, finding Dr. Julius Hibbert, who says that the Simpsons' dog, Santa's Little Helper, had impregnated his own dog, a purebred poodle named Rosa Barks, and he gives the puppies to the Simpson family, making them their problem. However, Lisa reads The Simpsons: A Complete Guide to Our Favorite Family that says Homer had taken Santa's Little Helper to be neutered after the events of \"Two Dozen and One Greyhounds,\" but Homer confesses that he couldn't bring himself to actually do it. Lisa and Bart, give out the puppies to people including Groundskeeper Willie, Snake Jailbird, and Krusty the Clown, who takes his new puppy for a walk to his old neighborhood.",
           "titleEs": "Hoy soy un payaso",
           "synopsisEs": "Maggie está encerrada en el baño y finalmente es liberada gracias a que Lisa intenta una solución de rescate por segunda vez (\"No entiendo por qué solo probamos las ideas una vez\"). La familia escucha el timbre y encuentra al Dr. Julius Hibbert, quien dice que el perro de los Simpson, Santa's Little Helper, había preñado a su propia perra, una caniche de pura raza llamada Rosa Barks, y le da los cachorros a la familia Simpson, convirtiéndolos en su problema. Sin embargo, Lisa lee Los Simpson: una guía completa de nuestra familia favorita que dice que Homero había llevado al pequeño ayudante de Santa para que lo castraran después de los eventos de \"Dos docenas y un galgo\", pero Homero confiesa que no se atrevía a hacerlo. Lisa y Bart entregan los cachorros a personas como el jardinero Willie, Snake Jailbird y Krusty el payaso, quien lleva a su nuevo cachorro a pasear a su antiguo vecindario."
@@ -3648,7 +3648,7 @@ const data = {
           "title": "'Tis the Fifteenth Season",
           "duration": "24",
           "airDate": "2003-12-14",
-          "image": "15x07.jpg",
+          "image": "simpsons_15x07.jpg",
           "synopsis": "When Homer gains a small fortune from a Joe DiMaggio baseball card Mr. Burns dismissed as worthless, he blows the money on an expensive gift for himself rather than buy gifts and a tree for the family. After being called out on his selfishness (and seeing a Christmas Carol spoof starring a Mr. Magoo knock-off), Homer decides to become the nicest man in Springfield, which (once again) doesn't sit well with Flanders -- especially after Homer decides to steal Christmas as his \"ultimate good deed\".",
           "titleEs": "'Es la decimoquinta temporada",
           "synopsisEs": "Cuando Homer gana una pequeña fortuna gracias a una tarjeta de béisbol de Joe DiMaggio que el Sr. Burns descartó como inútil, desperdicia el dinero en un regalo caro para él en lugar de comprar regalos y un árbol para la familia. Después de ser criticado por su egoísmo (y de ver una parodia de Cuento de Navidad protagonizada por una imitación de Mr. Magoo), Homer decide convertirse en el hombre más amable de Springfield, lo que (una vez más) no le sienta bien a Flanders, especialmente después de que Homer decide robar la Navidad como su \"mejor buena acción\"."
@@ -3659,7 +3659,7 @@ const data = {
           "title": "Marge vs. Singles, Seniors, Childless Couples and Teens and Gays",
           "duration": "23",
           "airDate": "2004-01-04",
-          "image": "15x08.jpg",
+          "image": "simpsons_15x08.jpg",
           "synopsis": "Following a riot at a children's concert, resident businesswoman Lindsay Naegle forms an anti-youth group made up of singles, seniors, childless couples, teenagers, and homosexuals against having to accommodate for families with children and push to get rid of anything considered \"child-friendly\" in Springfield. It's up to Marge (who is pro-family and pro-child), Bart, Lisa, and Mr. Burns (of all people) to fight back against Lindsay and her group.",
           "titleEs": "Marge contra solteros, personas mayores, parejas sin hijos, adolescentes y homosexuales",
           "synopsisEs": "Tras un motín en un concierto para niños, la empresaria residente Lindsay Naegle forma un grupo antijóvenes formado por solteros, personas mayores, parejas sin hijos, adolescentes y homosexuales contra la necesidad de adaptarse a familias con niños y presiona para deshacerse de todo lo que se considere \"favorable para los niños\" en Springfield. Depende de Marge (que está a favor de la familia y de los niños), Bart, Lisa y el Sr. Burns (entre todas las personas) luchar contra Lindsay y su grupo."
@@ -3670,7 +3670,7 @@ const data = {
           "title": "I, (Annoyed Grunt)-Bot",
           "duration": "23",
           "airDate": "2004-01-11",
-          "image": "15x09.jpg",
+          "image": "simpsons_15x09.jpg",
           "synopsis": "Bart and Homer enter a Robot Rumble competition. Meanwhile, Snowball II dies after being hit by a car and Lisa replaces him many times before getting a cat that looks exactly like him.",
           "titleEs": "Yo, (gruñido molesto) -Bot",
           "synopsisEs": "Bart y Homer participan en una competencia Robot Rumble. Mientras tanto, Snowball II muere tras ser atropellado por un coche y Lisa lo reemplaza muchas veces antes de conseguir un gato que se parece exactamente a él."
@@ -3681,7 +3681,7 @@ const data = {
           "title": "Diatribe of a Mad Housewife",
           "duration": "23",
           "airDate": "2004-01-25",
-          "image": "15x10.jpg",
+          "image": "simpsons_15x10.jpg",
           "synopsis": "Marge is inspired to write a romance novel, though after Homer hears rumors that Marge is secretly in love with Ned Flanders due to the story line of the novel, he grows jealous. Meanwhile, Homer buys an ambulance and becomes a paramedic.",
           "titleEs": "Diatriba de una ama de casa loca",
           "synopsisEs": "Marge se inspira para escribir una novela romántica, aunque después de que Homero escucha rumores de que Marge está secretamente enamorada de Ned Flanders debido a la trama de la novela, se pone celoso. Mientras tanto, Homer compra una ambulancia y se convierte en paramédico."
@@ -3692,7 +3692,7 @@ const data = {
           "title": "Margical History Tour",
           "duration": "23",
           "airDate": "2004-02-08",
-          "image": "15x11.jpg",
+          "image": "simpsons_15x11.jpg",
           "synopsis": "Marge, the kids and Milhouse go to the library where they find there are no longer any books on the shelves. With no books for reference, the kids are in danger of not being able to write their reports. Fortunately, Marge knows some history and relates to the children the following tales:",
           "titleEs": "Tour de historia marginal",
           "synopsisEs": "Marge, los niños y Milhouse van a la biblioteca y descubren que ya no hay libros en los estantes. Sin libros de referencia, los niños corren el peligro de no poder escribir sus informes. Afortunadamente, Marge sabe algo de historia y les cuenta a los niños los siguientes cuentos:"
@@ -3703,7 +3703,7 @@ const data = {
           "title": "Milhouse Doesn't Live Here Anymore",
           "duration": "23",
           "airDate": "2004-02-15",
-          "image": "15x12.jpg",
+          "image": "simpsons_15x12.jpg",
           "synopsis": "Marge, the kids and Milhouse go to the library where they find there are no longer any books on the shelves. With no books for reference, the kids are in danger of not being able to write their reports. Fortunately, Marge knows some history and relates to the children the following tales:",
           "titleEs": "Milhouse ya no vive aquí",
           "synopsisEs": "Marge, los niños y Milhouse van a la biblioteca y descubren que ya no hay libros en los estantes. Sin libros de referencia, los niños corren el peligro de no poder escribir sus informes. Afortunadamente, Marge sabe algo de historia y les cuenta a los niños los siguientes cuentos:"
@@ -3714,7 +3714,7 @@ const data = {
           "title": "Smart and Smarter",
           "duration": "23",
           "airDate": "2004-02-22",
-          "image": "15x13.jpg",
+          "image": "simpsons_15x13.jpg",
           "synopsis": "Lisa becomes jealous of Maggie when she is accepted into a gifted school. Lisa then begins to search for a new home where she can retain her identity as the smart one.",
           "titleEs": "Inteligente y más inteligente",
           "synopsisEs": "Lisa se pone celosa de Maggie cuando la aceptan en una escuela para superdotados. Luego, Lisa comienza a buscar un nuevo hogar donde pueda conservar su identidad de inteligente."
@@ -3725,7 +3725,7 @@ const data = {
           "title": "The Ziff Who Came to Dinner",
           "duration": "23",
           "airDate": "2004-03-14",
-          "image": "15x14.jpg",
+          "image": "simpsons_15x14.jpg",
           "synopsis": "The Simpsons go on a late-night attic search after Bart and Lisa (who are freaked out over a horror movie Homer let them watch) begin hearing voices — and find Marge's ex-prom date Artie Ziff, who's on the run for cheating the shareholders of his company.",
           "titleEs": "El Ziff que vino a cenar",
           "synopsisEs": "Los Simpson emprenden una búsqueda nocturna en el ático después de que Bart y Lisa (que están asustados por una película de terror que Homero les dejó ver) comienzan a escuchar voces y encuentran a la ex cita de Marge en el baile de graduación, Artie Ziff, que está huyendo por engañar a los accionistas de su empresa."
@@ -3736,7 +3736,7 @@ const data = {
           "title": "Co-Dependent's Day",
           "duration": "24",
           "airDate": "2004-03-21",
-          "image": "15x15.jpg",
+          "image": "simpsons_15x15.jpg",
           "synopsis": "After a trip to a vineyard, Homer and Marge plan to go on a drinking binge together. But, when Homer crashes the car while drunk driving, he frames a passed out Marge as the driver to avoid being arrested (this would have been his third strike). Marge takes the supposed crime seriously and makes a considerable effort to rehabilitate herself.",
           "titleEs": "Día del Codependiente",
           "synopsisEs": "Después de un viaje a un viñedo, Homer y Marge planean darse una borrachera juntos. Pero, cuando Homer choca el auto mientras conduce ebrio, incrimina a Marge, desmayada, como la conductora para evitar ser arrestado (este habría sido su tercer castigo). Marge se toma en serio el supuesto crimen y hace un esfuerzo considerable para rehabilitarse."
@@ -3747,7 +3747,7 @@ const data = {
           "title": "The Wandering Juvie",
           "duration": "23",
           "airDate": "2004-03-28",
-          "image": "15x16.jpg",
+          "image": "simpsons_15x16.jpg",
           "synopsis": "When Bart scams the town for wedding presents, he is sent to a Springfield Juvenile Correctional Facility. While tethered to female inmate, Gina Vendetti, he escapes the facility.",
           "titleEs": "El juvenil errante",
           "synopsisEs": "Cuando Bart estafa a la ciudad en busca de regalos de boda, lo envían a un centro correccional juvenil de Springfield. Mientras está atado a la reclusa Gina Vendetti, escapa de las instalaciones."
@@ -3758,7 +3758,7 @@ const data = {
           "title": "My Big Fat Geek Wedding",
           "duration": "23",
           "airDate": "2004-04-18",
-          "image": "15x17.jpg",
+          "image": "simpsons_15x17.jpg",
           "synopsis": "After leaving Principal Skinner at the altar, Mrs. Krabappel falls for Comic Book Guy and they plan a Star Trek-like wedding. Principal Skinner plans to prevent it.",
           "titleEs": "Mi gran boda friki",
           "synopsisEs": "Después de dejar al director Skinner en el altar, la señora Krabappel se enamora del chico del cómic y planean una boda al estilo de Star Trek. El director Skinner planea evitarlo."
@@ -3769,7 +3769,7 @@ const data = {
           "title": "Catch 'Em if You Can",
           "duration": "24",
           "airDate": "2004-04-25",
-          "image": "15x18.jpg",
+          "image": "simpsons_15x18.jpg",
           "synopsis": "When Bart and Lisa realize that Homer and Marge have gone to Miami for a second Honeymoon (instead of the birthday of their uncle), the kids do what they can to ruin their parents' second honeymoon.",
           "titleEs": "Atrápalos si puedes",
           "synopsisEs": "Cuando Bart y Lisa se dan cuenta de que Homer y Marge se han ido a Miami para una segunda luna de miel (en lugar del cumpleaños de su tío), los niños hacen lo que pueden para arruinar la segunda luna de miel de sus padres."
@@ -3780,7 +3780,7 @@ const data = {
           "title": "Simple Simpson",
           "duration": "24",
           "airDate": "2004-05-02",
-          "image": "15x19.jpg",
+          "image": "simpsons_15x19.jpg",
           "synopsis": "Homer watches a commercial about a contest that will allow the winner, the finder of a Golden Ticket, a trip to \"Farmer Billy's Bacon Factory\", and is intrigued by the commercial. Although Homer buys a surplus of bacon from the Kwik-E-Mart, he is only able to find a silver ticket, which allows him to judge the upcoming placement competition at the county fair. At the fair, Lisa's entry in the place setting competition is wrecked by The Rich Texan insulting her, making her cry. This offends Homer, who plans to teach the Rich Texan a lesson. Recalling a warning from Chief Wiggum that he will be arrested if he commits another felony assault, Homer disguises himself as a masked superhero, \"The Pie Man\", and throws a pie right into the Rich Texan's face, leaving him humiliated and the crowd laughing.",
           "titleEs": "simpson sencillo",
           "synopsisEs": "Homer ve un comercial sobre un concurso que le permitirá al ganador, quien encuentre un boleto dorado, un viaje a la \"Farmer Billy's Bacon Factory\", y queda intrigado por el comercial. Aunque Homer compra un excedente de tocino en el Kwik-E-Mart, solo puede encontrar un boleto plateado, lo que le permite juzgar la próxima competencia de colocación en la feria del condado. En la feria, la entrada de Lisa en el concurso de servicio de cubiertos se ve arruinada cuando The Rich Texan la insulta y la hace llorar. Esto ofende a Homer, quien planea darle una lección al rico texano. Recordando una advertencia del jefe Wiggum de que será arrestado si comete otro delito grave, Homer se disfraza de un superhéroe enmascarado, \"The Pie Man\", y arroja un pastel directamente a la cara del rico texano, dejándolo humillado y la multitud riéndose."
@@ -3791,7 +3791,7 @@ const data = {
           "title": "The Way We Weren't",
           "duration": "23",
           "airDate": "2004-05-09",
-          "image": "15x20.jpg",
+          "image": "simpsons_15x20.jpg",
           "synopsis": "When Homer admits to Marge that she was not his first kiss, the viewers see a flashback to Homer at summer camp.",
           "titleEs": "Como no éramos",
           "synopsisEs": "Cuando Homer le admite a Marge que ella no fue su primer beso, los espectadores ven un flashback de Homer en el campamento de verano."
@@ -3802,7 +3802,7 @@ const data = {
           "title": "Bart-Mangled Banner",
           "duration": "24",
           "airDate": "2004-05-16",
-          "image": "15x21.jpg",
+          "image": "simpsons_15x21.jpg",
           "synopsis": "When Homer admits to Marge that she was not his first kiss, the viewers see a flashback to Homer at summer camp.",
           "titleEs": "Estandarte destrozado por Bart",
           "synopsisEs": "Cuando Homer le admite a Marge que ella no fue su primer beso, los espectadores ven un flashback de Homer en el campamento de verano."
@@ -3813,7 +3813,7 @@ const data = {
           "title": "Fraudcast News",
           "duration": "23",
           "airDate": "2004-05-23",
-          "image": "15x22.jpg",
+          "image": "simpsons_15x22.jpg",
           "synopsis": "Mr. Burns buys out Springfield's media outlets after a newspaper mistakenly reports his death, and Lisa's homemade newspaper is next on his list.",
           "titleEs": "Noticias fraudulentas",
           "synopsisEs": "El Sr. Burns compra los medios de comunicación de Springfield después de que un periódico informara por error de su muerte, y el periódico casero de Lisa es el siguiente en su lista."
@@ -3824,7 +3824,7 @@ const data = {
     {
       "id": 16,
       "title": "Temporada 16",
-      "image": "Season_16_Icon.jpg",
+      "image": "simpsons_Season_16_Icon.jpg",
       "avgColor": "#C87A8B",
       "episodes": [
         {
@@ -3833,7 +3833,7 @@ const data = {
           "title": "Treehouse of Horror XV",
           "duration": "24",
           "airDate": "2004-11-07",
-          "image": "16x01.jpg",
+          "image": "simpsons_16x01.jpg",
           "synopsis": "Mr. Burns buys out Springfield's media outlets after a newspaper mistakenly reports his death, and Lisa's homemade newspaper is next on his list.",
           "titleEs": "La casa del árbol del terror XV",
           "synopsisEs": "El Sr. Burns compra los medios de comunicación de Springfield después de que un periódico informara por error de su muerte, y el periódico casero de Lisa es el siguiente en su lista."
@@ -3844,7 +3844,7 @@ const data = {
           "title": "All's Fair in Oven War",
           "duration": "24",
           "airDate": "2004-11-14",
-          "image": "16x02.jpg",
+          "image": "simpsons_16x02.jpg",
           "synopsis": "A two-year remodeling of the kitchen (which (a) results in nobody, including Maggie, looking any older two years into the future, and (b) doesn't exist in any other episodes) leads Marge to make a dessert for a church event which is so popular that Apu suggests she enter the Ovenfresh Bake-off, but when the other contestants sabotage her entry, she returns the favor by adding an extra ingredient to the other entries - Maggie's ear drops, absolutely unaware that Lisa saw her do it; when Bart finds the Playdude magazines that Marge found, cut out all of the nudes, and threw out, he and Milhouse think they should start behaving like the bachelors in the magazines, including turning the treehouse into a bachelor pad, complete with James Caan.",
           "titleEs": "Todo se vale en la guerra del horno",
           "synopsisEs": "Una remodelación de la cocina que duró dos años (que (a) da como resultado que nadie, incluida Maggie, parezca mayor dos años en el futuro, y (b) no existe en ningún otro episodio) lleva a Marge a preparar un postre para un evento de la iglesia que es tan popular que Apu sugiere que participe en el Ovenfresh Bake-off, pero cuando los otros concursantes sabotean su entrada, ella les devuelve el favor agregando un ingrediente adicional a las otras entradas: las gotas para los oídos de Maggie, sin saber absolutamente que Lisa la vio hacerlo; Cuando Bart encuentra las revistas Playdude que encontró Marge, recortó todos los desnudos y las tiró, él y Milhouse piensan que deberían empezar a comportarse como los solteros de las revistas, incluso convertir la casa del árbol en un apartamento de soltero, completo con James Caan."
@@ -3855,7 +3855,7 @@ const data = {
           "title": "Sleeping with the Enemy",
           "duration": "24",
           "airDate": "2004-11-21",
-          "image": "16x03.jpg",
+          "image": "simpsons_16x03.jpg",
           "synopsis": "When Bart gets a perfect score on a state capitals test he is given a lousy party, Marge thinks that Bart and Lisa feel she is \"overmothering\" them, so she shares her love with someone else - Nelson - resulting in Marge taking Nelson in (and putting him in with Bart) when Nelson's mother leaves him; Lisa plans to lose weight when she realizes how fat her posterior is - from her family, friends, and mirror.",
           "titleEs": "Dormir con el enemigo",
           "synopsisEs": "Cuando Bart obtiene una puntuación perfecta en un examen de las capitales estatales, le dan una fiesta pésima, Marge piensa que Bart y Lisa sienten que los está \"sobreprotegiendo\", por lo que comparte su amor con otra persona, Nelson, lo que hace que Marge acoja a Nelson (y lo ponga con Bart) cuando la madre de Nelson lo deja; Lisa planea perder peso cuando se dé cuenta de lo gordo que está su trasero, gracias a su familia, sus amigos y el espejo."
@@ -3866,7 +3866,7 @@ const data = {
           "title": "She Used to Be My Girl",
           "duration": "24",
           "airDate": "2004-12-05",
-          "image": "16x04.jpg",
+          "image": "simpsons_16x04.jpg",
           "synopsis": "Marge discovers that her high school journalism partner, Chloe (they were the Springfield High version of Woodward and Bernstein), is now a network TV news reporter (while Marge chose to forego college and marry Homer, Chloe broke up with her boyfriend, Barney, to go to journalism school); when Lisa seems more interested in what Chloe has done with her life than what Marge did with hers, she has to sneak out in the back of Chloe's car to attend a U.N. women's conference in Capitol City, only to end up surrounded by lava with Chloe at the base of the erupting Mount Springfield. Can Marge save the day? Is someone out there who can, maybe fly a helicopter to get Chloe out of harm's way? Is this the end of Classic Drunk Barney?",
           "titleEs": "Ella solía ser mi chica",
           "synopsisEs": "Marge descubre que su compañera de periodismo de la escuela secundaria, Chloe (eran la versión de Woodward y Bernstein en Springfield High), ahora es reportera de noticias de una cadena de televisión (mientras Marge decidió renunciar a la universidad y casarse con Homer, Chloe rompió con su novio, Barney, para ir a la escuela de periodismo); Cuando Lisa parece más interesada en lo que Chloe ha hecho con su vida que en lo que Marge hizo con la suya, tiene que escabullirse en la parte trasera del auto de Chloe para asistir a una conferencia de mujeres de la ONU en Capitol City, solo para terminar rodeada de lava con Chloe en la base del Monte Springfield en erupción. ¿Podrá Marge salvar el día? ¿Hay alguien por ahí que pueda, tal vez volar un helicóptero para sacar a Chloe de peligro? ¿Es este el final del clásico Barney borracho?"
@@ -3877,7 +3877,7 @@ const data = {
           "title": "Fat Man and Little Boy",
           "duration": "24",
           "airDate": "2004-12-12",
-          "image": "16x05.jpg",
+          "image": "simpsons_16x05.jpg",
           "synopsis": "Bart becomes depressed about growing up, but combats it by writing sarcastic slogans on T-shirts and selling them, prompting a Willy Wonka-esque salesman to buy them off him. Meanwhile, Homer (after getting cut from helping Bart with his T-shirt sales) builds a nuclear reactor for Lisa's science project.",
           "titleEs": "Hombre gordo y niño pequeño",
           "synopsisEs": "Bart se deprime por crecer, pero lo combate escribiendo lemas sarcásticos en camisetas y vendiéndolas, lo que llevó a un vendedor al estilo Willy Wonka a comprárselas. Mientras tanto, Homer (después de que lo despidieran de ayudar a Bart con la venta de camisetas) construye un reactor nuclear para el proyecto científico de Lisa."
@@ -3888,7 +3888,7 @@ const data = {
           "title": "Midnight Rx",
           "duration": "23",
           "airDate": "2005-01-16",
-          "image": "16x06.jpg",
+          "image": "simpsons_16x06.jpg",
           "synopsis": "When Mr. Burns cancels the plant employees' prescription drug plan, Homer chooses to get cheap prescription drugs from Canada (with forged Canadian ID papers), only for Grampa, Ned, and Apu to join him on a second trip, which is not as successful as the first; however, when Smithers is at the brink of death because of a thyroid condition, Burns chooses to finance one final run (it's easier than teaching someone new the filing system) with the help of his plane, \"The Plywood Pelican.\"",
           "titleEs": "Receta de medianoche",
           "synopsisEs": "Cuando el Sr. Burns cancela el plan de medicamentos recetados de los empleados de la planta, Homer decide obtener medicamentos recetados baratos de Canadá (con documentos de identificación canadienses falsificados), solo para que el abuelo, Ned y Apu lo acompañen en un segundo viaje, que no es tan exitoso como el primero; sin embargo, cuando Smithers está al borde de la muerte debido a una enfermedad de tiroides, Burns decide financiar un último viaje (es más fácil que enseñarle a alguien nuevo el sistema de archivo) con la ayuda de su avión, \"The Plywood Pelican\"."
@@ -3899,7 +3899,7 @@ const data = {
           "title": "Mommie Beerest",
           "duration": "24",
           "airDate": "2005-01-30",
-          "image": "16x07.jpg",
+          "image": "simpsons_16x07.jpg",
           "synopsis": "Moe's Tavern is closed by a health inspector, so Homer takes out a mortgage on his house to open the bar again. As a result, Marge becomes Moe's business partner and turns the bar into a British pub that makes them spend too much time together, which worries Homer.",
           "titleEs": "Mamá Beerest",
           "synopsisEs": "Un inspector de salud cierra la taberna de Moe, por lo que Homer pide una hipoteca sobre su casa para abrir el bar nuevamente. Como resultado, Marge se convierte en socia comercial de Moe y convierte el bar en un pub británico que les hace pasar demasiado tiempo juntos, lo que preocupa a Homer."
@@ -3910,7 +3910,7 @@ const data = {
           "title": "Homer and Ned's Hail Mary Pass",
           "duration": "24",
           "airDate": "2005-02-06",
-          "image": "16x08.jpg",
+          "image": "simpsons_16x08.jpg",
           "synopsis": "Homer starts to teach sport players his dances and is placed in charge of the halftime show of the next Super Bowl. Meanwhile, Ned creates a violent film about Bible stories, which makes Marge angry, so she prevents him from displaying it.",
           "titleEs": "Pase Ave María de Homero y Ned",
           "synopsisEs": "Homero comienza a enseñar bailes a los deportistas y es puesto a cargo del espectáculo de medio tiempo del próximo Super Bowl. Mientras tanto, Ned crea una película violenta sobre historias bíblicas, lo que enoja a Marge, por lo que le impide mostrarla."
@@ -3921,7 +3921,7 @@ const data = {
           "title": "Pranksta Rap",
           "duration": "24",
           "airDate": "2005-02-13",
-          "image": "16x09.jpg",
+          "image": "simpsons_16x09.jpg",
           "synopsis": "Bart fakes his own kidnapping to get out of being punished for going to a rap concert without his parents' permission, but the ruse goes too far when Milhouse's father is implicated as the kidnapper and Chief Wiggum sees this as an opportunity to make a name for himself as a competent police officer.",
           "titleEs": "Rap bromista",
           "synopsisEs": "Bart finge su propio secuestro para evitar ser castigado por ir a un concierto de rap sin el permiso de sus padres, pero la artimaña va demasiado lejos cuando el padre de Milhouse está implicado como secuestrador y el jefe Wiggum ve esto como una oportunidad para hacerse un nombre como oficial de policía competente."
@@ -3932,7 +3932,7 @@ const data = {
           "title": "There's Something About Marrying",
           "duration": "23",
           "airDate": "2005-02-20",
-          "image": "16x10.jpg",
+          "image": "simpsons_16x10.jpg",
           "synopsis": "Gay and lesbian couples are allowed to get married in Springfield and Homer takes advantage of it with a wedding business, marrying several same-sex couples, including Patty, who comes out of the closet as a lesbian.",
           "titleEs": "Hay algo sobre casarse",
           "synopsisEs": "Las parejas de gays y lesbianas pueden casarse en Springfield y Homer aprovecha con un negocio de bodas, casándose con varias parejas del mismo sexo, entre ellas Patty, que sale del armario siendo lesbiana."
@@ -3943,7 +3943,7 @@ const data = {
           "title": "On a Clear Day I Can't See My Sister",
           "duration": "23",
           "airDate": "2005-03-06",
-          "image": "16x11.jpg",
+          "image": "simpsons_16x11.jpg",
           "synopsis": "Lisa becomes fed up with Bart's teasing and takes out a restraining order against him, while Homer takes a job as a Sprawl-Mart employee.",
           "titleEs": "En un día despejado no puedo ver a mi hermana",
           "synopsisEs": "Lisa se cansa de las burlas de Bart y emite una orden de restricción en su contra, mientras Homer acepta un trabajo como empleado de Sprawl-Mart."
@@ -3954,7 +3954,7 @@ const data = {
           "title": "Goo Goo Gai Pan",
           "duration": "23",
           "airDate": "2005-03-13",
-          "image": "16x12.jpg",
+          "image": "simpsons_16x12.jpg",
           "synopsis": "Selma hits menopause while giving Mr. Burns his road test for a new driver's license and is upset that she won't be able to have children and not die alone. Lisa suggests that Selma adopt a kid, but the only place that has unwanted children looking for loving parents is China, and China doesn't allow single parents to adopt, so Selma puts down Homer's name on the adoption papers, prompting the family to come with her to China, with Selma and Homer pose as a married couple while Marge pretends to be their live-in nanny.",
           "titleEs": "Goo Goo Gai Pan",
           "synopsisEs": "Selma llega a la menopausia mientras le hace al Sr. Burns su examen práctico para obtener una nueva licencia de conducir y está molesta porque no podrá tener hijos y no morir sola. Lisa sugiere que Selma adopte un niño, pero el único lugar que tiene niños no deseados que buscan padres amorosos es China, y China no permite que los padres solteros adopten, por lo que Selma escribe el nombre de Homer en los papeles de adopción, lo que llevó a la familia a venir con ella a China, con Selma y Homer se hacen pasar por una pareja casada mientras Marge finge ser su niñera."
@@ -3965,7 +3965,7 @@ const data = {
           "title": "Mobile Homer",
           "duration": "24",
           "airDate": "2005-03-20",
-          "image": "16x13.jpg",
+          "image": "simpsons_16x13.jpg",
           "synopsis": "When Homer is almost killed by the repeatedly closing garage door, Marge insists that he gets health insurance. However, Homer is considered uninsurable. Marge starts saving money by cutting corners, which doesn't work very well when Homer wastes it faster than Marge saves it. Marge insists that she takes charge of the family finances, resulting in Homer using the savings on the down-payment for an RV. Marge has finally undergone too much peer pressure and turns against him, so Homer seeks out some new friends - fellow RV owners, whom he invites to pull into the backyard. However, their problems disappear the next morning; the problem is, so do Bart and Lisa, who plan to drive the RV back to the sales lot.",
           "titleEs": "Homero móvil",
           "synopsisEs": "Cuando Homero casi muere por la puerta del garaje que se cierra repetidamente, Marge insiste en que consiga un seguro médico. Sin embargo, Homer se considera no asegurable. Marge comienza a ahorrar dinero tomando atajos, lo que no funciona muy bien cuando Homero lo desperdicia más rápido de lo que Marge lo ahorra. Marge insiste en hacerse cargo de las finanzas familiares, lo que hace que Homer utilice los ahorros del pago inicial de una casa rodante. Marge finalmente ha sufrido demasiada presión de grupo y se vuelve en su contra, por lo que Homer busca nuevos amigos: compañeros propietarios de vehículos recreativos, a quienes invita a llevar al patio trasero. Sin embargo, sus problemas desaparecen a la mañana siguiente; El problema es que Bart y Lisa también lo hacen, quienes planean conducir la casa rodante de regreso al lote de ventas."
@@ -3976,7 +3976,7 @@ const data = {
           "title": "The Seven-Beer Snitch",
           "duration": "24",
           "airDate": "2005-04-03",
-          "image": "16x14.jpg",
+          "image": "simpsons_16x14.jpg",
           "synopsis": "After Shelbyville accuses Springfield of being hicks, Marge convinces the townspeople to fund a Frank Gehry-designed concert hall, which is then converted to a prison when the concert hall goes bankrupt on opening night. Meanwhile, Bart and Lisa investigate Snowball II's recent weight gain.",
           "titleEs": "El soplón de las siete cervezas",
           "synopsisEs": "Después de que Shelbyville acusa a Springfield de ser unos paletos, Marge convence a la gente del pueblo para que financien una sala de conciertos diseñada por Frank Gehry, que luego se convierte en una prisión cuando la sala de conciertos quiebra la noche del estreno. Mientras tanto, Bart y Lisa investigan el reciente aumento de peso de Snowball II."
@@ -3987,7 +3987,7 @@ const data = {
           "title": "Future-Drama",
           "duration": "24",
           "airDate": "2005-04-17",
-          "image": "16x15.jpg",
+          "image": "simpsons_16x15.jpg",
           "synopsis": "Through Professor Frink's future machine, Bart and Lisa see their lives in the year 2013, where Bart steals Lisa's chances at going to an Ivy League school in order to impress a skater girl named Jenda while Homer (now separated from Marge and living in an underwater apartment) fights Krusty the Clown after Marge begins dating him.",
           "titleEs": "Drama futuro",
           "synopsisEs": "A través de la futura máquina del profesor Frink, Bart y Lisa ven sus vidas en el año 2013, donde Bart le roba las oportunidades a Lisa de ir a una escuela de la Ivy League para impresionar a una patinadora llamada Jenda, mientras Homero (ahora separado de Marge y viviendo en un apartamento bajo el agua) pelea contra Krusty el Payaso después de que Marge comienza a salir con él."
@@ -3998,7 +3998,7 @@ const data = {
           "title": "Don't Fear the Roofer",
           "duration": "23",
           "airDate": "2005-05-01",
-          "image": "16x16.jpg",
+          "image": "simpsons_16x16.jpg",
           "synopsis": "Homer befriends a roofer named Ray (voiced by Ray Romano), but everyone worries about Homer's sanity when think Ray isn't real.",
           "titleEs": "No temas al techador",
           "synopsisEs": "Homer se hace amigo de un techador llamado Ray (con la voz de Ray Romano), pero todos se preocupan por la cordura de Homer cuando piensan que Ray no es real."
@@ -4009,7 +4009,7 @@ const data = {
           "title": "The Heartbroke Kid",
           "duration": "24",
           "airDate": "2005-05-01",
-          "image": "16x17.jpg",
+          "image": "simpsons_16x17.jpg",
           "synopsis": "Springfield Elementary signs a deal with a snack company to install vending machines in the schools—with Bart taking advantage of the situation to the point that he becomes obese and suffers a heart attack.",
           "titleEs": "El niño con el corazón roto",
           "synopsisEs": "Springfield Elementary firma un acuerdo con una empresa de snacks para instalar máquinas expendedoras en las escuelas, y Bart se aprovecha de la situación hasta el punto de volverse obeso y sufrir un infarto."
@@ -4020,7 +4020,7 @@ const data = {
           "title": "A Star is Torn",
           "duration": "24",
           "airDate": "2005-05-08",
-          "image": "16x18.jpg",
+          "image": "simpsons_16x18.jpg",
           "synopsis": "After her family falls ill from organic food, Lisa uses her singing voice to comfort them, and Homer sees his daughter's talent as a chance to compete on a reality talent show for kids.",
           "titleEs": "Una estrella está rota",
           "synopsisEs": "Después de que su familia se enferma a causa de los alimentos orgánicos, Lisa usa su voz cantante para consolarlos, y Homer ve el talento de su hija como una oportunidad de competir en un reality show de talentos para niños."
@@ -4031,7 +4031,7 @@ const data = {
           "title": "Thank God It's Doomsday",
           "duration": "24",
           "airDate": "2005-05-08",
-          "image": "16x19.jpg",
+          "image": "simpsons_16x19.jpg",
           "synopsis": "Homer fears the Biblical end of days is coming after watching a movie and seeing what he thinks are signs of the Apocalypse.",
           "titleEs": "Gracias a Dios es el día del juicio final",
           "synopsisEs": "Homero teme que llegue el fin de los días bíblico después de ver una película y ver lo que cree que son señales del Apocalipsis."
@@ -4042,7 +4042,7 @@ const data = {
           "title": "Home Away from Homer",
           "duration": "24",
           "airDate": "2005-05-15",
-          "image": "16x20.jpg",
+          "image": "simpsons_16x20.jpg",
           "synopsis": "Flanders rents a room to two college girls who host a webcam porn site. Upset that no one in town told him this (and that Homer was the one who told everyone), Ned moves to the seemingly perfect town of Humbleton, Pennsylvania, while a brash coach moves into Flanders' house and begins harassing Homer the same way Homer harassed Ned.",
           "titleEs": "Un hogar lejos de Homero",
           "synopsisEs": "Flanders alquila una habitación a dos universitarias que alojan un sitio porno con webcam. Molesto porque nadie en la ciudad le dijo esto (y que Homer fue quien se lo contó a todos), Ned se muda a la ciudad aparentemente perfecta de Humbleton, Pensilvania, mientras un entrenador descarado se muda a la casa de Flanders y comienza a acosar a Homer de la misma manera que Homer acosaba a Ned."
@@ -4053,7 +4053,7 @@ const data = {
           "title": "The Father, the Son and the Holy Guest Star",
           "duration": "23",
           "airDate": "2005-05-15",
-          "image": "16x21.jpg",
+          "image": "simpsons_16x21.jpg",
           "synopsis": "When Bart is unjustly expelled for an incident at a medieval-themed fair at school that wasn't his fault, he's sent to a Catholic private school led by an Irish priest who shows Bart and Homer the fun side of the Catholic religion. Naturally, Ned, Marge, and Reverend Lovejoy (who are Protestant) don't agree.",
           "titleEs": "El Padre, el Hijo y la Santa Estrella Invitada",
           "synopsisEs": "Cuando Bart es expulsado injustamente por un incidente en una feria de temática medieval en la escuela que no fue su culpa, lo envían a una escuela privada católica dirigida por un sacerdote irlandés que les muestra a Bart y Homero el lado divertido de la religión católica. Naturalmente, Ned, Marge y el reverendo Lovejoy (que son protestantes) no están de acuerdo."
@@ -4064,7 +4064,7 @@ const data = {
     {
       "id": 17,
       "title": "Temporada 17",
-      "image": "Season_17_Icon.jpg",
+      "image": "simpsons_Season_17_Icon.jpg",
       "avgColor": "#8A7B8A",
       "episodes": [
         {
@@ -4073,7 +4073,7 @@ const data = {
           "title": "The Bonfire of the Manatees",
           "duration": "23",
           "airDate": "2005-09-11",
-          "image": "17x01.jpg",
+          "image": "simpsons_17x01.jpg",
           "synopsis": "Homer gets into trouble over his football gambling debts and allows the Springfield Mafia to shoot a porno film in the house. In anger, Marge leaves for the beach—and encounters a marine biologist named Caleb (voiced by Alec Baldwin) who has dedicated his life to saving manatees.",
           "titleEs": "La Hoguera de los Manatíes",
           "synopsisEs": "Homero se mete en problemas por sus deudas de juego de fútbol y permite que la mafia de Springfield filme una película porno en la casa. Enfadada, Marge se va a la playa y se encuentra con un biólogo marino llamado Caleb (con la voz de Alec Baldwin) que ha dedicado su vida a salvar manatíes."
@@ -4084,7 +4084,7 @@ const data = {
           "title": "The Girl Who Slept Too Little",
           "duration": "23",
           "airDate": "2005-09-18",
-          "image": "17x02.jpg",
+          "image": "simpsons_17x02.jpg",
           "synopsis": "When a graveyard is moved near the Simpson house to make room for a stamp museum, Lisa suddenly has nightmares and learns that even someone as level-headed as her can be scared.",
           "titleEs": "La niña que dormía muy poco",
           "synopsisEs": "Cuando se traslada un cementerio cerca de la casa de los Simpson para hacer espacio para un museo de sellos, Lisa de repente tiene pesadillas y descubre que incluso alguien tan sensato como ella puede tener miedo."
@@ -4095,7 +4095,7 @@ const data = {
           "title": "Milhouse of Sand and Fog",
           "duration": "23",
           "airDate": "2005-09-25",
-          "image": "17x03.jpg",
+          "image": "simpsons_17x03.jpg",
           "synopsis": "When Maggie comes down with the chicken pox, Homer actually takes some advice from Flanders and holds a \"pox party\" so his friends could have their kids infected. After one too many \"Marge-aritas\", Kirk and Luann van Houten plan to get back together. However, Milhouse realizes they are too interested in each other and not interested in him, so he tries to break them up by planting a bra in his parents' bedroom. One problem: Luann discovers that it is Marge's bra, which leads to Homer and Marge breaking up yet again.",
           "titleEs": "Milhouse de arena y niebla",
           "synopsisEs": "Cuando Maggie contrae varicela, Homer sigue el consejo de Flanders y organiza una \"fiesta de la varicela\" para que sus amigos puedan infectar a sus hijos. Después de demasiadas \"Marge-aritas\", Kirk y Luann van Houten planean volver a estar juntos. Sin embargo, Milhouse se da cuenta de que están demasiado interesados ​​el uno en el otro y no en él, por lo que intenta separarlos colocando un sostén en la habitación de sus padres. Un problema: Luann descubre que es el sostén de Marge, lo que lleva a que Homer y Marge rompan una vez más."
@@ -4106,7 +4106,7 @@ const data = {
           "title": "Treehouse of Horror XVI",
           "duration": "24",
           "airDate": "2005-11-06",
-          "image": "17x04.jpg",
+          "image": "simpsons_17x04.jpg",
           "synopsis": "This year's Halloween episodes include: Kang and Kodos mess with the time/space continuum in order to make Halloween come early this year; Bart teams up with a band of rejected robots after being replaced with a robot boy while in a coma in \"B.I.: Bartifical Intelligence,\" Homer and several ancillary characters are hunted for sport by Mr. Burns in \"Survival of the Fattest,\" and a witch curses costumed townspeople after losing a Halloween contest in \"(I've Grown) A-Costume To Your Face.\"",
           "titleEs": "La casa del árbol del terror XVI",
           "synopsisEs": "Los episodios de Halloween de este año incluyen: Kang y Kodos se meten con el continuo tiempo/espacio para que Halloween llegue temprano este año; Bart se une a una banda de robots rechazados después de ser reemplazado por un niño robot mientras estaba en coma en \"B.I.: Bartifical Intelligence\", Homero y varios personajes auxiliares son cazados por deporte por el Sr. Burns en \"Survival of the Fattest\", y una bruja maldice a los habitantes disfrazados después de perder un concurso de Halloween en \"(I've Grown) A-Costume To Your Face\"."
@@ -4117,7 +4117,7 @@ const data = {
           "title": "Marge's Son Poisoning",
           "duration": "23",
           "airDate": "2005-11-13",
-          "image": "17x05.jpg",
+          "image": "simpsons_17x05.jpg",
           "synopsis": "Bart fears his spending time with Marge will make him a mama's boy. Meanwhile, Homer gets into arm wrestling.",
           "titleEs": "Envenenamiento del hijo de Marge",
           "synopsisEs": "Bart teme que pasar tiempo con Marge lo convierta en un niño de mamá. Mientras tanto, Homero se mete en una pulseada."
@@ -4128,7 +4128,7 @@ const data = {
           "title": "See Homer Run",
           "duration": "23",
           "airDate": "2005-11-20",
-          "image": "17x06.jpg",
+          "image": "simpsons_17x06.jpg",
           "synopsis": "To win back Lisa's love and keep her from hating men in the future, Homer dresses up as a mascot called \"The Safety Salamander\" and gains fame for rescuing people from a multiple-car pile-up on the freeway. Meanwhile, Springfield holds a recall election to finally get the incompetent Mayor Quimby out of office, and Homer (as The Safety Salamander) decides to run.",
           "titleEs": "Ver correr a Homero",
           "synopsisEs": "Para recuperar el amor de Lisa y evitar que odie a los hombres en el futuro, Homer se disfraza de una mascota llamada \"La Salamandra de Seguridad\" y gana fama por rescatar a personas de un choque de varios autos en la autopista. Mientras tanto, Springfield celebra una elección revocatoria para finalmente sacar del cargo al incompetente alcalde Quimby, y Homer (como The Safety Salamander) decide postularse."
@@ -4139,7 +4139,7 @@ const data = {
           "title": "The Last of the Red Hat Mamas",
           "duration": "24",
           "airDate": "2005-11-27",
-          "image": "17x07.jpg",
+          "image": "simpsons_17x07.jpg",
           "synopsis": "Homer ruins Marge's chance to make friends and, just when she thinks she will never have friends, a woman called Tammy offers her to join a group called \"The Cheery Red Tomatoes\". Meanwhile, Lisa Simpson wants to learn Italian.",
           "titleEs": "La última de las mamás Red Hat",
           "synopsisEs": "Homero arruina la oportunidad de Marge de hacer amigos y, justo cuando ella cree que nunca los tendrá, una mujer llamada Tammy le ofrece unirse a un grupo llamado \"The Cheery Red Tomatoes\". Mientras tanto, Lisa Simpson quiere aprender italiano."
@@ -4150,7 +4150,7 @@ const data = {
           "title": "The Italian Bob",
           "duration": "23",
           "airDate": "2005-12-11",
-          "image": "17x08.jpg",
+          "image": "simpsons_17x08.jpg",
           "synopsis": "The Simpsons are going to Italy...to help Mr. Burns retrieve his  new sports car, and end up in an Italian village where Sideshow Bob is now married and has a son.",
           "titleEs": "El bob italiano",
           "synopsisEs": "Los Simpson van a Italia... para ayudar al Sr. Burns a recuperar su nuevo auto deportivo y terminan en un pueblo italiano donde Sideshow Bob ahora está casado y tiene un hijo."
@@ -4161,7 +4161,7 @@ const data = {
           "title": "Simpsons Christmas Stories",
           "duration": "23",
           "airDate": "2005-12-18",
-          "image": "17x09.jpg",
+          "image": "simpsons_17x09.jpg",
           "synopsis": "In this Christmas anthology episode: Homer tells his rendition of Jesus' birth in the manger during a Christmas church service, Grampa tells Lisa about his Christmas fighting in the Pacific theater during World War II, and a parody of The Nutcracker Suite shows everyone in Springfield prepping for the holidays, including Moe's annual suicide and Homer forgetting Marge's present.",
           "titleEs": "Historias de Navidad de Los Simpson",
           "synopsisEs": "En este episodio de antología navideña: Homero cuenta su interpretación del nacimiento de Jesús en el pesebre durante un servicio religioso navideño, el abuelo le cuenta a Lisa sobre sus peleas navideñas en el teatro del Pacífico durante la Segunda Guerra Mundial, y una parodia de The Nutcracker Suite muestra a todos en Springfield preparándose para las fiestas, incluido el suicidio anual de Moe y a Homero olvidando el regalo de Marge."
@@ -4172,7 +4172,7 @@ const data = {
           "title": "Homer's Paternity Coot",
           "duration": "23",
           "airDate": "2006-01-08",
-          "image": "17x10.jpg",
+          "image": "simpsons_17x10.jpg",
           "synopsis": "After a frozen mailman from the 60s is discovered, all the letters he was carrying are delivered to their destinations, including one for Mona Simpson from a man telling her about their son, which suggests Abraham could not be Homer's father. Homer goes to find his true father, someone called Mason Fairbanks.",
           "titleEs": "La focha de paternidad de Homero",
           "synopsisEs": "Después de que se descubre a un cartero congelado de los años 60, todas las cartas que llevaba son entregadas a sus destinos, incluida una para Mona Simpson de un hombre que le cuenta sobre su hijo, lo que sugiere que Abraham no podría ser el padre de Homero. Homero va a buscar a su verdadero padre, alguien llamado Mason Fairbanks."
@@ -4183,7 +4183,7 @@ const data = {
           "title": "We're on the Road to D'oh-where",
           "duration": "23",
           "airDate": "2006-01-29",
-          "image": "17x11.jpg",
+          "image": "simpsons_17x11.jpg",
           "synopsis": "Bart gets in trouble for setting off the steam pipes in the school. The punishment: time in a behavioral modification camp in Oregon. Unfortunately, Bart has been put on the \"No Fly\" list, so Homer must sacrifice his Vegas trip with his bar buddies to take Bart to the camp. Meanwhile, Marge and Lisa clean house and hold a garage sale — and Marge inadvertently becomes a drug dealer when everyone in town  begins buying the family's expired medication.",
           "titleEs": "Estamos en el camino a D'oh, donde",
           "synopsisEs": "Bart se mete en problemas por hacer estallar las tuberías de vapor de la escuela. El castigo: tiempo en un campo de modificación de conducta en Oregón. Desafortunadamente, Bart ha sido incluido en la lista de \"Prohibido volar\", por lo que Homer debe sacrificar su viaje a Las Vegas con sus amigos del bar para llevar a Bart al campamento. Mientras tanto, Marge y Lisa limpian la casa y realizan una venta de garaje, y Marge, sin darse cuenta, se convierte en traficante de drogas cuando todos en la ciudad comienzan a comprar los medicamentos vencidos de la familia."
@@ -4194,7 +4194,7 @@ const data = {
           "title": "My Fair Laddy",
           "duration": "23",
           "airDate": "2006-02-26",
-          "image": "17x12.jpg",
+          "image": "simpsons_17x12.jpg",
           "synopsis": "Springfield Elementary School has a new gym teacher, Coach Krupt, who plays a game called Bombardment, which consists solely of Krupt knocking the students over with dodgeballs. When an errant solid-ice dodgeball which Bart made to get back at Krupt destroys Groundskeeper Willie's shack and leaves him homeless, the Simpsons take Willie in. Lisa plans to make Willie over into a proper gentleman as a project for the school science fair.",
           "titleEs": "Mi Bella Dama",
           "synopsisEs": "La escuela primaria de Springfield tiene un nuevo profesor de gimnasia, el entrenador Krupt, que juega un juego llamado Bombardeo, que consiste únicamente en que Krupt derribe a los estudiantes con pelotas esquivadas. Cuando una bola perdida de hielo sólido que Bart hizo para vengarse de Krupt destruye la choza del jardinero Willie y lo deja sin hogar, los Simpson acogen a Willie. Lisa planea convertir a Willie en un verdadero caballero como proyecto para la feria de ciencias de la escuela."
@@ -4205,7 +4205,7 @@ const data = {
           "title": "The Seemingly Never-Ending Story",
           "duration": "23",
           "airDate": "2006-03-12",
-          "image": "17x13.jpg",
+          "image": "simpsons_17x13.jpg",
           "synopsis": "On a family outing inside a cave, Homer causes a stalactite to crash into the ground, and he ends up stuck in the hole; while Marge, Bart, and Maggie look for a way out, Lisa stays behind and tells Homer a story about how she was chased by a ram and ended up in Mr. Burns' attic...where he tells the story of how he loses everything to the rich Texan and has to work his way back up from the bottom, starting at Moe's...where he discovers Moe's story of how he met the perfect woman - Mrs. Krabappel - but the only way he could afford to start a new life with her is to steal a bag of gold coins discovered by the archaeologist who would be Snake.",
           "titleEs": "La historia aparentemente interminable",
           "synopsisEs": "En una excursión familiar dentro de una cueva, Homero hace que una estalactita se estrelle contra el suelo y él termina atrapado en el agujero; Mientras Marge, Bart y Maggie buscan una salida, Lisa se queda atrás y le cuenta a Homer una historia sobre cómo fue perseguida por un carnero y terminó en el ático del Sr. Burns... donde él cuenta la historia de cómo lo pierde todo ante el rico tejano y tiene que volver a subir desde abajo, comenzando en casa de Moe... donde descubre la historia de Moe sobre cómo conoció a la mujer perfecta, la Sra. Krabappel, pero la única forma en que podía permitirse el lujo de comenzar una nueva vida. La vida con ella consiste en robar una bolsa de monedas de oro descubierta por el arqueólogo que sería Snake."
@@ -4216,7 +4216,7 @@ const data = {
           "title": "Bart Has Two Mommies",
           "duration": "23",
           "airDate": "2006-03-19",
-          "image": "17x14.jpg",
+          "image": "simpsons_17x14.jpg",
           "synopsis": "Marge babysits Rod and Todd, who are not allowed to do many activities since Ned cares for them too much. Homer takes the kids to an animal shelter, where Bart is kidnapped by a monkey named Toot-Toot.",
           "titleEs": "Bart tiene dos mamás",
           "synopsisEs": "Marge cuida a Rod y Todd, a quienes no se les permite realizar muchas actividades ya que Ned se preocupa demasiado por ellos. Homero lleva a los niños a un refugio de animales, donde Bart es secuestrado por un mono llamado Toot-Toot."
@@ -4227,7 +4227,7 @@ const data = {
           "title": "Homer Simpson, This is Your Wife",
           "duration": "23",
           "airDate": "2006-03-26",
-          "image": "17x15.jpg",
+          "image": "simpsons_17x15.jpg",
           "synopsis": "Homer puts himself and Marge in a TV show in which two families swap mothers: Homer and the kids get a very strict woman, while Marge stays with that woman's husband, who develops a crush on Marge.",
           "titleEs": "Homero Simpson, esta es tu esposa",
           "synopsisEs": "Homer se sitúa a sí mismo y a Marge en un programa de televisión en el que dos familias intercambian madres: Homer y los niños consiguen una mujer muy estricta, mientras que Marge se queda con el marido de esa mujer, quien se enamora de Marge."
@@ -4238,7 +4238,7 @@ const data = {
           "title": "Million-Dollar Abie",
           "duration": "23",
           "airDate": "2006-04-02",
-          "image": "17x16.jpg",
+          "image": "simpsons_17x16.jpg",
           "synopsis": "The commissioner of football is in town to finalize the awarding of a new professional football team to Springfield, but when he gets lost and asks for directions at the Simpson house, Grampa ties him up, leading the commissioner to cancel the team. This results to the townspeople hating Abe to the point where he attempts suicide, but when that doesn't happen, because he chooses to live life to the fullest, starting with being the toreador at the new football-stadium-turned-bullring.",
           "titleEs": "Abie del millón de dólares",
           "synopsisEs": "El comisionado de fútbol está en la ciudad para finalizar la adjudicación de un nuevo equipo de fútbol profesional a Springfield, pero cuando se pierde y pide indicaciones para llegar a la casa de los Simpson, el abuelo lo ata, lo que lleva al comisionado a cancelar el equipo. Esto hace que la gente del pueblo odie a Abe hasta el punto de que intenta suicidarse, pero eso no sucede, porque elige vivir la vida al máximo, comenzando por ser el torero en el nuevo estadio de fútbol convertido en plaza de toros."
@@ -4249,7 +4249,7 @@ const data = {
           "title": "Kiss Kiss Bang Bangalore",
           "duration": "23",
           "airDate": "2006-04-09",
-          "image": "17x17.jpg",
+          "image": "simpsons_17x17.jpg",
           "synopsis": "The Springfield Nuclear Power Plant is moved to India and Homer is chosen to manage the Indian plant, but with all the gifts and praise he gets, he thinks of being a god.",
           "titleEs": "Beso Beso Bang Bangalore",
           "synopsisEs": "La planta de energía nuclear de Springfield se traslada a la India y Homer es elegido para administrar la planta india, pero con todos los regalos y elogios que recibe, piensa que es un dios."
@@ -4260,7 +4260,7 @@ const data = {
           "title": "The Wettest Stories Ever Told",
           "duration": "23",
           "airDate": "2006-04-23",
-          "image": "17x18.jpg",
+          "image": "simpsons_17x18.jpg",
           "synopsis": "When the Simpsons' plans for a nice family outing at The Frying Dutchman turns into a dining disaster (due to an uncooperative octopus armed with knives), the family tries to salvage the night by turning the episode into yet another Simpsons anthology show (in the same vein as Tales from the Public Domain, Margical History Tour and Simpsons Christmas Stories, but with a nautical theme).",
           "titleEs": "Las historias más húmedas jamás contadas",
           "synopsisEs": "Cuando los planes de los Simpson para una agradable salida familiar en The Frying Dutchman se convierten en un desastre gastronómico (debido a que un pulpo armado con cuchillos no coopera), la familia intenta salvar la noche convirtiendo el episodio en otro espectáculo de antología de los Simpson (en la misma línea que Tales from the Public Domain, Margical History Tour y Simpsons Christmas Stories, pero con un tema náutico)."
@@ -4271,7 +4271,7 @@ const data = {
           "title": "Girls Just Want to Have Sums",
           "duration": "23",
           "airDate": "2006-04-30",
-          "image": "17x19.jpg",
+          "image": "simpsons_17x19.jpg",
           "synopsis": "After Principal Skinner gets in trouble for making an off-hand remark about how a former Springfield Elementary School student succeeded, despite being bad at math, a new female principal is hired and segregates the school based on gender. But when Lisa feels that the girls' side isn't doing any real learning, she disguises herself as a boy and goes to the boys' side.",
           "titleEs": "Las chicas sólo quieren tener sumas",
           "synopsisEs": "Después de que el director Skinner se mete en problemas por hacer un comentario casual sobre cómo un ex alumno de la Escuela Primaria de Springfield tuvo éxito, a pesar de ser malo en matemáticas, se contrata a una nueva directora y segrega la escuela según el género. Pero cuando Lisa siente que el lado de las niñas no está aprendiendo realmente, se disfraza de niño y va al lado de los niños."
@@ -4282,7 +4282,7 @@ const data = {
           "title": "Regarding Margie",
           "duration": "23",
           "airDate": "2006-05-07",
-          "image": "17x20.jpg",
+          "image": "simpsons_17x20.jpg",
           "synopsis": "When Marge bumps her head on a stool by her maximum-strength cleaning solution she uses to clear the house before her free housecleaning (which \"she\" won thanks to Homer painting the address number on the curb in front of the house), she gets amnesia, but quickly remembers everything except for two things - one, that she's married to Homer, and two, who Homer is.",
           "titleEs": "Respecto a Margie",
           "synopsisEs": "Cuando Marge se golpea la cabeza con un taburete con su solución de limpieza de máxima potencia que usa para limpiar la casa antes de su limpieza gratuita (que \"ella\" ganó gracias a que Homer pintó el número de la dirección en la acera frente a la casa), sufre amnesia, pero rápidamente recuerda todo excepto dos cosas: una, que está casada con Homer, y dos, quién es Homer."
@@ -4293,7 +4293,7 @@ const data = {
           "title": "The Monkey Suit",
           "duration": "23",
           "airDate": "2006-05-14",
-          "image": "17x21.jpg",
+          "image": "simpsons_17x21.jpg",
           "synopsis": "After Ned Flanders sees an exhibit on evolution at a museum, he and Reverend Lovejoy talk Principal Skinner into allowing the teaching of creationism in schools. When Lisa complains at a town meeting that there should only be one theory taught in schools, Mayor Quimby agrees - and teaching evolution is banned in schools, so Lisa plans to teach a secret evolution class which gets her arrested. Does Marge have something up where her sleeves would be if she didn't always wear a sleeveless dress to help Lisa?",
           "titleEs": "El traje de mono",
           "synopsisEs": "Después de que Ned Flanders ve una exposición sobre la evolución en un museo, él y el reverendo Lovejoy convencen al director Skinner para que permita la enseñanza del creacionismo en las escuelas. Cuando Lisa se queja en una reunión municipal de que solo debería enseñarse una teoría en las escuelas, el alcalde Quimby está de acuerdo, y enseñar la evolución está prohibido en las escuelas, por lo que Lisa planea dar una clase secreta de evolución que hace que la arresten. ¿Marge tiene algo debajo de sus mangas si no siempre usara un vestido sin mangas para ayudar a Lisa?"
@@ -4304,7 +4304,7 @@ const data = {
           "title": "Marge and Homer Turn a Couple Play",
           "duration": "23",
           "airDate": "2006-05-21",
-          "image": "17x22.jpg",
+          "image": "simpsons_17x22.jpg",
           "synopsis": "Homer and Marge are chosen by Buck Mitchell, the Springfield Isotopes' star first baseman, to help him sort out his relationship with Tabitha Vixx, a Britney Spears-esque pop singer notorious for her sexualized performances.",
           "titleEs": "Marge y Homer hacen una obra de teatro en pareja",
           "synopsisEs": "Homero y Marge son elegidos por Buck Mitchell, el primera base estrella de los Isótopos de Springfield, para ayudarlo a resolver su relación con Tabitha Vixx, una cantante pop al estilo Britney Spears famosa por sus actuaciones sexualizadas."
@@ -4315,7 +4315,7 @@ const data = {
     {
       "id": 18,
       "title": "Temporada 18",
-      "image": "Season_18_Icon.jpg",
+      "image": "simpsons_Season_18_Icon.jpg",
       "avgColor": "#94573E",
       "episodes": [
         {
@@ -4324,7 +4324,7 @@ const data = {
           "title": "The Mook, the Chef, the Wife and Her Homer",
           "duration": "23",
           "airDate": "2006-09-10",
-          "image": "18x01.jpg",
+          "image": "simpsons_18x01.jpg",
           "synopsis": "At school, Lisa befriends Fat Tony's son. Fat Tony is put out of commission by a rival society, and Homer and Bart take over running mob operations, when Michael, who says of being nothing like his father, is not interested in the “family business.”",
           "titleEs": "El Mook, el chef, la esposa y su Homero",
           "synopsisEs": "En la escuela, Lisa se hace amiga del hijo del Gordo Tony. Tony el Gordo es puesto fuera de servicio por una sociedad rival, y Homer y Bart se hacen cargo de las operaciones de la mafia, cuando Michael, que dice no parecerse en nada a su padre, no está interesado en el \"negocio familiar\"."
@@ -4335,7 +4335,7 @@ const data = {
           "title": "Jazzy and the Pussycats",
           "duration": "23",
           "airDate": "2006-09-17",
-          "image": "18x02.jpg",
+          "image": "simpsons_18x02.jpg",
           "synopsis": "Bart plays the drums following a counselor's suggestion. He is very good at it, and is asked by a rock group to become a member of their band, something that has been Lisa's dream for a long time.",
           "titleEs": "Jazzy y las mininas",
           "synopsisEs": "Bart toca la batería siguiendo la sugerencia de un consejero. Es muy bueno en eso y un grupo de rock le pide que se convierta en miembro de su banda, algo que ha sido el sueño de Lisa durante mucho tiempo."
@@ -4346,7 +4346,7 @@ const data = {
           "title": "Please Homer, Don't Hammer 'Em",
           "duration": "23",
           "airDate": "2006-09-24",
-          "image": "18x03.jpg",
+          "image": "simpsons_18x03.jpg",
           "synopsis": "Marge becomes interested in carpentry, but uses Homer as the face of her operation, since no one in town thinks women are good enough to be carpenters. Meanwhile, Springfield Elementary School bans all peanut products due to fear of food allergies — until Bart discovers that the one with the peanut allergy is Principal Skinner.",
           "titleEs": "Por favor, Homero, no los golpees",
           "synopsisEs": "Marge se interesa por la carpintería, pero utiliza a Homer como rostro de su operación, ya que nadie en la ciudad cree que las mujeres sean lo suficientemente buenas para ser carpinteras. Mientras tanto, la escuela primaria de Springfield prohíbe todos los productos con maní por temor a sufrir alergias alimentarias, hasta que Bart descubre que el que tiene alergia al maní es el director Skinner."
@@ -4357,7 +4357,7 @@ const data = {
           "title": "Treehouse of Horror XVII",
           "duration": "23",
           "airDate": "2006-11-05",
-          "image": "18x04.jpg",
+          "image": "simpsons_18x04.jpg",
           "synopsis": "In \"Married to the Blob\", Homer eats green extraterrestrial goo and morphs into a rampaging blob with an insatiable appetite; in \"You Gotta Know When to Golem\", Bart finds a golem (a clay man from Jewish mythology that does whatever is told of it through written scrolls inserted in its mouth) and uses it to play pranks and be destructive; and in \"The Day the Earth Looked Stupid,\" the residents of early-1930s Springfield refuse to believe news of an actual alien invasion after being duped by Orson Welles's \"War of the Worlds\" broadcast.",
           "titleEs": "La casa del árbol del terror XVII",
           "synopsisEs": "En \"Married to the Blob\", Homer come una sustancia viscosa extraterrestre verde y se transforma en una masa furiosa con un apetito insaciable; en \"Tienes que saber cuándo ir al Golem\", Bart encuentra un golem (un hombre de arcilla de la mitología judía que hace todo lo que se le dice a través de pergaminos escritos insertados en su boca) y lo usa para hacer bromas y ser destructivo; y en \"El día que la Tierra parecía estúpida\", los residentes de Springfield de principios de la década de 1930 se niegan a creer las noticias de una invasión extraterrestre real después de haber sido engañados por la transmisión de \"La guerra de los mundos\" de Orson Welles."
@@ -4368,7 +4368,7 @@ const data = {
           "title": "G.I. D'oh",
           "duration": "23",
           "airDate": "2006-11-12",
-          "image": "18x05.jpg",
+          "image": "simpsons_18x05.jpg",
           "synopsis": "Bart joins the army after recruiters visit the school, so Homer takes his place. After he escapes with all the other soldiers, the colonel invades Springfield in a hunt to locate him.",
           "titleEs": "SOLDADO AMERICANO. oh",
           "synopsisEs": "Bart se une al ejército después de que unos reclutadores visitan la escuela, por lo que Homero ocupa su lugar. Después de escapar con todos los demás soldados, el coronel invade Springfield en una búsqueda para localizarlo."
@@ -4379,7 +4379,7 @@ const data = {
           "title": "Moe'N'a Lisa",
           "duration": "23",
           "airDate": "2006-11-19",
-          "image": "18x06.jpg",
+          "image": "simpsons_18x06.jpg",
           "synopsis": "Lisa turns Moe's notes of an obscure world into a poem, so he is invited to a writer's convention by Tom Wolfe, but he says that it is his own work, which breaks Lisa's heart.",
           "titleEs": "Moe'N'a Lisa",
           "synopsisEs": "Lisa convierte las notas de Moe sobre un mundo oscuro en un poema, por lo que Tom Wolfe lo invita a una convención de escritores, pero él dice que es su propio trabajo, lo que le rompe el corazón a Lisa."
@@ -4390,7 +4390,7 @@ const data = {
           "title": "Ice Cream of Margie (with the Light Blue Hair)",
           "duration": "23",
           "airDate": "2006-11-26",
-          "image": "18x07.jpg",
+          "image": "simpsons_18x07.jpg",
           "synopsis": "Homer gets a job as an ice cream seller and Marge uses the ice creams sticks to make sculptures of people in Springfield and becomes famous.",
           "titleEs": "Helado de Margie (con el pelo celeste)",
           "synopsisEs": "Homero consigue un trabajo como vendedor de helados y Marge usa los palitos de helado para hacer esculturas de personas en Springfield y se hace famosa."
@@ -4401,7 +4401,7 @@ const data = {
           "title": "The Haw-Hawed Couple",
           "duration": "23",
           "airDate": "2006-12-10",
-          "image": "18x08.jpg",
+          "image": "simpsons_18x08.jpg",
           "synopsis": "Nelson invites Bart's classmates to his birthday party, but Bart and Martin convince the other kids not to go. Bart is forced to attend Nelson's party by Marge, and Bart becomes friends with Nelson.",
           "titleEs": "La pareja alborotada",
           "synopsisEs": "Nelson invita a los compañeros de Bart a su fiesta de cumpleaños, pero Bart y Martin convencen a los otros niños de que no vayan. Marge obliga a Bart a asistir a la fiesta de Nelson, y Bart se hace amigo de Nelson."
@@ -4412,7 +4412,7 @@ const data = {
           "title": "Kill Gil, Volumes I & II",
           "duration": "23",
           "airDate": "2006-12-17",
-          "image": "18x09.jpg",
+          "image": "simpsons_18x09.jpg",
           "synopsis": "The Simpsons let Gil stay with them during Christmas. However, he stays for eleven months because Marge can't tell him \"no\".",
           "titleEs": "Mata a Gil, volúmenes I y II",
           "synopsisEs": "Los Simpson dejaron que Gil se quedara con ellos durante la Navidad. Sin embargo, se queda once meses porque Marge no puede decirle \"no\"."
@@ -4423,7 +4423,7 @@ const data = {
           "title": "The Wife Aquatic",
           "duration": "23",
           "airDate": "2006-12-17",
-          "image": "18x10.jpg",
+          "image": "simpsons_18x10.jpg",
           "synopsis": "During an outdoor movie event, Marge remembers of going to Barnacle Bay, an island she visited in childhood. Homer takes her there, but when the family arrives they discover it has become positively poor.",
           "titleEs": "La esposa acuática",
           "synopsisEs": "Durante un evento cinematográfico al aire libre, Marge recuerda haber ido a Barnacle Bay, una isla que visitó cuando era niña. Homero la lleva allí, pero cuando llega la familia descubren que se ha vuelto absolutamente pobre."
@@ -4434,7 +4434,7 @@ const data = {
           "title": "Revenge is a Dish Best Served Three Times",
           "duration": "23",
           "airDate": "2007-01-28",
-          "image": "18x11.jpg",
+          "image": "simpsons_18x11.jpg",
           "synopsis": "When a motorist cuts Homer off and he swears revenge on the driver, Marge, Lisa, and Bart tell legends of revenge:",
           "titleEs": "La venganza es un plato que se sirve tres veces",
           "synopsisEs": "Cuando un automovilista interrumpe el paso a Homero y este jura vengarse del conductor, Marge, Lisa y Bart cuentan leyendas de venganza:"
@@ -4445,7 +4445,7 @@ const data = {
           "title": "Little Big Girl",
           "duration": "23",
           "airDate": "2007-02-11",
-          "image": "18x12.jpg",
+          "image": "simpsons_18x12.jpg",
           "synopsis": "After unwittingly saving Springfield from an out-of-control fire, Bart is rewarded with a driving license. However, he gets bushed of driving Homer everywhere, so he goes on the run and has a relationship with an older girl named Darcy. Meanwhile, Lisa invents a pretend Native American tribe for her school report and claims to be a descendant of it. The statement snowballs to a dramatic conclusion.",
           "titleEs": "pequeña niña grande",
           "synopsisEs": "Después de salvar involuntariamente a Springfield de un incendio fuera de control, Bart recibe como recompensa un permiso de conducir. Sin embargo, se cansa de llevar a Homer a todas partes, por lo que huye y tiene una relación con una chica mayor llamada Darcy. Mientras tanto, Lisa inventa una tribu nativa americana ficticia para su informe escolar y afirma ser descendiente de ella. La declaración crece hasta llegar a una conclusión dramática."
@@ -4456,7 +4456,7 @@ const data = {
           "title": "Springfield Up",
           "duration": "23",
           "airDate": "2007-02-18",
-          "image": "18x13.jpg",
+          "image": "simpsons_18x13.jpg",
           "synopsis": "Declan Desmond films a documentary about the lives of people of Springfield and how they changed over the years. Homer makes him believe he is rich, but he actually took Burns Manor while Mr. Burns was out.",
           "titleEs": "Springfield arriba",
           "synopsisEs": "Declan Desmond filma un documental sobre la vida de la gente de Springfield y cómo cambiaron a lo largo de los años. Homer le hace creer que es rico, pero en realidad tomó Burns Manor mientras el Sr. Burns estaba fuera."
@@ -4467,7 +4467,7 @@ const data = {
           "title": "Yokel Chords",
           "duration": "23",
           "airDate": "2007-03-04",
-          "image": "18x14.jpg",
+          "image": "simpsons_18x14.jpg",
           "synopsis": "Lisa teaches the Spuckler children about culture, and soon Krusty hires them to act on his show. They become famous and earn a lot of money, but Cletus exploits them and spends the money for himself.",
           "titleEs": "Acordes de Yokel",
           "synopsisEs": "Lisa les enseña cultura a los niños Spuckler y pronto Krusty los contrata para actuar en su programa. Se vuelven famosos y ganan mucho dinero, pero Cletus los explota y gasta el dinero para sí mismo."
@@ -4478,7 +4478,7 @@ const data = {
           "title": "Rome-Old and Julie-Eh",
           "duration": "23",
           "airDate": "2007-03-11",
-          "image": "18x15.jpg",
+          "image": "simpsons_18x15.jpg",
           "synopsis": "When Homer declares bankruptcy (under the impression that it would protect his assets), he has to cut wasteful spending, so he stops paying for Grampa to stay in the Springfield Retirement Castle, causing him to move out - and move into a relationship with Selma, despite the objections of Homer and Patty. Meanwhile Bart and Lisa order shipping materials from a delivery company and the company discovers they built a fort with them, it is an all-out war of paper products.",
           "titleEs": "Roma-Old y Julie-Eh",
           "synopsisEs": "Cuando Homer se declara en bancarrota (bajo la impresión de que eso protegería sus activos), tiene que reducir los gastos innecesarios, por lo que deja de pagarle al abuelo para que se quede en el Castillo de Retiro de Springfield, lo que lo obliga a mudarse y entablar una relación con Selma, a pesar de las objeciones de Homer y Patty. Mientras tanto, Bart y Lisa piden materiales de envío a una empresa de reparto y la empresa descubre que construyeron un fuerte con ellos, es una guerra total de productos de papel."
@@ -4489,7 +4489,7 @@ const data = {
           "title": "Homerazzi",
           "duration": "23",
           "airDate": "2007-03-11",
-          "image": "18x16.jpg",
+          "image": "simpsons_18x16.jpg",
           "synopsis": "Homer becomes a tabloid photographer and takes photos of famous people, but they start to get irritated so they send a photographer who will take pictures of Homer's most humiliating moments.",
           "titleEs": "Homerazzi",
           "synopsisEs": "Homer se convierte en fotógrafo sensacionalista y toma fotografías de personajes famosos, pero ellos comienzan a irritarse por lo que envían un fotógrafo que tomará fotografías de los momentos más humillantes de Homer."
@@ -4500,7 +4500,7 @@ const data = {
           "title": "Marge Gamer",
           "duration": "23",
           "airDate": "2007-04-22",
-          "image": "18x17.jpg",
+          "image": "simpsons_18x17.jpg",
           "synopsis": "Marge discovers the Internet and gets hooked on an online fantasy role-playing game called Earthland Realms, where she interacts with practically everyone in Springfield, including Bart, whose online persona is the local tough guy, the Shadow Knight. Meanwhile, Homer becomes a soccer referee, which strains his and Lisa's relationship when he has to call penalties on her.",
           "titleEs": "Marge jugador",
           "synopsisEs": "Marge descubre Internet y se engancha a un juego de rol de fantasía en línea llamado Earthland Realms, donde interactúa prácticamente con todos en Springfield, incluido Bart, cuyo personaje en línea es el tipo duro local, el Caballero de las Sombras. Mientras tanto, Homer se convierte en árbitro de fútbol, ​​lo que tensa su relación con Lisa cuando tiene que sancionarle penales."
@@ -4511,7 +4511,7 @@ const data = {
           "title": "The Boys of Bummer",
           "duration": "23",
           "airDate": "2007-04-29",
-          "image": "18x18.jpg",
+          "image": "simpsons_18x18.jpg",
           "synopsis": "The Springfield Isotots win a Little League championship game, but when Bart makes an error that costs the team the championship, the townspeople refuse to let him forget it. Meanwhile, Homer's attempts to talk his way out of being caught sleeping in a department store bed end up selling the mattress, so he ends up as a mattress salesman, but he has second thoughts when Reverend Lovejoy trades Homer's mattress for the one he just bought.",
           "titleEs": "Los chicos del fastidio",
           "synopsisEs": "Los Isotots de Springfield ganan el campeonato de las ligas menores, pero cuando Bart comete un error que le cuesta al equipo el campeonato, la gente del pueblo se niega a dejar que lo olvide. Mientras tanto, los intentos de Homer de evitar que lo atrapen durmiendo en la cama de una tienda departamental terminan vendiendo el colchón, por lo que termina como vendedor de colchones, pero lo piensa mejor cuando el Reverendo Lovejoy cambia el colchón de Homer por el que acaba de comprar."
@@ -4522,7 +4522,7 @@ const data = {
           "title": "Crook and Ladder",
           "duration": "23",
           "airDate": "2007-05-06",
-          "image": "18x19.jpg",
+          "image": "simpsons_18x19.jpg",
           "synopsis": "Homer, Moe, Apu and Principal Skinner become volunteer firefighters. But just because the boys are not getting their salary doesn't mean that they can't find a way to receive compensation.",
           "titleEs": "Ladrón y escalera",
           "synopsisEs": "Homer, Moe, Apu y el director Skinner se convierten en bomberos voluntarios. Pero el hecho de que los muchachos no reciban su salario no significa que no puedan encontrar una manera de recibir una compensación."
@@ -4533,7 +4533,7 @@ const data = {
           "title": "Stop, or My Dog Will Shoot!",
           "duration": "23",
           "airDate": "2007-05-13",
-          "image": "18x20.jpg",
+          "image": "simpsons_18x20.jpg",
           "synopsis": "When Homer gets lost in a cornfield maze, Santa's Little Helper comes to the rescue, sending the hound to animal police academy. However, when he bites Bart rather than play catch with him, Bart gets a new pet - a snake - which gets loose in the school.",
           "titleEs": "¡Detente o mi perro disparará!",
           "synopsisEs": "Cuando Homer se pierde en un laberinto de campos de maíz, el pequeño ayudante de Santa viene al rescate y envía al perro a la academia de policía animal. Sin embargo, cuando muerde a Bart en lugar de jugar a la pelota con él, Bart consigue una nueva mascota, una serpiente, que se suelta en la escuela."
@@ -4544,7 +4544,7 @@ const data = {
           "title": "24 Minutes",
           "duration": "23",
           "airDate": "2007-05-20",
-          "image": "18x21.jpg",
+          "image": "simpsons_18x21.jpg",
           "synopsis": "In a parody of 24, Bart and Lisa join forces to prevent the bullies from setting off a stink bomb at the school bake sale, and the pair gets help by many different students, including Martin.",
           "titleEs": "24 minutos",
           "synopsisEs": "En una parodia de 24, Bart y Lisa unen fuerzas para evitar que los matones detonen una bomba fétida en la venta de pasteles de la escuela, y la pareja recibe ayuda de muchos estudiantes diferentes, incluido Martin."
@@ -4555,7 +4555,7 @@ const data = {
           "title": "You Kent Always Say What You Want",
           "duration": "23",
           "airDate": "2007-05-20",
-          "image": "18x22.jpg",
+          "image": "simpsons_18x22.jpg",
           "synopsis": "In this, the 400th episode (both in production and broadcast order), Kent Brockman gets in trouble for swearing on live TV after Homer spills hot coffee on Brockman's lap during a live interview. After he loses his job for allegedly flavoring his coffee with cocaine, Brockman becomes The Simpsons' latest house guest. While there, he tells Lisa the real reason why the FCC issues fines for indecent content on TV and the two team up to take down the mainstream media by posting the bombshell on YouTube.",
           "titleEs": "Tú, Kent, siempre dices lo que quieres.",
           "synopsisEs": "En este, el episodio número 400 (tanto en orden de producción como de transmisión), Kent Brockman se mete en problemas por decir malas palabras en televisión en vivo después de que Homer derrama café caliente en el regazo de Brockman durante una entrevista en vivo. Después de perder su trabajo por supuestamente darle sabor a su café con cocaína, Brockman se convierte en el último huésped de Los Simpson. Mientras está allí, le cuenta a Lisa la verdadera razón por la que la FCC impone multas por contenido indecente en la televisión y los dos se unen para acabar con los principales medios de comunicación publicando la bomba en YouTube."
@@ -4566,7 +4566,7 @@ const data = {
     {
       "id": 19,
       "title": "Temporada 19",
-      "image": "Season_19_Icon.jpg",
+      "image": "simpsons_Season_19_Icon.jpg",
       "avgColor": "#79BB8C",
       "episodes": [
         {
@@ -4575,7 +4575,7 @@ const data = {
           "title": "He Loves to Fly and He D'ohs",
           "duration": "22",
           "airDate": "2007-09-23",
-          "image": "19x01.jpg",
+          "image": "simpsons_19x01.jpg",
           "synopsis": "Homer Simpson gets to fly in Charles Montgomery Burns' private jet and likes it so much that he plans to never fly commercial again. He tries to find a job that involves flying in a corporate jet, and hires a life coach named Colby Krause to assist him with his goal.",
           "titleEs": "Le encanta volar y D'ohs",
           "synopsisEs": "Homer Simpson viaja en el jet privado de Charles Montgomery Burns y le gusta tanto que planea no volver a volar nunca más en un avión comercial. Intenta encontrar un trabajo que implique volar en un avión corporativo y contrata a un entrenador de vida llamado Colby Krause para que lo ayude con su objetivo."
@@ -4586,7 +4586,7 @@ const data = {
           "title": "The Homer of Seville",
           "duration": "23",
           "airDate": "2007-09-30",
-          "image": "19x02.jpg",
+          "image": "simpsons_19x02.jpg",
           "synopsis": "After an injury at a funeral, Homer finds out that he can sing very well while being laid down, and joins the opera.",
           "titleEs": "El Homero de Sevilla",
           "synopsisEs": "Después de una lesión en un funeral, Homero descubre que puede cantar muy bien mientras está acostado y se une a la ópera."
@@ -4597,7 +4597,7 @@ const data = {
           "title": "Midnight Towboy",
           "duration": "24",
           "airDate": "2007-10-07",
-          "image": "19x03.jpg",
+          "image": "simpsons_19x03.jpg",
           "synopsis": "Matt Dillon guest voices as a tow truck driver in nearby Guidopolis who tows Homer's car (while he is searching for some milk for Maggie, who has become a little too clingy to Marge until Marge hires someone who persuades her into letting Maggie become independent) and ends up selling Homer a tow truck, but when Homer tows away a few too many of his friends' cars, they come up with a solution that results in Homer being put out of business...and possibly out of existence.",
           "titleEs": "Remolque de medianoche",
           "synopsisEs": "Matt Dillon interpreta a un conductor de grúa en la cercana Guidopolis que remolca el auto de Homer (mientras busca un poco de leche para Maggie, quien se ha vuelto demasiado pegajosa a Marge hasta que Marge contrata a alguien que la persuade para que deje que Maggie se independice) y termina vendiéndole a Homer una grúa, pero cuando Homer remolca demasiados autos de sus amigos, se les ocurre una solución que resulta en que Homer quede fuera del negocio... y posiblemente fuera. de existencia."
@@ -4608,7 +4608,7 @@ const data = {
           "title": "I Don't Wanna Know Why the Caged Bird Sings",
           "duration": "24",
           "airDate": "2007-10-14",
-          "image": "19x04.jpg",
+          "image": "simpsons_19x04.jpg",
           "synopsis": "Steve Buscemi guest voices as a bank robber who holds Marge hostage during a robbery, only to give himself up when she promises to visit him in prison (since his mother abandoned him at an amusement park when he was a child), but when Marge finds excuses not to talk to him, much less visit him, he escapes and confronts Marge...and makes her take him to the same park.",
           "titleEs": "No quiero saber por qué canta el pájaro enjaulado",
           "synopsisEs": "El invitado Steve Buscemi interpreta a un ladrón de bancos que mantiene a Marge como rehén durante un robo, solo para entregarse cuando ella promete visitarlo en prisión (ya que su madre lo abandonó en un parque de diversiones cuando era niño), pero cuando Marge encuentra excusas para no hablar con él, y mucho menos visitarlo, él escapa y confronta a Marge... y hace que ella lo lleve al mismo parque."
@@ -4619,7 +4619,7 @@ const data = {
           "title": "Treehouse of Horror XVIII",
           "duration": "23",
           "airDate": "2007-11-04",
-          "image": "19x05.jpg",
+          "image": "simpsons_19x05.jpg",
           "synopsis": "E.T., Go Home - In this spoof of E.T.: The Extraterrestrial,  Bart discovers Kodos hiding in the Simpsons' backyard, where Kodos tells him and Lisa to get equipment for contacting someone to pick him up, but in reality he is setting Earth up for an invasion.",
           "titleEs": "La casa del árbol del terror XVIII",
           "synopsisEs": "E.T., Go Home - En esta parodia de E.T.: The Extraterrestrial, Bart descubre a Kodos escondido en el patio trasero de los Simpson, donde Kodos les dice a él y a Lisa que consigan equipo para contactar a alguien que lo recoja, pero en realidad está preparando la Tierra para una invasión."
@@ -4630,7 +4630,7 @@ const data = {
           "title": "Little Orphan Millie",
           "duration": "23",
           "airDate": "2007-11-11",
-          "image": "19x06.jpg",
+          "image": "simpsons_19x06.jpg",
           "synopsis": "When Kirk and Luann remarry and go on a honeymoon cruise, they topple into the sea and are presumed dead. Milhouse turns into a real man following the loss of his parents - making him more popular than ever. Bart contacts Milhouse's uncle in a bid to regain his popularity, only to realize how much he is close to his best friend when he plans on leaving. Meanwhile, Homer finds himself in trouble when he can't remember Marge's eye color.",
           "titleEs": "La pequeña huérfana Millie",
           "synopsisEs": "Cuando Kirk y Luann se vuelven a casar y se embarcan en un crucero de luna de miel, caen al mar y se les da por muertos. Milhouse se convierte en un hombre de verdad tras la pérdida de sus padres, lo que lo hace más popular que nunca. Bart se pone en contacto con el tío de Milhouse en un intento por recuperar su popularidad, sólo para darse cuenta de lo cercano que es a su mejor amigo cuando planea irse. Mientras tanto, Homer se mete en problemas cuando no recuerda el color de ojos de Marge."
@@ -4641,7 +4641,7 @@ const data = {
           "title": "Husbands and Knives",
           "duration": "23",
           "airDate": "2007-11-18",
-          "image": "19x07.jpg",
+          "image": "simpsons_19x07.jpg",
           "synopsis": "Marge forms a new women-only gymnasium and Homer becomes worried about losing her after she becomes a highly successful businesswoman. Meanwhile, Coolsville, a new comic book shop, opens in Springfield and puts Comic Book Guy out of business.",
           "titleEs": "Maridos y cuchillos",
           "synopsisEs": "Marge crea un nuevo gimnasio exclusivo para mujeres y a Homer le preocupa perderla después de que se convierta en una exitosa mujer de negocios. Mientras tanto, Coolsville, una nueva tienda de cómics, abre en Springfield y deja a Comic Book Guy fuera del negocio."
@@ -4652,7 +4652,7 @@ const data = {
           "title": "Funeral for a Fiend",
           "duration": "23",
           "airDate": "2007-11-25",
-          "image": "19x08.jpg",
+          "image": "simpsons_19x08.jpg",
           "synopsis": "Marge sees a commercial for a new barbecue rib restaurant that turns out to be a trap set by Sideshow Bob. Once again, the trap fails and Bob is arrested, but at his trial, Bart throws away a nitroglycerin vial that Bob needed for his heart condition, leaving him to supposedly die.",
           "titleEs": "Funeral para un demonio",
           "synopsisEs": "Marge ve un comercial de un nuevo restaurante de costillas a la barbacoa que resulta ser una trampa tendida por Sideshow Bob. Una vez más, la trampa falla y Bob es arrestado, pero en su juicio, Bart tira un frasco de nitroglicerina que Bob necesitaba para su condición cardíaca, dejándolo supuestamente morir."
@@ -4663,7 +4663,7 @@ const data = {
           "title": "Eternal Moonshine of the Simpson Mind",
           "duration": "23",
           "airDate": "2007-12-16",
-          "image": "19x09.jpg",
+          "image": "simpsons_19x09.jpg",
           "synopsis": "Homer wakes up to find himself outdoors and covered with snow, without any memory of the evening before. When he arrives home, he finds out that everyone is missing. Seeking help from Moe and Professor Frink, Homer tries to piece together his memory to find out what happened to him.",
           "titleEs": "Luz de luna eterna de la mente Simpson",
           "synopsisEs": "Homero se despierta y se encuentra al aire libre y cubierto de nieve, sin ningún recuerdo de la noche anterior. Cuando llega a casa, descubre que todos han desaparecido. Homer busca la ayuda de Moe y el profesor Frink y trata de reconstruir su memoria para descubrir qué le pasó."
@@ -4674,7 +4674,7 @@ const data = {
           "title": "E. Pluribus Wiggum",
           "duration": "23",
           "airDate": "2008-01-06",
-          "image": "19x10.jpg",
+          "image": "simpsons_19x10.jpg",
           "synopsis": "Springfield becomes the site of the first presidential primary. The townspeople soon get sick of all of the presidential candidates sucking up to them, and plan to support their own write-in candidate: Ralph Wiggum.",
           "titleEs": "E. Pluribus Wiggum",
           "synopsisEs": "Springfield se convierte en el sitio de las primeras primarias presidenciales. La gente del pueblo pronto se cansa de que todos los candidatos presidenciales los adulen y planean apoyar a su propio candidato por escrito: Ralph Wiggum."
@@ -4685,7 +4685,7 @@ const data = {
           "title": "That '90s Show",
           "duration": "23",
           "airDate": "2008-01-27",
-          "image": "19x11.jpg",
+          "image": "simpsons_19x11.jpg",
           "synopsis": "After Bart and Lisa discover Marge's diploma from Springfield University, Homer and Marge recount one of the darkest points in their relationship, when Marge fell in love with a university professor, Stefane August.",
           "titleEs": "Ese programa de los 90",
           "synopsisEs": "Después de que Bart y Lisa descubren el diploma de Marge de la Universidad de Springfield, Homer y Marge cuentan uno de los puntos más oscuros de su relación, cuando Marge se enamoró de una profesora universitaria, Stefane August."
@@ -4696,7 +4696,7 @@ const data = {
           "title": "Love, Springfieldian Style",
           "duration": "23",
           "airDate": "2008-02-17",
-          "image": "19x12.jpg",
+          "image": "simpsons_19x12.jpg",
           "synopsis": "On Valentine's Day, Homer and Marge get stuck in a tunnel of love (thanks to Bart and some gelatin), so they pass the time with love stories of three couples, animated for our enjoyment:\nHomer and Marge as Bonnie and Clyde,\nHomer and Marge (again) as \"Shady and the Vamp\"\nNelson and Lisa as Sid Vicious and Nancy Spungen.",
           "titleEs": "Amor, estilo Springfieldiano",
           "synopsisEs": "El día de San Valentín, Homero y Marge quedan atrapados en un túnel del amor (gracias a Bart y unas gelatinas), por lo que pasan el rato con historias de amor de tres parejas, animadas para nuestro disfrute:\nHomero y Marge como Bonnie y Clyde,\nHomer y Marge (nuevamente) como \"Shady and the Vamp\"\nNelson y Lisa como Sid Vicious y Nancy Spungen."
@@ -4707,7 +4707,7 @@ const data = {
           "title": "The Debarted",
           "duration": "23",
           "airDate": "2008-03-02",
-          "image": "19x13.jpg",
+          "image": "simpsons_19x13.jpg",
           "synopsis": "A new troublesome student named Donny arrives at Springfield Elementary School, prompting a gleeful Bart to befriend him as his partner in pranks. Meanwhile, Marge wrecks the family car and gets a new luxury vehicle, which Homer grows attached to.",
           "titleEs": "Los excluidos",
           "synopsisEs": "Un nuevo estudiante problemático llamado Donny llega a la escuela primaria de Springfield, lo que lleva a un alegre Bart a hacerse amigo de él y convertirlo en su compañero de bromas. Mientras tanto, Marge destroza el coche familiar y consigue un nuevo vehículo de lujo, al que Homero se encariña."
@@ -4718,7 +4718,7 @@ const data = {
           "title": "Dial \"N\" for Nerder",
           "duration": "23",
           "airDate": "2008-03-09",
-          "image": "19x14.jpg",
+          "image": "simpsons_19x14.jpg",
           "synopsis": "Bart plays a prank on Martin, but by accident, Martin falls down a cliff. Bart and Lisa start to feel very guilty and behave very suspicious, prompting Nelson to investigate. Meanwhile, Marge thinks that Homer is cheating on his diet.",
           "titleEs": "Marque \"N\" para Nerder",
           "synopsisEs": "Bart le gasta una broma a Martin, pero por accidente, Martin cae por un acantilado. Bart y Lisa comienzan a sentirse muy culpables y a comportarse de manera muy sospechosa, lo que llevó a Nelson a investigar. Mientras tanto, Marge piensa que Homero está haciendo trampa en su dieta."
@@ -4729,7 +4729,7 @@ const data = {
           "title": "Smoke on the Daughter",
           "duration": "23",
           "airDate": "2008-03-30",
-          "image": "19x15.jpg",
+          "image": "simpsons_19x15.jpg",
           "synopsis": "Lisa gets recruited for Chazz Busby's Ballet Academy when they reject Marge. Meanwhile, Homer and Bart work on jerky at the risk of seeing a raccoon.",
           "titleEs": "Humo sobre la hija",
           "synopsisEs": "Lisa es reclutada para la Academia de Ballet de Chazz Busby cuando rechazan a Marge. Mientras tanto, Homer y Bart preparan cecina a riesgo de ver un mapache."
@@ -4740,7 +4740,7 @@ const data = {
           "title": "Papa Don't Leech",
           "duration": "23",
           "airDate": "2008-04-13",
-          "image": "19x16.jpg",
+          "image": "simpsons_19x16.jpg",
           "synopsis": "Country music star Lurleen Lumpkin makes another appearance in Springfield, destitute and a fugitive from justice due to owing a fortune in back taxes. Homer and Marge take Lurleen in, reunite her with her long-lost father Royce, and help Lurleen relaunch her musical career.",
           "titleEs": "Papá, no sanguijes",
           "synopsisEs": "La estrella de la música country Lurleen Lumpkin hace otra aparición en Springfield, indigente y fugitiva de la justicia debido a que debe una fortuna en impuestos atrasados. Homer y Marge acogen a Lurleen, la reúnen con su padre Royce, perdido hace mucho tiempo, y ayudan a Lurleen a relanzar su carrera musical."
@@ -4751,7 +4751,7 @@ const data = {
           "title": "Apocalypse Cow",
           "duration": "23",
           "airDate": "2008-04-27",
-          "image": "19x17.jpg",
+          "image": "simpsons_19x17.jpg",
           "synopsis": "Bart wins a contest with a cow, but realizes it is going to be slaughtered. He saves it and gives it to one of Cletus's kids, but Cletus believes that it is a token of marriage.",
           "titleEs": "Vaca Apocalipsis",
           "synopsisEs": "Bart gana un concurso con una vaca, pero se da cuenta de que la van a sacrificar. Lo guarda y se lo da a uno de los hijos de Cletus, pero Cletus cree que es una muestra de matrimonio."
@@ -4762,7 +4762,7 @@ const data = {
           "title": "Any Given Sundance",
           "duration": "23",
           "airDate": "2008-05-04",
-          "image": "19x18.jpg",
+          "image": "simpsons_19x18.jpg",
           "synopsis": "The Simpsons are going to Park City, Utah as Lisa's documentary is being presented at the Sundance Film Festival, but the other Simpsons are particularly baffled that the movie does not exactly show their good sides.",
           "titleEs": "Cualquier Sundance dado",
           "synopsisEs": "Los Simpson van a Park City, Utah, mientras se presenta el documental de Lisa en el Festival de Cine de Sundance, pero los otros Simpson están particularmente desconcertados porque la película no muestra exactamente sus lados buenos."
@@ -4773,7 +4773,7 @@ const data = {
           "title": "Mona Leaves-a",
           "duration": "23",
           "airDate": "2008-05-11",
-          "image": "19x19.jpg",
+          "image": "simpsons_19x19.jpg",
           "synopsis": "Homer is reunited with his mother Mona, but is not willing to forgive her for all the times she left him as a child. When she dies, a guilt-ridden Homer attempts to show his gratitude to her by fulfilling her final wishes.",
           "titleEs": "Mona hojas-a",
           "synopsisEs": "Homero se reencuentra con su madre Mona, pero no está dispuesto a perdonarla por todas las veces que lo dejó cuando era niño. Cuando ella muere, Homero, lleno de culpa, intenta mostrarle su gratitud cumpliendo sus últimos deseos."
@@ -4784,7 +4784,7 @@ const data = {
           "title": "All About Lisa",
           "duration": "23",
           "airDate": "2008-05-18",
-          "image": "19x20.jpg",
+          "image": "simpsons_19x20.jpg",
           "synopsis": "Lisa becomes Krusty the Clown's newest assistant and steals his spotlight. She wins the Entertainer of the Year award, but is warned that with her sudden fame comes a new attitude towards others and herself. In the meantime, Homer and Bart form a partnership over their newfound activity of coin collecting, but they are one coin short - a 1917 misminted penny that appears to have Abraham Lincoln kissing himself.",
           "titleEs": "Todo sobre Lisa",
           "synopsisEs": "Lisa se convierte en la nueva asistente de Krusty el Payaso y le roba la atención. Gana el premio a la Artista del Año, pero se le advierte que con su repentina fama viene una nueva actitud hacia los demás y hacia ella misma. Mientras tanto, Homer y Bart se asocian para su nueva actividad de coleccionar monedas, pero les falta una moneda: un centavo mal acuñado en 1917 que parece tener a Abraham Lincoln besándose."
@@ -4795,7 +4795,7 @@ const data = {
     {
       "id": 20,
       "title": "Temporada 20",
-      "image": "Season_20_Icon.jpg",
+      "image": "simpsons_Season_20_Icon.jpg",
       "avgColor": "#B5863A",
       "episodes": [
         {
@@ -4804,7 +4804,7 @@ const data = {
           "title": "Sex, Pies, and Idiot Scrapes",
           "duration": "23",
           "airDate": "2008-09-28",
-          "image": "20x01.jpg",
+          "image": "simpsons_20x01.jpg",
           "synopsis": "After Homer is punished for brawling on St. Patrick's Day, he meets a bounty hunter, a parody of Dog the Bounty Hunter, when he gets his bail bond. Intrigued, he plans to try his hand at the profession - but is saved by Flanders when it doesn't go quite to plan. Together, they form an unlikely bounty-hunting duo, but when Homer's attitude gets the better of him, Flanders is less than impressed. Meanwhile, Marge unwittingly starts working at an erotic bakery.",
           "titleEs": "Sexo, pasteles y raspaduras de idiotas",
           "synopsisEs": "Después de que Homer es castigado por pelear el día de San Patricio, conoce a un cazarrecompensas, una parodia de Dog the Bounty Hunter, cuando obtiene su fianza. Intrigado, planea probar suerte en la profesión, pero Flanders lo salva cuando las cosas no salen según lo planeado. Juntos, forman un improbable dúo de cazadores de recompensas, pero cuando la actitud de Homer se apodera de él, Flanders no queda nada impresionado. Mientras tanto, Marge, sin saberlo, empieza a trabajar en una panadería erótica."
@@ -4815,7 +4815,7 @@ const data = {
           "title": "Lost Verizon",
           "duration": "23",
           "airDate": "2008-10-05",
-          "image": "20x02.jpg",
+          "image": "simpsons_20x02.jpg",
           "synopsis": "While trying to earn money at the country club, Bart acquires Denis Leary's cell phone after Leary angrily chucks it away. Bart keeps Denis Leary's phone and makes prank calls pretending to be Leary and when Marge finds out what Bart is doing she contacts Leary. Denis says Bart may as well keep the phone, but he advises her to activate the GPS system in the phone to track every move Bart makes.",
           "titleEs": "Verizon perdido",
           "synopsisEs": "Mientras intenta ganar dinero en el club de campo, Bart adquiere el teléfono celular de Denis Leary después de que Leary lo tira enojado. Bart se queda con el teléfono de Denis Leary y hace bromas telefónicas haciéndose pasar por Leary y cuando Marge descubre lo que está haciendo Bart, se pone en contacto con Leary. Denis dice que Bart también puede quedarse con el teléfono, pero le aconseja que active el sistema GPS en el teléfono para rastrear cada movimiento que hace Bart."
@@ -4826,7 +4826,7 @@ const data = {
           "title": "Double, Double, Boy in Trouble",
           "duration": "23",
           "airDate": "2008-10-19",
-          "image": "20x03.jpg",
+          "image": "simpsons_20x03.jpg",
           "synopsis": "Bart meets his doppelganger, Simon Woosterfield, a member of the richest family in Springfield and the two plan to switch places. Simon adjusts nicely to his new digs at the Simpson home, while Bart discovers that his new siblings are plotting his demise so they can gain possession of his inheritance.",
           "titleEs": "Doble, Doble, Chico en Problemas",
           "synopsisEs": "Bart conoce a su doble, Simon Woosterfield, un miembro de la familia más rica de Springfield y los dos planean cambiar de lugar. Simon se adapta muy bien a su nuevo alojamiento en la casa de los Simpson, mientras Bart descubre que sus nuevos hermanos están planeando su desaparición para poder apoderarse de su herencia."
@@ -4837,7 +4837,7 @@ const data = {
           "title": "Treehouse of Horror XIX",
           "duration": "23",
           "airDate": "2008-11-02",
-          "image": "20x04.jpg",
+          "image": "simpsons_20x04.jpg",
           "synopsis": "This year, Homer's attempt to vote goes murderously wrong; Bart's new robot toy leads a revolution; Homer murders celebrities so advertisers can use their images without express permission; and a parody of The Peanuts holiday specials where Milhouse summons a pumpkin demon that attacks humans after learning that pumpkins are used as food and decoration during the fall months.",
           "titleEs": "La casa del árbol del terror XIX",
           "synopsisEs": "Este año, el intento de Homero de votar sale terriblemente mal; El nuevo robot de juguete de Bart lidera una revolución; Homer asesina a celebridades para que los anunciantes puedan usar sus imágenes sin permiso expreso; y una parodia de los especiales navideños de The Peanuts donde Milhouse convoca a un demonio calabaza que ataca a los humanos después de enterarse de que las calabazas se utilizan como alimento y decoración durante los meses de otoño."
@@ -4848,7 +4848,7 @@ const data = {
           "title": "Dangerous Curves",
           "duration": "23",
           "airDate": "2008-11-09",
-          "image": "20x05.jpg",
+          "image": "simpsons_20x05.jpg",
           "synopsis": "The Simpsons take a road trip to a cabin in the woods that Homer and Marge once vacationed at 20 years before. In a series of flashbacks, Homer and Marge reflect on some history from their courtship and Bart and Lisa recall some pleasant memories from their very early days.",
           "titleEs": "Curvas peligrosas",
           "synopsisEs": "Los Simpson hacen un viaje por carretera a una cabaña en el bosque donde Homero y Marge estuvieron de vacaciones 20 años antes. En una serie de flashbacks, Homer y Marge reflexionan sobre la historia de su noviazgo y Bart y Lisa recuerdan algunos recuerdos agradables de sus primeros días."
@@ -4859,7 +4859,7 @@ const data = {
           "title": "Homer and Lisa Exchange Cross Words",
           "duration": "23",
           "airDate": "2008-11-16",
-          "image": "20x06.jpg",
+          "image": "simpsons_20x06.jpg",
           "synopsis": "Lisa discovers she has an impressive knack for solving crossword puzzles and enters a citywide crossword tournament, but her feelings are hurt when Homer bets against Lisa in the championship match.",
           "titleEs": "Homero y Lisa intercambian palabras cruzadas",
           "synopsisEs": "Lisa descubre que tiene una habilidad impresionante para resolver crucigramas y participa en un torneo de crucigramas en toda la ciudad, pero sus sentimientos se sienten heridos cuando Homer apuesta contra Lisa en el partido por el campeonato."
@@ -4870,7 +4870,7 @@ const data = {
           "title": "MyPods and Boomsticks",
           "duration": "23",
           "airDate": "2008-11-30",
-          "image": "20x07.jpg",
+          "image": "simpsons_20x07.jpg",
           "synopsis": "Bart befriends Bashir bin Laden, a Muslim boy who's new at school, and invites the neighbors over for dinner. Unfortunately, Homer's paranoia gets the better of himself and he ends up offending Bashir and his parents. Homer goes over to the Bin Laden home to apologize, but his paranoia strikes again when he observes Bashir's father with sticks of TNT and thinks he is going to blow up Springfield Mall. Meanwhile, Lisa gets a Mapple MyPod - and a bill for over 1200 downloaded songs at 99 cents each.",
           "titleEs": "MyPods y Boomsticks",
           "synopsisEs": "Bart se hace amigo de Bashir bin Laden, un niño musulmán nuevo en la escuela, e invita a los vecinos a cenar. Desafortunadamente, la paranoia de Homer se apodera de él y termina ofendiendo a Bashir y a sus padres. Homero va a la casa de Bin Laden para disculparse, pero su paranoia vuelve a atacar cuando observa al padre de Bashir con cartuchos de TNT y piensa que va a volar el centro comercial Springfield. Mientras tanto, Lisa recibe un Mapple MyPod y una factura por más de 1200 canciones descargadas a 99 centavos cada una."
@@ -4881,7 +4881,7 @@ const data = {
           "title": "The Burns and the Bees",
           "duration": "23",
           "airDate": "2008-12-07",
-          "image": "20x08.jpg",
+          "image": "simpsons_20x08.jpg",
           "synopsis": "When Mr. Burns wins a professional basketball team in a poker game, he plans to build a new sports arena in Springfield for them - on the site where Lisa is trying to keep Springfield's bee population from becoming extinct, and Homer tries to solve the problem by mating the bees - with \"killer\" Africanized bees (Aka African Honey Bees).",
           "titleEs": "Las quemaduras y las abejas",
           "synopsisEs": "Cuando el Sr. Burns gana un equipo de baloncesto profesional en un juego de póquer, planea construir un nuevo estadio deportivo en Springfield para ellos, en el sitio donde Lisa está tratando de evitar que la población de abejas de Springfield se extinga, y Homer intenta resolver el problema apareando las abejas, con abejas africanizadas \"asesinas\" (también conocidas como abejas melíferas africanas)."
@@ -4892,7 +4892,7 @@ const data = {
           "title": "Lisa the Drama Queen",
           "duration": "23",
           "airDate": "2009-01-25",
-          "image": "20x09.jpg",
+          "image": "simpsons_20x09.jpg",
           "synopsis": "Lisa and a new friend create the fantasy world of Equalia together, but Lisa is a little worried when her friend treats Equalia as a real place to escape the problems of the real world.",
           "titleEs": "Lisa la reina del drama",
           "synopsisEs": "Lisa y una nueva amiga crean juntas el mundo de fantasía de Equalia, pero Lisa se preocupa un poco cuando su amiga trata a Equalia como un lugar real para escapar de los problemas del mundo real."
@@ -4903,7 +4903,7 @@ const data = {
           "title": "Take My Life, Please",
           "duration": "22",
           "airDate": "2009-02-15",
-          "image": "20x10.jpg",
+          "image": "simpsons_20x10.jpg",
           "synopsis": "Vance Connor is inducted into the Springfield Wall of Fame, and Homer recalls how he ran against Vance for school president. After discovering that the real ballot box was hidden, Homer searches for it only to discover that he should have won. The family goes to Luigi's restaurant and meets a man who can tell people's fates by stirring tomato sauce. Homer sees what his life would have been like had he been class president.",
           "titleEs": "Toma mi vida, por favor",
           "synopsisEs": "Vance Connor ingresa al Muro de la Fama de Springfield y Homer recuerda cómo se postuló contra Vance para la presidencia de la escuela. Después de descubrir que la urna real estaba escondida, Homer la busca solo para descubrir que debería haber ganado. La familia va al restaurante de Luigi y conoce a un hombre que puede predecir el destino de la gente removiendo salsa de tomate. Homero ve cómo habría sido su vida si hubiera sido presidente de la clase."
@@ -4914,7 +4914,7 @@ const data = {
           "title": "How the Test Was Won",
           "duration": "23",
           "airDate": "2009-03-01",
-          "image": "20x11.jpg",
+          "image": "simpsons_20x11.jpg",
           "synopsis": "A national achievement test has Springfield Elementary School in an uproar. Bart and the school's other underachievers are sent on a class trip to Capital City so they don't bring down the school's score, while Lisa, rattled by her score of \"only\" 96 percent on a practice test, has trouble with the real thing. Meanwhile, Homer forgets to send an insurance payment on time and has to prevent anyone from getting injured in the Simpson house.",
           "titleEs": "Cómo se ganó la prueba",
           "synopsisEs": "Una prueba de rendimiento nacional tiene alborotada a la escuela primaria de Springfield. Bart y los demás estudiantes de bajo rendimiento de la escuela son enviados a un viaje de estudios a Capital City para no bajar el puntaje de la escuela, mientras que Lisa, desconcertada por su puntaje de \"sólo\" 96 por ciento en un examen de práctica, tiene problemas con el examen real. Mientras tanto, Homer se olvida de enviar el pago del seguro a tiempo y tiene que evitar que alguien resulte herido en la casa de los Simpson."
@@ -4925,7 +4925,7 @@ const data = {
           "title": "No Loan Again, Naturally",
           "duration": "23",
           "airDate": "2009-03-08",
-          "image": "20x12.jpg",
+          "image": "simpsons_20x12.jpg",
           "synopsis": "When the adjustable rate on the Simpson couple's mortgage resets at more than the pair can afford, they must sell their house. Good Samaritan Ned Flanders buys the house and rents it out to them at an affordable rate. But Homer pushes his luck too far when he takes advantage of Ned's generous landlord duties.",
           "titleEs": "No habrá préstamo nuevamente, naturalmente",
           "synopsisEs": "Cuando la tasa ajustable de la hipoteca de la pareja Simpson vuelve a ser superior a lo que la pareja puede pagar, deben vender su casa. El buen samaritano Ned Flanders compra la casa y se la alquila a un precio asequible. Pero Homer lleva su suerte demasiado lejos cuando se aprovecha de los generosos deberes de Ned como propietario."
@@ -4936,7 +4936,7 @@ const data = {
           "title": "Gone Maggie Gone",
           "duration": "23",
           "airDate": "2009-03-15",
-          "image": "20x13.jpg",
+          "image": "simpsons_20x13.jpg",
           "synopsis": "Lisa infiltrates a convent in order to save Maggie, who was accidentally taken in by nuns. While in the convent, Lisa uncovers a series of cryptic clues leading to a hidden jewel in Springfield. With help from resident history buffs Principal Skinner and Comic Book Guy, Lisa sets off to find the coveted prize. But Springfield's Freemasons are also hot on the trail of the jewel, and Lisa must race against them to find the jewel and rescue Maggie.",
           "titleEs": "Se fue Maggie se fue",
           "synopsisEs": "Lisa se infiltra en un convento para salvar a Maggie, quien fue acogida accidentalmente por monjas. Mientras está en el convento, Lisa descubre una serie de pistas crípticas que conducen a una joya escondida en Springfield. Con la ayuda del director Skinner y el chico de los cómics, residentes residentes aficionados a la historia, Lisa parte en busca del codiciado premio. Pero los masones de Springfield también están tras la pista de la joya, y Lisa debe correr contra ellos para encontrar la joya y rescatar a Maggie."
@@ -4947,7 +4947,7 @@ const data = {
           "title": "In the Name of the Grandfather",
           "duration": "23",
           "airDate": "2009-03-15",
-          "image": "20x14.jpg",
+          "image": "simpsons_20x14.jpg",
           "synopsis": "The Simpsons travel to Ireland so that Grampa can have a final drink at O'Flanagan's Pub, his old favorite watering hole. But when the small town of Dunkilderry isn't quite how Grampa remembers it and O'Flanagans has become a rundown, empty pub, he and Homer choose to buy it and make some repairs to the bar.",
           "titleEs": "En el nombre del abuelo",
           "synopsisEs": "Los Simpson viajan a Irlanda para que el abuelo pueda tomar una última copa en el O'Flanagan's Pub, su antiguo bar favorito. Pero cuando el pequeño pueblo de Dunkilderry no es exactamente como el abuelo lo recuerda y O'Flanagans se ha convertido en un pub ruinoso y vacío, él y Homer deciden comprarlo y hacer algunas reparaciones en el bar."
@@ -4958,7 +4958,7 @@ const data = {
           "title": "Wedding for Disaster",
           "duration": "23",
           "airDate": "2009-03-29",
-          "image": "20x15.jpg",
+          "image": "simpsons_20x15.jpg",
           "synopsis": "The Simpsons travel to Ireland so that Grampa can have a final drink at O'Flanagan's Pub, his old favorite watering hole. But when the small town of Dunkilderry isn't quite how Grampa remembers it and O'Flanagans has become a rundown, empty pub, he and Homer choose to buy it and make some repairs to the bar.",
           "titleEs": "Boda para el desastre",
           "synopsisEs": "Los Simpson viajan a Irlanda para que el abuelo pueda tomar una última copa en el O'Flanagan's Pub, su antiguo bar favorito. Pero cuando el pequeño pueblo de Dunkilderry no es exactamente como el abuelo lo recuerda y O'Flanagans se ha convertido en un pub ruinoso y vacío, él y Homer deciden comprarlo y hacer algunas reparaciones en el bar."
@@ -4969,7 +4969,7 @@ const data = {
           "title": "Eeny Teeny Maya, Moe",
           "duration": "23",
           "airDate": "2009-04-05",
-          "image": "20x16.jpg",
+          "image": "simpsons_20x16.jpg",
           "synopsis": "Moe develops an Internet relationship with a beautiful woman named Maya. When the two agree to meet face to face, Moe is surprised to discover that Maya's only three feet tall. Meanwhile, Marge wants Homer to spend more time with Maggie. Homer obliges and finds himself in luck when he discovers a playground right next to Moe's Tavern.",
           "titleEs": "Eeny Teeny Maya, Moe",
           "synopsisEs": "Moe desarrolla una relación en Internet con una hermosa mujer llamada Maya. Cuando los dos acuerdan encontrarse cara a cara, Moe se sorprende al descubrir que Maya sólo mide un metro de altura. Mientras tanto, Marge quiere que Homer pase más tiempo con Maggie. Homer obedece y tiene suerte cuando descubre un parque infantil justo al lado de Moe's Tavern."
@@ -4980,7 +4980,7 @@ const data = {
           "title": "The Good, the Sad and the Drugly",
           "duration": "23",
           "airDate": "2009-04-19",
-          "image": "20x17.jpg",
+          "image": "simpsons_20x17.jpg",
           "synopsis": "When Milhouse gets suspended for a prank that he pulled, Bart promises to visit Milhouse every day. However, he meets a girl named Jenny, and starts a relationship with her. Meanwhile, Lisa becomes depressed after reading Internet articles about future shortages and disasters, and gets put on antidepressants that make her hallucinate.",
           "titleEs": "Los buenos, los tristes y los drogados",
           "synopsisEs": "Cuando Milhouse es suspendido por una broma que hizo, Bart promete visitar a Milhouse todos los días. Sin embargo, conoce a una chica llamada Jenny y comienza una relación con ella. Mientras tanto, Lisa se deprime después de leer artículos en Internet sobre futuras escaseces y desastres, y le recetan antidepresivos que la hacen alucinar."
@@ -4991,7 +4991,7 @@ const data = {
           "title": "Father Knows Worst",
           "duration": "23",
           "airDate": "2009-04-26",
-          "image": "20x18.jpg",
+          "image": "simpsons_20x18.jpg",
           "synopsis": "When Homer believes that Bart's under achievements and Lisa's unpopularity will jeopardize their future, he tries \"helicopter parenting\" - that is, he hovers over them constantly; meanwhile, Marge is too busy relaxing in the mysterious new basement sauna she just happened to find in the basement to care.",
           "titleEs": "El padre sabe lo peor",
           "synopsisEs": "Cuando Homer cree que los escasos logros de Bart y la impopularidad de Lisa pondrán en peligro su futuro, intenta \"paternidad helicóptero\", es decir, se cierne sobre ellos constantemente; Mientras tanto, Marge está demasiado ocupada relajándose en la nueva y misteriosa sauna del sótano que acaba de encontrar en el sótano como para que le importe."
@@ -5002,7 +5002,7 @@ const data = {
           "title": "Waverly Hills, 9-0-2-1-D'oh",
           "duration": "23",
           "airDate": "2009-05-03",
-          "image": "20x19.jpg",
+          "image": "simpsons_20x19.jpg",
           "synopsis": "When Marge discovers the poor teaching conditions at Springfield Elementary School, she gets Homer to rent an apartment in the Waverly Hills area so Bart and Lisa can attend school there, but Lisa's lack of knowledge about singer Alaska Nebraska makes her as unpopular as ever, until Bart spreads a rumor that Lisa and Alaska are best friends - which comes back to haunt Lisa when her new friends want backstage passes to her upcoming concert; Homer has to stay in his shabby apartment until the city's City inspector pays a surprise visit to make sure they actually live in the area, but he gets to like it - until he invites Marge to move in with him, and begin to enjoy their own company.",
           "titleEs": "Waverly Hills, 9-0-2-1-D'oh",
           "synopsisEs": "Cuando Marge descubre las malas condiciones de enseñanza en la Escuela Primaria de Springfield, consigue que Homer alquile un apartamento en el área de Waverly Hills para que Bart y Lisa puedan asistir a la escuela allí, pero la falta de conocimiento de Lisa sobre la cantante Alaska Nebraska la hace tan impopular como siempre, hasta que Bart difunde el rumor de que Lisa y Alaska son mejores amigas, lo que vuelve a atormentar a Lisa cuando sus nuevos amigos quieren pases detrás del escenario para su próximo concierto; Homer tiene que quedarse en su destartalado apartamento hasta que el inspector municipal de la ciudad les hace una visita sorpresa para asegurarse de que realmente viven en la zona, pero le llega a gustar, hasta que invita a Marge a mudarse con él y empezar a disfrutar de su propia compañía."
@@ -5013,7 +5013,7 @@ const data = {
           "title": "Four Great Women and a Manicure",
           "duration": "23",
           "airDate": "2009-05-10",
-          "image": "20x20.jpg",
+          "image": "simpsons_20x20.jpg",
           "synopsis": "While at the nail salon, Marge and Lisa tell four stories about great women in history and pop culture to prove whether or not women can simultaneously be smart, beautiful, and powerful.",
           "titleEs": "Cuatro grandes mujeres y una manicura",
           "synopsisEs": "Mientras están en el salón de uñas, Marge y Lisa cuentan cuatro historias sobre grandes mujeres de la historia y la cultura pop para demostrar si las mujeres pueden ser inteligentes, hermosas y poderosas al mismo tiempo."
@@ -5024,7 +5024,7 @@ const data = {
           "title": "Coming to Homerica",
           "duration": "23",
           "airDate": "2009-05-17",
-          "image": "20x21.jpg",
+          "image": "simpsons_20x21.jpg",
           "synopsis": "Ogdenville's economy takes a tumble after tainted barley is discovered in Krusty's veggie burgers and the unemployed of Ogdenville flock to Springfield. When Mayor Quimby closes off the town's borders and enlists private citizens to help patrol them, Homer puts together a border patrol group.",
           "titleEs": "Llegando a Homerica",
           "synopsisEs": "La economía de Ogdenville da un vuelco después de que se descubre cebada contaminada en las hamburguesas vegetarianas de Krusty y los desempleados de Ogdenville acuden en masa a Springfield. Cuando el alcalde Quimby cierra las fronteras de la ciudad y recluta a ciudadanos privados para ayudar a patrullarlas, Homer forma un grupo de patrulla fronteriza."
@@ -5035,7 +5035,7 @@ const data = {
     {
       "id": 21,
       "title": "Temporada 21",
-      "image": "Season_21_Icon.jpg",
+      "image": "simpsons_Season_21_Icon.jpg",
       "avgColor": "#A16667",
       "episodes": [
         {
@@ -5044,7 +5044,7 @@ const data = {
           "title": "Homer the Whopper",
           "duration": "24",
           "airDate": "2009-09-27",
-          "image": "21x01.jpg",
+          "image": "simpsons_21x01.jpg",
           "synopsis": "Comic Book Guy's comic book hero, Everyman that Homer is disguising himself as, becomes a big hit in Springfield and he agrees to a movie version. Comic Book Guy insists that he chooses who plays the lead role and gives the part to Homer. However, the movie company hire a personal trainer for Homer, known as Lyle McCarthy, so that he can get fit for the part. When Lyle leaves, Homer puts on weight again and the movie is a disaster. The company offers CBG the chance to direct a sequel if he pretends he liked the movie but he criticizes it.",
           "titleEs": "Homero el Whopper",
           "synopsisEs": "El héroe del cómic de Comic Book Guy, Everyman, del que Homero se disfraza, se convierte en un gran éxito en Springfield y acepta una versión cinematográfica. Comic Book Guy insiste en que él elige quién desempeña el papel principal y le da el papel a Homer. Sin embargo, la compañía cinematográfica contrata a un entrenador personal para Homer, conocido como Lyle McCarthy, para que se ponga en forma para el papel. Cuando Lyle se va, Homer vuelve a engordar y la película es un desastre. La compañía ofrece a CBG la posibilidad de dirigir una secuela si finge que le gustó la película pero la critica."
@@ -5055,7 +5055,7 @@ const data = {
           "title": "Bart Gets a \"Z\"",
           "duration": "24",
           "airDate": "2009-10-04",
-          "image": "21x02.jpg",
+          "image": "simpsons_21x02.jpg",
           "synopsis": "When Mrs. Krabappel confiscates her students' mobile phones, they hatch a plan to get their teacher drunk to get her to \"loosen up\". When Principal Skinner fires her, she is replaced by a cool new teacher, Zachary Vaughn, who impresses the kids with his love of texting, Facebook and Twitter. Bart has a lingering guilt about getting Edna fired and tries to help her. With the assistance of a self-help book/DVD, she opens her own muffin store - but she still dreams about being a teacher again.",
           "titleEs": "Bart obtiene una \"Z\"",
           "synopsisEs": "Cuando la Sra. Krabappel confisca los teléfonos móviles de sus alumnos, ellos traman un plan para emborrachar a su profesora para que se \"relaje\". Cuando el director Skinner la despide, es reemplazada por un nuevo maestro genial, Zachary Vaughn, quien impresiona a los niños con su amor por los mensajes de texto, Facebook y Twitter. Bart siente una persistente culpa por haber hecho que despidieran a Edna y trata de ayudarla. Con la ayuda de un libro/DVD de autoayuda, abre su propia tienda de magdalenas, pero todavía sueña con volver a ser profesora."
@@ -5066,7 +5066,7 @@ const data = {
           "title": "The Great Wife Hope",
           "duration": "24",
           "airDate": "2009-10-11",
-          "image": "21x03.jpg",
+          "image": "simpsons_21x03.jpg",
           "synopsis": "The men and boys in Springfield become obsessed with Ultimate Punch, Kick and Choke Championships, a violent sport where fighters inflict severe pain on each other. When Marge and her friends stage a protest against the sport, the show's promoter, Chett Englebrick, embraces the controversy and challenges Marge to a match, promising to shut down the competition if she wins. She begins to train with rhythmic gymnastics, but her family steps in and get her professional martial arts help to give her a real chance at winning.",
           "titleEs": "La gran esperanza de la esposa",
           "synopsisEs": "Los hombres y niños de Springfield se obsesionan con los Ultimate Punch, Kick and Choke Championships, un deporte violento en el que los luchadores se infligen intensos dolores unos a otros. Cuando Marge y sus amigos organizan una protesta contra el deporte, el promotor del programa, Chett Englebrick, acepta la controversia y desafía a Marge a un partido, prometiendo cerrar la competencia si gana. Comienza a entrenar con gimnasia rítmica, pero su familia interviene y consigue ayuda profesional en artes marciales para darle una oportunidad real de ganar."
@@ -5077,7 +5077,7 @@ const data = {
           "title": "Treehouse of Horror XX",
           "duration": "24",
           "airDate": "2009-10-11",
-          "image": "21x04.jpg",
+          "image": "simpsons_21x04.jpg",
           "synopsis": "This year's tales of terror include the Universal Monsters making an appearance at the Simpson's Halloween party; Bart tricking Lisa into a crisscross murder plan; Springfield (once again) has a zombie apocalypse and Bart's immunity to Krusty's latest burger may be the key to stopping it; and a macabre musical where Moe (once again) uses Homer to make a best-selling drink for his bar.",
           "titleEs": "La casa del árbol del terror XX",
           "synopsisEs": "Las historias de terror de este año incluyen la aparición de Universal Monsters en la fiesta de Halloween de los Simpson; Bart engaña a Lisa con un plan de asesinato entrecruzado; Springfield (una vez más) tiene un apocalipsis zombie y la inmunidad de Bart a la última hamburguesa de Krusty puede ser la clave para detenerlo; y un musical macabro donde Moe (una vez más) usa a Homer para preparar la bebida más vendida para su bar."
@@ -5088,7 +5088,7 @@ const data = {
           "title": "The Devil Wears Nada",
           "duration": "24",
           "airDate": "2009-11-15",
-          "image": "21x05.jpg",
+          "image": "simpsons_21x05.jpg",
           "synopsis": "Marge poses as a calendar model for charity but becomes the talk of the town after she reveals a little too much during her photo shoot. Meanwhile, Carl receives a promotion at the plant. He then promotes Homer to be his executive assistant and drives him up the wall with requests, including going to Paris.",
           "titleEs": "El diablo viste nada",
           "synopsisEs": "Marge se hace pasar por modelo de calendario para una organización benéfica, pero se convierte en la comidilla de la ciudad después de que revela demasiado durante su sesión de fotos. Mientras tanto, Carl recibe un ascenso en la planta. Luego asciende a Homer para que sea su asistente ejecutivo y lo vuelve loco con solicitudes, incluido ir a París."
@@ -5099,7 +5099,7 @@ const data = {
           "title": "Pranks and Greens",
           "duration": "24",
           "airDate": "2009-11-22",
-          "image": "21x06.jpg",
+          "image": "simpsons_21x06.jpg",
           "synopsis": "Groundskeeper Willie tells Bart about Andy Hamilton, a former student who was an even better prankster than Bart is. Bart tracks down Andy, now age 19 and still pulling pranks, and the two become quick friends. Meanwhile, Marge wants the family to \"eat healthier\".",
           "titleEs": "Bromas y verdes",
           "synopsisEs": "El jardinero Willie le cuenta a Bart sobre Andy Hamilton, un ex alumno que era aún mejor bromista que Bart. Bart localiza a Andy, que ahora tiene 19 años y todavía hace bromas, y los dos se hacen amigos rápidamente. Mientras tanto, Marge quiere que la familia \"coma más sano\"."
@@ -5110,7 +5110,7 @@ const data = {
           "title": "Rednecks and Broomsticks",
           "duration": "24",
           "airDate": "2009-11-29",
-          "image": "21x07.jpg",
+          "image": "simpsons_21x07.jpg",
           "synopsis": "After stumbling upon teenage Wiccans, Lisa accepts an invitation to join their coven. Just before Lisa is inducted Chief Wiggum arrives and arrests the three teens on charges of witchcraft; Lisa becomes the chief witness in the trial. Meanwhile, Homer starts to hang out with his new pal Cletus after discovering the slack-jawed yokel makes moonshine and becomes the local moonshine taste-tester.",
           "titleEs": "Campesinos sureños y escobas",
           "synopsisEs": "Después de toparse con wiccanos adolescentes, Lisa acepta una invitación para unirse a su aquelarre. Justo antes de que Lisa sea admitida, llega el jefe Wiggum y arresta a los tres adolescentes bajo cargos de brujería; Lisa se convierte en la testigo principal del juicio. Mientras tanto, Homer comienza a salir con su nuevo amigo Cletus después de descubrir que el paleto boquiabierto elabora alcohol ilegal y se convierte en el probador de sabor local."
@@ -5121,7 +5121,7 @@ const data = {
           "title": "O Brother, Where Bart Thou?",
           "duration": "24",
           "airDate": "2009-12-13",
-          "image": "21x08.jpg",
+          "image": "simpsons_21x08.jpg",
           "synopsis": "When Lisa tells Bart that he will never have the special bond that she has with Maggie because he doesn't have any brothers, he tries to get Homer and Marge to make him a baby brother, but when that doesn't work, he goes to the orphanage where a young boy follows him home.",
           "titleEs": "Oh hermano, ¿dónde estás?",
           "synopsisEs": "Cuando Lisa le dice a Bart que nunca tendrá el vínculo especial que tiene con Maggie porque no tiene hermanos, intenta que Homero y Marge le hagan un hermanito, pero cuando eso no funciona, va al orfanato donde un niño lo sigue a casa."
@@ -5132,7 +5132,7 @@ const data = {
           "title": "Thursdays with Abie",
           "duration": "24",
           "airDate": "2010-01-03",
-          "image": "21x09.jpg",
+          "image": "simpsons_21x09.jpg",
           "synopsis": "A Springfield Shopper reporter takes an interest in Grampa's stories, making him front-page news, which makes Homer jealous, until he discovers what the reporter has in store for the final column; Lisa loses the classroom stuffed lamb she was watching for Bart - down a sewer drain.",
           "titleEs": "Jueves con Abie",
           "synopsisEs": "Un reportero de Springfield Shopper se interesa por las historias del abuelo, lo que lo convierte en noticia de primera plana, lo que pone celoso a Homer, hasta que descubre lo que el reportero tiene reservado para la columna final; Lisa pierde el cordero relleno del aula que estaba cuidando para Bart, por un desagüe."
@@ -5143,7 +5143,7 @@ const data = {
           "title": "Once Upon a Time in Springfield",
           "duration": "24",
           "airDate": "2010-01-10",
-          "image": "21x10.jpg",
+          "image": "simpsons_21x10.jpg",
           "synopsis": "Krusty is forced to add a female character named Princess Penelope to his show in order to attract more female viewers. She immediately overshadows Krusty as the ratings improve. Bart and Milhouse want to get the show back to the way it was, but the situation gets more complicated when Krusty and Penelope fall in love and decide to get married. Meanwhile, Homer, Lenny and Carl consider working at a competing nuclear plant when Mr. Burns cuts off their daily doughnut service.",
           "titleEs": "Érase una vez en Springfield",
           "synopsisEs": "Krusty se ve obligado a agregar un personaje femenino llamado Princesa Penélope a su programa para atraer a más espectadoras. Ella inmediatamente eclipsa a Krusty a medida que mejoran los ratings. Bart y Milhouse quieren que el programa vuelva a ser como antes, pero la situación se complica más cuando Krusty y Penélope se enamoran y deciden casarse. Mientras tanto, Homer, Lenny y Carl consideran trabajar en una planta nuclear competidora cuando el Sr. Burns corta su servicio diario de donas."
@@ -5154,7 +5154,7 @@ const data = {
           "title": "Million Dollar Maybe",
           "duration": "24",
           "airDate": "2010-01-31",
-          "image": "21x11.jpg",
+          "image": "simpsons_21x11.jpg",
           "synopsis": "Homer skips a date with Marge so he can buy a lottery ticket; when he wins a million dollars, he fears Marge's reaction to having blown off the date for a chance at fortune and he keeps his winnings a secret while showering the family with anonymous gifts. Meanwhile, Lisa helps to keep the senior citizens at the Springfield Retirement Castle stimulated with some video games.",
           "titleEs": "Millones de dólares tal vez",
           "synopsisEs": "Homero falta a una cita con Marge para poder comprar un billete de lotería; cuando gana un millón de dólares, teme la reacción de Marge al haber cancelado la fecha para tener una oportunidad de hacer fortuna y mantiene sus ganancias en secreto mientras colma a la familia de regalos anónimos. Mientras tanto, Lisa ayuda a mantener estimulados a las personas mayores del Springfield Retirement Castle con algunos videojuegos."
@@ -5165,7 +5165,7 @@ const data = {
           "title": "Boy Meets Curl",
           "duration": "24",
           "airDate": "2010-02-14",
-          "image": "21x12.jpg",
+          "image": "simpsons_21x12.jpg",
           "synopsis": "After discovering their love of curling, Marge and Homer try out for the Olympic team and actually participate in the 2010 Vancouver Games. Meanwhile, in Vancouver, Lisa develops an addiction to collecting Olympic pins.",
           "titleEs": "El chico conoce a Curl",
           "synopsisEs": "Después de descubrir su amor por el curling, Marge y Homer hacen una prueba para formar parte del equipo olímpico y, de hecho, participan en los Juegos de Vancouver de 2010. Mientras tanto, en Vancouver, Lisa desarrolla una adicción a coleccionar pines olímpicos."
@@ -5176,7 +5176,7 @@ const data = {
           "title": "The Color Yellow",
           "duration": "24",
           "airDate": "2010-02-21",
-          "image": "21x13.jpg",
+          "image": "simpsons_21x13.jpg",
           "synopsis": "While researching her family tree for someone who isn't a total boob or criminal, Lisa finds the 1860 diary of Eliza Simpson, a young girl who was in the Underground Railroad and tried to help a slave escape to Canada, but a diary by one of Milhouse's ancestors casts doubt on just what Eliza accomplished.",
           "titleEs": "El color amarillo",
           "synopsisEs": "Mientras investiga su árbol genealógico en busca de alguien que no sea un tonto o un criminal total, Lisa encuentra el diario de 1860 de Eliza Simpson, una joven que estaba en el Ferrocarril Subterráneo y trató de ayudar a un esclavo a escapar a Canadá, pero un diario de uno de los antepasados ​​de Milhouse arroja dudas sobre lo que Eliza logró."
@@ -5187,7 +5187,7 @@ const data = {
           "title": "Postcards From the Wedge",
           "duration": "24",
           "airDate": "2010-03-14",
-          "image": "21x14.jpg",
+          "image": "simpsons_21x14.jpg",
           "synopsis": "When Homer receives a letter from Edna Krabappel saying that Bart is way behind in his studies, he tries to take a hard line with him, but Marge thinks he has too much work, so Bart finds a way to turn their difference of opinion into a full-scale fight, only for it to end up with the pair choosing that they need to worry about themselves more than Bart - at least until Bart discovers that running trains on the old Springfield Subway System is causing the school's structure to crumble.",
           "titleEs": "Postales desde la cuña",
           "synopsisEs": "Cuando Homer recibe una carta de Edna Krabappel diciendo que Bart está muy atrasado en sus estudios, intenta adoptar una línea dura con él, pero Marge cree que tiene demasiado trabajo, por lo que Bart encuentra una manera de convertir su diferencia de opinión en una pelea a gran escala, solo para terminar con la pareja decidiendo que deben preocuparse más por sí mismos que por Bart, al menos hasta que Bart descubre que los trenes en el antiguo sistema de metro de Springfield están causando que la estructura de la escuela se desmorone."
@@ -5198,7 +5198,7 @@ const data = {
           "title": "Stealing First Base",
           "duration": "24",
           "airDate": "2010-03-21",
-          "image": "21x15.jpg",
+          "image": "simpsons_21x15.jpg",
           "synopsis": "When Springfield Elementary's two fourth-grade classes have to share desks rather than pay for a substitute teacher, Bart falls for his new deskmate, but after he kisses her, she starts sending him mixed signals; Lisa gets advice on how to handle being a female overachiever...from Michelle Obama.",
           "titleEs": "Robar la primera base",
           "synopsisEs": "Cuando las dos clases de cuarto grado de la escuela primaria Springfield tienen que compartir escritorios en lugar de pagar a un maestro sustituto, Bart se enamora de su nueva compañera de escritorio, pero después de besarla, ella comienza a enviarle señales contradictorias; Lisa recibe consejos sobre cómo manejar ser una mujer sobresaliente... de Michelle Obama."
@@ -5209,7 +5209,7 @@ const data = {
           "title": "The Greatest Story Ever D'ohed",
           "duration": "24",
           "airDate": "2010-03-28",
-          "image": "21x16.jpg",
+          "image": "simpsons_21x16.jpg",
           "synopsis": "The Simpsons are going to Israel. When Ned invites Homer along on a Bible Study trip in an attempt to save his soul, but when Homer defiles one too many sacred sites, Ned says that Homer’s soul isn’t worth saving.",
           "titleEs": "La historia más grande jamás escrita",
           "synopsisEs": "Los Simpson se van a Israel. Cuando Ned invita a Homer a un viaje de estudio bíblico en un intento por salvar su alma, pero cuando Homer profana demasiados lugares sagrados, Ned dice que no vale la pena salvar el alma de Homer."
@@ -5220,7 +5220,7 @@ const data = {
           "title": "American History X-cellent",
           "duration": "24",
           "airDate": "2010-04-11",
-          "image": "21x17.jpg",
+          "image": "simpsons_21x17.jpg",
           "synopsis": "When stolen paintings are found in Burns Manor, Mr. Burns is arrested, so he has Smithers take over duties at the nuclear plant, but when he starts working the employees night and day, they try to get Burns back, even if it means breaking him out of prison - which it does. Meanwhile, Bart and Lisa bond over one ant that survives an accident involving Lisa's ant farm.",
           "titleEs": "Historia americana X-cellent",
           "synopsisEs": "Cuando se encuentran pinturas robadas en Burns Manor, arrestan al Sr. Burns, por lo que hace que Smithers se haga cargo de las tareas en la planta nuclear, pero cuando comienza a trabajar con los empleados día y noche, intentan recuperar a Burns, incluso si eso significa sacarlo de prisión, lo cual sucede. Mientras tanto, Bart y Lisa se unen por una hormiga que sobrevive a un accidente que involucra la granja de hormigas de Lisa."
@@ -5231,7 +5231,7 @@ const data = {
           "title": "Chief of Hearts",
           "duration": "24",
           "airDate": "2010-04-18",
-          "image": "21x18.jpg",
+          "image": "simpsons_21x18.jpg",
           "synopsis": "Homer and Chief Wiggum become close friends during Homer's community service stint, but when Homer leaves Wiggum's side during his recuperation to go to Moe's, the Chief takes offense; Bart becomes addicted to Battle Ball (a Japanese game with cards and plastic balls that turn into creatures). Marge is led on to believe that Bart is on drugs after mistaking his discussion about a new toy for drug talk.",
           "titleEs": "Jefe de corazones",
           "synopsisEs": "Homer y el Jefe Wiggum se vuelven amigos cercanos durante el período de servicio comunitario de Homer, pero cuando Homer deja al lado de Wiggum durante su recuperación para ir a casa de Moe, el Jefe se ofende; Bart se vuelve adicto al Battle Ball (un juego japonés con cartas y bolas de plástico que se convierten en criaturas). A Marge se le hace creer que Bart está drogado después de confundir su conversación sobre un juguete nuevo con una conversación sobre drogas."
@@ -5242,7 +5242,7 @@ const data = {
           "title": "The Squirt and the Whale",
           "duration": "24",
           "airDate": "2010-04-25",
-          "image": "21x19.jpg",
+          "image": "simpsons_21x19.jpg",
           "synopsis": "Having become frustrated with too many electric bills, Homer places a windmill generator in the backyard. When he sees that the excess energy goes back to the power company, he takes the house off the power grid, making it entirely dependent on the windmill. Then a violent windstorm hits Springfield, and among the victims are the windmill and a whale which ends up beached, prompting Lisa, Homer, and the other townspeople in an attempt to save it.",
           "titleEs": "El chorro y la ballena",
           "synopsisEs": "Frustrado por demasiadas facturas de electricidad, Homer coloca un generador de molino de viento en el patio trasero. Cuando ve que el exceso de energía vuelve a la compañía eléctrica, desconecta la casa de la red eléctrica, haciéndola completamente dependiente del molino de viento. Luego, una violenta tormenta de viento azota Springfield, y entre las víctimas se encuentran el molino de viento y una ballena que termina varada, lo que llevó a Lisa, Homer y los demás habitantes a intentar salvarlo."
@@ -5253,7 +5253,7 @@ const data = {
           "title": "To Surveil With Love",
           "duration": "24",
           "airDate": "2010-05-02",
-          "image": "21x20.jpg",
+          "image": "simpsons_21x20.jpg",
           "synopsis": "When Homer leaves a gym bag with radioactive waste (planted there by Smithers) unattended in a train station, Springfield has surveillance cameras installed throughout the town. But when citizen video monitor scanner Ned abuses his ability to speak through the cameras' speakers, Homer uses the camera's blind spot.",
           "titleEs": "Vigilar con amor",
           "synopsisEs": "Cuando Homero deja desatendida en una estación de tren una bolsa de deporte con residuos radiactivos (colocados allí por Smithers), Springfield tiene cámaras de vigilancia instaladas por toda la ciudad. Pero cuando el escáner de video ciudadano Ned abusa de su capacidad para hablar a través de los parlantes de las cámaras, Homer usa el punto ciego de la cámara."
@@ -5264,7 +5264,7 @@ const data = {
           "title": "Moe Letter Blues",
           "duration": "24",
           "airDate": "2010-05-09",
-          "image": "21x21.jpg",
+          "image": "simpsons_21x21.jpg",
           "synopsis": "Homer, Apu, and Reverend Lovejoy embark on a trip with their kids on Mother's Day so their wives can look forward to relaxing themselves, but they receive a message from Moe saying that he is leaving Springfield... with one of their wives.",
           "titleEs": "Moe Letra Azul",
           "synopsisEs": "Homer, Apu y el reverendo Lovejoy se embarcan en un viaje con sus hijos el Día de la Madre para que sus esposas puedan relajarse, pero reciben un mensaje de Moe diciéndoles que se va de Springfield... con una de sus esposas."
@@ -5275,7 +5275,7 @@ const data = {
           "title": "The Bob Next Door",
           "duration": "24",
           "airDate": "2010-05-16",
-          "image": "21x22.jpg",
+          "image": "simpsons_21x22.jpg",
           "synopsis": "Bart is horrified when he recognizes his new neighbor as his arch enemy, Sideshow Bob (disguised as Walt Warren), who has returned for revenge. But when Marge tries to convince Bart otherwise by taking him to the local penitentiary, a disturbing secret is revealed, leading to danger for the spiky-haired boy.",
           "titleEs": "El Bob de al lado",
           "synopsisEs": "Bart se horroriza cuando reconoce a su nuevo vecino como su archienemigo, el actor secundario Bob (disfrazado de Walt Warren), que ha regresado en busca de venganza. Pero cuando Marge intenta convencer a Bart de lo contrario llevándolo a la penitenciaría local, se revela un secreto inquietante que pone en peligro al chico de pelo puntiagudo."
@@ -5286,7 +5286,7 @@ const data = {
           "title": "Judge Me Tender",
           "duration": "24",
           "airDate": "2010-05-23",
-          "image": "21x23.jpg",
+          "image": "simpsons_21x23.jpg",
           "synopsis": "American Idol host Ryan Seacrest and judges Simon Cowell, Randy Jackson, Kara DioGuardi, and Ellen DeGeneres welcome a new judge to the show - Moe, who displays an exceptional talent in making judgements; and while Moe is vacationing, Homer has more time to spend at home with Marge... much to her dismay.",
           "titleEs": "Júzgame tierno",
           "synopsisEs": "El presentador de American Idol, Ryan Seacrest, y los jueces Simon Cowell, Randy Jackson, Kara DioGuardi y Ellen DeGeneres dan la bienvenida al programa a un nuevo juez: Moe, quien muestra un talento excepcional para emitir juicios; y mientras Moe está de vacaciones, Homer tiene más tiempo para pasar en casa con Marge... para su consternación."
@@ -5297,7 +5297,7 @@ const data = {
     {
       "id": 22,
       "title": "Temporada 22",
-      "image": "Season_22_Icon.jpg",
+      "image": "simpsons_Season_22_Icon.jpg",
       "avgColor": "#B5618B",
       "episodes": [
         {
@@ -5306,7 +5306,7 @@ const data = {
           "title": "Elementary School Musical",
           "duration": "23",
           "airDate": "2010-09-26",
-          "image": "22x01.jpg",
+          "image": "simpsons_22x01.jpg",
           "synopsis": "Marge sends Lisa to a performing arts camp where artsy counselors (guest voices Jemaine Clement and Bret McKenzie of Flight of the Conchords) and fellow musically inclined campers (guest voices Lea Michele, Cory Monteith and Amber Riley from Glee) inspire her to embrace her creative side. After she returns to Springfield, Lisa becomes restless with her boring suburban lifestyle and catches the first bus to Sprooklyn in hopes of reconnecting with her inner hipster. Meanwhile, Krusty gets tricked into the International Supreme Court for all the bad deeds he has done.",
           "titleEs": "Musical de escuela primaria",
           "synopsisEs": "Marge envía a Lisa a un campamento de artes escénicas donde consejeros artísticos (las voces invitadas Jemaine Clement y Bret McKenzie de Flight of the Conchords) y otros campistas con inclinaciones musicales (las voces invitadas Lea Michele, Cory Monteith y Amber Riley de Glee) la inspiran a abrazar su lado creativo. Después de regresar a Springfield, Lisa se inquieta con su aburrido estilo de vida suburbano y toma el primer autobús a Sprooklyn con la esperanza de volver a conectarse con su hipster interior. Mientras tanto, Krusty es engañado y llevado a la Corte Suprema Internacional por todas las malas acciones que ha cometido."
@@ -5317,7 +5317,7 @@ const data = {
           "title": "Loan-a Lisa",
           "duration": "23",
           "airDate": "2010-10-03",
-          "image": "22x02.jpg",
+          "image": "simpsons_22x02.jpg",
           "synopsis": "When Grampa gives each member of the family a portion of his savings, Lisa invests in Nelson's brand-new business venture, but soon realizes that her friend's instant success might lure him away from the classroom. Worried that his judgment might be clouded, Lisa introduces Nelson to Facebook creator Mark Zuckerberg, only to find out that he also dropped out of school. But when Nelson's business suddenly takes a sharp turn, Lisa teaches her partner that education is invaluable.",
           "titleEs": "Préstamo Lisa",
           "synopsisEs": "Cuando el abuelo le da a cada miembro de la familia una parte de sus ahorros, Lisa invierte en el nuevo negocio de Nelson, pero pronto se da cuenta de que el éxito instantáneo de su amigo podría alejarlo del aula. Preocupada de que su juicio pueda verse empañado, Lisa le presenta a Nelson al creador de Facebook, Mark Zuckerberg, solo para descubrir que él también abandonó la escuela. Pero cuando el negocio de Nelson de repente da un giro brusco, Lisa le enseña a su socio que la educación tiene un valor incalculable."
@@ -5328,7 +5328,7 @@ const data = {
           "title": "MoneyBART",
           "duration": "23",
           "airDate": "2010-10-10",
-          "image": "22x03.jpg",
+          "image": "simpsons_22x03.jpg",
           "synopsis": "In an effort to broaden her extracurricular horizons, Lisa plans to manage Bart's little league team. With the use of statistics and probabilities, Lisa leads the team to an incredible winning streak.",
           "titleEs": "DineroBART",
           "synopsisEs": "En un esfuerzo por ampliar sus horizontes extracurriculares, Lisa planea dirigir el equipo de ligas menores de Bart. Con el uso de estadísticas y probabilidades, Lisa lleva al equipo a una increíble racha ganadora."
@@ -5339,7 +5339,7 @@ const data = {
           "title": "Treehouse of Horror XXI",
           "duration": "23",
           "airDate": "2010-11-07",
-          "image": "22x04.jpg",
+          "image": "simpsons_22x04.jpg",
           "synopsis": "\"War and Pieces\" - In a Jumanji spoof, Bart and Milhouse are forced to play board games (as Marge finds video games too violent for boys their age) and unleash a curse that turns the family's board games into violent, life-sized replicas that invade the town.",
           "titleEs": "La casa del árbol del terror XXI",
           "synopsisEs": "\"War and Pieces\" - En una parodia de Jumanji, Bart y Milhouse se ven obligados a jugar juegos de mesa (ya que Marge considera que los videojuegos son demasiado violentos para los niños de su edad) y desatan una maldición que convierte los juegos de mesa de la familia en réplicas violentas de tamaño natural que invaden la ciudad."
@@ -5350,7 +5350,7 @@ const data = {
           "title": "Lisa Simpson, This Isn't Your Life",
           "duration": "23",
           "airDate": "2010-11-14",
-          "image": "22x05.jpg",
+          "image": "simpsons_22x05.jpg",
           "synopsis": "When Lisa discovers that Marge's good grades slipped away when she met Homer, Lisa wants to avoid turning out like Marge. To do so, she is enrolled at Cloisters Academy and soon learns the truth why Marge became a dropout. Meanwhile, a series of coincidences in which Bart gets the better of Nelson leads everyone to consider Bart as the new school bully.",
           "titleEs": "Lisa Simpson, Esta no es tu vida",
           "synopsisEs": "Cuando Lisa descubre que las buenas notas de Marge se esfumaron cuando conoció a Homero, Lisa quiere evitar convertirse en Marge. Para hacerlo, se inscribe en la Academia Cloisters y pronto descubre la verdad de por qué Marge abandonó los estudios. Mientras tanto, una serie de coincidencias en las que Bart vence a Nelson lleva a todos a considerar a Bart como el nuevo matón de la escuela."
@@ -5361,7 +5361,7 @@ const data = {
           "title": "The Fool Monty",
           "duration": "23",
           "airDate": "2010-11-21",
-          "image": "22x06.jpg",
+          "image": "simpsons_22x06.jpg",
           "synopsis": "After Mr. Burns cuts in line and takes all the vaccines for a so-called disease called \"House Cat Flu\", everyone in town starts to resent him more than ever. Burns is told by his doctor that the tycoon will pass on within five–six weeks. After telling everyone, they are everything but sad. Soon, Burns attempts to commit suicide but falls into a forest with amnesia. Homer and Bart then establish a schedule for the townspeople to keep Burns for half an hour each and torture him.",
           "titleEs": "El tonto Monty",
           "synopsisEs": "Después de que el Sr. Burns hace cola y toma todas las vacunas para una enfermedad llamada \"gripe de los gatos domésticos\", todos en la ciudad comienzan a resentirse con él más que nunca. Su médico le dice a Burns que el magnate fallecerá en cinco o seis semanas. Después de contárselo a todo el mundo, están todo menos tristes. Pronto, Burns intenta suicidarse pero cae en un bosque con amnesia. Luego, Homero y Bart establecen un horario para que la gente del pueblo retenga a Burns durante media hora cada uno y lo torture."
@@ -5372,7 +5372,7 @@ const data = {
           "title": "How Munched is That Birdie in the Window?",
           "duration": "23",
           "airDate": "2010-11-28",
-          "image": "22x07.jpg",
+          "image": "simpsons_22x07.jpg",
           "synopsis": "A Pigeon crashes through Bart’s bedroom window, and he nurses it back to health, but after Santa's Little Helper eats it, Bart has a hard time coping with the loss.",
           "titleEs": "¿Qué tan comido está ese pajarito en la ventana?",
           "synopsisEs": "Una paloma se estrella contra la ventana del dormitorio de Bart y él la cuida hasta que recupera la salud, pero después de que el pequeño ayudante de Santa se la come, Bart tiene dificultades para sobrellevar la pérdida."
@@ -5383,7 +5383,7 @@ const data = {
           "title": "The Fight Before Christmas",
           "duration": "24",
           "airDate": "2010-12-05",
-          "image": "22x08.jpg",
+          "image": "simpsons_22x08.jpg",
           "synopsis": "A Pigeon crashes through Bart’s bedroom window, and he nurses it back to health, but after Santa's Little Helper eats it, Bart has a hard time coping with the loss.",
           "titleEs": "La lucha antes de Navidad",
           "synopsisEs": "Una paloma se estrella contra la ventana del dormitorio de Bart y él la cuida hasta que recupera la salud, pero después de que el pequeño ayudante de Santa se la come, Bart tiene dificultades para sobrellevar la pérdida."
@@ -5394,7 +5394,7 @@ const data = {
           "title": "Donnie Fatso",
           "duration": "23",
           "airDate": "2010-12-12",
-          "image": "22x09.jpg",
+          "image": "simpsons_22x09.jpg",
           "synopsis": "Homer is sentenced to ten years in jail and in order to reduce his sentence the FBI offers him a deal, so he agrees to infiltrate Fat Tony's mob, undercover.",
           "titleEs": "Donnie Gordo",
           "synopsisEs": "Homer es condenado a diez años de cárcel y para reducir su condena el FBI le ofrece un trato, por lo que accede a infiltrarse en la mafia del Gordo Tony, de forma encubierta."
@@ -5405,7 +5405,7 @@ const data = {
           "title": "Moms I'd Like to Forget",
           "duration": "23",
           "airDate": "2011-01-09",
-          "image": "22x10.jpg",
+          "image": "simpsons_22x10.jpg",
           "synopsis": "When Bart discovers that a fifth grader has a scar identical to one Bart has, Marge tells him about a club of four mothers she was in seven years earlier; when Marge plans to reunite with the mothers, while Homer reunites with the fathers and Bart with the boys, matters turn out much better for Marge than for Homer or Bart, who, after hearing the story from Jeffery Albertson about how they got their scars, tries to break the group up.",
           "titleEs": "Mamás que me gustaría olvidar",
           "synopsisEs": "Cuando Bart descubre que un niño de quinto grado tiene una cicatriz idéntica a la de Bart, Marge le cuenta sobre un club de cuatro madres en el que estuvo siete años antes; Cuando Marge planea reunirse con las madres, mientras Homero se reúne con los padres y Bart con los niños, las cosas salen mucho mejor para Marge que para Homero o Bart, quienes, después de escuchar la historia de Jeffery Albertson sobre cómo obtuvieron sus cicatrices, intenta dividir el grupo."
@@ -5416,7 +5416,7 @@ const data = {
           "title": "Flaming Moe",
           "duration": "23",
           "airDate": "2011-01-16",
-          "image": "22x11.jpg",
+          "image": "simpsons_22x11.jpg",
           "synopsis": "Smithers helps Moe turn his tavern into a popular gay bar, but later on Smithers gets offended at Moe for pretending to be gay. Meanwhile, Skinner develops a crush for the new music teacher—Ms. Calliope Juniper—so he talks Bart into going on a date with Ms. Juniper's daughter, Melody, with him and Calliope being chaperones.",
           "titleEs": "Moe llameante",
           "synopsisEs": "Smithers ayuda a Moe a convertir su taberna en un popular bar gay, pero luego Smithers se ofende con Moe por pretender ser gay. Mientras tanto, Skinner se enamora de la nueva profesora de música: la Sra. Calliope Juniper, así que convence a Bart para que tenga una cita con Melody, la hija de la Sra. Juniper, con él y Calliope como acompañantes."
@@ -5427,7 +5427,7 @@ const data = {
           "title": "Homer the Father",
           "duration": "23",
           "airDate": "2011-01-23",
-          "image": "22x12.jpg",
+          "image": "simpsons_22x12.jpg",
           "synopsis": "Homer becomes addicted to an 80's family show and starts behaving like the series' father. Bart wants a minibike and asks Homer for it, and it ends up as a reject. So Bart plans to sell SNPP secrets to China in exchange for the minibike.",
           "titleEs": "homero el padre",
           "synopsisEs": "Homer se vuelve adicto a un programa familiar de los 80 y empieza a comportarse como el padre de la serie. Bart quiere una minimoto y se la pide a Homero, pero termina siendo rechazada. Entonces Bart planea vender los secretos del SNPP a China a cambio de la minimoto."
@@ -5438,7 +5438,7 @@ const data = {
           "title": "The Blue and the Gray",
           "duration": "23",
           "airDate": "2011-02-13",
-          "image": "22x13.jpg",
+          "image": "simpsons_22x13.jpg",
           "synopsis": "Marge discovers her natural gray hair, and Homer becomes a Valentine's Day wingman to Moe, much to Marge's suspicion that Homer is cheating on her.",
           "titleEs": "El azul y el gris",
           "synopsisEs": "Marge descubre su cabello gris natural y Homer se convierte en el compañero de Moe en el Día de San Valentín, lo que hace que Marge sospeche que Homer la está engañando."
@@ -5449,7 +5449,7 @@ const data = {
           "title": "Angry Dad: The Movie",
           "duration": "23",
           "airDate": "2011-02-20",
-          "image": "22x14.jpg",
+          "image": "simpsons_22x14.jpg",
           "synopsis": "Bart makes a short film based on the character Angry Dad that he created in \"I Am Furious (Yellow)\", (from Season 13), which soon becomes successful that it gets nominated for several awards, but Homer is taking all of the credit.",
           "titleEs": "Papá enojado: la película",
           "synopsisEs": "Bart hace un cortometraje basado en el personaje Angry Dad que creó en \"I Am Furious (Yellow)\", (de la temporada 13), que pronto tiene éxito y es nominado a varios premios, pero Homer se lleva todo el crédito."
@@ -5460,7 +5460,7 @@ const data = {
           "title": "The Scorpion's Tale",
           "duration": "23",
           "airDate": "2011-03-06",
-          "image": "22x15.jpg",
+          "image": "simpsons_22x15.jpg",
           "synopsis": "Bart makes a short film based on the character Angry Dad that he created in \"I Am Furious (Yellow)\", (from Season 13), which soon becomes successful that it gets nominated for several awards, but Homer is taking all of the credit.",
           "titleEs": "El cuento del escorpión",
           "synopsisEs": "Bart hace un cortometraje basado en el personaje Angry Dad que creó en \"I Am Furious (Yellow)\", (de la temporada 13), que pronto tiene éxito y es nominado a varios premios, pero Homer se lleva todo el crédito."
@@ -5471,7 +5471,7 @@ const data = {
           "title": "A Midsummer's Nice Dream",
           "duration": "23",
           "airDate": "2011-03-13",
-          "image": "22x16.jpg",
+          "image": "simpsons_22x16.jpg",
           "synopsis": "Springfield's favorite comedians Cheech and Chong break up as comedy partners. Homer becomes Cheech's new partner and Chong gets Skinner. Meanwhile, Lisa and Marge turn the tables on the Crazy Cat Lady's ways.",
           "titleEs": "El bonito sueño de un verano",
           "synopsisEs": "Los comediantes favoritos de Springfield, Cheech y Chong, se separan como compañeros de comedia. Homer se convierte en el nuevo socio de Cheech y Chong se queda con Skinner. Mientras tanto, Lisa y Marge cambian la situación de Crazy Cat Lady."
@@ -5482,7 +5482,7 @@ const data = {
           "title": "Love is a Many Strangled Thing",
           "duration": "23",
           "airDate": "2011-03-27",
-          "image": "22x17.jpg",
+          "image": "simpsons_22x17.jpg",
           "synopsis": "At a parenting class, Homer confesses to strangling Bart and receives the ultimate punishment - a strangling by Kareem Abdul-Jabbar. Because of this, Homer becomes scared of Bart at the fear of being killed by Abdul-Jabbar. So Marge has to find a way to set Homer straight.",
           "titleEs": "El amor es una cosa muchas veces estrangulada",
           "synopsisEs": "En una clase para padres, Homer confiesa haber estrangulado a Bart y recibe el castigo máximo: un estrangulamiento por parte de Kareem Abdul-Jabbar. Debido a esto, Homer le tiene miedo a Bart por temor a ser asesinado por Abdul-Jabbar. Entonces Marge tiene que encontrar una manera de aclarar a Homer."
@@ -5493,7 +5493,7 @@ const data = {
           "title": "The Great Simpsina",
           "duration": "23",
           "airDate": "2011-04-10",
-          "image": "22x18.jpg",
+          "image": "simpsons_22x18.jpg",
           "synopsis": "Lisa ends up at the house of a famous magician named \"The Great Raymondo\" who teaches her some of his magic tricks. But matters go wrong when she gives away his greatest trick to his biggest rival.",
           "titleEs": "La gran Simpsina",
           "synopsisEs": "Lisa termina en casa de un famoso mago llamado \"El Gran Raymondo\" quien le enseña algunos de sus trucos de magia. Pero las cosas van mal cuando ella le revela su mayor truco a su mayor rival."
@@ -5504,7 +5504,7 @@ const data = {
           "title": "The Real Housewives of Fat Tony",
           "duration": "23",
           "airDate": "2011-05-01",
-          "image": "22x19.jpg",
+          "image": "simpsons_22x19.jpg",
           "synopsis": "Fit-Fat Tony and Selma fall in love and get married. Meanwhile, Lisa uses Bart's nose to hunt for truffles.",
           "titleEs": "Las verdaderas amas de casa del Gordo Tony",
           "synopsisEs": "Fit-Fat Tony y Selma se enamoran y se casan. Mientras tanto, Lisa usa la nariz de Bart para buscar trufas."
@@ -5515,7 +5515,7 @@ const data = {
           "title": "Homer Scissorhands",
           "duration": "23",
           "airDate": "2011-05-08",
-          "image": "22x20.jpg",
+          "image": "simpsons_22x20.jpg",
           "synopsis": "Homer suddenly becomes a hair stylist after he beautifully cuts Patty's hair. Meanwhile, Milhouse falls in love with a fifth grader after Lisa 'breaks up' with him.",
           "titleEs": "Homero Manostijeras",
           "synopsisEs": "Homer de repente se convierte en estilista después de cortar maravillosamente el cabello de Patty. Mientras tanto, Milhouse se enamora de un alumno de quinto grado después de que Lisa 'rompe' con él."
@@ -5526,7 +5526,7 @@ const data = {
           "title": "500 Keys",
           "duration": "24",
           "airDate": "2011-05-15",
-          "image": "22x21.jpg",
+          "image": "simpsons_22x21.jpg",
           "synopsis": "While looking for the spare car key in the key drawer (to get to Maggie, who locked herself in the car along with the car keys), the Simpsons find keys that lead them in three directions; Homer has the key to the Duff Brewery, which leads to a joyride in the Duff Blimp; Marge and Maggie find a key to a windup train that makes flatulent noises; Lisa finds a key to a room of \"Banned Band Books\" which is really a mysterious empty classroom.",
           "titleEs": "500 llaves",
           "synopsisEs": "Mientras buscan la llave de repuesto del auto en el cajón de llaves (para llegar a Maggie, quien se encerró en el auto junto con las llaves), los Simpson encuentran llaves que los llevan en tres direcciones; Homer tiene la llave de la cervecería Duff, lo que conduce a un paseo en el dirigible Duff; Marge y Maggie encuentran la llave de un tren de cuerda que hace ruidos flatulentos; Lisa encuentra la llave de una sala de \"Libros de bandas prohibidas\", que en realidad es un misterioso aula vacía."
@@ -5537,7 +5537,7 @@ const data = {
           "title": "The Ned-liest Catch",
           "duration": "23",
           "airDate": "2011-05-22",
-          "image": "22x22.jpg",
+          "image": "simpsons_22x22.jpg",
           "synopsis": "Edna Krabappel is placed in the Teacher Holding Facility for mistreating Bart. When Bart helps Edna escape, Ned Flanders saves Edna from a falling ladder, and they begin dating.",
           "titleEs": "La captura más Ned",
           "synopsisEs": "Edna Krabappel es internada en el centro de detención de profesores por maltratar a Bart. Cuando Bart ayuda a Edna a escapar, Ned Flanders salva a Edna de una escalera que cae y comienzan a salir."
@@ -5548,7 +5548,7 @@ const data = {
     {
       "id": 23,
       "title": "Temporada 23",
-      "image": "Season_23_Icon.jpg",
+      "image": "simpsons_Season_23_Icon.jpg",
       "avgColor": "#587C7E",
       "episodes": [
         {
@@ -5557,7 +5557,7 @@ const data = {
           "title": "The Falcon and the D'ohman",
           "duration": "24",
           "airDate": "2011-09-25",
-          "image": "23x01.jpg",
+          "image": "simpsons_23x01.jpg",
           "synopsis": "Homer meets a new security guard, Wayne, at the nuclear power plant, who is a former CIA operative. Unfortunately, Wayne gets fired for attacking Mr. Burns while a group of Ukrainian mafia members are on route to Springfield to kill Wayne. Later, Homer is kidnapped and Wayne must leap into action to make a rescue.",
           "titleEs": "El Halcón y el D'ohman",
           "synopsisEs": "Homer conoce a un nuevo guardia de seguridad, Wayne, en la planta de energía nuclear, que es un ex agente de la CIA. Desafortunadamente, Wayne es despedido por atacar al Sr. Burns mientras un grupo de miembros de la mafia ucraniana se dirigen a Springfield para matar a Wayne. Más tarde, Homer es secuestrado y Wayne debe entrar en acción para rescatarlo."
@@ -5568,7 +5568,7 @@ const data = {
           "title": "Bart Stops to Smell the Roosevelts",
           "duration": "23",
           "airDate": "2011-10-02",
-          "image": "23x02.jpg",
+          "image": "simpsons_23x02.jpg",
           "synopsis": "Superintendent Chalmers is convinced into educating Bart about Theodore Roosevelt, which turns out to be successful. Bart invites the bullies to his education stint, and they like it; however, when Nelson gets injured on a unauthorized field trip to locate Teddy Roosevelt's spectacles, Chalmers gets fired. The boys then take over the school, with all of the kids in it, and agree to allow the staff to enter if Chalmers gets his job back.",
           "titleEs": "Bart se detiene a oler los Roosevelt",
           "synopsisEs": "Se convence al superintendente Chalmers para que le informe a Bart sobre Theodore Roosevelt, lo que resulta ser un éxito. Bart invita a los matones a su período educativo y les gusta; sin embargo, cuando Nelson se lesiona en una excursión no autorizada para localizar las gafas de Teddy Roosevelt, Chalmers es despedido. Luego, los niños se hacen cargo de la escuela, con todos los niños allí, y acuerdan permitir la entrada del personal si Chalmers recupera su trabajo."
@@ -5579,7 +5579,7 @@ const data = {
           "title": "Treehouse of Horror XXII",
           "duration": "24",
           "airDate": "2011-10-30",
-          "image": "23x03.jpg",
+          "image": "simpsons_23x03.jpg",
           "synopsis": "The Diving Bell and the Butterball - Homer is paralyzed by a spider bite, but can still communicate...through flatulence.",
           "titleEs": "La casa del árbol del terror XXII",
           "synopsisEs": "La escafandra y la bola de mantequilla: Homer queda paralizado por la picadura de una araña, pero aún puede comunicarse... a través de la flatulencia."
@@ -5590,7 +5590,7 @@ const data = {
           "title": "Replaceable You",
           "duration": "23",
           "airDate": "2011-11-06",
-          "image": "23x04.jpg",
+          "image": "simpsons_23x04.jpg",
           "synopsis": "Bart and Martin invent a robot baby seal for a science fair. The plans turns into a success and the toy actually made Jasper and other senior citizens happy. However, the managers of some cemeteries realize that the number of funerals are depleting and turn the seals evil. Meanwhile, Homer gets a new assistant, but he becomes her assistant when he ditches work so he can watch a comedy film with Barney.",
           "titleEs": "Reemplazable usted",
           "synopsisEs": "Bart y Martin inventan una cría de foca robot para una feria de ciencias. Los planes se convierten en un éxito y el juguete realmente hizo felices a Jasper y a otras personas mayores. Sin embargo, los responsables de algunos cementerios se dan cuenta de que el número de funerales se está agotando y vuelven malignos los sellos. Mientras tanto, Homer consigue un nuevo asistente, pero se convierte en su asistente cuando deja el trabajo para poder ver una película de comedia con Barney."
@@ -5601,7 +5601,7 @@ const data = {
           "title": "The Food Wife",
           "duration": "24",
           "airDate": "2011-11-13",
-          "image": "23x05.jpg",
+          "image": "simpsons_23x05.jpg",
           "synopsis": "Marge wants to be as fun as Homer so she, Bart and Lisa taste foreign food. They become foodies and get an invitation to the famous restaurant in town, but Marge didn't want to invite Homer and told him the wrong address.",
           "titleEs": "La esposa de la comida",
           "synopsisEs": "Marge quiere ser tan divertida como Homero, por eso ella, Bart y Lisa prueban comida extranjera. Se vuelven amantes de la comida y reciben una invitación al famoso restaurante de la ciudad, pero Marge no quiso invitar a Homer y le dijo la dirección equivocada."
@@ -5612,7 +5612,7 @@ const data = {
           "title": "The Book Job",
           "duration": "23",
           "airDate": "2011-11-20",
-          "image": "23x06.jpg",
+          "image": "simpsons_23x06.jpg",
           "synopsis": "When Lisa discovers that the author of her favorite fantasy series was hired to be the face of the book while the entire series was planned and written by committee, Homer and Bart decide to gain fame the same way with a novel about a ghoul attending a prestigious academy — until a real publisher wants to publish their work and change it into yet another teenaged vampire love story based on Twilight.",
           "titleEs": "El trabajo del libro",
           "synopsisEs": "Cuando Lisa descubre que el autor de su serie de fantasía favorita fue contratado para ser la cara del libro, mientras que toda la serie fue planificada y escrita por un comité, Homer y Bart deciden ganar fama de la misma manera con una novela sobre un demonio que asiste a una prestigiosa academia, hasta que un verdadero editor quiere publicar su trabajo y convertirlo en otra historia de amor de vampiros adolescentes basada en Crepúsculo."
@@ -5623,7 +5623,7 @@ const data = {
           "title": "The Man in the Blue Flannel Pants",
           "duration": "23",
           "airDate": "2011-11-27",
-          "image": "23x07.jpg",
+          "image": "simpsons_23x07.jpg",
           "synopsis": "Homer is promoted to account executive and has an ad professional to guide him through the process. However, Homer's newfound lease on life comes at a cost. In the meantime, Bart starts classic works.",
           "titleEs": "El hombre de los pantalones de franela azules",
           "synopsisEs": "Homer es ascendido a ejecutivo de cuentas y cuenta con un profesional de publicidad para guiarlo a través del proceso. Sin embargo, la nueva oportunidad de vida de Homero tiene un costo. Mientras tanto, Bart empieza a trabajar en obras clásicas."
@@ -5634,7 +5634,7 @@ const data = {
           "title": "The Ten-Per-Cent Solution",
           "duration": "23",
           "airDate": "2011-12-04",
-          "image": "23x08.jpg",
+          "image": "simpsons_23x08.jpg",
           "synopsis": "Krusty is down on his luck when his show gets cancelled and he also loses his talent agent. To help him out, the Simpsons find a veteran agent, who happened to be his first one, Annie Dubinsky. Despite their troubled past, Krusty gives Annie another chance. The move to bring the retro style helps revive his show. However, it has downside, Krusty must choose of getting help afterwards, from his agent or the network.",
           "titleEs": "La solución del diez por ciento",
           "synopsisEs": "Krusty tiene mala suerte cuando su programa es cancelado y también pierde a su agente de talentos. Para ayudarlo, los Simpson encuentran a una agente veterana, que resultó ser la primera, Annie Dubinsky. A pesar de su turbulento pasado, Krusty le da a Annie otra oportunidad. La apuesta por acercar el estilo retro ayuda a revivir su espectáculo. Sin embargo, tiene una desventaja: Krusty debe elegir entre obtener ayuda después, de su agente o de la red."
@@ -5645,7 +5645,7 @@ const data = {
           "title": "Holidays of Future Passed",
           "duration": "23",
           "airDate": "2011-12-11",
-          "image": "23x09.jpg",
+          "image": "simpsons_23x09.jpg",
           "synopsis": "At Christmas 30 years in the future, Bart and Lisa bring their kids to Homer and Marge's house. When there, they learn about parenting and loving your family. Meanwhile, a pregnant Maggie is traveling to visit her family and falls into labor after arriving in Springfield.",
           "titleEs": "Las vacaciones del futuro pasaron",
           "synopsisEs": "En Navidad, 30 años en el futuro, Bart y Lisa llevan a sus hijos a la casa de Homer y Marge. Una vez allí, aprenden sobre cómo ser padres y cómo amar a su familia. Mientras tanto, Maggie, embarazada, viaja para visitar a su familia y se pone de parto después de llegar a Springfield."
@@ -5656,7 +5656,7 @@ const data = {
           "title": "Politically Inept, with Homer Simpson",
           "duration": "23",
           "airDate": "2012-01-08",
-          "image": "23x10.jpg",
+          "image": "simpsons_23x10.jpg",
           "synopsis": "While flying on a plane, Homer starts protesting about modern flights while riding an aircraft food trolley, and Bart records a video. This video goes viral and Homer creates a TV show. The show is a bit too good and Homer is chosen by the Republicans to choose the presidential candidate running against President Obama, and he quickly starts endorsing Ted Nugent (who guest stars as himself).",
           "titleEs": "Políticamente inepto, con Homer Simpson",
           "synopsisEs": "Mientras vuela en un avión, Homero comienza a protestar contra los vuelos modernos mientras viaja en un carrito de comida del avión, y Bart graba un vídeo. Este vídeo se vuelve viral y Homer crea un programa de televisión. El espectáculo es demasiado bueno y los republicanos eligen a Homer para elegir al candidato presidencial que se postula contra el presidente Obama, y ​​rápidamente comienza a respaldar a Ted Nugent (quien es el protagonista invitado como él mismo)."
@@ -5667,7 +5667,7 @@ const data = {
           "title": "The D'oh-cial Network",
           "duration": "23",
           "airDate": "2012-01-15",
-          "image": "23x11.jpg",
+          "image": "simpsons_23x11.jpg",
           "synopsis": "In a parody of The Social Network, when Lisa and her family went to a new shopping mall, she met some of her friends, but they mentioned that she was lame and very dorky. After realizing she does not have friends, Lisa creates a social network site, Springface to gain their attention. However, the residents of Springfield soon become addicted to it, and later have car accidents and many injuries. Will Lisa escape this situation? Will she still have friends?",
           "titleEs": "La Red D'oh-cial",
           "synopsisEs": "En una parodia de The Social Network, cuando Lisa y su familia fueron a un nuevo centro comercial, conoció a algunos de sus amigos, pero mencionaron que era tonta y muy tonta. Después de darse cuenta de que no tiene amigos, Lisa crea un sitio de red social, Springface, para llamar su atención. Sin embargo, los residentes de Springfield pronto se vuelven adictos y luego sufren accidentes automovilísticos y muchas lesiones. ¿Lisa escapará de esta situación? ¿Seguirá teniendo amigos?"
@@ -5678,7 +5678,7 @@ const data = {
           "title": "Moe Goes from Rags to Riches",
           "duration": "23",
           "airDate": "2012-01-29",
-          "image": "23x12.jpg",
+          "image": "simpsons_23x12.jpg",
           "synopsis": "Moe's beloved bar rag, loomed as an ornate medieval tapestry, recounts its millennium-spanning life story. The tapestry was woven out of demon wool, so it could tell the future. It went from being a tapestry hung up in a building to a bar rag. And when the rag goes missing, the supposedly friendless Moe realizes that he has more friends than he thought, so Santa's Little Helper gets the rag, and the rag says that it has never felt such love in its entire lifetime.",
           "titleEs": "Moe pasa de la pobreza a la riqueza",
           "synopsisEs": "El querido trapo de bar de Moe, que se alza como un ornamentado tapiz medieval, relata la historia de su vida milenaria. El tapiz estaba tejido con lana de demonio, por lo que podía predecir el futuro. Pasó de ser un tapiz colgado en un edificio a un trapo de bar. Y cuando el trapo desaparece, Moe, supuestamente sin amigos, se da cuenta de que tiene más amigos de los que pensaba, por lo que el pequeño ayudante de Santa recibe el trapo, y el trapo dice que nunca ha sentido tanto amor en toda su vida."
@@ -5689,7 +5689,7 @@ const data = {
           "title": "The Daughter Also Rises",
           "duration": "23",
           "airDate": "2012-02-12",
-          "image": "23x13.jpg",
+          "image": "simpsons_23x13.jpg",
           "synopsis": "Nick, a seemingly gallant boy, becomes a potential love interest for Lisa.",
           "titleEs": "La hija también se levanta",
           "synopsisEs": "Nick, un chico aparentemente galante, se convierte en un potencial interés amoroso para Lisa."
@@ -5700,7 +5700,7 @@ const data = {
           "title": "At Long Last Leave",
           "duration": "23",
           "airDate": "2012-02-19",
-          "image": "23x14.jpg",
+          "image": "simpsons_23x14.jpg",
           "synopsis": "After everyone in Springfield (except Ned Flanders) agrees they have had enough of the Simpsons, the family is officially banished from the town. Moving to a deranged \"off the grid\" commune, the family embraces a new lifestyle as wild mountain people. Upon learning that the Simpsons actually enjoy their new home, the rest of Springfield decides to move in too.",
           "titleEs": "En el último permiso",
           "synopsisEs": "Después de que todos en Springfield (excepto Ned Flanders) están de acuerdo en que ya están hartos de los Simpson, la familia es oficialmente desterrada de la ciudad. Al mudarse a una comuna trastornada \"fuera de la red\", la familia adopta un nuevo estilo de vida como gente salvaje de las montañas. Al enterarse de que los Simpson realmente disfrutan de su nuevo hogar, el resto de Springfield decide mudarse también."
@@ -5711,7 +5711,7 @@ const data = {
           "title": "Exit Through the Kwik-E-Mart",
           "duration": "23",
           "airDate": "2012-03-04",
-          "image": "23x15.jpg",
+          "image": "simpsons_23x15.jpg",
           "synopsis": "Bart plasters unflattering graffiti images of Homer all over Springfield. They catch the eyes of established street artists Shepard Fairey, Ron English, Kenny Scharf and Robbie Conal, who catch him in the act, and they invite Bart to exhibit his work at a gallery show of his own. Meanwhile, a new health-food superstore threatens to put the Kwik-E-Mart out of business.",
           "titleEs": "Salga por el Kwik-E-Mart",
           "synopsisEs": "Bart coloca graffitis poco favorecedores de Homero por todo Springfield. Captan la atención de los artistas callejeros establecidos Shepard Fairey, Ron English, Kenny Scharf y Robbie Conal, quienes lo sorprenden en el acto, e invitan a Bart a exhibir su trabajo en una galería propia. Mientras tanto, un nuevo hipermercado de alimentos saludables amenaza con cerrar el Kwik-E-Mart."
@@ -5722,7 +5722,7 @@ const data = {
           "title": "How I Wet Your Mother",
           "duration": "23",
           "airDate": "2012-03-11",
-          "image": "23x16.jpg",
+          "image": "simpsons_23x16.jpg",
           "synopsis": "In a parody of Christopher Nolan's Inception, following a traumatic incident, Homer's bed-wetting problem worsens, and his family plans to infiltrate his dreams to get to its subconscious source. Also in Homer's dreams is where his late mother Mona Simpson (voiced by Glenn Close) resides.",
           "titleEs": "Cómo mojé a tu madre",
           "synopsisEs": "En una parodia de El origen de Christopher Nolan, tras un incidente traumático, el problema de enuresis de Homero empeora y su familia planea infiltrarse en sus sueños para llegar a su fuente subconsciente. También en los sueños de Homero es donde reside su difunta madre, Mona Simpson, (con la voz de Glenn Close)."
@@ -5733,7 +5733,7 @@ const data = {
           "title": "Them, Robot",
           "duration": "23",
           "airDate": "2012-03-18",
-          "image": "23x17.jpg",
+          "image": "simpsons_23x17.jpg",
           "synopsis": "Mr. Burns replaces all of Springfield Power Plant's employees with robots but plans to keep Homer as the sole human worker. With unemployment at an all-time high and mechanical arms operating the workplace, Springfield becomes a dismal and humorless place. But when Homer's machine-programmed peers start to turn on the community and his former real-life fellow employees come to the rescue, they all realize that robots can't replace human friends. This episode is a parody of the movie I, Robot.",
           "titleEs": "ellos, robot",
           "synopsisEs": "Burns reemplaza a todos los empleados de Springfield Power Plant con robots, pero planea mantener a Homer como el único trabajador humano. Con el desempleo en su punto más alto y brazos mecánicos operando en el lugar de trabajo, Springfield se convierte en un lugar deprimente y sin humor. Pero cuando los compañeros programados por máquinas de Homer comienzan a volverse contra la comunidad y sus antiguos compañeros de trabajo de la vida real acuden al rescate, todos se dan cuenta de que los robots no pueden reemplazar a los amigos humanos. Este episodio es una parodia de la película Yo, Robot."
@@ -5744,7 +5744,7 @@ const data = {
           "title": "Beware My Cheating Bart",
           "duration": "23",
           "airDate": "2012-04-15",
-          "image": "23x18.jpg",
+          "image": "simpsons_23x18.jpg",
           "synopsis": "When Bart is forced to chaperone Jimbo's girlfriend, Shauna, to a movie, Shauna develops feelings for Bart, resulting in serious trouble with the bullies at school. Meanwhile, Homer buys a new treadmill, which comes with an online TV website, and becomes hooked to the show \"Stranded\".",
           "titleEs": "Cuidado con mi Bart infiel",
           "synopsisEs": "Cuando Bart se ve obligado a acompañar a la novia de Jimbo, Shauna, a ver una película, Shauna desarrolla sentimientos por Bart, lo que resulta en serios problemas con los matones de la escuela. Mientras tanto, Homer compra una nueva cinta de correr, que viene con un sitio web de televisión en línea, y se engancha al programa \"Stranded\"."
@@ -5755,7 +5755,7 @@ const data = {
           "title": "A Totally Fun Thing Bart Will Never Do Again",
           "duration": "24",
           "airDate": "2012-04-29",
-          "image": "23x19.jpg",
+          "image": "simpsons_23x19.jpg",
           "synopsis": "Bart, in a slump, wants the family to go on a cruise. When they get aboard, they have a lot of fun, but Bart wants the fun to last longer.",
           "titleEs": "Algo totalmente divertido que Bart nunca volverá a hacer",
           "synopsisEs": "Bart, deprimido, quiere que la familia se vaya de crucero. Cuando suben a bordo, se divierten mucho, pero Bart quiere que la diversión dure más."
@@ -5766,7 +5766,7 @@ const data = {
           "title": "The Spy Who Learned Me",
           "duration": "23",
           "airDate": "2012-05-06",
-          "image": "23x20.jpg",
+          "image": "simpsons_23x20.jpg",
           "synopsis": "Homer and Marge go through marriage problems, and when Homer suffers a concussion at work and gets two months off, he imagines the secret agent Stradivarius Cain, to help Homer be a better man. Meanwhile, Bart learns a way to prevent Nelson from stealing his lunch money - giving Nelson Krusty Burgers until he is too fat to punch anyone.",
           "titleEs": "El espía que me aprendió",
           "synopsisEs": "Homer y Marge pasan por problemas matrimoniales, y cuando Homer sufre una conmoción cerebral en el trabajo y tiene dos meses de baja, imagina al agente secreto Stradivarius Cain, para ayudar a Homer a ser un mejor hombre. Mientras tanto, Bart aprende una manera de evitar que Nelson le robe el dinero del almuerzo: dándole a Nelson hamburguesas Krusty hasta que esté demasiado gordo para golpear a alguien."
@@ -5777,7 +5777,7 @@ const data = {
           "title": "Ned 'N Edna's Blend Agenda",
           "duration": "23",
           "airDate": "2012-05-13",
-          "image": "23x21.jpg",
+          "image": "simpsons_23x21.jpg",
           "synopsis": "Ned and Edna announce that they secretly got hitched, so Marge throws a wedding party for them. But marriage invites trouble when Edna consults Bart, so Edna 'improves' Rod and Todd's lives.",
           "titleEs": "Agenda de mezcla de Ned 'N Edna",
           "synopsisEs": "Ned y Edna anuncian que se casaron en secreto, por lo que Marge les organiza una fiesta de boda. Pero el matrimonio invita a los problemas cuando Edna consulta a Bart, por lo que Edna \"mejora\" la vida de Rod y Todd."
@@ -5788,7 +5788,7 @@ const data = {
           "title": "Lisa Goes Gaga",
           "duration": "24",
           "airDate": "2012-05-20",
-          "image": "23x22.jpg",
+          "image": "simpsons_23x22.jpg",
           "synopsis": "Ned and Edna announce that they secretly got hitched, so Marge throws a wedding party for them. But marriage invites trouble when Edna consults Bart, so Edna 'improves' Rod and Todd's lives.",
           "titleEs": "Lisa se vuelve gaga",
           "synopsisEs": "Ned y Edna anuncian que se casaron en secreto, por lo que Marge les organiza una fiesta de boda. Pero el matrimonio invita a los problemas cuando Edna consulta a Bart, por lo que Edna \"mejora\" la vida de Rod y Todd."
@@ -5799,7 +5799,7 @@ const data = {
     {
       "id": 24,
       "title": "Temporada 24",
-      "image": "Season_24_Icon.jpg",
+      "image": "simpsons_Season_24_Icon.jpg",
       "avgColor": "#85A874",
       "episodes": [
         {
@@ -5808,7 +5808,7 @@ const data = {
           "title": "Moonshine River",
           "duration": "23",
           "airDate": "2012-09-30",
-          "image": "24x01.jpg",
+          "image": "simpsons_24x01.jpg",
           "synopsis": "Bart discovers that Cletus the Slack-Jawed Yokel's daughter, Mary, is the only girl who ever liked him, and the Simpsons head to New York City (again) so Bart can be with her after hearing that Mary got a job as a Saturday Night Live writer.",
           "titleEs": "río luz de la luna",
           "synopsisEs": "Bart descubre que Mary, la hija de Cletus, el paleto boquiabierto, es la única chica a la que alguna vez le agradó, y los Simpson se dirigen a la ciudad de Nueva York (nuevamente) para que Bart pueda estar con ella después de enterarse de que Mary consiguió un trabajo como escritora de Saturday Night Live."
@@ -5819,7 +5819,7 @@ const data = {
           "title": "Treehouse of Horror XXIII",
           "duration": "23",
           "airDate": "2012-10-07",
-          "image": "24x02.jpg",
+          "image": "simpsons_24x02.jpg",
           "synopsis": "Opening - The Simp-Mayans witness a prediction that the world will end in 2012.",
           "titleEs": "La casa del árbol del terror XXIII",
           "synopsisEs": "Apertura: Los Simp-Mayans son testigos de una predicción de que el mundo se acabará en 2012."
@@ -5830,7 +5830,7 @@ const data = {
           "title": "Adventures in Baby-Getting",
           "duration": "23",
           "airDate": "2012-11-04",
-          "image": "24x03.jpg",
+          "image": "simpsons_24x03.jpg",
           "synopsis": "Marge gets the car of her dreams after her stationwagon falls into a sinkhole — but soon she becomes angry over the decision, as it clashes with her deep-seated desire to have another baby. Meanwhile, Bart and his friends spy on Lisa when Lisa begins taking private after-school lessons from one of Principal Skinner's rivals.",
           "titleEs": "Aventuras en la preparación de bebés",
           "synopsisEs": "Marge consigue el auto de sus sueños después de que su camioneta cae en un socavón, pero pronto se enoja por la decisión, ya que choca con su deseo profundamente arraigado de tener otro bebé. Mientras tanto, Bart y sus amigos espían a Lisa cuando Lisa comienza a recibir lecciones privadas después de la escuela de uno de los rivales del director Skinner."
@@ -5841,7 +5841,7 @@ const data = {
           "title": "Gone Abie Gone",
           "duration": "23",
           "airDate": "2012-11-11",
-          "image": "24x04.jpg",
+          "image": "simpsons_24x04.jpg",
           "synopsis": "While trying to solve the mystery of why he ran away from the retirement home, Marge and Homer stumble upon Grampa Simpson's secret past, which includes marrying a black singer named Rita LaFleur while working as a busboy in an upscale restaurant. Meanwhile, Lisa becomes an online gambler after Homer puts her college fund on a poker site to fight back against corrupt banks, and gets addicted to Internet poker (thanks to lessons from Jennifer Tilly) so she can get more money for a better education.",
           "titleEs": "Se ha ido Abie se ha ido",
           "synopsisEs": "Mientras intentan resolver el misterio de por qué se escapó de la casa de retiro, Marge y Homer se topan con el pasado secreto del abuelo Simpson, que incluye casarse con una cantante negra llamada Rita LaFleur mientras trabajaba como ayudante de camarero en un restaurante de lujo. Mientras tanto, Lisa se convierte en una jugadora en línea después de que Homer pone su fondo universitario en un sitio de póquer para luchar contra los bancos corruptos y se vuelve adicta al póquer en Internet (gracias a las lecciones de Jennifer Tilly) para poder obtener más dinero para una mejor educación."
@@ -5852,7 +5852,7 @@ const data = {
           "title": "Penny-Wiseguys",
           "duration": "23",
           "airDate": "2012-11-18",
-          "image": "24x05.jpg",
+          "image": "simpsons_24x05.jpg",
           "synopsis": "Homer's new bowling partner is an accountant for the Mafia who's been promoted to mob boss while Fat Tony goes to court — for jury duty. Meanwhile, Lisa adds bugs to her vegetarian diet after suffering a drop in iron, but stops when the bugs guilt her in her dreams.",
           "titleEs": "Penny-Wiseguys",
           "synopsisEs": "El nuevo compañero de bolos de Homer es un contador de la mafia que ha sido ascendido a jefe de la mafia mientras Fat Tony va a los tribunales para servir como jurado. Mientras tanto, Lisa agrega insectos a su dieta vegetariana después de sufrir una caída de hierro, pero deja de hacerlo cuando los insectos la hacen sentir culpable en sus sueños."
@@ -5863,7 +5863,7 @@ const data = {
           "title": "A Tree Grows in Springfield",
           "duration": "23",
           "airDate": "2012-11-25",
-          "image": "24x06.jpg",
+          "image": "simpsons_24x06.jpg",
           "synopsis": "Homer becomes obsessed with a Mapple MyPad he won in a silent auction at school, but when he breaks it, he loses all hope — then finds it again when he discovers that his backyard tree has spelled out the word \"HOPE\" in sap.",
           "titleEs": "Un árbol crece en Springfield",
           "synopsisEs": "Homer se obsesiona con un Mapple MyPad que ganó en una subasta silenciosa en la escuela, pero cuando lo rompe, pierde toda esperanza; luego la vuelve a encontrar cuando descubre que el árbol de su patio trasero ha deletreado la palabra \"ESPERANZA\" en savia."
@@ -5874,7 +5874,7 @@ const data = {
           "title": "The Day the Earth Stood Cool",
           "duration": "23",
           "airDate": "2012-12-09",
-          "image": "24x07.jpg",
+          "image": "simpsons_24x07.jpg",
           "synopsis": "Fred Armisen and Carrie Brownstein from Portlandia guest star as cool neighbors whom Homer wants to emulate, and Marge and Bart find to be pretentious hipsters whose ilk are overrunning the town.",
           "titleEs": "El día que la Tierra se mantuvo fría",
           "synopsisEs": "Fred Armisen y Carrie Brownstein de Portlandia son los protagonistas invitados como vecinos geniales a quienes Homer quiere emular, y Marge y Bart consideran que son hipsters pretenciosos cuya clase está invadiendo la ciudad."
@@ -5885,7 +5885,7 @@ const data = {
           "title": "To Cur, with Love",
           "duration": "23",
           "airDate": "2012-12-16",
-          "image": "24x08.jpg",
+          "image": "simpsons_24x08.jpg",
           "synopsis": "Homer loses Santa's Little Helper while playing the tablet game, VillageVille. When Santa's Little Helper is found in the kitchen cabinet and Homer admits he doesn't care about him, Grampa tells the story of Homer's first dog, Bongo, and how he ended up missing.",
           "titleEs": "Curar, con amor",
           "synopsisEs": "Homer pierde al pequeño ayudante de Santa mientras juega al juego de tableta VillageVille. Cuando el pequeño ayudante de Santa aparece en el gabinete de la cocina y Homer admite que no se preocupa por él, el abuelo cuenta la historia del primer perro de Homer, Bongo, y cómo terminó desaparecido."
@@ -5896,7 +5896,7 @@ const data = {
           "title": "Homer Goes to Prep School",
           "duration": "23",
           "airDate": "2013-01-06",
-          "image": "24x09.jpg",
+          "image": "simpsons_24x09.jpg",
           "synopsis": "After a lockdown at a kids' fun center (caused by a kid chasing after a ball and a negligent worker talking on her cell phone), Homer is traumatized overseeing everyone panic in the chaos, and meets a doomsday prepper named Lloyd who introduces him to some Springfield residents (specifically Superintendent Chalmers, Lindsay Naegle, Herman the one-armed military antique store owner, and a man who looks similar to Lieutenant L.T. Smash) who are preparing for the day when society crumbles from a disaster.",
           "titleEs": "Homero va a la escuela preparatoria",
           "synopsisEs": "Después de un encierro en un centro de diversión para niños (causado por un niño persiguiendo una pelota y un trabajador negligente hablando por su teléfono celular), Homer queda traumatizado al observar que todos entran en pánico en el caos, y conoce a un preparador del fin del mundo llamado Lloyd, quien le presenta a algunos residentes de Springfield (específicamente el superintendente Chalmers, Lindsay Naegle, Herman, el dueño de una tienda de antigüedades militar manco, y un hombre que se parece al teniente L.T. Smash) que se están preparando para el el día en que la sociedad se desmorone por un desastre."
@@ -5907,7 +5907,7 @@ const data = {
           "title": "A Test Before Trying",
           "duration": "23",
           "airDate": "2013-01-13",
-          "image": "24x10.jpg",
+          "image": "simpsons_24x10.jpg",
           "synopsis": "Thanks to rising energy costs by Mr. Burns, Homer uses a discarded parking meter to make some extra money by planting it at various parking spots around town. Meanwhile, Bart is pressured by everyone at Springfield Elementary School to do well on the latest standardized test, because, if he doesn't, Springfield Elementary will shut down for having a low average.",
           "titleEs": "Una prueba antes de intentarlo",
           "synopsisEs": "Gracias al aumento de los costos de energía por parte del Sr. Burns, Homer usa un parquímetro desechado para ganar algo de dinero extra plantándolo en varios lugares de estacionamiento de la ciudad. Mientras tanto, todos en la Escuela Primaria de Springfield presionan a Bart para que obtenga buenos resultados en el último examen estandarizado, porque, si no lo hace, la Escuela Primaria de Springfield cerrará por tener un promedio bajo."
@@ -5918,7 +5918,7 @@ const data = {
           "title": "Changing of the Guardian",
           "duration": "23",
           "airDate": "2013-01-27",
-          "image": "24x11.jpg",
+          "image": "simpsons_24x11.jpg",
           "synopsis": "Homer and Marge decide to name a legal guardian for their children should (Heaven forbid) the day come that Homer and Marge die or are unable to care for the kids, but when Homer's brother, Herb, goes broke again (this time, for reasons unknown) and everyone else in town refuses, Bart and Lisa pick a young, yuppie couple that Marge and Homer fear will replace them while they're still alive.",
           "titleEs": "Cambio de guardián",
           "synopsisEs": "Homer y Marge deciden nombrar un tutor legal para sus hijos en caso (Dios no lo quiera) de que llegue el día en que Homer y Marge mueran o no puedan cuidar a los niños, pero cuando el hermano de Homer, Herb, vuelve a arruinarse (esta vez, por razones desconocidas) y todos los demás en la ciudad se niegan, Bart y Lisa eligen una pareja joven yuppie que Marge y Homer temen que los reemplace mientras aún estén vivos."
@@ -5929,7 +5929,7 @@ const data = {
           "title": "Love is a Many-Splintered Thing",
           "duration": "23",
           "airDate": "2013-02-10",
-          "image": "24x12.jpg",
+          "image": "simpsons_24x12.jpg",
           "synopsis": "Bart reunites with Mary Spuckler, but their relationship drifts apart and, after Bart and Homer get kicked out of the house, Bart must win back Mary or lose her forever.",
           "titleEs": "El amor es una cosa dividida en muchos fragmentos",
           "synopsisEs": "Bart se reúne con Mary Spuckler, pero su relación se distancia y, después de que Bart y Homer son expulsados ​​de la casa, Bart debe recuperar a Mary o perderla para siempre."
@@ -5940,7 +5940,7 @@ const data = {
           "title": "Hardly Kirk-ing",
           "duration": "23",
           "airDate": "2013-02-17",
-          "image": "24x13.jpg",
+          "image": "simpsons_24x13.jpg",
           "synopsis": "Bart accidentally sprays epoxy in Milhouse's hair — and the resulting haircut to get it out makes Milhouse look like his father, prompting Bart and Lisa to dress Milhouse like an adult so they can do things that require parental supervision. Meanwhile, Marge tries to wean Maggie off an educational DVD series that was pulled for stunting developmental growth in younger children, and Homer becomes incredibly skilled at \"find-the-hidden-object\" picture puzzle books.",
           "titleEs": "Apenas Kirk-ing",
           "synopsisEs": "Bart accidentalmente rocía epoxi en el cabello de Milhouse, y el corte de cabello resultante para quitárselo hace que Milhouse se parezca a su padre, lo que llevó a Bart y Lisa a vestir a Milhouse como un adulto para poder hacer cosas que requieren supervisión de los padres. Mientras tanto, Marge intenta sacar a Maggie de una serie educativa en DVD que fue retirada para retrasar el crecimiento del desarrollo en niños más pequeños, y Homer se vuelve increíblemente hábil con los libros de rompecabezas con imágenes de \"encontrar el objeto oculto\"."
@@ -5951,7 +5951,7 @@ const data = {
           "title": "Gorgeous Grampa",
           "duration": "23",
           "airDate": "2013-03-03",
-          "image": "24x14.jpg",
+          "image": "simpsons_24x14.jpg",
           "synopsis": "After Homer wins Grampa Simpson's storage locker filled with muscle magazines and flamboyant costumes, the family thinks Grampa is a closet homosexual and try to get him to come out of the closet...until Mr. Burns reveals that Grampa used to be a Gorgeous George-esque heel wrestler named \"Glamorous Godfrey\".",
           "titleEs": "Abuelo magnífico",
           "synopsisEs": "Después de que Homero gana el casillero del abuelo Simpson lleno de revistas de músculos y disfraces extravagantes, la familia piensa que el abuelo es un homosexual encubierto y trata de sacarlo del armario... hasta que el Sr. Burns revela que el abuelo solía ser un magnífico luchador de tacones al estilo George llamado \"Glamorous Godfrey\"."
@@ -5962,7 +5962,7 @@ const data = {
           "title": "Black-Eyed, Please",
           "duration": "23",
           "airDate": "2013-03-10",
-          "image": "24x15.jpg",
+          "image": "simpsons_24x15.jpg",
           "synopsis": "A substitute teacher named Ms. Cantwell loves all of her temporary students, except for Lisa, and Lisa tries to find out why. Meanwhile, Flanders tries to atone for punching Homer in the face after Flanders' beatnik parents (the same ones from Sweet Seymour Skinner's Baadasssss Song and Hurricane Neddy) take a liking to Homer rather than their own son.",
           "titleEs": "Ojos negros, por favor",
           "synopsisEs": "Una maestra sustituta llamada Sra. Cantwell ama a todos sus alumnos temporales, excepto a Lisa, y Lisa intenta descubrir por qué. Mientras tanto, Flanders intenta expiar el golpe que le dio a Homer en la cara después de que sus padres beatniks (los mismos de Baadasssss Song de Sweet Seymour Skinner y Hurricane Neddy) prefieren a Homer en lugar de a su propio hijo."
@@ -5973,7 +5973,7 @@ const data = {
           "title": "Dark Knight Court",
           "duration": "23",
           "airDate": "2013-03-17",
-          "image": "24x16.jpg",
+          "image": "simpsons_24x16.jpg",
           "synopsis": "Bart is accused of playing a prank on the Springfield Elementary School band during an Easter gathering, and Janet Reno is hired to oversee the case. Meanwhile, Mr. Burns becomes a superhero known as \"Fruit Batman\" and Smithers pays the townspeople to pose as Mr. Burns' rogues gallery of villains.",
           "titleEs": "Corte del Caballero Oscuro",
           "synopsisEs": "Bart es acusado de gastarle una broma a la banda de la escuela primaria de Springfield durante una reunión de Pascua, y contratan a Janet Reno para supervisar el caso. Mientras tanto, el Sr. Burns se convierte en un superhéroe conocido como \"Fruit Batman\" y Smithers paga a la gente del pueblo para que se hagan pasar por la galería de villanos pícaros del Sr. Burns."
@@ -5984,7 +5984,7 @@ const data = {
           "title": "What Animated Women Want",
           "duration": "23",
           "airDate": "2013-04-14",
-          "image": "24x17.jpg",
+          "image": "simpsons_24x17.jpg",
           "synopsis": "Homer and Milhouse each learn a lesson on what (animated) women want out of their (cartoon) men: Milhouse takes his lessons on how to be a woman's man from the ghost of Marlon Brando while Moe teaches Homer that the best way to keep women in line is with a Fifty Shades of Grey-style relationship filled with bondage, fetish costumes, and bizarre sex toys.",
           "titleEs": "Lo que quieren las mujeres animadas",
           "synopsisEs": "Homer y Milhouse aprenden cada uno una lección sobre lo que las mujeres (animadas) quieren de sus hombres (de dibujos animados): Milhouse toma sus lecciones sobre cómo ser un hombre de mujer del fantasma de Marlon Brando mientras Moe le enseña a Homer que la mejor manera de mantener a las mujeres a raya es con una relación al estilo Cincuenta Sombras de Grey llena de bondage, disfraces fetichistas y juguetes sexuales extraños."
@@ -5995,7 +5995,7 @@ const data = {
           "title": "Pulpit Friction",
           "duration": "23",
           "airDate": "2013-04-28",
-          "image": "24x18.jpg",
+          "image": "simpsons_24x18.jpg",
           "synopsis": "A new, younger, more charismatic preacher helps Springfield during a bedbug crisis, leaving Reverend Lovejoy to give up sermoning for hot tub selling. Meanwhile, Homer becomes a deacon, and Marge loses her wedding dress.",
           "titleEs": "Fricción del púlpito",
           "synopsisEs": "Un predicador nuevo, más joven y más carismático ayuda a Springfield durante una crisis de chinches, lo que obliga al reverendo Lovejoy a dejar de sermonear para vender jacuzzis. Mientras tanto, Homero se convierte en diácono y Marge pierde su vestido de novia."
@@ -6006,7 +6006,7 @@ const data = {
           "title": "Whiskey Business",
           "duration": "23",
           "airDate": "2013-05-05",
-          "image": "24x19.jpg",
+          "image": "simpsons_24x19.jpg",
           "synopsis": "Homer and Marge help a suicidal Moe get a new lease on life, which leads Moe to market his own whiskey. Meanwhile, Grampa discovers that Bart is a better caretaker than most of the nurses at the retirement home, and Lisa protests against the use of Bleeding Gums Murphy's image as a hologram that shills from beyond the grave.",
           "titleEs": "negocio del whisky",
           "synopsisEs": "Homero y Marge ayudan a un Moe suicida a conseguir una nueva oportunidad de vida, lo que lleva a Moe a comercializar su propio whisky. Mientras tanto, el abuelo descubre que Bart es mejor cuidador que la mayoría de las enfermeras de la residencia de ancianos, y Lisa protesta contra el uso de la imagen de Bleeding Gums Murphy como un holograma que aparece desde más allá de la tumba."
@@ -6017,7 +6017,7 @@ const data = {
           "title": "The Fabulous Faker Boy",
           "duration": "23",
           "airDate": "2013-05-12",
-          "image": "24x20.jpg",
+          "image": "simpsons_24x20.jpg",
           "synopsis": "Bart fakes his way into being a piano-playing virtuoso to impress a Russian girl named Zhenya. Meanwhile, Marge helps Zhenya's father, Slava pass his driver's test, and Homer hides his baldness when the last two hairs on his head fall out.",
           "titleEs": "El fabuloso chico farsante",
           "synopsisEs": "Bart finge convertirse en un virtuoso del piano para impresionar a una chica rusa llamada Zhenya. Mientras tanto, Marge ayuda al padre de Zhenya, Slava a aprobar el examen de conducir y Homer oculta su calvicie cuando se le caen los dos últimos pelos de la cabeza."
@@ -6028,7 +6028,7 @@ const data = {
           "title": "The Saga of Carl",
           "duration": "23",
           "airDate": "2013-05-19",
-          "image": "24x21.jpg",
+          "image": "simpsons_24x21.jpg",
           "synopsis": "Homer, Moe, Lenny, and Carl share a winning lottery ticket, but when Carl makes off with the money, the others follow him to his country of origin, Iceland, where they learn why Carl would do that.",
           "titleEs": "La saga de Carl",
           "synopsisEs": "Homer, Moe, Lenny y Carl comparten un billete de lotería ganador, pero cuando Carl se lleva el dinero, los demás lo siguen a su país de origen, Islandia, donde descubren por qué Carl haría eso."
@@ -6039,7 +6039,7 @@ const data = {
           "title": "Dangers on a Train",
           "duration": "23",
           "airDate": "2013-05-19",
-          "image": "24x22.jpg",
+          "image": "simpsons_24x22.jpg",
           "synopsis": "Marge mistakes an adulterers' dating website for a cupcake delivery website and bonds with a shy man over  a Downton Abbey-esque period drama. Meanwhile, Homer, Reverend Lovejoy, Moe, Lenny, Carl, and Larry the Lush team up to renovate a steam train that was once a part of Springfield's most glamorous outside mall as part of Marge's wedding anniversary present.",
           "titleEs": "Peligros en un tren",
           "synopsisEs": "Marge confunde un sitio web de citas para adúlteros con un sitio web de entrega de pastelitos y se une a un hombre tímido durante un drama de época al estilo Downton Abbey. Mientras tanto, Homer, el reverendo Lovejoy, Moe, Lenny, Carl y Larry the Lush se unen para renovar un tren de vapor que alguna vez fue parte del centro comercial exterior más glamoroso de Springfield como parte del regalo de aniversario de bodas de Marge."
@@ -6050,7 +6050,7 @@ const data = {
     {
       "id": 25,
       "title": "Temporada 25",
-      "image": "Season_25_Icon.jpg",
+      "image": "simpsons_Season_25_Icon.jpg",
       "avgColor": "#A5842C",
       "episodes": [
         {
@@ -6059,7 +6059,7 @@ const data = {
           "title": "Homerland",
           "duration": "23",
           "airDate": "2013-09-29",
-          "image": "25x01.jpg",
+          "image": "simpsons_25x01.jpg",
           "synopsis": "After returning from a nuclear plant convention, Homer begins to act out of character and Lisa, along with a mentally disturbed FBI agent, investigate.",
           "titleEs": "Patria",
           "synopsisEs": "Después de regresar de una convención sobre una planta nuclear, Homer comienza a actuar fuera de lugar y Lisa, junto con un agente del FBI con trastornos mentales, investigan."
@@ -6070,7 +6070,7 @@ const data = {
           "title": "Treehouse of Horror XXIV",
           "duration": "23",
           "airDate": "2013-09-29",
-          "image": "25x02.jpg",
+          "image": "simpsons_25x02.jpg",
           "synopsis": "This year's horrifying half-hour shows a Simpsons opening packed to the brim with sci-fi, horror, and fantasy references, a Dr. Seuss spoof where Bart, Lisa, and Maggie go trick-or-treating with a destructive prankster known as The Fat in the Hat (Homer), Bart and Lisa getting closer as siblings after a decapitation leaves Bart without a body, and a spoof of the infamous 1932 pre-Code horror movie, Freaks.",
           "titleEs": "La casa del árbol del terror XXIV",
           "synopsisEs": "La horrible media hora de este año muestra una apertura de Los Simpson repleta de referencias de ciencia ficción, terror y fantasía, una parodia del Dr. Seuss en la que Bart, Lisa y Maggie salen a pedir dulces con un bromista destructivo conocido como El Gordo del Sombrero (Homero), Bart y Lisa se acercan como hermanos después de que una decapitación deja a Bart sin cuerpo, y una parodia del infame 1932. Película de terror anterior al Código, Freaks."
@@ -6081,7 +6081,7 @@ const data = {
           "title": "Four Regrettings and a Funeral",
           "duration": "23",
           "airDate": "2013-11-03",
-          "image": "25x03.jpg",
+          "image": "simpsons_25x03.jpg",
           "synopsis": "During the funeral of a beloved Simpsons character who was never seen before, yet acknowledged to have been there all along, Homer, Kent Brockman, Marge, and Mr. Burns all try to make up for their respective past regrets: Homer regrets selling his Apple stock for a bowling ball, Marge regrets listening to KISS music while pregnant with Bart, Mr. Burns regrets breaking up with a French woman who has now converted to Buddhism, and Kent Brockman regrets not giving up his local anchorman job for the wonderful world of cable news.",
           "titleEs": "Cuatro arrepentimientos y un funeral",
           "synopsisEs": "Durante el funeral de un querido personaje de Los Simpson que nunca antes había sido visto, pero que se reconoció que había estado allí todo el tiempo, Homer, Kent Brockman, Marge y el Sr. Burns intentan compensar sus respectivos arrepentimientos pasados: Homer se arrepiente de haber vendido sus acciones de Apple por una bola de boliche, Marge se arrepiente de haber escuchado música de KISS mientras estaba embarazada de Bart, el Sr. Burns se arrepiente de haber roto con una mujer francesa que ahora se ha convertido al budismo, y Kent Brockman se arrepiente de no haber renunciado a su presentador local. trabajo para el maravilloso mundo de las noticias por cable."
@@ -6092,7 +6092,7 @@ const data = {
           "title": "Yolo",
           "duration": "23",
           "airDate": "2013-11-10",
-          "image": "25x04.jpg",
+          "image": "simpsons_25x04.jpg",
           "synopsis": "Homer tries to live the \"You Only Live Once\" (YOLO) life after reuniting with his pen pal from Spain. Meanwhile, Lisa creates an honor code for Springfield Elementary to combat cheating.",
           "titleEs": "Yolo",
           "synopsisEs": "Homero intenta vivir la vida de \"Sólo se vive una vez\" (YOLO) después de reunirse con su amigo por correspondencia de España. Mientras tanto, Lisa crea un código de honor para la escuela primaria Springfield para combatir las trampas."
@@ -6103,7 +6103,7 @@ const data = {
           "title": "Labor Pains",
           "duration": "23",
           "airDate": "2013-11-17",
-          "image": "25x05.jpg",
+          "image": "simpsons_25x05.jpg",
           "synopsis": "On his way home from a poker game, Homer befriends a pregnant woman, then is forced to help her when the elevator gets stuck and she goes into labor. Meanwhile, Lisa helps the town's cheerleaders unionize so they can negotiate for better wages and on-the-job conditions, leading the Rich Texan to hire scabs.",
           "titleEs": "Dolores de parto",
           "synopsisEs": "De camino a casa después de una partida de póquer, Homer se hace amigo de una mujer embarazada y luego se ve obligado a ayudarla cuando el ascensor se atasca y ella se pone de parto. Mientras tanto, Lisa ayuda a las porristas de la ciudad a sindicalizarse para poder negociar mejores salarios y condiciones laborales, lo que lleva al rico texano a contratar esquiroles."
@@ -6114,7 +6114,7 @@ const data = {
           "title": "The Kid is All Right",
           "duration": "23",
           "airDate": "2013-11-24",
-          "image": "25x06.jpg",
+          "image": "simpsons_25x06.jpg",
           "synopsis": "A new student named Isabel Gutierrez comes to Springfield Elementary and makes friends with Lisa, but the friendship becomes strained when Lisa finds out that Isabel is a Republican (and not an Abraham Lincoln- or even a Ronald Reagan-era Republican — a George W. Bush one).",
           "titleEs": "El niño está bien",
           "synopsisEs": "Una nueva estudiante llamada Isabel Gutiérrez llega a la escuela primaria Springfield y se hace amiga de Lisa, pero la amistad se vuelve tensa cuando Lisa descubre que Isabel es republicana (y no una republicana de Abraham Lincoln, ni siquiera de la era de Ronald Reagan, sino de George W. Bush)."
@@ -6125,7 +6125,7 @@ const data = {
           "title": "Yellow Subterfuge",
           "duration": "23",
           "airDate": "2013-12-08",
-          "image": "25x07.jpg",
+          "image": "simpsons_25x07.jpg",
           "synopsis": "After Skinner promises the most behaved students on a trip on a submarine and starts by giving everyone a clean slate, Bart tries his best to do just that. Meanwhile, Krusty sells his show rights to other countries (as per Lisa's advice), but soon regrets it when the Krustys from other countries become more successful than the domestic Krusty.",
           "titleEs": "Subterfugio amarillo",
           "synopsisEs": "Después de que Skinner promete a los estudiantes más educados un viaje en un submarino y comienza a darles a todos un borrón y cuenta nueva, Bart hace todo lo posible para lograrlo. Mientras tanto, Krusty vende los derechos de su programa a otros países (según el consejo de Lisa), pero pronto se arrepiente cuando los Krusty de otros países tienen más éxito que el Krusty nacional."
@@ -6136,7 +6136,7 @@ const data = {
           "title": "White Christmas Blues",
           "duration": "23",
           "airDate": "2013-12-15",
-          "image": "25x08.jpg",
+          "image": "simpsons_25x08.jpg",
           "synopsis": "Springfield becomes a winter wonderland after a freak accident involving the nuclear plant and The Springfield Tire Fire, and out-of-towners flock to whatever state Springfield is in to experience a white Christmas, but the sudden tourism causes prices to skyrocket and drives Marge to turn the Simpson house into a bed-and-breakfast.",
           "titleEs": "Blanco Navidad azul",
           "synopsisEs": "Springfield se convierte en un paraíso invernal después de un extraño accidente que involucró a la planta nuclear y el incendio de neumáticos de Springfield, y los forasteros acuden en masa a cualquier estado en el que se encuentre Springfield para experimentar una Navidad blanca, pero el repentino turismo hace que los precios se disparen y lleva a Marge a convertir la casa de los Simpson en un bed and breakfast."
@@ -6147,7 +6147,7 @@ const data = {
           "title": "Steal This Episode",
           "duration": "23",
           "airDate": "2014-01-05",
-          "image": "25x09.jpg",
+          "image": "simpsons_25x09.jpg",
           "synopsis": "After getting sick of high ticket prices and pre-movie commercials, Homer becomes a movie pirate. He starts hosting movie nights for the entire town, but Marge accidentally gets the FBI on his track when she tries to reimburse the film company for the lost ticket revenue.",
           "titleEs": "Robar este episodio",
           "synopsisEs": "Después de cansarse de los altos precios de las entradas y los comerciales previos a la película, Homer se convierte en un pirata del cine. Empieza a organizar noches de cine para toda la ciudad, pero Marge accidentalmente consigue que el FBI le siga la pista cuando intenta reembolsar a la compañía cinematográfica los ingresos perdidos por las entradas."
@@ -6158,7 +6158,7 @@ const data = {
           "title": "Married to the Blob",
           "duration": "23",
           "airDate": "2014-01-12",
-          "image": "25x10.jpg",
+          "image": "simpsons_25x10.jpg",
           "synopsis": "Comic Book Guy falls in love with a mangaka (a Japanese manga writer) named Kumiko but in order to marry her he must impress Kumiko’s strict father.",
           "titleEs": "Casado con la mancha",
           "synopsisEs": "Comic Book Guy se enamora de una mangaka (una escritora de manga japonesa) llamada Kumiko, pero para casarse con ella debe impresionar al estricto padre de Kumiko."
@@ -6169,7 +6169,7 @@ const data = {
           "title": "Specs and the City",
           "duration": "23",
           "airDate": "2014-01-26",
-          "image": "25x11.jpg",
+          "image": "simpsons_25x11.jpg",
           "synopsis": "Homer's new Google Glass-style glasses, which Mr. Burns gave all of the nuclear plant workers so he could spy on them, uncovers evidence that Marge is seeking a marriage counsellor, where she admits she hates the grind of being a housewife. Meanwhile, Nelson forces Bart into getting him the best Valentine's Day gift ever.",
           "titleEs": "Especificaciones y la ciudad",
           "synopsisEs": "Las nuevas gafas estilo Google Glass de Homer, que el Sr. Burns les dio a todos los trabajadores de la planta nuclear para poder espiarlos, descubren evidencia de que Marge está buscando un consejero matrimonial, donde admite que odia la rutina de ser ama de casa. Mientras tanto, Nelson obliga a Bart a conseguirle el mejor regalo de San Valentín."
@@ -6180,7 +6180,7 @@ const data = {
           "title": "Diggs",
           "duration": "23",
           "airDate": "2014-03-09",
-          "image": "25x12.jpg",
+          "image": "simpsons_25x12.jpg",
           "synopsis": "Bart befriends a strange, older boy named Diggs who gets Bart into falconry, but Bart worries about Diggs's sanity when Diggs claims that he actually wants to fly like the falcons he trains.",
           "titleEs": "excavaciones",
           "synopsisEs": "Bart se hace amigo de un extraño niño mayor llamado Diggs, quien lo introduce en la cetrería, pero Bart se preocupa por la cordura de Diggs cuando Diggs afirma que en realidad quiere volar como los halcones que entrena."
@@ -6191,7 +6191,7 @@ const data = {
           "title": "The Man Who Grew Too Much",
           "duration": "23",
           "airDate": "2014-03-09",
-          "image": "25x13.jpg",
+          "image": "simpsons_25x13.jpg",
           "synopsis": "When Lisa protests against genetically-modified foods, she discovers that the town's newest chemical engineering plant is owned by none other than Sideshow Bob, who's using the plant and the position to genetically modify himself in his neverending plot to kill Bart Simpson. Meanwhile, Marge becomes a church volunteer to help horny teenagers become abstinent.",
           "titleEs": "El hombre que creció demasiado",
           "synopsisEs": "Cuando Lisa protesta contra los alimentos genéticamente modificados, descubre que la planta de ingeniería química más nueva de la ciudad es propiedad nada menos que de Sideshow Bob, quien está usando la planta y la posición para modificarse genéticamente en su interminable complot para matar a Bart Simpson. Mientras tanto, Marge se convierte en voluntaria de la iglesia para ayudar a los adolescentes cachondos a ser abstinentes."
@@ -6202,7 +6202,7 @@ const data = {
           "title": "The Winter of His Content",
           "duration": "23",
           "airDate": "2014-03-16",
-          "image": "25x14.jpg",
+          "image": "simpsons_25x14.jpg",
           "synopsis": "When the Springfield Retirement Home shuts down due to health violations, Grampa and his friends (Jasper Beardley and the Crazy Old Jewish Man) move in with The Simpsons and Homer begins acting like an old man. Meanwhile, Nelson befriends Bart after Bart defends Nelson over his choice to wear secondhand underwear and invites him to a gathering of bullies modeled after The Warriors.",
           "titleEs": "El invierno de su contenido",
           "synopsisEs": "Cuando la residencia de ancianos de Springfield cierra debido a problemas de salud, el abuelo y sus amigos (Jasper Beardley y el viejo judío loco) se mudan con Los Simpson y Homero comienza a actuar como un anciano. Mientras tanto, Nelson se hace amigo de Bart después de que Bart defiende a Nelson por su elección de usar ropa interior de segunda mano y lo invita a una reunión de matones inspirada en The Warriors."
@@ -6213,7 +6213,7 @@ const data = {
           "title": "The War of Art",
           "duration": "23",
           "airDate": "2014-03-23",
-          "image": "25x15.jpg",
+          "image": "simpsons_25x15.jpg",
           "synopsis": "Homer and Marge buy a seascape painting from the van Houten's garage sale and discover that the painting fetches a high price at auction, which could help the perpetually broke Simpsons, but could also hurt the van Houtens, as Kirk had no idea his seascape painting was worth a lot of money.",
           "titleEs": "La guerra del arte",
           "synopsisEs": "Homero y Marge compran una pintura de un paisaje marino en la venta de garaje de Van Houten y descubren que la pintura alcanza un alto precio en la subasta, lo que podría ayudar a los Simpson, perpetuamente en quiebra, pero también podría perjudicar a los Van Houten, ya que Kirk no tenía idea de que su pintura de paisaje marino valía mucho dinero."
@@ -6224,7 +6224,7 @@ const data = {
           "title": "You Don't Have to Live Like a Referee",
           "duration": "23",
           "airDate": "2014-03-30",
-          "image": "25x16.jpg",
+          "image": "simpsons_25x16.jpg",
           "synopsis": "Homer and Marge buy a seascape painting from the van Houten's garage sale and discover that the painting fetches a high price at auction, which could help the perpetually broke Simpsons, but could also hurt the van Houtens, as Kirk had no idea his seascape painting was worth a lot of money.",
           "titleEs": "No es necesario vivir como un árbitro",
           "synopsisEs": "Homero y Marge compran una pintura de un paisaje marino en la venta de garaje de Van Houten y descubren que la pintura alcanza un alto precio en la subasta, lo que podría ayudar a los Simpson, perpetuamente en quiebra, pero también podría perjudicar a los Van Houten, ya que Kirk no tenía idea de que su pintura de paisaje marino valía mucho dinero."
@@ -6235,7 +6235,7 @@ const data = {
           "title": "Luca$",
           "duration": "23",
           "airDate": "2014-03-30",
-          "image": "25x17.jpg",
+          "image": "simpsons_25x17.jpg",
           "synopsis": "Marge is worried that Lisa's interest in budding competitive eater Lucas Bortner will lead to a life of marrying Homer-esque slobs. Meanwhile, Bart befriends Snake the criminal.",
           "titleEs": "luca$",
           "synopsisEs": "A Marge le preocupa que el interés de Lisa en el incipiente comedor competitivo Lucas Bortner la lleve a una vida de casarse con vagos al estilo Homero. Mientras tanto, Bart se hace amigo del criminal Snake."
@@ -6246,7 +6246,7 @@ const data = {
           "title": "Days of Future Future",
           "duration": "23",
           "airDate": "unknown",
-          "image": "25x18.jpg",
+          "image": "simpsons_25x18.jpg",
           "synopsis": "In this partial continuation of \"Holidays of Future Passed\", Bart goes to a clinic to rid himself of his feelings for his ex-wife Jenda, Lisa must choose whether or not to cure her zombie husband Milhouse after he gets bitten by a homeless zombie, and Marge (after putting up with years of Homer dying and being cloned back to life by Professor Frink) loads Homer onto a flatscreen monitor and throws him out of the house.",
           "titleEs": "Días del futuro futuro",
           "synopsisEs": "En esta continuación parcial de \"Holidays of Future Passed\", Bart va a una clínica para deshacerse de sus sentimientos por su ex esposa Jenda, Lisa debe elegir si curar o no a su marido zombie Milhouse después de que lo muerda un zombi sin hogar, y Marge (después de soportar años de que Homer muriera y fuera clonado de nuevo a la vida por el profesor Frink) carga a Homer en un monitor de pantalla plana y lo arroja fuera de la casa."
@@ -6257,7 +6257,7 @@ const data = {
           "title": "What to Expect When Bart's Expecting",
           "duration": "23",
           "airDate": "2014-04-27",
-          "image": "25x19.jpg",
+          "image": "simpsons_25x19.jpg",
           "synopsis": "Bart creates a voodoo doll to kill his sickly sweet art teacher, but when he ends up making her pregnant, every childless couple in Springfield flocks to Bart for his magic touch — and Fat Tony and his goons kidnap Bart so he can work his magic on a racehorse.",
           "titleEs": "Qué esperar cuando Bart está esperando",
           "synopsisEs": "Bart crea un muñeco vudú para matar a su enfermiza y dulce maestra de arte, pero cuando termina dejándola embarazada, todas las parejas sin hijos en Springfield acuden en masa a Bart en busca de su toque mágico, y Fat Tony y sus matones secuestran a Bart para que pueda hacer su magia en un caballo de carreras."
@@ -6268,7 +6268,7 @@ const data = {
           "title": "Brick Like Me",
           "duration": "23",
           "airDate": "2014-05-04",
-          "image": "25x20.jpg",
+          "image": "simpsons_25x20.jpg",
           "synopsis": "Homer wakes up in a world where everyone and everything is made of LEGO bricks and no one has any memory of being in high-definition, 2D digital ink and paint...except for Homer, who has flashbacks of his former life and tries to find a way out of the plastic world.",
           "titleEs": "Ladrillo como yo",
           "synopsisEs": "Homer se despierta en un mundo donde todos y todo está hecho de ladrillos LEGO y nadie tiene ningún recuerdo de haber estado en tinta y pintura digital 2D de alta definición... excepto Homer, que tiene flashbacks de su vida anterior e intenta encontrar una salida al mundo del plástico."
@@ -6279,7 +6279,7 @@ const data = {
           "title": "Pay Pal",
           "duration": "23",
           "airDate": "2014-05-11",
-          "image": "25x21.jpg",
+          "image": "simpsons_25x21.jpg",
           "synopsis": "John Oliver guest stars as Booth Wilkes-John, a neighbor whom Marge has never met — and doesn't want to meet since Homer insulted them like he always does with new neighbors, but Marge reconsiders when Lisa decides to go friendless.",
           "titleEs": "pagar amigo",
           "synopsisEs": "John Oliver es la estrella invitada como Booth Wilkes-John, un vecino a quien Marge nunca ha conocido, y no quiere verlo desde que Homero los insultó como siempre lo hace con los nuevos vecinos, pero Marge lo reconsidera cuando Lisa decide quedarse sin amigos."
@@ -6290,7 +6290,7 @@ const data = {
           "title": "The Yellow Badge of Cowardge",
           "duration": "23",
           "airDate": "2014-05-18",
-          "image": "25x22.jpg",
+          "image": "simpsons_25x22.jpg",
           "synopsis": "With a little help from Nelson taking out pre-race favorite Milhouse, Bart wins the annual Springfield Elementary \"Last Day of School Race Around the School,\" but doesn't feel proud of it. Meanwhile, Homer tries to bring back the Fourth of July town picnic after the town cancels it due to budget cuts.",
           "titleEs": "La insignia amarilla de la cobardía",
           "synopsisEs": "Con un poco de ayuda de Nelson para derrotar al favorito Milhouse antes de la carrera, Bart gana la \"Carrera alrededor de la escuela del último día de clases\" anual de Springfield Elementary, pero no se siente orgulloso de ello. Mientras tanto, Homer intenta recuperar el picnic municipal del 4 de julio después de que la ciudad lo canceló debido a recortes presupuestarios."
@@ -6301,7 +6301,7 @@ const data = {
     {
       "id": 26,
       "title": "Temporada 26",
-      "image": "Season_26_Icon.jpg",
+      "image": "simpsons_Season_26_Icon.jpg",
       "avgColor": "#798E74",
       "episodes": [
         {
@@ -6310,7 +6310,7 @@ const data = {
           "title": "Clown in the Dumps",
           "duration": "23",
           "airDate": "2014-09-28",
-          "image": "26x01.jpg",
+          "image": "simpsons_26x01.jpg",
           "synopsis": "After being insulted at a Comedy Central-style roast and having his father die before he can tell him whether or not he was ever funny, Krusty decides to, once again, leave show business (this time out of heartbreak). Meanwhile, Lisa worries that Homer's destructive antics may cost him his life (even though it hasn't so far and probably never will).",
           "titleEs": "Payaso en los vertederos",
           "synopsisEs": "Después de ser insultado en un asado al estilo de Comedy Central y de que su padre muriera antes de poder decirle si alguna vez fue gracioso o no, Krusty decide, una vez más, dejar el mundo del espectáculo (esta vez por angustia). Mientras tanto, a Lisa le preocupa que las travesuras destructivas de Homero puedan costarle la vida (aunque hasta ahora no lo ha hecho y probablemente nunca lo hará)."
@@ -6321,7 +6321,7 @@ const data = {
           "title": "The Wreck of the Relationship",
           "duration": "23",
           "airDate": "2014-10-05",
-          "image": "26x02.jpg",
+          "image": "simpsons_26x02.jpg",
           "synopsis": "Homer and Bart try to, once again, fix their father-son relationship; this time, by going on a trust-building sea excursion. Meanwhile, Marge takes over for Homer's fantasy football league.",
           "titleEs": "El naufragio de la relación",
           "synopsisEs": "Homero y Bart intentan, una vez más, arreglar su relación padre-hijo; esta vez, realizando una excursión por mar que generará confianza. Mientras tanto, Marge se hace cargo de la liga de fútbol de fantasía de Homero."
@@ -6332,7 +6332,7 @@ const data = {
           "title": "Super Franchise Me",
           "duration": "23",
           "airDate": "2014-10-12",
-          "image": "26x03.jpg",
+          "image": "simpsons_26x03.jpg",
           "synopsis": "Marge opens a sandwich franchise store after her sandwiches become a huge success at Springfield Elementary School. But running day-to-day at the store proves challenging, especially when the same franchise opens another location across the street.",
           "titleEs": "Súper Franquicia Yo",
           "synopsisEs": "Marge abre una franquicia de sándwiches después de que sus sándwiches se convirtieran en un gran éxito en la escuela primaria de Springfield. Pero el día a día en la tienda resulta un desafío, especialmente cuando la misma franquicia abre otra tienda al otro lado de la calle."
@@ -6343,7 +6343,7 @@ const data = {
           "title": "Treehouse of Horror XXV",
           "duration": "23",
           "airDate": "2014-10-19",
-          "image": "26x04.jpg",
+          "image": "simpsons_26x04.jpg",
           "synopsis": "Marge opens a sandwich franchise store after her sandwiches become a huge success at Springfield Elementary School. But running day-to-day at the store proves challenging, especially when the same franchise opens another location across the street.",
           "titleEs": "La casa del árbol del terror XXV",
           "synopsisEs": "Marge abre una franquicia de sándwiches después de que sus sándwiches se convirtieran en un gran éxito en la escuela primaria de Springfield. Pero el día a día en la tienda resulta un desafío, especialmente cuando la misma franquicia abre otra tienda al otro lado de la calle."
@@ -6354,7 +6354,7 @@ const data = {
           "title": "Opposites A-Frack",
           "duration": "23",
           "airDate": "2014-11-02",
-          "image": "26x05.jpg",
+          "image": "simpsons_26x05.jpg",
           "synopsis": "Lisa sends Democratic Assembly woman Maxine Lombard to stop Mr. Burns' latest environmentally destructive project, but the two end up in love. Meanwhile, Patty and Selma stay with The Simpsons, but Homer won't let them smoke.",
           "titleEs": "Opuestos A-Frack",
           "synopsisEs": "Lisa envía a la asambleísta demócrata Maxine Lombard a detener el último proyecto ambientalmente destructivo del Sr. Burns, pero los dos terminan enamorados. Mientras tanto, Patty y Selma se quedan con Los Simpson, pero Homero no las deja fumar."
@@ -6365,7 +6365,7 @@ const data = {
           "title": "Simpsorama",
           "duration": "23",
           "airDate": "2014-11-09",
-          "image": "26x06.jpg",
+          "image": "simpsons_26x06.jpg",
           "synopsis": "When a time capsule containing a sandwich with Bart's germs, Milhouse's rabbit's foot, and radioactive ooze causes a major catastrophe in the future, Bender of the Planet Express crew travels through time to kill Homer in order to stop the mess from happening.",
           "titleEs": "Simpsorama",
           "synopsisEs": "Cuando una cápsula del tiempo que contiene un sándwich con los gérmenes de Bart, la pata de conejo de Milhouse y un exudado radiactivo causa una gran catástrofe en el futuro, Bender, del equipo de Planet Express, viaja en el tiempo para matar a Homer y evitar que ocurra el desastre."
@@ -6376,7 +6376,7 @@ const data = {
           "title": "Blazed and Confused",
           "duration": "23",
           "airDate": "2014-11-16",
-          "image": "26x07.jpg",
+          "image": "simpsons_26x07.jpg",
           "synopsis": "In the continuing saga of Springfield Elementary replacing Mrs. Krabappel as Bart's fourth grade teacher (to coincide with the death of Mrs. Krabappel's voice actress, Marcia Wallace), Superintendent Chalmers picks Mr. Lassen, a soft-spoken psychotic man from Shelbyville, who has it in for Bart. Meanwhile, the Simpsons end up vacationing at a desert festival called Blazing Guy, and Mr. Lassen decides to get rid of Bart once and for all.",
           "titleEs": "Ardido y confundido",
           "synopsisEs": "En la saga continua de la escuela primaria Springfield reemplazando a la Sra. Krabappel como maestra de cuarto grado de Bart (coincidiendo con la muerte de la actriz de voz de la Sra. Krabappel, Marcia Wallace), el superintendente Chalmers elige al Sr. Lassen, un psicótico de voz suave de Shelbyville, que tiene problemas con Bart. Mientras tanto, los Simpson terminan de vacaciones en un festival en el desierto llamado Blazing Guy, y el Sr. Lassen decide deshacerse de Bart de una vez por todas."
@@ -6387,7 +6387,7 @@ const data = {
           "title": "Covercraft",
           "duration": "23",
           "airDate": "2014-11-23",
-          "image": "26x08.jpg",
+          "image": "simpsons_26x08.jpg",
           "synopsis": "Homer has a mid-life crisis, takes up bass guitar and forms a cover band with some of the other dads in town. But the band's modest early success is soon overwhelmed by the breakout potential of their most unlikely star, Apu.",
           "titleEs": "cubierta",
           "synopsisEs": "Homer tiene una crisis de mediana edad, toma el bajo y forma una banda de versiones con algunos de los otros padres de la ciudad. Pero el modesto éxito inicial de la banda pronto se ve superado por el potencial de su estrella más improbable, Apu."
@@ -6398,7 +6398,7 @@ const data = {
           "title": "I Won't Be Home for Christmas",
           "duration": "22",
           "airDate": "2014-12-07",
-          "image": "26x09.jpg",
+          "image": "simpsons_26x09.jpg",
           "synopsis": "Marge kicks Homer out of the house after Moe convinces him to stay out all night on Christmas Eve at his tavern. Depressed after his brutal divorce by his wife, Homer takes a lonely walk through Springfield instead of being with his family.",
           "titleEs": "No estaré en casa para Navidad",
           "synopsisEs": "Marge echa a Homer de la casa después de que Moe lo convence de quedarse fuera toda la noche de Nochebuena en su taberna. Deprimido tras el brutal divorcio de su esposa, Homer da un paseo solitario por Springfield en lugar de estar con su familia."
@@ -6409,7 +6409,7 @@ const data = {
           "title": "The Man Who Came to Be Dinner",
           "duration": "23",
           "airDate": "2015-01-04",
-          "image": "26x10.jpg",
+          "image": "simpsons_26x10.jpg",
           "synopsis": "The Simpsons go to Diz-Nee-Land where the lines for the rides are terrible, except for a rocket called \"Rocket to Your Doom\" that takes them to the home planet of Kang and Kodos, Rigel VII where the inhabitants try to eat Homer in a giant fondue.",
           "titleEs": "El hombre que vino a cenar",
           "synopsisEs": "Los Simpson van a Diz-Nee-Land donde las colas para las atracciones son terribles, excepto por un cohete llamado \"Rocket to Your Doom\" que los lleva al planeta natal de Kang y Kodos, Rigel VII, donde los habitantes intentan comerse a Homero en una fondue gigante."
@@ -6420,7 +6420,7 @@ const data = {
           "title": "Bart's New Friend",
           "duration": "23",
           "airDate": "2015-01-11",
-          "image": "26x11.jpg",
+          "image": "simpsons_26x11.jpg",
           "synopsis": "The Simpsons go to Diz-Nee-Land where the lines for the rides are terrible, except for a rocket called \"Rocket to Your Doom\" that takes them to the home planet of Kang and Kodos, Rigel VII where the inhabitants try to eat Homer in a giant fondue.",
           "titleEs": "El nuevo amigo de Bart",
           "synopsisEs": "Los Simpson van a Diz-Nee-Land donde las colas para las atracciones son terribles, excepto por un cohete llamado \"Rocket to Your Doom\" que los lleva al planeta natal de Kang y Kodos, Rigel VII, donde los habitantes intentan comerse a Homero en una fondue gigante."
@@ -6431,7 +6431,7 @@ const data = {
           "title": "The Musk Who Fell to Earth",
           "duration": "23",
           "airDate": "2015-01-25",
-          "image": "26x12.jpg",
+          "image": "simpsons_26x12.jpg",
           "synopsis": "When billionaire investor Elon Musk lands in Springfield, he and Homer become fast friends and revolutionize the town's nuclear power plant. But when Musk goes overboard and Mr. Burns wants him removed, Homer must figure out a way to break up with him.",
           "titleEs": "El almizcle que cayó a la Tierra",
           "synopsisEs": "Cuando el inversionista multimillonario Elon Musk aterriza en Springfield, él y Homer rápidamente se hacen amigos y revolucionan la planta de energía nuclear de la ciudad. Pero cuando Musk se pasa de la raya y el señor Burns quiere que lo eliminen, Homer debe encontrar una manera de romper con él."
@@ -6442,7 +6442,7 @@ const data = {
           "title": "Walking Big & Tall",
           "duration": "23",
           "airDate": "2015-02-08",
-          "image": "26x13.jpg",
+          "image": "simpsons_26x13.jpg",
           "synopsis": "Marge tries to get Homer to lose weight. But instead, he finds a support group that encourages him to embrace his largeness. The subplot is that Springfield has an anthem that every American city had dibs on it, so Bart and Lisa plan to write a new anthem.",
           "titleEs": "Caminando grande y alto",
           "synopsisEs": "Marge intenta que Homero pierda peso. Pero en cambio, encuentra un grupo de apoyo que lo anima a aceptar su grandeza. La trama secundaria es que Springfield tiene un himno que todas las ciudades estadounidenses tenían, por lo que Bart y Lisa planean escribir un nuevo himno."
@@ -6453,7 +6453,7 @@ const data = {
           "title": "My Fare Lady",
           "duration": "23",
           "airDate": "2015-02-15",
-          "image": "26x14.jpg",
+          "image": "simpsons_26x14.jpg",
           "synopsis": "Marge assigns a list of places for her and Homer to drive the kids around Springfield. However, Homer backs out of the chore and sneaks off to Moe's, leaving Marge to drive the kids by herself. Marge drives Bart to his baseball game, Lisa to her band rehearsal, and Maggie to several birthday parties.",
           "titleEs": "Mi dama de honor",
           "synopsisEs": "Marge asigna una lista de lugares para que ella y Homer lleven a los niños por Springfield. Sin embargo, Homer se retira de la tarea y se escabulle a casa de Moe, dejando a Marge a cargo de llevar a los niños sola. Marge lleva a Bart a su partido de béisbol, a Lisa al ensayo de su banda y a Maggie a varias fiestas de cumpleaños."
@@ -6464,7 +6464,7 @@ const data = {
           "title": "The Princess Guide",
           "duration": "23",
           "airDate": "2015-03-01",
-          "image": "26x15.jpg",
+          "image": "simpsons_26x15.jpg",
           "synopsis": "Marge assigns a list of places for her and Homer to drive the kids around Springfield. However, Homer backs out of the chore and sneaks off to Moe's, leaving Marge to drive the kids by herself. Marge drives Bart to his baseball game, Lisa to her band rehearsal, and Maggie to several birthday parties.",
           "titleEs": "La guía de la princesa",
           "synopsisEs": "Marge asigna una lista de lugares para que ella y Homer lleven a los niños por Springfield. Sin embargo, Homer se retira de la tarea y se escabulle a casa de Moe, dejando a Marge a cargo de llevar a los niños sola. Marge lleva a Bart a su partido de béisbol, a Lisa al ensayo de su banda y a Maggie a varias fiestas de cumpleaños."
@@ -6475,7 +6475,7 @@ const data = {
           "title": "Sky Police",
           "duration": "23",
           "airDate": "2015-03-08",
-          "image": "26x16.jpg",
+          "image": "simpsons_26x16.jpg",
           "synopsis": "",
           "titleEs": "policía del cielo"
         },
@@ -6485,7 +6485,7 @@ const data = {
           "title": "Waiting for Duffman",
           "duration": "23",
           "airDate": "2015-03-15",
-          "image": "26x17.jpg",
+          "image": "simpsons_26x17.jpg",
           "synopsis": "",
           "titleEs": "Esperando a Duffman"
         },
@@ -6495,7 +6495,7 @@ const data = {
           "title": "Peeping Mom",
           "duration": "23",
           "airDate": "2015-04-19",
-          "image": "26x18.jpg",
+          "image": "simpsons_26x18.jpg",
           "synopsis": "Bart gives false information about his participation in a bulldozer crash, so Marge plans to pursue and punishes Bart for 45 days everywhere until he tells the truth. Meanwhile, Homer ignores Santa's Little Helper when Flanders gets a new dog.",
           "titleEs": "Mamá espiando",
           "synopsisEs": "Bart da información falsa sobre su participación en un accidente con una excavadora, por lo que Marge planea perseguir y castigar a Bart durante 45 días en todas partes hasta que diga la verdad. Mientras tanto, Homer ignora al pequeño ayudante de Santa cuando Flanders tiene un perro nuevo."
@@ -6506,7 +6506,7 @@ const data = {
           "title": "The Kids Are All Fight",
           "duration": "23",
           "airDate": "2015-04-26",
-          "image": "26x19.jpg",
+          "image": "simpsons_26x19.jpg",
           "synopsis": "When Homer gets an old film roll developed, the family takes a trip down memory lane to see the origins of how Bart and Lisa first started getting along with each other.",
           "titleEs": "Todos los niños están peleando",
           "synopsisEs": "Cuando Homer revela un viejo rollo de película, la familia hace un viaje al pasado para ver los orígenes de cómo Bart y Lisa comenzaron a llevarse bien."
@@ -6517,7 +6517,7 @@ const data = {
           "title": "Let's Go Fly a Coot",
           "duration": "23",
           "airDate": "2015-05-03",
-          "image": "26x20.jpg",
+          "image": "simpsons_26x20.jpg",
           "synopsis": "The Simpsons learn about Grampa's stories in the Air Force. Also, in order to impress Milhouse's Dutch cousin Annika, Bart plans to smoke electronic cigarettes.",
           "titleEs": "Vamos a volar una focha",
           "synopsisEs": "Los Simpson aprenden sobre las historias del abuelo en la Fuerza Aérea. Además, para impresionar a Annika, la prima holandesa de Milhouse, Bart planea fumar cigarrillos electrónicos."
@@ -6528,7 +6528,7 @@ const data = {
           "title": "Bull-E",
           "duration": "23",
           "airDate": "2015-05-10",
-          "image": "26x21.jpg",
+          "image": "simpsons_26x21.jpg",
           "synopsis": "After Bart gets bullied at the school dance, Marge convinces the town to pass anti-bullying legislation. Homer then gets arrested and sent to rehab for bullying Ned, only to subsequently leave rehab as a hero.",
           "titleEs": "Toro-E",
           "synopsisEs": "Después de que Bart sufre acoso en el baile de la escuela, Marge convence al pueblo para que apruebe una legislación contra el acoso. Luego, Homer es arrestado y enviado a rehabilitación por intimidar a Ned, solo para posteriormente salir de la rehabilitación como un héroe."
@@ -6539,7 +6539,7 @@ const data = {
           "title": "Mathlete's Feat",
           "duration": "23",
           "airDate": "2015-05-17",
-          "image": "26x22.jpg",
+          "image": "simpsons_26x22.jpg",
           "synopsis": "When a modernized Springfield Elementary has a technical meltdown, Lisa transforms it into a Waldorf school. Meanwhile, Groundskeeper Willie becomes the coach of the mathletes. When Lisa and the other kids on the Springfield Elementary Mathlympics Team compete against Waverly Hills Elementary, they instantly get help from a natural genius who uses ancient techniques to compute geometric figures and helps the Mathletes.",
           "titleEs": "La hazaña de Mathlete",
           "synopsisEs": "Cuando una primaria modernizada de Springfield sufre un colapso técnico, Lisa la transforma en una escuela Waldorf. Mientras tanto, el jardinero Willie se convierte en el entrenador de los matemáticos. Cuando Lisa y los otros niños del equipo de Juegos Olímpicos de Matemáticas de la Primaria de Springfield compiten contra la Primaria Waverly Hills, instantáneamente reciben ayuda de un genio natural que utiliza técnicas antiguas para calcular figuras geométricas y ayuda a los Mathletes."
@@ -6550,7 +6550,7 @@ const data = {
     {
       "id": 27,
       "title": "Temporada 27",
-      "image": "Season_27_Icon.jpg",
+      "image": "simpsons_Season_27_Icon.jpg",
       "avgColor": "#9E6886",
       "episodes": [
         {
@@ -6559,7 +6559,7 @@ const data = {
           "title": "Every Man's Dream",
           "duration": "23",
           "airDate": "2015-09-27",
-          "image": "27x01.jpg",
+          "image": "simpsons_27x01.jpg",
           "synopsis": "Homer is diagnosed with narcolepsy, but instead of getting his prescription medication, he comes home drunk. Homer and Marge visit a marriage counselor and have a trial separation, during which Homer begins dating a twenty something pharmacist, something that he soon regrets.",
           "titleEs": "El sueño de todo hombre",
           "synopsisEs": "A Homer le diagnostican narcolepsia, pero en lugar de recibir sus medicamentos recetados, llega a casa borracho. Homer y Marge visitan a un consejero matrimonial y tienen una separación de prueba, durante la cual Homer comienza a salir con un farmacéutico de veintitantos años, algo de lo que pronto se arrepiente."
@@ -6570,7 +6570,7 @@ const data = {
           "title": "Cue Detective",
           "duration": "23",
           "airDate": "2015-10-04",
-          "image": "27x02.jpg",
+          "image": "simpsons_27x02.jpg",
           "synopsis": "Scotty Boom, a Chew Network super-chef, challenges Homer to a smoke-off. But when someone steals Homer’s secret gadget – a smoker he purchased from a mysterious man at a barbecue shack – Lisa and Bart are on the case.",
           "titleEs": "detective de señales",
           "synopsisEs": "Scotty Boom, un superchef de Chew Network, desafía a Homer a fumar. Pero cuando alguien roba el artilugio secreto de Homero (un ahumador que le compró a un hombre misterioso en una barbacoa), Lisa y Bart se involucran en el caso."
@@ -6581,7 +6581,7 @@ const data = {
           "title": "Puffless",
           "duration": "23",
           "airDate": "2015-10-11",
-          "image": "27x03.jpg",
+          "image": "simpsons_27x03.jpg",
           "synopsis": "After learning that their father really died of lung cancer, Selma and Patty agree to quit smoking. When Selma relapses, Patty moves in with Marge and Homer. Meanwhile, Maggie finds animals on the roof and befriends them.",
           "titleEs": "Sin puff",
           "synopsisEs": "Después de enterarse de que su padre realmente murió de cáncer de pulmón, Selma y Patty acuerdan dejar de fumar. Cuando Selma recae, Patty se muda con Marge y Homer. Mientras tanto, Maggie encuentra animales en el tejado y se hace amiga de ellos."
@@ -6592,7 +6592,7 @@ const data = {
           "title": "Halloween of Horror",
           "duration": "23",
           "airDate": "2015-10-18",
-          "image": "27x04.jpg",
+          "image": "simpsons_27x04.jpg",
           "synopsis": "When Lisa becomes frightened at the Krustyland Halloween Horror Night, Homer is forced to take down his Everscream Terrors decorations. Halloween pop-up employees seek vengeance on Homer for causing them to lose their jobs, and rob the family house while Homer and Lisa take shelter in the attic. Homer and Lisa light the stored holiday decorations to attract attention and stand up to the intruders. Meanwhile, Marge takes Bart out for trick-or-treating only to discover that it is too late.",
           "titleEs": "Halloween de terror",
           "synopsisEs": "Cuando Lisa se asusta en la Noche de Terror de Halloween de Krustyland, Homer se ve obligado a quitar sus decoraciones de Everscream Terrors. Los empleados de la ventana emergente de Halloween buscan vengarse de Homer por haberles hecho perder sus trabajos y roban la casa familiar mientras Homer y Lisa se refugian en el ático. Homer y Lisa encienden las decoraciones navideñas guardadas para llamar la atención y enfrentarse a los intrusos. Mientras tanto, Marge lleva a Bart a pedir dulces solo para descubrir que ya es demasiado tarde."
@@ -6603,7 +6603,7 @@ const data = {
           "title": "Treehouse of Horror XXVI",
           "duration": "23",
           "airDate": "2015-10-25",
-          "image": "27x05.jpg",
+          "image": "simpsons_27x05.jpg",
           "synopsis": "Wanted: Dead, Then Alive - Sideshow Bob finally kills Bart, but he is uncertain about what to do with his life after completing his mission, so he repeatedly brings Bart back to life just to kill him.",
           "titleEs": "La casa del árbol del terror XXVI",
           "synopsisEs": "Se busca: muerto, luego vivo: el actor secundario Bob finalmente mata a Bart, pero no está seguro de qué hacer con su vida después de completar su misión, por lo que repetidamente devuelve a Bart a la vida solo para matarlo."
@@ -6614,7 +6614,7 @@ const data = {
           "title": "Friend with Benefit",
           "duration": "23",
           "airDate": "2015-10-25",
-          "image": "27x06.jpg",
+          "image": "simpsons_27x06.jpg",
           "synopsis": "Lisa makes a new pal at school named Harper, whose internet billionaire father becomes buddies with a different Simpson: Homer. Soon, though, Lisa becomes worried that Harper is a little too entitled.",
           "titleEs": "Amigo con beneficio",
           "synopsisEs": "Lisa hace un nuevo amigo en la escuela llamado Harper, cuyo padre multimillonario de Internet se hace amigo de un Simpson diferente: Homero. Sin embargo, pronto Lisa se preocupa de que Harper tenga demasiado derecho."
@@ -6625,7 +6625,7 @@ const data = {
           "title": "Lisa with an \"S\"",
           "duration": "23",
           "airDate": "2015-11-22",
-          "image": "27x07.jpg",
+          "image": "simpsons_27x07.jpg",
           "synopsis": "When Homer loses $5,000 at a poker game with Broadway legend Laney Fontaine, the only way he is able to settle the bet is if he loans Lisa to Laney for a month. Laney turns Lisa into a showbiz kid, and Marge and Homer fear they made a mistake letting her go.",
           "titleEs": "Lisa con una \"S\"",
           "synopsisEs": "Cuando Homero pierde 5.000 dólares en una partida de póquer con la leyenda de Broadway Laney Fontaine, la única forma de saldar la apuesta es prestándole a Lisa a Laney durante un mes. Laney convierte a Lisa en una chica del mundo del espectáculo, y Marge y Homer temen haber cometido un error al dejarla ir."
@@ -6636,7 +6636,7 @@ const data = {
           "title": "Paths of Glory",
           "duration": "23",
           "airDate": "2015-11-22",
-          "image": "27x08.jpg",
+          "image": "simpsons_27x08.jpg",
           "synopsis": "Lisa sets out to restore the tarnished reputation of Springfield’s first female inventor. To locate her invention, she scours an abandoned asylum and a restaurant that caters to men. Bart joins Lisa at the asylum, stealing one of the homicidal patient’s notebooks, and bragging to the boys at school that he wrote the entries himself. This revelation causes Homer and Marge to believe he is a sociopath, which Bart decides to use to his advantage until matters go too far.",
           "titleEs": "Caminos de gloria",
           "synopsisEs": "Lisa se propone restaurar la reputación empañada de la primera inventora de Springfield. Para localizar su invento, recorre un asilo abandonado y un restaurante que atiende a hombres. Bart se une a Lisa en el asilo, roba uno de los cuadernos del paciente homicida y se jacta ante los chicos de la escuela de que él mismo escribió las anotaciones. Esta revelación hace que Homero y Marge crean que es un sociópata, lo que Bart decide utilizar a su favor hasta que las cosas vayan demasiado lejos."
@@ -6647,7 +6647,7 @@ const data = {
           "title": "Barthood",
           "duration": "23",
           "airDate": "2015-12-13",
-          "image": "27x09.jpg",
+          "image": "simpsons_27x09.jpg",
           "synopsis": "Bart’s coming of age story, a la “Boyhood”, chronicles his life from six years old to his time as an accomplished young man. Along the way, his tense relationship with Homer, an overly uncaring version of himself, and Lisa, who overshadows him in every way possible shape Bart more than he realizes.",
           "titleEs": "Bartidad",
           "synopsisEs": "La historia de Bart sobre la mayoría de edad, al estilo “Boyhood”, narra su vida desde los seis años hasta su época como un joven consumado. En el camino, su tensa relación con Homer, una versión excesivamente indiferente de sí mismo, y Lisa, que lo eclipsa en todos los sentidos posibles, moldean a Bart más de lo que él cree."
@@ -6658,7 +6658,7 @@ const data = {
           "title": "The Girl Code",
           "duration": "23",
           "airDate": "2015-12-13",
-          "image": "27x10.jpg",
+          "image": "simpsons_27x10.jpg",
           "synopsis": "After a photo Marge posts on social media gets Homer fired, he returns to the best job he ever had, a dishwasher at a Greek restaurant. This same post inspires Lisa to code an app that predicts the real-life consequences of anything you post online, only to create sentient artificial intelligence.",
           "titleEs": "El código de la chica",
           "synopsisEs": "Después de que una foto que Marge publica en las redes sociales hace que Homero despida, él regresa al mejor trabajo que jamás haya tenido: lavaplatos en un restaurante griego. Esta misma publicación inspira a Lisa a codificar una aplicación que predice las consecuencias en la vida real de cualquier cosa que publiques en línea, solo para crear inteligencia artificial sensible."
@@ -6669,7 +6669,7 @@ const data = {
           "title": "Teenage Mutant Milk-caused Hurdles",
           "duration": "23",
           "airDate": "unknown",
-          "image": "27x11.jpg",
+          "image": "simpsons_27x11.jpg",
           "synopsis": "A new teacher named Carol Berrera (guest voice Sofia Vergara) arrives at Springfield Elementary, and a smitten Bart attempts to win her over.",
           "titleEs": "Obstáculos causados ​​por la leche de adolescentes mutantes",
           "synopsisEs": "Una nueva maestra llamada Carol Berrera (voz invitada de Sofía Vergara) llega a la escuela primaria de Springfield y Bart, enamorado, intenta ganársela."
@@ -6680,7 +6680,7 @@ const data = {
           "title": "Much Apu About Something",
           "duration": "23",
           "airDate": "unknown",
-          "image": "27x12.jpg",
+          "image": "simpsons_27x12.jpg",
           "synopsis": "Sanjay passes his stake in the Kwik-E-Mart to his millennial son, Jay, who turns it into a hip, health food market against Apu’s insistence on tradition. Bart, whom Homer had convinced to give up pranking, is called upon to return to his trickster life and take down the new store.",
           "titleEs": "Mucho Apu sobre algo",
           "synopsisEs": "Sanjay pasa su participación en el Kwik-E-Mart a su hijo milenario, Jay, quien lo convierte en un moderno mercado de alimentos saludables en contra de la insistencia de Apu en la tradición. Bart, a quien Homer había convencido de que dejara de hacer bromas, es llamado a regresar a su vida de embaucador y derribar la nueva tienda."
@@ -6691,7 +6691,7 @@ const data = {
           "title": "Love Is in the N2-O2-Ar-CO2-Ne-He-CH4",
           "duration": "23",
           "airDate": "2016-02-14",
-          "image": "27x13.jpg",
+          "image": "simpsons_27x13.jpg",
           "synopsis": "Lonesome Professor Frink uses science to turn himself into a man whom women find attractive. Then, overwhelmed by the attention, he invents an algorithm to perfectly pair the lonely men and women of Springfield, realizing that scientific exploration is his true love. Meanwhile, Marge, Bart, and Lisa visit Grampa for Valentine’s Day and try to rescue the occupants from a drug-induced hallucination that allows them to relive their happiest memories.",
           "titleEs": "El amor está en el N2-O2-Ar-CO2-Ne-He-CH4",
           "synopsisEs": "El solitario profesor Frink utiliza la ciencia para convertirse en un hombre que las mujeres encuentran atractivo. Luego, abrumado por la atención, inventa un algoritmo para emparejar perfectamente a los hombres y mujeres solitarios de Springfield, dándose cuenta de que la exploración científica es su verdadero amor. Mientras tanto, Marge, Bart y Lisa visitan al abuelo para el Día de San Valentín e intentan rescatar a los ocupantes de una alucinación inducida por drogas que les permite revivir sus recuerdos más felices."
@@ -6702,7 +6702,7 @@ const data = {
           "title": "Gal of Constant Sorrow",
           "duration": "23",
           "airDate": "2016-02-21",
-          "image": "27x14.jpg",
+          "image": "simpsons_27x14.jpg",
           "synopsis": "After Bart accidentally sends a sweet homeless woman's cart into the river, he allows the vagabond to live in his closet for a small fee. When Lisa discovers that the woman is an incredible folk singer, she offers her own closet and plans a concert, only to be disappointed by Hettie's surprising substance abuse and violent nature. Meanwhile, Homer tries to prove that he is handy, but accidentally traps the cat in the walls of the house.",
           "titleEs": "Chica de dolor constante",
           "synopsisEs": "Después de que Bart envía accidentalmente el carrito de una dulce mujer sin hogar al río, permite que el vagabundo viva en su armario por una pequeña tarifa. Cuando Lisa descubre que la mujer es una cantante folk increíble, ofrece su propio armario y planea un concierto, sólo para quedar decepcionada por el sorprendente abuso de sustancias y la naturaleza violenta de Hettie. Mientras tanto, Homero intenta demostrar que es hábil, pero accidentalmente atrapa al gato en las paredes de la casa."
@@ -6713,7 +6713,7 @@ const data = {
           "title": "Lisa the Veterinarian",
           "duration": "23",
           "airDate": "2016-03-06",
-          "image": "27x15.jpg",
+          "image": "simpsons_27x15.jpg",
           "synopsis": "After performing CPR on a tased raccoon, Lisa discovers her calling to be veterinarian and becomes an intern at the local office, but learns a tough lesson when her neglected class hamster dies. Meanwhile, Marge moonlights as a crime scene cleaner for a little extra money, and the trauma of the gory scenes make her increasingly dead inside.",
           "titleEs": "Lisa la veterinaria",
           "synopsisEs": "Después de realizarle reanimación cardiopulmonar a un mapache con pistola Taser, Lisa descubre su vocación de ser veterinaria y se convierte en pasante en la oficina local, pero aprende una dura lección cuando el hámster de su clase, descuidado, muere. Mientras tanto, Marge trabaja como limpiadora de escenas del crimen por un poco de dinero extra, y el trauma de las escenas sangrientas la deja cada vez más muerta por dentro."
@@ -6724,7 +6724,7 @@ const data = {
           "title": "The Marge-ian Chronicles",
           "duration": "23",
           "airDate": "2016-03-13",
-          "image": "27x16.jpg",
+          "image": "simpsons_27x16.jpg",
           "synopsis": "Lisa volunteers for a future permanent migration to Mars, much to Marge's chagrin. As she searches for a way to convince Lisa not to go, Marge hits upon the most devious strategy of all, and volunteers to go along for the ride. Will the Simpson girls be mankind's first residents of the Red Planet?",
           "titleEs": "Las crónicas margeianas",
           "synopsisEs": "Lisa se ofrece como voluntaria para una futura migración permanente a Marte, para disgusto de Marge. Mientras busca una manera de convencer a Lisa de que no vaya, Marge descubre la estrategia más tortuosa de todas y se ofrece voluntaria para acompañarla. ¿Serán las chicas Simpson las primeras residentes de la humanidad en el Planeta Rojo?"
@@ -6735,7 +6735,7 @@ const data = {
           "title": "The Burns Cage",
           "duration": "23",
           "airDate": "2016-04-03",
-          "image": "27x17.jpg",
+          "image": "simpsons_27x17.jpg",
           "synopsis": "When Smithers is devastated by Burns’ lack of affection towards him, Homer becomes tenacious to find Smithers a partner. Meanwhile, after he orchestrates the removal of the lead role in the school’s stage production of “Casablanca,” Milhouse serves as a terrible understudy, which frustrates his co-star, Lisa.",
           "titleEs": "La jaula de las quemaduras",
           "synopsisEs": "Cuando Smithers está devastado por la falta de afecto de Burns hacia él, Homer se vuelve tenaz para encontrarle un compañero a Smithers. Mientras tanto, después de orquestar la eliminación del papel principal en la producción teatral de la escuela de \"Casablanca\", Milhouse actúa como un terrible suplente, lo que frustra a su coprotagonista, Lisa."
@@ -6746,7 +6746,7 @@ const data = {
           "title": "How Lisa Got Her Marge Back",
           "duration": "23",
           "airDate": "2016-04-10",
-          "image": "27x18.jpg",
+          "image": "simpsons_27x18.jpg",
           "synopsis": "Marge takes Lisa on a girls’s weekend touristy trip to Capital City, where they attend a performance of Bad News Bears: The Musical starring  Andrew Rannells. During a backstage meet-and-greet after the show,  Andrew Rannells reminds Lisa — who is going through a rough spell with Marge — that she should feel lucky to have such a great mom. Meanwhile, Bart becomes frustrated that everyone expects his pranks, so he bonds with Maggie to trick people.",
           "titleEs": "Cómo Lisa recuperó a su Marge",
           "synopsisEs": "Marge lleva a Lisa a un viaje turístico de fin de semana para chicas a Capital City, donde asisten a una presentación de Bad News Bears: The Musical, protagonizada por Andrew Rannells. Durante un encuentro entre bastidores después del espectáculo, Andrew Rannells le recuerda a Lisa, que está pasando por una mala racha con Marge, que debería sentirse afortunada de tener una madre tan maravillosa. Mientras tanto, Bart se frustra porque todos esperan sus bromas, por lo que se une a Maggie para engañar a la gente."
@@ -6757,7 +6757,7 @@ const data = {
           "title": "Fland Canyon",
           "duration": "22",
           "airDate": "2016-04-24",
-          "image": "27x19.jpg",
+          "image": "simpsons_27x19.jpg",
           "synopsis": "Homer recalls a tense family vacation to the Grand Canyon with the Flanders family. At first, the Flanders' perfection puts the families at odds, but when they get stranded and Ned and Homer go for help, the families finally bond with each other.",
           "titleEs": "Cañón de Fland",
           "synopsisEs": "Homer recuerda unas tensas vacaciones familiares en el Gran Cañón con la familia Flanders. Al principio, la perfección del Flanders pone a las familias en desacuerdo, pero cuando se quedan varados y Ned y Homer buscan ayuda, las familias finalmente se unen entre sí."
@@ -6768,7 +6768,7 @@ const data = {
           "title": "To Courier with Love",
           "duration": "22",
           "airDate": "2016-05-08",
-          "image": "27x20.jpg",
+          "image": "simpsons_27x20.jpg",
           "synopsis": "The episode starts with a flashback to the Stone age (50,000 years ago), \"The Invention of Motherhood\" with a prehistoric Homer, Bart, Lisa and Maggie lookalikes doing their shenanigans while a Marge lookalike tries to keep everything in order. The episode fast forwards to the present day, with the family still doing their usual shenanigans while Marge tries to maintain order. She manages to convince Homer to clean the garage, and in the process he finds a rare Morgan Motors vehicle that was probably left behind by the previous owner, and chooses to keep the car for himself.",
           "titleEs": "Al mensajero con amor",
           "synopsisEs": "El episodio comienza con un flashback de la Edad de Piedra (hace 50.000 años), \"La invención de la maternidad\", con unos dobles prehistóricos de Homero, Bart, Lisa y Maggie haciendo sus travesuras mientras un doble de Marge intenta mantener todo en orden. El episodio avanza rápidamente hasta el día de hoy, con la familia todavía haciendo sus travesuras habituales mientras Marge intenta mantener el orden. Ella logra convencer a Homer para que limpie el garaje y, en el proceso, él encuentra un raro vehículo de Morgan Motors que probablemente dejó el dueño anterior y decide quedarse con el auto."
@@ -6779,7 +6779,7 @@ const data = {
           "title": "Simprovised",
           "duration": "23",
           "airDate": "2016-05-15",
-          "image": "27x21.jpg",
+          "image": "simpsons_27x21.jpg",
           "synopsis": "After butchering a speech in front of all his friends at work, Homer turns to improvisation comedy to regain his confidence in his public speaking talents. Meanwhile, Marge offers to rebuild Bart’s lackluster treehouse, but tensions escalate when Bart questions her building skills.",
           "titleEs": "Simprovisado",
           "synopsisEs": "Después de dar un discurso delante de todos sus amigos en el trabajo, Homer recurre a la comedia de improvisación para recuperar la confianza en su talento para hablar en público. Mientras tanto, Marge se ofrece a reconstruir la deslucida casa del árbol de Bart, pero las tensiones aumentan cuando Bart cuestiona sus habilidades de construcción."
@@ -6790,7 +6790,7 @@ const data = {
           "title": "Orange is the New Yellow",
           "duration": "23",
           "airDate": "2016-05-22",
-          "image": "27x22.jpg",
+          "image": "simpsons_27x22.jpg",
           "synopsis": "When Marge gets arrested for letting Bart go to the park unsupervised, she serves time only to realize that prison is a welcome break from the demands of her life as a mother and wife. In her absence, Homer struggles to manage all of the parenting and household responsibilities that Marge predominantly handles.",
           "titleEs": "El naranja es el nuevo amarillo",
           "synopsisEs": "Cuando arrestan a Marge por dejar que Bart fuera al parque sin supervisión, cumple condena solo para darse cuenta de que la prisión es un bienvenido descanso de las exigencias de su vida como madre y esposa. En su ausencia, Homer lucha por manejar todas las responsabilidades domésticas y de crianza que Marge maneja predominantemente."
@@ -6801,7 +6801,7 @@ const data = {
     {
       "id": 28,
       "title": "Temporada 28",
-      "image": "Season_28_Icon.jpg",
+      "image": "simpsons_Season_28_Icon.jpg",
       "avgColor": "#7B5948",
       "episodes": [
         {
@@ -6810,7 +6810,7 @@ const data = {
           "title": "Monty Burns' Fleeing Circus",
           "duration": "23",
           "airDate": "2016-09-25",
-          "image": "28x01.jpg",
+          "image": "simpsons_28x01.jpg",
           "synopsis": "When Springfield is burned to the ground, the Simpsons beg Mr. Burns to fund its rebuilding. Burns agrees - with one condition: he gets to put on a variety show at the Springfield Bowl.",
           "titleEs": "El circo que huye de Monty Burns",
           "synopsisEs": "Cuando Springfield es quemada hasta los cimientos, los Simpson le ruegan al Sr. Burns que financie su reconstrucción. Burns está de acuerdo, con una condición: montar un programa de variedades en el Springfield Bowl."
@@ -6821,7 +6821,7 @@ const data = {
           "title": "Friends and Family",
           "duration": "23",
           "airDate": "2016-10-02",
-          "image": "28x02.jpg",
+          "image": "simpsons_28x02.jpg",
           "synopsis": "Mr. Burns hires the Simpsons to play his live-in virtual reality family, but excludes Homer so that he may play dad. Now lonesome, Homer finds a new best friend in girl-next-door Julia, who eats, drinks and thinks just like him.",
           "titleEs": "Amigos y familiares",
           "synopsisEs": "El Sr. Burns contrata a los Simpson para que interpreten a su familia de realidad virtual, pero excluye a Homer para poder interpretar a papá. Ahora que se siente solo, Homer encuentra una nueva mejor amiga en la vecina Julia, que come, bebe y piensa igual que él."
@@ -6832,7 +6832,7 @@ const data = {
           "title": "The Town",
           "duration": "23",
           "airDate": "2016-10-09",
-          "image": "28x03.jpg",
+          "image": "simpsons_28x03.jpg",
           "synopsis": "After Homer catches Bart rooting for Springfield's football rival, the Boston Americans, he plans a family \"hate-cation\" trip to Boston in an attempt to show Bart that Boston is a terrible city.",
           "titleEs": "el pueblo",
           "synopsisEs": "Después de que Homero descubre a Bart apoyando al rival de fútbol de Springfield, los Boston Americans, planea un viaje familiar de \"odio\" a Boston en un intento de mostrarle a Bart que Boston es una ciudad terrible."
@@ -6843,7 +6843,7 @@ const data = {
           "title": "Treehouse of Horror XXVII",
           "duration": "24",
           "airDate": "2016-10-09",
-          "image": "28x04.jpg",
+          "image": "simpsons_28x04.jpg",
           "synopsis": "This year's shocking stories are:",
           "titleEs": "La casa del árbol del terror XXVII",
           "synopsisEs": "Las impactantes historias de este año son:"
@@ -6854,7 +6854,7 @@ const data = {
           "title": "Trust But Clarify",
           "duration": "23",
           "airDate": "2016-10-23",
-          "image": "28x05.jpg",
+          "image": "simpsons_28x05.jpg",
           "synopsis": "Lisa and Bart investigate Krusty's suspicious new \"Krustaceans\" candy. Meanwhile, Homer wants a promotion at the nuclear plant and asks Marge to help him dress for the part, and news anchorman Kent Brockman struggles to find his position in the changing media world.",
           "titleEs": "Confía pero aclara",
           "synopsisEs": "Lisa y Bart investigan los nuevos y sospechosos dulces \"Krustáceos\" de Krusty. Mientras tanto, Homer quiere un ascenso en la planta nuclear y le pide a Marge que lo ayude a vestirse para el papel, y el presentador de noticias Kent Brockman lucha por encontrar su posición en el cambiante mundo de los medios."
@@ -6865,7 +6865,7 @@ const data = {
           "title": "There Will Be Buds",
           "duration": "23",
           "airDate": "2016-11-06",
-          "image": "28x06.jpg",
+          "image": "simpsons_28x06.jpg",
           "synopsis": "Homer gets roped into coaching the kids' lacrosse team with Milhouse's father, Kirk, who is in desperate need of a friend. When Kirk gets too clingy, Homer vents about how much of a loser he is. Kirk overhears this rant and disappears, right when the team needs him most: for the championship game.",
           "titleEs": "Habrá brotes",
           "synopsisEs": "Homer se ve obligado a entrenar el equipo de lacrosse de los niños con el padre de Milhouse, Kirk, quien necesita desesperadamente un amigo. Cuando Kirk se vuelve demasiado pegajoso, Homer se desahoga sobre lo perdedor que es. Kirk escucha esta perorata y desaparece, justo cuando el equipo más lo necesita: para el partido de campeonato."
@@ -6876,7 +6876,7 @@ const data = {
           "title": "Havana Wild Weekend",
           "duration": "23",
           "airDate": "2016-11-13",
-          "image": "28x07.jpg",
+          "image": "simpsons_28x07.jpg",
           "synopsis": "When the Retirement Castle and the V.A. Hospital can't solve Grampa's health issues, the Simpsons decide to take a family trip to Cuba to get him cheap medical care.",
           "titleEs": "Fin de semana salvaje en La Habana",
           "synopsisEs": "Cuando el Castillo de Retiro y el V.A. El hospital no puede resolver los problemas de salud del abuelo, los Simpson deciden hacer un viaje familiar a Cuba para conseguirle atención médica barata."
@@ -6887,7 +6887,7 @@ const data = {
           "title": "Dad Behavior",
           "duration": "23",
           "airDate": "2016-11-20",
-          "image": "28x08.jpg",
+          "image": "simpsons_28x08.jpg",
           "synopsis": "Homer finds a new app that makes his life much easier and outsources his father-son bonding. Meanwhile, Grampa finds out he is about to become a father again.",
           "titleEs": "Comportamiento de papá",
           "synopsisEs": "Homer encuentra una nueva aplicación que le hace la vida mucho más fácil y subcontrata el vínculo entre padre e hijo. Mientras tanto, el abuelo descubre que está a punto de volver a ser padre."
@@ -6898,7 +6898,7 @@ const data = {
           "title": "The Last Traction Hero",
           "duration": "23",
           "airDate": "2016-12-04",
-          "image": "28x09.jpg",
+          "image": "simpsons_28x09.jpg",
           "synopsis": "An accident places Homer in a cast, and in a position to sue Mr. Burns. This leaves Marge unfulfilled, so she turns to an unexpected source for romance. Meanwhile, Lisa is proclaimed \"Bus Monitor\" and tries to keep the peace.",
           "titleEs": "El último héroe de tracción",
           "synopsisEs": "Un accidente coloca a Homer enyesado y en condiciones de demandar al Sr. Burns. Esto deja a Marge insatisfecha, por lo que recurre a una fuente inesperada de romance. Mientras tanto, Lisa es proclamada \"Monitor de autobús\" e intenta mantener la paz."
@@ -6909,7 +6909,7 @@ const data = {
           "title": "The Nightmare After Krustmas",
           "duration": "23",
           "airDate": "2016-12-11",
-          "image": "28x10.jpg",
+          "image": "simpsons_28x10.jpg",
           "synopsis": "Krusty tries to impress his daughter as they spend Christmas with The Simpsons. Meanwhile, Reverend Lovejoy seeks converts after church attendance plummets, and Maggie is haunted by a spooky Christmas toy.",
           "titleEs": "La pesadilla después de Krustmas",
           "synopsisEs": "Krusty intenta impresionar a su hija mientras pasan la Navidad con Los Simpson. Mientras tanto, el reverendo Lovejoy busca conversos después de que la asistencia a la iglesia cae en picado, y Maggie es perseguida por un espeluznante juguete navideño."
@@ -6920,7 +6920,7 @@ const data = {
           "title": "Pork and Burns",
           "duration": "23",
           "airDate": "2017-01-08",
-          "image": "28x11.jpg",
+          "image": "simpsons_28x11.jpg",
           "synopsis": "When Marge becomes obsessed with a Japanese style of living, the Simpsons must part with any item that no longer brings them joy. For Homer, this means finding a new home for the family pig. For Lisa, it means saying goodbye to her beloved saxophone.",
           "titleEs": "Cerdo y quemaduras",
           "synopsisEs": "Cuando Marge se obsesiona con el estilo de vida japonés, los Simpson deben deshacerse de cualquier objeto que ya no les proporcione alegría. Para Homero, esto significa encontrar un nuevo hogar para el cerdo de la familia. Para Lisa, significa despedirse de su amado saxofón."
@@ -6931,7 +6931,7 @@ const data = {
           "title": "The Great Phatsby",
           "duration": "44",
           "airDate": "2017-01-15",
-          "image": "28x12.jpg",
+          "image": "simpsons_28x12.jpg",
           "synopsis": "Mr. Burns tries to relive his glory days and crosses paths with a mysterious music mogul. After getting conned by him and reduced to bankruptcy, Burns seeks revenge on the music producer with the help of Homer, Bart, rapper Jazzy James, and the mogul's ex-wife, Praline. Also, Lisa is courted by the richest child in town, Waylon Smithers, Jr. begins a perilous journey, and Marge opens an obscure boutique store.",
           "titleEs": "El gran Phatsby",
           "synopsisEs": "El Sr. Burns intenta revivir sus días de gloria y se cruza con un misterioso magnate de la música. Después de ser estafado por él y reducido a la bancarrota, Burns busca vengarse del productor musical con la ayuda de Homer, Bart, el rapero Jazzy James y la ex esposa del magnate, Praline. Además, Lisa es cortejada por el niño más rico de la ciudad, Waylon Smithers, Jr. comienza un viaje peligroso y Marge abre una oscura boutique."
@@ -6942,7 +6942,7 @@ const data = {
           "title": "Fatzcarraldo",
           "duration": "22",
           "airDate": "2017-02-12",
-          "image": "28x13.jpg",
+          "image": "simpsons_28x13.jpg",
           "synopsis": "When all of the fast food restaurants in Springfield become healthy, Homer turns to the last bastion of greasy food for comfort - and digs up some childhood memories along the way. Meanwhile, Lisa must find a good news story when the future of her school radio station is put in jeopardy.",
           "titleEs": "fatzcarraldo",
           "synopsisEs": "Cuando todos los restaurantes de comida rápida de Springfield se vuelven saludables, Homer recurre al último bastión de comida grasosa en busca de consuelo y, en el camino, desentierra algunos recuerdos de la infancia. Mientras tanto, Lisa debe encontrar una buena noticia cuando el futuro de la estación de radio de su escuela está en peligro."
@@ -6953,7 +6953,7 @@ const data = {
           "title": "The Cad and the Hat",
           "duration": "23",
           "airDate": "2017-02-19",
-          "image": "28x14.jpg",
+          "image": "simpsons_28x14.jpg",
           "synopsis": "When Bart betrays Lisa, he has to deal with his guilt – literally. Meanwhile, Springfield is surprised when Homer is revealed to be a chess savant.",
           "titleEs": "El canalla y el sombrero",
           "synopsisEs": "Cuando Bart traiciona a Lisa, tiene que lidiar con su culpa, literalmente. Mientras tanto, Springfield se sorprende cuando se revela que Homero es un experto en ajedrez."
@@ -6964,7 +6964,7 @@ const data = {
           "title": "Kamp Krustier",
           "duration": "23",
           "airDate": "2017-03-05",
-          "image": "28x15.jpg",
+          "image": "simpsons_28x15.jpg",
           "synopsis": "When Bart and Lisa return home abruptly after a traumatic incident at Kamp Krusty, they put an end to Homer and Marge's romantic encounters. Without sex to distract him, Homer becomes a more productive worker and caring husband, but Marge misses the old Homer. Meanwhile, Bart and Lisa return to camp to confront the source of their trauma.",
           "titleEs": "Campamento Krustier",
           "synopsisEs": "Cuando Bart y Lisa regresan abruptamente a casa después de un incidente traumático en Kamp Krusty, ponen fin a los encuentros románticos de Homer y Marge. Sin sexo que lo distraiga, Homer se convierte en un trabajador más productivo y un esposo cariñoso, pero Marge extraña al viejo Homer. Mientras tanto, Bart y Lisa regresan al campamento para afrontar la fuente de su trauma."
@@ -6975,7 +6975,7 @@ const data = {
           "title": "22 For 30",
           "duration": "23",
           "airDate": "2017-03-12",
-          "image": "28x16.jpg",
+          "image": "simpsons_28x16.jpg",
           "synopsis": "Bart goes from delinquent with detention to the star basketball player at Springfield Elementary. Lisa covers Bart's success for the school paper, and Homer becomes the team's coach. But matters go awry when Bart gets involved with the mafia.",
           "titleEs": "22 por 30",
           "synopsisEs": "Bart pasa de ser un delincuente castigado a ser el jugador estrella de baloncesto en la escuela primaria Springfield. Lisa cubre el éxito de Bart para el periódico escolar y Homer se convierte en el entrenador del equipo. Pero las cosas salen mal cuando Bart se involucra con la mafia."
@@ -6986,7 +6986,7 @@ const data = {
           "title": "A Father's Watch",
           "duration": "23",
           "airDate": "2017-03-19",
-          "image": "28x17.jpg",
+          "image": "simpsons_28x17.jpg",
           "synopsis": "Worried that Bart is destined for failure, Marge turns to a series of parenting \"experts\" for advice. Homer chooses to cash in on an expert's advice by opening up a trophy store in Springfield. Meanwhile, Bart gets some needed encouragement from Grampa, who gives him a precious watch coveted by Homer.",
           "titleEs": "El reloj de un padre",
           "synopsisEs": "Preocupada porque Bart esté destinado al fracaso, Marge recurre a una serie de \"expertos\" en paternidad en busca de consejo. Homer decide sacar provecho del consejo de un experto y abre una tienda de trofeos en Springfield. Mientras tanto, Bart recibe el estímulo necesario del abuelo, quien le regala un precioso reloj codiciado por Homero."
@@ -6997,7 +6997,7 @@ const data = {
           "title": "The Caper Chase",
           "duration": "23",
           "airDate": "2017-04-02",
-          "image": "28x18.jpg",
+          "image": "simpsons_28x18.jpg",
           "synopsis": "Mr. Burns opens his own university (a la Donald Trump) after visiting his alma mater, Yale, and discovering how politically correct it's become.",
           "titleEs": "La persecución de las alcaparras",
           "synopsisEs": "Burns abre su propia universidad (al estilo Donald Trump) después de visitar su alma mater, Yale, y descubrir cuán políticamente correcta se ha vuelto."
@@ -7008,7 +7008,7 @@ const data = {
           "title": "Looking for Mr. Goodbart",
           "duration": "23",
           "airDate": "2017-04-02",
-          "image": "28x19.jpg",
+          "image": "simpsons_28x19.jpg",
           "synopsis": "Bart gets in trouble on Grandparents Day at school and is forced to hang out with Skinner's mother as punishment. After spending time with various grandmas in the neighborhood, he learns the benefits of hanging out with the elderly, but eventually recognizes the dangers of taking advantage of them. Meanwhile, Peekimon Get, a parody of Pokémon Go, has taken over the town of Springfield.",
           "titleEs": "Buscando al Sr. Goodbart",
           "synopsisEs": "Bart se mete en problemas el Día de los Abuelos en la escuela y se ve obligado a salir con la madre de Skinner como castigo. Después de pasar tiempo con varias abuelas del vecindario, aprende los beneficios de salir con personas mayores, pero finalmente reconoce los peligros de aprovecharse de ellas. Mientras tanto, Peekimon Get, una parodia de Pokémon Go, se ha apoderado de la ciudad de Springfield."
@@ -7019,7 +7019,7 @@ const data = {
           "title": "Moho House",
           "duration": "23",
           "airDate": "2017-05-07",
-          "image": "28x20.jpg",
+          "image": "simpsons_28x20.jpg",
           "synopsis": "Homer and Marge attempt to work on their marriage, not realizing that Mr. Burns and Nigel have a bet on whether Nigel can bisect them apart. With the successful, albeit unconventional, help of Moe, the couple gets back their mojo.",
           "titleEs": "Casa Moho",
           "synopsisEs": "Homer y Marge intentan mejorar su matrimonio, sin darse cuenta de que el Sr. Burns y Nigel han hecho una apuesta sobre si Nigel podrá dividirlos en dos. Con la ayuda exitosa, aunque poco convencional, de Moe, la pareja recupera su encanto."
@@ -7030,7 +7030,7 @@ const data = {
           "title": "Dogtown",
           "duration": "22",
           "airDate": "2017-05-07",
-          "image": "28x21.jpg",
+          "image": "simpsons_28x21.jpg",
           "synopsis": "When Homer's court case determines that a dog's life is more profitable than the one of a human, the status of man's best friend rises in Springfield. When the dogs recognize their new position of power, they assert their dominance over the humans.",
           "titleEs": "ciudadperruna",
           "synopsisEs": "Cuando el caso judicial de Homero determina que la vida de un perro es más rentable que la de un humano, el estatus del mejor amigo del hombre aumenta en Springfield. Cuando los perros reconocen su nueva posición de poder, afirman su dominio sobre los humanos."
@@ -7041,7 +7041,7 @@ const data = {
     {
       "id": 29,
       "title": "Temporada 29",
-      "image": "Season_29_Icon.jpg",
+      "image": "simpsons_Season_29_Icon.jpg",
       "avgColor": "#5D737E",
       "episodes": [
         {
@@ -7050,7 +7050,7 @@ const data = {
           "title": "The Serfsons",
           "duration": "23",
           "airDate": "2017-05-07",
-          "image": "29x01.jpg",
+          "image": "simpsons_29x01.jpg",
           "synopsis": "In a magical medieval world, Marge's mother is turned into an Ice Walker, and the only way for Homer to seek the cure is to make Lisa perform illegal magic. When the King discovers this attempt, he kidnaps Lisa, and Homer must lead a feudal uprising to rescue her.",
           "titleEs": "Los Serfson",
           "synopsisEs": "En un mundo mágico medieval, la madre de Marge se convierte en una Caminante sobre el Hielo, y la única forma que tiene Homero de buscar la cura es obligar a Lisa a realizar magia ilegal. Cuando el Rey descubre este intento, secuestra a Lisa y Homero debe liderar un levantamiento feudal para rescatarla."
@@ -7061,7 +7061,7 @@ const data = {
           "title": "Springfield Splendor",
           "duration": "24",
           "airDate": "2017-10-08",
-          "image": "29x02.jpg",
+          "image": "simpsons_29x02.jpg",
           "synopsis": "Marge and Lisa turn Lisa's sad experience into a successful graphic novel-turned-Broadway show, but they struggle with creative differences and egos.",
           "titleEs": "Esplendor de Springfield",
           "synopsisEs": "Marge y Lisa convierten la triste experiencia de Lisa en una exitosa novela gráfica convertida en espectáculo de Broadway, pero luchan con diferencias creativas y egos."
@@ -7072,7 +7072,7 @@ const data = {
           "title": "Whistler's Father",
           "duration": "23",
           "airDate": "2017-10-15",
-          "image": "29x03.jpg",
+          "image": "simpsons_29x03.jpg",
           "synopsis": "Homer discovers that Maggie is a whistling savant and launches her baby-celebrity career. Meanwhile, Marge impresses Fat Tony with her interior design taste, and he hires her to style his brothel.",
           "titleEs": "El padre de Whistler",
           "synopsisEs": "Homer descubre que Maggie es una sabia que silba y lanza su carrera como bebé celebridad. Mientras tanto, Marge impresiona a Fat Tony con su gusto por el diseño de interiores y él la contrata para diseñar su burdel."
@@ -7083,7 +7083,7 @@ const data = {
           "title": "Treehouse of Horror XXVIII",
           "duration": "23",
           "airDate": "2017-10-22",
-          "image": "29x04.jpg",
+          "image": "simpsons_29x04.jpg",
           "synopsis": "The Sweets Hereafter: The Simpsons are Halloween candies living in fear of being eaten.",
           "titleEs": "La casa del árbol del terror XXVIII",
           "synopsisEs": "Los dulces del futuro: Los Simpson son dulces de Halloween que viven con el miedo de ser comidos."
@@ -7094,7 +7094,7 @@ const data = {
           "title": "Grampy Can Ya Hear Me",
           "duration": "23",
           "airDate": "2017-11-05",
-          "image": "29x05.jpg",
+          "image": "simpsons_29x05.jpg",
           "synopsis": "Grampa gets a hearing aid and finally hears what everyone has been saying about him.",
           "titleEs": "Abuelo, ¿puedes oírme?",
           "synopsisEs": "El abuelo se pone un audífono y finalmente escucha lo que todos dicen sobre él."
@@ -7105,7 +7105,7 @@ const data = {
           "title": "The Old Blue Mayor She Ain't What She Used to Be",
           "duration": "23",
           "airDate": "2017-10-22",
-          "image": "29x06.jpg",
+          "image": "simpsons_29x06.jpg",
           "synopsis": "Frustrated with the local government, Marge plans to run for Mayor. To win public support, she begins making Homer the butt of her jokes.",
           "titleEs": "La vieja alcaldesa azul Ella ya no es lo que solía ser",
           "synopsisEs": "Frustrada con el gobierno local, Marge planea postularse para alcalde. Para ganarse el apoyo del público, comienza a hacer de Homero el blanco de sus bromas."
@@ -7116,7 +7116,7 @@ const data = {
           "title": "Singin' in the Lane",
           "duration": "23",
           "airDate": "2017-11-05",
-          "image": "29x07.jpg",
+          "image": "simpsons_29x07.jpg",
           "synopsis": "Homer and the guys reunite their old bowling team to cheer up Moe, only to end up in fierce competition with a team of arrogant millionaires. Meanwhile, Lisa and Marge try to teach Bart that money isn't everything.",
           "titleEs": "Cantando en el carril",
           "synopsisEs": "Homer y los chicos reúnen a su antiguo equipo de bolos para animar a Moe, sólo para terminar en una feroz competencia con un equipo de millonarios arrogantes. Mientras tanto, Lisa y Marge intentan enseñarle a Bart que el dinero no lo es todo."
@@ -7127,7 +7127,7 @@ const data = {
           "title": "Mr. Lisa's Opus",
           "duration": "23",
           "airDate": "2017-12-03",
-          "image": "29x08.jpg",
+          "image": "simpsons_29x08.jpg",
           "synopsis": "Lisa's version of \"Barthood\". First, Homer discovers how smart she is, then she will go to college, and finally being scared after getting out of Springfield. Meanwhile, Ned will try to cure Homer of his alcohol problem.",
           "titleEs": "La obra del Sr. Lisa",
           "synopsisEs": "La versión de Lisa de \"Barthood\". Primero, Homero descubre lo inteligente que es, luego irá a la universidad y finalmente se asusta al salir de Springfield. Mientras tanto, Ned intentará curar a Homer de su problema con el alcohol."
@@ -7138,7 +7138,7 @@ const data = {
           "title": "Gone Boy",
           "duration": "23",
           "airDate": "2017-12-10",
-          "image": "29x09.jpg",
+          "image": "simpsons_29x09.jpg",
           "synopsis": "Winter is ruined for Springfield when Bart falls into an underground missile silo, leading the town to put together a search party to find him. After most give up hope, Sideshow Bob manipulates Milhouse into revealing where Bart is hiding.",
           "titleEs": "chico ido",
           "synopsisEs": "El invierno se arruina para Springfield cuando Bart cae en un silo de misiles subterráneo, lo que lleva a la ciudad a formar un grupo de búsqueda para encontrarlo. Después de que la mayoría pierde la esperanza, Sideshow Bob manipula a Milhouse para que revele dónde se esconde Bart."
@@ -7149,7 +7149,7 @@ const data = {
           "title": "Haw-Haw Land",
           "duration": "23",
           "airDate": "2018-01-07",
-          "image": "29x10.jpg",
+          "image": "simpsons_29x10.jpg",
           "synopsis": "When the Simpsons go to a STEM conference, Lisa falls for a crooning jazz pianist named Brendan Beiderbecke. After seeing the pair together, Nelson becomes jealous because of his past relationship with Lisa and tries to win her over instead, making Milhouse get caught in the same love triangle over Lisa. Meanwhile, Homer and Marge become suspicious when Bart discovers that he has an affinity for chemistry, leaving everyone to wonder just what he is up to.",
           "titleEs": "Tierra Haw-Haw",
           "synopsisEs": "Cuando los Simpson van a una conferencia STEM, Lisa se enamora de un pianista de jazz llamado Brendan Beiderbecke. Después de ver a la pareja junta, Nelson se pone celoso debido a su relación pasada con Lisa y trata de ganársela, lo que hace que Milhouse quede atrapado en el mismo triángulo amoroso por Lisa. Mientras tanto, Homer y Marge empiezan a sospechar cuando Bart descubre que tiene afinidad por la química, lo que hace que todos se pregunten qué está haciendo."
@@ -7160,7 +7160,7 @@ const data = {
           "title": "Frink Gets Testy",
           "duration": "23",
           "airDate": "2018-01-14",
-          "image": "29x11.jpg",
+          "image": "simpsons_29x11.jpg",
           "synopsis": "Mr. Burns builds a doomsday ark after believing that the end of the world is near when he watches an old Orson Welles show about Nostradamus. Professor Frink comes up with a new way of testing the citizens of Springfield after Burns wants a test to determine who should go on a spacecraft with him. The results shake the Simpson family to their core, as Homer is dismayed to find he has the lowest possible score, while Lisa becomes obsessed with finding out how Ralph scored higher than she did.",
           "titleEs": "Frink se pone irritable",
           "synopsisEs": "Burns construye un arca del fin del mundo después de creer que el fin del mundo está cerca cuando ve un viejo programa de Orson Welles sobre Nostradamus. Al profesor Frink se le ocurre una nueva forma de evaluar a los ciudadanos de Springfield después de que Burns quiere una prueba para determinar quién debería ir con él en una nave espacial. Los resultados sacuden a la familia Simpson hasta lo más profundo, ya que Homer está consternado al descubrir que tiene el puntaje más bajo posible, mientras que Lisa se obsesiona con descubrir cómo Ralph obtuvo un puntaje más alto que ella."
@@ -7171,7 +7171,7 @@ const data = {
           "title": "Homer Is Where the Art Isn't",
           "duration": "23",
           "airDate": "2018-03-18",
-          "image": "29x12.jpg",
+          "image": "simpsons_29x12.jpg",
           "synopsis": "When Homer is accused of stealing a million-dollar painting, only a detective from the 1970s can clear his name, or send him to jail.",
           "titleEs": "Homero está donde no está el arte",
           "synopsisEs": "Cuando Homero es acusado de robar un cuadro valorado en un millón de dólares, sólo un detective de los años 70 puede limpiar su nombre o enviarlo a la cárcel."
@@ -7182,7 +7182,7 @@ const data = {
           "title": "3 Scenes Plus a Tag from a Marriage",
           "duration": "23",
           "airDate": "2018-03-25",
-          "image": "29x13.jpg",
+          "image": "simpsons_29x13.jpg",
           "synopsis": "While visiting their old apartment in Capital City, Homer and Marge recount the story of their transition from loving their lifetime without kids to being miserable parents.",
           "titleEs": "3 escenas más una etiqueta de un matrimonio",
           "synopsisEs": "Mientras visitan su antiguo apartamento en Capital City, Homer y Marge cuentan la historia de su transición de amar su vida sin hijos a ser padres miserables."
@@ -7193,7 +7193,7 @@ const data = {
           "title": "Fears of a Clown",
           "duration": "23",
           "airDate": "2018-04-01",
-          "image": "29x14.jpg",
+          "image": "simpsons_29x14.jpg",
           "synopsis": "In a re-imagining of Stephen King's novel It, the entire faculty at Springfield Elementary School pranks Bart, forcing him to seek revenge by making them wear clown masks, only to cause the entire town to start fearing clowns, destroying Krusty's career. While a tortured Krusty tries his hand at serious drama with a regional theater company, Marge convinces a judge to send Bart to a rehabilitation camp in order to try to cure him of pulling pranks.",
           "titleEs": "Miedos de un payaso",
           "synopsisEs": "En una reimaginación de la novela It de Stephen King, todo el profesorado de la Escuela Primaria de Springfield le hace una broma a Bart, obligándolo a buscar venganza haciéndolos usar máscaras de payaso, solo para hacer que toda la ciudad comience a temer a los payasos, destruyendo la carrera de Krusty. Mientras un Krusty torturado intenta hacer un drama serio con una compañía de teatro regional, Marge convence a un juez para que envíe a Bart a un campo de rehabilitación para tratar de curarlo de hacer bromas."
@@ -7204,7 +7204,7 @@ const data = {
           "title": "No Good Read Goes Unpunished",
           "duration": "23",
           "airDate": "2018-04-08",
-          "image": "29x15.jpg",
+          "image": "simpsons_29x15.jpg",
           "synopsis": "In an attempt to bring the family back together, Marge forces everyone to hand in their electronics and take a trip to a book store.",
           "titleEs": "Ninguna buena lectura queda impune",
           "synopsisEs": "En un intento por volver a unir a la familia, Marge obliga a todos a entregar sus dispositivos electrónicos e ir a una librería."
@@ -7215,7 +7215,7 @@ const data = {
           "title": "King Leer",
           "duration": "23",
           "airDate": "2018-04-15",
-          "image": "29x16.jpg",
+          "image": "simpsons_29x16.jpg",
           "synopsis": "Homer and Marge find out that Moe is having a big battle with his father Morty. The pair tries to reconnect their relationship.",
           "titleEs": "rey leer",
           "synopsisEs": "Homero y Marge descubren que Moe está teniendo una gran batalla con su padre Morty. La pareja intenta reconectar su relación."
@@ -7226,7 +7226,7 @@ const data = {
           "title": "Lisa Gets the Blues",
           "duration": "23",
           "airDate": "2018-04-22",
-          "image": "29x17.jpg",
+          "image": "simpsons_29x17.jpg",
           "synopsis": "Dewey Largo tells Lisa that she is just a big fish in a small pond, and that she is not a good musician. Initially, the Simpson family was supposed to go to Gainesville, Florida, to visit Eunice Bouvier for her birthday, but their flight to Gainesville gets rerouted to New Orleans instead. To cheer her up, the rest of the Simpson family goes with Lisa to Jazz Fest. While there, Lisa is forced to face her failures, and regain her confidence as a jazz musician.",
           "titleEs": "Lisa se pone triste",
           "synopsisEs": "Dewey Largo le dice a Lisa que ella es solo un pez grande en un estanque pequeño y que no es una buena música. Inicialmente, se suponía que la familia Simpson iría a Gainesville, Florida, para visitar a Eunice Bouvier por su cumpleaños, pero su vuelo a Gainesville es desviado a Nueva Orleans. Para animarla, el resto de la familia Simpson va con Lisa al Jazz Fest. Mientras está allí, Lisa se ve obligada a afrontar sus fracasos y recuperar su confianza como músico de jazz."
@@ -7237,7 +7237,7 @@ const data = {
           "title": "Forgive and Regret",
           "duration": "23",
           "airDate": "2018-04-29",
-          "image": "29x18.jpg",
+          "image": "simpsons_29x18.jpg",
           "synopsis": "Abe Simpson admits to Homer about his correlation and comes to realize that the issue will not be easy to reconcile when he makes a recovery.",
           "titleEs": "Perdonar y arrepentirse",
           "synopsisEs": "Abe Simpson le admite a Homer su correlación y se da cuenta de que el problema no será fácil de reconciliar cuando se recupere."
@@ -7248,7 +7248,7 @@ const data = {
           "title": "Left Behind",
           "duration": "23",
           "airDate": "2018-05-06",
-          "image": "29x19.jpg",
+          "image": "simpsons_29x19.jpg",
           "synopsis": "Homer gets Ned Flanders a job at the plant, and he soon learns that no good deed goes unpunished when Flanders starts to insist on carpools and demands more from Homer's work performance. Meanwhile, Marge believes that their marriage has lost its spark.",
           "titleEs": "dejado atrás",
           "synopsisEs": "Homer le consigue un trabajo a Ned Flanders en la planta, y pronto descubre que ninguna buena acción queda impune cuando Flanders comienza a insistir en compartir vehículos y exige más del desempeño laboral de Homer. Mientras tanto, Marge cree que su matrimonio ha perdido la chispa."
@@ -7259,7 +7259,7 @@ const data = {
           "title": "Throw Grampa from the Dane",
           "duration": "23",
           "airDate": "2018-04-29",
-          "image": "29x20.jpg",
+          "image": "simpsons_29x20.jpg",
           "synopsis": "After receiving an insurance payout, Grampa and his family plan to go to Denmark so that the former can benefit from the country's free healthcare.",
           "titleEs": "Tira al abuelo del danés",
           "synopsisEs": "Después de recibir el pago del seguro, el abuelo y su familia planean ir a Dinamarca para que el primero pueda beneficiarse de la asistencia sanitaria gratuita del país."
@@ -7270,7 +7270,7 @@ const data = {
           "title": "Flanders' Ladder",
           "duration": "23",
           "airDate": "2018-05-06",
-          "image": "29x21.jpg",
+          "image": "simpsons_29x21.jpg",
           "synopsis": "After getting struck by lightning, Bart receives visits from ghosts, who want closure only he can provide.",
           "titleEs": "Escalera de Flandes",
           "synopsisEs": "Después de ser alcanzado por un rayo, Bart recibe visitas de fantasmas, que quieren un cierre que sólo él puede brindarles."
@@ -7281,7 +7281,7 @@ const data = {
     {
       "id": 30,
       "title": "Temporada 30",
-      "image": "Season_30_icon.jpg",
+      "image": "simpsons_Season_30_icon.jpg",
       "avgColor": "#A9636D",
       "episodes": [
         {
@@ -7290,7 +7290,7 @@ const data = {
           "title": "Bart's Not Dead",
           "duration": "23",
           "airDate": "unknown",
-          "image": "30x01.jpg",
+          "image": "simpsons_30x01.jpg",
           "synopsis": "Bart takes a dare, and ends up in the hospital. To cover for himself and Homer, he says he went to Heaven and met Jesus. Christian producers offer the Simpsons a movie deal, which Homer takes. But Bart can't deal with the guilt and comes clean to Marge after the movie is finished.",
           "titleEs": "Bart no está muerto",
           "synopsisEs": "Bart se atreve y termina en el hospital. Para cubrirse a sí mismo y a Homero, dice que fue al cielo y conoció a Jesús. Los productores cristianos ofrecen a los Simpson un contrato cinematográfico, que Homer acepta. Pero Bart no puede lidiar con la culpa y se sincera con Marge una vez terminada la película."
@@ -7301,7 +7301,7 @@ const data = {
           "title": "Heartbreak Hotel",
           "duration": "23",
           "airDate": "unknown",
-          "image": "30x02.jpg",
+          "image": "simpsons_30x02.jpg",
           "synopsis": "Marge and Homer's marriage is tested when they travel to a tropical island to compete for a million dollars on Marge's favorite reality competition show.",
           "titleEs": "Hotel Desamor",
           "synopsisEs": "El matrimonio de Marge y Homer se pone a prueba cuando viajan a una isla tropical para competir por un millón de dólares en el reality show favorito de Marge."
@@ -7312,7 +7312,7 @@ const data = {
           "title": "My Way or the Highway to Heaven",
           "duration": "23",
           "airDate": "unknown",
-          "image": "30x03.jpg",
+          "image": "simpsons_30x03.jpg",
           "synopsis": "God and St. Peter contemplate what merits a soul getting into heaven, while citizens of Springfield remember their divine encounters.",
           "titleEs": "Mi camino o la autopista al cielo",
           "synopsisEs": "Dios y San Pedro contemplan lo que merece que un alma entre al cielo, mientras los ciudadanos de Springfield recuerdan sus encuentros divinos."
@@ -7323,7 +7323,7 @@ const data = {
           "title": "Treehouse of Horror XXIX",
           "duration": "23",
           "airDate": "unknown",
-          "image": "30x04.jpg",
+          "image": "simpsons_30x04.jpg",
           "synopsis": "This year, we have Homer winning an eating contest against the mythical Cthulhu, Springfield overrun by plant body-snatchers, Bart and Milhouse living in fear of Lisa's multiple personality disorder, and Mr. Burns opening a retirement home filled with literal old fossils.",
           "titleEs": "La casa del árbol del terror XXIX",
           "synopsisEs": "Este año, tenemos a Homero ganando un concurso de comida contra el mítico Cthulhu, Springfield invadida por ladrones de cuerpos de plantas, Bart y Milhouse viviendo con miedo del trastorno de personalidad múltiple de Lisa, y el Sr. Burns abriendo una casa de retiro llena literalmente de viejos fósiles."
@@ -7334,7 +7334,7 @@ const data = {
           "title": "Baby You Can't Drive My Car",
           "duration": "23",
           "airDate": "2018-11-04",
-          "image": "30x05.jpg",
+          "image": "simpsons_30x05.jpg",
           "synopsis": "A self-driving car company comes to Springfield, poaching all of the power plant employees with their fun work environment.",
           "titleEs": "Bebé, no puedes conducir mi auto",
           "synopsisEs": "Una empresa de vehículos autónomos llega a Springfield y caza furtivamente a todos los empleados de la central eléctrica con su divertido ambiente de trabajo."
@@ -7345,7 +7345,7 @@ const data = {
           "title": "From Russia Without Love",
           "duration": "23",
           "airDate": "2018-11-11",
-          "image": "30x06.jpg",
+          "image": "simpsons_30x06.jpg",
           "synopsis": "On a mission to play hardcore pranks, Bart, Milhouse, and Nelson get Moe a mail-order bride on the Dark Web.",
           "titleEs": "De Rusia sin amor",
           "synopsisEs": "En una misión para gastar bromas pesadas, Bart, Milhouse y Nelson le consiguen a Moe una novia por correo en la Dark Web."
@@ -7356,7 +7356,7 @@ const data = {
           "title": "Werking Mom",
           "duration": "23",
           "airDate": "2018-11-18",
-          "image": "30x07.jpg",
+          "image": "simpsons_30x07.jpg",
           "synopsis": "Marge wants a job, and stumbles into becoming a plastic food storage container-selling drag queen. Meanwhile, Lisa tries to make the world better in the style of Amelie.",
           "titleEs": "mamá trabajando",
           "synopsisEs": "Marge quiere un trabajo y se convierte en una drag queen vendedora de contenedores de plástico para almacenar alimentos. Mientras tanto, Lisa intenta mejorar el mundo al estilo de Amelie."
@@ -7367,7 +7367,7 @@ const data = {
           "title": "Krusty the Clown",
           "duration": "23",
           "airDate": "2018-11-25",
-          "image": "30x08.jpg",
+          "image": "simpsons_30x08.jpg",
           "synopsis": "Homer finds his calling as a TV recapper, but his harsh grading causes a brawl with Krusty. After almost killing Homer, Krusty hides out at a real circus, and finds happiness there.",
           "titleEs": "Krusty el payaso",
           "synopsisEs": "Homero encuentra su vocación como recapitulador de televisión, pero su dura calificación provoca una pelea con Krusty. Después de casi matar a Homero, Krusty se esconde en un circo real y encuentra la felicidad allí."
@@ -7378,7 +7378,7 @@ const data = {
           "title": "Daddicus Finch",
           "duration": "23",
           "airDate": "2018-12-02",
-          "image": "30x09.jpg",
+          "image": "simpsons_30x09.jpg",
           "synopsis": "Lisa and Homer's bond gets stronger when they start spending real quality time together, and Bart feels neglected. So Marge tries to help Homer balance his attention between the kids.",
           "titleEs": "pinzón papá",
           "synopsisEs": "El vínculo entre Lisa y Homer se fortalece cuando empiezan a pasar tiempo de calidad juntos y Bart se siente abandonado. Entonces Marge intenta ayudar a Homer a equilibrar su atención entre los niños."
@@ -7389,7 +7389,7 @@ const data = {
           "title": "'Tis the 30th Season",
           "duration": "23",
           "airDate": "2018-12-09",
-          "image": "30x10.jpg",
+          "image": "simpsons_30x10.jpg",
           "synopsis": "After a failed Black Friday shopping spree, Marge is determined to fix Christmas. However, Homer and the kids surprise Marge with a vacation to a Florida resort.",
           "titleEs": "'Es la temporada número 30",
           "synopsisEs": "Después de una fallida juerga de compras del Viernes Negro, Marge está decidida a arreglar la Navidad. Sin embargo, Homer y los niños sorprenden a Marge con unas vacaciones en un resort de Florida."
@@ -7400,7 +7400,7 @@ const data = {
           "title": "Mad About the Toy",
           "duration": "23",
           "airDate": "2019-01-06",
-          "image": "30x11.jpg",
+          "image": "simpsons_30x11.jpg",
           "synopsis": "When Marge and Homer leave Grampa to babysit the kids, some little green army men trigger a PTSD episode, sending the family on a journey to Grampa's past to when he was a post-war toy model.",
           "titleEs": "Loco por el juguete",
           "synopsisEs": "Cuando Marge y Homer dejan al abuelo para cuidar a los niños, unos pequeños hombres verdes del ejército desencadenan un episodio de trastorno de estrés postraumático, lo que envía a la familia a un viaje al pasado del abuelo, cuando era un modelo de juguete de la posguerra."
@@ -7411,7 +7411,7 @@ const data = {
           "title": "The Girl on the Bus",
           "duration": "23",
           "airDate": "2019-01-13",
-          "image": "30x12.jpg",
+          "image": "simpsons_30x12.jpg",
           "synopsis": "When Lisa spots a new best friend from the window of the bus, she gets a taste of what life could be like with a different, more cultured family, and proceeds to try and live a double life.",
           "titleEs": "La chica del autobús",
           "synopsisEs": "Cuando Lisa ve a su nueva mejor amiga desde la ventanilla del autobús, tiene una idea de cómo podría ser la vida con una familia diferente y más culta, y procede a intentar vivir una doble vida."
@@ -7422,7 +7422,7 @@ const data = {
           "title": "I'm Dancing as Fat as I Can",
           "duration": "23",
           "airDate": "2019-02-10",
-          "image": "30x13.jpg",
+          "image": "simpsons_30x13.jpg",
           "synopsis": "Marge gets upset when Homer watches a TV show without her.",
           "titleEs": "Estoy bailando tan gordo como puedo",
           "synopsisEs": "Marge se enoja cuando Homero ve un programa de televisión sin ella."
@@ -7433,7 +7433,7 @@ const data = {
           "title": "The Clown Stays in the Picture",
           "duration": "23",
           "airDate": "2019-02-17",
-          "image": "30x14.jpg",
+          "image": "simpsons_30x14.jpg",
           "synopsis": "Krusty the Clown tells the story of the time he was making a live-action film adaption of The Sands of Space. During this story, Homer and Marge has recently started dating and they took part in making the movie, as one of their early dates.",
           "titleEs": "El payaso permanece en la imagen",
           "synopsisEs": "Krusty the Clown cuenta la historia de la época en que estaba haciendo una adaptación cinematográfica de acción real de The Sands of Space. Durante esta historia, Homer y Marge comenzaron a salir recientemente y participaron en la realización de la película, como una de sus primeras citas."
@@ -7444,7 +7444,7 @@ const data = {
           "title": "101 Mitigations",
           "duration": "23",
           "airDate": "2019-03-03",
-          "image": "30x15.jpg",
+          "image": "simpsons_30x15.jpg",
           "synopsis": "After Homer steals Comic Book Guy’s car, he must either prove his innocence in court or reconcile with the jilted nerd.",
           "titleEs": "101 mitigaciones",
           "synopsisEs": "Después de que Homer roba el auto del chico de las historietas, debe demostrar su inocencia en la corte o reconciliarse con el nerd abandonado."
@@ -7455,7 +7455,7 @@ const data = {
           "title": "I Want You (She's So Heavy)",
           "duration": "23",
           "airDate": "2019-03-10",
-          "image": "30x16.jpg",
+          "image": "simpsons_30x16.jpg",
           "synopsis": "When a romantic night ends in injury, Marge recovers by taking up kite boarding while Homer bonds with his hallucinated hernia. Lisa attempts to fix her parents' strained relationship by seeking advice from an unlikely source.",
           "titleEs": "Te quiero (ella es tan pesada)",
           "synopsisEs": "Cuando una noche romántica termina en una lesión, Marge se recupera practicando kitesurf mientras Homer se une a su hernia alucinada. Lisa intenta arreglar la tensa relación de sus padres buscando el consejo de una fuente poco probable."
@@ -7466,7 +7466,7 @@ const data = {
           "title": "E My Sports",
           "duration": "23",
           "airDate": "2019-03-17",
-          "image": "30x17.jpg",
+          "image": "simpsons_30x17.jpg",
           "synopsis": "Bart and his friends form an E Sports team and enter the world championships in South Korea, with Homer coaching them. Lisa and Marge visit places in Korea and make Homer understand a new reality.",
           "titleEs": "E mis deportes",
           "synopsisEs": "Bart y sus amigos forman un equipo de E Sports y participan en el campeonato mundial en Corea del Sur, con Homer entrenándolos. Lisa y Marge visitan lugares de Corea y le hacen comprender a Homer una nueva realidad."
@@ -7477,7 +7477,7 @@ const data = {
           "title": "Bart vs. Itchy & Scratchy",
           "duration": "23",
           "airDate": "2019-03-24",
-          "image": "30x18.jpg",
+          "image": "simpsons_30x18.jpg",
           "synopsis": "Krusty releases an all-female reboot of Itchy & Scratchy, with Bart and his male friends boycotting the show. Bart joins an all-woman protest group at school after getting caught liking the show.",
           "titleEs": "Bart contra Pica y Rasca",
           "synopsisEs": "Krusty lanza un reinicio exclusivamente femenino de Itchy & Scratchy, con Bart y sus amigos varones boicoteando el programa. Bart se une a un grupo de protesta exclusivamente femenino en la escuela después de que lo sorprendieran gustándole el programa."
@@ -7488,7 +7488,7 @@ const data = {
           "title": "Girl's in the Band",
           "duration": "23",
           "airDate": "2019-03-31",
-          "image": "30x19.jpg",
+          "image": "simpsons_30x19.jpg",
           "synopsis": "The director of the Capitol City Philharmonic takes notice of Lisa’s talent and attempts to convince her to join them, which upsets her band teacher; Homer inadvertently puts strain on the family when he works extra shifts to support Lisa.",
           "titleEs": "Chica en la banda",
           "synopsisEs": "El director de la Filarmónica de Capitol City se da cuenta del talento de Lisa e intenta convencerla de que se una a ellos, lo que molesta a su profesor de banda; Sin darse cuenta, Homer ejerce presión sobre la familia cuando trabaja turnos adicionales para mantener a Lisa."
@@ -7499,7 +7499,7 @@ const data = {
           "title": "I'm Just a Girl Who Can't Say D'oh",
           "duration": "23",
           "airDate": "2019-04-07",
-          "image": "30x20.jpg",
+          "image": "simpsons_30x20.jpg",
           "synopsis": "Marge becomes director of Springfield's local theater, armed with Lisa’s script resembling \"Hamilton.\" Meanwhile, Homer joins a baby class with Maggie, where he takes a liking to supervisor Chloe.",
           "titleEs": "Sólo soy una chica que no puede decir D'oh",
           "synopsisEs": "Marge se convierte en directora del teatro local de Springfield, armada con un guión de Lisa que se parece a \"Hamilton\". Mientras tanto, Homer se une a una clase para bebés con Maggie, donde le gusta la supervisora ​​Chloe."
@@ -7510,7 +7510,7 @@ const data = {
           "title": "D'oh Canada",
           "duration": "23",
           "airDate": "2019-04-28",
-          "image": "30x21.jpg",
+          "image": "simpsons_30x21.jpg",
           "synopsis": "When the Simpson family go to Niagara Falls, Lisa goes over the Falls and is mistakenly given asylum in Canada. When Marge goes to Canada to rescue Lisa, they begin to re-evaluate their love for America.",
           "titleEs": "D'oh Canadá",
           "synopsisEs": "Cuando la familia Simpson va a las Cataratas del Niágara, Lisa las cruza y por error recibe asilo en Canadá. Cuando Marge va a Canadá para rescatar a Lisa, comienzan a reevaluar su amor por Estados Unidos."
@@ -7521,7 +7521,7 @@ const data = {
           "title": "Woo-hoo Dunnit?",
           "duration": "23",
           "airDate": "2019-05-05",
-          "image": "30x22.jpg",
+          "image": "simpsons_30x22.jpg",
           "synopsis": "When Lisa's college fund goes missing, the documentary crime series \"Deadline Springfield\" goes in-depth to solve the case.",
           "titleEs": "Woo-hoo Dunnit?",
           "synopsisEs": "Cuando el fondo universitario de Lisa desaparece, la serie documental sobre crímenes \"Deadline Springfield\" profundiza para resolver el caso."
@@ -7532,7 +7532,7 @@ const data = {
           "title": "Crystal Blue-Haired Persuasion",
           "duration": "23",
           "airDate": "2019-05-12",
-          "image": "30x23.jpg",
+          "image": "simpsons_30x23.jpg",
           "synopsis": "Mr. Burns cuts children's health care benefits for everyone at the Springfield Nuclear Power Plant. As the Simpson family cannot afford medication for Bart's ADD, Marge tries out some healing crystals on Bart as a cheaper solution. She starts selling them to other people and word on the street spreads when the crystals help Bart get better grades, or do they?",
           "titleEs": "Persuasión de pelo azul cristalino",
           "synopsisEs": "El Sr. Burns recorta los beneficios de atención médica infantil para todos en la planta de energía nuclear de Springfield. Como la familia Simpson no puede permitirse los medicamentos para el trastorno de déficit de atención de Bart, Marge prueba algunos cristales curativos con Bart como una solución más económica. Ella comienza a venderlos a otras personas y se corre la voz en la calle cuando los cristales ayudan a Bart a obtener mejores calificaciones, ¿o no?"
@@ -7543,7 +7543,7 @@ const data = {
     {
       "id": 31,
       "title": "Temporada 31",
-      "image": "Season_31_Icon.jpg",
+      "image": "simpsons_Season_31_Icon.jpg",
       "avgColor": "#805C72",
       "episodes": [
         {
@@ -7552,7 +7552,7 @@ const data = {
           "title": "The Winter of Our Monetized Content",
           "duration": "24",
           "airDate": "2019-05-05",
-          "image": "31x01.jpg",
+          "image": "simpsons_31x01.jpg",
           "synopsis": "When a video of Bart and Homer fighting goes viral, they begin a journey as social media celebrities. Meanwhile, Lisa battles the school's new industrialized detention system.",
           "titleEs": "El invierno de nuestro contenido monetizado",
           "synopsisEs": "Cuando un vídeo de Bart y Homer peleando se vuelve viral, comienzan un viaje como celebridades de las redes sociales. Mientras tanto, Lisa lucha contra el nuevo sistema de detención industrializado de la escuela."
@@ -7563,7 +7563,7 @@ const data = {
           "title": "Go Big or Go Homer",
           "duration": "23",
           "airDate": "2019-10-06",
-          "image": "31x02.jpg",
+          "image": "simpsons_31x02.jpg",
           "synopsis": "Homer is demoted to supervising interns, among whom is go-getter millennial Mike, a 35-year-old who asks Homer to be his mentor. However, when Homer inspires Mike to start a business of his own, the two find themselves being chased by the mob.",
           "titleEs": "Ve a lo grande o ve a Homero",
           "synopsisEs": "Homer es degradado a supervisar pasantes, entre los que se encuentra el ambicioso millennial Mike, un hombre de 35 años que le pide a Homer que sea su mentor. Sin embargo, cuando Homer inspira a Mike a iniciar su propio negocio, los dos se ven perseguidos por la mafia."
@@ -7574,7 +7574,7 @@ const data = {
           "title": "The Fat Blue Line",
           "duration": "24",
           "airDate": "2019-10-13",
-          "image": "31x03.jpg",
+          "image": "simpsons_31x03.jpg",
           "synopsis": "During the San Castellaneta street festival, much of the town realizes their wallets have been pickpocketed. After the state investigator puts the wrong man in jail, Chief Wiggum sets out to clear his name, catch the real criminal, and show he's still up for police work.",
           "titleEs": "La línea azul gorda",
           "synopsisEs": "Durante las fiestas populares de San Castellaneta, gran parte del pueblo se da cuenta de que les han robado las carteras. Después de que el investigador estatal encarcela al hombre equivocado, el jefe Wiggum se propone limpiar su nombre, atrapar al verdadero criminal y demostrar que todavía puede trabajar como policía."
@@ -7585,7 +7585,7 @@ const data = {
           "title": "Treehouse of Horror XXX",
           "duration": "23",
           "airDate": "2019-10-20",
-          "image": "31x04.jpg",
+          "image": "simpsons_31x04.jpg",
           "synopsis": "The thirtieth Treehouse of Horror features a demon Maggie, a mission to rescue Milhouse from another dimension, dead-Homer's spirit trying on some new bodies for size, and Selma finally finding love in an unlikely place - the alien in the basement.",
           "titleEs": "La casa del árbol del terror XXX",
           "synopsisEs": "El trigésimo Treehouse of Horror presenta a un demonio Maggie, una misión para rescatar a Milhouse de otra dimensión, el espíritu de Homero muerto probándose algunos cuerpos nuevos para ver el tamaño y Selma finalmente encuentra el amor en un lugar improbable: el extraterrestre en el sótano."
@@ -7596,7 +7596,7 @@ const data = {
           "title": "Gorillas on the Mast",
           "duration": "24",
           "airDate": "2019-11-03",
-          "image": "31x05.jpg",
+          "image": "simpsons_31x05.jpg",
           "synopsis": "After a trip to Aquatraz Water Park, Lisa becomes determined to set free Springfield's most vicious animals in captivity. Meanwhile, Homer fulfills a lifelong dream of buying a boat, and quickly realizes boat ownership sucks.",
           "titleEs": "Gorilas en el mástil",
           "synopsisEs": "Después de un viaje al parque acuático Aquatraz, Lisa está decidida a liberar a los animales más feroces en cautiverio de Springfield. Mientras tanto, Homer cumple el sueño de toda su vida de comprar un barco y rápidamente se da cuenta de que ser propietario de un barco apesta."
@@ -7607,7 +7607,7 @@ const data = {
           "title": "Marge the Lumberjill",
           "duration": "24",
           "airDate": "2019-11-10",
-          "image": "31x06.jpg",
+          "image": "simpsons_31x06.jpg",
           "synopsis": "When Marge realizes that everyone views her as boring, she takes up competitive lumber-jacking as a hobby and has a real gift for it. The circuit of competitive timber sports takes her on a month-long retreat to Portland with her trainer, Paula, who Homer worries is going to steal her away forever.",
           "titleEs": "Marge la leñadora",
           "synopsisEs": "Cuando Marge se da cuenta de que todo el mundo la considera aburrida, se dedica a la competencia de leñadores como pasatiempo y tiene un verdadero don para ello. El circuito de deportes de madera competitivos la lleva a un retiro de un mes en Portland con su entrenadora, Paula, a quien Homer teme que se la robe para siempre."
@@ -7618,7 +7618,7 @@ const data = {
           "title": "Livin' La Pura Vida",
           "duration": "24",
           "airDate": "2019-11-17",
-          "image": "31x07.jpg",
+          "image": "simpsons_31x07.jpg",
           "synopsis": "The Simpsons join other Springfield families on the Van Houtens' annual trip to Costa Rica, which they obviously can't afford. While there, Homer befriends Patty's new girlfriend, Evelyn, and Lisa tracks down the real reason the Van Houtens can go on this trip every year.",
           "titleEs": "Viviendo La Pura Vida",
           "synopsisEs": "Los Simpson se unen a otras familias de Springfield en el viaje anual de los Van Houtens a Costa Rica, que obviamente no pueden pagar. Mientras está allí, Homer se hace amigo de la nueva novia de Patty, Evelyn, y Lisa descubre la verdadera razón por la que los Van Houten pueden realizar este viaje todos los años."
@@ -7629,7 +7629,7 @@ const data = {
           "title": "Thanksgiving of Horror",
           "duration": "27",
           "airDate": "2019-11-24",
-          "image": "31x08.jpg",
+          "image": "simpsons_31x08.jpg",
           "synopsis": "In a special Thanksgiving edition of \"Treehouse of Horror,\" The Simpsons are forced to face various Thanksgiving nightmares, including the first Thanksgiving, an A.I. mishap and a dangerous space mission complicated by a sentient cranberry sauce.",
           "titleEs": "Acción de gracias del horror",
           "synopsisEs": "En una edición especial de Acción de Gracias de \"Treehouse of Horror\", Los Simpson se ven obligados a enfrentar varias pesadillas de Acción de Gracias, incluido el primer Día de Acción de Gracias, un A.I. percance y una peligrosa misión espacial complicada por una sensible salsa de arándanos."
@@ -7640,7 +7640,7 @@ const data = {
           "title": "Todd, Todd, Why Hast Thou Forsaken Me?",
           "duration": "24",
           "airDate": "2019-12-01",
-          "image": "31x09.jpg",
+          "image": "simpsons_31x09.jpg",
           "synopsis": "Todd blames God for the death of his mother and rejects his faith - causing great distress for Ned, who sends him to live with the Simpsons in an attempt to scare him back into God's arms.",
           "titleEs": "Todd, Todd, ¿por qué me has desamparado?",
           "synopsisEs": "Todd culpa a Dios por la muerte de su madre y rechaza su fe, lo que causa gran angustia a Ned, quien lo envía a vivir con los Simpson en un intento de asustarlo para que regrese a los brazos de Dios."
@@ -7651,7 +7651,7 @@ const data = {
           "title": "Bobby, It's Cold Outside",
           "duration": "24",
           "airDate": "2019-11-24",
-          "image": "31x10.jpg",
+          "image": "simpsons_31x10.jpg",
           "synopsis": "Sideshow Bob gets contracted as this year's mall Santa. Meanwhile, someone is stealing all the Christmas packages off people's front porches.",
           "titleEs": "Bobby, hace frío afuera",
           "synopsisEs": "Sideshow Bob es contratado como el Santa del centro comercial de este año. Mientras tanto, alguien está robando todos los paquetes navideños de los porches de la gente."
@@ -7662,7 +7662,7 @@ const data = {
           "title": "Hail to the Teeth",
           "duration": "24",
           "airDate": "2020-01-05",
-          "image": "31x11.jpg",
+          "image": "simpsons_31x11.jpg",
           "synopsis": "Homer and Marge attend Artie Ziff's wedding and become quite uncomfortable when they realize that his bride-to-be is a clone of Marge. Meanwhile, Lisa grapples with the misogynistic implications of the immediate popularity she receives after getting her new Invisalign braces.",
           "titleEs": "Saludo a los dientes",
           "synopsisEs": "Homero y Marge asisten a la boda de Artie Ziff y se sienten bastante incómodos cuando se dan cuenta de que su futura esposa es un clon de Marge. Mientras tanto, Lisa lidia con las implicaciones misóginas de la popularidad inmediata que recibe después de ponerse sus nuevos aparatos ortopédicos Invisalign."
@@ -7673,7 +7673,7 @@ const data = {
           "title": "The Miseducation of Lisa Simpson",
           "duration": "24",
           "airDate": "2020-02-16",
-          "image": "31x12.jpg",
+          "image": "simpsons_31x12.jpg",
           "synopsis": "The Sea Captain finds a treasure he's been searching for all his life, but it's taken from him by the townspeople. Marge convinces the people of Springfield to build a S.T.E.M. school with the money.",
           "titleEs": "La mala educación de Lisa Simpson",
           "synopsisEs": "El Capitán de Mar encuentra un tesoro que ha estado buscando toda su vida, pero la gente del pueblo se lo quita. Marge convence a la gente de Springfield para que construyan un S.T.E.M. escuela con el dinero."
@@ -7684,7 +7684,7 @@ const data = {
           "title": "Frinkcoin",
           "duration": "24",
           "airDate": "2020-02-23",
-          "image": "31x13.jpg",
+          "image": "simpsons_31x13.jpg",
           "synopsis": "Homer and Marge attend Artie Ziff's wedding and become quite uncomfortable when they realize that his bride-to-be is a clone of Marge. Meanwhile, Lisa grapples with the misogynistic implications of the immediate popularity she receives after getting her new Invisalign braces.",
           "titleEs": "Frinkcoin",
           "synopsisEs": "Homero y Marge asisten a la boda de Artie Ziff y se sienten bastante incómodos cuando se dan cuenta de que su futura esposa es un clon de Marge. Mientras tanto, Lisa lidia con las implicaciones misóginas de la popularidad inmediata que recibe después de ponerse sus nuevos aparatos ortopédicos Invisalign."
@@ -7695,7 +7695,7 @@ const data = {
           "title": "Bart the Bad Guy",
           "duration": "24",
           "airDate": "2020-03-01",
-          "image": "31x14.jpg",
+          "image": "simpsons_31x14.jpg",
           "synopsis": "Bart accidentally sees a brand-new superhero movie a month before it comes out... and the world cowers before his newfound plot-spoiling powers. Thus, a new super-villain is born: Spoiler Boy! Can heroic movie executives stop Bart before he succumbs to the temptations of ultimate evil?",
           "titleEs": "Bart el malo",
           "synopsisEs": "Bart ve accidentalmente una nueva película de superhéroes un mes antes de su estreno... y el mundo se encoge de miedo ante sus nuevos poderes para arruinar la trama. Así nace un nuevo supervillano: ¡Spoiler Boy! ¿Podrán los heroicos ejecutivos del cine detener a Bart antes de que sucumba a las tentaciones del mal supremo?"
@@ -7706,7 +7706,7 @@ const data = {
           "title": "Screenless",
           "duration": "24",
           "airDate": "2020-03-08",
-          "image": "31x15.jpg",
+          "image": "simpsons_31x15.jpg",
           "synopsis": "When Marge notes that the family is on their screens, she makes them stop using them, but it is soon discovered that even Marge cannot avoid screens herself.",
           "titleEs": "Sin pantalla",
           "synopsisEs": "Cuando Marge nota que la familia está en sus pantallas, les hace dejar de usarlas, pero pronto se descubre que ni siquiera Marge puede evitar las pantallas."
@@ -7717,7 +7717,7 @@ const data = {
           "title": "Better Off Ned (episode)",
           "duration": "24",
           "airDate": "2020-03-15",
-          "image": "31x16.jpg",
+          "image": "simpsons_31x16.jpg",
           "synopsis": "Bart bonds with Ned Flanders, which leaves Homer jealous, so he retaliates by mentoring Nelson Muntz. Then, a heroic act by Homer makes Bart look up to him again.",
           "titleEs": "Mejor fuera Ned (episodio)",
           "synopsisEs": "Bart se une a Ned Flanders, lo que deja a Homer celoso, por lo que toma represalias siendo mentor de Nelson Muntz. Entonces, un acto heroico de Homero hace que Bart vuelva a admirarlo."
@@ -7728,7 +7728,7 @@ const data = {
           "title": "Highway to Well",
           "duration": "24",
           "airDate": "2020-03-22",
-          "image": "31x17.jpg",
+          "image": "simpsons_31x17.jpg",
           "synopsis": "Marge gets a job at a high-end marijuana dispensary, but when Otto just wants to \"score some weed\", Homer and Moe open a competing dispensary that features the experience of buying it illegally... which Marge has to get shut down if she wants to keep her own job.",
           "titleEs": "Carretera al pozo",
           "synopsisEs": "Marge consigue un trabajo en un dispensario de marihuana de alta gama, pero cuando Otto sólo quiere \"conseguir un poco de hierba\", Homer y Moe abren un dispensario competidor que ofrece la experiencia de comprarla ilegalmente... el cual Marge tiene que cerrar si quiere conservar su propio trabajo."
@@ -7739,7 +7739,7 @@ const data = {
           "title": "The Incredible Lightness of Being a Baby",
           "duration": "24",
           "airDate": "2020-03-15",
-          "image": "31x18.jpg",
+          "image": "simpsons_31x18.jpg",
           "synopsis": "When Maggie reunites with Baby Hudson (from \"Playdate with Destiny\"), Marge won't let her play with her new baby crush because of his annoying mother, leading Maggie into a depressive spiral. Meanwhile, Cletus comes across quite a bit of money and becomes a helium tycoon, so Mr. Burns wants Homer to help him obtain it.",
           "titleEs": "La increíble levedad de ser un bebé",
           "synopsisEs": "Cuando Maggie se reúne con Baby Hudson (de \"Playdate with Destiny\"), Marge no la deja jugar con el nuevo bebé que le gusta debido a su molesta madre, lo que lleva a Maggie a una espiral depresiva. Mientras tanto, Cletus encuentra bastante dinero y se convierte en un magnate del helio, por lo que el señor Burns quiere que Homer le ayude a conseguirlo."
@@ -7750,7 +7750,7 @@ const data = {
           "title": "Warrin' Priests (Part One)",
           "duration": "24",
           "airDate": "2020-04-26",
-          "image": "31x19.jpg",
+          "image": "simpsons_31x19.jpg",
           "synopsis": "When Bode, a young charismatic new preacher, comes to town and shakes things up at church.  While many people take a liking to Bode Ned Flanders views the new priest as evil just because his preachings are different.  Lisa also starts to really see Bode as a role model especially since he helps all people regardless of their religion, even Marge and Homer have their issues resolved.  Eventually the church dismisses Revered Lovejoy from his service and is unemployed.  However after learning that Bode was actually sent away, Reverend Lovejoy and Helen leave to investigates Bode's mysterious past.",
           "titleEs": "Sacerdotes guerreros (primera parte)",
           "synopsisEs": "Cuando Bode, un joven y carismático nuevo predicador, llega a la ciudad y cambia las cosas en la iglesia.  Si bien a muchas personas les gusta Bode, Ned Flanders ve al nuevo sacerdote como malvado solo porque sus predicaciones son diferentes.  Lisa también comienza a ver a Bode como un modelo a seguir, especialmente porque ayuda a todas las personas independientemente de su religión, incluso Marge y Homer tienen sus problemas resueltos.  Finalmente, la iglesia despide al reverendo Lovejoy de su servicio y queda desempleado.  Sin embargo, después de enterarse de que Bode fue despedido, el reverendo Lovejoy y Helen se van para investigar el misterioso pasado de Bode."
@@ -7761,7 +7761,7 @@ const data = {
           "title": "Warrin' Priests (Part Two)",
           "duration": "24",
           "airDate": "2020-05-03",
-          "image": "31x20.jpg",
+          "image": "simpsons_31x20.jpg",
           "synopsis": "In Michigan, Reverend Lovejoy uncovers the reason why Bode left and came to Springfield. When the congregation learns of his crime, they must decide whether to banish their new priest.  Meanwhile Flanders is getting fed up with Bode's preaching methods but Lisa starts to see Bode as a great idol (Marge does remind Lisa that almost every time Lisa has had an adult influence, it doesn't really end well).",
           "titleEs": "Sacerdotes guerreros (segunda parte)",
           "synopsisEs": "En Michigan, el reverendo Lovejoy descubre la razón por la que Bode se fue y vino a Springfield. Cuando la congregación se entera de su crimen, deben decidir si destierran a su nuevo sacerdote.  Mientras tanto, Flanders se está hartando de los métodos de predicación de Bode, pero Lisa comienza a ver a Bode como un gran ídolo (Marge le recuerda a Lisa que casi cada vez que Lisa ha tenido una influencia adulta, en realidad no termina bien)."
@@ -7772,7 +7772,7 @@ const data = {
           "title": "The Hateful Eight-Year-Olds",
           "duration": "24",
           "airDate": "2020-05-10",
-          "image": "31x21.jpg",
+          "image": "simpsons_31x21.jpg",
           "synopsis": "Lisa makes a new friend who loves horses, but then becomes part of a circle of snooty young rich girls. Meanwhile, Homer takes Marge on a romantic cruise.",
           "titleEs": "Los odiosos niños de ocho años",
           "synopsisEs": "Lisa hace una nueva amiga a la que le encantan los caballos, pero luego pasa a formar parte de un círculo de jóvenes ricas y presumidas. Mientras tanto, Homero lleva a Marge a un crucero romántico."
@@ -7783,7 +7783,7 @@ const data = {
           "title": "The Way of the Dog",
           "duration": "24",
           "airDate": "2020-05-17",
-          "image": "31x22.jpg",
+          "image": "simpsons_31x22.jpg",
           "synopsis": "After the Simpsons' dog bites Marge, the family explores the tragic past of Santa's Little Helper.",
           "titleEs": "El camino del perro",
           "synopsisEs": "Después de que el perro de los Simpson muerde a Marge, la familia explora el trágico pasado del pequeño ayudante de Santa."
@@ -7794,7 +7794,7 @@ const data = {
     {
       "id": 32,
       "title": "Temporada 32",
-      "image": "Season_32_Icon.jpg",
+      "image": "simpsons_Season_32_Icon.jpg",
       "avgColor": "#577266",
       "episodes": [
         {
@@ -7803,7 +7803,7 @@ const data = {
           "title": "Undercover Burns",
           "duration": "23",
           "airDate": "2020-09-27",
-          "image": "32x01.jpg",
+          "image": "simpsons_32x01.jpg",
           "synopsis": "Lisa makes a new friend who loves horses, but then becomes part of a circle of snooty young rich girls. Meanwhile, Homer takes Marge on a romantic cruise.",
           "titleEs": "Quemaduras encubiertas",
           "synopsisEs": "Lisa hace una nueva amiga a la que le encantan los caballos, pero luego pasa a formar parte de un círculo de jóvenes ricas y presumidas. Mientras tanto, Homero lleva a Marge a un crucero romántico."
@@ -7814,7 +7814,7 @@ const data = {
           "title": "I, Carumbus",
           "duration": "24",
           "airDate": "2020-10-04",
-          "image": "32x02.jpg",
+          "image": "simpsons_32x02.jpg",
           "synopsis": "After the Simpsons' dog bites Marge, the family explores the tragic past of Santa's Little Helper.",
           "titleEs": "Yo, Carumbus",
           "synopsisEs": "Después de que el perro de los Simpson muerde a Marge, la familia explora el trágico pasado del pequeño ayudante de Santa."
@@ -7825,7 +7825,7 @@ const data = {
           "title": "Now Museum, Now You Don't",
           "duration": "23",
           "airDate": "2020-10-11",
-          "image": "32x03.jpg",
+          "image": "simpsons_32x03.jpg",
           "synopsis": "",
           "titleEs": "Ahora museo, ahora no"
         },
@@ -7835,7 +7835,7 @@ const data = {
           "title": "Treehouse of Horror XXXI",
           "duration": "23",
           "airDate": "2020-10-04",
-          "image": "32x04.jpg",
+          "image": "simpsons_32x04.jpg",
           "synopsis": "This year, Homer learns the hard way that voting in elections does matter; the toys Bart once tortured and abused get their revenge; Homer finds a nickel slot machine that brings alternate universe versions of Homer into the current universe; and Lisa is cursed to repeat her ninth birthday.",
           "titleEs": "La casa del árbol del terror XXXI",
           "synopsisEs": "Este año, Homer aprende por las malas que votar en las elecciones sí importa; los juguetes que Bart una vez torturó y abusó se vengan; Homer encuentra una máquina tragamonedas de níquel que trae versiones alternativas de Homer al universo actual; y Lisa está maldita a repetir su noveno cumpleaños."
@@ -7846,7 +7846,7 @@ const data = {
           "title": "The 7 Beer Itch",
           "duration": "23",
           "airDate": "2020-11-08",
-          "image": "32x05.jpg",
+          "image": "simpsons_32x05.jpg",
           "synopsis": "When Marge and the kids take a seaside vacation, Homer is unwittingly tempted by a British femme fatale named Lily Marleen.",
           "titleEs": "La picazón de las 7 cervezas",
           "synopsisEs": "Cuando Marge y los niños se van de vacaciones a la playa, Homer se siente tentado sin darse cuenta por una mujer fatal británica llamada Lily Marleen."
@@ -7857,7 +7857,7 @@ const data = {
           "title": "Podcast News",
           "duration": "23",
           "airDate": "2020-11-15",
-          "image": "32x06.jpg",
+          "image": "simpsons_32x06.jpg",
           "synopsis": "Grampa is accused of a crime, while Kent Brockman questions his career.",
           "titleEs": "Noticias del podcast",
           "synopsisEs": "El abuelo es acusado de un delito, mientras Kent Brockman cuestiona su carrera."
@@ -7868,7 +7868,7 @@ const data = {
           "title": "Three Dreams Denied",
           "duration": "23",
           "airDate": "2020-11-22",
-          "image": "32x07.jpg",
+          "image": "simpsons_32x07.jpg",
           "synopsis": "Bart becomes a voiceover actor and Comic Book Guy is humiliated at Comic-Con. Meanwhile, Lisa is set up for a fall.",
           "titleEs": "Tres sueños negados",
           "synopsisEs": "Bart se convierte en actor de doblaje y Comic Book Guy es humillado en la Comic-Con. Mientras tanto, Lisa está preparada para una caída."
@@ -7879,7 +7879,7 @@ const data = {
           "title": "The Road to Cincinnati",
           "duration": "23",
           "airDate": "2020-11-29",
-          "image": "32x08.jpg",
+          "image": "simpsons_32x08.jpg",
           "synopsis": "Odd couple Skinner and Chalmers embark on an 800-mile car ride to Cincinnati to attend an administrator's convention, but whether they reach their destination without killing each other first is anyone's guess.",
           "titleEs": "El camino a Cincinnati",
           "synopsisEs": "La extraña pareja Skinner y Chalmers se embarcan en un viaje en automóvil de 800 millas a Cincinnati para asistir a una convención de administradores, pero nadie sabe si llegan a su destino sin matarse primero."
@@ -7890,7 +7890,7 @@ const data = {
           "title": "Sorry Not Sorry",
           "duration": "23",
           "airDate": "2020-12-06",
-          "image": "32x09.jpg",
+          "image": "simpsons_32x09.jpg",
           "synopsis": "Lisa calls her teacher, Ms. Hoover, a \"hack\" and refuses to apologize. Then, she learns Ms. Hoover’s private pain.",
           "titleEs": "Lo siento, no lo siento",
           "synopsisEs": "Lisa llama \"pirata\" a su maestra, la Sra. Hoover, y se niega a disculparse. Luego, se entera del dolor privado de la Sra. Hoover."
@@ -7901,7 +7901,7 @@ const data = {
           "title": "A Springfield Summer Christmas for Christmas",
           "duration": "23",
           "airDate": "2020-12-13",
-          "image": "32x10.jpg",
+          "image": "simpsons_32x10.jpg",
           "synopsis": "A cable channel films a Christmas movie in Springfield and Skinner falls in love, but after some leaks, things go for the worse.",
           "titleEs": "Una Navidad de verano en Springfield para Navidad",
           "synopsisEs": "Un canal de cable filma una película navideña en Springfield y Skinner se enamora, pero tras algunas filtraciones, las cosas empeoran."
@@ -7912,7 +7912,7 @@ const data = {
           "title": "The Dad-Feelings Limited",
           "duration": "23",
           "airDate": "2021-01-03",
-          "image": "32x11.jpg",
+          "image": "simpsons_32x11.jpg",
           "synopsis": "Lisa calls her teacher, Ms. Hoover, a \"hack\" and refuses to apologize. Then, she learns Ms. Hoover’s private pain.",
           "titleEs": "Los sentimientos de papá limitados",
           "synopsisEs": "Lisa llama \"pirata\" a su maestra, la Sra. Hoover, y se niega a disculparse. Luego, se entera del dolor privado de la Sra. Hoover."
@@ -7923,7 +7923,7 @@ const data = {
           "title": "Diary Queen",
           "duration": "23",
           "airDate": "2020-12-13",
-          "image": "32x12.jpg",
+          "image": "simpsons_32x12.jpg",
           "synopsis": "Bart finds his old teacher's diary and learns a surprising secret. Then, Lisa discovers an even bigger surprise.",
           "titleEs": "reina del diario",
           "synopsisEs": "Bart encuentra el diario de su antiguo maestro y descubre un secreto sorprendente. Entonces Lisa descubre una sorpresa aún mayor."
@@ -7934,7 +7934,7 @@ const data = {
           "title": "Wad Goals",
           "duration": "23",
           "airDate": "2021-02-28",
-          "image": "32x13.jpg",
+          "image": "simpsons_32x13.jpg",
           "synopsis": "",
           "titleEs": "Metas de taco"
         },
@@ -7944,7 +7944,7 @@ const data = {
           "title": "Yokel Hero",
           "duration": "23",
           "airDate": "2021-03-07",
-          "image": "32x14.jpg",
+          "image": "simpsons_32x14.jpg",
           "synopsis": "Cletus becomes a singing sensation, while Homer becomes a new man. Then, Cletus turns on his fans, ruining everything.",
           "titleEs": "Héroe paleto",
           "synopsisEs": "Cletus se convierte en una sensación del canto, mientras que Homero se convierte en un hombre nuevo. Entonces, Cletus se vuelve contra sus fans y lo arruina todo."
@@ -7955,7 +7955,7 @@ const data = {
           "title": "Do PizzaBots Dream of Electric Guitars?",
           "duration": "24",
           "airDate": "2021-03-14",
-          "image": "32x15.jpg",
+          "image": "simpsons_32x15.jpg",
           "synopsis": "Homer tries to reunite a mechanical band from his youth, but film and TV creator J. J. Abrams gets hold of them first.",
           "titleEs": "¿Sueñan los PizzaBots con guitarras eléctricas?",
           "synopsisEs": "Homero intenta reunir una banda mecánica de su juventud, pero el creador de cine y televisión J. J. Abrams los consigue primero."
@@ -7966,7 +7966,7 @@ const data = {
           "title": "Manger Things",
           "duration": "23",
           "airDate": "2021-03-21",
-          "image": "32x16.jpg",
+          "image": "simpsons_32x16.jpg",
           "synopsis": "Learn a secret of Flanders’ past and discover a never-before-seen room.",
           "titleEs": "Cosas del pesebre",
           "synopsisEs": "Conozca un secreto del pasado de Flandes y descubra una habitación nunca antes vista."
@@ -7977,7 +7977,7 @@ const data = {
           "title": "Uncut Femmes",
           "duration": "23",
           "airDate": "2021-03-28",
-          "image": "32x17.jpg",
+          "image": "simpsons_32x17.jpg",
           "synopsis": "Chief Wiggum’s wife is more than she seems; Marge takes part in a jewel heist.",
           "titleEs": "mujeres sin cortes",
           "synopsisEs": "La esposa del jefe Wiggum es más de lo que parece; Marge participa en un robo de joyas."
@@ -7988,7 +7988,7 @@ const data = {
           "title": "Burger Kings",
           "duration": "23",
           "airDate": "2021-04-11",
-          "image": "32x18.jpg",
+          "image": "simpsons_32x18.jpg",
           "synopsis": "Mr. Burns gets into the plant-based burger business. Lisa refuses to believe he’s up to no good.",
           "titleEs": "hamburguesas reyes",
           "synopsisEs": "Burns ingresa al negocio de las hamburguesas a base de plantas. Lisa se niega a creer que él no trama nada bueno."
@@ -7999,7 +7999,7 @@ const data = {
           "title": "Panic on the Streets of Springfield",
           "duration": "25",
           "airDate": "2021-04-18",
-          "image": "32x19.jpg",
+          "image": "simpsons_32x19.jpg",
           "synopsis": "Lisa gets an imaginary friend who makes her feel much better about her friends. Meanwhile, Homer gets a vehicle with awesome torque.",
           "titleEs": "Pánico en las calles de Springfield",
           "synopsisEs": "Lisa tiene una amiga imaginaria que la hace sentir mucho mejor con sus amigos. Mientras tanto, Homer consigue un vehículo con un torque increíble."
@@ -8010,7 +8010,7 @@ const data = {
           "title": "Mother and Child Reunion",
           "duration": "23",
           "airDate": "2021-04-11",
-          "image": "32x20.jpg",
+          "image": "simpsons_32x20.jpg",
           "synopsis": "Lisa makes a shocking college decision, wounding Marge. It leads to a very surprising place.",
           "titleEs": "Reunión de madre e hijo",
           "synopsisEs": "Lisa toma una impactante decisión universitaria, hiriendo a Marge. Conduce a un lugar muy sorprendente."
@@ -8021,7 +8021,7 @@ const data = {
           "title": "The Man from G.R.A.M.P.A.",
           "duration": "23",
           "airDate": "2021-05-16",
-          "image": "32x21.jpg",
+          "image": "simpsons_32x21.jpg",
           "synopsis": "Lisa gets an imaginary friend who makes her feel much better about her friends. Meanwhile, Homer gets a vehicle with awesome torque.",
           "titleEs": "El hombre de G.R.A.M.P.A.",
           "synopsisEs": "Lisa tiene una amiga imaginaria que la hace sentir mucho mejor con sus amigos. Mientras tanto, Homer consigue un vehículo con un torque increíble."
@@ -8032,7 +8032,7 @@ const data = {
           "title": "The Last Barfighter",
           "duration": "24",
           "airDate": "2021-05-23",
-          "image": "32x22.jpg",
+          "image": "simpsons_32x22.jpg",
           "synopsis": "After Moe breaks their most sacred rule, a secret society of bartenders seeks ultimate vengeance on Homer and his friends.",
           "titleEs": "El último barman",
           "synopsisEs": "Después de que Moe rompe su regla más sagrada, una sociedad secreta de camareros busca venganza definitiva contra Homer y sus amigos."
@@ -8043,7 +8043,7 @@ const data = {
     {
       "id": 33,
       "title": "Temporada 33",
-      "image": "Season_33_Icon.jpg",
+      "image": "simpsons_Season_33_Icon.jpg",
       "avgColor": "#7A93A7",
       "episodes": [
         {
@@ -8052,7 +8052,7 @@ const data = {
           "title": "The Star of the Backstage",
           "duration": "23",
           "airDate": "2021-09-26",
-          "image": "33x01.jpg",
+          "image": "simpsons_33x01.jpg",
           "synopsis": "A musical comes to life in Springfield as Marge stages a revival of her beloved high school show - but her wonderful memories are threatened by the return of a rival from the past.",
           "titleEs": "La estrella del backstage",
           "synopsisEs": "Un musical cobra vida en Springfield cuando Marge renueva su querido espectáculo de la escuela secundaria, pero sus maravillosos recuerdos se ven amenazados por el regreso de un rival del pasado."
@@ -8063,7 +8063,7 @@ const data = {
           "title": "Bart's In Jail!",
           "duration": "23",
           "airDate": "2021-10-03",
-          "image": "33x02.jpg",
+          "image": "simpsons_33x02.jpg",
           "synopsis": "When Grampa falls victim to a phone scammer, the Simpsons set out on a mission of vengeance to get his money back.",
           "titleEs": "¡Bart está en la cárcel!",
           "synopsisEs": "Cuando el abuelo es víctima de un estafador telefónico, los Simpson emprenden una misión de venganza para recuperar su dinero."
@@ -8074,7 +8074,7 @@ const data = {
           "title": "Treehouse of Horror XXXII",
           "duration": "24",
           "airDate": "2021-10-10",
-          "image": "33x03.jpg",
+          "image": "simpsons_33x03.jpg",
           "synopsis": "This year, there are five horrific segments instead of the usual three:",
           "titleEs": "La casa del árbol del terror XXXII",
           "synopsisEs": "Este año, hay cinco segmentos terroríficos en lugar de los tres habituales:"
@@ -8085,7 +8085,7 @@ const data = {
           "title": "The Wayz We Were",
           "duration": "23",
           "airDate": "2021-10-17",
-          "image": "33x04.jpg",
+          "image": "simpsons_33x04.jpg",
           "synopsis": "Evergreen Terrace is overrun with traffic and Moe has a fateful choice to make.",
           "titleEs": "Los Wayz que éramos",
           "synopsisEs": "Evergreen Terrace está invadida por el tráfico y Moe tiene que tomar una decisión fatídica."
@@ -8096,7 +8096,7 @@ const data = {
           "title": "Lisa's Belly",
           "duration": "24",
           "airDate": "2021-10-24",
-          "image": "33x05.jpg",
+          "image": "simpsons_33x05.jpg",
           "synopsis": "Marge puts a hurtful word in Lisa's brain and Bart gets swole.",
           "titleEs": "El vientre de Lisa",
           "synopsisEs": "Marge pone una palabra hiriente en el cerebro de Lisa y Bart se enoja."
@@ -8107,7 +8107,7 @@ const data = {
           "title": "A Serious Flanders: Part One and Two",
           "duration": "45",
           "airDate": "2021-11-07",
-          "image": "33x06.jpg",
+          "image": "simpsons_33x06.jpg",
           "synopsis": "When a ruthless debt collector comes to Springfield, Homer and Ned's lives are sucked into the artfully violent world of prestige TV.",
           "titleEs": "Un Flandes serio: primera y segunda parte",
           "synopsisEs": "Cuando un despiadado cobrador de deudas llega a Springfield, las vidas de Homer y Ned se ven absorbidas por el ingeniosamente violento mundo de la prestigiosa televisión."
@@ -8118,7 +8118,7 @@ const data = {
           "title": "Portrait of a Lackey on Fire",
           "duration": "23",
           "airDate": "2021-11-21",
-          "image": "33x07.jpg",
+          "image": "simpsons_33x07.jpg",
           "synopsis": "Smithers finds true love with a famous fashion designer, but will his new relationship destroy Springfield?",
           "titleEs": "Retrato de un lacayo en llamas",
           "synopsisEs": "Smithers encuentra el amor verdadero en un famoso diseñador de moda, pero ¿su nueva relación destruirá Springfield?"
@@ -8129,7 +8129,7 @@ const data = {
           "title": "Mothers and Other Strangers",
           "duration": "23",
           "airDate": "2021-11-28",
-          "image": "33x08.jpg",
+          "image": "simpsons_33x08.jpg",
           "synopsis": "Teenager Homer and Grampa take a road trip to look for his mom.",
           "titleEs": "Madres y otros extraños",
           "synopsisEs": "El adolescente Homer y el abuelo hacen un viaje por carretera para buscar a su madre."
@@ -8140,7 +8140,7 @@ const data = {
           "title": "A Made Maggie",
           "duration": "23",
           "airDate": "2021-12-19",
-          "image": "33x09.jpg",
+          "image": "simpsons_33x09.jpg",
           "synopsis": "Fit-Fat Tony becomes Godfather to Maggie Simpson.",
           "titleEs": "Una maggie hecha",
           "synopsisEs": "Fit-Fat Tony se convierte en el padrino de Maggie Simpson."
@@ -8151,7 +8151,7 @@ const data = {
           "title": "The Longest Marge",
           "duration": "24",
           "airDate": "2022-01-02",
-          "image": "33x10.jpg",
+          "image": "simpsons_33x10.jpg",
           "synopsis": "Marge and Mr. Burns fight for soul of a brash young football prodigy.",
           "titleEs": "La marge más larga",
           "synopsisEs": "Marge y el Sr. Burns luchan por el alma de un joven y atrevido prodigio del fútbol."
@@ -8162,7 +8162,7 @@ const data = {
           "title": "Pixelated and Afraid",
           "duration": "23",
           "airDate": "2022-02-27",
-          "image": "33x11.jpg",
+          "image": "simpsons_33x11.jpg",
           "synopsis": "When Homer and Marge are lost in an icy wilderness, they must push themselves to their limits to survive.",
           "titleEs": "Pixelado y asustado",
           "synopsisEs": "Cuando Homer y Marge se pierden en un desierto helado, deben esforzarse al máximo para sobrevivir."
@@ -8173,7 +8173,7 @@ const data = {
           "title": "Boyz N the Highlands",
           "duration": "24",
           "airDate": "2022-03-06",
-          "image": "33x12.jpg",
+          "image": "simpsons_33x12.jpg",
           "synopsis": "Bart, Martin, Nelson and Dolph are on the run for their lives when a wilderness weekend takes a chilling turn.",
           "titleEs": "Boyz N las Tierras Altas",
           "synopsisEs": "Bart, Martin, Nelson y Dolph huyen para salvar sus vidas cuando un fin de semana en la naturaleza toma un giro escalofriante."
@@ -8184,7 +8184,7 @@ const data = {
           "title": "You Won't Believe What This Episode is About - Act Three Will Shock You!",
           "duration": "24",
           "airDate": "2022-03-13",
-          "image": "33x13.jpg",
+          "image": "simpsons_33x13.jpg",
           "synopsis": "When Homer is erroneously blamed for leaving Santa's Little Helper locked in a hot car, footage of the incident goes viral, outraging all of Springfield and making Homer a pariah.",
           "titleEs": "No creerás de qué se trata este episodio: ¡el tercer acto te sorprenderá!",
           "synopsisEs": "Cuando se culpa erróneamente a Homer de haber dejado al pequeño ayudante de Santa encerrado en un auto caliente, las imágenes del incidente se vuelven virales, indignando a todo Springfield y convirtiendo a Homer en un paria."
@@ -8195,7 +8195,7 @@ const data = {
           "title": "Bart the Cool Kid",
           "duration": "23",
           "airDate": "2022-03-20",
-          "image": "33x14.jpg",
+          "image": "simpsons_33x14.jpg",
           "synopsis": "When Bart befriends a famous kid influencer who owns an ultra-cool skate wear brand, Homer leads a rebellion of loser dads against them.",
           "titleEs": "Bart el chico genial",
           "synopsisEs": "Cuando Bart se hace amigo de un famoso niño influyente que posee una marca de ropa de skate ultramoderna, Homer lidera una rebelión de padres perdedores contra ellos."
@@ -8206,7 +8206,7 @@ const data = {
           "title": "Pretty Whittle Liar",
           "duration": "23",
           "airDate": "2022-03-27",
-          "image": "33x15.jpg",
+          "image": "simpsons_33x15.jpg",
           "synopsis": "Cletus discovers that his wife Brandine has been hiding a secret love ... of learning.",
           "titleEs": "Bastante mentirosa",
           "synopsisEs": "Cletus descubre que su esposa Brandine ha estado ocultando un amor secreto... por el aprendizaje."
@@ -8217,7 +8217,7 @@ const data = {
           "title": "The Sound of Bleeding Gums",
           "duration": "23",
           "airDate": "2022-04-10",
-          "image": "33x16.jpg",
+          "image": "simpsons_33x16.jpg",
           "synopsis": "Lisa meets the son of the late musician Bleeding Gums Murphy -- and attempts to improve his life.",
           "titleEs": "El sonido de las encías sangrantes",
           "synopsisEs": "Lisa conoce al hijo del fallecido músico Bleeding Gums Murphy e intenta mejorar su vida."
@@ -8228,7 +8228,7 @@ const data = {
           "title": "My Octopus and a Teacher",
           "duration": "23",
           "airDate": "2022-04-24",
-          "image": "33x17.jpg",
+          "image": "simpsons_33x17.jpg",
           "synopsis": "Bart can't control his feelings when he gets a new teacher. Meanwhile, Lisa befriends an octopus.",
           "titleEs": "Mi pulpo y una maestra",
           "synopsisEs": "Bart no puede controlar sus sentimientos cuando consigue un nuevo maestro. Mientras tanto, Lisa se hace amiga de un pulpo."
@@ -8239,7 +8239,7 @@ const data = {
           "title": "Girls Just Shauna Have Fun",
           "duration": "23",
           "airDate": "2022-04-10",
-          "image": "33x18.jpg",
+          "image": "simpsons_33x18.jpg",
           "synopsis": "When Lisa joins the high school marching band, she finds an unlikely mentor in Shauna Chalmers. Meanwhile, Homer   becomes a craft beer brewer with Chalmers.",
           "titleEs": "Las chicas solo Shauna se divierten",
           "synopsisEs": "Cuando Lisa se une a la banda de música de la escuela secundaria, encuentra una mentora poco común en Shauna Chalmers. Mientras tanto, Homer se convierte en cervecero artesanal con Chalmers."
@@ -8250,7 +8250,7 @@ const data = {
           "title": "Marge the Meanie",
           "duration": "23",
           "airDate": "2022-05-08",
-          "image": "33x19.jpg",
+          "image": "simpsons_33x19.jpg",
           "synopsis": "A surprise from Marge's past has her bonding with Bart and while Homer tries to bond with Lisa.",
           "titleEs": "Marge la mala",
           "synopsisEs": "Una sorpresa del pasado de Marge la vincula con Bart y mientras Homer intenta vincularse con Lisa."
@@ -8261,7 +8261,7 @@ const data = {
           "title": "Meat Is Murder",
           "duration": "24",
           "airDate": "2022-05-15",
-          "image": "33x20.jpg",
+          "image": "simpsons_33x20.jpg",
           "synopsis": "Grampa finds himself in a pickle when his hidden hamburger past comes back to \"ketchup\" with him.",
           "titleEs": "La carne es un asesinato",
           "synopsisEs": "El abuelo se encuentra en un aprieto cuando su pasado oculto en las hamburguesas regresa al \"ketchup\" con él."
@@ -8272,7 +8272,7 @@ const data = {
           "title": "Poorhouse Rock",
           "duration": "23",
           "airDate": "2022-05-15",
-          "image": "33x21.jpg",
+          "image": "simpsons_33x21.jpg",
           "synopsis": "After Bart humiliates him at church, Homer finally teaches his son to admire his dad - til a visit from a magical, singing janitor (Hugh Jackman) changes everything they thought they knew.",
           "titleEs": "Roca del asilo de pobres",
           "synopsisEs": "Después de que Bart lo humilla en la iglesia, Homer finalmente le enseña a su hijo a admirar a su padre, hasta que la visita de un conserje mágico y cantante (Hugh Jackman) cambia todo lo que creían saber."
@@ -8283,7 +8283,7 @@ const data = {
     {
       "id": 34,
       "title": "Temporada 34",
-      "image": "Season_34_Icon.jpg",
+      "image": "simpsons_Season_34_Icon.jpg",
       "avgColor": "#744A4E",
       "episodes": [
         {
@@ -8292,7 +8292,7 @@ const data = {
           "title": "Habeas Tortoise",
           "duration": "23",
           "airDate": "2022-09-25",
-          "image": "34x01.jpg",
+          "image": "simpsons_34x01.jpg",
           "synopsis": "After Homer humiliates himself in a town meeting, he looks for acceptance in an internet group hunting for a missing tortoise but finds something much more sinister.",
           "titleEs": "Tortuga de hábeas",
           "synopsisEs": "Después de que Homero se humilla en una reunión municipal, busca aceptación en un grupo de Internet que busca una tortuga desaparecida, pero encuentra algo mucho más siniestro."
@@ -8303,7 +8303,7 @@ const data = {
           "title": "One Angry Lisa",
           "duration": "23",
           "airDate": "2022-10-02",
-          "image": "34x02.jpg",
+          "image": "simpsons_34x02.jpg",
           "synopsis": "Lisa gets called for jury duty while Marge becomes obsessed with her exercise bike.",
           "titleEs": "Una lisa enojada",
           "synopsisEs": "Llaman a Lisa para que actúe como jurado mientras Marge se obsesiona con su bicicleta estática."
@@ -8314,7 +8314,7 @@ const data = {
           "title": "Lisa the Boy Scout",
           "duration": "24",
           "airDate": "2022-10-09",
-          "image": "34x03.jpg",
+          "image": "simpsons_34x03.jpg",
           "synopsis": "An episode of The Simpsons where Bart and Lisa join a kids' scout troop that just went co-ed gets interrupted by a pair of Internet hackers who hold the show hostage in exchange for Bitcoins by showing \"show-ruining\" clips.",
           "titleEs": "Lisa la boy scout",
           "synopsisEs": "Un episodio de Los Simpson en el que Bart y Lisa se unen a una tropa de niños exploradores que acaba de convertirse en mixto es interrumpido por un par de piratas informáticos de Internet que mantienen al programa como rehén a cambio de Bitcoins mostrando clips que \"arruinan el espectáculo\"."
@@ -8325,7 +8325,7 @@ const data = {
           "title": "The King of Nice",
           "duration": "24",
           "airDate": "2022-10-16",
-          "image": "34x04.jpg",
+          "image": "simpsons_34x04.jpg",
           "synopsis": "Marge is hired as a segment producer on Krusty's new daytime talk show. But her initial excitement about the job fades when she discovers what an endless nightmare it is.",
           "titleEs": "El rey de Niza",
           "synopsisEs": "Marge es contratada como productora de segmento en el nuevo programa de entrevistas diurno de Krusty. Pero su entusiasmo inicial por el trabajo se desvanece cuando descubre que es una pesadilla interminable."
@@ -8336,7 +8336,7 @@ const data = {
           "title": "Not It",
           "duration": "23",
           "airDate": "2022-10-23",
-          "image": "34x05.jpg",
+          "image": "simpsons_34x05.jpg",
           "synopsis": "In this full-length “Treehouse of Horror” Halloween episode, Homer and his teenaged friends are pursued by a killer clown (Krusty) in a spoof of Stephen King’s novel It (though, mostly, it's based on the 2017 movie version).",
           "titleEs": "No es eso",
           "synopsisEs": "En este episodio completo de Halloween de “La casa del árbol del terror”, Homero y sus amigos adolescentes son perseguidos por un payaso asesino (Krusty) en una parodia de la novela It de Stephen King (aunque, en su mayor parte, está basada en la versión cinematográfica de 2017)."
@@ -8347,7 +8347,7 @@ const data = {
           "title": "Treehouse of Horror XXXIII",
           "duration": "24",
           "airDate": "2022-10-30",
-          "image": "34x06.jpg",
+          "image": "simpsons_34x06.jpg",
           "synopsis": "This year's tales of terror see Marge become possessed by a demon that feeds off her resentment and misery as a mom, a spoof of the anime Death Note where Lisa saves the world by writing names in a cursed notebook, and a Westworld parody where The Simpsons discover that they're robots in a theme park chronicling the show's history and memorable moments.",
           "titleEs": "La casa del árbol del terror XXXIII",
           "synopsisEs": "Las historias de terror de este año ven a Marge poseída por un demonio que se alimenta de su resentimiento y miseria como madre, una parodia del anime Death Note donde Lisa salva al mundo escribiendo nombres en un cuaderno maldito y una parodia de Westworld donde Los Simpson descubren que son robots en un parque temático que narra la historia del programa y sus momentos memorables."
@@ -8358,7 +8358,7 @@ const data = {
           "title": "From Beer to Paternity",
           "duration": "23",
           "airDate": "2022-11-13",
-          "image": "34x07.jpg",
+          "image": "simpsons_34x07.jpg",
           "synopsis": "When Homer becomes Duffman's girl-dad hero, they go on a road trip with Lisa that threatens to expose Homer's terrible parenting.",
           "titleEs": "De la cerveza a la paternidad",
           "synopsisEs": "Cuando Homer se convierte en el héroe padre-niña de Duffman, se embarcan en un viaje por carretera con Lisa que amenaza con exponer la terrible paternidad de Homer."
@@ -8369,7 +8369,7 @@ const data = {
           "title": "Step Brother from the Same Planet",
           "duration": "23",
           "airDate": "2022-11-20",
-          "image": "34x08.jpg",
+          "image": "simpsons_34x08.jpg",
           "synopsis": "Homer has a rival in Grampa's love in a \"Stepbrothers\" scenario.",
           "titleEs": "Hermanastro del mismo planeta",
           "synopsisEs": "Homero tiene un rival en el amor del abuelo en un escenario de \"Hermanastros\"."
@@ -8380,7 +8380,7 @@ const data = {
           "title": "When Nelson Met Lisa",
           "duration": "23",
           "airDate": "2022-11-27",
-          "image": "34x09.jpg",
+          "image": "simpsons_34x09.jpg",
           "synopsis": "A future tale of the will-they-won’t-they-I-guess-they-won’t-maybe-they-will of Springfield’s most unlikely couple: Lisa Simpson and Nelson Muntz.",
           "titleEs": "Cuando Nelson conoció a Lisa",
           "synopsisEs": "Una historia futura de la voluntad-ellos-no-ellos-supongo-que-no-tal vez-lo harán-de la pareja más improbable de Springfield: Lisa Simpson y Nelson Muntz."
@@ -8391,7 +8391,7 @@ const data = {
           "title": "Game Done Changed",
           "duration": "23",
           "airDate": "2022-12-04",
-          "image": "34x10.jpg",
+          "image": "simpsons_34x10.jpg",
           "synopsis": "When Bart discovers a profitable glitch in an online game, he ropes Principal Skinner into his lucrative criminal enterprise. Marge and Maggie discover paradise.",
           "titleEs": "Juego hecho cambiado",
           "synopsisEs": "Cuando Bart descubre un error rentable en un juego en línea, involucra al director Skinner en su lucrativa empresa criminal. Marge y Maggie descubren el paraíso."
@@ -8402,7 +8402,7 @@ const data = {
           "title": "Top Goon",
           "duration": "23",
           "airDate": "2022-12-11",
-          "image": "34x11.jpg",
+          "image": "simpsons_34x11.jpg",
           "synopsis": "When Coach Moe recruits the world's greatest brawlers to teach Nelson the art of hockey goonery, Simpsons fans are enraged by a second hockey episode in 35 years.",
           "titleEs": "Top matón",
           "synopsisEs": "Cuando el entrenador Moe recluta a los mejores luchadores del mundo para enseñarle a Nelson el arte del hockey, los fanáticos de los Simpson se enfurecen ante un segundo episodio de hockey en 35 años."
@@ -8413,7 +8413,7 @@ const data = {
           "title": "My Life as a Vlog",
           "duration": "23",
           "airDate": "2023-01-01",
-          "image": "34x12.jpg",
+          "image": "simpsons_34x12.jpg",
           "synopsis": "Through a series of YouTube recommended videos, the story of the rise and fall of The Simpson Family Vlog is revealed.",
           "titleEs": "Mi vida como vlog",
           "synopsisEs": "A través de una serie de videos recomendados por YouTube, se revela la historia del ascenso y caída de The Simpson Family Vlog."
@@ -8424,7 +8424,7 @@ const data = {
           "title": "The Many Saints of Springfield",
           "duration": "23",
           "airDate": "2023-02-19",
-          "image": "34x13.jpg",
+          "image": "simpsons_34x13.jpg",
           "synopsis": "When Ned Flanders falls on hard times, Fit-Fat Tony makes him an offer he can’t refuse. But when Flanders realizes he accidentally partnered with the mob, and wants the relationship to end, Fit-Fat Tony ominously warns there’s only one way for that to happen.",
           "titleEs": "Los muchos santos de Springfield",
           "synopsisEs": "Cuando Ned Flanders atraviesa tiempos difíciles, Fit-Fat Tony le hace una oferta que no puede rechazar. Pero cuando Flanders se da cuenta de que accidentalmente se asoció con la mafia y quiere que la relación termine, Fit-Fat Tony advierte siniestramente que sólo hay una manera de que eso suceda."
@@ -8435,7 +8435,7 @@ const data = {
           "title": "Carl Carlson Rides Again",
           "duration": "23",
           "airDate": "2023-02-26",
-          "image": "34x14.jpg",
+          "image": "simpsons_34x14.jpg",
           "synopsis": "When Carl is smitten by a beautiful black woman, he looks into the roots of his own identity by discovering the origins of a mysterious rodeo buckle.",
           "titleEs": "Carl Carlson vuelve a montar",
           "synopsisEs": "Cuando Carl se enamora de una hermosa mujer negra, investiga las raíces de su propia identidad al descubrir los orígenes de una misteriosa hebilla de rodeo."
@@ -8446,7 +8446,7 @@ const data = {
           "title": "Bartless",
           "duration": "23",
           "airDate": "2023-03-05",
-          "image": "34x15.jpg",
+          "image": "simpsons_34x15.jpg",
           "synopsis": "When Bart's latest prank leads to chaos at Springfield Elementary, Marge and Homer dream of a world in which their rambunctious son was never a Simpson.",
           "titleEs": "sin barra",
           "synopsisEs": "Cuando la última broma de Bart provoca el caos en la escuela primaria de Springfield, Marge y Homer sueñan con un mundo en el que su revoltoso hijo nunca haya sido un Simpson."
@@ -8457,7 +8457,7 @@ const data = {
           "title": "Hostile Kirk Place",
           "duration": "24",
           "airDate": "2023-03-12",
-          "image": "34x16.jpg",
+          "image": "simpsons_34x16.jpg",
           "synopsis": "By fanning the flames of hate and division instead of embracing historical fact, nobody Kirk Van Houten rises from obscurity to become arbiter of Springfield Elementary's curriculum--leading to a fascist, dystopian future where Kirk is Springfield's dictator.",
           "titleEs": "Lugar hostil de Kirk",
           "synopsisEs": "Al avivar las llamas del odio y la división en lugar de aceptar los hechos históricos, nadie Kirk Van Houten surge de la oscuridad para convertirse en árbitro del plan de estudios de la escuela primaria de Springfield, lo que lleva a un futuro fascista y distópico en el que Kirk es el dictador de Springfield."
@@ -8468,7 +8468,7 @@ const data = {
           "title": "Pin Gal",
           "duration": "23",
           "airDate": "2023-03-19",
-          "image": "34x17.jpg",
+          "image": "simpsons_34x17.jpg",
           "synopsis": "A mysterious figure from Marge's past returns to coach her for a bowling tournament.",
           "titleEs": "chica pin",
           "synopsisEs": "Una figura misteriosa del pasado de Marge regresa para entrenarla en un torneo de bolos."
@@ -8479,7 +8479,7 @@ const data = {
           "title": "Fan-ily Feud",
           "duration": "23",
           "airDate": "2023-04-23",
-          "image": "34x18.jpg",
+          "image": "simpsons_34x18.jpg",
           "synopsis": "Homer Simpson publicly disparages a pop singer and faces the ire of her vindictive and highly organized fan army.",
           "titleEs": "Pelea fan-ily",
           "synopsisEs": "Homer Simpson menosprecia públicamente a una cantante pop y se enfrenta a la ira de su vengativo y altamente organizado ejército de fans."
@@ -8490,7 +8490,7 @@ const data = {
           "title": "Write Off This Episode",
           "duration": "23",
           "airDate": "2023-04-30",
-          "image": "34x19.jpg",
+          "image": "simpsons_34x19.jpg",
           "synopsis": "When Marge and Lisa start a charity together, Marge is seduced by the money and prestige of Big Charity fundraising.",
           "titleEs": "Escribe este episodio",
           "synopsisEs": "Cuando Marge y Lisa fundan juntas una organización benéfica, Marge se deja seducir por el dinero y el prestigio de la recaudación de fondos de Big Charity."
@@ -8501,7 +8501,7 @@ const data = {
           "title": "The Very Hungry Caterpillars",
           "duration": "23",
           "airDate": "2023-05-07",
-          "image": "34x20.jpg",
+          "image": "simpsons_34x20.jpg",
           "synopsis": "When a plague of insects shuts down Springfield, the Simpsons face their greatest challenge yet...spending time in lock down with each other.",
           "titleEs": "Las orugas muy hambrientas",
           "synopsisEs": "Cuando una plaga de insectos cierra Springfield, los Simpson enfrentan su mayor desafío hasta el momento... pasar tiempo encerrados unos con otros."
@@ -8512,7 +8512,7 @@ const data = {
           "title": "Clown V. Board of Education",
           "duration": "24",
           "airDate": "2023-05-14",
-          "image": "34x21.jpg",
+          "image": "simpsons_34x21.jpg",
           "synopsis": "Krusty opens a school for clowning, and it becomes the most successful thing he’s ever done.",
           "titleEs": "Payaso V. Junta de Educación",
           "synopsisEs": "Krusty abre una escuela de payasos y se convierte en lo más exitoso que jamás haya hecho."
@@ -8523,7 +8523,7 @@ const data = {
           "title": "Homer's Adventures Through the Windshield Glass",
           "duration": "24",
           "airDate": "2023-05-21",
-          "image": "34x22.jpg",
+          "image": "simpsons_34x22.jpg",
           "synopsis": "Time stands still after Homer Simpson crashes his car and flies through the windshield. As his life flashes before his eyes, a magical friend (voiced and sung by Lizzo) helps Homer learn the secret truth about his marriage.",
           "titleEs": "Las aventuras de Homero a través del cristal del parabrisas",
           "synopsisEs": "El tiempo se detiene después de que Homer Simpson choca su auto y sale volando por el parabrisas. Mientras su vida pasa ante sus ojos, un amigo mágico (con la voz y la voz de Lizzo) ayuda a Homer a descubrir la verdad secreta sobre su matrimonio."
@@ -8534,7 +8534,7 @@ const data = {
     {
       "id": 35,
       "title": "Temporada 35",
-      "image": "Season_35_Icon.jpg",
+      "image": "simpsons_Season_35_Icon.jpg",
       "avgColor": "#94A47E",
       "episodes": [
         {
@@ -8543,7 +8543,7 @@ const data = {
           "title": "Homer's Crossing",
           "duration": "24",
           "airDate": "2023-10-01",
-          "image": "35x01.jpg",
+          "image": "simpsons_35x01.jpg",
           "synopsis": "Feeling worthless at work, Homer volunteers to be a school crossing guard. But when his safety squad receives too much funding, the crossing guards become a force to be feared.",
           "titleEs": "El cruce de Homero",
           "synopsisEs": "Sintiéndose inútil en el trabajo, Homer se ofrece como voluntario para ser guardia de tránsito escolar. Pero cuando su equipo de seguridad recibe demasiados fondos, los guardias de cruce se convierten en una fuerza a temer."
@@ -8554,7 +8554,7 @@ const data = {
           "title": "A Mid-Childhood Night's Dream",
           "duration": "23",
           "airDate": "2023-10-08",
-          "image": "35x02.jpg",
+          "image": "simpsons_35x02.jpg",
           "synopsis": "Marge feels an overwhelming dread of the empty nest.",
           "titleEs": "El sueño de una noche de mediana infancia",
           "synopsisEs": "Marge siente un miedo abrumador al nido vacío."
@@ -8565,7 +8565,7 @@ const data = {
           "title": "McMansion & Wife",
           "duration": "24",
           "airDate": "2023-10-22",
-          "image": "35x03.jpg",
+          "image": "simpsons_35x03.jpg",
           "synopsis": "When a new neighbor shower him with kindness, Homer thinks he’s being tricked into buying a sports car at the dealership where the neighbor works—but the truth turns out to be even more sinister; Lisa neutralizes Nelson after he goes on a bullying spree.",
           "titleEs": "McMansión y esposa",
           "synopsisEs": "Cuando un nuevo vecino lo colma de amabilidad, Homer cree que lo están engañando para que compre un auto deportivo en el concesionario donde trabaja el vecino, pero la verdad resulta ser aún más siniestra; Lisa neutraliza a Nelson después de que éste se embarca en una ola de intimidación."
@@ -8576,7 +8576,7 @@ const data = {
           "title": "Thirst Trap: A Corporate Love Story",
           "duration": "23",
           "airDate": "2023-10-29",
-          "image": "35x04.jpg",
+          "image": "simpsons_35x04.jpg",
           "synopsis": "In a parody documentary, a young college-dropout CEO embraces the Silicon Valley \"fake it until you make it\" philosophy and bewitches Mr. Burns into funding her highly dubious dream project.",
           "titleEs": "La trampa de la sed: una historia de amor corporativa",
           "synopsisEs": "En un documental de parodia, un joven director ejecutivo que abandonó la universidad adopta la filosofía de Silicon Valley de \"fingir hasta lograrlo\" y hechiza al Sr. Burns para que financie el dudoso proyecto de sus sueños."
@@ -8587,7 +8587,7 @@ const data = {
           "title": "Treehouse of Horror XXXIV",
           "duration": "24",
           "airDate": "2023-11-05",
-          "image": "35x05.jpg",
+          "image": "simpsons_35x05.jpg",
           "synopsis": "This year's shocking tales include: Marge entering the blockchain to save Bart from becoming an NFT; a spoof of Se7en and Silence of the Lambs where, years after the events of \"Cape Feare\", a grown-up Lisa consults Sideshow Bob to help her find a serial killer, and a spoof of pandemic horror movies like Contagion and Outbreak (along with some real-world parallels to the COVID-19 pandemic) where Homer becomes patient zero to a virus that turns Springfield into a city of fat, lazy, moronic slobs.",
           "titleEs": "La casa del árbol del terror XXXIV",
           "synopsisEs": "Las impactantes historias de este año incluyen: Marge ingresa a la cadena de bloques para evitar que Bart se convierta en una NFT; una parodia de Se7en y El silencio de los corderos donde, años después de los eventos de \"Cape Feare\", una Lisa adulta consulta a Sideshow Bob para que la ayude a encontrar un asesino en serie, y una parodia de películas de terror pandémicas como Contagio y Brote (junto con algunos paralelos del mundo real con la pandemia de COVID-19) donde Homero se convierte en el paciente cero de un virus que convierte a Springfield en una ciudad de vagos gordos, perezosos y estúpidos."
@@ -8598,7 +8598,7 @@ const data = {
           "title": "Iron Marge",
           "duration": "24",
           "airDate": "2023-11-12",
-          "image": "35x06.jpg",
+          "image": "simpsons_35x06.jpg",
           "synopsis": "When Marge's heart is broken by a bad birthday present, Bart and Lisa must dig into their mom's past to show that they really know her. Homer becomes a neighborhood fear-monger.",
           "titleEs": "Margen de Hierro",
           "synopsisEs": "Cuando el corazón de Marge se rompe por un mal regalo de cumpleaños, Bart y Lisa deben investigar el pasado de su madre para demostrar que realmente la conocen. Homero se convierte en un traficante de miedo en el vecindario."
@@ -8609,7 +8609,7 @@ const data = {
           "title": "It's a Blunderful Life",
           "duration": "23",
           "airDate": "2023-11-19",
-          "image": "35x07.jpg",
+          "image": "simpsons_35x07.jpg",
           "synopsis": "An elderly Lisa recounts the story of how Homer was scapegoated for a power outage that plunged Springfield into darkness days before Thanksgiving to her family at the thanksgiving table.",
           "titleEs": "Es una vida desastrosa",
           "synopsisEs": "Una anciana Lisa le cuenta a su familia en la mesa de acción de gracias la historia de cómo Homero fue el chivo expiatorio de un corte de energía que sumió a Springfield en la oscuridad días antes del Día de Acción de Gracias."
@@ -8620,7 +8620,7 @@ const data = {
           "title": "AE Bonny Romance",
           "duration": "26",
           "airDate": "2023-12-03",
-          "image": "35x08.jpg",
+          "image": "simpsons_35x08.jpg",
           "synopsis": "When Groundskeeper Willie is kidnapped to Scotland, Bart and the Simpsons follow — only to discover that what awaits is Homer's worst nightmare.",
           "titleEs": "AE Bonny Romance",
           "synopsisEs": "Cuando el jardinero Willie es secuestrado en Escocia, Bart y los Simpson lo siguen, solo para descubrir que lo que le espera es la peor pesadilla de Homero."
@@ -8631,7 +8631,7 @@ const data = {
           "title": "Murder, She Boat",
           "duration": "25",
           "airDate": "2023-12-17",
-          "image": "35x09.jpg",
+          "image": "simpsons_35x09.jpg",
           "synopsis": "Lisa must solve a closed-boat mystery when Comic Book Guy's million-dollar action figure is \"murdered\" on a pop culture cruise.",
           "titleEs": "Asesinato, ella barco",
           "synopsisEs": "Lisa debe resolver un misterio en un barco cerrado cuando la figura de acción de un millón de dólares del Hombre de las Cómics es \"asesinada\" en un crucero de cultura pop."
@@ -8642,7 +8642,7 @@ const data = {
           "title": "Do the Wrong Thing",
           "duration": "23",
           "airDate": "2023-12-24",
-          "image": "35x10.jpg",
+          "image": "simpsons_35x10.jpg",
           "synopsis": "Homer and Bart become kings of the blue-collar sports circuit, but Marge suspects something dishonest at the core of their father-son bond.",
           "titleEs": "Hacer lo incorrecto",
           "synopsisEs": "Homero y Bart se convierten en reyes del circuito deportivo obrero, pero Marge sospecha que hay algo deshonesto en el núcleo de su vínculo padre-hijo."
@@ -8653,7 +8653,7 @@ const data = {
           "title": "Frinkenstein's Monster",
           "duration": "23",
           "airDate": "2024-02-18",
-          "image": "35x11.jpg",
+          "image": "simpsons_35x11.jpg",
           "synopsis": "Professor Frink secretly helps Homer, through a zoom interview, land a high-level position at a state-of-the-art nuclear plant in Shelbyville. But since Homer lacks the skills to actually perform the job, Frink must monitor Homer's work situation remotely and dictate his every word... causing Frink to fear he's created a monster.",
           "titleEs": "El monstruo de Frinkenstein",
           "synopsisEs": "El profesor Frink ayuda en secreto a Homer, a través de una entrevista por Zoom, a conseguir un puesto de alto nivel en una planta nuclear de última generación en Shelbyville. Pero como Homer carece de las habilidades para realizar el trabajo, Frink debe monitorear la situación laboral de Homer de forma remota y dictar cada una de sus palabras... lo que hace que Frink tema haber creado un monstruo."
@@ -8664,7 +8664,7 @@ const data = {
           "title": "Lisa Gets an F1",
           "duration": "23",
           "airDate": "2024-02-25",
-          "image": "35x12.jpg",
+          "image": "simpsons_35x12.jpg",
           "synopsis": "Lisa feels a need for speed as well a need for control of her anxiety when she becomes a pro kid go-cart racer.",
           "titleEs": "Lisa obtiene una F1",
           "synopsisEs": "Lisa siente la necesidad de velocidad y de controlar su ansiedad cuando se convierte en una corredora profesional de karts para niños."
@@ -8675,7 +8675,7 @@ const data = {
           "title": "Clan of the Cave Mom",
           "duration": "23",
           "airDate": "2024-03-24",
-          "image": "35x13.jpg",
+          "image": "simpsons_35x13.jpg",
           "synopsis": "A parenting disagreement between Marge and Luann Van Houten escalates into a life-or-death struggle for survival.",
           "titleEs": "Clan de la mamá de las cavernas",
           "synopsisEs": "Un desacuerdo paternal entre Marge y Luann Van Houten se convierte en una lucha de vida o muerte por la supervivencia."
@@ -8686,7 +8686,7 @@ const data = {
           "title": "Night of the Living Wage",
           "duration": "23",
           "airDate": "2024-04-07",
-          "image": "35x14.jpg",
+          "image": "simpsons_35x14.jpg",
           "synopsis": "Marge gets a job in a high-pressure ghost kitchen, but when she tries to start a union, she gets more than she collectively bargained for.",
           "titleEs": "Noche del salario digno",
           "synopsisEs": "Marge consigue un trabajo en una cocina fantasma de alta presión, pero cuando intenta formar un sindicato, obtiene más de lo que negoció colectivamente."
@@ -8697,7 +8697,7 @@ const data = {
           "title": "Cremains of the Day",
           "duration": "23",
           "airDate": "2024-04-21",
-          "image": "35x15.jpg",
+          "image": "simpsons_35x15.jpg",
           "synopsis": "Moe, Homer, Lenny, and Carl go on a road trip to scatter the ashes of Larry \"The Lush\" Dalrymple (the orange jacket-wearing drunk that has been a background character in Moe's Tavern since the show's first season), and discover that there was more to Larry's life than they initially thought.",
           "titleEs": "Cremas del día",
           "synopsisEs": "Moe, Homer, Lenny y Carl emprenden un viaje por carretera para esparcir las cenizas de Larry \"The Lush\" Dalrymple (el borracho con chaqueta naranja que ha sido un personaje de fondo en Moe's Tavern desde la primera temporada del programa) y descubren que había más en la vida de Larry de lo que inicialmente pensaban."
@@ -8708,7 +8708,7 @@ const data = {
           "title": "The Tell-Tale Pants",
           "duration": "23",
           "airDate": "2024-05-05",
-          "image": "35x16.jpg",
+          "image": "simpsons_35x16.jpg",
           "synopsis": "Marge comes upon a surprising windfall and, angry with Homer, spends it secretly on herself.",
           "titleEs": "Los pantalones reveladores",
           "synopsisEs": "Marge recibe una sorprendente ganancia inesperada y, enojada con Homero, la gasta en secreto en ella misma."
@@ -8719,7 +8719,7 @@ const data = {
           "title": "The Tipping Point",
           "duration": "23",
           "airDate": "2024-05-12",
-          "image": "35x17.jpg",
+          "image": "simpsons_35x17.jpg",
           "synopsis": "Homer loses his mind over tipping culture run amok.",
           "titleEs": "El punto de inflexión",
           "synopsisEs": "Homero pierde la cabeza por descontrolar la cultura."
@@ -8730,7 +8730,7 @@ const data = {
           "title": "Bart's Brain",
           "duration": "23",
           "airDate": "2024-05-19",
-          "image": "35x18.jpg",
+          "image": "simpsons_35x18.jpg",
           "synopsis": "Bart buys a brain in a jar from Herman's Military Antique Store, and his attachment to it causes concern for everyone around him.",
           "titleEs": "El cerebro de Bart",
           "synopsisEs": "Bart compra un cerebro en un frasco en la tienda de antigüedades militares de Herman y su apego a él preocupa a todos los que lo rodean."

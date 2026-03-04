@@ -123,7 +123,7 @@ export default function SeasonsScreen({ navigation }) {
 
   return (
     <ImageBackground
-      source={require("../../assets/backgrounds/simpsons_clouds.jpg")}
+      source={require("../../assets/simpsons/backgrounds/simpsons_clouds.jpg")}
       resizeMode="cover"
       style={{ flex: 1 }}
     >
@@ -145,7 +145,7 @@ export default function SeasonsScreen({ navigation }) {
           }}
         >
           <Animated.Image
-            source={require("../../assets/logos/logo_simpsons.png")}
+            source={require("../../assets/simpsons/logos/logo_simpsons.png")}
             resizeMode="contain"
             style={{
               width: "100%",
