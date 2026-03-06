@@ -8,6 +8,7 @@ export default function SeasonHeader({
   maxHeaderH,
   translateY,
   strings,
+  seriesName,
 }) {
   const seasonImgSrc = resolveAsset(season?.image);
 
@@ -68,8 +69,13 @@ export default function SeasonHeader({
           <Text style={{ color: "#fff", fontSize: 26, fontWeight: "900" }}>
             {formatSeasonTitle(season?.id, strings)}
           </Text>
+          {seriesName ? (
+            <Text style={{ color: "rgba(255,255,255,0.92)", marginTop: 2, fontSize: 13 }}>
+              {seriesName}
+            </Text>
+          ) : null}
           <Text style={{ color: "rgba(255,255,255,0.9)", marginTop: 2, fontSize: 13 }}>
-            {season?.episodes?.length ?? 0} {strings?.episodes || "episodes"}
+            {(season?.episodeCount ?? season?.episodes?.length ?? 0)} {strings?.episodes || "episodes"}
           </Text>
         </View>
       </View>

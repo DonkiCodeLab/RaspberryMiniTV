@@ -1,5 +1,5 @@
 import React, {
-  useMemo,
+  useEffect,
   useRef,
   useLayoutEffect,
   useCallback,
@@ -13,16 +13,17 @@ import {
   Platform,
   Dimensions,
   Alert,
+  ActivityIndicator,
+  Pressable,
 } from "react-native";
 
-import rawData from "../data/simpsons";
-import { localizeSimpsonsData } from "../data/localizeSimpsonsData";
 import EpisodeRow from "../components/EpisodeRow";
 import SeasonHeader from "../components/SeasonHeader";
 import EpisodeDetailsModal from "../components/EpisodeDetailsModal";
 import RaspberryStatusBadge from "../components/RaspberryStatusBadge";
-import { getDeviceLanguage, getStrings } from "../i18n";
+import { getDeviceLanguage, getDeviceLocaleTag, getStrings } from "../i18n";
 import { getRaspberryBaseUrl } from "../services/raspberryApi";
+import { getTvSeasonEpisodes } from "../services/tmdbApi";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 
@@ -44,24 +45,57 @@ function toRaspberryEpisodeId(appEpisodeId) {
 }
 
 export default function EpisodesScreen({ route, navigation }) {
-  const { seasonId } = route.params;
+  const {
+    seasonId,
+    seriesId = 456,
+    seriesName = "The Simpsons",
+    fallbackRuntime,
+  } = route?.params || {};
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [season, setSeason] = useState(null);
+  const [episodes, setEpisodes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const language = getDeviceLanguage();
+  const localeTag = getDeviceLocaleTag();
   const strings = getStrings(language);
-  const localizedData = useMemo(
-    () => localizeSimpsonsData(rawData, language),
-    [language]
-  );
 
   useLayoutEffect(() => {
     navigation?.setOptions?.({ headerShown: false });
   }, [navigation]);
 
-  const season = useMemo(
-    () => localizedData.seasons.find((s) => s.id === seasonId),
-    [localizedData, seasonId]
-  );
+  const loadSeasonEpisodes = useCallback(async () => {
+    if (!seasonId) {
+      setError(strings.notFoundSeason || "Season not found.");
+      setSeason(null);
+      setEpisodes([]);
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    setError("");
+    try {
+      const seasonData = await getTvSeasonEpisodes({
+        seriesId,
+        seasonNumber: seasonId,
+        language: localeTag,
+        fallbackRuntime,
+      });
+      setSeason(seasonData);
+      setEpisodes(seasonData.episodes || []);
+    } catch (err) {
+      setError(String(err?.message || err));
+      setSeason(null);
+      setEpisodes([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fallbackRuntime, localeTag, seasonId, seriesId, strings.notFoundSeason]);
+
+  useEffect(() => {
+    loadSeasonEpisodes();
+  }, [loadSeasonEpisodes]);
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const detailsAnim = useRef(new Animated.Value(0)).current;
@@ -168,6 +202,39 @@ export default function EpisodesScreen({ route, navigation }) {
     outputRange: [0, 1],
   });
 
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#111" }}>
+        <ActivityIndicator size="large" color="#fff" />
+        <Text style={{ color: "#fff", marginTop: 12 }}>{strings.loadingEpisodes}</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#111", padding: 20 }}>
+        <Text style={{ color: "#fff", fontWeight: "800", marginBottom: 8 }}>
+          {strings.tmdbErrorTitle}
+        </Text>
+        <Text style={{ color: "#fff", textAlign: "center", marginBottom: 14 }}>{error}</Text>
+        <Pressable
+          onPress={loadSeasonEpisodes}
+          style={{
+            backgroundColor: "rgba(255,255,255,0.12)",
+            borderColor: "rgba(255,255,255,0.6)",
+            borderWidth: 1,
+            borderRadius: 12,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700" }}>{strings.retry}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   if (!season) {
     return (
       <View style={{ flex: 1, padding: 16, justifyContent: "center" }}>
@@ -193,7 +260,7 @@ export default function EpisodesScreen({ route, navigation }) {
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.22)" }}>
         {/* LISTA */}
         <Animated.FlatList
-          data={season.episodes}
+          data={episodes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <EpisodeRow
@@ -222,6 +289,7 @@ export default function EpisodesScreen({ route, navigation }) {
           maxHeaderH={MAX_HEADER_H}
           translateY={headerTranslateY}
           strings={strings}
+          seriesName={seriesName}
         />
 
         {/* “Safe area” mínimo arriba para iOS notch (sin libs) */}
@@ -241,6 +309,7 @@ export default function EpisodesScreen({ route, navigation }) {
         visible={isDetailsVisible}
         episode={selectedEpisode}
         seasonNumber={season?.id}
+        seriesName={seriesName}
         strings={strings}
         onClose={closeEpisodeDetails}
         onPlay={onPressPlay}

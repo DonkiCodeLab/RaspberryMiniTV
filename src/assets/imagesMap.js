@@ -808,6 +808,12 @@ export const imagesMap = {
 
 export function resolveAsset(pathStr) {
   if (!pathStr) return undefined;
+  if (typeof pathStr === "object" && pathStr !== null && pathStr.uri) {
+    return pathStr;
+  }
+  if (typeof pathStr === "string" && /^https?:\/\//i.test(pathStr)) {
+    return { uri: pathStr };
+  }
   const parts = String(pathStr).split('/');
   const filename = parts[parts.length - 1];
   return imagesMap[filename];

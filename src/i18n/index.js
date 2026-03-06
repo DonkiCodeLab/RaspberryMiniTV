@@ -3,6 +3,7 @@ import { NativeModules, Platform } from "react-native";
 const STRINGS = {
   es: {
     episodes: "capítulos",
+    series: "serie",
     seasonFallback: "Temporada",
     noImage: "No img",
     viewDetails: "Ver detalles de",
@@ -43,9 +44,15 @@ const STRINGS = {
     minutes: "minutos",
     synopsisLabel: "Sinopsis",
     playSimpsonsTv: "Reproducir en Simpsons TV",
+    rating: "Valoración",
+    loadingSeasons: "Cargando temporadas...",
+    loadingEpisodes: "Cargando episodios...",
+    retry: "Reintentar",
+    tmdbErrorTitle: "Error cargando TMDB",
   },
   en: {
     episodes: "episodes",
+    series: "series",
     seasonFallback: "Season",
     noImage: "No img",
     viewDetails: "View details for",
@@ -86,6 +93,11 @@ const STRINGS = {
     minutes: "minutes",
     synopsisLabel: "Synopsis",
     playSimpsonsTv: "Play on Simpsons TV",
+    rating: "Rating",
+    loadingSeasons: "Loading seasons...",
+    loadingEpisodes: "Loading episodes...",
+    retry: "Retry",
+    tmdbErrorTitle: "TMDB loading error",
   },
 };
 
@@ -165,6 +177,12 @@ function pickAppLanguageFromLocale(localeValue) {
 }
 
 export function getDeviceLanguage() {
+  const localeTag = getDeviceLocaleTag();
+  const mapped = pickAppLanguageFromLocale(localeTag);
+  return mapped || "es";
+}
+
+export function getDeviceLocaleTag() {
   const expoLocales = getExpoLocales();
   const nativeLocales = getNativeLocales();
   const intlLocale = Intl?.DateTimeFormat?.().resolvedOptions?.().locale || null;
@@ -181,20 +199,15 @@ export function getDeviceLanguage() {
     navigatorLocale,
   ].filter(Boolean);
 
-  // Respetar orden de preferencia del sistema:
-  // primer locale resoluble gana.
   const seen = new Set();
   for (const locale of candidates) {
     const key = String(locale).trim();
     if (!key || seen.has(key)) continue;
     seen.add(key);
-
-    const mapped = pickAppLanguageFromLocale(key);
-    if (mapped) return mapped;
+    return key.replace("_", "-");
   }
 
-  // Fallback pragmático: esta app está orientada a ES y solo tiene ES/EN.
-  return "es";
+  return "es-ES";
 }
 
 export function getStrings(language) {

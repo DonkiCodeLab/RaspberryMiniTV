@@ -7,6 +7,7 @@ export default function EpisodeDetailsModal({
   visible,
   episode,
   seasonNumber,
+  seriesName,
   strings,
   onClose,
   onPlay,
@@ -15,6 +16,10 @@ export default function EpisodeDetailsModal({
   cardScale,
 }) {
   const episodeImg = episode ? resolveAsset(episode.image) : null;
+  const durationLabel = episode?.duration
+    ? `${episode.duration} ${strings?.minutes || "minutes"}`
+    : strings?.unknown || "unknown";
+  const airDateLabel = episode?.airDate || strings?.unknown || "unknown";
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
@@ -97,6 +102,18 @@ export default function EpisodeDetailsModal({
                   >
                     {formatSeasonTitle(seasonNumber, strings)}
                   </Text>
+                  {seriesName ? (
+                    <Text
+                      style={{
+                        color: "rgba(255,255,255,0.9)",
+                        fontSize: 13,
+                        fontWeight: "700",
+                        marginBottom: 8,
+                      }}
+                    >
+                      {seriesName}
+                    </Text>
+                  ) : null}
 
                   {episodeImg ? (
                     <Image
@@ -135,11 +152,15 @@ export default function EpisodeDetailsModal({
 
                 <Text style={{ color: "#222", fontSize: 15, marginTop: 12 }}>
                   ⏱ <Text style={{ fontWeight: "800" }}>{strings?.duration || "Duration"}:</Text>{" "}
-                  {episode.duration} {strings?.minutes || "minutes"}
+                  {durationLabel}
                 </Text>
                 <Text style={{ color: "#222", fontSize: 15, marginTop: 12 }}>
                   📅 <Text style={{ fontWeight: "800" }}>{strings?.airDate || "Aired"}:</Text>{" "}
-                  {episode.airDate}
+                  {airDateLabel}
+                </Text>
+                <Text style={{ color: "#222", fontSize: 15, marginTop: 12 }}>
+                  ⭐ <Text style={{ fontWeight: "800" }}>{strings?.rating || "Rating"}:</Text>{" "}
+                  {episode.voteAverage ? episode.voteAverage.toFixed(1) : "-"}
                 </Text>
 
                 <Text
