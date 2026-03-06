@@ -9,6 +9,8 @@ import {
   StatusBar,
   Animated,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,7 +22,7 @@ import {
   getStrings,
 } from "../i18n";
 import RaspberryStatusBadge from "../components/RaspberryStatusBadge";
-import { getAvailableSeries, getTvSeriesById } from "../services/tmdbApi";
+import { getAvailableSeries, getTvSeriesFromOption } from "../services/tmdbApi";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -40,16 +42,20 @@ export default function SeasonsScreen({ navigation }) {
   const language = getDeviceLanguage();
   const localeTag = getDeviceLocaleTag();
   const strings = getStrings(language);
-  const [selectedSeriesId, setSelectedSeriesId] = useState(
-    getAvailableSeries()[0]?.id || 456
+  const availableSeries = useMemo(() => getAvailableSeries(), []);
+  const [selectedSeriesKey, setSelectedSeriesKey] = useState(
+    availableSeries[0]?.key || "simpsons"
   );
-  const [seriesName, setSeriesName] = useState(getAvailableSeries()[0]?.name || "");
+  const selectedSeries =
+    availableSeries.find((series) => series.key === selectedSeriesKey) ||
+    availableSeries[0];
+  const [resolvedSeriesId, setResolvedSeriesId] = useState(selectedSeries?.id || 456);
+  const [seriesName, setSeriesName] = useState(selectedSeries?.name || "");
   const [fallbackRuntime, setFallbackRuntime] = useState(null);
   const [seasons, setSeasons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const availableSeries = useMemo(() => getAvailableSeries(), []);
+  const [isSeriesSelectorVisible, setIsSeriesSelectorVisible] = useState(false);
 
   const itemWidth = useMemo(() => {
     return (SCREEN_W - H_PADDING * 2 - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
@@ -73,17 +79,18 @@ export default function SeasonsScreen({ navigation }) {
     setIsLoading(true);
     setError("");
     try {
-      const tvData = await getTvSeriesById(selectedSeriesId, localeTag);
+      const tvData = await getTvSeriesFromOption(selectedSeries, localeTag);
       setSeasons(tvData.seasons);
       setSeriesName(tvData.name);
       setFallbackRuntime(tvData.fallbackRuntime);
+      setResolvedSeriesId(tvData.id);
     } catch (err) {
       setError(String(err?.message || err));
       setSeasons([]);
     } finally {
       setIsLoading(false);
     }
-  }, [localeTag, selectedSeriesId]);
+  }, [localeTag, selectedSeries]);
 
   useEffect(() => {
     loadSeries();
@@ -97,7 +104,7 @@ export default function SeasonsScreen({ navigation }) {
         onPress={() =>
           navigation.navigate("Episodes", {
             seasonId: item.id,
-            seriesId: selectedSeriesId,
+            seriesId: resolvedSeriesId,
             seriesName,
             fallbackRuntime,
           })
@@ -193,44 +200,30 @@ export default function SeasonsScreen({ navigation }) {
           />
         </Animated.View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            paddingHorizontal: 16,
-            marginBottom: 12,
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13 }}>
-            {strings.series}:
+        <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13, marginBottom: 6 }}>
+            {strings.selectSeries || strings.series}
           </Text>
-          <View style={{ flexDirection: "row", gap: 8, flexShrink: 1 }}>
-            {availableSeries.map((series) => {
-              const isActive = series.id === selectedSeriesId;
-              return (
-                <Pressable
-                  key={series.id}
-                  onPress={() => setSelectedSeriesId(series.id)}
-                  style={({ pressed }) => ({
-                    paddingHorizontal: 10,
-                    paddingVertical: 6,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.6)",
-                    backgroundColor: isActive
-                      ? "rgba(0,0,0,0.5)"
-                      : "rgba(255,255,255,0.15)",
-                    opacity: pressed ? 0.75 : 1,
-                  })}
-                >
-                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
-                    {series.name}
-                  </Text>
-                </Pressable>
-              );
+          <Pressable
+            onPress={() => setIsSeriesSelectorVisible(true)}
+            style={({ pressed }) => ({
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.65)",
+              backgroundColor: "rgba(0,0,0,0.45)",
+              paddingHorizontal: 12,
+              paddingVertical: 11,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              opacity: pressed ? 0.8 : 1,
             })}
-          </View>
+          >
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", flex: 1 }}>
+              {selectedSeries?.name || "-"}
+            </Text>
+            <Text style={{ color: "#fff", fontSize: 16, marginLeft: 8 }}>▾</Text>
+          </Pressable>
         </View>
 
         {/* Lista animada (para capturar el scrollY) */}
@@ -281,6 +274,74 @@ export default function SeasonsScreen({ navigation }) {
           />
         )}
       </View>
+
+      <Modal
+        visible={isSeriesSelectorVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsSeriesSelectorVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            paddingHorizontal: 18,
+            backgroundColor: "rgba(0,0,0,0.55)",
+          }}
+        >
+          <Pressable
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+            onPress={() => setIsSeriesSelectorVisible(false)}
+          />
+          <View
+            style={{
+              backgroundColor: "rgba(18,18,18,0.97)",
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.15)",
+              padding: 12,
+              maxHeight: SCREEN_H * 0.6,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16, marginBottom: 8 }}>
+              {strings.selectSeries || strings.series}
+            </Text>
+            <FlatList
+              data={availableSeries}
+              keyExtractor={(item) => item.key}
+              ItemSeparatorComponent={() => (
+                <View style={{ height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+              )}
+              renderItem={({ item }) => {
+                const isActive = item.key === selectedSeriesKey;
+                return (
+                  <Pressable
+                    onPress={() => {
+                      setSelectedSeriesKey(item.key);
+                      setIsSeriesSelectorVisible(false);
+                    }}
+                    style={({ pressed }) => ({
+                      paddingVertical: 12,
+                      paddingHorizontal: 6,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      opacity: pressed ? 0.75 : 1,
+                    })}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 15, fontWeight: isActive ? "800" : "600" }}>
+                      {item.name}
+                    </Text>
+                    <Text style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 16 }}>
+                      {isActive ? "✓" : ""}
+                    </Text>
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }

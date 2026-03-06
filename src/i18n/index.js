@@ -4,6 +4,7 @@ const STRINGS = {
   es: {
     episodes: "capítulos",
     series: "serie",
+    selectSeries: "Seleccionar serie",
     seasonFallback: "Temporada",
     noImage: "No img",
     viewDetails: "Ver detalles de",
@@ -53,6 +54,7 @@ const STRINGS = {
   en: {
     episodes: "episodes",
     series: "series",
+    selectSeries: "Select series",
     seasonFallback: "Season",
     noImage: "No img",
     viewDetails: "View details for",

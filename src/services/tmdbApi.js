@@ -3,8 +3,24 @@ const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 
 const FALLBACK_SERIES = [
   {
+    key: "simpsons",
     id: 456,
     name: "The Simpsons",
+  },
+  {
+    key: "futurama",
+    id: 615,
+    name: "Futurama",
+  },
+  {
+    key: "dragon-ball",
+    name: "Bola de Dragon (Dragon Ball)",
+    searchQuery: "Dragon Ball",
+  },
+  {
+    key: "dr-slump",
+    name: "Arale (Dr. Slump)",
+    searchQuery: "Dr. Slump",
   },
 ];
 
@@ -65,6 +81,20 @@ export function getAvailableSeries() {
   return FALLBACK_SERIES;
 }
 
+async function searchTvSeriesByName(query, language) {
+  const data = await fetchTmdbJson("/search/tv", {
+    language,
+    query: {
+      query,
+      include_adult: "false",
+      page: 1,
+    },
+  });
+
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return results[0] || null;
+}
+
 export function buildTmdbImageUrl(path, size = "w500") {
   if (!path) return null;
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
@@ -98,6 +128,25 @@ export async function getTvSeriesById(seriesId, language) {
     fallbackRuntime,
     seasons,
   };
+}
+
+export async function getTvSeriesFromOption(seriesOption, language) {
+  if (!seriesOption) {
+    throw new Error("No series selected.");
+  }
+
+  let seriesId = Number(seriesOption.id);
+
+  if (!seriesId && seriesOption.searchQuery) {
+    const found = await searchTvSeriesByName(seriesOption.searchQuery, language);
+    seriesId = Number(found?.id);
+  }
+
+  if (!seriesId) {
+    throw new Error(`Could not resolve TMDB id for "${seriesOption.name}".`);
+  }
+
+  return getTvSeriesById(seriesId, language);
 }
 
 export async function getTvSeasonEpisodes({
