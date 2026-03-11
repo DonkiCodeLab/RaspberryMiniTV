@@ -12,6 +12,7 @@ import {
   Modal,
   FlatList,
 } from "react-native";
+import MaskedView from "@react-native-masked-view/masked-view";
 
 import { resolveAsset } from "../assets/imagesMap";
 import {
@@ -34,6 +35,7 @@ const HEADER_BADGE_GAP = 12;
 const HEADER_TOP_PADDING = 34;
 const HEADER_BOTTOM_PADDING = 10;
 const HEADER_BADGE_LEFT_SHIFT = SCREEN_W * 0.05;
+const CARTELL_ASPECT_RATIO = 711 / 382;
 
 export default function SeasonsScreen({ navigation }) {
   const language = getDeviceLanguage();
@@ -48,6 +50,7 @@ export default function SeasonsScreen({ navigation }) {
     availableSeries[0];
   const [resolvedSeriesId, setResolvedSeriesId] = useState(selectedSeries?.id || 456);
   const [seriesName, setSeriesName] = useState(selectedSeries?.name || "");
+  const [seriesHeroImage, setSeriesHeroImage] = useState(null);
   const [fallbackRuntime, setFallbackRuntime] = useState(null);
   const [seasons, setSeasons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,11 +68,13 @@ export default function SeasonsScreen({ navigation }) {
       const tvData = await getTvSeriesFromOption(selectedSeries, localeTag);
       setSeasons(tvData.seasons);
       setSeriesName(tvData.name);
+      setSeriesHeroImage(tvData.heroImage || null);
       setFallbackRuntime(tvData.fallbackRuntime);
       setResolvedSeriesId(tvData.id);
     } catch (err) {
       setError(String(err?.message || err));
       setSeasons([]);
+      setSeriesHeroImage(null);
     } finally {
       setIsLoading(false);
     }
@@ -179,14 +184,59 @@ export default function SeasonsScreen({ navigation }) {
                 height: "100%",
               }}
             >
-              <Image
-                source={require("../../assets/cartell_main_logo.png")}
+              <View
                 style={{
                   width: "100%",
                   height: "100%",
+                  aspectRatio: CARTELL_ASPECT_RATIO,
+                  alignSelf: "flex-start",
                 }}
-                resizeMode="contain"
-              />
+              >
+                <MaskedView
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                  }}
+                  maskElement={
+                    <View
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "stretch",
+                        backgroundColor: "transparent",
+                      }}
+                    >
+                      <Image
+                        source={require("../../assets/cartell_main_mask.png")}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          tintColor: "#000",
+                        }}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  }
+                >
+                  {seriesHeroImage ? (
+                    <Image
+                      source={{ uri: seriesHeroImage }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                      }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.35)",
+                      }}
+                    />
+                  )}
+                </MaskedView>
+              </View>
             </View>
             <View style={{ width: HEADER_BADGE_GAP }} />
             <View style={{ marginLeft: -HEADER_BADGE_LEFT_SHIFT }}>

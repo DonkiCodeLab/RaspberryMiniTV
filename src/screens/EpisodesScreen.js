@@ -15,6 +15,7 @@ import {
   Alert,
   ActivityIndicator,
   Pressable,
+  ImageBackground,
 } from "react-native";
 
 import EpisodeRow from "../components/EpisodeRow";
@@ -243,7 +244,6 @@ export default function EpisodesScreen({ route, navigation }) {
     );
   }
 
-  const bgColor = season.avgColor || "#111";
   const maxTranslate = MAX_HEADER_H - MIN_HEADER_H;
 
   const headerTranslateY = scrollY.interpolate({
@@ -253,7 +253,11 @@ export default function EpisodesScreen({ route, navigation }) {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: bgColor }}>
+    <ImageBackground
+      source={require("../../assets/simpsons/backgrounds/simpsons_clouds.jpg")}
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
       <StatusBar barStyle="light-content" />
       <RaspberryStatusBadge strings={strings} />
 
@@ -317,6 +321,6 @@ export default function EpisodesScreen({ route, navigation }) {
         cardTranslateY={detailsCardTranslateY}
         cardScale={detailsCardScale}
       />
-    </View>
+    </ImageBackground>
   );
 }

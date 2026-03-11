@@ -12,7 +12,7 @@ export default function EpisodeRow({ item, onOpenDetails, strings }) {
         alignItems: "center",
         padding: 12,
         borderRadius: 14,
-        backgroundColor: "rgba(0,0,0,0.55)",
+        backgroundColor: "rgba(0,0,0,0.74)",
       }}
     >
       {imgSrc ? (
@@ -55,7 +55,7 @@ export default function EpisodeRow({ item, onOpenDetails, strings }) {
           borderRadius: 22,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "rgba(255,255,255,0.12)",
+          backgroundColor: "rgba(255,255,255,0.18)",
           opacity: pressed ? 0.7 : 1,
           transform: [{ scale: pressed ? 0.98 : 1 }],
         })}

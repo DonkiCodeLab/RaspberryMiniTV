@@ -103,6 +103,10 @@ export function buildTmdbImageUrl(path, size = "w500") {
 export async function getTvSeriesById(seriesId, language) {
   const show = await fetchTmdbJson(`/tv/${seriesId}`, { language });
   const fallbackRuntime = Number(show?.episode_run_time?.[0]) || null;
+  const heroImage =
+    buildTmdbImageUrl(show?.backdrop_path, "w1280") ||
+    buildTmdbImageUrl(show?.poster_path, "w780") ||
+    null;
 
   const seasons = (show?.seasons || [])
     .filter((season) => Number(season?.season_number) > 0)
@@ -125,6 +129,7 @@ export async function getTvSeriesById(seriesId, language) {
   return {
     id: Number(show?.id) || Number(seriesId),
     name: show?.name || "Unknown show",
+    heroImage,
     fallbackRuntime,
     seasons,
   };
