@@ -15,7 +15,13 @@ function statusColor(status) {
   return "#ef4444";
 }
 
-export default function RaspberryStatusBadge({ strings, scale = 1, topOffset = 0 }) {
+export default function RaspberryStatusBadge({
+  strings,
+  scale = 1,
+  topOffset = 0,
+  absolute = true,
+  rightOffset = 16,
+}) {
   const { health, refreshHealth, baseUrl, updateBaseUrl } = useRaspberryStatus();
   const insets = useSafeAreaInsets();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -191,9 +197,9 @@ export default function RaspberryStatusBadge({ strings, scale = 1, topOffset = 0
     <>
       <Animated.View
         style={{
-          position: "absolute",
-          top: insets.top + topOffset,
-          right: 16,
+          position: absolute ? "absolute" : "relative",
+          top: absolute ? insets.top + topOffset : undefined,
+          right: absolute ? rightOffset : undefined,
           zIndex: 30,
           transform: [{ scale: badgeScale }],
         }}
