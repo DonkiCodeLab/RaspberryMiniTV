@@ -81,17 +81,33 @@ export function getAvailableSeries() {
   return FALLBACK_SERIES;
 }
 
-async function searchTvSeriesByName(query, language) {
+export async function searchTvSeries(query, language) {
+  const trimmedQuery = String(query || "").trim();
+  if (!trimmedQuery) return [];
+
   const data = await fetchTmdbJson("/search/tv", {
     language,
     query: {
-      query,
+      query: trimmedQuery,
       include_adult: "false",
       page: 1,
     },
   });
 
   const results = Array.isArray(data?.results) ? data.results : [];
+  return results.map((item) => ({
+    id: Number(item?.id),
+    name: item?.name || item?.original_name || "Unknown show",
+    firstAirDate: item?.first_air_date || "",
+    image:
+      buildTmdbImageUrl(item?.poster_path, "w342") ||
+      buildTmdbImageUrl(item?.backdrop_path, "w500") ||
+      null,
+  }));
+}
+
+async function searchTvSeriesByName(query, language) {
+  const results = await searchTvSeries(query, language);
   return results[0] || null;
 }
 

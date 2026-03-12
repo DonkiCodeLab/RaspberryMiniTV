@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Modal,
   FlatList,
+  Alert,
 } from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 
@@ -22,7 +23,15 @@ import {
   getStrings,
 } from "../i18n";
 import RaspberryStatusBadge from "../components/RaspberryStatusBadge";
-import { getAvailableSeries, getTvSeriesFromOption } from "../services/tmdbApi";
+import AddSeriesDialog from "../components/AddSeriesDialog";
+import SeriesOptionsDialog from "../components/SeriesOptionsDialog";
+import {
+  addSeriesToLibrary,
+  loadSeriesLibrary,
+  removeSeriesFromLibrary,
+  renameSeriesInLibrary,
+} from "../services/seriesLibrary";
+import { getTvSeriesFromOption } from "../services/tmdbApi";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -59,13 +68,12 @@ export default function SeasonsScreen({ navigation }) {
   const language = getDeviceLanguage();
   const localeTag = getDeviceLocaleTag();
   const strings = getStrings(language);
-  const availableSeries = useMemo(() => getAvailableSeries(), []);
-  const [selectedSeriesKey, setSelectedSeriesKey] = useState(
-    availableSeries[0]?.key || "simpsons"
-  );
+  const [availableSeries, setAvailableSeries] = useState([]);
+  const [isSeriesLibraryLoading, setIsSeriesLibraryLoading] = useState(true);
+  const [selectedSeriesKey, setSelectedSeriesKey] = useState(null);
   const selectedSeries =
     availableSeries.find((series) => series.key === selectedSeriesKey) ||
-    availableSeries[0];
+    null;
   const [resolvedSeriesId, setResolvedSeriesId] = useState(selectedSeries?.id || 456);
   const [seriesName, setSeriesName] = useState(selectedSeries?.name || "");
   const [seriesHeroImage, setSeriesHeroImage] = useState(null);
@@ -74,12 +82,54 @@ export default function SeasonsScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSeriesSelectorVisible, setIsSeriesSelectorVisible] = useState(false);
+  const [isAddSeriesVisible, setIsAddSeriesVisible] = useState(false);
+  const [isSeriesOptionsVisible, setIsSeriesOptionsVisible] = useState(false);
 
   const itemWidth = useMemo(() => {
     return (SCREEN_W - H_PADDING * 2 - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
   }, []);
 
+  const syncSeriesLibrary = useCallback((nextSeries) => {
+    setAvailableSeries(nextSeries);
+    setSelectedSeriesKey((currentKey) => {
+      if (!nextSeries.length) return null;
+      if (currentKey && nextSeries.some((series) => series.key === currentKey)) {
+        return currentKey;
+      }
+      return nextSeries[0].key;
+    });
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const storedSeries = await loadSeriesLibrary();
+        if (!isMounted) return;
+        syncSeriesLibrary(storedSeries);
+      } finally {
+        if (isMounted) setIsSeriesLibraryLoading(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [syncSeriesLibrary]);
+
   const loadSeries = useCallback(async () => {
+    if (!selectedSeries) {
+      setSeasons([]);
+      setSeriesName("");
+      setSeriesHeroImage(null);
+      setFallbackRuntime(null);
+      setResolvedSeriesId(null);
+      setError("");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     try {
@@ -101,6 +151,53 @@ export default function SeasonsScreen({ navigation }) {
   useEffect(() => {
     loadSeries();
   }, [loadSeries]);
+
+  const handleAddSeries = useCallback(
+    async (seriesResult) => {
+      try {
+        const nextSeries = await addSeriesToLibrary({
+          id: seriesResult.id,
+          name: seriesResult.name,
+        });
+        syncSeriesLibrary(nextSeries);
+        setSelectedSeriesKey(
+          nextSeries.find((series) => Number(series.id) === Number(seriesResult.id))?.key ||
+            nextSeries[0]?.key ||
+            null
+        );
+        setIsAddSeriesVisible(false);
+      } catch (err) {
+        Alert.alert(strings.tmdbErrorTitle, String(err?.message || err));
+      }
+    },
+    [strings.tmdbErrorTitle, syncSeriesLibrary]
+  );
+
+  const handleRenameSeries = useCallback(
+    async (series, nextName) => {
+      try {
+        const nextSeries = await renameSeriesInLibrary(series?.key, nextName);
+        syncSeriesLibrary(nextSeries);
+        setIsSeriesOptionsVisible(false);
+      } catch (err) {
+        Alert.alert(strings.tmdbErrorTitle, String(err?.message || err));
+      }
+    },
+    [strings.tmdbErrorTitle, syncSeriesLibrary]
+  );
+
+  const handleDeleteSeries = useCallback(
+    async (series) => {
+      try {
+        const nextSeries = await removeSeriesFromLibrary(series?.key);
+        syncSeriesLibrary(nextSeries);
+        setIsSeriesOptionsVisible(false);
+      } catch (err) {
+        Alert.alert(strings.tmdbErrorTitle, String(err?.message || err));
+      }
+    },
+    [strings.tmdbErrorTitle, syncSeriesLibrary]
+  );
 
   const renderItem = ({ item }) => {
     const imgSrc = resolveAsset(item.image);
@@ -250,33 +347,91 @@ export default function SeasonsScreen({ navigation }) {
           <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13, marginBottom: 6 }}>
             {strings.selectSeries || strings.series}
           </Text>
-          <Pressable
-            onPress={() => setIsSeriesSelectorVisible(true)}
-            style={({ pressed }) => ({
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.65)",
-              backgroundColor: "rgba(0,0,0,0.45)",
-              paddingHorizontal: 12,
-              paddingVertical: 11,
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", flex: 1 }}>
-              {selectedSeries?.name || "-"}
-            </Text>
-            <Text style={{ color: "#fff", fontSize: 16, marginLeft: 8 }}>▾</Text>
-          </Pressable>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Pressable
+              onPress={() => setIsSeriesSelectorVisible(true)}
+              style={({ pressed }) => ({
+                flex: 1,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.65)",
+                backgroundColor: "rgba(0,0,0,0.45)",
+                paddingHorizontal: 12,
+                paddingVertical: 11,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                opacity: pressed ? 0.8 : 1,
+              })}
+            >
+              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", flex: 1 }}>
+                {selectedSeries?.name || "-"}
+              </Text>
+              <Text style={{ color: "#fff", fontSize: 16, marginLeft: 8 }}>▾</Text>
+            </Pressable>
+
+            {selectedSeries ? (
+              <Pressable
+                onPress={() => setIsSeriesOptionsVisible(true)}
+                style={({ pressed }) => ({
+                  width: 46,
+                  height: 46,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.65)",
+                  backgroundColor: "rgba(0,0,0,0.45)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.8 : 1,
+                })}
+              >
+                <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800" }}>⋯</Text>
+              </Pressable>
+            ) : null}
+
+            <Pressable
+              onPress={() => setIsAddSeriesVisible(true)}
+              style={({ pressed }) => ({
+                width: 46,
+                height: 46,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.65)",
+                backgroundColor: "rgba(0,0,0,0.45)",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: pressed ? 0.8 : 1,
+              })}
+            >
+              <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800" }}>+</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* Lista de temporadas */}
-        {isLoading ? (
+        {isSeriesLibraryLoading || isLoading ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <ActivityIndicator size="large" color="#ffffff" />
             <Text style={{ color: "#fff", marginTop: 10 }}>{strings.loadingSeasons}</Text>
+          </View>
+        ) : !selectedSeries ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
+            <Text style={{ color: "#fff", fontWeight: "800", marginBottom: 8 }}>
+              {strings.noSeriesSelected}
+            </Text>
+            <Pressable
+              onPress={() => setIsAddSeriesVisible(true)}
+              style={{
+                backgroundColor: "rgba(0,0,0,0.45)",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.6)",
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "800" }}>{strings.addYourFirstSeries}</Text>
+            </Pressable>
           </View>
         ) : error ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -383,6 +538,24 @@ export default function SeasonsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+
+      <AddSeriesDialog
+        visible={isAddSeriesVisible}
+        strings={strings}
+        localeTag={localeTag}
+        existingSeriesIds={availableSeries.map((series) => series.id)}
+        onClose={() => setIsAddSeriesVisible(false)}
+        onAddSeries={handleAddSeries}
+      />
+
+      <SeriesOptionsDialog
+        visible={isSeriesOptionsVisible && Boolean(selectedSeries)}
+        strings={strings}
+        series={selectedSeries}
+        onClose={() => setIsSeriesOptionsVisible(false)}
+        onRenameSeries={handleRenameSeries}
+        onDeleteSeries={handleDeleteSeries}
+      />
     </ImageBackground>
   );
 }
