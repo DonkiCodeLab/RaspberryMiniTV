@@ -17,6 +17,7 @@ function statusColor(status) {
 
 export default function RaspberryStatusBadge({
   strings,
+  size = 104,
   scale = 1,
   topOffset = 0,
   absolute = true,
@@ -184,6 +185,8 @@ export default function RaspberryStatusBadge({
     inputRange: [0, 1],
     outputRange: [0, 1],
   });
+  const badgeSize = size;
+  const tvSize = badgeSize * 0.81;
   const badgeScale = scale;
 
   const stateLabel =
@@ -207,9 +210,9 @@ export default function RaspberryStatusBadge({
         <Pressable
           onPress={openModal}
           style={({ pressed }) => ({
-            width: 104,
-            height: 104,
-            borderRadius: 52,
+            width: badgeSize,
+            height: badgeSize,
+            borderRadius: badgeSize / 2,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "rgba(255,255,255,0.50)",
@@ -230,7 +233,7 @@ export default function RaspberryStatusBadge({
                 ? require("../../assets/tele_red_1.png")
                 : require("../../assets/tele_red_2.png")
             }
-            style={{ width: 84, height: 84, marginTop: 0 }}
+            style={{ width: tvSize, height: tvSize, marginTop: 0 }}
             resizeMode="contain"
           />
         </Pressable>

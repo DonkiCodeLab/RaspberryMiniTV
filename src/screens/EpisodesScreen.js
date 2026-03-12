@@ -31,7 +31,7 @@ const { height: SCREEN_H } = Dimensions.get("window");
 // Ajusta a tu gusto
 const MAX_HEADER_H = SCREEN_H * 0.52;
 const MIN_HEADER_H = SCREEN_H * 0.15;
-const GAP_BELOW_HEADER = 12;
+const GAP_BELOW_HEADER = 16;
 
 // Convierte el ID del JSON (ej: "7x01") a lo que espera la Raspberry (ej: "S07E01")
 function toRaspberryEpisodeId(appEpisodeId) {

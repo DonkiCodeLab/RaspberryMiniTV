@@ -29,13 +29,31 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const NUM_COLUMNS = 2;
 const GAP = 14;
 const H_PADDING = 16;
-const HEADER_PLACEHOLDER_H = SCREEN_H * 0.24;
 const HEADER_HORIZONTAL_PADDING = 16;
-const HEADER_BADGE_GAP = 12;
-const HEADER_TOP_PADDING = 34;
+const HEADER_TOP_PADDING = 52;
 const HEADER_BOTTOM_PADDING = 10;
-const HEADER_BADGE_LEFT_SHIFT = SCREEN_W * 0.05;
-const CARTELL_ASPECT_RATIO = 711 / 382;
+const HEADER_BASE_WIDTH = 714;
+const HEADER_BASE_HEIGHT = 228;
+const BADGE_ZONE_X = 523;
+const BADGE_ZONE_Y = 19;
+const BADGE_ZONE_WIDTH = 191;
+const BADGE_ZONE_HEIGHT = 190;
+const HEADER_SCENE_ASPECT_RATIO = HEADER_BASE_WIDTH / HEADER_BASE_HEIGHT;
+const HEADER_SCENE_WIDTH = SCREEN_W - HEADER_HORIZONTAL_PADDING * 2;
+const HEADER_SCENE_HEIGHT = HEADER_SCENE_WIDTH / HEADER_SCENE_ASPECT_RATIO;
+const HEADER_PLACEHOLDER_H =
+  HEADER_TOP_PADDING + HEADER_SCENE_HEIGHT + HEADER_BOTTOM_PADDING;
+const BADGE_ZONE_WIDTH_SCALED =
+  HEADER_SCENE_WIDTH * (BADGE_ZONE_WIDTH / HEADER_BASE_WIDTH);
+const BADGE_ZONE_HEIGHT_SCALED =
+  HEADER_SCENE_HEIGHT * (BADGE_ZONE_HEIGHT / HEADER_BASE_HEIGHT);
+const BADGE_SIZE = Math.min(BADGE_ZONE_WIDTH_SCALED, BADGE_ZONE_HEIGHT_SCALED) * 0.9;
+const BADGE_LEFT =
+  HEADER_SCENE_WIDTH * (BADGE_ZONE_X / HEADER_BASE_WIDTH) +
+  (BADGE_ZONE_WIDTH_SCALED - BADGE_SIZE) / 2;
+const BADGE_TOP =
+  HEADER_SCENE_HEIGHT * (BADGE_ZONE_Y / HEADER_BASE_HEIGHT) +
+  (BADGE_ZONE_HEIGHT_SCALED - BADGE_SIZE) / 2;
 
 export default function SeasonsScreen({ navigation }) {
   const language = getDeviceLanguage();
@@ -173,74 +191,57 @@ export default function SeasonsScreen({ navigation }) {
         >
           <View
             style={{
-              height: "100%",
-              flexDirection: "row",
-              alignItems: "center",
+              width: "100%",
+              height: HEADER_SCENE_HEIGHT,
+              position: "relative",
             }}
           >
-            <View
+            <MaskedView
               style={{
-                flex: 1,
+                width: "100%",
                 height: "100%",
               }}
-            >
-              <View
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  aspectRatio: CARTELL_ASPECT_RATIO,
-                  alignSelf: "flex-start",
-                }}
-              >
-                <MaskedView
+              maskElement={
+                <Image
+                  source={require("../../assets/cartell_base_black_mask.png")}
                   style={{
                     width: "100%",
                     height: "100%",
                   }}
-                  maskElement={
-                    <View
-                      style={{
-                        flex: 1,
-                        justifyContent: "center",
-                        alignItems: "stretch",
-                        backgroundColor: "transparent",
-                      }}
-                    >
-                      <Image
-                        source={require("../../assets/cartell_main_mask.png")}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          tintColor: "#000",
-                        }}
-                        resizeMode="contain"
-                      />
-                    </View>
-                  }
-                >
-                  {seriesHeroImage ? (
-                    <Image
-                      source={{ uri: seriesHeroImage }}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                      }}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View
-                      style={{
-                        flex: 1,
-                        backgroundColor: "rgba(0,0,0,0.35)",
-                      }}
-                    />
-                  )}
-                </MaskedView>
-              </View>
-            </View>
-            <View style={{ width: HEADER_BADGE_GAP }} />
-            <View style={{ marginLeft: -HEADER_BADGE_LEFT_SHIFT }}>
-              <RaspberryStatusBadge strings={strings} absolute={false} />
+                  resizeMode="contain"
+                />
+              }
+            >
+              {seriesHeroImage ? (
+                <Image
+                  source={{ uri: seriesHeroImage }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                  }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "rgba(0,0,0,0.35)",
+                  }}
+                />
+              )}
+            </MaskedView>
+            <View
+              style={{
+                position: "absolute",
+                left: BADGE_LEFT,
+                top: BADGE_TOP,
+              }}
+            >
+              <RaspberryStatusBadge
+                strings={strings}
+                absolute={false}
+                size={BADGE_SIZE}
+              />
             </View>
           </View>
         </View>
