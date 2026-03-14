@@ -69,7 +69,7 @@ const STRINGS = {
     noContentLoadedTitle: "Sin contenido cargado",
     noContentLoadedIntro: "Para empezar tienes 2 maneras de agregar contenido:",
     addSeriesManualTitle: "Añadir manualmente",
-    addSeriesManualDescription: "Pulsa el botón + y busca una serie nueva.",
+    addSeriesManualDescription: "Pulsa el botón redondo + y busca una serie nueva.",
     addSeriesSyncTitle: "Sincronizar Raspberry",
     addSeriesSyncDescription:
       "Usa el badge de la Raspberry para conectar con la mini TV y detectar automáticamente lo que haya en la tarjeta SD.",

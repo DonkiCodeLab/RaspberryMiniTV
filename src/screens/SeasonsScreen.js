@@ -63,6 +63,7 @@ const BADGE_LEFT =
 const BADGE_TOP =
   HEADER_SCENE_HEIGHT * (BADGE_ZONE_Y / HEADER_BASE_HEIGHT) +
   (BADGE_ZONE_HEIGHT_SCALED - BADGE_SIZE) / 2;
+const TV_GREEN_IMAGE = require("../../assets/tele_green_1.png");
 
 export default function SeasonsScreen({ navigation }) {
   const language = getDeviceLanguage();
@@ -415,7 +416,7 @@ export default function SeasonsScreen({ navigation }) {
               style={({ pressed }) => ({
                 width: 46,
                 height: 46,
-                borderRadius: 12,
+                borderRadius: 23,
                 borderWidth: 1,
                 borderColor: "rgba(255,255,255,0.65)",
                 backgroundColor: "rgba(0,0,0,0.45)",
@@ -501,7 +502,7 @@ export default function SeasonsScreen({ navigation }) {
                   style={{
                     width: 44,
                     height: 44,
-                    borderRadius: 12,
+                    borderRadius: 22,
                     borderWidth: 1,
                     borderColor: "rgba(255,255,255,0.65)",
                     backgroundColor: "rgba(0,0,0,0.45)",
@@ -550,15 +551,19 @@ export default function SeasonsScreen({ navigation }) {
                   style={{
                     width: 44,
                     height: 44,
-                    borderRadius: 12,
+                    borderRadius: 22,
                     borderWidth: 1,
-                    borderColor: "rgba(133,255,177,0.45)",
-                    backgroundColor: "rgba(56,144,93,0.18)",
+                    borderColor: "rgba(133,255,177,0.7)",
+                    backgroundColor: "#ffffff",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <Text style={{ color: "#d8ffe3", fontSize: 13, fontWeight: "800" }}>RPi</Text>
+                  <Image
+                    source={TV_GREEN_IMAGE}
+                    resizeMode="contain"
+                    style={{ width: 32, height: 32 }}
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
