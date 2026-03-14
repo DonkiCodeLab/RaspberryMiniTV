@@ -84,6 +84,7 @@ export default function SeasonsScreen({ navigation }) {
   const [isSeriesSelectorVisible, setIsSeriesSelectorVisible] = useState(false);
   const [isAddSeriesVisible, setIsAddSeriesVisible] = useState(false);
   const [isSeriesOptionsVisible, setIsSeriesOptionsVisible] = useState(false);
+  const hasAnySeries = availableSeries.length > 0;
 
   const itemWidth = useMemo(() => {
     return (SCREEN_W - H_PADDING * 2 - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
@@ -322,9 +323,18 @@ export default function SeasonsScreen({ navigation }) {
                 <View
                   style={{
                     flex: 1,
-                    backgroundColor: "rgba(0,0,0,0.35)",
+                    backgroundColor: "rgba(0,0,0,0.2)",
                   }}
-                />
+                >
+                  <Image
+                    source={require("../../assets/cartell_logo.png")}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                    }}
+                    resizeMode="cover"
+                  />
+                </View>
               )}
             </MaskedView>
             <View
@@ -344,33 +354,44 @@ export default function SeasonsScreen({ navigation }) {
         </View>
 
         <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13, marginBottom: 6 }}>
-            {strings.selectSeries || strings.series}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Pressable
-              onPress={() => setIsSeriesSelectorVisible(true)}
-              style={({ pressed }) => ({
-                flex: 1,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.65)",
-                backgroundColor: "rgba(0,0,0,0.45)",
-                paddingHorizontal: 12,
-                paddingVertical: 11,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                opacity: pressed ? 0.8 : 1,
-              })}
-            >
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", flex: 1 }}>
-                {selectedSeries?.name || "-"}
-              </Text>
-              <Text style={{ color: "#fff", fontSize: 16, marginLeft: 8 }}>▾</Text>
-            </Pressable>
+          {hasAnySeries ? (
+            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13, marginBottom: 6 }}>
+              {strings.selectSeries || strings.series}
+            </Text>
+          ) : null}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              justifyContent: hasAnySeries ? "flex-start" : "flex-end",
+            }}
+          >
+            {hasAnySeries ? (
+              <Pressable
+                onPress={() => setIsSeriesSelectorVisible(true)}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.65)",
+                  backgroundColor: "rgba(0,0,0,0.45)",
+                  paddingHorizontal: 12,
+                  paddingVertical: 11,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  opacity: pressed ? 0.8 : 1,
+                })}
+              >
+                <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", flex: 1 }}>
+                  {selectedSeries?.name || "-"}
+                </Text>
+                <Text style={{ color: "#fff", fontSize: 16, marginLeft: 8 }}>▾</Text>
+              </Pressable>
+            ) : null}
 
-            {selectedSeries ? (
+            {hasAnySeries && selectedSeries ? (
               <Pressable
                 onPress={() => setIsSeriesOptionsVisible(true)}
                 style={({ pressed }) => ({
@@ -416,22 +437,152 @@ export default function SeasonsScreen({ navigation }) {
           </View>
         ) : !selectedSeries ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
-            <Text style={{ color: "#fff", fontWeight: "800", marginBottom: 8 }}>
-              {strings.noSeriesSelected}
-            </Text>
-            <Pressable
-              onPress={() => setIsAddSeriesVisible(true)}
+            <View
               style={{
-                backgroundColor: "rgba(0,0,0,0.45)",
+                width: "100%",
+                maxWidth: 420,
+                borderRadius: 24,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.6)",
-                borderRadius: 12,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
+                borderColor: "rgba(190,255,220,0.2)",
+                backgroundColor: "rgba(0,0,0,0.68)",
+                paddingHorizontal: 18,
+                paddingVertical: 18,
+                shadowColor: "#000",
+                shadowOpacity: 0.34,
+                shadowRadius: 22,
+                shadowOffset: { width: 0, height: 12 },
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "800" }}>{strings.addYourFirstSeries}</Text>
-            </Pressable>
+              <Text
+                style={{
+                  color: "#f4fff8",
+                  fontWeight: "800",
+                  fontSize: 19,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                  letterSpacing: 1.2,
+                }}
+              >
+                {strings.noContentLoadedTitle}
+              </Text>
+              <View
+                style={{
+                  height: 1,
+                  width: "100%",
+                  backgroundColor: "rgba(190,255,220,0.18)",
+                  marginBottom: 10,
+                }}
+              />
+              <Text
+                style={{
+                  color: "rgba(220,255,232,0.84)",
+                  fontSize: 13,
+                  lineHeight: 19,
+                  marginBottom: 14,
+                }}
+              >
+                {strings.noContentLoadedIntro}
+              </Text>
+
+              <View
+                style={{
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  padding: 14,
+                  marginBottom: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,0.65)",
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800" }}>+</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: "#ffffff",
+                      fontWeight: "800",
+                      fontSize: 15,
+                      marginBottom: 3,
+                    }}
+                  >
+                    {strings.addSeriesManualTitle}
+                  </Text>
+                  <Text
+                    style={{
+                      color: "rgba(220,255,232,0.9)",
+                      fontSize: 13,
+                      lineHeight: 18,
+                    }}
+                  >
+                    {strings.addSeriesManualDescription}
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  padding: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "rgba(133,255,177,0.45)",
+                    backgroundColor: "rgba(56,144,93,0.18)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: "#d8ffe3", fontSize: 13, fontWeight: "800" }}>RPi</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: "#ffffff",
+                      fontWeight: "800",
+                      fontSize: 15,
+                      marginBottom: 3,
+                    }}
+                  >
+                    {strings.addSeriesSyncTitle}
+                  </Text>
+                  <Text
+                    style={{
+                      color: "rgba(220,255,232,0.9)",
+                      fontSize: 13,
+                      lineHeight: 18,
+                    }}
+                  >
+                    {strings.addSeriesSyncDescription}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
         ) : error ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 20 }}>

@@ -66,8 +66,13 @@ const STRINGS = {
     seriesNamePlaceholder: "Nombre de la serie",
     deleteSeriesTitle: "Eliminar serie",
     deleteSeriesMessage: "¿Seguro que quieres eliminar esta serie?",
-    noSeriesSelected: "No hay ninguna serie seleccionada.",
-    addYourFirstSeries: "Añade tu primera serie",
+    noContentLoadedTitle: "Sin contenido cargado",
+    noContentLoadedIntro: "Para empezar tienes 2 maneras de agregar contenido:",
+    addSeriesManualTitle: "Añadir manualmente",
+    addSeriesManualDescription: "Pulsa el botón + y busca una serie nueva.",
+    addSeriesSyncTitle: "Sincronizar Raspberry",
+    addSeriesSyncDescription:
+      "Usa el badge de la Raspberry para conectar con la mini TV y detectar automáticamente lo que haya en la tarjeta SD.",
   },
   en: {
     episodes: "episodes",
@@ -134,8 +139,13 @@ const STRINGS = {
     seriesNamePlaceholder: "Series name",
     deleteSeriesTitle: "Delete series",
     deleteSeriesMessage: "Are you sure you want to delete this series?",
-    noSeriesSelected: "No series selected.",
-    addYourFirstSeries: "Add your first series",
+    noContentLoadedTitle: "No content loaded",
+    noContentLoadedIntro: "You have 2 ways to start:",
+    addSeriesManualTitle: "Add manually",
+    addSeriesManualDescription: "Tap the + button and search for a new series.",
+    addSeriesSyncTitle: "Sync Raspberry",
+    addSeriesSyncDescription:
+      "Use the Raspberry badge to connect with the mini TV and automatically detect what is stored on the SD card.",
   },
 };
 
