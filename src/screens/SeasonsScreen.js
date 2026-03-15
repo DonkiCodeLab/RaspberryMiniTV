@@ -24,10 +24,12 @@ import {
 } from "../i18n";
 import RaspberryStatusBadge from "../components/RaspberryStatusBadge";
 import AddSeriesDialog from "../components/AddSeriesDialog";
+import RaspberrySyncDialog from "../components/RaspberrySyncDialog";
 import SeriesOptionsDialog from "../components/SeriesOptionsDialog";
 import {
   addSeriesToLibrary,
   loadSeriesLibrary,
+  mergeSeriesIntoLibrary,
   removeSeriesFromLibrary,
   renameSeriesInLibrary,
 } from "../services/seriesLibrary";
@@ -85,6 +87,7 @@ export default function SeasonsScreen({ navigation }) {
   const [isSeriesSelectorVisible, setIsSeriesSelectorVisible] = useState(false);
   const [isAddSeriesVisible, setIsAddSeriesVisible] = useState(false);
   const [isSeriesOptionsVisible, setIsSeriesOptionsVisible] = useState(false);
+  const [isRaspberrySyncVisible, setIsRaspberrySyncVisible] = useState(false);
   const hasAnySeries = availableSeries.length > 0;
 
   const itemWidth = useMemo(() => {
@@ -201,6 +204,30 @@ export default function SeasonsScreen({ navigation }) {
     [strings.tmdbErrorTitle, syncSeriesLibrary]
   );
 
+  const handleSaveRaspberrySync = useCallback(
+    async (seriesList) => {
+      try {
+        const nextSeries = await mergeSeriesIntoLibrary(seriesList);
+        syncSeriesLibrary(nextSeries);
+
+        const firstSyncedId = Number(seriesList?.[0]?.id);
+        if (firstSyncedId) {
+          const matchedSeries = nextSeries.find(
+            (series) => Number(series.id) === firstSyncedId
+          );
+          if (matchedSeries?.key) {
+            setSelectedSeriesKey(matchedSeries.key);
+          }
+        }
+
+        setIsRaspberrySyncVisible(false);
+      } catch (err) {
+        Alert.alert(strings.tmdbErrorTitle, String(err?.message || err));
+      }
+    },
+    [strings.tmdbErrorTitle, syncSeriesLibrary]
+  );
+
   const renderItem = ({ item }) => {
     const imgSrc = resolveAsset(item.image);
 
@@ -212,6 +239,7 @@ export default function SeasonsScreen({ navigation }) {
             seriesId: resolvedSeriesId,
             seriesName,
             fallbackRuntime,
+            raspberrySync: selectedSeries?.raspberrySync || null,
           })
         }
         style={({ pressed }) => ({
@@ -349,6 +377,7 @@ export default function SeasonsScreen({ navigation }) {
                 strings={strings}
                 absolute={false}
                 size={BADGE_SIZE}
+                onRequestSynchronize={() => setIsRaspberrySyncVisible(true)}
               />
             </View>
           </View>
@@ -702,6 +731,15 @@ export default function SeasonsScreen({ navigation }) {
         existingSeriesIds={availableSeries.map((series) => series.id)}
         onClose={() => setIsAddSeriesVisible(false)}
         onAddSeries={handleAddSeries}
+      />
+
+      <RaspberrySyncDialog
+        visible={isRaspberrySyncVisible}
+        strings={strings}
+        localeTag={localeTag}
+        existingSeries={availableSeries}
+        onClose={() => setIsRaspberrySyncVisible(false)}
+        onSave={handleSaveRaspberrySync}
       />
 
       <SeriesOptionsDialog

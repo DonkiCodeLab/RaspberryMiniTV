@@ -73,6 +73,19 @@ const STRINGS = {
     addSeriesSyncTitle: "Sincronizar Raspberry",
     addSeriesSyncDescription:
       "Usa el badge de la Raspberry para conectar con la mini TV y detectar automáticamente lo que haya en la tarjeta SD.",
+    rpiSyncTitle: "Sincronizar con la Raspberry",
+    rpiSyncSubtitle:
+      "La app lee las carpetas de la Raspberry, propone la serie de TMDB que mejor encaja y te deja ajustar cada caso antes de guardar.",
+    rpiSyncLoading: "Leyendo contenido de la Raspberry...",
+    rpiSyncError: "No se pudo sincronizar.",
+    rpiSyncEmpty: "No se han encontrado carpetas de series en la Raspberry.",
+    rpiSyncNoMatch: "No se ha encontrado ninguna serie que encaje.",
+    rpiSyncShowAlternatives: "Ver otras opciones",
+    rpiSyncHideAlternatives: "Ocultar alternativas",
+    rpiSyncExistingSeries:
+      "Ya existe en la biblioteca; se añadirá el vínculo con la Raspberry.",
+    rpiSyncAlreadyLinked:
+      "Ya estaba vinculada; se actualizará la sincronización.",
   },
   en: {
     episodes: "episodes",
@@ -146,6 +159,19 @@ const STRINGS = {
     addSeriesSyncTitle: "Sync Raspberry",
     addSeriesSyncDescription:
       "Use the Raspberry badge to connect with the mini TV and automatically detect what is stored on the SD card.",
+    rpiSyncTitle: "Sync with Raspberry",
+    rpiSyncSubtitle:
+      "The app reads Raspberry folders, suggests the best TMDB match and lets you adjust each result before saving.",
+    rpiSyncLoading: "Reading Raspberry content...",
+    rpiSyncError: "Could not synchronize.",
+    rpiSyncEmpty: "No series folders were found on the Raspberry.",
+    rpiSyncNoMatch: "No matching TV series was found.",
+    rpiSyncShowAlternatives: "Show alternatives",
+    rpiSyncHideAlternatives: "Hide alternatives",
+    rpiSyncExistingSeries:
+      "This series is already in the library; the Raspberry link will be added.",
+    rpiSyncAlreadyLinked:
+      "This series was already linked; the sync metadata will be updated.",
   },
 };
 

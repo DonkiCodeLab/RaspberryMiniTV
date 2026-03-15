@@ -30,6 +30,7 @@ export default function RaspberryStatusBadge({
   topOffset = 0,
   absolute = true,
   rightOffset = 16,
+  onRequestSynchronize,
 }) {
   const { health, refreshHealth, baseUrl, updateBaseUrl } = useRaspberryStatus();
   const insets = useSafeAreaInsets();
@@ -62,13 +63,18 @@ export default function RaspberryStatusBadge({
     }).start();
   }, [anim]);
 
-  const closeModal = useCallback(() => {
+  const closeModal = useCallback((onClosed) => {
     Animated.timing(anim, {
       toValue: 0,
       duration: 180,
       useNativeDriver: true,
     }).start(({ finished }) => {
-      if (finished) setVisible(false);
+      if (finished) {
+        setVisible(false);
+        if (typeof onClosed === "function") {
+          onClosed();
+        }
+      }
     });
   }, [anim]);
 
@@ -115,11 +121,18 @@ export default function RaspberryStatusBadge({
 
   const onSynchronize = useCallback(async () => {
     try {
+      if (typeof onRequestSynchronize === "function") {
+        closeModal(() => {
+          onRequestSynchronize();
+        });
+        return;
+      }
+
       await refreshHealth();
     } catch (err) {
       Alert.alert(strings?.rpiRefresh || "Refresh", String(err));
     }
-  }, [refreshHealth, strings?.rpiRefresh]);
+  }, [closeModal, onRequestSynchronize, refreshHealth, strings?.rpiRefresh]);
 
   const onOpenYoutube = useCallback(async () => {
     try {

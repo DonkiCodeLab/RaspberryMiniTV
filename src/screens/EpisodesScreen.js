@@ -23,7 +23,7 @@ import SeasonHeader from "../components/SeasonHeader";
 import EpisodeDetailsModal from "../components/EpisodeDetailsModal";
 import RaspberryStatusBadge from "../components/RaspberryStatusBadge";
 import { getDeviceLanguage, getDeviceLocaleTag, getStrings } from "../i18n";
-import { getRaspberryBaseUrl } from "../services/raspberryApi";
+import { playRaspberryEpisode } from "../services/raspberryApi";
 import { getTvSeasonEpisodes } from "../services/tmdbApi";
 
 const { height: SCREEN_H } = Dimensions.get("window");
@@ -51,6 +51,7 @@ export default function EpisodesScreen({ route, navigation }) {
     seriesId = 456,
     seriesName = "The Simpsons",
     fallbackRuntime,
+    raspberrySync = null,
   } = route?.params || {};
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
@@ -131,43 +132,18 @@ export default function EpisodesScreen({ route, navigation }) {
   }, [detailsAnim]);
 
   const playEpisodeOnPi = useCallback(async (raspberryEpisodeId) => {
-    const baseUrl = await getRaspberryBaseUrl();
-    if (!baseUrl) {
-      Alert.alert(
-        strings.rpiNotConfigured || "Raspberry not configured",
-        strings.rpiNeedQrFirst || "Scan the Raspberry QR first from the RPi status badge."
-      );
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
     try {
-      const res = await fetch(`${baseUrl}/play`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: raspberryEpisodeId }),
-        signal: controller.signal,
+      await playRaspberryEpisode({
+        id: raspberryEpisodeId,
+        directory: raspberrySync?.directoryPath || undefined,
       });
-
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status} ${txt}`);
-      }
-
-      // Si quieres, puedes leer JSON:
-      // const json = await res.json();
-      // console.log(json);
     } catch (err) {
       Alert.alert(
         strings.couldNotPlay,
-        `Error llamando a ${baseUrl}/play\n\n${String(err)}`
+        String(err?.message || err)
       );
-    } finally {
-      clearTimeout(timeout);
     }
-  }, [strings.couldNotPlay, strings.rpiNeedQrFirst, strings.rpiNotConfigured]);
+  }, [raspberrySync?.directoryPath, strings.couldNotPlay]);
 
   const onPressPlay = useCallback(
     async (item) => {

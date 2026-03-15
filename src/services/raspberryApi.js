@@ -156,7 +156,7 @@ export async function stopRaspberryPlayback({ timeoutMs = 5000 } = {}) {
   }
 }
 
-async function postToRaspberry(path, { timeoutMs = 5000 } = {}) {
+async function postToRaspberry(path, { timeoutMs = 5000, body } = {}) {
   const baseUrl = await getRaspberryBaseUrl();
   if (!baseUrl) {
     throw new Error("Raspberry URL not configured");
@@ -169,6 +169,7 @@ async function postToRaspberry(path, { timeoutMs = 5000 } = {}) {
     const res = await fetch(`${baseUrl}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     });
 
@@ -184,6 +185,49 @@ async function postToRaspberry(path, { timeoutMs = 5000 } = {}) {
     } catch (_err) {
       return { ok: true, raw: txt };
     }
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function playRaspberryEpisode({ id, directory, timeoutMs = 5000 } = {}) {
+  const episodeId = String(id || "").trim().toUpperCase();
+  if (!episodeId) {
+    throw new Error("Episode id is required");
+  }
+
+  return postToRaspberry("/play", {
+    timeoutMs,
+    body: directory
+      ? {
+          id: episodeId,
+          directory,
+        }
+      : { id: episodeId },
+  });
+}
+
+export async function getRaspberryVideos({ timeoutMs = 10000 } = {}) {
+  const baseUrl = await getRaspberryBaseUrl();
+  if (!baseUrl) {
+    throw new Error("Raspberry URL not configured");
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(`${baseUrl}/videos`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(`HTTP ${res.status} ${txt}`);
+    }
+
+    return res.json();
   } finally {
     clearTimeout(timeout);
   }
