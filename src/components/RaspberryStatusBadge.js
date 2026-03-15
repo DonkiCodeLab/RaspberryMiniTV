@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, Text, Pressable, Modal, Animated, Alert, Image } from "react-native";
+import { View, Text, Pressable, Modal, Animated, Alert, Image, Linking } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import {
   stopRaspberryPlayback,
@@ -8,6 +8,14 @@ import {
   volumeUpRaspberry,
 } from "../services/raspberryApi";
 import { useRaspberryStatus } from "../context/RaspberryStatusContext";
+
+const STOP_ICON = require("../../assets/stop.png");
+const SYNCHRONIZE_ICON = require("../../assets/synchronize.png");
+const VOLUME_DOWN_ICON = require("../../assets/volume_down.png");
+const VOLUME_UP_ICON = require("../../assets/volume_up.png");
+const YOUTUBE_ICON = require("../../assets/youtube_icon.png");
+const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@donkicodelab";
+const YOUTUBE_APP_URL = "vnd.youtube://www.youtube.com/@donkicodelab";
 
 function statusColor(status) {
   if (status === "green") return "#22c55e";
@@ -79,7 +87,7 @@ export default function RaspberryStatusBadge({
     }
   }, [refreshHealth, strings?.rpiStopErrorTitle]);
 
-  const canControlPlayback = health.status === "green" && health.running;
+  const isRaspberryConnected = health.status === "green";
 
   const onVolumeDown = useCallback(async () => {
     setChangingVolume(true);
@@ -104,6 +112,23 @@ export default function RaspberryStatusBadge({
       setChangingVolume(false);
     }
   }, [refreshHealth, strings?.rpiVolumeErrorTitle]);
+
+  const onSynchronize = useCallback(async () => {
+    try {
+      await refreshHealth();
+    } catch (err) {
+      Alert.alert(strings?.rpiRefresh || "Refresh", String(err));
+    }
+  }, [refreshHealth, strings?.rpiRefresh]);
+
+  const onOpenYoutube = useCallback(async () => {
+    try {
+      const canOpenYoutubeApp = await Linking.canOpenURL(YOUTUBE_APP_URL);
+      await Linking.openURL(canOpenYoutubeApp ? YOUTUBE_APP_URL : YOUTUBE_CHANNEL_URL);
+    } catch (err) {
+      Alert.alert("YouTube", String(err));
+    }
+  }, []);
 
   const openScanner = useCallback(async () => {
     const current = cameraPermission?.granted;
@@ -195,6 +220,14 @@ export default function RaspberryStatusBadge({
       : health.status === "yellow"
       ? strings?.rpiDegraded || "Degraded"
       : strings?.rpiDisconnected || "Sin conexión";
+  const modalTvSource =
+    health.status === "green"
+      ? tvFrame === 0
+        ? require("../../assets/tele_green_1.png")
+        : require("../../assets/tele_green_2.png")
+      : tvFrame === 0
+      ? require("../../assets/tele_red_1.png")
+      : require("../../assets/tele_red_2.png");
 
   return (
     <>
@@ -256,207 +289,313 @@ export default function RaspberryStatusBadge({
           <Animated.View
             style={{
               width: "90%",
-              borderRadius: 18,
-              backgroundColor: "rgba(255,255,255,0.95)",
-              padding: 16,
               opacity: cardOpacity,
               transform: [{ translateY: cardTranslateY }],
+              alignItems: "center",
             }}
           >
             <View
               style={{
-                flexDirection: "row",
+                width: 292,
+                height: 292,
+                borderRadius: 146,
+                backgroundColor: "#ffffff",
                 alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 10,
+                justifyContent: "center",
+                marginBottom: -48,
+                zIndex: 2,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Image
-                  source={require("../../assets/tele_green_1.png")}
-                  style={{ width: 26, height: 26, marginRight: 8 }}
-                  resizeMode="contain"
-                />
-                <Text style={{ color: "#111", fontSize: 20, fontWeight: "900" }}>
-                  Simpsons TV
-                </Text>
-              </View>
-              <Pressable onPress={closeModal}>
-                <Text style={{ color: "#111", fontSize: 22, fontWeight: "800" }}>×</Text>
-              </Pressable>
+              <Image
+                source={modalTvSource}
+                style={{ width: 252, height: 252 }}
+                resizeMode="contain"
+              />
             </View>
-
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+            <View
+              style={{
+                width: "100%",
+                borderTopLeftRadius: 22,
+                borderTopRightRadius: 22,
+                borderBottomLeftRadius: 22,
+                borderBottomRightRadius: 22,
+                backgroundColor: "#ffffff",
+                opacity: 1,
+                padding: 16,
+                paddingTop: 42,
+                shadowColor: "#000",
+                shadowOpacity: 0.18,
+                shadowRadius: 18,
+                shadowOffset: { width: 0, height: 10 },
+              }}
+            >
               <View
                 style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 5,
-                  backgroundColor: statusColor(health.status),
-                  marginRight: 8,
-                }}
-              />
-              <Text style={{ color: "#111", fontSize: 15, fontWeight: "700" }}>
-                {stateLabel}
-              </Text>
-            </View>
-
-            <Text style={{ color: "#111", fontSize: 14, marginBottom: 14 }}>
-              <Text style={{ fontWeight: "800" }}>
-                {strings?.rpiPlayingTitle || "Reproduciendo"}:
-              </Text>{" "}
-              {health.playing || "-"}
-            </Text>
-            <Text style={{ color: "#111", fontSize: 13, marginBottom: 14 }}>
-              <Text style={{ fontWeight: "800" }}>
-                {strings?.rpiBaseUrlLabel || "IP/URL"}:
-              </Text>{" "}
-              {baseUrl || strings?.rpiUnknown || "unknown"}
-            </Text>
-
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <Pressable
-                onPress={openScanner}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  height: 44,
-                  borderRadius: 12,
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "rgba(0,0,0,0.08)",
-                  opacity: pressed ? 0.8 : 1,
-                })}
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                }}
               >
-                <View
+                <Text style={{ color: "#111", fontSize: 20, fontWeight: "900" }}>
+                  Raspberry Pi TV
+                </Text>
+                <Pressable
+                  onPress={closeModal}
                   style={{
-                    width: 18,
-                    height: 18,
-                    borderWidth: 2,
-                    borderColor: "#111",
-                    marginRight: 8,
-                    position: "relative",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0,0,0,0.12)",
                   }}
                 >
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 1,
-                      left: 1,
-                      width: 4,
-                      height: 4,
-                      backgroundColor: "#111",
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 1,
-                      right: 1,
-                      width: 4,
-                      height: 4,
-                      backgroundColor: "#111",
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: 1,
-                      left: 1,
-                      width: 4,
-                      height: 4,
-                      backgroundColor: "#111",
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: 5,
-                      right: 5,
-                      width: 3,
-                      height: 3,
-                      backgroundColor: "#111",
-                    }}
-                  />
+                  <Text style={{ color: "#111", fontSize: 22, fontWeight: "800" }}>×</Text>
+                </Pressable>
+              </View>
+
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                <View
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: statusColor(health.status),
+                    marginRight: 8,
+                  }}
+                />
+                <Text style={{ color: "#111", fontSize: 15, fontWeight: "700" }}>
+                  {stateLabel}
+                </Text>
+              </View>
+
+              <Text style={{ color: "#111", fontSize: 14, marginBottom: 14 }}>
+                <Text style={{ fontWeight: "800" }}>
+                  {strings?.rpiPlayingTitle || "Reproduciendo"}:
+                </Text>{" "}
+                {health.playing || "-"}
+              </Text>
+              <Text style={{ color: "#111", fontSize: 13, marginBottom: 14 }}>
+                <Text style={{ fontWeight: "800" }}>
+                  {strings?.rpiBaseUrlLabel || "IP/URL"}:
+                </Text>{" "}
+                {baseUrl || strings?.rpiUnknown || "unknown"}
+              </Text>
+
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Pressable
+                    onPress={openScanner}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      height: 44,
+                      borderRadius: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "rgba(0,0,0,0.08)",
+                      opacity: pressed ? 0.8 : 1,
+                    })}
+                  >
+                    <View
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderWidth: 2,
+                        borderColor: "#111",
+                        marginRight: 8,
+                        position: "relative",
+                      }}
+                    >
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 1,
+                          left: 1,
+                          width: 4,
+                          height: 4,
+                          backgroundColor: "#111",
+                        }}
+                      />
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 1,
+                          right: 1,
+                          width: 4,
+                          height: 4,
+                          backgroundColor: "#111",
+                        }}
+                      />
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: 1,
+                          left: 1,
+                          width: 4,
+                          height: 4,
+                          backgroundColor: "#111",
+                        }}
+                      />
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: 5,
+                          right: 5,
+                          width: 3,
+                          height: 3,
+                          backgroundColor: "#111",
+                        }}
+                      />
+                    </View>
+                    <Text style={{ color: "#111", fontWeight: "700" }}>
+                      {strings?.rpiScanQr || "Escanear QR"}
+                    </Text>
+                  </Pressable>
                 </View>
-                <Text style={{ color: "#111", fontWeight: "700" }}>
-                  {strings?.rpiScanQr || "Escanear QR"}
-                </Text>
-              </Pressable>
 
-              <Pressable
-                disabled={stopping || !canControlPlayback}
-                onPress={onStop}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  height: 44,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#111",
-                  opacity:
-                    stopping || !canControlPlayback
-                      ? 0.45
-                      : pressed
-                      ? 0.85
-                      : 1,
-                })}
-              >
-                <Text style={{ color: "#fff", fontWeight: "800" }}>
-                  {"⏹ "}
-                  {stopping
-                    ? strings?.rpiStopping || "Stopping..."
-                    : strings?.rpiStop || "Detener"}
-                </Text>
-              </Pressable>
-            </View>
+                <Pressable
+                  disabled={!isRaspberryConnected}
+                  onPress={onSynchronize}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    height: 44,
+                    borderRadius: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0,0,0,0.08)",
+                    opacity:
+                      !isRaspberryConnected
+                        ? 0.45
+                        : pressed
+                        ? 0.85
+                        : 1,
+                  })}
+                >
+                  <Image
+                    source={SYNCHRONIZE_ICON}
+                    resizeMode="contain"
+                    style={{ width: 18, height: 18, marginRight: 8 }}
+                  />
+                  <Text style={{ color: "#111", fontWeight: "800" }}>
+                    Sincronizar
+                  </Text>
+                </Pressable>
+              </View>
 
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-              <Pressable
-                disabled={changingVolume || !canControlPlayback}
-                onPress={onVolumeDown}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  height: 40,
-                  borderRadius: 10,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "rgba(0,0,0,0.08)",
-                  opacity:
-                    changingVolume || !canControlPlayback
-                      ? 0.45
-                      : pressed
-                      ? 0.8
-                      : 1,
-                })}
-              >
-                <Text style={{ color: "#111", fontWeight: "800" }}>
-                  {strings?.volumeDown || "🔉 Vol -"}
-                </Text>
-              </Pressable>
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+                <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
+                  <Pressable
+                    disabled={changingVolume || !isRaspberryConnected}
+                    onPress={onVolumeDown}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      height: 40,
+                      borderRadius: 10,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "rgba(0,0,0,0.08)",
+                      opacity:
+                        changingVolume || !isRaspberryConnected
+                          ? 0.45
+                          : pressed
+                          ? 0.8
+                          : 1,
+                    })}
+                  >
+                    <Image
+                      source={VOLUME_DOWN_ICON}
+                      resizeMode="contain"
+                      style={{ width: 24, height: 24 }}
+                    />
+                  </Pressable>
 
-              <Pressable
-                disabled={changingVolume || !canControlPlayback}
-                onPress={onVolumeUp}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  height: 40,
-                  borderRadius: 10,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "rgba(0,0,0,0.08)",
-                  opacity:
-                    changingVolume || !canControlPlayback
-                      ? 0.45
-                      : pressed
-                      ? 0.8
-                      : 1,
-                })}
-              >
-                <Text style={{ color: "#111", fontWeight: "800" }}>
-                  {strings?.volumeUp || "🔊 Vol +"}
-                </Text>
-              </Pressable>
+                  <Pressable
+                    disabled={changingVolume || !isRaspberryConnected}
+                    onPress={onVolumeUp}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      height: 40,
+                      borderRadius: 10,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "rgba(0,0,0,0.08)",
+                      opacity:
+                        changingVolume || !isRaspberryConnected
+                          ? 0.45
+                          : pressed
+                          ? 0.8
+                          : 1,
+                    })}
+                  >
+                    <Image
+                      source={VOLUME_UP_ICON}
+                      resizeMode="contain"
+                      style={{ width: 24, height: 24 }}
+                    />
+                  </Pressable>
+                </View>
+
+                <Pressable
+                  disabled={stopping || !isRaspberryConnected}
+                  onPress={onStop}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    height: 40,
+                    borderRadius: 10,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#111",
+                    opacity:
+                      stopping || !isRaspberryConnected
+                        ? 0.45
+                        : pressed
+                        ? 0.85
+                        : 1,
+                  })}
+                >
+                  <Image
+                    source={STOP_ICON}
+                    resizeMode="contain"
+                    style={{ width: 16, height: 16, marginRight: 8 }}
+                  />
+                  <Text style={{ color: "#fff", fontWeight: "800" }}>
+                    {stopping
+                      ? strings?.rpiStopping || "Stopping..."
+                      : strings?.rpiStop || "Detener"}
+                  </Text>
+                </Pressable>
+              </View>
+
+              <View style={{ marginTop: 10 }}>
+                <Pressable
+                  onPress={onOpenYoutube}
+                  style={({ pressed }) => ({
+                    width: "100%",
+                    height: 42,
+                    borderRadius: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0,0,0,0.08)",
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Image
+                    source={YOUTUBE_ICON}
+                    resizeMode="contain"
+                    style={{ width: 22, height: 22, marginRight: 8 }}
+                  />
+                  <Text style={{ color: "#111", fontWeight: "800" }}>
+                    Visitar canal de YouTube
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         </View>

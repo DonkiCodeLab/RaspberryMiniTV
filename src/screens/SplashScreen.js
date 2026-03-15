@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import {
   Animated,
   Image,
-  ImageBackground,
   StatusBar,
   StyleSheet,
   useWindowDimensions,
@@ -11,7 +10,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { VideoView, useVideoPlayer } from "expo-video";
 
-const BACKGROUND_IMAGE = require("../../assets/splashScreen_background.png");
 const DEVELOPING_IMAGE = require("../../assets/splashScreen_developing.png");
 const RASPBERRY_IMAGE = require("../../assets/splashScreen_raspberry.png");
 const TV_IMAGE = require("../../assets/tele_simpsons.png");
@@ -20,7 +18,7 @@ const INTRO_VIDEO = require("../../assets/video_donkicodeLab.mp4");
 const TV_ASPECT_RATIO = 922 / 1265;
 const FADE_IN_DURATION_MS = 3000;
 const VIDEO_DURATION_MS = 11145;
-const SPLASH_HOLD_MS = VIDEO_DURATION_MS;
+const SPLASH_HOLD_MS = VIDEO_DURATION_MS - 3000;
 const DEVELOPING_CANVAS_WIDTH = 770;
 const DEVELOPING_CANVAS_HEIGHT = 279;
 const DEVELOPING_CONTENT_LEFT = 151;
@@ -98,7 +96,7 @@ export default function SplashScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar hidden />
-      <ImageBackground source={BACKGROUND_IMAGE} resizeMode="cover" style={styles.background}>
+      <View style={styles.background}>
         <SafeAreaView edges={["top"]} style={[styles.safeArea, { paddingTop: topSpacer }]}>
           <View
             style={[
@@ -181,7 +179,7 @@ export default function SplashScreen({ navigation }) {
             style={[styles.tvImage, { width: tvWidth, height: tvHeight }]}
           />
         </View>
-      </ImageBackground>
+      </View>
     </View>
   );
 }
@@ -189,11 +187,11 @@ export default function SplashScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
   },
   background: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
   },
   safeArea: {
     alignItems: "center",

@@ -398,16 +398,16 @@ export default function SeasonsScreen({ navigation }) {
                 style={({ pressed }) => ({
                   width: 46,
                   height: 46,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.65)",
-                  backgroundColor: "rgba(0,0,0,0.45)",
                   alignItems: "center",
                   justifyContent: "center",
                   opacity: pressed ? 0.8 : 1,
                 })}
               >
-                <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800" }}>⋯</Text>
+                <Image
+                  source={require("../../assets/options.png")}
+                  resizeMode="contain"
+                  style={{ width: 22, height: 22 }}
+                />
               </Pressable>
             ) : null}
 
