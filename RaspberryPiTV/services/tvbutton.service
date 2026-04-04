@@ -1,0 +1,16 @@
+[Unit]
+Description=tvbutton
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/donkikochan/TvSimpsonsApp/RaspberryPiTV
+ExecStart=/usr/bin/python3 /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/buttons.py
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
