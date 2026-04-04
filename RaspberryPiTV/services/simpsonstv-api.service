@@ -1,17 +1,20 @@
 [Unit]
 Description=SimpsonsTV Control API
-After=network.target
+After=network.target graphical.target
+Wants=graphical.target
 
 [Service]
 Type=simple
-User=root
+User=donkikochan
 WorkingDirectory=/home/donkikochan/TvSimpsonsApp/RaspberryPiTV
 ExecStart=/usr/bin/python3 /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/control_api.py
 Restart=always
 RestartSec=2
 Environment=PYTHONUNBUFFERED=1
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/donkikochan/.Xauthority
 StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
