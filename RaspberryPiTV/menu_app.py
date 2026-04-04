@@ -11,6 +11,8 @@ os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 
 import pygame
 
+HAS_FINGERUP = hasattr(pygame, "FINGERUP")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
 MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Screen_Main.png")
@@ -202,7 +204,7 @@ class RaspberryPiTVMenu:
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     self.handle_touch(event.pos)
-                elif event.type == pygame.FINGERUP:
+                elif HAS_FINGERUP and event.type == pygame.FINGERUP:
                     self.handle_touch((int(event.x * self.width), int(event.y * self.height)))
 
             self.draw()
