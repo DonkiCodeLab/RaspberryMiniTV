@@ -28,14 +28,15 @@ systemctl disable simpsonstv-api.service tvbutton.service simpsonstv-menu.servic
 
 install_service "simpsonstv-api.service"
 install_service "simpsonstv-menu.service"
-install_service "tvbutton.service"
+# Temporalmente no reinstalamos ni activamos tvbutton.service
+# mientras el cable del boton fisico esta desconectado.
 
 systemctl daemon-reload
-systemctl enable simpsonstv-api.service simpsonstv-menu.service tvbutton.service
-systemctl restart simpsonstv-api.service simpsonstv-menu.service tvbutton.service
+systemctl enable simpsonstv-api.service simpsonstv-menu.service
+systemctl restart simpsonstv-api.service simpsonstv-menu.service
 
 echo "Servicios instalados y reiniciados correctamente."
 echo "Puedes revisar su estado con:"
 echo "  sudo systemctl status simpsonstv-api.service"
 echo "  sudo systemctl status simpsonstv-menu.service"
-echo "  sudo systemctl status tvbutton.service"
+echo "tvbutton.service queda desactivado temporalmente."
