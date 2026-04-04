@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState, useCallback } from "react";
+import React, { useMemo, useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -25,13 +25,14 @@ import {
 import RaspberryStatusBadge from "../components/RaspberryStatusBadge";
 import AddSeriesDialog from "../components/AddSeriesDialog";
 import RaspberrySyncDialog from "../components/RaspberrySyncDialog";
+import SeriesCoverFrame from "../components/SeriesCoverFrame";
 import SeriesOptionsDialog from "../components/SeriesOptionsDialog";
 import {
   addSeriesToLibrary,
   loadSeriesLibrary,
   mergeSeriesIntoLibrary,
   removeSeriesFromLibrary,
-  renameSeriesInLibrary,
+  updateSeriesInLibrary,
 } from "../services/seriesLibrary";
 import { getTvSeriesFromOption } from "../services/tmdbApi";
 
@@ -67,6 +68,31 @@ const BADGE_TOP =
   (BADGE_ZONE_HEIGHT_SCALED - BADGE_SIZE) / 2;
 const TV_GREEN_IMAGE = require("../../assets/tele_green_1.png");
 
+function createPulseAnimation(animatedValue) {
+  return Animated.sequence([
+    Animated.timing(animatedValue, {
+      toValue: 1.12,
+      duration: 220,
+      useNativeDriver: true,
+    }),
+    Animated.timing(animatedValue, {
+      toValue: 1,
+      duration: 220,
+      useNativeDriver: true,
+    }),
+    Animated.timing(animatedValue, {
+      toValue: 1.06,
+      duration: 160,
+      useNativeDriver: true,
+    }),
+    Animated.timing(animatedValue, {
+      toValue: 1,
+      duration: 160,
+      useNativeDriver: true,
+    }),
+  ]);
+}
+
 export default function SeasonsScreen({ navigation }) {
   const language = getDeviceLanguage();
   const localeTag = getDeviceLocaleTag();
@@ -80,6 +106,7 @@ export default function SeasonsScreen({ navigation }) {
   const [resolvedSeriesId, setResolvedSeriesId] = useState(selectedSeries?.id || 456);
   const [seriesName, setSeriesName] = useState(selectedSeries?.name || "");
   const [seriesHeroImage, setSeriesHeroImage] = useState(null);
+  const [seriesImageOptions, setSeriesImageOptions] = useState([]);
   const [fallbackRuntime, setFallbackRuntime] = useState(null);
   const [seasons, setSeasons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,6 +116,10 @@ export default function SeasonsScreen({ navigation }) {
   const [isSeriesOptionsVisible, setIsSeriesOptionsVisible] = useState(false);
   const [isRaspberrySyncVisible, setIsRaspberrySyncVisible] = useState(false);
   const hasAnySeries = availableSeries.length > 0;
+  const addButtonPulse = useRef(new Animated.Value(1)).current;
+  const addHintPulse = useRef(new Animated.Value(1)).current;
+  const raspberryButtonPulse = useRef(new Animated.Value(1)).current;
+  const raspberryHintPulse = useRef(new Animated.Value(1)).current;
 
   const itemWidth = useMemo(() => {
     return (SCREEN_W - H_PADDING * 2 - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
@@ -128,6 +159,7 @@ export default function SeasonsScreen({ navigation }) {
       setSeasons([]);
       setSeriesName("");
       setSeriesHeroImage(null);
+      setSeriesImageOptions([]);
       setFallbackRuntime(null);
       setResolvedSeriesId(null);
       setError("");
@@ -140,14 +172,16 @@ export default function SeasonsScreen({ navigation }) {
     try {
       const tvData = await getTvSeriesFromOption(selectedSeries, localeTag);
       setSeasons(tvData.seasons);
-      setSeriesName(tvData.name);
-      setSeriesHeroImage(tvData.heroImage || null);
+      setSeriesName(selectedSeries?.name || tvData.name);
+      setSeriesHeroImage(selectedSeries?.selectedImage || tvData.heroImage || null);
+      setSeriesImageOptions(tvData.imageOptions || []);
       setFallbackRuntime(tvData.fallbackRuntime);
       setResolvedSeriesId(tvData.id);
     } catch (err) {
       setError(String(err?.message || err));
       setSeasons([]);
       setSeriesHeroImage(null);
+      setSeriesImageOptions([]);
     } finally {
       setIsLoading(false);
     }
@@ -156,6 +190,49 @@ export default function SeasonsScreen({ navigation }) {
   useEffect(() => {
     loadSeries();
   }, [loadSeries]);
+
+  useEffect(() => {
+    if (hasAnySeries || isSeriesLibraryLoading || isLoading) {
+      addButtonPulse.setValue(1);
+      addHintPulse.setValue(1);
+      raspberryButtonPulse.setValue(1);
+      raspberryHintPulse.setValue(1);
+      return undefined;
+    }
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          createPulseAnimation(addButtonPulse),
+          createPulseAnimation(addHintPulse),
+        ]),
+        Animated.delay(340),
+        Animated.parallel([
+          createPulseAnimation(raspberryButtonPulse),
+          createPulseAnimation(raspberryHintPulse),
+        ]),
+        Animated.delay(950),
+      ])
+    );
+
+    loop.start();
+
+    return () => {
+      loop.stop();
+      addButtonPulse.setValue(1);
+      addHintPulse.setValue(1);
+      raspberryButtonPulse.setValue(1);
+      raspberryHintPulse.setValue(1);
+    };
+  }, [
+    addButtonPulse,
+    addHintPulse,
+    hasAnySeries,
+    isLoading,
+    isSeriesLibraryLoading,
+    raspberryButtonPulse,
+    raspberryHintPulse,
+  ]);
 
   const handleAddSeries = useCallback(
     async (seriesResult) => {
@@ -178,10 +255,10 @@ export default function SeasonsScreen({ navigation }) {
     [strings.tmdbErrorTitle, syncSeriesLibrary]
   );
 
-  const handleRenameSeries = useCallback(
-    async (series, nextName) => {
+  const handleSaveSeriesOptions = useCallback(
+    async (series, nextOptions) => {
       try {
-        const nextSeries = await renameSeriesInLibrary(series?.key, nextName);
+        const nextSeries = await updateSeriesInLibrary(series?.key, nextOptions);
         syncSeriesLibrary(nextSeries);
         setIsSeriesOptionsVisible(false);
       } catch (err) {
@@ -195,6 +272,15 @@ export default function SeasonsScreen({ navigation }) {
     async (series) => {
       try {
         const nextSeries = await removeSeriesFromLibrary(series?.key);
+        if (!nextSeries.length) {
+          setSeasons([]);
+          setSeriesName("");
+          setSeriesHeroImage(null);
+          setSeriesImageOptions([]);
+          setFallbackRuntime(null);
+          setResolvedSeriesId(null);
+          setError("");
+        }
         syncSeriesLibrary(nextSeries);
         setIsSeriesOptionsVisible(false);
       } catch (err) {
@@ -340,13 +426,12 @@ export default function SeasonsScreen({ navigation }) {
               }
             >
               {seriesHeroImage ? (
-                <Image
-                  source={{ uri: seriesHeroImage }}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                  }}
-                  resizeMode="cover"
+                <SeriesCoverFrame
+                  imageUri={seriesHeroImage}
+                  crop={selectedSeries?.selectedImageCrop}
+                  strings={strings}
+                  height={HEADER_SCENE_HEIGHT}
+                  showFrame={false}
                 />
               ) : (
                 <View
@@ -366,11 +451,12 @@ export default function SeasonsScreen({ navigation }) {
                 </View>
               )}
             </MaskedView>
-            <View
+            <Animated.View
               style={{
                 position: "absolute",
                 left: BADGE_LEFT,
                 top: BADGE_TOP,
+                transform: [{ scale: raspberryButtonPulse }],
               }}
             >
               <RaspberryStatusBadge
@@ -379,7 +465,7 @@ export default function SeasonsScreen({ navigation }) {
                 size={BADGE_SIZE}
                 onRequestSynchronize={() => setIsRaspberrySyncVisible(true)}
               />
-            </View>
+            </Animated.View>
           </View>
         </View>
 
@@ -440,22 +526,24 @@ export default function SeasonsScreen({ navigation }) {
               </Pressable>
             ) : null}
 
-            <Pressable
-              onPress={() => setIsAddSeriesVisible(true)}
-              style={({ pressed }) => ({
-                width: 46,
-                height: 46,
-                borderRadius: 23,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.65)",
-                backgroundColor: "rgba(0,0,0,0.45)",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.8 : 1,
-              })}
-            >
-              <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800" }}>+</Text>
-            </Pressable>
+            <Animated.View style={{ transform: [{ scale: addButtonPulse }] }}>
+              <Pressable
+                onPress={() => setIsAddSeriesVisible(true)}
+                style={({ pressed }) => ({
+                  width: 46,
+                  height: 46,
+                  borderRadius: 23,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.65)",
+                  backgroundColor: "rgba(0,0,0,0.45)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.8 : 1,
+                })}
+              >
+                <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800" }}>+</Text>
+              </Pressable>
+            </Animated.View>
           </View>
         </View>
 
@@ -527,7 +615,7 @@ export default function SeasonsScreen({ navigation }) {
                   gap: 12,
                 }}
               >
-                <View
+                <Animated.View
                   style={{
                     width: 44,
                     height: 44,
@@ -537,10 +625,11 @@ export default function SeasonsScreen({ navigation }) {
                     backgroundColor: "rgba(0,0,0,0.45)",
                     alignItems: "center",
                     justifyContent: "center",
+                    transform: [{ scale: addHintPulse }],
                   }}
                 >
                   <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800" }}>+</Text>
-                </View>
+                </Animated.View>
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
@@ -576,7 +665,7 @@ export default function SeasonsScreen({ navigation }) {
                   gap: 12,
                 }}
               >
-                <View
+                <Animated.View
                   style={{
                     width: 44,
                     height: 44,
@@ -586,6 +675,7 @@ export default function SeasonsScreen({ navigation }) {
                     backgroundColor: "#ffffff",
                     alignItems: "center",
                     justifyContent: "center",
+                    transform: [{ scale: raspberryHintPulse }],
                   }}
                 >
                   <Image
@@ -593,7 +683,7 @@ export default function SeasonsScreen({ navigation }) {
                     resizeMode="contain"
                     style={{ width: 32, height: 32 }}
                   />
-                </View>
+                </Animated.View>
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
@@ -746,8 +836,9 @@ export default function SeasonsScreen({ navigation }) {
         visible={isSeriesOptionsVisible && Boolean(selectedSeries)}
         strings={strings}
         series={selectedSeries}
+        imageOptions={seriesImageOptions}
         onClose={() => setIsSeriesOptionsVisible(false)}
-        onRenameSeries={handleRenameSeries}
+        onSaveSeriesOptions={handleSaveSeriesOptions}
         onDeleteSeries={handleDeleteSeries}
       />
     </ImageBackground>

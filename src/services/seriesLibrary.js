@@ -57,6 +57,15 @@ function normalizeSeries(series, index = 0) {
     id: Number.isFinite(id) ? id : null,
     name: String(series?.name || "").trim() || `Series ${index + 1}`,
     searchQuery: String(series?.searchQuery || "").trim() || undefined,
+    selectedImage: String(series?.selectedImage || "").trim() || null,
+    selectedImageCrop:
+      series?.selectedImageCrop && typeof series.selectedImageCrop === "object"
+        ? {
+            focusX: Number(series.selectedImageCrop.focusX) || 0.5,
+            focusY: Number(series.selectedImageCrop.focusY) || 0.5,
+            zoom: Number(series.selectedImageCrop.zoom) || 1,
+          }
+        : null,
     raspberrySync: normalizeRaspberrySync(series?.raspberrySync),
   };
 }
@@ -85,18 +94,49 @@ function dedupeSeries(seriesList) {
   }, []);
 }
 
+function isLegacySeedLibrary(seriesList) {
+  if (!Array.isArray(seriesList)) return false;
+
+  const normalizedStored = dedupeSeries(seriesList);
+  const normalizedFallback = dedupeSeries(getAvailableSeries());
+
+  if (
+    !normalizedStored.length ||
+    normalizedStored.length !== normalizedFallback.length
+  ) {
+    return false;
+  }
+
+  return normalizedStored.every((series, index) => {
+    const fallbackSeries = normalizedFallback[index];
+
+    return (
+      series.key === fallbackSeries.key &&
+      Number(series.id) === Number(fallbackSeries.id) &&
+      series.name === fallbackSeries.name &&
+      !series.selectedImage &&
+      !series.selectedImageCrop &&
+      !series.raspberrySync
+    );
+  });
+}
+
 export async function loadSeriesLibrary() {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (raw == null) {
-      return dedupeSeries(getAvailableSeries());
+      return [];
     }
 
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
+    if (isLegacySeedLibrary(parsed)) {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      return [];
+    }
     return dedupeSeries(parsed);
   } catch (_err) {
-    return dedupeSeries(getAvailableSeries());
+    return [];
   }
 }
 
@@ -123,6 +163,34 @@ export async function renameSeriesInLibrary(seriesKey, nextName) {
   const next = current.map((series) =>
     series.key === seriesKey ? { ...series, name: trimmedName } : series
   );
+  return saveSeriesLibrary(next);
+}
+
+export async function updateSeriesInLibrary(seriesKey, updates = {}) {
+  const current = await loadSeriesLibrary();
+  const next = current.map((series) => {
+    if (series.key !== seriesKey) return series;
+
+    const nextName = String(updates?.name ?? series?.name ?? "").trim();
+    const nextSelectedImage = String(updates?.selectedImage ?? series?.selectedImage ?? "").trim();
+    const nextSelectedImageCrop =
+      updates?.selectedImageCrop && typeof updates.selectedImageCrop === "object"
+        ? updates.selectedImageCrop
+        : series?.selectedImageCrop || null;
+
+    if (!nextName) {
+      throw new Error("Series name is required.");
+    }
+
+    return {
+      ...series,
+      ...updates,
+      name: nextName,
+      selectedImage: nextSelectedImage || null,
+      selectedImageCrop: nextSelectedImageCrop,
+    };
+  });
+
   return saveSeriesLibrary(next);
 }
 

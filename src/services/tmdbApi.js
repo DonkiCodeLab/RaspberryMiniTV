@@ -24,11 +24,20 @@ const FALLBACK_SERIES = [
   },
 ];
 
+function uniqueImageList(imageUrls) {
+  const seen = new Set();
+
+  return (Array.isArray(imageUrls) ? imageUrls : []).filter((imageUrl) => {
+    const normalized = String(imageUrl || "").trim();
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
 function readTmdbCredentials() {
-  const apiKey = String(process?.env?.EXPO_PUBLIC_TMDB_API_KEY || "").trim();
-  const bearerToken = String(
-    process?.env?.EXPO_PUBLIC_TMDB_BEARER_TOKEN || ""
-  ).trim();
+  const apiKey = String(process.env.EXPO_PUBLIC_TMDB_API_KEY || "").trim();
+  const bearerToken = String(process.env.EXPO_PUBLIC_TMDB_BEARER_TOKEN || "").trim();
 
   return { apiKey, bearerToken };
 }
@@ -116,13 +125,40 @@ export function buildTmdbImageUrl(path, size = "w500") {
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 
+export async function getTvSeriesImages(seriesId, language) {
+  const data = await fetchTmdbJson(`/tv/${seriesId}/images`, {
+    language,
+    query: {
+      include_image_language: "null,en,es",
+    },
+  });
+
+  const posters = (Array.isArray(data?.posters) ? data.posters : []).map((item) =>
+    buildTmdbImageUrl(item?.file_path, "w780")
+  );
+  const backdrops = (Array.isArray(data?.backdrops) ? data.backdrops : []).map((item) =>
+    buildTmdbImageUrl(item?.file_path, "w1280")
+  );
+
+  return uniqueImageList([...posters, ...backdrops]);
+}
+
 export async function getTvSeriesById(seriesId, language) {
-  const show = await fetchTmdbJson(`/tv/${seriesId}`, { language });
+  const [show, availableImages] = await Promise.all([
+    fetchTmdbJson(`/tv/${seriesId}`, { language }),
+    getTvSeriesImages(seriesId, language).catch(() => []),
+  ]);
   const fallbackRuntime = Number(show?.episode_run_time?.[0]) || null;
   const heroImage =
     buildTmdbImageUrl(show?.backdrop_path, "w1280") ||
     buildTmdbImageUrl(show?.poster_path, "w780") ||
     null;
+  const imageOptions = uniqueImageList([
+    heroImage,
+    buildTmdbImageUrl(show?.poster_path, "w780"),
+    buildTmdbImageUrl(show?.backdrop_path, "w1280"),
+    ...availableImages,
+  ]);
 
   const seasons = (show?.seasons || [])
     .filter((season) => Number(season?.season_number) > 0)
@@ -146,6 +182,7 @@ export async function getTvSeriesById(seriesId, language) {
     id: Number(show?.id) || Number(seriesId),
     name: show?.name || "Unknown show",
     heroImage,
+    imageOptions,
     fallbackRuntime,
     seasons,
   };

@@ -75,17 +75,34 @@ export default function AddSeriesDialog({
         <View
           style={{
             backgroundColor: "rgba(18,18,18,0.98)",
-            borderRadius: 16,
+            borderRadius: 22,
             borderWidth: 1,
             borderColor: "rgba(255,255,255,0.15)",
-            padding: 14,
+            padding: 18,
             maxHeight: "78%",
           }}
         >
-          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16, marginBottom: 10 }}>
+          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 17, marginBottom: 8 }}>
             {strings?.addSeriesTitle || "Añadir serie"}
           </Text>
-
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "rgba(255,255,255,0.12)",
+              marginBottom: 16,
+            }}
+          />
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.68)",
+              fontSize: 13,
+              lineHeight: 18,
+              marginBottom: 20,
+            }}
+          >
+            {strings?.addSeriesSubtitle ||
+              "Añadir una serie sin estar sincronizada con la Raspberry Pi TV"}
+          </Text>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
             <TextInput
               value={query}
@@ -123,9 +140,17 @@ export default function AddSeriesDialog({
           </View>
 
           {isSearching ? (
-            <View style={{ paddingVertical: 24, alignItems: "center" }}>
-              <ActivityIndicator color="#fff" />
-              <Text style={{ color: "#fff", marginTop: 10 }}>
+            <View
+              style={{
+                paddingVertical: 28,
+                paddingHorizontal: 18,
+                alignItems: "center",
+                backgroundColor: "#fff",
+                borderRadius: 18,
+              }}
+            >
+              <ActivityIndicator color="#111827" />
+              <Text style={{ color: "#111827", marginTop: 10, fontWeight: "600" }}>
                 {strings?.searchingSeries || "Buscando series..."}
               </Text>
             </View>
@@ -135,16 +160,33 @@ export default function AddSeriesDialog({
             <FlatList
               data={results}
               keyExtractor={(item) => String(item.id)}
-              style={{ maxHeight: 360 }}
+              style={{
+                maxHeight: 360,
+                backgroundColor: "#fff",
+                borderRadius: 18,
+              }}
+              contentContainerStyle={{
+                paddingHorizontal: 14,
+                paddingVertical: results.length ? 8 : 26,
+              }}
               ItemSeparatorComponent={() => (
-                <View style={{ height: 1, backgroundColor: "rgba(255,255,255,0.08)" }} />
+                <View style={{ height: 1, backgroundColor: "rgba(17,24,39,0.08)" }} />
               )}
               ListEmptyComponent={
-                <Text style={{ color: "rgba(255,255,255,0.7)", paddingVertical: 16 }}>
-                  {query.trim()
-                    ? strings?.noSeriesResults || "No se han encontrado resultados."
-                    : strings?.seriesSearchHint || "Busca una serie para añadirla."}
-                </Text>
+                <View style={{ alignItems: "center", justifyContent: "center", minHeight: 120 }}>
+                  <Text
+                    style={{
+                      color: "#111827",
+                      fontSize: 15,
+                      fontWeight: "500",
+                      textAlign: "center",
+                    }}
+                  >
+                    {query.trim()
+                      ? strings?.noSeriesResults || "Aún no se han encontrado resultados para la búsqueda."
+                      : strings?.noSeriesResults || "Aún no se han encontrado resultados para la búsqueda."}
+                  </Text>
+                </View>
               }
               renderItem={({ item }) => {
                 const isSelected = item.id === selectedId;
@@ -158,7 +200,7 @@ export default function AddSeriesDialog({
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 12,
-                      paddingVertical: 10,
+                      paddingVertical: 12,
                       opacity: alreadyAdded ? 0.45 : pressed ? 0.75 : 1,
                     })}
                   >
@@ -180,11 +222,17 @@ export default function AddSeriesDialog({
                       ) : null}
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: "#fff", fontSize: 15, fontWeight: isSelected ? "800" : "600" }}>
+                      <Text
+                        style={{
+                          color: "#111827",
+                          fontSize: 15,
+                          fontWeight: isSelected ? "800" : "600",
+                        }}
+                      >
                         {item.name}
                       </Text>
                       {item.firstAirDate ? (
-                        <Text style={{ color: "rgba(255,255,255,0.72)", marginTop: 3 }}>
+                        <Text style={{ color: "rgba(17,24,39,0.7)", marginTop: 3 }}>
                           {item.firstAirDate}
                         </Text>
                       ) : null}
@@ -194,7 +242,13 @@ export default function AddSeriesDialog({
                         </Text>
                       ) : null}
                     </View>
-                    <Text style={{ color: isSelected ? "#fff" : "rgba(255,255,255,0.3)", fontSize: 16 }}>
+                    <Text
+                      style={{
+                        color: isSelected ? "#16a34a" : "rgba(17,24,39,0.22)",
+                        fontSize: 16,
+                        fontWeight: "800",
+                      }}
+                    >
                       {isSelected ? "✓" : ""}
                     </Text>
                   </Pressable>
@@ -204,8 +258,18 @@ export default function AddSeriesDialog({
           )}
 
           <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 12 }}>
-            <Pressable onPress={onClose} style={{ paddingHorizontal: 12, paddingVertical: 10 }}>
-              <Text style={{ color: "#fff", fontWeight: "700" }}>
+            <Pressable
+              onPress={onClose}
+              style={({ pressed }) => ({
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                backgroundColor: pressed ? "rgba(255,255,255,0.06)" : "transparent",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.08)",
+              })}
+            >
+              <Text style={{ color: "rgba(255,255,255,0.92)", fontWeight: "700" }}>
                 {strings?.cancel || "Cancelar"}
               </Text>
             </Pressable>

@@ -1,21 +1,63 @@
-import React, { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, Text, TextInput, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+
+import SeriesCoverFrame, { CARTELL_LOGO_ASPECT_RATIO } from "./SeriesCoverFrame";
+
+const DEFAULT_CROP = {
+  focusX: 0.5,
+  focusY: 0.5,
+  zoom: 1,
+};
 
 export default function SeriesOptionsDialog({
   visible,
   strings,
   series,
+  imageOptions = [],
   onClose,
-  onRenameSeries,
+  onSaveSeriesOptions,
   onDeleteSeries,
 }) {
   const [name, setName] = useState(series?.name || "");
+  const [selectedImage, setSelectedImage] = useState(series?.selectedImage || null);
+  const [selectedImageCrop, setSelectedImageCrop] = useState(
+    series?.selectedImageCrop || DEFAULT_CROP
+  );
 
   useEffect(() => {
     setName(series?.name || "");
+    setSelectedImage(series?.selectedImage || null);
+    setSelectedImageCrop(series?.selectedImageCrop || DEFAULT_CROP);
   }, [series, visible]);
 
   const trimmedName = name.trim();
+  const normalizedImageOptions = useMemo(() => {
+    const seen = new Set();
+    const nextOptions = [];
+
+    (Array.isArray(imageOptions) ? imageOptions : []).forEach((imageUrl) => {
+      const normalized = String(imageUrl || "").trim();
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      nextOptions.push(normalized);
+    });
+
+    if (selectedImage && !seen.has(selectedImage)) {
+      nextOptions.unshift(selectedImage);
+    }
+
+    return nextOptions;
+  }, [imageOptions, selectedImage]);
+
+  const handleSave = () => {
+    if (!trimmedName) return;
+
+    onSaveSeriesOptions(series, {
+      name: trimmedName,
+      selectedImage,
+      selectedImageCrop: selectedImage ? selectedImageCrop : null,
+    });
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -38,6 +80,7 @@ export default function SeriesOptionsDialog({
             borderWidth: 1,
             borderColor: "rgba(255,255,255,0.15)",
             padding: 14,
+            maxHeight: "86%",
           }}
         >
           <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16, marginBottom: 10 }}>
@@ -65,7 +108,84 @@ export default function SeriesOptionsDialog({
             }}
           />
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 14 }}>
+          <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 14, marginBottom: 8 }}>
+            {strings?.seriesImageLabel || "Imagen"}
+          </Text>
+
+          {normalizedImageOptions.length ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10, paddingRight: 4 }}
+            >
+              {normalizedImageOptions.map((imageUrl) => {
+                const isActive = imageUrl === selectedImage;
+
+                return (
+                  <Pressable
+                    key={imageUrl}
+                    onPress={() => {
+                      setSelectedImage(imageUrl);
+                      setSelectedImageCrop(
+                        imageUrl === selectedImage ? selectedImageCrop : DEFAULT_CROP
+                      );
+                    }}
+                    style={({ pressed }) => ({
+                      width: 118,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      borderWidth: 2,
+                      borderColor: isActive ? "#22c55e" : "rgba(255,255,255,0.18)",
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      opacity: pressed ? 0.82 : 1,
+                    })}
+                  >
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={{ width: "100%", height: 168 }}
+                      resizeMode="cover"
+                    />
+                    <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
+                        {isActive
+                          ? strings?.seriesImageSelected || "Carátula seleccionada"
+                          : strings?.seriesImageUse || "Usar esta imagen"}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View
+              style={{
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.12)",
+                backgroundColor: "rgba(255,255,255,0.04)",
+                paddingHorizontal: 12,
+                paddingVertical: 14,
+              }}
+            >
+              <Text style={{ color: "rgba(255,255,255,0.7)" }}>
+                {strings?.seriesImagesEmpty || "No hay imágenes disponibles para esta serie."}
+              </Text>
+            </View>
+          )}
+
+          <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 16, marginBottom: 8 }}>
+            {strings?.seriesImageCropLabel || "Región visible del cartel"}
+          </Text>
+          <SeriesCoverFrame
+            imageUri={selectedImage}
+            crop={selectedImageCrop}
+            onCropChange={setSelectedImageCrop}
+            strings={strings}
+            editable
+            aspectRatio={CARTELL_LOGO_ASPECT_RATIO}
+          />
+
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }}>
             <Pressable
               onPress={() => {
                 Alert.alert(
@@ -101,7 +221,7 @@ export default function SeriesOptionsDialog({
               </Pressable>
               <Pressable
                 disabled={!trimmedName}
-                onPress={() => onRenameSeries(series, trimmedName)}
+                onPress={handleSave}
                 style={({ pressed }) => ({
                   borderRadius: 12,
                   paddingHorizontal: 14,
