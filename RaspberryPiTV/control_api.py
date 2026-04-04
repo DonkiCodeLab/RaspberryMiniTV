@@ -397,5 +397,4 @@ def health():
 
 
 if __name__ == "__main__":
-    show_qr_if_needed()
     app.run(host="0.0.0.0", port=PORT)
