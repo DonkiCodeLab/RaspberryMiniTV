@@ -2,25 +2,18 @@
 Description=SimpsonsTV Menu
 After=network.target simpsonstv-api.service
 Wants=simpsonstv-api.service
-Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
 User=root
 WorkingDirectory=/home/donkikochan/TvSimpsonsApp/RaspberryPiTV
-ExecStartPre=/bin/chvt 1
-ExecStart=/usr/bin/python3 /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/menu_app.py
+ExecStart=/usr/bin/openvt -c 1 -f -- /usr/bin/python3 /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/menu_app.py
 Restart=always
 RestartSec=2
 Environment=PYTHONUNBUFFERED=1
 Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_MOUSE_TOUCH_EVENTS=1
-StandardInput=tty
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=no
-TTYVTDisallocate=no
 StandardOutput=journal
 StandardError=journal
 
