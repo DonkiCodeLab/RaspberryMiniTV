@@ -23,6 +23,11 @@ ACCENT = (247, 207, 63)
 TEXT = (10, 10, 10)
 
 
+def ensure_screen_on():
+    subprocess.run(["raspi-gpio", "set", "19", "op", "a5"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    subprocess.run(["raspi-gpio", "set", "18", "op", "dh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+
+
 def get_local_ip():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -74,6 +79,7 @@ def blit_centered(surface, image, width, height):
 
 class RaspberryPiTVMenu:
     def __init__(self):
+        ensure_screen_on()
         pygame.display.init()
         pygame.font.init()
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
