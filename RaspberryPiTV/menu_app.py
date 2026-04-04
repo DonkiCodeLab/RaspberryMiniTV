@@ -5,6 +5,10 @@ import subprocess
 import sys
 import time
 
+os.environ.setdefault("SDL_VIDEODRIVER", "fbcon")
+os.environ.setdefault("SDL_FBDEV", "/dev/fb0")
+os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
+
 import pygame
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -70,9 +74,10 @@ def blit_centered(surface, image, width, height):
 
 class RaspberryPiTVMenu:
     def __init__(self):
-        pygame.init()
-        pygame.mouse.set_visible(False)
+        pygame.display.init()
+        pygame.font.init()
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        pygame.mouse.set_visible(False)
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
         self.font = pygame.font.SysFont("Arial", 28)
@@ -206,3 +211,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pygame.quit()
         sys.exit(0)
+    except pygame.error as exc:
+        print(f"pygame failed to initialize the display: {exc}", file=sys.stderr)
+        pygame.quit()
+        sys.exit(1)

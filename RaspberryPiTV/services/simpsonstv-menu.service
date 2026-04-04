@@ -5,12 +5,14 @@ Wants=simpsonstv-api.service
 
 [Service]
 Type=simple
-User=donkikochan
+User=root
 WorkingDirectory=/home/donkikochan/TvSimpsonsApp/RaspberryPiTV
 ExecStart=/usr/bin/python3 /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/menu_app.py
 Restart=always
 RestartSec=2
 Environment=PYTHONUNBUFFERED=1
+Environment=SDL_VIDEODRIVER=fbcon
+Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_MOUSE_TOUCH_EVENTS=1
 StandardOutput=journal
 StandardError=journal
