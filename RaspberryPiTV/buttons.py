@@ -23,8 +23,10 @@ def turn_off_screen():
     GPIO.output(POWER_PIN, GPIO.LOW)
 
 
-turn_off_screen()
-screen_on = False
+# El sistema debe arrancar con la pantalla activa para que el menu se vea
+# incluso antes de tocar el boton fisico.
+turn_on_screen()
+screen_on = True
 
 while True:
     button_state = GPIO.input(BUTTON_PIN)

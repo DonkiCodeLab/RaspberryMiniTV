@@ -28,6 +28,7 @@ La arquitectura queda separada en dos partes:
 
 - `control_api.py`: backend de reproducción y API HTTP.
 - `menu_app.py`: frontend a pantalla completa hecho con `pygame`.
+- `buttons.py`: deja la pantalla encendida al arrancar y permite alternarla con el botón físico.
 
 Al arrancar `menu_app.py`:
 
@@ -89,7 +90,7 @@ Para esta nueva arquitectura, instala al menos:
 
 ```bash
 sudo apt update
-sudo apt install -y python3-flask python3-pygame qrencode
+sudo apt install -y python3-flask python3-pygame python3-rpi.gpio qrencode
 ```
 
 Para revisar estado y logs:
