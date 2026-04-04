@@ -5,6 +5,7 @@ Scripts para ejecutar la TV en la Raspberry Pi.
 ## Archivos
 
 - `control_api.py`: API Flask para listar y reproducir vídeos con `omxplayer`.
+- `menu_app.py`: menú principal en `pygame`, pensado para touch, animaciones y futuros minijuegos.
 - `buttons.py`: control del botón físico y encendido/apagado de pantalla.
 - `install_services.sh`: instala y activa los servicios `systemd`.
 - `menu/`: recursos visuales del menú principal, opciones y vídeo de introducción.
@@ -23,10 +24,15 @@ Y copia ahí tus vídeos `.mp4`, `.m4v`, `.mov` o `.mkv`.
 
 ## Menú táctil
 
-Al arrancar el servicio:
+La arquitectura queda separada en dos partes:
 
-1. se reproduce `menu/video_intro.mp4`.
-2. al terminar, se muestra `menu/Screen_Main.png`.
+- `control_api.py`: backend de reproducción y API HTTP.
+- `menu_app.py`: frontend a pantalla completa hecho con `pygame`.
+
+Al arrancar `menu_app.py`:
+
+1. reproduce `menu/video_intro.mp4`.
+2. al terminar, muestra `menu/Screen_Main.png`.
 
 Comportamiento actual del touch:
 
@@ -35,7 +41,12 @@ Comportamiento actual del touch:
 - menú de opciones, abajo derecha: vuelve al menú principal.
 - pantalla QR, abajo derecha: vuelve al menú principal.
 
-Si la API recibe una orden de reproducir un vídeo, ese vídeo tiene prioridad y, al terminar, vuelve al menú principal.
+El menú ya usa `pygame`, así que es una base mejor para añadir:
+
+- animaciones de iconos.
+- transiciones entre pantallas.
+- elementos interactivos.
+- minijuegos como `Snake`.
 
 ## Clonar solo RaspberryPiTV con sparse-checkout
 
@@ -70,13 +81,24 @@ El script:
 - crea `RaspberryPiTV/videos` si no existe.
 - reemplaza los servicios antiguos por los nuevos.
 - hace `daemon-reload`.
-- habilita y reinicia `simpsonstv-api.service` y `tvbutton.service`.
+- habilita y reinicia `simpsonstv-api.service`, `simpsonstv-menu.service` y `tvbutton.service`.
+
+## Dependencias recomendadas en Raspberry Pi
+
+Para esta nueva arquitectura, instala al menos:
+
+```bash
+sudo apt update
+sudo apt install -y python3-flask python3-pygame qrencode
+```
 
 Para revisar estado y logs:
 
 ```bash
 sudo systemctl status simpsonstv-api.service
+sudo systemctl status simpsonstv-menu.service
 sudo systemctl status tvbutton.service
 journalctl -u simpsonstv-api.service -n 50 --no-pager
+journalctl -u simpsonstv-menu.service -n 50 --no-pager
 journalctl -u tvbutton.service -n 50 --no-pager
 ```

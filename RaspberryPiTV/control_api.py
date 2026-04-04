@@ -4,24 +4,21 @@ import socket
 import subprocess
 import threading
 import time
-import tkinter as tk
 
 from flask import Flask, jsonify, request
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
-MENU_DIR = os.path.join(BASE_DIR, "menu")
-MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Screen_Main.png")
-MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
-INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
-QR_PNG = "/tmp/simpsonstv_qr.png"
 EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
+QR_PNG = "/tmp/simpsonstv_qr.png"
 
 app = Flask(__name__)
 
 lock = threading.Lock()
 current = {"proc": None, "id": None, "directory": None, "file": None}
+qr_proc = {"proc": None}
+qr_visible = {"shown": False}
 
 
 def get_local_ip():
@@ -182,133 +179,45 @@ def list_video_directories():
     }
 
 
-class MenuController:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("RaspberryPiTV")
-        self.root.configure(bg="black")
-        self.root.attributes("-fullscreen", True)
-        self.root.config(cursor="none")
+def show_qr_if_needed():
+    if qr_visible["shown"]:
+        return
 
-        self.label = tk.Label(self.root, bg="black")
-        self.label.pack(fill="both", expand=True)
-        self.label.bind("<Button-1>", self.handle_touch)
+    ip = get_local_ip()
+    url = f"http://{ip}:{PORT}"
 
-        self.photos = {
-            "main": self.load_photo(MAIN_SCREEN_PATH),
-            "more": self.load_photo(MORE_OPTIONS_PATH),
-        }
-        self.qr_photo = None
-        self.current_screen = "main"
+    subprocess.run(
+        ["qrencode", "-o", QR_PNG, "-s", "12", "-m", "2", url],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
-        self.root.bind("<Escape>", lambda _event: self.root.destroy())
-        self.root.after(100, self.play_intro)
-
-    def load_photo(self, path):
-        if not os.path.isfile(path):
-            return None
-        return tk.PhotoImage(file=path)
-
-    def show_photo(self, photo, screen_name):
-        if photo is None:
-            self.label.configure(image="", text=f"Missing asset: {screen_name}", fg="white", bg="black")
-        else:
-            self.label.configure(image=photo, text="", bg="black")
-            self.label.image = photo
-        self.current_screen = screen_name
-        self.root.deiconify()
-        self.root.lift()
-
-    def show_main_menu(self):
-        self.show_photo(self.photos["main"], "main")
-
-    def show_more_options(self):
-        self.show_photo(self.photos["more"], "more")
-
-    def show_qr(self):
-        url = f"http://{get_local_ip()}:{PORT}"
-        subprocess.run(
-            ["qrencode", "-o", QR_PNG, "-s", "12", "-m", "2", url],
-            check=False,
+    try:
+        qr_proc["proc"] = subprocess.Popen(
+            ["fbi", "-T", "1", "-a", "-noverbose", QR_PNG],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        self.qr_photo = self.load_photo(QR_PNG)
-        self.show_photo(self.qr_photo, "qr")
-
-    def hide_menu(self):
-        self.root.withdraw()
-
-    def schedule_main_menu(self):
-        self.root.after(0, self.show_main_menu)
-
-    def schedule_hide_menu(self):
-        self.root.after(0, self.hide_menu)
-
-    def schedule_qr(self):
-        self.root.after(0, self.show_qr)
-
-    def play_intro(self):
-        if os.path.isfile(INTRO_VIDEO_PATH):
-            self.hide_menu()
-            play_media_locked(INTRO_VIDEO_PATH, player_id="INTRO", directory=None, file_path="menu/video_intro.mp4")
-        else:
-            self.show_main_menu()
-
-    def handle_touch(self, event):
-        width = max(self.label.winfo_width(), 1)
-        height = max(self.label.winfo_height(), 1)
-        column = 0 if event.x < width / 2 else 1
-        row = 0 if event.y < height / 2 else 1
-
-        if self.current_screen == "main":
-            if row == 0 and column == 1:
-                self.show_qr()
-            elif row == 1 and column == 1:
-                self.show_more_options()
-        elif self.current_screen in {"more", "qr"}:
-            if row == 1 and column == 1:
-                self.show_main_menu()
-
-    def run(self):
-        self.show_main_menu()
-        self.root.mainloop()
+        qr_visible["shown"] = True
+    except Exception:
+        qr_visible["shown"] = True
 
 
-menu_controller = None
+def hide_qr():
+    proc = qr_proc.get("proc")
+    if proc and proc.poll() is None:
+        try:
+            proc.terminate()
+        except Exception:
+            pass
 
-
-def schedule_main_menu():
-    if menu_controller is not None:
-        menu_controller.schedule_main_menu()
-
-
-def schedule_hide_menu():
-    if menu_controller is not None:
-        menu_controller.schedule_hide_menu()
-
-
-def monitor_current_process():
-    proc = None
-    should_show_main_menu = False
-
-    with lock:
-        proc = current["proc"]
-        if proc is None:
-            return
-
-    proc.wait()
-
-    with lock:
-        if current["proc"] is proc:
-            should_show_main_menu = current["id"] is not None
-            current["proc"] = None
-            current["id"] = None
-            current["directory"] = None
-            current["file"] = None
-
-    if should_show_main_menu:
-        schedule_main_menu()
+    subprocess.run(
+        ["pkill", "-f", "fbi"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    qr_proc["proc"] = None
 
 
 def stop_locked():
@@ -316,7 +225,6 @@ def stop_locked():
     if proc and proc.poll() is None:
         try:
             proc.terminate()
-            proc.wait(timeout=2)
         except Exception:
             pass
 
@@ -332,24 +240,13 @@ def stop_locked():
     current["file"] = None
 
 
-def play_media_locked(filepath, player_id, directory, file_path):
-    stop_locked()
-    schedule_hide_menu()
-
-    proc = subprocess.Popen(
+def start_play_locked(filepath):
+    current["proc"] = subprocess.Popen(
         ["omxplayer", "--no-osd", "--aspect-mode", "fill", filepath],
         stdin=subprocess.PIPE,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
-
-    current["proc"] = proc
-    current["id"] = player_id
-    current["directory"] = directory
-    current["file"] = file_path
-
-    monitor_thread = threading.Thread(target=monitor_current_process, daemon=True)
-    monitor_thread.start()
 
 
 def volume_up_locked():
@@ -426,12 +323,12 @@ def play():
         return jsonify(payload), 404
 
     with lock:
-        play_media_locked(
-            match["full_path"],
-            player_id=ep_id,
-            directory=match["directory_path"],
-            file_path=match["relative_path"],
-        )
+        hide_qr()
+        stop_locked()
+        start_play_locked(match["full_path"])
+        current["id"] = ep_id
+        current["directory"] = match["directory_path"]
+        current["file"] = match["relative_path"]
 
     return jsonify(
         {
@@ -447,7 +344,6 @@ def play():
 def stop():
     with lock:
         stop_locked()
-    schedule_main_menu()
     return jsonify({"ok": True})
 
 
@@ -500,13 +396,6 @@ def health():
         )
 
 
-def run_api():
-    app.run(host="0.0.0.0", port=PORT, threaded=True, use_reloader=False)
-
-
 if __name__ == "__main__":
-    api_thread = threading.Thread(target=run_api, daemon=True)
-    api_thread.start()
-
-    menu_controller = MenuController()
-    menu_controller.run()
+    show_qr_if_needed()
+    app.run(host="0.0.0.0", port=PORT)

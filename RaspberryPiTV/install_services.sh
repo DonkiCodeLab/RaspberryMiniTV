@@ -23,16 +23,19 @@ require_root
 mkdir -p "${VIDEOS_DIR}"
 
 systemctl stop simpsonstv-api.service tvbutton.service 2>/dev/null || true
-systemctl disable simpsonstv-api.service tvbutton.service 2>/dev/null || true
+systemctl stop simpsonstv-menu.service 2>/dev/null || true
+systemctl disable simpsonstv-api.service tvbutton.service simpsonstv-menu.service 2>/dev/null || true
 
 install_service "simpsonstv-api.service"
+install_service "simpsonstv-menu.service"
 install_service "tvbutton.service"
 
 systemctl daemon-reload
-systemctl enable simpsonstv-api.service tvbutton.service
-systemctl restart simpsonstv-api.service tvbutton.service
+systemctl enable simpsonstv-api.service simpsonstv-menu.service tvbutton.service
+systemctl restart simpsonstv-api.service simpsonstv-menu.service tvbutton.service
 
 echo "Servicios instalados y reiniciados correctamente."
 echo "Puedes revisar su estado con:"
 echo "  sudo systemctl status simpsonstv-api.service"
+echo "  sudo systemctl status simpsonstv-menu.service"
 echo "  sudo systemctl status tvbutton.service"
