@@ -6,6 +6,7 @@ Scripts para ejecutar la TV en la Raspberry Pi.
 
 - `control_api.py`: API Flask para listar y reproducir vídeos con `omxplayer`.
 - `menu_app.py`: menú principal en `pygame`, pensado para touch, animaciones y futuros minijuegos.
+- `start_menu.sh`: lanzador del menú en segundo plano para Raspberry Pi.
 - `buttons.py`: control del botón físico y encendido/apagado de pantalla.
 - `install_services.sh`: instala y activa los servicios `systemd`.
 - `menu/`: recursos visuales del menú principal, opciones y vídeo de introducción.
@@ -102,4 +103,5 @@ sudo systemctl status tvbutton.service
 journalctl -u simpsonstv-api.service -n 50 --no-pager
 journalctl -u simpsonstv-menu.service -n 50 --no-pager
 journalctl -u tvbutton.service -n 50 --no-pager
+tail -n 50 /tmp/raspberrypitv-menu.log
 ```

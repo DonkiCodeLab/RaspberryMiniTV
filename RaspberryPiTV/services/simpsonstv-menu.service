@@ -4,16 +4,13 @@ After=network.target simpsonstv-api.service
 Wants=simpsonstv-api.service
 
 [Service]
-Type=forking
+Type=oneshot
+RemainAfterExit=yes
 User=root
 WorkingDirectory=/home/donkikochan/TvSimpsonsApp/RaspberryPiTV
-ExecStart=/bin/openvt -c 1 -f -- /usr/bin/python3 /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/menu_app.py
-Restart=always
-RestartSec=2
+ExecStart=/bin/bash /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/start_menu.sh
+ExecStop=/usr/bin/pkill -f /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/menu_app.py
 Environment=PYTHONUNBUFFERED=1
-Environment=SDL_VIDEODRIVER=fbcon
-Environment=SDL_FBDEV=/dev/fb0
-Environment=SDL_MOUSE_TOUCH_EVENTS=1
 StandardOutput=journal
 StandardError=journal
 
