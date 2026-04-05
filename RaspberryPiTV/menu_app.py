@@ -202,10 +202,12 @@ class RaspberryPiTVMenu:
             for button_id, (x, y) in BUTTON_LAYOUT.items()
         }
 
-    def clamp_touch_pos(self, pos):
+    def normalize_touch_pos(self, pos):
         raw_x, raw_y = pos
-        normalized_x = max(0, min(self.width - 1, int(raw_x)))
-        normalized_y = max(0, min(self.height - 1, int(raw_y)))
+        normalized_x = int(raw_y * self.width / self.height)
+        normalized_y = int(self.height - (raw_x * self.height / self.width))
+        normalized_x = max(0, min(self.width - 1, normalized_x))
+        normalized_y = max(0, min(self.height - 1, normalized_y))
         return normalized_x, normalized_y
 
     def button_at_pos(self, pos):
@@ -227,7 +229,7 @@ class RaspberryPiTVMenu:
             self.state = "main"
 
     def handle_touch_down(self, pos):
-        normalized_pos = self.clamp_touch_pos(pos)
+        normalized_pos = self.normalize_touch_pos(pos)
         if self.state == "qr":
             self.pressed_button = "qr-anywhere"
             log_debug(
@@ -240,7 +242,7 @@ class RaspberryPiTVMenu:
         )
 
     def handle_touch_up(self, pos):
-        normalized_pos = self.clamp_touch_pos(pos)
+        normalized_pos = self.normalize_touch_pos(pos)
         if self.state == "qr" and self.pressed_button == "qr-anywhere":
             self.pressed_button = None
             log_debug(
