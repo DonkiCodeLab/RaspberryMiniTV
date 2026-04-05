@@ -1,4 +1,5 @@
 import os
+import select
 import socket
 import subprocess
 import sys
@@ -9,14 +10,18 @@ os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 
 import pygame
 
-HAS_FINGERDOWN = hasattr(pygame, "FINGERDOWN")
-HAS_FINGERUP = hasattr(pygame, "FINGERUP")
+try:
+    from evdev import InputDevice, ecodes
+except ImportError:
+    InputDevice = None
+    ecodes = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
 MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
+TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
 PORT = 5050
 BACKGROUND = (245, 245, 245)
@@ -106,6 +111,9 @@ class RaspberryPiTVMenu:
         self.state = "main"
         self.pressed_button = None
         self.qr_url = None
+        self.touch_device = None
+        self.touch_position = (0, 0)
+        self.touch_is_down = False
         self.assets = {
             "main": self.prepare_screen_assets(
                 MAIN_SCREEN_PATH,
@@ -130,6 +138,7 @@ class RaspberryPiTVMenu:
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
+        self.setup_touch_input()
 
     def prepare_asset(self, path):
         image = load_image(path)
@@ -142,6 +151,18 @@ class RaspberryPiTVMenu:
             "default": self.prepare_asset(default_path),
             "pressed": {button_id: self.prepare_asset(path) for button_id, path in pressed_paths.items()},
         }
+
+    def setup_touch_input(self):
+        if InputDevice is None:
+            log_debug("TOUCH evdev unavailable, falling back to pygame mouse events")
+            return
+
+        try:
+            self.touch_device = InputDevice(TOUCH_DEVICE_PATH)
+            log_debug(f"TOUCH device={TOUCH_DEVICE_PATH} name={self.touch_device.name}")
+        except Exception as exc:
+            self.touch_device = None
+            log_debug(f"TOUCH failed to open {TOUCH_DEVICE_PATH}: {exc}")
 
     def refresh_qr_asset(self):
         self.qr_url = generate_qr()
@@ -181,12 +202,10 @@ class RaspberryPiTVMenu:
             for button_id, (x, y) in BUTTON_LAYOUT.items()
         }
 
-    def normalize_touch_pos(self, pos):
+    def clamp_touch_pos(self, pos):
         raw_x, raw_y = pos
-        normalized_x = int(raw_y * self.width / self.height)
-        normalized_y = int(self.height - (raw_x * self.height / self.width))
-        normalized_x = max(0, min(self.width - 1, normalized_x))
-        normalized_y = max(0, min(self.height - 1, normalized_y))
+        normalized_x = max(0, min(self.width - 1, int(raw_x)))
+        normalized_y = max(0, min(self.height - 1, int(raw_y)))
         return normalized_x, normalized_y
 
     def button_at_pos(self, pos):
@@ -208,7 +227,7 @@ class RaspberryPiTVMenu:
             self.state = "main"
 
     def handle_touch_down(self, pos):
-        normalized_pos = self.normalize_touch_pos(pos)
+        normalized_pos = self.clamp_touch_pos(pos)
         if self.state == "qr":
             self.pressed_button = "qr-anywhere"
             log_debug(
@@ -221,7 +240,7 @@ class RaspberryPiTVMenu:
         )
 
     def handle_touch_up(self, pos):
-        normalized_pos = self.normalize_touch_pos(pos)
+        normalized_pos = self.clamp_touch_pos(pos)
         if self.state == "qr" and self.pressed_button == "qr-anywhere":
             self.pressed_button = None
             log_debug(
@@ -237,6 +256,28 @@ class RaspberryPiTVMenu:
         )
         if active_button and active_button == released_button:
             self.handle_button_action(active_button)
+
+    def poll_native_touch(self):
+        if self.touch_device is None or ecodes is None:
+            return
+
+        ready, _, _ = select.select([self.touch_device.fd], [], [], 0)
+        if not ready:
+            return
+
+        for event in self.touch_device.read():
+            if event.type == ecodes.EV_ABS:
+                if event.code in (ecodes.ABS_X, ecodes.ABS_MT_POSITION_X):
+                    self.touch_position = (event.value, self.touch_position[1])
+                elif event.code in (ecodes.ABS_Y, ecodes.ABS_MT_POSITION_Y):
+                    self.touch_position = (self.touch_position[0], event.value)
+            elif event.type == ecodes.EV_KEY and event.code == ecodes.BTN_TOUCH:
+                if event.value == 1 and not self.touch_is_down:
+                    self.touch_is_down = True
+                    self.handle_touch_down(self.touch_position)
+                elif event.value == 0 and self.touch_is_down:
+                    self.touch_is_down = False
+                    self.handle_touch_up(self.touch_position)
 
     def draw_missing(self, message):
         self.screen.fill((20, 20, 20))
@@ -274,19 +315,16 @@ class RaspberryPiTVMenu:
         play_intro()
 
         while self.running:
+            self.poll_native_touch()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                elif self.touch_device is None and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.handle_touch_down(event.pos)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                elif self.touch_device is None and event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     self.handle_touch_up(event.pos)
-                elif HAS_FINGERDOWN and event.type == pygame.FINGERDOWN:
-                    self.handle_touch_down((int(event.x * self.width), int(event.y * self.height)))
-                elif HAS_FINGERUP and event.type == pygame.FINGERUP:
-                    self.handle_touch_up((int(event.x * self.width), int(event.y * self.height)))
 
             self.draw()
             self.clock.tick(30)
