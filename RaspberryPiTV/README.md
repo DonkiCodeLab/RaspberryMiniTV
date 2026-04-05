@@ -91,7 +91,7 @@ Para esta nueva arquitectura, instala al menos:
 
 ```bash
 sudo apt update
-sudo apt install -y python3-flask python3-pygame python3-rpi.gpio python3-evdev qrencode
+sudo apt install -y python3-flask python3-pygame python3-rpi.gpio python3-evdev qrencode network-manager wireless-tools wpasupplicant
 ```
 
 Para revisar estado y logs:
