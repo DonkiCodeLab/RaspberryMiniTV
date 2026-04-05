@@ -127,9 +127,9 @@ class RaspberryPiTVMenu:
             ),
         }
         self.qr_asset = None
-        log_debug(f"screen={self.width}x{self.height}")
+        log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
-            log_debug(f"button {button_id} rect={rect}")
+            log_debug(f"BUTTON {button_id} rect={rect}")
 
     def prepare_asset(self, path):
         image = load_image(path)
@@ -197,7 +197,7 @@ class RaspberryPiTVMenu:
         return None
 
     def handle_button_action(self, button_id):
-        log_debug(f"action state={self.state} button={button_id}")
+        log_debug(f"ACTION state={self.state} button={button_id}")
         if self.state == "main":
             if button_id == "1x2":
                 self.refresh_qr_asset()
@@ -214,22 +214,30 @@ class RaspberryPiTVMenu:
         normalized_pos = self.normalize_touch_pos(pos)
         if self.state == "qr":
             self.pressed_button = "qr-anywhere"
-            log_debug(f"touch down raw={pos} normalized={normalized_pos} state={self.state} pressed={self.pressed_button}")
+            log_debug(
+                f"DOWN raw={pos} normalized={normalized_pos} state={self.state} pressed={self.pressed_button}"
+            )
             return
         self.pressed_button = self.button_at_pos(normalized_pos)
-        log_debug(f"touch down raw={pos} normalized={normalized_pos} state={self.state} pressed={self.pressed_button}")
+        log_debug(
+            f"DOWN raw={pos} normalized={normalized_pos} state={self.state} pressed={self.pressed_button}"
+        )
 
     def handle_touch_up(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
         if self.state == "qr" and self.pressed_button == "qr-anywhere":
             self.pressed_button = None
-            log_debug(f"touch up raw={pos} normalized={normalized_pos} state=qr down=qr-anywhere up=qr-anywhere")
+            log_debug(
+                f"UP raw={pos} normalized={normalized_pos} state=qr down=qr-anywhere up=qr-anywhere"
+            )
             self.state = "main"
             return
         released_button = self.button_at_pos(normalized_pos)
         active_button = self.pressed_button
         self.pressed_button = None
-        log_debug(f"touch up raw={pos} normalized={normalized_pos} state={self.state} down={active_button} up={released_button}")
+        log_debug(
+            f"UP raw={pos} normalized={normalized_pos} state={self.state} down={active_button} up={released_button}"
+        )
         if active_button and active_button == released_button:
             self.handle_button_action(active_button)
 
