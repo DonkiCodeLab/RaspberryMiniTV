@@ -184,6 +184,14 @@ class RaspberryPiTVMenu:
             for button_id, (x, y) in BUTTON_LAYOUT.items()
         }
 
+    def normalize_touch_pos(self, pos):
+        raw_x, raw_y = pos
+        normalized_x = int(raw_y * self.width / self.height)
+        normalized_y = int(self.height - (raw_x * self.height / self.width))
+        normalized_x = max(0, min(self.width - 1, normalized_x))
+        normalized_y = max(0, min(self.height - 1, normalized_y))
+        return normalized_x, normalized_y
+
     def button_at_pos(self, pos):
         x, y = pos
         for button_id, rect in self.get_button_rects().items():
@@ -207,18 +215,20 @@ class RaspberryPiTVMenu:
                 self.state = "main"
 
     def handle_touch_down(self, pos):
-        if self.debug_rect.collidepoint(pos):
-            log_debug(f"DEBUG_RECT down pos={pos}")
-        self.pressed_button = self.button_at_pos(pos)
-        log_debug(f"touch down pos={pos} state={self.state} pressed={self.pressed_button}")
+        normalized_pos = self.normalize_touch_pos(pos)
+        if self.debug_rect.collidepoint(normalized_pos):
+            log_debug(f"DEBUG_RECT down raw={pos} normalized={normalized_pos}")
+        self.pressed_button = self.button_at_pos(normalized_pos)
+        log_debug(f"touch down raw={pos} normalized={normalized_pos} state={self.state} pressed={self.pressed_button}")
 
     def handle_touch_up(self, pos):
-        if self.debug_rect.collidepoint(pos):
-            log_debug(f"DEBUG_RECT up pos={pos}")
-        released_button = self.button_at_pos(pos)
+        normalized_pos = self.normalize_touch_pos(pos)
+        if self.debug_rect.collidepoint(normalized_pos):
+            log_debug(f"DEBUG_RECT up raw={pos} normalized={normalized_pos}")
+        released_button = self.button_at_pos(normalized_pos)
         active_button = self.pressed_button
         self.pressed_button = None
-        log_debug(f"touch up pos={pos} state={self.state} down={active_button} up={released_button}")
+        log_debug(f"touch up raw={pos} normalized={normalized_pos} state={self.state} down={active_button} up={released_button}")
         if active_button and active_button == released_button:
             self.handle_button_action(active_button)
 
