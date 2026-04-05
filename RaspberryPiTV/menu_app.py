@@ -25,6 +25,7 @@ BASE_WIDTH = 640
 BASE_HEIGHT = 480
 BUTTON_WIDTH = 186
 BUTTON_HEIGHT = 177
+DEBUG_RECT = (0, 0, 50, 50)
 BUTTON_LAYOUT = {
     "1x1": (124, 52),
     "1x2": (330, 52),
@@ -36,6 +37,10 @@ BUTTON_LAYOUT = {
 def ensure_screen_on():
     subprocess.run(["raspi-gpio", "set", "19", "op", "a5"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
     subprocess.run(["raspi-gpio", "set", "18", "op", "dh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+
+
+def log_debug(message):
+    print(f"[menu-debug] {message}", flush=True)
 
 
 def get_local_ip():
@@ -123,6 +128,11 @@ class RaspberryPiTVMenu:
             ),
         }
         self.qr_asset = None
+        self.debug_rect = self.scale_rect(*DEBUG_RECT)
+        log_debug(f"screen={self.width}x{self.height}")
+        for button_id, rect in self.get_button_rects().items():
+            log_debug(f"button {button_id} rect={rect}")
+        log_debug(f"debug rect={self.debug_rect}")
 
     def prepare_asset(self, path):
         image = load_image(path)
@@ -182,6 +192,7 @@ class RaspberryPiTVMenu:
         return None
 
     def handle_button_action(self, button_id):
+        log_debug(f"action state={self.state} button={button_id}")
         if self.state == "main":
             if button_id == "1x2":
                 self.refresh_qr_asset()
@@ -196,12 +207,18 @@ class RaspberryPiTVMenu:
                 self.state = "main"
 
     def handle_touch_down(self, pos):
+        if self.debug_rect.collidepoint(pos):
+            log_debug(f"DEBUG_RECT down pos={pos}")
         self.pressed_button = self.button_at_pos(pos)
+        log_debug(f"touch down pos={pos} state={self.state} pressed={self.pressed_button}")
 
     def handle_touch_up(self, pos):
+        if self.debug_rect.collidepoint(pos):
+            log_debug(f"DEBUG_RECT up pos={pos}")
         released_button = self.button_at_pos(pos)
         active_button = self.pressed_button
         self.pressed_button = None
+        log_debug(f"touch up pos={pos} state={self.state} down={active_button} up={released_button}")
         if active_button and active_button == released_button:
             self.handle_button_action(active_button)
 
@@ -234,6 +251,8 @@ class RaspberryPiTVMenu:
                 self.draw_missing("QR")
             else:
                 self.screen.blit(self.qr_asset, (0, 0))
+
+        pygame.draw.rect(self.screen, (255, 60, 60), self.debug_rect, 2)
 
         pygame.display.flip()
 
