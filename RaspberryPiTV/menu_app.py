@@ -111,7 +111,9 @@ def scan_wifi_networks():
                 continue
             seen.add(ssid)
             networks.append({"ssid": ssid, "signal": int(signal or 0), "security": security or "open"})
-        return sorted(networks, key=lambda item: (-item["signal"], item["ssid"].lower()))
+        if networks:
+            return sorted(networks, key=lambda item: (-item["signal"], item["ssid"].lower()))
+        log_debug("WIFI nmcli returned no networks, falling back to iwlist")
 
     iw_result = run_command(["iwlist", "wlan0", "scan"])
     networks = []
