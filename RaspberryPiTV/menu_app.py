@@ -199,10 +199,7 @@ class RaspberryPiTVMenu:
     def handle_button_action(self, button_id):
         log_debug(f"ACTION state={self.state} button={button_id}")
         if self.state == "main":
-            if button_id == "1x2":
-                self.refresh_qr_asset()
-                self.state = "qr"
-            elif button_id == "2x2":
+            if button_id == "2x2":
                 self.state = "more"
         elif self.state == "more":
             if button_id == "2x2":
