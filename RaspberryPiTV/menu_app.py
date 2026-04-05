@@ -524,7 +524,7 @@ class RaspberryPiTVMenu:
         self.screen.blit(title, (20, 10))
 
         list_rect = layout["list"]
-        pygame.draw.rect(self.screen, DARK_GRAY, list_rect, border_radius=12)
+        pygame.draw.rect(self.screen, DARK_GRAY, list_rect)
         row_height = 34
         start_index = self.wifi_scroll_offset // row_height
         offset_y = -(self.wifi_scroll_offset % row_height)
@@ -539,7 +539,7 @@ class RaspberryPiTVMenu:
             if row_rect.bottom < list_rect.y or row_rect.top > list_rect.bottom:
                 continue
             selected = network["ssid"] == self.wifi_selected_ssid
-            pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect, border_radius=8)
+            pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
             label = self.wifi_font.render(network["ssid"], True, WHITE)
             power = self.small_font.render(f"{network['signal']}%", True, WHITE)
             self.screen.blit(label, (row_rect.x + 10, row_rect.y + 5))
@@ -552,7 +552,7 @@ class RaspberryPiTVMenu:
         )
         self.screen.blit(selected_text, (layout["selected"].x, layout["selected"].y))
 
-        pygame.draw.rect(self.screen, WHITE, layout["password"], 2, border_radius=8)
+        pygame.draw.rect(self.screen, WHITE, layout["password"], 2)
         masked_password = "*" * len(self.wifi_password)
         password_text = self.wifi_font.render(f"Password: {masked_password}", True, WHITE)
         self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 6))
@@ -562,7 +562,7 @@ class RaspberryPiTVMenu:
             ("Conectar", layout["connect"], GREEN),
             ("Volver", layout["back"], RED),
         ):
-            pygame.draw.rect(self.screen, color, rect, border_radius=10)
+            pygame.draw.rect(self.screen, color, rect)
             label = self.small_font.render(key, True, WHITE)
             self.screen.blit(label, label.get_rect(center=rect.center))
 
@@ -581,7 +581,7 @@ class RaspberryPiTVMenu:
                     int(key_width - 4),
                     int(row_height - 4),
                 )
-                pygame.draw.rect(self.screen, MID_GRAY, rect, border_radius=8)
+                pygame.draw.rect(self.screen, MID_GRAY, rect)
                 text_surface = self.small_font.render(label, True, WHITE)
                 self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
