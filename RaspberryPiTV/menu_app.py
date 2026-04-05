@@ -1,9 +1,7 @@
-import math
 import os
 import socket
 import subprocess
 import sys
-import time
 
 os.environ.setdefault("SDL_VIDEODRIVER", "fbcon")
 os.environ.setdefault("SDL_FBDEV", "/dev/fb0")
@@ -11,18 +9,28 @@ os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 
 import pygame
 
+HAS_FINGERDOWN = hasattr(pygame, "FINGERDOWN")
 HAS_FINGERUP = hasattr(pygame, "FINGERUP")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
-MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Screen_Main.png")
+MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 QR_PNG = "/tmp/simpsonstv_qr.png"
 PORT = 5050
 BACKGROUND = (245, 245, 245)
-ACCENT = (247, 207, 63)
 TEXT = (10, 10, 10)
+BASE_WIDTH = 640
+BASE_HEIGHT = 480
+BUTTON_WIDTH = 186
+BUTTON_HEIGHT = 177
+BUTTON_LAYOUT = {
+    "1x1": (124, 52),
+    "1x2": (330, 52),
+    "2x1": (124, 250),
+    "2x2": (330, 250),
+}
 
 
 def ensure_screen_on():
@@ -92,11 +100,27 @@ class RaspberryPiTVMenu:
         self.title_font = pygame.font.SysFont("Arial", 42, bold=True)
         self.running = True
         self.state = "main"
+        self.pressed_button = None
         self.qr_url = None
-        self.started_at = time.time()
         self.assets = {
-            "main": self.prepare_asset(MAIN_SCREEN_PATH),
-            "more": self.prepare_asset(MORE_OPTIONS_PATH),
+            "main": self.prepare_screen_assets(
+                MAIN_SCREEN_PATH,
+                {
+                    "1x1": os.path.join(MENU_DIR, "Main_Menu_Button_1x1_Pressed.png"),
+                    "1x2": os.path.join(MENU_DIR, "Main_Menu_Button_1x2_Pressed.png"),
+                    "2x1": os.path.join(MENU_DIR, "Main_Menu_Button_2x1_Pressed.png"),
+                    "2x2": os.path.join(MENU_DIR, "Main_Menu_Button_2x2_Pressed.png"),
+                },
+            ),
+            "more": self.prepare_screen_assets(
+                MORE_OPTIONS_PATH,
+                {
+                    "1x1": os.path.join(MENU_DIR, "Screen_MoreOptions_Button_1x1_Pressed.png"),
+                    "1x2": os.path.join(MENU_DIR, "Screen_MoreOptions_Button_1x2_Pressed.png"),
+                    "2x1": os.path.join(MENU_DIR, "Screen_MoreOptions_Button_2x1_Pressed.png"),
+                    "2x2": os.path.join(MENU_DIR, "Screen_MoreOptions_Button_2x2_Pressed.png"),
+                },
+            ),
         }
         self.qr_asset = None
 
@@ -105,6 +129,12 @@ class RaspberryPiTVMenu:
         if image is None:
             return None
         return fit_image(image, (self.width, self.height))
+
+    def prepare_screen_assets(self, default_path, pressed_paths):
+        return {
+            "default": self.prepare_asset(default_path),
+            "pressed": {button_id: self.prepare_asset(path) for button_id, path in pressed_paths.items()},
+        }
 
     def refresh_qr_asset(self):
         self.qr_url = generate_qr()
@@ -128,24 +158,52 @@ class RaspberryPiTVMenu:
         qr_surface.blit(hint, hint.get_rect(center=(self.width // 2, self.height - 60)))
         self.qr_asset = qr_surface.convert()
 
-    def point_to_cell(self, pos):
+    def scale_rect(self, x, y, width, height):
+        scale_x = self.width / BASE_WIDTH
+        scale_y = self.height / BASE_HEIGHT
+        return pygame.Rect(
+            int(x * scale_x),
+            int(y * scale_y),
+            int(width * scale_x),
+            int(height * scale_y),
+        )
+
+    def get_button_rects(self):
+        return {
+            button_id: self.scale_rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
+            for button_id, (x, y) in BUTTON_LAYOUT.items()
+        }
+
+    def button_at_pos(self, pos):
         x, y = pos
-        col = 0 if x < self.width / 2 else 1
-        row = 0 if y < self.height / 2 else 1
-        return row, col
+        for button_id, rect in self.get_button_rects().items():
+            if rect.collidepoint(x, y):
+                return button_id
+        return None
 
-    def handle_touch(self, pos):
-        row, col = self.point_to_cell(pos)
-
+    def handle_button_action(self, button_id):
         if self.state == "main":
-            if row == 0 and col == 1:
+            if button_id == "1x2":
                 self.refresh_qr_asset()
                 self.state = "qr"
-            elif row == 1 and col == 1:
+            elif button_id == "2x2":
                 self.state = "more"
-        elif self.state in {"more", "qr"}:
-            if row == 1 and col == 1:
+        elif self.state == "more":
+            if button_id == "2x2":
                 self.state = "main"
+        elif self.state == "qr":
+            if button_id == "2x2":
+                self.state = "main"
+
+    def handle_touch_down(self, pos):
+        self.pressed_button = self.button_at_pos(pos)
+
+    def handle_touch_up(self, pos):
+        released_button = self.button_at_pos(pos)
+        active_button = self.pressed_button
+        self.pressed_button = None
+        if active_button and active_button == released_button:
+            self.handle_button_action(active_button)
 
     def draw_missing(self, message):
         self.screen.fill((20, 20, 20))
@@ -154,35 +212,21 @@ class RaspberryPiTVMenu:
         self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height // 2 - 30)))
         self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, self.height // 2 + 20)))
 
-    def draw_overlay(self):
-        # Pequeña animacion para dar vida al menu sin tocar los PNG base.
-        elapsed = time.time() - self.started_at
-        pulse = 0.5 + 0.5 * math.sin(elapsed * 2.2)
-        radius = int(10 + pulse * 8)
-        y = self.height - 28
-        positions = (self.width // 2 - 26, self.width // 2, self.width // 2 + 26)
-        for index, x in enumerate(positions):
-            alpha = int(120 + 100 * math.sin(elapsed * 3 + index))
-            color = (*ACCENT, max(40, min(220, alpha)))
-            circle = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
-            pygame.draw.circle(circle, color, (radius + 2, radius + 2), radius)
-            self.screen.blit(circle, circle.get_rect(center=(x, y)))
-
     def draw(self):
         if self.state == "main":
-            asset = self.assets["main"]
+            asset_pack = self.assets["main"]
+            asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
             if asset is None:
-                self.draw_missing("menu/Screen_Main.png")
+                self.draw_missing("menu/Main_Menu.png")
             else:
                 self.screen.blit(asset, (0, 0))
-                self.draw_overlay()
         elif self.state == "more":
-            asset = self.assets["more"]
+            asset_pack = self.assets["more"]
+            asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
             if asset is None:
                 self.draw_missing("menu/Screen_MoreOptions.png")
             else:
                 self.screen.blit(asset, (0, 0))
-                self.draw_overlay()
         elif self.state == "qr":
             if self.qr_asset is None:
                 self.refresh_qr_asset()
@@ -202,10 +246,14 @@ class RaspberryPiTVMenu:
                     self.running = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.handle_touch_down(event.pos)
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self.handle_touch(event.pos)
+                    self.handle_touch_up(event.pos)
+                elif HAS_FINGERDOWN and event.type == pygame.FINGERDOWN:
+                    self.handle_touch_down((int(event.x * self.width), int(event.y * self.height)))
                 elif HAS_FINGERUP and event.type == pygame.FINGERUP:
-                    self.handle_touch((int(event.x * self.width), int(event.y * self.height)))
+                    self.handle_touch_up((int(event.x * self.width), int(event.y * self.height)))
 
             self.draw()
             self.clock.tick(30)
