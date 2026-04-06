@@ -262,9 +262,7 @@ class RaspberryPiTVMenu:
         self.wifi_selected_ssid = None
         self.wifi_password = ""
         self.wifi_status = "Escanea y selecciona una red"
-        self.wifi_scroll_offset = 0
-        self.wifi_drag_start_pos = None
-        self.wifi_scroll_anchor = 0
+        self.wifi_page_start = 0
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
@@ -324,21 +322,30 @@ class RaspberryPiTVMenu:
 
     def refresh_wifi_networks(self):
         self.wifi_networks = scan_wifi_networks()
-        self.wifi_scroll_offset = 0
+        self.wifi_page_start = 0
         if self.wifi_selected_ssid and not any(item["ssid"] == self.wifi_selected_ssid for item in self.wifi_networks):
             self.wifi_selected_ssid = None
         self.wifi_status = f"{len(self.wifi_networks)} redes encontradas" if self.wifi_networks else "No se encontraron redes"
 
     def get_wifi_layout(self):
         return {
-            "list": pygame.Rect(20, 56, self.width - 40, 150),
-            "selected": pygame.Rect(20, 214, self.width - 40, 28),
-            "password": pygame.Rect(20, 246, self.width - 40, 38),
-            "refresh": pygame.Rect(20, 292, 140, 36),
-            "connect": pygame.Rect(170, 292, 170, 36),
-            "back": pygame.Rect(self.width - 160, 292, 140, 36),
-            "status": pygame.Rect(20, 334, self.width - 40, 24),
-            "keyboard": pygame.Rect(20, 364, self.width - 40, self.height - 384),
+            "list": pygame.Rect(20, 70, 470, 260),
+            "up": pygame.Rect(505, 90, 115, 80),
+            "down": pygame.Rect(505, 185, 115, 80),
+            "refresh": pygame.Rect(20, 346, 140, 40),
+            "connect": pygame.Rect(170, 346, 170, 40),
+            "back": pygame.Rect(350, 346, 140, 40),
+            "status": pygame.Rect(20, 400, self.width - 40, 26),
+        }
+
+    def get_wifi_password_layout(self):
+        return {
+            "selected": pygame.Rect(20, 56, self.width - 40, 28),
+            "password": pygame.Rect(20, 94, self.width - 40, 42),
+            "connect": pygame.Rect(20, 146, 170, 40),
+            "back": pygame.Rect(200, 146, 140, 40),
+            "status": pygame.Rect(20, 196, self.width - 40, 26),
+            "keyboard": pygame.Rect(20, 232, self.width - 40, self.height - 252),
         }
 
     def get_wifi_rows(self):
@@ -350,7 +357,7 @@ class RaspberryPiTVMenu:
         ]
 
     def get_keyboard_key_at(self, pos):
-        layout = self.get_wifi_layout()
+        layout = self.get_wifi_password_layout()
         keyboard_rect = layout["keyboard"]
         if not keyboard_rect.collidepoint(pos):
             return None
@@ -438,57 +445,72 @@ class RaspberryPiTVMenu:
             self.state = "more"
 
     def handle_wifi_touch_down(self, pos):
-        self.wifi_drag_start_pos = pos
-        self.wifi_scroll_anchor = self.wifi_scroll_offset
         self.pressed_button = "wifi-touch"
-        log_debug(f"WIFI DOWN pos={pos} selected={self.wifi_selected_ssid}")
+        log_debug(f"WIFI DOWN pos={pos} selected={self.wifi_selected_ssid} state={self.state}")
 
-    def handle_wifi_touch_move(self, pos):
-        if self.state != "wifi" or self.wifi_drag_start_pos is None:
+    def move_wifi_page(self, delta):
+        if not self.wifi_networks:
             return
-        delta_y = pos[1] - self.wifi_drag_start_pos[1]
-        list_rect = self.get_wifi_layout()["list"]
-        row_height = 34
-        max_scroll = max(0, len(self.wifi_networks) * row_height - list_rect.height)
-        self.wifi_scroll_offset = max(0, min(max_scroll, self.wifi_scroll_anchor - delta_y))
+        max_start = max(0, len(self.wifi_networks) - 4)
+        self.wifi_page_start = max(0, min(max_start, self.wifi_page_start + delta))
 
     def handle_wifi_touch_up(self, pos):
-        layout = self.get_wifi_layout()
-        start_pos = self.wifi_drag_start_pos or pos
-        dragged = abs(pos[1] - start_pos[1]) > 12
-        self.wifi_drag_start_pos = None
         self.pressed_button = None
-        if dragged:
-            log_debug(f"WIFI UP drag pos={pos} scroll={self.wifi_scroll_offset}")
-            return
+        if self.state == "wifi":
+            layout = self.get_wifi_layout()
+            if layout["refresh"].collidepoint(pos):
+                self.refresh_wifi_networks()
+                return
+            if layout["up"].collidepoint(pos):
+                self.move_wifi_page(-1)
+                return
+            if layout["down"].collidepoint(pos):
+                self.move_wifi_page(1)
+                return
+            if layout["back"].collidepoint(pos):
+                self.state = "main"
+                return
+            if layout["connect"].collidepoint(pos):
+                if self.wifi_selected_ssid:
+                    current_ssid = get_connected_wifi_info()
+                    if self.wifi_selected_ssid == current_ssid:
+                        self.wifi_status = f"Ya conectado a {self.wifi_selected_ssid}"
+                    else:
+                        self.wifi_password = ""
+                        self.wifi_status = f"Introduce la password de {self.wifi_selected_ssid}"
+                        self.state = "wifi_password"
+                return
+            if layout["list"].collidepoint(pos):
+                row_height = 62
+                row_index = int((pos[1] - layout["list"].y) / row_height)
+                index = self.wifi_page_start + row_index
+                if 0 <= index < len(self.wifi_networks):
+                    self.wifi_selected_ssid = self.wifi_networks[index]["ssid"]
+                    self.wifi_status = f"Seleccionada: {self.wifi_selected_ssid}"
+                return
 
-        if layout["refresh"].collidepoint(pos):
-            self.refresh_wifi_networks()
-            return
-        if layout["connect"].collidepoint(pos):
-            success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
-            self.wifi_status = message
-            return
-        if layout["back"].collidepoint(pos):
-            self.state = "main"
-            return
-        if layout["list"].collidepoint(pos):
-            row_height = 34
-            row_index = int((pos[1] - layout["list"].y + self.wifi_scroll_offset) / row_height)
-            if 0 <= row_index < len(self.wifi_networks):
-                self.wifi_selected_ssid = self.wifi_networks[row_index]["ssid"]
-                self.wifi_status = f"Seleccionada: {self.wifi_selected_ssid}"
-            return
+        if self.state == "wifi_password":
+            layout = self.get_wifi_password_layout()
+            if layout["back"].collidepoint(pos):
+                self.state = "wifi"
+                return
+            if layout["connect"].collidepoint(pos):
+                success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
+                self.wifi_status = message
+                if success:
+                    self.state = "wifi"
+                    self.refresh_wifi_networks()
+                return
 
-        key_value = self.get_keyboard_key_at(pos)
-        if key_value is None:
-            return
-        if key_value == "BACKSPACE":
-            self.wifi_password = self.wifi_password[:-1]
-        elif key_value == "CLEAR":
-            self.wifi_password = ""
-        else:
-            self.wifi_password += key_value
+            key_value = self.get_keyboard_key_at(pos)
+            if key_value is None:
+                return
+            if key_value == "BACKSPACE":
+                self.wifi_password = self.wifi_password[:-1]
+            elif key_value == "CLEAR":
+                self.wifi_password = ""
+            else:
+                self.wifi_password += key_value
 
     def handle_touch_down(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
@@ -502,6 +524,9 @@ class RaspberryPiTVMenu:
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=poweroff pressed={self.pressed_button}")
             return
         if self.state == "wifi":
+            self.handle_wifi_touch_down(normalized_pos)
+            return
+        if self.state == "wifi_password":
             self.handle_wifi_touch_down(normalized_pos)
             return
         if self.state == "qr":
@@ -536,6 +561,10 @@ class RaspberryPiTVMenu:
             self.handle_wifi_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=wifi")
             return
+        if self.state == "wifi_password":
+            self.handle_wifi_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=wifi_password")
+            return
         if self.state == "qr" and self.pressed_button == "qr-anywhere":
             self.pressed_button = None
             log_debug(
@@ -566,8 +595,6 @@ class RaspberryPiTVMenu:
                     self.touch_position = (event.value, self.touch_position[1])
                 elif event.code in (ecodes.ABS_Y, ecodes.ABS_MT_POSITION_Y):
                     self.touch_position = (self.touch_position[0], event.value)
-                if self.touch_is_down:
-                    self.handle_wifi_touch_move(self.normalize_touch_pos(self.touch_position))
             elif event.type == ecodes.EV_KEY and event.code == ecodes.BTN_TOUCH:
                 if event.value == 1 and not self.touch_is_down:
                     self.touch_is_down = True
@@ -600,25 +627,56 @@ class RaspberryPiTVMenu:
 
         list_rect = layout["list"]
         pygame.draw.rect(self.screen, DARK_GRAY, list_rect)
-        row_height = 34
-        start_index = self.wifi_scroll_offset // row_height
-        offset_y = -(self.wifi_scroll_offset % row_height)
-        visible_rows = list_rect.height // row_height + 2
+        row_height = 62
+        visible_networks = self.wifi_networks[self.wifi_page_start:self.wifi_page_start + 4]
 
-        for row_offset in range(visible_rows):
-            index = start_index + row_offset
+        current_ssid = get_connected_wifi_info()
+        for row_offset, network in enumerate(visible_networks):
+            index = self.wifi_page_start + row_offset
             if index >= len(self.wifi_networks):
                 break
-            network = self.wifi_networks[index]
-            row_rect = pygame.Rect(list_rect.x + 6, list_rect.y + offset_y + row_offset * row_height, list_rect.width - 12, row_height - 4)
-            if row_rect.bottom < list_rect.y or row_rect.top > list_rect.bottom:
-                continue
+            row_rect = pygame.Rect(list_rect.x + 6, list_rect.y + 6 + row_offset * row_height, list_rect.width - 12, row_height - 6)
             selected = network["ssid"] == self.wifi_selected_ssid
             pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
-            label = self.wifi_font.render(network["ssid"], True, WHITE)
+            prefix = "> " if network["ssid"] == current_ssid else "  "
+            ssid = network["ssid"]
+            max_len = 24
+            if len(ssid) > max_len:
+                ssid = ssid[: max_len - 3] + "..."
+            label = self.wifi_font.render(f"{prefix}{ssid}", True, WHITE)
             power = self.small_font.render(f"{network['signal']}%", True, WHITE)
+            security = self.small_font.render(network["security"], True, GRAY)
             self.screen.blit(label, (row_rect.x + 10, row_rect.y + 5))
+            self.screen.blit(security, (row_rect.x + 10, row_rect.y + 33))
             self.screen.blit(power, power.get_rect(midright=(row_rect.right - 10, row_rect.y + row_rect.height / 2)))
+
+        for key, rect, color in (
+            ("Actualizar", layout["refresh"], MID_GRAY),
+            ("Conectar", layout["connect"], GREEN if self.wifi_selected_ssid else MID_GRAY),
+            ("Volver", layout["back"], RED),
+            ("Subir", layout["up"], MID_GRAY),
+            ("Bajar", layout["down"], MID_GRAY),
+        ):
+            pygame.draw.rect(self.screen, color, rect)
+            label = self.small_font.render(key, True, WHITE)
+            self.screen.blit(label, label.get_rect(center=rect.center))
+
+        selected_text = self.small_font.render(
+            f"Red seleccionada: {self.wifi_selected_ssid or 'ninguna'}",
+            True,
+            WHITE,
+        )
+        self.screen.blit(selected_text, (20, 392))
+
+        status_text = self.small_font.render(self.wifi_status[:70], True, WHITE)
+        self.screen.blit(status_text, (layout["status"].x, 424))
+
+    def draw_wifi_password(self):
+        layout = self.get_wifi_password_layout()
+        self.screen.fill(BLACK)
+
+        title = self.title_font.render("Conectar Wi-Fi", True, WHITE)
+        self.screen.blit(title, (20, 10))
 
         selected_text = self.small_font.render(
             f"Red: {self.wifi_selected_ssid or 'ninguna seleccionada'}",
@@ -633,7 +691,6 @@ class RaspberryPiTVMenu:
         self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 6))
 
         for key, rect, color in (
-            ("Actualizar", layout["refresh"], MID_GRAY),
             ("Conectar", layout["connect"], GREEN),
             ("Volver", layout["back"], RED),
         ):
@@ -698,6 +755,8 @@ class RaspberryPiTVMenu:
             self.draw_clock()
         elif self.state == "wifi":
             self.draw_wifi()
+        elif self.state == "wifi_password":
+            self.draw_wifi_password()
         elif self.state == "poweroff":
             self.draw_poweroff()
 
