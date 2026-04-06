@@ -21,6 +21,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
 MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
+POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
@@ -43,6 +44,12 @@ BUTTON_LAYOUT = {
     "1x2": (330, 52),
     "2x1": (124, 250),
     "2x2": (330, 250),
+}
+POWEROFF_BUTTON_WIDTH = 185
+POWEROFF_BUTTON_HEIGHT = 180
+POWEROFF_BUTTON_LAYOUT = {
+    "1x1": (117, 248),
+    "1x2": (335, 248),
 }
 
 
@@ -79,7 +86,7 @@ def play_intro():
 
 
 def generate_qr():
-    url = f"http://{get_local_ip()}:{PORT}"
+    url = get_local_ip()
     subprocess.run(
         ["qrencode", "-o", QR_PNG, "-s", "12", "-m", "2", url],
         stdout=subprocess.DEVNULL,
@@ -169,6 +176,23 @@ def connect_wifi(ssid, password):
     return False, stderr or stdout or f"No se pudo conectar a {ssid}"
 
 
+def get_connected_wifi_info():
+    nmcli_result = run_command(["nmcli", "-t", "-f", "ACTIVE,SSID", "dev", "wifi"])
+    if nmcli_result.returncode == 0:
+        for line in nmcli_result.stdout.splitlines():
+            if not line.strip():
+                continue
+            parts = line.split(":", 1)
+            if len(parts) == 2 and parts[0] == "yes":
+                ssid = parts[1].strip()
+                if ssid:
+                    return ssid
+
+    iwgetid_result = run_command(["iwgetid", "-r"])
+    ssid = iwgetid_result.stdout.strip()
+    return ssid or None
+
+
 def load_image(path):
     if not os.path.isfile(path):
         return None
@@ -225,6 +249,13 @@ class RaspberryPiTVMenu:
                     "2x2": os.path.join(MENU_DIR, "Screen_MoreOptions_Button_2x2_Pressed.png"),
                 },
             ),
+            "poweroff": self.prepare_screen_assets(
+                POWEROFF_PATH,
+                {
+                    "1x1": os.path.join(MENU_DIR, "PowerOff_Menu_Button_1x1_Pressed.png"),
+                    "1x2": os.path.join(MENU_DIR, "PowerOff_Menu_Button_1x2_Pressed.png"),
+                },
+            ),
         }
         self.qr_asset = None
         self.wifi_networks = []
@@ -265,6 +296,7 @@ class RaspberryPiTVMenu:
 
     def refresh_qr_asset(self):
         self.qr_url = generate_qr()
+        connected_wifi = get_connected_wifi_info()
         qr = load_image(QR_PNG)
         if qr is None:
             self.qr_asset = None
@@ -272,17 +304,23 @@ class RaspberryPiTVMenu:
 
         qr_size = min(self.width, self.height) // 2
         qr_surface = pygame.Surface((self.width, self.height))
-        qr_surface.fill(BACKGROUND)
+        qr_surface.fill(BLACK)
         qr_scaled = fit_image(qr, (qr_size, qr_size))
         blit_centered(qr_surface, qr_scaled, self.width, self.height - 100)
 
-        title = self.title_font.render("Escanea el QR", True, TEXT)
-        subtitle = self.font.render(self.qr_url, True, TEXT)
-        hint = self.font.render("Toca abajo a la derecha para volver", True, TEXT)
+        title = self.title_font.render("Escanea el QR", True, WHITE)
+        subtitle = self.font.render(self.qr_url, True, WHITE)
+        wifi_line = self.small_font.render(
+            f"Wi-Fi: {connected_wifi}" if connected_wifi else "Wi-Fi: no conectado",
+            True,
+            WHITE,
+        )
+        hint = self.font.render("Toca cualquier sitio para volver", True, WHITE)
 
         qr_surface.blit(title, title.get_rect(center=(self.width // 2, 50)))
-        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, self.height - 120)))
-        qr_surface.blit(hint, hint.get_rect(center=(self.width // 2, self.height - 60)))
+        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, self.height - 135)))
+        qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, self.height - 95)))
+        qr_surface.blit(hint, hint.get_rect(center=(self.width // 2, self.height - 55)))
         self.qr_asset = qr_surface.convert()
 
     def refresh_wifi_networks(self):
@@ -344,6 +382,12 @@ class RaspberryPiTVMenu:
             for button_id, (x, y) in BUTTON_LAYOUT.items()
         }
 
+    def get_poweroff_button_rects(self):
+        return {
+            button_id: self.scale_rect(x, y, POWEROFF_BUTTON_WIDTH, POWEROFF_BUTTON_HEIGHT)
+            for button_id, (x, y) in POWEROFF_BUTTON_LAYOUT.items()
+        }
+
     def normalize_touch_pos(self, pos):
         raw_x, raw_y = pos
         normalized_x = int(raw_y * self.width / self.height)
@@ -355,6 +399,13 @@ class RaspberryPiTVMenu:
     def button_at_pos(self, pos):
         x, y = pos
         for button_id, rect in self.get_button_rects().items():
+            if rect.collidepoint(x, y):
+                return button_id
+        return None
+
+    def poweroff_button_at_pos(self, pos):
+        x, y = pos
+        for button_id, rect in self.get_poweroff_button_rects().items():
             if rect.collidepoint(x, y):
                 return button_id
         return None
@@ -373,10 +424,19 @@ class RaspberryPiTVMenu:
         elif self.state == "more":
             if button_id == "1x2":
                 self.state = "clock"
+            elif button_id == "2x1":
+                self.state = "poweroff"
             elif button_id == "2x2":
                 self.state = "main"
         elif self.state == "qr":
             self.state = "main"
+
+    def handle_poweroff_action(self, button_id):
+        log_debug(f"POWEROFF action button={button_id}")
+        if button_id == "1x1":
+            run_command(["shutdown", "-h", "now"])
+        elif button_id == "1x2":
+            self.state = "more"
 
     def handle_wifi_touch_down(self, pos):
         self.wifi_drag_start_pos = pos
@@ -438,6 +498,10 @@ class RaspberryPiTVMenu:
             self.pressed_button = "clock-anywhere"
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=clock pressed=clock-anywhere")
             return
+        if self.state == "poweroff":
+            self.pressed_button = self.poweroff_button_at_pos(normalized_pos)
+            log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=poweroff pressed={self.pressed_button}")
+            return
         if self.state == "wifi":
             self.handle_wifi_touch_down(normalized_pos)
             return
@@ -458,6 +522,16 @@ class RaspberryPiTVMenu:
             self.pressed_button = None
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=clock down=clock-anywhere up=clock-anywhere")
             self.state = "more"
+            return
+        if self.state == "poweroff":
+            released_button = self.poweroff_button_at_pos(normalized_pos)
+            active_button = self.pressed_button
+            self.pressed_button = None
+            log_debug(
+                f"UP raw={pos} normalized={normalized_pos} state=poweroff down={active_button} up={released_button}"
+            )
+            if active_button and active_button == released_button:
+                self.handle_poweroff_action(active_button)
             return
         if self.state == "wifi":
             self.handle_wifi_touch_up(normalized_pos)
@@ -587,6 +661,18 @@ class RaspberryPiTVMenu:
                 text_surface = self.small_font.render(label, True, WHITE)
                 self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
+    def draw_poweroff(self):
+        asset_pack = self.assets["poweroff"]
+        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
+        if asset is None:
+            self.draw_missing("menu/PowerOff_Menu.png")
+            return
+        self.screen.blit(asset, (0, 0))
+        title = self.font.render("Realmente quiere apagar la Raspberry Pi TV?", True, WHITE)
+        shadow = self.font.render("Realmente quiere apagar la Raspberry Pi TV?", True, BLACK)
+        self.screen.blit(shadow, shadow.get_rect(center=(self.width // 2 + 1, 34 + 1)))
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, 34)))
+
     def draw(self):
         if self.state == "main":
             asset_pack = self.assets["main"]
@@ -613,6 +699,8 @@ class RaspberryPiTVMenu:
             self.draw_clock()
         elif self.state == "wifi":
             self.draw_wifi()
+        elif self.state == "poweroff":
+            self.draw_poweroff()
 
         pygame.display.flip()
 
