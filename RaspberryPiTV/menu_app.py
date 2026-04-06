@@ -306,7 +306,8 @@ class RaspberryPiTVMenu:
         qr_surface = pygame.Surface((self.width, self.height))
         qr_surface.fill(BLACK)
         qr_scaled = fit_image(qr, (qr_size, qr_size))
-        blit_centered(qr_surface, qr_scaled, self.width, self.height - 100)
+        qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
+        qr_surface.blit(qr_scaled, qr_rect)
 
         title = self.title_font.render("Escanea el QR", True, WHITE)
         subtitle = self.font.render(self.qr_url, True, WHITE)
@@ -315,12 +316,10 @@ class RaspberryPiTVMenu:
             True,
             WHITE,
         )
-        hint = self.font.render("Toca cualquier sitio para volver", True, WHITE)
 
-        qr_surface.blit(title, title.get_rect(center=(self.width // 2, 50)))
-        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, self.height - 135)))
-        qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, self.height - 95)))
-        qr_surface.blit(hint, hint.get_rect(center=(self.width // 2, self.height - 55)))
+        qr_surface.blit(title, title.get_rect(center=(self.width // 2, 42)))
+        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, qr_rect.bottom + 34)))
+        qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, qr_rect.bottom + 64)))
         self.qr_asset = qr_surface.convert()
 
     def refresh_wifi_networks(self):
