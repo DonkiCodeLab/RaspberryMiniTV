@@ -219,9 +219,11 @@ class RaspberryPiTVMenu:
         self.width, self.height = self.screen.get_size()
         self.font = pygame.font.SysFont("Arial", 28)
         self.title_font = pygame.font.SysFont("Arial", 42, bold=True)
+        self.poweroff_title_font = pygame.font.SysFont("Arial", 34, bold=True)
         self.clock_font = pygame.font.SysFont("Arial", 140, bold=True)
         self.small_font = pygame.font.SysFont("Arial", 20)
         self.wifi_font = pygame.font.SysFont("Arial", 24)
+        self.wifi_bold_font = pygame.font.SysFont("Arial", 24, bold=True)
         self.running = True
         self.state = "main"
         self.pressed_button = None
@@ -332,19 +334,17 @@ class RaspberryPiTVMenu:
             "list": pygame.Rect(20, 70, 470, 260),
             "up": pygame.Rect(505, 90, 115, 80),
             "down": pygame.Rect(505, 185, 115, 80),
-            "refresh": pygame.Rect(20, 346, 140, 40),
-            "connect": pygame.Rect(170, 346, 170, 40),
-            "back": pygame.Rect(350, 346, 140, 40),
-            "status": pygame.Rect(20, 400, self.width - 40, 26),
+            "refresh": pygame.Rect(20, 350, 180, 56),
+            "connect": pygame.Rect(210, 350, 200, 56),
+            "back": pygame.Rect(420, 350, 180, 56),
         }
 
     def get_wifi_password_layout(self):
         return {
-            "selected": pygame.Rect(20, 56, self.width - 40, 28),
-            "password": pygame.Rect(20, 94, self.width - 40, 42),
-            "connect": pygame.Rect(20, 146, 170, 40),
-            "back": pygame.Rect(200, 146, 140, 40),
-            "status": pygame.Rect(20, 196, self.width - 40, 26),
+            "selected": pygame.Rect(20, 56, self.width - 40, 34),
+            "password": pygame.Rect(20, 102, self.width - 40, 48),
+            "connect": pygame.Rect(20, 164, 220, 52),
+            "back": pygame.Rect(252, 164, 180, 52),
             "keyboard": pygame.Rect(20, 232, self.width - 40, self.height - 252),
         }
 
@@ -477,7 +477,6 @@ class RaspberryPiTVMenu:
                         self.wifi_status = f"Ya conectado a {self.wifi_selected_ssid}"
                     else:
                         self.wifi_password = ""
-                        self.wifi_status = f"Introduce la password de {self.wifi_selected_ssid}"
                         self.state = "wifi_password"
                 return
             if layout["list"].collidepoint(pos):
@@ -643,7 +642,8 @@ class RaspberryPiTVMenu:
             max_len = 24
             if len(ssid) > max_len:
                 ssid = ssid[: max_len - 3] + "..."
-            label = self.wifi_font.render(f"{prefix}{ssid}", True, WHITE)
+            label_font = self.wifi_bold_font if network["ssid"] == current_ssid else self.wifi_font
+            label = label_font.render(f"{prefix}{ssid}", True, WHITE)
             power = self.small_font.render(f"{network['signal']}%", True, WHITE)
             security = self.small_font.render(network["security"], True, GRAY)
             self.screen.blit(label, (row_rect.x + 10, row_rect.y + 5))
@@ -658,18 +658,9 @@ class RaspberryPiTVMenu:
             ("Bajar", layout["down"], MID_GRAY),
         ):
             pygame.draw.rect(self.screen, color, rect)
-            label = self.small_font.render(key, True, WHITE)
+            label_font = self.wifi_font if key in {"Actualizar", "Conectar", "Volver"} else self.small_font
+            label = label_font.render(key, True, WHITE)
             self.screen.blit(label, label.get_rect(center=rect.center))
-
-        selected_text = self.small_font.render(
-            f"Red seleccionada: {self.wifi_selected_ssid or 'ninguna'}",
-            True,
-            WHITE,
-        )
-        self.screen.blit(selected_text, (20, 392))
-
-        status_text = self.small_font.render(self.wifi_status[:70], True, WHITE)
-        self.screen.blit(status_text, (layout["status"].x, 424))
 
     def draw_wifi_password(self):
         layout = self.get_wifi_password_layout()
@@ -679,27 +670,23 @@ class RaspberryPiTVMenu:
         self.screen.blit(title, (20, 10))
 
         selected_text = self.small_font.render(
-            f"Red: {self.wifi_selected_ssid or 'ninguna seleccionada'}",
+            f"Introducir pwd de la red: {self.wifi_selected_ssid or 'ninguna'}",
             True,
             WHITE,
         )
         self.screen.blit(selected_text, (layout["selected"].x, layout["selected"].y))
 
         pygame.draw.rect(self.screen, WHITE, layout["password"], 2)
-        masked_password = "*" * len(self.wifi_password)
-        password_text = self.wifi_font.render(f"Password: {masked_password}", True, WHITE)
-        self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 6))
+        password_text = self.wifi_font.render(self.wifi_password or " ", True, WHITE)
+        self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 8))
 
         for key, rect, color in (
             ("Conectar", layout["connect"], GREEN),
             ("Volver", layout["back"], RED),
         ):
             pygame.draw.rect(self.screen, color, rect)
-            label = self.small_font.render(key, True, WHITE)
+            label = self.wifi_font.render(key, True, WHITE)
             self.screen.blit(label, label.get_rect(center=rect.center))
-
-        status_text = self.small_font.render(self.wifi_status[:70], True, WHITE)
-        self.screen.blit(status_text, (layout["status"].x, layout["status"].y))
 
         keyboard_rect = layout["keyboard"]
         rows = self.get_wifi_rows()
@@ -724,10 +711,16 @@ class RaspberryPiTVMenu:
             self.draw_missing("menu/PowerOff_Menu.png")
             return
         self.screen.blit(asset, (0, 0))
-        title = self.font.render("Realmente quiere apagar la Raspberry Pi TV?", True, WHITE)
-        shadow = self.font.render("Realmente quiere apagar la Raspberry Pi TV?", True, BLACK)
-        self.screen.blit(shadow, shadow.get_rect(center=(self.width // 2 + 1, 34 + 1)))
-        self.screen.blit(title, title.get_rect(center=(self.width // 2, 34)))
+        title_line_1 = "Realmente quiere"
+        title_line_2 = "apagar la Raspberry Pi TV?"
+        line_1 = self.poweroff_title_font.render(title_line_1, True, WHITE)
+        line_2 = self.poweroff_title_font.render(title_line_2, True, WHITE)
+        shadow_1 = self.poweroff_title_font.render(title_line_1, True, BLACK)
+        shadow_2 = self.poweroff_title_font.render(title_line_2, True, BLACK)
+        self.screen.blit(shadow_1, shadow_1.get_rect(center=(self.width // 2 + 1, 28 + 1)))
+        self.screen.blit(shadow_2, shadow_2.get_rect(center=(self.width // 2 + 1, 68 + 1)))
+        self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 28)))
+        self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 68)))
 
     def draw(self):
         if self.state == "main":
