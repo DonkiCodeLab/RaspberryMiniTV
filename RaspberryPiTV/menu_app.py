@@ -318,8 +318,8 @@ class RaspberryPiTVMenu:
         )
 
         qr_surface.blit(title, title.get_rect(center=(self.width // 2, 42)))
-        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, qr_rect.bottom + 34)))
-        qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, qr_rect.bottom + 64)))
+        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, qr_rect.bottom + 44)))
+        qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, qr_rect.bottom + 78)))
         self.qr_asset = qr_surface.convert()
 
     def refresh_wifi_networks(self):
