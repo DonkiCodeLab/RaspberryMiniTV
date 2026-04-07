@@ -24,6 +24,7 @@ MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
+LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
@@ -239,6 +240,7 @@ class RaspberryPiTVMenu:
         self.play_label_font = pygame.font.SysFont("Arial", 26, bold=True)
         self.browser_font = pygame.font.SysFont("Arial", 24)
         self.browser_bold_font = pygame.font.SysFont("Arial", 24, bold=True)
+        self.video_button_font = pygame.font.SysFont("Arial", 30, bold=True)
         self.running = True
         self.state = "main"
         self.pressed_button = None
@@ -294,6 +296,15 @@ class RaspberryPiTVMenu:
         self.browser_page_start = 0
         self.browser_entries = []
         self.browser_status = "Select a video or folder"
+        self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
+        self.loading_video_path = None
+        self.loading_return_state = "play"
+        self.loading_started_at = 0
+        self.video_proc = None
+        self.video_controls_visible = False
+        self.video_paused = False
+        self.video_return_state = "play"
+        self.video_now_playing = ""
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
@@ -561,20 +572,20 @@ class RaspberryPiTVMenu:
     def play_video_path(self, full_path):
         relative_path = os.path.relpath(full_path, VIDEOS_DIR).replace(os.sep, "/")
         log_debug(f"PLAY file={relative_path}")
-        run_command(["pkill", "-f", "omxplayer.bin"])
-        subprocess.Popen(
-            ["omxplayer", "--no-osd", "--aspect-mode", "fill", full_path],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        self.play_status = f"Playing {os.path.basename(full_path)}"
-        self.state = "main"
+        self.stop_video_playback(silent=True)
+        self.loading_video_path = full_path
+        self.loading_started_at = pygame.time.get_ticks()
+        self.video_controls_visible = False
+        self.video_paused = False
+        self.video_now_playing = os.path.basename(full_path)
+        self.state = "loading_video"
 
     def start_random_video(self):
         all_videos = self.get_entry_video_files(VIDEOS_DIR)
         if not all_videos:
             self.play_status = "No videos found"
             return
+        self.loading_return_state = "play"
         self.play_video_path(random.choice(all_videos))
 
     def activate_browser_entry(self, entry):
@@ -594,7 +605,94 @@ class RaspberryPiTVMenu:
             return
         videos = entry.get("videos") or []
         if videos:
+            self.loading_return_state = "browse"
             self.play_video_path(videos[0])
+
+    def get_video_control_layout(self):
+        return {
+            "pause": pygame.Rect(self.width // 2 - 170, self.height - 110, 150, 60),
+            "close": pygame.Rect(self.width // 2 + 20, self.height - 110, 150, 60),
+        }
+
+    def handle_video_touch_down(self, pos):
+        self.pressed_button = "video-touch"
+        log_debug(f"VIDEO DOWN pos={pos} controls_visible={self.video_controls_visible} paused={self.video_paused}")
+
+    def handle_video_touch_up(self, pos):
+        layout = self.get_video_control_layout()
+        was_visible = self.video_controls_visible
+        self.pressed_button = None
+
+        if not was_visible:
+            self.video_controls_visible = True
+            return
+
+        if layout["pause"].collidepoint(pos):
+            self.toggle_video_pause()
+            return
+        if layout["close"].collidepoint(pos):
+            self.stop_video_playback()
+            return
+
+        self.video_controls_visible = False
+
+    def toggle_video_pause(self):
+        if self.video_proc and self.video_proc.poll() is None and self.video_proc.stdin:
+            try:
+                self.video_proc.stdin.write(b"p")
+                self.video_proc.stdin.flush()
+                self.video_paused = not self.video_paused
+                self.video_controls_visible = True
+            except Exception as exc:
+                log_debug(f"VIDEO pause toggle failed: {exc}")
+
+    def stop_video_playback(self, silent=False):
+        proc = self.video_proc
+        if proc and proc.poll() is None:
+            try:
+                if proc.stdin:
+                    proc.stdin.write(b"q")
+                    proc.stdin.flush()
+            except Exception:
+                pass
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+        run_command(["pkill", "-f", "omxplayer.bin"])
+        self.video_proc = None
+        self.video_controls_visible = False
+        self.video_paused = False
+        self.loading_video_path = None
+        if not silent:
+            self.state = self.video_return_state
+
+    def maybe_start_pending_video(self):
+        if self.state != "loading_video" or not self.loading_video_path:
+            return
+        if pygame.time.get_ticks() - self.loading_started_at < 220:
+            return
+        self.video_return_state = self.loading_return_state
+        self.video_proc = subprocess.Popen(
+            ["omxplayer", "--no-osd", "--aspect-mode", "fill", self.loading_video_path],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        self.loading_video_path = None
+        self.video_controls_visible = False
+        self.video_paused = False
+        self.state = "video"
+
+    def update_video_state(self):
+        if self.state == "loading_video":
+            self.maybe_start_pending_video()
+            return
+        if self.state == "video" and self.video_proc and self.video_proc.poll() is not None:
+            self.video_proc = None
+            self.video_controls_visible = False
+            self.video_paused = False
+            self.state = self.video_return_state
 
     def normalize_touch_pos(self, pos):
         raw_x, raw_y = pos
@@ -774,6 +872,9 @@ class RaspberryPiTVMenu:
             self.pressed_button = self.poweroff_button_at_pos(normalized_pos)
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=poweroff pressed={self.pressed_button}")
             return
+        if self.state == "video":
+            self.handle_video_touch_down(normalized_pos)
+            return
         if self.state == "play":
             self.pressed_button = self.play_button_at_pos(normalized_pos)
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=play pressed={self.pressed_button}")
@@ -814,6 +915,10 @@ class RaspberryPiTVMenu:
             )
             if active_button and active_button == released_button:
                 self.handle_poweroff_action(active_button)
+            return
+        if self.state == "video":
+            self.handle_video_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video visible={self.video_controls_visible}")
             return
         if self.state == "play":
             released_button = self.play_button_at_pos(normalized_pos)
@@ -995,6 +1100,37 @@ class RaspberryPiTVMenu:
         self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 38)))
         self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 78)))
 
+    def draw_loading_video(self):
+        if self.loading_asset is not None:
+            self.screen.blit(self.loading_asset, (0, 0))
+        else:
+            self.screen.fill(BLACK)
+            title = self.title_font.render("Loading video...", True, WHITE)
+            self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height // 2)))
+
+    def draw_video_controls(self):
+        if not self.video_controls_visible:
+            return False
+
+        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 90))
+
+        title = self.small_font.render(self.truncate_text(self.video_now_playing, self.small_font, self.width - 80), True, WHITE)
+        overlay.blit(title, title.get_rect(center=(self.width // 2, 40)))
+
+        layout = self.get_video_control_layout()
+        pause_label = "Play" if self.video_paused else "Pause"
+        for key, rect, color in (
+            (pause_label, layout["pause"], MID_GRAY),
+            ("Close", layout["close"], RED),
+        ):
+            pygame.draw.rect(overlay, color, rect)
+            label = self.video_button_font.render(key, True, WHITE)
+            overlay.blit(label, label.get_rect(center=rect.center))
+
+        self.screen.blit(overlay, (0, 0))
+        return True
+
     def draw_play(self):
         asset_pack = self.assets["play"]
         asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
@@ -1083,6 +1219,7 @@ class RaspberryPiTVMenu:
         self.screen.blit(status_surface, (20, self.height - 18))
 
     def draw(self):
+        should_flip = True
         if self.state == "main":
             asset_pack = self.assets["main"]
             asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
@@ -1106,6 +1243,10 @@ class RaspberryPiTVMenu:
                 self.screen.blit(self.qr_asset, (0, 0))
         elif self.state == "clock":
             self.draw_clock()
+        elif self.state == "loading_video":
+            self.draw_loading_video()
+        elif self.state == "video":
+            should_flip = self.draw_video_controls()
         elif self.state == "play":
             self.draw_play()
         elif self.state == "browse":
@@ -1117,12 +1258,14 @@ class RaspberryPiTVMenu:
         elif self.state == "poweroff":
             self.draw_poweroff()
 
-        pygame.display.flip()
+        if should_flip:
+            pygame.display.flip()
 
     def run(self):
         play_intro()
 
         while self.running:
+            self.update_video_state()
             self.poll_native_touch()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
