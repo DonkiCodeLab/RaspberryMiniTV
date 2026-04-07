@@ -151,14 +151,14 @@ def scan_wifi_networks():
 
 def connect_wifi(ssid, password):
     if not ssid:
-        return False, "Selecciona una red Wi-Fi"
+        return False, "Select a Wi-Fi network"
 
     nmcli_base = ["nmcli", "dev", "wifi", "connect", ssid]
     if password:
         nmcli_base.extend(["password", password])
     nmcli_result = run_command(nmcli_base)
     if nmcli_result.returncode == 0:
-        return True, f"Conectado a {ssid}"
+        return True, f"Connected to {ssid}"
 
     if password:
         add_result = run_command(["wpa_cli", "-i", "wlan0", "add_network"])
@@ -169,11 +169,11 @@ def connect_wifi(ssid, password):
             run_command(["wpa_cli", "-i", "wlan0", "enable_network", network_id])
             save_result = run_command(["wpa_cli", "-i", "wlan0", "save_config"])
             if save_result.returncode == 0:
-                return True, f"Intentando conectar a {ssid}"
+                return True, f"Trying to connect to {ssid}"
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
-    return False, stderr or stdout or f"No se pudo conectar a {ssid}"
+    return False, stderr or stdout or f"Could not connect to {ssid}"
 
 
 def get_connected_wifi_info():
@@ -263,7 +263,7 @@ class RaspberryPiTVMenu:
         self.wifi_networks = []
         self.wifi_selected_ssid = None
         self.wifi_password = ""
-        self.wifi_status = "Escanea y selecciona una red"
+        self.wifi_status = "Scan and select a network"
         self.wifi_page_start = 0
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
@@ -309,10 +309,10 @@ class RaspberryPiTVMenu:
         qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
         qr_surface.blit(qr_scaled, qr_rect)
 
-        title = self.title_font.render("Escanea el QR", True, WHITE)
+        title = self.title_font.render("Scan the QR", True, WHITE)
         subtitle = self.font.render(self.qr_url, True, WHITE)
         wifi_line = self.small_font.render(
-            f"Wi-Fi: {connected_wifi}" if connected_wifi else "Wi-Fi: no conectado",
+            f"Wi-Fi: {connected_wifi}" if connected_wifi else "Wi-Fi: not connected",
             True,
             WHITE,
         )
@@ -327,7 +327,7 @@ class RaspberryPiTVMenu:
         self.wifi_page_start = 0
         if self.wifi_selected_ssid and not any(item["ssid"] == self.wifi_selected_ssid for item in self.wifi_networks):
             self.wifi_selected_ssid = None
-        self.wifi_status = f"{len(self.wifi_networks)} redes encontradas" if self.wifi_networks else "No se encontraron redes"
+        self.wifi_status = f"{len(self.wifi_networks)} networks found" if self.wifi_networks else "No networks found"
 
     def get_wifi_layout(self):
         return {
@@ -474,7 +474,7 @@ class RaspberryPiTVMenu:
                 if self.wifi_selected_ssid:
                     current_ssid = get_connected_wifi_info()
                     if self.wifi_selected_ssid == current_ssid:
-                        self.wifi_status = f"Ya conectado a {self.wifi_selected_ssid}"
+                        self.wifi_status = f"Already connected to {self.wifi_selected_ssid}"
                     else:
                         self.wifi_password = ""
                         self.state = "wifi_password"
@@ -485,7 +485,7 @@ class RaspberryPiTVMenu:
                 index = self.wifi_page_start + row_index
                 if 0 <= index < len(self.wifi_networks):
                     self.wifi_selected_ssid = self.wifi_networks[index]["ssid"]
-                    self.wifi_status = f"Seleccionada: {self.wifi_selected_ssid}"
+                    self.wifi_status = f"Selected: {self.wifi_selected_ssid}"
                 return
 
         if self.state == "wifi_password":
@@ -604,7 +604,7 @@ class RaspberryPiTVMenu:
 
     def draw_missing(self, message):
         self.screen.fill((20, 20, 20))
-        title = self.title_font.render("Falta un recurso", True, (255, 255, 255))
+        title = self.title_font.render("Missing asset", True, (255, 255, 255))
         subtitle = self.font.render(message, True, (220, 220, 220))
         self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height // 2 - 30)))
         self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, self.height // 2 + 20)))
@@ -613,7 +613,7 @@ class RaspberryPiTVMenu:
         self.screen.fill(BLACK)
         time_text = datetime.now().strftime("%H : %M")
         text_surface = self.clock_font.render(time_text, True, WHITE)
-        hint_surface = self.small_font.render("Toca cualquier sitio para volver", True, GRAY)
+        hint_surface = self.small_font.render("Tap anywhere to go back", True, GRAY)
         self.screen.blit(text_surface, text_surface.get_rect(center=(self.width // 2, self.height // 2 - 10)))
         self.screen.blit(hint_surface, hint_surface.get_rect(center=(self.width // 2, self.height - 32)))
 
@@ -651,14 +651,14 @@ class RaspberryPiTVMenu:
             self.screen.blit(power, power.get_rect(midright=(row_rect.right - 10, row_rect.y + row_rect.height / 2)))
 
         for key, rect, color in (
-            ("Actualizar", layout["refresh"], MID_GRAY),
-            ("Conectar", layout["connect"], GREEN if self.wifi_selected_ssid else MID_GRAY),
-            ("Volver", layout["back"], RED),
-            ("Subir", layout["up"], MID_GRAY),
-            ("Bajar", layout["down"], MID_GRAY),
+            ("Refresh", layout["refresh"], MID_GRAY),
+            ("Connect", layout["connect"], GREEN if self.wifi_selected_ssid else MID_GRAY),
+            ("Back", layout["back"], RED),
+            ("Up", layout["up"], MID_GRAY),
+            ("Down", layout["down"], MID_GRAY),
         ):
             pygame.draw.rect(self.screen, color, rect)
-            label_font = self.wifi_font if key in {"Actualizar", "Conectar", "Volver"} else self.small_font
+            label_font = self.wifi_font if key in {"Refresh", "Connect", "Back"} else self.small_font
             label = label_font.render(key, True, WHITE)
             self.screen.blit(label, label.get_rect(center=rect.center))
 
@@ -666,11 +666,11 @@ class RaspberryPiTVMenu:
         layout = self.get_wifi_password_layout()
         self.screen.fill(BLACK)
 
-        title = self.title_font.render("Conectar Wi-Fi", True, WHITE)
+        title = self.title_font.render("Connect Wi-Fi", True, WHITE)
         self.screen.blit(title, (20, 10))
 
         selected_text = self.small_font.render(
-            f"Introducir pwd de la red: {self.wifi_selected_ssid or 'ninguna'}",
+            f"Enter password for: {self.wifi_selected_ssid or 'none'}",
             True,
             WHITE,
         )
@@ -681,8 +681,8 @@ class RaspberryPiTVMenu:
         self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 8))
 
         for key, rect, color in (
-            ("Conectar", layout["connect"], GREEN),
-            ("Volver", layout["back"], RED),
+            ("Connect", layout["connect"], GREEN),
+            ("Back", layout["back"], RED),
         ):
             pygame.draw.rect(self.screen, color, rect)
             label = self.wifi_font.render(key, True, WHITE)
@@ -711,8 +711,8 @@ class RaspberryPiTVMenu:
             self.draw_missing("menu/PowerOff_Menu.png")
             return
         self.screen.blit(asset, (0, 0))
-        title_line_1 = "Realmente quiere"
-        title_line_2 = "apagar la Raspberry Pi TV?"
+        title_line_1 = "Do you really want to"
+        title_line_2 = "turn off Raspberry Pi TV?"
         line_1 = self.poweroff_title_font.render(title_line_1, True, WHITE)
         line_2 = self.poweroff_title_font.render(title_line_2, True, WHITE)
         shadow_1 = self.poweroff_title_font.render(title_line_1, True, BLACK)
