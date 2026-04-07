@@ -304,6 +304,8 @@ class RaspberryPiTVMenu:
         self.video_paused = False
         self.video_return_state = "play"
         self.video_now_playing = ""
+        self.last_video_tap_at = 0
+        self.video_double_tap_ms = 450
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
@@ -606,20 +608,21 @@ class RaspberryPiTVMenu:
             self.loading_return_state = "browse"
             self.play_video_path(videos[0])
 
-    def get_video_control_layout(self):
-        return {
-            "resume": pygame.Rect(self.width // 2 - 170, self.height - 110, 150, 60),
-            "quit": pygame.Rect(self.width // 2 + 20, self.height - 110, 150, 60),
-        }
-
     def handle_video_touch_down(self, pos):
         self.pressed_button = "video-touch"
         log_debug(f"VIDEO DOWN pos={pos} paused={self.video_paused}")
 
     def handle_video_touch_up(self, pos):
         self.pressed_button = None
+        now_ms = pygame.time.get_ticks()
+        if self.last_video_tap_at and now_ms - self.last_video_tap_at <= self.video_double_tap_ms:
+            log_debug(f"VIDEO double tap pos={pos} -> quit")
+            self.last_video_tap_at = 0
+            self.stop_video_playback()
+            return
+
+        self.last_video_tap_at = now_ms
         self.toggle_video_pause()
-        self.state = "video_menu"
 
     def toggle_video_pause(self):
         if self.video_proc and self.video_proc.poll() is None and self.video_proc.stdin:
@@ -629,22 +632,6 @@ class RaspberryPiTVMenu:
                 self.video_paused = not self.video_paused
             except Exception as exc:
                 log_debug(f"VIDEO pause toggle failed: {exc}")
-
-    def handle_video_menu_touch_down(self, pos):
-        self.pressed_button = "video-menu-touch"
-        log_debug(f"VIDEO MENU DOWN pos={pos} paused={self.video_paused}")
-
-    def handle_video_menu_touch_up(self, pos):
-        layout = self.get_video_control_layout()
-        self.pressed_button = None
-        if layout["resume"].collidepoint(pos):
-            if self.video_paused:
-                self.toggle_video_pause()
-            self.state = "video"
-            return
-        if layout["quit"].collidepoint(pos):
-            self.stop_video_playback()
-            return
 
     def stop_video_playback(self, silent=False):
         proc = self.video_proc
@@ -663,6 +650,7 @@ class RaspberryPiTVMenu:
         self.video_proc = None
         self.video_paused = False
         self.loading_video_path = None
+        self.last_video_tap_at = 0
         if not silent:
             self.state = self.video_return_state
 
@@ -680,6 +668,7 @@ class RaspberryPiTVMenu:
         )
         self.loading_video_path = None
         self.video_paused = False
+        self.last_video_tap_at = 0
         self.state = "video"
 
     def update_video_state(self):
@@ -689,10 +678,7 @@ class RaspberryPiTVMenu:
         if self.state == "video" and self.video_proc and self.video_proc.poll() is not None:
             self.video_proc = None
             self.video_paused = False
-            self.state = self.video_return_state
-        if self.state == "video_menu" and self.video_proc and self.video_proc.poll() is not None:
-            self.video_proc = None
-            self.video_paused = False
+            self.last_video_tap_at = 0
             self.state = self.video_return_state
 
     def normalize_touch_pos(self, pos):
@@ -876,9 +862,6 @@ class RaspberryPiTVMenu:
         if self.state == "video":
             self.handle_video_touch_down(normalized_pos)
             return
-        if self.state == "video_menu":
-            self.handle_video_menu_touch_down(normalized_pos)
-            return
         if self.state == "play":
             self.pressed_button = self.play_button_at_pos(normalized_pos)
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=play pressed={self.pressed_button}")
@@ -923,10 +906,6 @@ class RaspberryPiTVMenu:
         if self.state == "video":
             self.handle_video_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=video paused={self.video_paused}")
-            return
-        if self.state == "video_menu":
-            self.handle_video_menu_touch_up(normalized_pos)
-            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video_menu paused={self.video_paused}")
             return
         if self.state == "play":
             released_button = self.play_button_at_pos(normalized_pos)
@@ -1116,35 +1095,6 @@ class RaspberryPiTVMenu:
             title = self.title_font.render("Loading video...", True, WHITE)
             self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height // 2)))
 
-    def draw_video_menu(self):
-        if self.loading_asset is not None:
-            self.screen.blit(self.loading_asset, (0, 0))
-        else:
-            self.screen.fill(BLACK)
-
-        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 165))
-
-        title = self.title_font.render("Playback paused", True, WHITE)
-        subtitle = self.small_font.render(
-            self.truncate_text(self.video_now_playing, self.small_font, self.width - 80),
-            True,
-            WHITE,
-        )
-        overlay.blit(title, title.get_rect(center=(self.width // 2, 96)))
-        overlay.blit(subtitle, subtitle.get_rect(center=(self.width // 2, 134)))
-
-        layout = self.get_video_control_layout()
-        for key, rect, color in (
-            ("Resume", layout["resume"], GREEN),
-            ("Quit", layout["quit"], RED),
-        ):
-            pygame.draw.rect(overlay, color, rect)
-            label = self.video_button_font.render(key, True, WHITE)
-            overlay.blit(label, label.get_rect(center=rect.center))
-
-        self.screen.blit(overlay, (0, 0))
-
     def draw_play(self):
         asset_pack = self.assets["play"]
         asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
@@ -1260,8 +1210,6 @@ class RaspberryPiTVMenu:
             self.draw_loading_video()
         elif self.state == "video":
             return
-        elif self.state == "video_menu":
-            self.draw_video_menu()
         elif self.state == "play":
             self.draw_play()
         elif self.state == "browse":
