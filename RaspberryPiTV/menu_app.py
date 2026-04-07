@@ -1,4 +1,5 @@
 import os
+import random
 import select
 import socket
 import subprocess
@@ -22,10 +23,12 @@ MENU_DIR = os.path.join(BASE_DIR, "menu")
 MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
+PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
 PORT = 5050
+VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
 BACKGROUND = (245, 245, 245)
 TEXT = (10, 10, 10)
 BLACK = (0, 0, 0)
@@ -51,6 +54,10 @@ POWEROFF_BUTTON_LAYOUT = {
     "1x1": (117, 248),
     "1x2": (335, 248),
 }
+PLAY_EXIT_LAYOUT = (22, 23, 60, 55)
+PLAY_RANDOM_LAYOUT = (183, 207, 272, 103)
+PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
+BROWSE_VISIBLE_ITEMS = 5
 
 
 def ensure_screen_on():
@@ -98,6 +105,10 @@ def generate_qr():
 
 def run_command(command):
     return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+
+
+def is_video_file(filename):
+    return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
 def scan_wifi_networks():
@@ -224,6 +235,10 @@ class RaspberryPiTVMenu:
         self.small_font = pygame.font.SysFont("Arial", 20)
         self.wifi_font = pygame.font.SysFont("Arial", 24)
         self.wifi_bold_font = pygame.font.SysFont("Arial", 24, bold=True)
+        self.play_title_font = pygame.font.SysFont("Arial", 34, bold=True)
+        self.play_label_font = pygame.font.SysFont("Arial", 26, bold=True)
+        self.browser_font = pygame.font.SysFont("Arial", 24)
+        self.browser_bold_font = pygame.font.SysFont("Arial", 24, bold=True)
         self.running = True
         self.state = "main"
         self.pressed_button = None
@@ -258,6 +273,14 @@ class RaspberryPiTVMenu:
                     "1x2": os.path.join(MENU_DIR, "PowerOff_Menu_Button_1x2_Pressed.png"),
                 },
             ),
+            "play": self.prepare_screen_assets(
+                PLAYMENU_PATH,
+                {
+                    "exit": os.path.join(MENU_DIR, "PlayMenu_ButtonExit_Pressed.png"),
+                    "random": os.path.join(MENU_DIR, "PlayMenu_ButtonRandom_Pressed.png"),
+                    "browse": os.path.join(MENU_DIR, "PlayMenu_ButtonBrowse_Pressed.png"),
+                },
+            ),
         }
         self.qr_asset = None
         self.wifi_networks = []
@@ -265,6 +288,12 @@ class RaspberryPiTVMenu:
         self.wifi_password = ""
         self.wifi_status = "Scan and select a network"
         self.wifi_page_start = 0
+        self.play_status = "Choose how you want to start watching"
+        self.browser_path = VIDEOS_DIR
+        self.browser_selected_index = 0
+        self.browser_page_start = 0
+        self.browser_entries = []
+        self.browser_status = "Select a video or folder"
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
@@ -394,6 +423,179 @@ class RaspberryPiTVMenu:
             for button_id, (x, y) in POWEROFF_BUTTON_LAYOUT.items()
         }
 
+    def get_play_button_rects(self):
+        return {
+            "exit": self.scale_rect(*PLAY_EXIT_LAYOUT),
+            "random": self.scale_rect(*PLAY_RANDOM_LAYOUT),
+            "browse": self.scale_rect(*PLAY_BROWSE_LAYOUT),
+        }
+
+    def play_button_at_pos(self, pos):
+        x, y = pos
+        for button_id, rect in self.get_play_button_rects().items():
+            if rect.collidepoint(x, y):
+                return button_id
+        return None
+
+    def get_browser_layout(self):
+        return {
+            "back": pygame.Rect(20, 18, 100, 44),
+            "path": pygame.Rect(130, 18, self.width - 150, 44),
+            "list": pygame.Rect(20, 80, 470, 300),
+            "up": pygame.Rect(505, 100, 115, 70),
+            "down": pygame.Rect(505, 185, 115, 70),
+            "action": pygame.Rect(20, 400, 260, 56),
+            "close": pygame.Rect(320, 400, 260, 56),
+        }
+
+    def rel_browser_path(self):
+        rel_path = os.path.relpath(self.browser_path, VIDEOS_DIR)
+        return "/" if rel_path == "." else f"/{rel_path.replace(os.sep, '/')}"
+
+    def get_entry_video_files(self, entry_path):
+        if os.path.isfile(entry_path) and is_video_file(entry_path):
+            return [entry_path]
+
+        videos = []
+        if os.path.isdir(entry_path):
+            for root, _dirs, files in os.walk(entry_path):
+                for filename in sorted(files):
+                    full_path = os.path.join(root, filename)
+                    if is_video_file(full_path):
+                        videos.append(full_path)
+        return sorted(videos)
+
+    def refresh_browser_entries(self):
+        entries = []
+        if os.path.abspath(self.browser_path) != os.path.abspath(VIDEOS_DIR):
+            entries.append(
+                {
+                    "label": "..",
+                    "path": os.path.dirname(self.browser_path),
+                    "type": "parent",
+                    "action": "up",
+                    "video_count": 0,
+                }
+            )
+
+        if os.path.isdir(self.browser_path):
+            for name in sorted(os.listdir(self.browser_path), key=lambda item: item.lower()):
+                full_path = os.path.join(self.browser_path, name)
+                if os.path.isdir(full_path):
+                    videos = self.get_entry_video_files(full_path)
+                    if not videos:
+                        continue
+                    entries.append(
+                        {
+                            "label": name,
+                            "path": full_path,
+                            "type": "directory",
+                            "action": "view" if len(videos) == 1 else "browse",
+                            "video_count": len(videos),
+                            "videos": videos,
+                        }
+                    )
+                elif is_video_file(full_path):
+                    entries.append(
+                        {
+                            "label": name,
+                            "path": full_path,
+                            "type": "file",
+                            "action": "view",
+                            "video_count": 1,
+                            "videos": [full_path],
+                        }
+                    )
+
+        self.browser_entries = entries
+        if not self.browser_entries:
+            self.browser_selected_index = 0
+            self.browser_page_start = 0
+            self.browser_status = "No videos found in this folder"
+            return
+
+        self.browser_selected_index = max(0, min(self.browser_selected_index, len(self.browser_entries) - 1))
+        max_start = max(0, len(self.browser_entries) - BROWSE_VISIBLE_ITEMS)
+        self.browser_page_start = min(self.browser_page_start, max_start)
+        if self.browser_selected_index < self.browser_page_start:
+            self.browser_page_start = self.browser_selected_index
+        if self.browser_selected_index >= self.browser_page_start + BROWSE_VISIBLE_ITEMS:
+            self.browser_page_start = self.browser_selected_index - BROWSE_VISIBLE_ITEMS + 1
+        self.browser_status = "Select a video or folder"
+
+    def move_browser_selection(self, delta):
+        if not self.browser_entries:
+            return
+        self.browser_selected_index = max(0, min(len(self.browser_entries) - 1, self.browser_selected_index + delta))
+        if self.browser_selected_index < self.browser_page_start:
+            self.browser_page_start = self.browser_selected_index
+        if self.browser_selected_index >= self.browser_page_start + BROWSE_VISIBLE_ITEMS:
+            self.browser_page_start = self.browser_selected_index - BROWSE_VISIBLE_ITEMS + 1
+
+    def browser_entry_at_pos(self, pos):
+        layout = self.get_browser_layout()
+        if not layout["list"].collidepoint(pos):
+            return None
+        row_height = layout["list"].height / BROWSE_VISIBLE_ITEMS
+        row_index = int((pos[1] - layout["list"].y) / row_height)
+        index = self.browser_page_start + row_index
+        if 0 <= index < len(self.browser_entries):
+            return index
+        return None
+
+    def get_selected_browser_entry(self):
+        if not self.browser_entries:
+            return None
+        if 0 <= self.browser_selected_index < len(self.browser_entries):
+            return self.browser_entries[self.browser_selected_index]
+        return None
+
+    def truncate_text(self, text, font, max_width):
+        if font.size(text)[0] <= max_width:
+            return text
+        candidate = text
+        while candidate and font.size(candidate + "...")[0] > max_width:
+            candidate = candidate[:-1]
+        return candidate + "..."
+
+    def play_video_path(self, full_path):
+        relative_path = os.path.relpath(full_path, VIDEOS_DIR).replace(os.sep, "/")
+        log_debug(f"PLAY file={relative_path}")
+        run_command(["pkill", "-f", "omxplayer.bin"])
+        subprocess.Popen(
+            ["omxplayer", "--no-osd", "--aspect-mode", "fill", full_path],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        self.play_status = f"Playing {os.path.basename(full_path)}"
+        self.state = "main"
+
+    def start_random_video(self):
+        all_videos = self.get_entry_video_files(VIDEOS_DIR)
+        if not all_videos:
+            self.play_status = "No videos found"
+            return
+        self.play_video_path(random.choice(all_videos))
+
+    def activate_browser_entry(self, entry):
+        if entry is None:
+            return
+        if entry["type"] == "parent":
+            self.browser_path = entry["path"]
+            self.browser_selected_index = 0
+            self.browser_page_start = 0
+            self.refresh_browser_entries()
+            return
+        if entry["action"] == "browse":
+            self.browser_path = entry["path"]
+            self.browser_selected_index = 0
+            self.browser_page_start = 0
+            self.refresh_browser_entries()
+            return
+        videos = entry.get("videos") or []
+        if videos:
+            self.play_video_path(videos[0])
+
     def normalize_touch_pos(self, pos):
         raw_x, raw_y = pos
         normalized_x = int(raw_y * self.width / self.height)
@@ -425,6 +627,8 @@ class RaspberryPiTVMenu:
             elif button_id == "1x2":
                 self.refresh_qr_asset()
                 self.state = "qr"
+            elif button_id == "2x1":
+                self.state = "play"
             elif button_id == "2x2":
                 self.state = "more"
         elif self.state == "more":
@@ -443,6 +647,54 @@ class RaspberryPiTVMenu:
             run_command(["shutdown", "-h", "now"])
         elif button_id == "1x2":
             self.state = "more"
+
+    def handle_play_action(self, button_id):
+        log_debug(f"PLAYMENU action button={button_id}")
+        if button_id == "exit":
+            self.state = "main"
+        elif button_id == "random":
+            self.start_random_video()
+        elif button_id == "browse":
+            self.browser_path = VIDEOS_DIR
+            self.browser_selected_index = 0
+            self.browser_page_start = 0
+            self.refresh_browser_entries()
+            self.state = "browse"
+
+    def handle_browser_touch_down(self, pos):
+        self.pressed_button = "browse-touch"
+        log_debug(f"BROWSE DOWN pos={pos} path={self.rel_browser_path()} selected={self.browser_selected_index}")
+
+    def handle_browser_touch_up(self, pos):
+        self.pressed_button = None
+        layout = self.get_browser_layout()
+        if layout["back"].collidepoint(pos):
+            if os.path.abspath(self.browser_path) == os.path.abspath(VIDEOS_DIR):
+                self.state = "play"
+            else:
+                self.browser_path = os.path.dirname(self.browser_path)
+                self.browser_selected_index = 0
+                self.browser_page_start = 0
+                self.refresh_browser_entries()
+            return
+        if layout["up"].collidepoint(pos):
+            self.move_browser_selection(-1)
+            return
+        if layout["down"].collidepoint(pos):
+            self.move_browser_selection(1)
+            return
+        if layout["close"].collidepoint(pos):
+            self.state = "play"
+            return
+
+        selected_entry = self.get_selected_browser_entry()
+        if layout["action"].collidepoint(pos):
+            self.activate_browser_entry(selected_entry)
+            return
+
+        entry_index = self.browser_entry_at_pos(pos)
+        if entry_index is not None:
+            self.browser_selected_index = entry_index
 
     def handle_wifi_touch_down(self, pos):
         self.pressed_button = "wifi-touch"
@@ -522,6 +774,13 @@ class RaspberryPiTVMenu:
             self.pressed_button = self.poweroff_button_at_pos(normalized_pos)
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=poweroff pressed={self.pressed_button}")
             return
+        if self.state == "play":
+            self.pressed_button = self.play_button_at_pos(normalized_pos)
+            log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=play pressed={self.pressed_button}")
+            return
+        if self.state == "browse":
+            self.handle_browser_touch_down(normalized_pos)
+            return
         if self.state == "wifi":
             self.handle_wifi_touch_down(normalized_pos)
             return
@@ -555,6 +814,20 @@ class RaspberryPiTVMenu:
             )
             if active_button and active_button == released_button:
                 self.handle_poweroff_action(active_button)
+            return
+        if self.state == "play":
+            released_button = self.play_button_at_pos(normalized_pos)
+            active_button = self.pressed_button
+            self.pressed_button = None
+            log_debug(
+                f"UP raw={pos} normalized={normalized_pos} state=play down={active_button} up={released_button}"
+            )
+            if active_button and active_button == released_button:
+                self.handle_play_action(active_button)
+            return
+        if self.state == "browse":
+            self.handle_browser_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=browse")
             return
         if self.state == "wifi":
             self.handle_wifi_touch_up(normalized_pos)
@@ -722,6 +995,93 @@ class RaspberryPiTVMenu:
         self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 38)))
         self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 78)))
 
+    def draw_play(self):
+        asset_pack = self.assets["play"]
+        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
+        if asset is None:
+            self.draw_missing("menu/PlayMenu.png")
+            return
+        self.screen.blit(asset, (0, 0))
+
+        title = self.play_title_font.render("What to Watch", True, WHITE)
+        subtitle = self.small_font.render(self.play_status, True, GRAY)
+        random_text = self.play_label_font.render("Random", True, WHITE)
+        browse_text = self.play_label_font.render("Browse", True, WHITE)
+
+        self.screen.blit(title, title.get_rect(center=(self.width // 2 + 6, 106)))
+        self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, 150)))
+        self.screen.blit(random_text, random_text.get_rect(center=(372, 258)))
+        self.screen.blit(browse_text, browse_text.get_rect(center=(372, 387)))
+
+    def draw_browser(self):
+        layout = self.get_browser_layout()
+        self.screen.fill(BLACK)
+
+        selected_entry = self.get_selected_browser_entry()
+        action_label = "View"
+        if selected_entry:
+            action_label = "View" if selected_entry["action"] == "view" else "Browse"
+
+        for key, rect, color in (
+            ("Back", layout["back"], RED),
+            ("Up", layout["up"], MID_GRAY),
+            ("Down", layout["down"], MID_GRAY),
+            ("Close", layout["close"], RED),
+        ):
+            pygame.draw.rect(self.screen, color, rect)
+            label = self.small_font.render(key, True, WHITE)
+            self.screen.blit(label, label.get_rect(center=rect.center))
+
+        for key, rect, color in ((action_label, layout["action"], GREEN if selected_entry else MID_GRAY),):
+            pygame.draw.rect(self.screen, color, rect)
+            label = self.wifi_font.render(key, True, WHITE)
+            self.screen.blit(label, label.get_rect(center=rect.center))
+
+        path_text = self.truncate_text(f"Path: {self.rel_browser_path()}", self.small_font, layout["path"].width)
+        path_surface = self.small_font.render(path_text, True, WHITE)
+        self.screen.blit(path_surface, (layout["path"].x, layout["path"].y + 11))
+
+        pygame.draw.rect(self.screen, DARK_GRAY, layout["list"])
+        row_height = layout["list"].height / BROWSE_VISIBLE_ITEMS
+        visible_entries = self.browser_entries[self.browser_page_start:self.browser_page_start + BROWSE_VISIBLE_ITEMS]
+        for row_offset, entry in enumerate(visible_entries):
+            index = self.browser_page_start + row_offset
+            row_rect = pygame.Rect(
+                layout["list"].x + 6,
+                int(layout["list"].y + 6 + row_offset * row_height),
+                layout["list"].width - 12,
+                int(row_height - 8),
+            )
+            selected = index == self.browser_selected_index
+            pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
+            if entry["type"] == "parent":
+                entry_label = ".."
+                meta_label = "Go up"
+            else:
+                prefix = "[DIR] " if entry["type"] == "directory" else "[VID] "
+                entry_label = prefix + entry["label"]
+                if entry["type"] == "directory":
+                    noun = "video" if entry["video_count"] == 1 else "videos"
+                    meta_label = f"{entry['video_count']} {noun} · {entry['action'].title()}"
+                else:
+                    meta_label = "Single video"
+
+            entry_surface = self.browser_bold_font.render(
+                self.truncate_text(entry_label, self.browser_bold_font, row_rect.width - 20),
+                True,
+                WHITE,
+            )
+            meta_surface = self.small_font.render(
+                self.truncate_text(meta_label, self.small_font, row_rect.width - 20),
+                True,
+                GRAY,
+            )
+            self.screen.blit(entry_surface, (row_rect.x + 10, row_rect.y + 6))
+            self.screen.blit(meta_surface, (row_rect.x + 10, row_rect.y + 35))
+
+        status_surface = self.small_font.render(self.browser_status, True, GRAY)
+        self.screen.blit(status_surface, (20, self.height - 18))
+
     def draw(self):
         if self.state == "main":
             asset_pack = self.assets["main"]
@@ -746,6 +1106,10 @@ class RaspberryPiTVMenu:
                 self.screen.blit(self.qr_asset, (0, 0))
         elif self.state == "clock":
             self.draw_clock()
+        elif self.state == "play":
+            self.draw_play()
+        elif self.state == "browse":
+            self.draw_browser()
         elif self.state == "wifi":
             self.draw_wifi()
         elif self.state == "wifi_password":

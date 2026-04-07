@@ -1,0 +1,150 @@
+:root {
+  color-scheme: dark;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(255, 195, 77, 0.28), transparent 32%),
+    linear-gradient(180deg, #11263f 0%, #09121d 100%);
+  color: #f7f4ea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1.2rem;
+  background: linear-gradient(135deg, #ffd34d, #ff9f1c);
+  color: #14253d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.page-shell {
+  width: min(1160px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.hero-card,
+.panel {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 17, 28, 0.72);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+}
+
+.hero-card {
+  border-radius: 28px;
+  padding: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffd34d;
+  font-size: 0.78rem;
+}
+
+.hero-card h1 {
+  margin: 0;
+  max-width: 12ch;
+  font-size: clamp(2.2rem, 6vw, 4.6rem);
+  line-height: 0.95;
+}
+
+.lead {
+  max-width: 62ch;
+  color: #d8deeb;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.status-grid,
+.content-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.status-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 1.5rem;
+}
+
+.status-card {
+  border-radius: 22px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #9eb0c7;
+  font-size: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.message {
+  margin: 1rem 0 0;
+  color: #ffdca0;
+}
+
+.message.error {
+  color: #ff8d7e;
+}
+
+.content-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-top: 1rem;
+}
+
+.panel {
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.panel-wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    width: min(100% - 1rem, 100%);
+    padding-top: 1rem;
+  }
+
+  .hero-card,
+  .panel {
+    padding: 1.25rem;
+  }
+}
