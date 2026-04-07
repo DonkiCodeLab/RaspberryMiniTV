@@ -717,10 +717,10 @@ class RaspberryPiTVMenu:
         line_2 = self.poweroff_title_font.render(title_line_2, True, WHITE)
         shadow_1 = self.poweroff_title_font.render(title_line_1, True, BLACK)
         shadow_2 = self.poweroff_title_font.render(title_line_2, True, BLACK)
-        self.screen.blit(shadow_1, shadow_1.get_rect(center=(self.width // 2 + 1, 28 + 1)))
-        self.screen.blit(shadow_2, shadow_2.get_rect(center=(self.width // 2 + 1, 68 + 1)))
-        self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 28)))
-        self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 68)))
+        self.screen.blit(shadow_1, shadow_1.get_rect(center=(self.width // 2 + 1, 38 + 1)))
+        self.screen.blit(shadow_2, shadow_2.get_rect(center=(self.width // 2 + 1, 78 + 1)))
+        self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 38)))
+        self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 78)))
 
     def draw(self):
         if self.state == "main":
