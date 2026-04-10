@@ -291,6 +291,7 @@ class RaspberryPiTVMenu:
         self.wifi_password = ""
         self.wifi_status = "Scan and select a network"
         self.wifi_page_start = 0
+        self.wifi_keyboard_upper = True
         self.play_status = "Choose how you want to start watching"
         self.browser_path = VIDEOS_DIR
         self.browser_selected_index = 0
@@ -391,11 +392,19 @@ class RaspberryPiTVMenu:
         }
 
     def get_wifi_rows(self):
+        letters = [
+            list("QWERTYUIOP"),
+            list("ASDFGHJKL"),
+            list("ZXCVBNM"),
+        ]
+        if not self.wifi_keyboard_upper:
+            letters = [[char.lower() for char in row] for row in letters]
+
         return [
             [("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5"), ("6", "6"), ("7", "7"), ("8", "8"), ("9", "9"), ("0", "0")],
-            [("Q", "Q"), ("W", "W"), ("E", "E"), ("R", "R"), ("T", "T"), ("Y", "Y"), ("U", "U"), ("I", "I"), ("O", "O"), ("P", "P")],
-            [("A", "A"), ("S", "S"), ("D", "D"), ("F", "F"), ("G", "G"), ("H", "H"), ("J", "J"), ("K", "K"), ("L", "L"), ("<-", "BACKSPACE")],
-            [("Z", "Z"), ("X", "X"), ("C", "C"), ("V", "V"), ("B", "B"), ("N", "N"), ("M", "M"), (".", "."), ("SPACE", " "), ("CLR", "CLEAR")],
+            [(char, char) for char in letters[0]],
+            [(char, char) for char in letters[1]] + [("<-", "BACKSPACE")],
+            [(char, char) for char in letters[2]] + [(".", "."), ("aA" if self.wifi_keyboard_upper else "Aa", "TOGGLE_CASE"), ("CLR", "CLEAR")],
         ]
 
     def get_keyboard_key_at(self, pos):
@@ -815,6 +824,7 @@ class RaspberryPiTVMenu:
                         self.wifi_status = f"Already connected to {self.wifi_selected_ssid}"
                     else:
                         self.wifi_password = ""
+                        self.wifi_keyboard_upper = True
                         self.state = "wifi_password"
                 return
             if layout["list"].collidepoint(pos):
@@ -844,6 +854,8 @@ class RaspberryPiTVMenu:
                 return
             if key_value == "BACKSPACE":
                 self.wifi_password = self.wifi_password[:-1]
+            elif key_value == "TOGGLE_CASE":
+                self.wifi_keyboard_upper = not self.wifi_keyboard_upper
             elif key_value == "CLEAR":
                 self.wifi_password = ""
             else:
