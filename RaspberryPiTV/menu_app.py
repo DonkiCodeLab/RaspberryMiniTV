@@ -39,6 +39,7 @@ DARK_GRAY = (38, 38, 38)
 MID_GRAY = (70, 70, 70)
 GREEN = (72, 190, 120)
 RED = (210, 80, 80)
+FONT_FAMILY = "DejaVu Sans"
 BASE_WIDTH = 640
 BASE_HEIGHT = 480
 BUTTON_WIDTH = 186
@@ -229,18 +230,18 @@ class RaspberryPiTVMenu:
         pygame.mouse.set_visible(False)
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
-        self.font = pygame.font.SysFont("Arial", 28)
-        self.title_font = pygame.font.SysFont("Arial", 42, bold=True)
-        self.poweroff_title_font = pygame.font.SysFont("Arial", 34, bold=True)
-        self.clock_font = pygame.font.SysFont("Arial", 140, bold=True)
-        self.small_font = pygame.font.SysFont("Arial", 20)
-        self.wifi_font = pygame.font.SysFont("Arial", 24)
-        self.wifi_bold_font = pygame.font.SysFont("Arial", 24, bold=True)
-        self.play_title_font = pygame.font.SysFont("Arial", 34, bold=True)
-        self.play_label_font = pygame.font.SysFont("Arial", 26, bold=True)
-        self.browser_font = pygame.font.SysFont("Arial", 24)
-        self.browser_bold_font = pygame.font.SysFont("Arial", 24, bold=True)
-        self.video_button_font = pygame.font.SysFont("Arial", 30, bold=True)
+        self.font = pygame.font.SysFont(FONT_FAMILY, 28)
+        self.title_font = pygame.font.SysFont(FONT_FAMILY, 42, bold=True)
+        self.poweroff_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
+        self.clock_font = pygame.font.SysFont(FONT_FAMILY, 140, bold=True)
+        self.small_font = pygame.font.SysFont(FONT_FAMILY, 20)
+        self.wifi_font = pygame.font.SysFont(FONT_FAMILY, 24)
+        self.wifi_bold_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
+        self.play_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
+        self.play_label_font = pygame.font.SysFont(FONT_FAMILY, 26, bold=True)
+        self.browser_font = pygame.font.SysFont(FONT_FAMILY, 24)
+        self.browser_bold_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
+        self.video_button_font = pygame.font.SysFont(FONT_FAMILY, 30, bold=True)
         self.running = True
         self.state = "main"
         self.pressed_button = None
