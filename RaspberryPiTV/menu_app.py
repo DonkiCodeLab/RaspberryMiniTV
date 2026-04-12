@@ -26,7 +26,8 @@ POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
 PLAY_EXIT_NORMAL_PATH = os.path.join(MENU_DIR, "button_exit_normal.png")
 PLAY_EXIT_PRESSED_PATH = os.path.join(MENU_DIR, "button_exit_pressed.png")
-LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video.png")
+LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "loading.png")
+LOADING_VIDEO_ANIMATION_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
@@ -305,9 +306,11 @@ class RaspberryPiTVMenu:
         self.browser_entries = []
         self.browser_status = "Select a video or folder"
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
+        self.loading_animation_asset = load_image(LOADING_VIDEO_ANIMATION_PATH)
         self.loading_video_path = None
         self.loading_return_state = "play"
         self.loading_started_at = 0
+        self.loading_rotation = 0
         self.video_proc = None
         self.video_paused = False
         self.video_return_state = "play"
@@ -1117,8 +1120,14 @@ class RaspberryPiTVMenu:
             self.screen.blit(self.loading_asset, (0, 0))
         else:
             self.screen.fill(BLACK)
-            title = self.title_font.render("Loading video...", True, WHITE)
-            self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height // 2)))
+        if self.loading_animation_asset is not None:
+            self.loading_rotation = (self.loading_rotation + 2) % 360
+            rotated = pygame.transform.rotozoom(self.loading_animation_asset, -self.loading_rotation, 1.0)
+            rotated_rect = rotated.get_rect(center=(self.width // 2, self.height // 2))
+            self.screen.blit(rotated, rotated_rect)
+
+        title = self.title_font.render("Loading...", True, WHITE)
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height - 64)))
 
     def draw_play(self):
         asset_pack = self.assets["play"]
