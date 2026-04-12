@@ -63,6 +63,7 @@ PLAY_EXIT_LAYOUT = (22, 23, 60, 55)
 PLAY_RANDOM_LAYOUT = (183, 207, 272, 103)
 PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
 BROWSE_VISIBLE_ITEMS = 5
+LOADING_MIN_DURATION_MS = 1000
 
 
 def ensure_screen_on():
@@ -688,7 +689,7 @@ class RaspberryPiTVMenu:
     def maybe_start_pending_video(self):
         if self.state != "loading_video" or not self.loading_video_path:
             return
-        if pygame.time.get_ticks() - self.loading_started_at < 220:
+        if pygame.time.get_ticks() - self.loading_started_at < LOADING_MIN_DURATION_MS:
             return
         self.video_return_state = self.loading_return_state
         self.video_proc = subprocess.Popen(
@@ -1018,9 +1019,7 @@ class RaspberryPiTVMenu:
         self.screen.fill(BLACK)
         time_text = datetime.now().strftime("%H : %M")
         text_surface = self.clock_font.render(time_text, True, WHITE)
-        hint_surface = self.small_font.render("Tap anywhere to go back", True, GRAY)
         self.screen.blit(text_surface, text_surface.get_rect(center=(self.width // 2, self.height // 2 - 10)))
-        self.screen.blit(hint_surface, hint_surface.get_rect(center=(self.width // 2, self.height - 32)))
 
     def draw_wifi(self):
         layout = self.get_wifi_layout()
@@ -1134,7 +1133,7 @@ class RaspberryPiTVMenu:
             self.screen.fill(BLACK)
         if self.loading_spinner_asset is not None:
             self.loading_rotation = (self.loading_rotation + 2) % 360
-            rotated = pygame.transform.rotozoom(self.loading_spinner_asset, -self.loading_rotation, 0.42)
+            rotated = pygame.transform.rotozoom(self.loading_spinner_asset, -self.loading_rotation, 0.84)
             rotated_rect = rotated.get_rect(center=(self.width // 2, self.height // 2))
             self.screen.blit(rotated, rotated_rect)
 
