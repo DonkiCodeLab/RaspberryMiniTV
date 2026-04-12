@@ -1,4 +1,5 @@
 const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").trim();
+const WEB_PIN_STORAGE_KEY = "simpsonstv-web-pin";
 
 function getBaseUrl() {
   if (configuredBaseUrl) {
@@ -9,9 +10,11 @@ function getBaseUrl() {
 }
 
 async function request(path, options = {}) {
+  const storedPin = getStoredWebPin();
   const response = await fetch(`${getBaseUrl()}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(storedPin ? { "X-Web-Pin": storedPin } : {}),
       ...(options.headers || {}),
     },
     ...options,
@@ -21,7 +24,9 @@ async function request(path, options = {}) {
   const payload = text ? tryParseJson(text) : null;
 
   if (!response.ok) {
-    throw new Error(payload?.error || `HTTP ${response.status}`);
+    const error = new Error(payload?.error || `HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
 
   return payload;
@@ -37,6 +42,25 @@ function tryParseJson(value) {
 
 export function getApiBaseUrl() {
   return getBaseUrl();
+}
+
+export function getStoredWebPin() {
+  return window.sessionStorage.getItem(WEB_PIN_STORAGE_KEY) || "";
+}
+
+export function setStoredWebPin(pin) {
+  if (!pin) {
+    window.sessionStorage.removeItem(WEB_PIN_STORAGE_KEY);
+    return;
+  }
+  window.sessionStorage.setItem(WEB_PIN_STORAGE_KEY, pin);
+}
+
+export function authWebPin(pin) {
+  return request("/web/auth", {
+    method: "POST",
+    body: JSON.stringify({ pin }),
+  });
 }
 
 export function getHealth() {
@@ -71,3 +95,9 @@ export function volumeDown() {
   });
 }
 
+export function stopPlayback() {
+  return request("/stop", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}

@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import select
@@ -24,6 +25,8 @@ MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
+SETTINGS_MENU_PATH = os.path.join(MENU_DIR, "Settings_Menu.png")
+LANGUAGE_MENU_PATH = os.path.join(MENU_DIR, "Language_Menu.png")
 PLAY_EXIT_NORMAL_PATH = os.path.join(MENU_DIR, "button_exit_normal.png")
 PLAY_EXIT_PRESSED_PATH = os.path.join(MENU_DIR, "button_exit_pressed.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
@@ -31,6 +34,8 @@ LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
+TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
+USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 PORT = 5050
 VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
 BACKGROUND = (245, 245, 245)
@@ -64,6 +69,10 @@ PLAY_RANDOM_LAYOUT = (183, 207, 272, 103)
 PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
 BROWSE_VISIBLE_ITEMS = 5
 LOADING_MIN_DURATION_MS = 1000
+DEFAULT_SETTINGS = {
+    "language": "en",
+    "web_password": "1234",
+}
 
 
 def ensure_screen_on():
@@ -111,6 +120,20 @@ def generate_qr():
 
 def run_command(command):
     return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+
+
+def load_json_file(path, fallback):
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        return data if isinstance(data, type(fallback)) else fallback
+    except Exception:
+        return fallback
+
+
+def save_json_file(path, payload):
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, ensure_ascii=False)
 
 
 def is_video_file(filename):
@@ -168,14 +191,14 @@ def scan_wifi_networks():
 
 def connect_wifi(ssid, password):
     if not ssid:
-        return False, "Select a Wi-Fi network"
+        return False, "wifi.select_network"
 
     nmcli_base = ["nmcli", "dev", "wifi", "connect", ssid]
     if password:
         nmcli_base.extend(["password", password])
     nmcli_result = run_command(nmcli_base)
     if nmcli_result.returncode == 0:
-        return True, f"Connected to {ssid}"
+        return True, "wifi.connected"
 
     if password:
         add_result = run_command(["wpa_cli", "-i", "wlan0", "add_network"])
@@ -186,11 +209,11 @@ def connect_wifi(ssid, password):
             run_command(["wpa_cli", "-i", "wlan0", "enable_network", network_id])
             save_result = run_command(["wpa_cli", "-i", "wlan0", "save_config"])
             if save_result.returncode == 0:
-                return True, f"Trying to connect to {ssid}"
+                return True, "wifi.trying_to_connect"
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
-    return False, stderr or stdout or f"Could not connect to {ssid}"
+    return False, stderr or stdout or "wifi.could_not_connect"
 
 
 def get_connected_wifi_info():
@@ -246,6 +269,8 @@ class RaspberryPiTVMenu:
         self.browser_font = pygame.font.SysFont(FONT_FAMILY, 24)
         self.browser_bold_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
         self.video_button_font = pygame.font.SysFont(FONT_FAMILY, 30, bold=True)
+        self.translations = load_json_file(TRANSLATIONS_PATH, {})
+        self.config = self.load_settings()
         self.running = True
         self.state = "main"
         self.pressed_button = None
@@ -287,6 +312,24 @@ class RaspberryPiTVMenu:
                     "browse": os.path.join(MENU_DIR, "PlayMenu_ButtonBrowse_Pressed.png"),
                 },
             ),
+            "settings": self.prepare_screen_assets(
+                SETTINGS_MENU_PATH,
+                {
+                    "1x1": os.path.join(MENU_DIR, "Settings_Menu_Button_1x1_Pressed.png"),
+                    "1x2": os.path.join(MENU_DIR, "Settings_Menu_Button_1x2_Pressed.png"),
+                    "2x1": os.path.join(MENU_DIR, "Settings_Menu_Button_2x1_Pressed.png"),
+                    "2x2": os.path.join(MENU_DIR, "Settings_Menu_Button_2x2_Pressed.png"),
+                },
+            ),
+            "language": self.prepare_screen_assets(
+                LANGUAGE_MENU_PATH,
+                {
+                    "1x1": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Pressed.png"),
+                    "1x2": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Pressed.png"),
+                    "2x1": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Pressed.png"),
+                    "2x2": os.path.join(MENU_DIR, "Language_Menu_Button_2x2_Pressed.png"),
+                },
+            ),
         }
         play_exit_rect = self.get_play_button_rects()["exit"]
         self.play_exit_assets = {
@@ -297,15 +340,16 @@ class RaspberryPiTVMenu:
         self.wifi_networks = []
         self.wifi_selected_ssid = None
         self.wifi_password = ""
-        self.wifi_status = "Scan and select a network"
+        self.wifi_status = ""
         self.wifi_page_start = 0
         self.wifi_keyboard_upper = True
-        self.play_status = "Choose how you want to start watching"
+        self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
+        self.play_status = ""
         self.browser_path = VIDEOS_DIR
         self.browser_selected_index = 0
         self.browser_page_start = 0
         self.browser_entries = []
-        self.browser_status = "Select a video or folder"
+        self.browser_status = ""
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
         self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
         self.loading_video_path = None
@@ -318,10 +362,37 @@ class RaspberryPiTVMenu:
         self.video_now_playing = ""
         self.last_video_tap_at = 0
         self.video_double_tap_ms = 450
+        self.refresh_translated_state_texts()
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
         self.setup_touch_input()
+
+    def load_settings(self):
+        loaded = load_json_file(USER_SETTINGS_PATH, {})
+        settings = dict(DEFAULT_SETTINGS)
+        if isinstance(loaded, dict):
+            settings.update({key: value for key, value in loaded.items() if key in settings and isinstance(value, str)})
+        if not os.path.isfile(USER_SETTINGS_PATH):
+            save_json_file(USER_SETTINGS_PATH, settings)
+        return settings
+
+    def save_settings(self):
+        save_json_file(USER_SETTINGS_PATH, self.config)
+
+    def tr(self, key, **kwargs):
+        language = self.config.get("language", "en")
+        table = self.translations.get(language) or self.translations.get("en") or {}
+        value = table.get(key) or key
+        try:
+            return value.format(**kwargs)
+        except Exception:
+            return value
+
+    def refresh_translated_state_texts(self):
+        self.wifi_status = self.tr("wifi.scan_prompt")
+        self.play_status = self.tr("play.choose")
+        self.browser_status = self.tr("browser.select")
 
     def prepare_asset(self, path):
         image = load_image(path)
@@ -368,10 +439,10 @@ class RaspberryPiTVMenu:
         qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
         qr_surface.blit(qr_scaled, qr_rect)
 
-        title = self.title_font.render("Scan the QR", True, WHITE)
+        title = self.title_font.render(self.tr("qr.title"), True, WHITE)
         subtitle = self.font.render(self.qr_url, True, WHITE)
         wifi_line = self.small_font.render(
-            f"Wi-Fi: {connected_wifi}" if connected_wifi else "Wi-Fi: not connected",
+            self.tr("qr.wifi_connected", ssid=connected_wifi) if connected_wifi else self.tr("qr.wifi_not_connected"),
             True,
             WHITE,
         )
@@ -386,7 +457,7 @@ class RaspberryPiTVMenu:
         self.wifi_page_start = 0
         if self.wifi_selected_ssid and not any(item["ssid"] == self.wifi_selected_ssid for item in self.wifi_networks):
             self.wifi_selected_ssid = None
-        self.wifi_status = f"{len(self.wifi_networks)} networks found" if self.wifi_networks else "No networks found"
+        self.wifi_status = self.tr("wifi.networks_found", count=len(self.wifi_networks)) if self.wifi_networks else self.tr("wifi.no_networks")
 
     def get_wifi_layout(self):
         return {
@@ -420,7 +491,7 @@ class RaspberryPiTVMenu:
             [("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5"), ("6", "6"), ("7", "7"), ("8", "8"), ("9", "9"), ("0", "0")],
             [(char, char) for char in letters[0]],
             [(char, char) for char in letters[1]] + [("<-", "BACKSPACE")],
-            [(char, char) for char in letters[2]] + [(".", "."), ("Aa" if self.wifi_keyboard_upper else "aA", "TOGGLE_CASE"), ("CLR", "CLEAR")],
+            [(char, char) for char in letters[2]] + [(".", "."), ("Aa" if self.wifi_keyboard_upper else "aA", "TOGGLE_CASE"), (self.tr("common.clear"), "CLEAR")],
         ]
 
     def get_keyboard_key_at(self, pos):
@@ -555,7 +626,7 @@ class RaspberryPiTVMenu:
         if not self.browser_entries:
             self.browser_selected_index = 0
             self.browser_page_start = 0
-            self.browser_status = "No videos found in this folder"
+            self.browser_status = self.tr("browser.no_videos")
             return
 
         self.browser_selected_index = max(0, min(self.browser_selected_index, len(self.browser_entries) - 1))
@@ -565,7 +636,7 @@ class RaspberryPiTVMenu:
             self.browser_page_start = self.browser_selected_index
         if self.browser_selected_index >= self.browser_page_start + BROWSE_VISIBLE_ITEMS:
             self.browser_page_start = self.browser_selected_index - BROWSE_VISIBLE_ITEMS + 1
-        self.browser_status = "Select a video or folder"
+        self.browser_status = self.tr("browser.select")
 
     def move_browser_selection(self, delta):
         if not self.browser_entries:
@@ -615,7 +686,7 @@ class RaspberryPiTVMenu:
     def start_random_video(self):
         all_videos = self.get_entry_video_files(VIDEOS_DIR)
         if not all_videos:
-            self.play_status = "No videos found"
+            self.play_status = self.tr("browser.no_videos")
             return
         self.loading_return_state = "play"
         self.play_video_path(random.choice(all_videos))
@@ -739,8 +810,7 @@ class RaspberryPiTVMenu:
         log_debug(f"ACTION state={self.state} button={button_id}")
         if self.state == "main":
             if button_id == "1x1":
-                self.refresh_wifi_networks()
-                self.state = "wifi"
+                self.state = "settings"
             elif button_id == "1x2":
                 self.refresh_qr_asset()
                 self.state = "qr"
@@ -748,6 +818,35 @@ class RaspberryPiTVMenu:
                 self.state = "play"
             elif button_id == "2x2":
                 self.state = "more"
+        elif self.state == "settings":
+            if button_id == "1x1":
+                self.refresh_wifi_networks()
+                self.state = "wifi"
+            elif button_id == "1x2":
+                self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
+                self.state = "web_pin"
+            elif button_id == "2x1":
+                self.state = "language"
+            elif button_id == "2x2":
+                self.state = "main"
+        elif self.state == "language":
+            if button_id == "1x1":
+                self.config["language"] = "en"
+                self.save_settings()
+                self.refresh_translated_state_texts()
+                self.qr_asset = None
+            elif button_id == "1x2":
+                self.config["language"] = "ca"
+                self.save_settings()
+                self.refresh_translated_state_texts()
+                self.qr_asset = None
+            elif button_id == "2x1":
+                self.config["language"] = "es"
+                self.save_settings()
+                self.refresh_translated_state_texts()
+                self.qr_asset = None
+            elif button_id == "2x2":
+                self.state = "settings"
         elif self.state == "more":
             if button_id == "1x2":
                 self.state = "clock"
@@ -837,13 +936,13 @@ class RaspberryPiTVMenu:
                 self.move_wifi_page(1)
                 return
             if layout["back"].collidepoint(pos):
-                self.state = "main"
+                self.state = "settings"
                 return
             if layout["connect"].collidepoint(pos):
                 if self.wifi_selected_ssid:
                     current_ssid = get_connected_wifi_info()
                     if self.wifi_selected_ssid == current_ssid:
-                        self.wifi_status = f"Already connected to {self.wifi_selected_ssid}"
+                        self.wifi_status = self.tr("wifi.already_connected", ssid=self.wifi_selected_ssid)
                     else:
                         self.wifi_password = ""
                         self.wifi_keyboard_upper = True
@@ -855,7 +954,7 @@ class RaspberryPiTVMenu:
                 index = self.wifi_page_start + row_index
                 if 0 <= index < len(self.wifi_networks):
                     self.wifi_selected_ssid = self.wifi_networks[index]["ssid"]
-                    self.wifi_status = f"Selected: {self.wifi_selected_ssid}"
+                    self.wifi_status = self.tr("wifi.selected", ssid=self.wifi_selected_ssid)
                 return
 
         if self.state == "wifi_password":
@@ -865,7 +964,7 @@ class RaspberryPiTVMenu:
                 return
             if layout["connect"].collidepoint(pos):
                 success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
-                self.wifi_status = message
+                self.wifi_status = self.tr(message, ssid=self.wifi_selected_ssid) if "." in message else message
                 if success:
                     self.state = "wifi"
                     self.refresh_wifi_networks()
@@ -883,6 +982,63 @@ class RaspberryPiTVMenu:
             else:
                 self.wifi_password += key_value
 
+    def get_web_pin_layout(self):
+        return {
+            "title": pygame.Rect(20, 18, self.width - 40, 40),
+            "value": pygame.Rect(140, 78, self.width - 280, 58),
+            "save": pygame.Rect(110, 154, 180, 52),
+            "back": pygame.Rect(350, 154, 180, 52),
+            "keyboard": pygame.Rect(80, 230, self.width - 160, self.height - 250),
+        }
+
+    def get_web_pin_rows(self):
+        return [
+            [("1", "1"), ("2", "2"), ("3", "3")],
+            [("4", "4"), ("5", "5"), ("6", "6")],
+            [("7", "7"), ("8", "8"), ("9", "9")],
+            [(self.tr("common.clear"), "CLEAR"), ("0", "0"), (self.tr("common.delete"), "BACKSPACE")],
+        ]
+
+    def get_web_pin_key_at(self, pos):
+        layout = self.get_web_pin_layout()
+        keyboard_rect = layout["keyboard"]
+        if not keyboard_rect.collidepoint(pos):
+            return None
+        rows = self.get_web_pin_rows()
+        row_height = keyboard_rect.height / len(rows)
+        row_index = max(0, min(len(rows) - 1, int((pos[1] - keyboard_rect.y) / row_height)))
+        row = rows[row_index]
+        key_width = keyboard_rect.width / len(row)
+        col_index = max(0, min(len(row) - 1, int((pos[0] - keyboard_rect.x) / key_width)))
+        return row[col_index][1]
+
+    def handle_web_pin_touch_down(self, pos):
+        self.pressed_button = "web-pin-touch"
+        log_debug(f"WEB PIN DOWN pos={pos} value={self.web_pin_value}")
+
+    def handle_web_pin_touch_up(self, pos):
+        self.pressed_button = None
+        layout = self.get_web_pin_layout()
+        if layout["back"].collidepoint(pos):
+            self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
+            self.state = "settings"
+            return
+        if layout["save"].collidepoint(pos):
+            if len(self.web_pin_value) == 4:
+                self.config["web_password"] = self.web_pin_value
+                self.save_settings()
+                self.state = "settings"
+            return
+        key_value = self.get_web_pin_key_at(pos)
+        if key_value is None:
+            return
+        if key_value == "CLEAR":
+            self.web_pin_value = ""
+        elif key_value == "BACKSPACE":
+            self.web_pin_value = self.web_pin_value[:-1]
+        elif len(self.web_pin_value) < 4:
+            self.web_pin_value += key_value
+
     def handle_touch_down(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
         self.touch_down_pos = normalized_pos
@@ -893,6 +1049,14 @@ class RaspberryPiTVMenu:
         if self.state == "poweroff":
             self.pressed_button = self.poweroff_button_at_pos(normalized_pos)
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=poweroff pressed={self.pressed_button}")
+            return
+        if self.state == "settings":
+            self.pressed_button = self.button_at_pos(normalized_pos)
+            log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=settings pressed={self.pressed_button}")
+            return
+        if self.state == "language":
+            self.pressed_button = self.button_at_pos(normalized_pos)
+            log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=language pressed={self.pressed_button}")
             return
         if self.state == "video":
             self.handle_video_touch_down(normalized_pos)
@@ -909,6 +1073,9 @@ class RaspberryPiTVMenu:
             return
         if self.state == "wifi_password":
             self.handle_wifi_touch_down(normalized_pos)
+            return
+        if self.state == "web_pin":
+            self.handle_web_pin_touch_down(normalized_pos)
             return
         if self.state == "qr":
             self.pressed_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
@@ -941,6 +1108,22 @@ class RaspberryPiTVMenu:
             if active_button and active_button == released_button:
                 self.handle_poweroff_action(active_button)
             return
+        if self.state == "settings":
+            released_button = self.button_at_pos(normalized_pos)
+            active_button = self.pressed_button
+            self.pressed_button = None
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=settings down={active_button} up={released_button}")
+            if active_button and active_button == released_button:
+                self.handle_button_action(active_button)
+            return
+        if self.state == "language":
+            released_button = self.button_at_pos(normalized_pos)
+            active_button = self.pressed_button
+            self.pressed_button = None
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=language down={active_button} up={released_button}")
+            if active_button and active_button == released_button:
+                self.handle_button_action(active_button)
+            return
         if self.state == "video":
             self.handle_video_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=video paused={self.video_paused}")
@@ -966,6 +1149,10 @@ class RaspberryPiTVMenu:
         if self.state == "wifi_password":
             self.handle_wifi_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=wifi_password")
+            return
+        if self.state == "web_pin":
+            self.handle_web_pin_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=web_pin value={self.web_pin_value}")
             return
         if self.state == "qr":
             active_button = self.pressed_button
@@ -1010,7 +1197,7 @@ class RaspberryPiTVMenu:
 
     def draw_missing(self, message):
         self.screen.fill((20, 20, 20))
-        title = self.title_font.render("Missing asset", True, (255, 255, 255))
+        title = self.title_font.render(self.tr("common.missing_asset"), True, (255, 255, 255))
         subtitle = self.font.render(message, True, (220, 220, 220))
         self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height // 2 - 30)))
         self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, self.height // 2 + 20)))
@@ -1025,7 +1212,7 @@ class RaspberryPiTVMenu:
         layout = self.get_wifi_layout()
         self.screen.fill(BLACK)
 
-        title = self.title_font.render("Wi-Fi", True, WHITE)
+        title = self.title_font.render(self.tr("wifi.title"), True, WHITE)
         self.screen.blit(title, (20, 10))
 
         list_rect = layout["list"]
@@ -1055,14 +1242,14 @@ class RaspberryPiTVMenu:
             self.screen.blit(power, power.get_rect(midright=(row_rect.right - 10, row_rect.y + row_rect.height / 2)))
 
         for key, rect, color in (
-            ("Refresh", layout["refresh"], MID_GRAY),
-            ("Connect", layout["connect"], GREEN if self.wifi_selected_ssid else MID_GRAY),
-            ("Back", layout["back"], RED),
-            ("Up", layout["up"], MID_GRAY),
-            ("Down", layout["down"], MID_GRAY),
+            (self.tr("common.refresh"), layout["refresh"], MID_GRAY),
+            (self.tr("common.connect"), layout["connect"], GREEN if self.wifi_selected_ssid else MID_GRAY),
+            (self.tr("common.back"), layout["back"], RED),
+            (self.tr("common.up"), layout["up"], MID_GRAY),
+            (self.tr("common.down"), layout["down"], MID_GRAY),
         ):
             pygame.draw.rect(self.screen, color, rect)
-            label_font = self.wifi_font if key in {"Refresh", "Connect", "Back"} else self.small_font
+            label_font = self.wifi_font if key in {self.tr("common.refresh"), self.tr("common.connect"), self.tr("common.back")} else self.small_font
             label = label_font.render(key, True, WHITE)
             self.screen.blit(label, label.get_rect(center=rect.center))
 
@@ -1070,11 +1257,11 @@ class RaspberryPiTVMenu:
         layout = self.get_wifi_password_layout()
         self.screen.fill(BLACK)
 
-        title = self.title_font.render("Connect Wi-Fi", True, WHITE)
+        title = self.title_font.render(self.tr("wifi.connect_title"), True, WHITE)
         self.screen.blit(title, (20, 10))
 
         selected_text = self.small_font.render(
-            f"Enter password for: {self.wifi_selected_ssid or 'none'}",
+            self.tr("wifi.enter_password_for", ssid=self.wifi_selected_ssid or self.tr("common.none")),
             True,
             WHITE,
         )
@@ -1085,8 +1272,8 @@ class RaspberryPiTVMenu:
         self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 8))
 
         for key, rect, color in (
-            ("Connect", layout["connect"], GREEN),
-            ("Back", layout["back"], RED),
+            (self.tr("common.connect"), layout["connect"], GREEN),
+            (self.tr("common.back"), layout["back"], RED),
         ):
             pygame.draw.rect(self.screen, color, rect)
             label = self.wifi_font.render(key, True, WHITE)
@@ -1115,8 +1302,8 @@ class RaspberryPiTVMenu:
             self.draw_missing("menu/PowerOff_Menu.png")
             return
         self.screen.blit(asset, (0, 0))
-        title_line_1 = "Do you really want to"
-        title_line_2 = "turn off Raspberry Pi TV?"
+        title_line_1 = self.tr("poweroff.line1")
+        title_line_2 = self.tr("poweroff.line2")
         line_1 = self.poweroff_title_font.render(title_line_1, True, WHITE)
         line_2 = self.poweroff_title_font.render(title_line_2, True, WHITE)
         shadow_1 = self.poweroff_title_font.render(title_line_1, True, BLACK)
@@ -1133,11 +1320,11 @@ class RaspberryPiTVMenu:
             self.screen.fill(BLACK)
         if self.loading_spinner_asset is not None:
             self.loading_rotation = (self.loading_rotation + 2) % 360
-            rotated = pygame.transform.rotozoom(self.loading_spinner_asset, -self.loading_rotation, 0.84)
+            rotated = pygame.transform.rotozoom(self.loading_spinner_asset, -self.loading_rotation, 0.924)
             rotated_rect = rotated.get_rect(center=(self.width // 2, self.height // 2))
             self.screen.blit(rotated, rotated_rect)
 
-        title = self.title_font.render("Loading...", True, WHITE)
+        title = self.title_font.render(self.tr("loading.title"), True, WHITE)
         self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height - 64)))
 
     def draw_top_back_button(self):
@@ -1159,28 +1346,84 @@ class RaspberryPiTVMenu:
         if exit_asset is not None:
             self.screen.blit(exit_asset, exit_rect)
 
-        title = self.play_title_font.render("What to Watch", True, WHITE)
-        random_text = self.play_label_font.render("Random", True, WHITE)
-        browse_text = self.play_label_font.render("Browse", True, WHITE)
+        title = self.play_title_font.render(self.tr("play.title"), True, WHITE)
+        random_text = self.play_label_font.render(self.tr("play.random"), True, WHITE)
+        browse_text = self.play_label_font.render(self.tr("play.browse"), True, WHITE)
 
         self.screen.blit(title, title.get_rect(center=(self.width // 2 + 6, 106)))
         self.screen.blit(random_text, random_text.get_rect(center=(372, 258)))
         self.screen.blit(browse_text, browse_text.get_rect(center=(372, 387)))
+
+    def draw_settings(self):
+        asset_pack = self.assets["settings"]
+        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
+        if asset is None:
+            self.draw_missing("menu/Settings_Menu.png")
+            return
+        self.screen.blit(asset, (0, 0))
+
+    def draw_language(self):
+        asset_pack = self.assets["language"]
+        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
+        if asset is None:
+            self.draw_missing("menu/Language_Menu.png")
+            return
+        self.screen.blit(asset, (0, 0))
+        title = self.font.render(self.tr("language.title"), True, WHITE)
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, 34)))
+
+    def draw_web_pin(self):
+        layout = self.get_web_pin_layout()
+        self.screen.fill(BLACK)
+        title = self.title_font.render(self.tr("web_pin.title"), True, WHITE)
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, 34)))
+
+        subtitle = self.font.render(self.tr("web_pin.subtitle"), True, WHITE)
+        self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, 78)))
+
+        pygame.draw.rect(self.screen, WHITE, layout["value"], 2)
+        value_text = self.clock_font.render(self.web_pin_value or "----", True, WHITE)
+        scaled = pygame.transform.smoothscale(value_text, (layout["value"].width - 20, layout["value"].height - 10))
+        self.screen.blit(scaled, scaled.get_rect(center=layout["value"].center))
+
+        for key, rect, color in (
+            (self.tr("common.save"), layout["save"], GREEN if len(self.web_pin_value) == 4 else MID_GRAY),
+            (self.tr("common.back"), layout["back"], RED),
+        ):
+            pygame.draw.rect(self.screen, color, rect)
+            label = self.wifi_font.render(key, True, WHITE)
+            self.screen.blit(label, label.get_rect(center=rect.center))
+
+        keyboard_rect = layout["keyboard"]
+        rows = self.get_web_pin_rows()
+        row_height = keyboard_rect.height / len(rows)
+        for row_index, row in enumerate(rows):
+            key_width = keyboard_rect.width / len(row)
+            for col_index, (label, _value) in enumerate(row):
+                rect = pygame.Rect(
+                    int(keyboard_rect.x + col_index * key_width + 2),
+                    int(keyboard_rect.y + row_index * row_height + 2),
+                    int(key_width - 4),
+                    int(row_height - 4),
+                )
+                pygame.draw.rect(self.screen, MID_GRAY, rect)
+                text_surface = self.small_font.render(label, True, WHITE)
+                self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
     def draw_browser(self):
         layout = self.get_browser_layout()
         self.screen.fill(BLACK)
 
         selected_entry = self.get_selected_browser_entry()
-        action_label = "View"
+        action_label = self.tr("browser.view")
         if selected_entry:
-            action_label = "View" if selected_entry["action"] == "view" else "Browse"
+            action_label = self.tr("browser.view") if selected_entry["action"] == "view" else self.tr("browser.browse")
 
         for key, rect, color in (
-            ("Back", layout["back"], RED),
-            ("Up", layout["up"], MID_GRAY),
-            ("Down", layout["down"], MID_GRAY),
-            ("Close", layout["close"], RED),
+            (self.tr("common.back"), layout["back"], RED),
+            (self.tr("common.up"), layout["up"], MID_GRAY),
+            (self.tr("common.down"), layout["down"], MID_GRAY),
+            (self.tr("common.close"), layout["close"], RED),
         ):
             pygame.draw.rect(self.screen, color, rect)
             label = self.small_font.render(key, True, WHITE)
@@ -1191,7 +1434,7 @@ class RaspberryPiTVMenu:
             label = self.wifi_font.render(key, True, WHITE)
             self.screen.blit(label, label.get_rect(center=rect.center))
 
-        path_text = self.truncate_text(f"Path: {self.rel_browser_path()}", self.small_font, layout["path"].width)
+        path_text = self.truncate_text(self.tr("browser.path", path=self.rel_browser_path()), self.small_font, layout["path"].width)
         path_surface = self.small_font.render(path_text, True, WHITE)
         self.screen.blit(path_surface, (layout["path"].x, layout["path"].y + 11))
 
@@ -1210,15 +1453,16 @@ class RaspberryPiTVMenu:
             pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
             if entry["type"] == "parent":
                 entry_label = ".."
-                meta_label = "Go up"
+                meta_label = self.tr("browser.go_up")
             else:
-                prefix = "[DIR] " if entry["type"] == "directory" else "[VID] "
+                prefix = f"[{self.tr('browser.dir_prefix')}] " if entry["type"] == "directory" else f"[{self.tr('browser.file_prefix')}] "
                 entry_label = prefix + entry["label"]
                 if entry["type"] == "directory":
-                    noun = "video" if entry["video_count"] == 1 else "videos"
-                    meta_label = f"{entry['video_count']} {noun} · {entry['action'].title()}"
+                    noun = self.tr("browser.video") if entry["video_count"] == 1 else self.tr("browser.videos")
+                    action_label = self.tr("browser.view") if entry["action"] == "view" else self.tr("browser.browse")
+                    meta_label = f"{entry['video_count']} {noun} · {action_label}"
                 else:
-                    meta_label = "Single video"
+                    meta_label = self.tr("browser.single_video")
 
             entry_surface = self.browser_bold_font.render(
                 self.truncate_text(entry_label, self.browser_bold_font, row_rect.width - 20),
@@ -1262,6 +1506,10 @@ class RaspberryPiTVMenu:
         elif self.state == "clock":
             self.draw_clock()
             self.draw_top_back_button()
+        elif self.state == "settings":
+            self.draw_settings()
+        elif self.state == "language":
+            self.draw_language()
         elif self.state == "loading_video":
             self.draw_loading_video()
         elif self.state == "video":
@@ -1274,6 +1522,8 @@ class RaspberryPiTVMenu:
             self.draw_wifi()
         elif self.state == "wifi_password":
             self.draw_wifi_password()
+        elif self.state == "web_pin":
+            self.draw_web_pin()
         elif self.state == "poweroff":
             self.draw_poweroff()
 

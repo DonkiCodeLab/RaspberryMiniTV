@@ -4,6 +4,7 @@ import socket
 import subprocess
 import threading
 import time
+import json
 
 from flask import Flask, jsonify, request
 
@@ -12,6 +13,11 @@ VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
 EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/simpsonstv_qr.png"
+USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
+DEFAULT_SETTINGS = {
+    "language": "en",
+    "web_password": "1234",
+}
 
 app = Flask(__name__)
 
@@ -19,6 +25,42 @@ lock = threading.Lock()
 current = {"proc": None, "id": None, "directory": None, "file": None}
 qr_proc = {"proc": None}
 qr_visible = {"shown": False}
+
+
+def load_settings():
+    settings = dict(DEFAULT_SETTINGS)
+    try:
+        with open(USER_SETTINGS_PATH, "r", encoding="utf-8") as handle:
+            loaded = json.load(handle)
+        if isinstance(loaded, dict):
+            settings.update(
+                {
+                    key: value
+                    for key, value in loaded.items()
+                    if key in settings and isinstance(value, str)
+                }
+            )
+    except Exception:
+        pass
+    return settings
+
+
+def current_web_pin():
+    return load_settings().get("web_password", DEFAULT_SETTINGS["web_password"])
+
+
+def is_authorized_request():
+    submitted_pin = request.headers.get("X-Web-Pin", "").strip()
+    return submitted_pin == current_web_pin()
+
+
+@app.before_request
+def require_web_pin():
+    if request.path in {"/web/auth", "/ip"}:
+        return None
+    if is_authorized_request():
+        return None
+    return jsonify({"error": "Unauthorized"}), 401
 
 
 def get_local_ip():
@@ -378,6 +420,15 @@ def now():
 @app.route("/ip", methods=["GET"])
 def ip():
     return jsonify({"ip": get_local_ip(), "port": PORT})
+
+
+@app.route("/web/auth", methods=["POST"])
+def web_auth():
+    data = request.get_json(force=True, silent=True) or {}
+    submitted_pin = str(data.get("pin") or "").strip()
+    if submitted_pin == current_web_pin():
+        return jsonify({"ok": True})
+    return jsonify({"error": "Invalid PIN"}), 401
 
 
 @app.route("/health", methods=["GET"])
