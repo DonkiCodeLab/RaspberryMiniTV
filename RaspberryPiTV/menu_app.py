@@ -24,6 +24,8 @@ MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
+PLAY_EXIT_NORMAL_PATH = os.path.join(MENU_DIR, "button_exit_normal.png")
+PLAY_EXIT_PRESSED_PATH = os.path.join(MENU_DIR, "button_exit_pressed.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
@@ -279,11 +281,15 @@ class RaspberryPiTVMenu:
             "play": self.prepare_screen_assets(
                 PLAYMENU_PATH,
                 {
-                    "exit": os.path.join(MENU_DIR, "PlayMenu_ButtonExit_Pressed.png"),
                     "random": os.path.join(MENU_DIR, "PlayMenu_ButtonRandom_Pressed.png"),
                     "browse": os.path.join(MENU_DIR, "PlayMenu_ButtonBrowse_Pressed.png"),
                 },
             ),
+        }
+        play_exit_rect = self.get_play_button_rects()["exit"]
+        self.play_exit_assets = {
+            "default": self.prepare_button_asset(PLAY_EXIT_NORMAL_PATH, play_exit_rect),
+            "pressed": self.prepare_button_asset(PLAY_EXIT_PRESSED_PATH, play_exit_rect),
         }
         self.qr_asset = None
         self.wifi_networks = []
@@ -324,6 +330,12 @@ class RaspberryPiTVMenu:
             "default": self.prepare_asset(default_path),
             "pressed": {button_id: self.prepare_asset(path) for button_id, path in pressed_paths.items()},
         }
+
+    def prepare_button_asset(self, path, rect):
+        image = load_image(path)
+        if image is None:
+            return None
+        return fit_image(image, rect.size)
 
     def setup_touch_input(self):
         if InputDevice is None:
@@ -404,7 +416,7 @@ class RaspberryPiTVMenu:
             [("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5"), ("6", "6"), ("7", "7"), ("8", "8"), ("9", "9"), ("0", "0")],
             [(char, char) for char in letters[0]],
             [(char, char) for char in letters[1]] + [("<-", "BACKSPACE")],
-            [(char, char) for char in letters[2]] + [(".", "."), ("aA" if self.wifi_keyboard_upper else "Aa", "TOGGLE_CASE"), ("CLR", "CLEAR")],
+            [(char, char) for char in letters[2]] + [(".", "."), ("Aa" if self.wifi_keyboard_upper else "aA", "TOGGLE_CASE"), ("CLR", "CLEAR")],
         ]
 
     def get_keyboard_key_at(self, pos):
@@ -1110,19 +1122,22 @@ class RaspberryPiTVMenu:
 
     def draw_play(self):
         asset_pack = self.assets["play"]
-        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
+        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button in {"random", "browse"} else asset_pack["default"]
         if asset is None:
             self.draw_missing("menu/PlayMenu.png")
             return
         self.screen.blit(asset, (0, 0))
 
+        exit_rect = self.get_play_button_rects()["exit"]
+        exit_asset = self.play_exit_assets["pressed"] if self.pressed_button == "exit" else self.play_exit_assets["default"]
+        if exit_asset is not None:
+            self.screen.blit(exit_asset, exit_rect)
+
         title = self.play_title_font.render("What to Watch", True, WHITE)
-        subtitle = self.small_font.render(self.play_status, True, GRAY)
         random_text = self.play_label_font.render("Random", True, WHITE)
         browse_text = self.play_label_font.render("Browse", True, WHITE)
 
         self.screen.blit(title, title.get_rect(center=(self.width // 2 + 6, 106)))
-        self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, 150)))
         self.screen.blit(random_text, random_text.get_rect(center=(372, 258)))
         self.screen.blit(browse_text, browse_text.get_rect(center=(372, 387)))
 
