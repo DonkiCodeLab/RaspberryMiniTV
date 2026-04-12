@@ -26,8 +26,8 @@ POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
 PLAY_EXIT_NORMAL_PATH = os.path.join(MENU_DIR, "button_exit_normal.png")
 PLAY_EXIT_PRESSED_PATH = os.path.join(MENU_DIR, "button_exit_pressed.png")
-LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "loading.png")
-LOADING_VIDEO_ANIMATION_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
+LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
+LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
@@ -306,7 +306,7 @@ class RaspberryPiTVMenu:
         self.browser_entries = []
         self.browser_status = "Select a video or folder"
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
-        self.loading_animation_asset = load_image(LOADING_VIDEO_ANIMATION_PATH)
+        self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
         self.loading_video_path = None
         self.loading_return_state = "play"
         self.loading_started_at = 0
@@ -466,6 +466,12 @@ class RaspberryPiTVMenu:
             "random": self.scale_rect(*PLAY_RANDOM_LAYOUT),
             "browse": self.scale_rect(*PLAY_BROWSE_LAYOUT),
         }
+
+    def get_top_back_rect(self):
+        return self.get_play_button_rects()["exit"]
+
+    def top_back_at_pos(self, pos):
+        return self.get_top_back_rect().collidepoint(pos)
 
     def play_button_at_pos(self, pos):
         x, y = pos
@@ -880,8 +886,8 @@ class RaspberryPiTVMenu:
         normalized_pos = self.normalize_touch_pos(pos)
         self.touch_down_pos = normalized_pos
         if self.state == "clock":
-            self.pressed_button = "clock-anywhere"
-            log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=clock pressed=clock-anywhere")
+            self.pressed_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
+            log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=clock pressed={self.pressed_button}")
             return
         if self.state == "poweroff":
             self.pressed_button = self.poweroff_button_at_pos(normalized_pos)
@@ -904,7 +910,7 @@ class RaspberryPiTVMenu:
             self.handle_wifi_touch_down(normalized_pos)
             return
         if self.state == "qr":
-            self.pressed_button = "qr-anywhere"
+            self.pressed_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
             log_debug(
                 f"DOWN raw={pos} normalized={normalized_pos} state={self.state} pressed={self.pressed_button}"
             )
@@ -916,10 +922,13 @@ class RaspberryPiTVMenu:
 
     def handle_touch_up(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
-        if self.state == "clock" and self.pressed_button == "clock-anywhere":
+        if self.state == "clock":
+            active_button = self.pressed_button
+            released_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
             self.pressed_button = None
-            log_debug(f"UP raw={pos} normalized={normalized_pos} state=clock down=clock-anywhere up=clock-anywhere")
-            self.state = "more"
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=clock down={active_button} up={released_button}")
+            if active_button == "top-back" and released_button == "top-back":
+                self.state = "more"
             return
         if self.state == "poweroff":
             released_button = self.poweroff_button_at_pos(normalized_pos)
@@ -957,12 +966,15 @@ class RaspberryPiTVMenu:
             self.handle_wifi_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=wifi_password")
             return
-        if self.state == "qr" and self.pressed_button == "qr-anywhere":
+        if self.state == "qr":
+            active_button = self.pressed_button
+            released_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
             self.pressed_button = None
             log_debug(
-                f"UP raw={pos} normalized={normalized_pos} state=qr down=qr-anywhere up=qr-anywhere"
+                f"UP raw={pos} normalized={normalized_pos} state=qr down={active_button} up={released_button}"
             )
-            self.state = "main"
+            if active_button == "top-back" and released_button == "top-back":
+                self.state = "main"
             return
         released_button = self.button_at_pos(normalized_pos)
         active_button = self.pressed_button
@@ -1120,14 +1132,20 @@ class RaspberryPiTVMenu:
             self.screen.blit(self.loading_asset, (0, 0))
         else:
             self.screen.fill(BLACK)
-        if self.loading_animation_asset is not None:
+        if self.loading_spinner_asset is not None:
             self.loading_rotation = (self.loading_rotation + 2) % 360
-            rotated = pygame.transform.rotozoom(self.loading_animation_asset, -self.loading_rotation, 1.0)
+            rotated = pygame.transform.rotozoom(self.loading_spinner_asset, -self.loading_rotation, 0.42)
             rotated_rect = rotated.get_rect(center=(self.width // 2, self.height // 2))
             self.screen.blit(rotated, rotated_rect)
 
         title = self.title_font.render("Loading...", True, WHITE)
         self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height - 64)))
+
+    def draw_top_back_button(self):
+        back_rect = self.get_top_back_rect()
+        back_asset = self.play_exit_assets["pressed"] if self.pressed_button == "top-back" else self.play_exit_assets["default"]
+        if back_asset is not None:
+            self.screen.blit(back_asset, back_rect)
 
     def draw_play(self):
         asset_pack = self.assets["play"]
@@ -1241,8 +1259,10 @@ class RaspberryPiTVMenu:
                 self.draw_missing("QR")
             else:
                 self.screen.blit(self.qr_asset, (0, 0))
+                self.draw_top_back_button()
         elif self.state == "clock":
             self.draw_clock()
+            self.draw_top_back_button()
         elif self.state == "loading_video":
             self.draw_loading_video()
         elif self.state == "video":
