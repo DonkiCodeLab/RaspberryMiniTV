@@ -606,8 +606,8 @@ class RaspberryPiTVMenu:
             wifi_y = qr_rect.bottom + 78
         else:
             fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
-            pygame.draw.rect(qr_surface, DARK_GRAY, fallback_box, border_radius=24)
-            pygame.draw.rect(qr_surface, MID_GRAY, fallback_box, 2, border_radius=24)
+            pygame.draw.rect(qr_surface, DARK_GRAY, fallback_box, 0, 24)
+            pygame.draw.rect(qr_surface, MID_GRAY, fallback_box, 2, 24)
             fallback_label = self.font.render(self.qr_url, True, WHITE)
             qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
             subtitle_y = fallback_box.bottom + 38
@@ -627,8 +627,8 @@ class RaspberryPiTVMenu:
 
     def get_wifi_layout(self):
         list_rect = pygame.Rect(20, 108, 490, 236)
-        arrow_width = 62
-        arrow_height = 42
+        arrow_width = 81
+        arrow_height = 55
         arrow_gap = 18
         group_height = (arrow_height * 2) + arrow_gap
         group_top = int(list_rect.centery - group_height / 2)
@@ -739,8 +739,8 @@ class RaspberryPiTVMenu:
 
     def get_browser_layout(self):
         list_rect = pygame.Rect(20, 108, 490, 236)
-        arrow_width = 62
-        arrow_height = 42
+        arrow_width = 81
+        arrow_height = 55
         arrow_gap = 18
         group_height = (arrow_height * 2) + arrow_gap
         group_top = int(list_rect.centery - group_height / 2)
@@ -1530,7 +1530,7 @@ class RaspberryPiTVMenu:
                 if scaled_icon is not None:
                     if not enabled:
                         scaled_icon = scaled_icon.copy()
-                        scaled_icon.set_alpha(128)
+                        scaled_icon.set_alpha(90)
                     self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
 
         connect_enabled = bool(self.wifi_selected_ssid)
@@ -1718,7 +1718,7 @@ class RaspberryPiTVMenu:
                 cell_width,
                 cell_height,
             )
-            pygame.draw.rect(self.screen, WHITE, cell_rect, 2, border_radius=10)
+            pygame.draw.rect(self.screen, WHITE, cell_rect, 2, 10)
             digit = self.web_pin_value[index] if index < len(self.web_pin_value) else "_"
             digit_surface = self.title_font.render(digit, True, WHITE)
             self.screen.blit(digit_surface, digit_surface.get_rect(center=cell_rect.center))
@@ -1732,7 +1732,7 @@ class RaspberryPiTVMenu:
             self.screen.blit(save_surface, layout["save"])
         else:
             save_color = GREEN if save_enabled else MID_GRAY
-            pygame.draw.rect(self.screen, save_color, layout["save"], border_radius=16)
+            pygame.draw.rect(self.screen, save_color, layout["save"], 0, 16)
 
         save_label = self.wifi_font.render(self.tr("common.save"), True, WHITE)
         if not save_enabled:
@@ -1755,7 +1755,7 @@ class RaspberryPiTVMenu:
                 )
                 is_pressed = self.pressed_button == f"web-pin-key:{_value}"
                 key_color = (98, 98, 98) if is_pressed else MID_GRAY
-                pygame.draw.rect(self.screen, key_color, rect, border_radius=12)
+                pygame.draw.rect(self.screen, key_color, rect, 0, 12)
                 icon = self.web_pin_icons.get(_value)
                 if icon is not None:
                     icon_size = (rect.width - 24, rect.height - 24)
@@ -1788,7 +1788,7 @@ class RaspberryPiTVMenu:
                 if scaled_icon is not None:
                     if not enabled:
                         scaled_icon = scaled_icon.copy()
-                        scaled_icon.set_alpha(128)
+                        scaled_icon.set_alpha(90)
                     self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
 
         path_text = self.truncate_text(self.tr("browser.path", path=self.rel_browser_path()), self.small_font, layout["path"].width)
