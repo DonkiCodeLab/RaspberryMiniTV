@@ -59,6 +59,7 @@ TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
+WIFI_DEBUG_LOG_PATH = os.path.join(BASE_DIR, "wifi_debug.log")
 PORT = 5050
 VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
 BACKGROUND = (245, 245, 245)
@@ -115,6 +116,20 @@ def log_debug(message):
     print(f"[menu-debug] {message}", flush=True)
 
 
+def log_wifi_debug(event, **fields):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    parts = [f"{key}={value}" for key, value in fields.items() if value not in (None, "")]
+    line = f"[{timestamp}] {event}"
+    if parts:
+        line += " | " + " | ".join(parts)
+    try:
+        with open(WIFI_DEBUG_LOG_PATH, "a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+    except Exception:
+        pass
+    log_debug(line)
+
+
 def get_local_ip():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -155,9 +170,21 @@ def generate_qr():
 
 def run_command(command):
     try:
-        return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+        return result
     except FileNotFoundError as exc:
         return subprocess.CompletedProcess(command, 127, "", str(exc))
+
+
+def get_wifi_ipv4(interface="wlan0"):
+    result = run_command(["ip", "-4", "addr", "show", interface])
+    if result.returncode != 0:
+        return None
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if line.startswith("inet "):
+            return line.split()[1].split("/", 1)[0]
+    return None
 
 
 def load_json_file(path, fallback):
@@ -227,41 +254,83 @@ def scan_wifi_networks():
     return sorted(unique.values(), key=lambda item: (-item["signal"], item["ssid"].lower()))
 
 
+def classify_wifi_error(stdout, stderr):
+    combined = f"{stdout}\n{stderr}".lower()
+    if any(token in combined for token in ["secrets were required", "wrong password", "bad password", "authentication", "802-11-wireless-security.key-mgmt"]):
+        return "Contrasena incorrecta o autenticacion fallida."
+    if any(token in combined for token in ["no network with ssid", "network not found", "not found"]):
+        return "La red Wi-Fi ya no esta disponible."
+    if any(token in combined for token in ["timeout", "timed out"]):
+        return "Tiempo de espera agotado al conectar."
+    if any(token in combined for token in ["failed to activate", "could not activate", "activation failed"]):
+        return "La Raspberry no pudo activar la conexion Wi-Fi."
+    if any(token in combined for token in ["networkmanager", "nmcli"]) and "not found" in combined:
+        return "NetworkManager no esta disponible."
+    return "No se pudo conectar a la red Wi-Fi."
+
+
 def connect_wifi(ssid, password):
     if not ssid:
-        return False, "wifi.select_network"
+        return False, "Selecciona una red Wi-Fi primero."
 
     nmcli_base = ["nmcli", "dev", "wifi", "connect", ssid]
     if password:
         nmcli_base.extend(["password", password])
+    log_wifi_debug("wifi_connect_start", ssid=ssid, has_password=bool(password))
     nmcli_result = run_command(nmcli_base)
+    log_wifi_debug(
+        "wifi_connect_nmcli",
+        ssid=ssid,
+        returncode=nmcli_result.returncode,
+        stdout=(nmcli_result.stdout or "").strip(),
+        stderr=(nmcli_result.stderr or "").strip(),
+    )
     if nmcli_result.returncode == 0:
         return wait_for_wifi_connection(ssid)
 
     if password:
         add_result = run_command(["wpa_cli", "-i", "wlan0", "add_network"])
         network_id = add_result.stdout.strip()
+        log_wifi_debug(
+            "wifi_connect_wpa_add_network",
+            ssid=ssid,
+            returncode=add_result.returncode,
+            stdout=(add_result.stdout or "").strip(),
+            stderr=(add_result.stderr or "").strip(),
+            network_id=network_id,
+        )
         if add_result.returncode == 0 and network_id.isdigit():
             run_command(["wpa_cli", "-i", "wlan0", "set_network", network_id, "ssid", f'"{ssid}"'])
             run_command(["wpa_cli", "-i", "wlan0", "set_network", network_id, "psk", f'"{password}"'])
             run_command(["wpa_cli", "-i", "wlan0", "enable_network", network_id])
             save_result = run_command(["wpa_cli", "-i", "wlan0", "save_config"])
+            log_wifi_debug(
+                "wifi_connect_wpa_save",
+                ssid=ssid,
+                returncode=save_result.returncode,
+                stdout=(save_result.stdout or "").strip(),
+                stderr=(save_result.stderr or "").strip(),
+            )
             if save_result.returncode == 0:
                 return wait_for_wifi_connection(ssid)
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
-    return False, stderr or stdout or "wifi.could_not_connect"
+    return False, classify_wifi_error(stdout, stderr)
 
 
 def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds=1):
     deadline = time.time() + timeout_seconds
     while time.time() < deadline:
         current_ssid = get_connected_wifi_info()
+        current_ip = get_wifi_ipv4()
+        log_wifi_debug("wifi_connect_poll", expected_ssid=expected_ssid, current_ssid=current_ssid, current_ip=current_ip)
         if current_ssid == expected_ssid:
-            return True, "wifi.connected"
+            if current_ip:
+                return True, f"Conectado a {expected_ssid} ({current_ip})"
+            return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
         time.sleep(interval_seconds)
-    return False, "wifi.could_not_connect"
+    return False, f"No se pudo confirmar la conexion a {expected_ssid}."
 
 
 def get_connected_wifi_info():
@@ -1274,7 +1343,7 @@ class RaspberryPiTVMenu:
                 return
             if active_button == "wifi-password-connect" and layout["connect"].collidepoint(pos):
                 success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
-                resolved_message = self.tr(message, ssid=self.wifi_selected_ssid) if "." in message else message
+                resolved_message = message
                 self.wifi_status = resolved_message
                 self.wifi_dialog_message = resolved_message
                 self.wifi_dialog_is_error = not success
