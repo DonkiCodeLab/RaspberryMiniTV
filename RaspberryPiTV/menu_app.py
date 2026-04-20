@@ -419,6 +419,8 @@ class RaspberryPiTVMenu:
         self.current_wifi_ssid = None
         self.wifi_password = ""
         self.wifi_status = ""
+        self.wifi_dialog_message = ""
+        self.wifi_dialog_is_error = False
         self.wifi_page_start = 0
         self.wifi_keyboard_upper = True
         self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
@@ -670,11 +672,11 @@ class RaspberryPiTVMenu:
 
     def get_wifi_password_layout(self):
         return {
-            "selected": pygame.Rect(20, 56, self.width - 40, 34),
-            "password": pygame.Rect(20, 102, self.width - 40, 48),
-            "connect": pygame.Rect(20, 164, 220, 52),
-            "back": pygame.Rect(252, 164, 180, 52),
-            "keyboard": pygame.Rect(20, 232, self.width - 40, self.height - 252),
+            "selected": pygame.Rect(20, 70, self.width - 40, 34),
+            "password": pygame.Rect(20, 112, self.width - 40, 48),
+            "connect": pygame.Rect((self.width - 238) // 2, 180, 238, 56),
+            "keyboard": pygame.Rect(20, 252, self.width - 40, self.height - 272),
+            "dialog": pygame.Rect(66, 138, self.width - 132, 150),
         }
 
     def get_wifi_rows(self):
@@ -1156,6 +1158,18 @@ class RaspberryPiTVMenu:
             self.browser_selected_index = entry_index
 
     def handle_wifi_touch_down(self, pos):
+        if self.state == "wifi_password":
+            layout = self.get_wifi_password_layout()
+            if self.top_back_at_pos(pos):
+                self.pressed_button = "top-back"
+            elif layout["connect"].collidepoint(pos):
+                self.pressed_button = "wifi-password-connect"
+            else:
+                key_value = self.get_keyboard_key_at(pos)
+                self.pressed_button = f"wifi-password-key:{key_value}" if key_value else "wifi-touch"
+            log_debug(f"WIFI DOWN pos={pos} selected={self.wifi_selected_ssid} state={self.state}")
+            return
+
         layout = self.get_wifi_layout()
         connect_enabled = bool(self.wifi_selected_ssid) and self.wifi_selected_ssid != self.current_wifi_ssid
         if self.top_back_at_pos(pos):
@@ -1199,6 +1213,10 @@ class RaspberryPiTVMenu:
         active_button = self.pressed_button
         self.pressed_button = None
         if self.state == "wifi":
+            if self.wifi_dialog_message:
+                self.wifi_dialog_message = ""
+                self.wifi_dialog_is_error = False
+                return
             layout = self.get_wifi_layout()
             if active_button == "top-back" and self.top_back_at_pos(pos):
                 self.state = "settings"
@@ -1232,15 +1250,24 @@ class RaspberryPiTVMenu:
                 return
 
         if self.state == "wifi_password":
+            if self.wifi_dialog_message:
+                was_error = self.wifi_dialog_is_error
+                self.wifi_dialog_message = ""
+                self.wifi_dialog_is_error = False
+                if not was_error and self.current_wifi_ssid == self.wifi_selected_ssid:
+                    self.state = "wifi"
+                return
             layout = self.get_wifi_password_layout()
-            if layout["back"].collidepoint(pos):
+            if active_button == "top-back" and self.top_back_at_pos(pos):
                 self.state = "wifi"
                 return
-            if layout["connect"].collidepoint(pos):
+            if active_button == "wifi-password-connect" and layout["connect"].collidepoint(pos):
                 success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
-                self.wifi_status = self.tr(message, ssid=self.wifi_selected_ssid) if "." in message else message
+                resolved_message = self.tr(message, ssid=self.wifi_selected_ssid) if "." in message else message
+                self.wifi_status = resolved_message
+                self.wifi_dialog_message = resolved_message
+                self.wifi_dialog_is_error = not success
                 if success:
-                    self.state = "wifi"
                     self.refresh_wifi_networks()
                 return
 
@@ -1584,6 +1611,10 @@ class RaspberryPiTVMenu:
                 if not enabled:
                     surface.set_alpha(128)
                 self.screen.blit(surface, rect)
+                if not enabled:
+                    overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    overlay.fill((0, 0, 0, 96))
+                    self.screen.blit(overlay, rect.topleft)
 
             icon = self.wifi_button_icons[key_name]["pressed"] if is_pressed else self.wifi_button_icons[key_name]["normal"]
             if icon is not None:
@@ -1616,7 +1647,8 @@ class RaspberryPiTVMenu:
         self.screen.fill(BLACK)
 
         title = self.title_font.render(self.tr("wifi.connect_title"), True, WHITE)
-        self.screen.blit(title, (20, 10))
+        title_y = self.get_top_back_rect().centery
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, title_y)))
 
         selected_text = self.small_font.render(
             self.tr("wifi.enter_password_for", ssid=self.wifi_selected_ssid or self.tr("common.none")),
@@ -1629,13 +1661,27 @@ class RaspberryPiTVMenu:
         password_text = self.wifi_font.render(self.wifi_password or " ", True, WHITE)
         self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 8))
 
-        for key, rect, color in (
-            (self.tr("common.connect"), layout["connect"], GREEN),
-            (self.tr("common.back"), layout["back"], RED),
-        ):
-            pygame.draw.rect(self.screen, color, rect)
-            label = self.wifi_font.render(key, True, WHITE)
-            self.screen.blit(label, label.get_rect(center=rect.center))
+        connect_asset = self.wifi_assets["connect"]["pressed"] if self.pressed_button == "wifi-password-connect" else self.wifi_assets["connect"]["normal"]
+        if connect_asset is not None:
+            self.screen.blit(connect_asset, layout["connect"])
+        connect_icon = self.wifi_button_icons["connect"]["pressed"] if self.pressed_button == "wifi-password-connect" else self.wifi_button_icons["connect"]["normal"]
+        if connect_icon is not None:
+            scaled_icon = fit_image_contain(connect_icon, (layout["connect"].height - 18, layout["connect"].height - 18))
+            if scaled_icon is not None:
+                icon_rect = scaled_icon.get_rect()
+                icon_rect.left = layout["connect"].x + 16
+                icon_rect.centery = layout["connect"].centery
+                self.screen.blit(scaled_icon, icon_rect)
+                text_left = icon_rect.right + 14
+            else:
+                text_left = layout["connect"].x + 20
+        else:
+            text_left = layout["connect"].x + 20
+        connect_label = self.wifi_font.render(self.tr("common.connect"), True, WHITE)
+        connect_label_rect = connect_label.get_rect()
+        connect_label_rect.left = text_left
+        connect_label_rect.centery = layout["connect"].centery
+        self.screen.blit(connect_label, connect_label_rect)
 
         keyboard_rect = layout["keyboard"]
         rows = self.get_wifi_rows()
@@ -1652,6 +1698,22 @@ class RaspberryPiTVMenu:
                 pygame.draw.rect(self.screen, MID_GRAY, rect)
                 text_surface = self.small_font.render(label, True, WHITE)
                 self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+
+        if self.wifi_dialog_message:
+            overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 150))
+            self.screen.blit(overlay, (0, 0))
+            dialog_rect = layout["dialog"]
+            dialog_color = (110, 38, 38) if self.wifi_dialog_is_error else (38, 72, 44)
+            draw_rect_compat(self.screen, dialog_color, dialog_rect, 0, 18)
+            draw_rect_compat(self.screen, WHITE, dialog_rect, 2, 18)
+            title_text = "Error de connexio" if self.wifi_dialog_is_error else "Wi-Fi connectada"
+            title_surface = self.wifi_bold_font.render(title_text, True, WHITE)
+            body_surface = self.small_font.render(self.wifi_dialog_message, True, WHITE)
+            hint_surface = self.small_font.render("Toca per continuar", True, WHITE)
+            self.screen.blit(title_surface, title_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.y + 32)))
+            self.screen.blit(body_surface, body_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.centery)))
+            self.screen.blit(hint_surface, hint_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.bottom - 24)))
 
     def draw_poweroff(self):
         asset_pack = self.assets["poweroff"]
@@ -1967,6 +2029,7 @@ class RaspberryPiTVMenu:
             self.draw_top_back_button()
         elif self.state == "wifi_password":
             self.draw_wifi_password()
+            self.draw_top_back_button()
         elif self.state == "web_pin":
             self.draw_web_pin()
             self.draw_top_back_button()
