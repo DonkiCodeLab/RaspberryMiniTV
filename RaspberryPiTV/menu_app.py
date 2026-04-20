@@ -7,8 +7,11 @@ import subprocess
 import sys
 from datetime import datetime
 
-os.environ.setdefault("SDL_VIDEODRIVER", "fbcon")
-os.environ.setdefault("SDL_FBDEV", "/dev/fb0")
+DESKTOP_PREVIEW = os.environ.get("SIMPSONSTV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
+
+if not DESKTOP_PREVIEW:
+    os.environ.setdefault("SDL_VIDEODRIVER", "fbcon")
+    os.environ.setdefault("SDL_FBDEV", "/dev/fb0")
 os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 
 import pygame
@@ -32,6 +35,25 @@ PLAY_EXIT_PRESSED_PATH = os.path.join(MENU_DIR, "button_exit_pressed.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
 LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
+CLEAR_ICON_PATH = os.path.join(MENU_DIR, "clear.png")
+BACKSPACE_ICON_PATH = os.path.join(MENU_DIR, "backspace.png")
+SAVE_PIN_NORMAL_PATH = os.path.join(MENU_DIR, "save_pin_normal.png")
+SAVE_PIN_PRESSED_PATH = os.path.join(MENU_DIR, "save_pin_pressed.png")
+ARROW_UP_NORMAL_PATH = os.path.join(MENU_DIR, "arrow_up_normal.png")
+ARROW_UP_PRESSED_PATH = os.path.join(MENU_DIR, "arrow_up_pressed.png")
+ARROW_DOWN_NORMAL_PATH = os.path.join(MENU_DIR, "arrow_down_normal.png")
+ARROW_DOWN_PRESSED_PATH = os.path.join(MENU_DIR, "arrow_down_pressed.png")
+WIFI_BUTTON_NORMAL_PATH = os.path.join(MENU_DIR, "Wifi_Button_normal.png")
+WIFI_BUTTON_PRESSED_PATH = os.path.join(MENU_DIR, "Wifi_Button_pressed.png")
+ICON_CONNECT_NORMAL_PATH = os.path.join(MENU_DIR, "icon_connect_normal.png")
+ICON_CONNECT_PRESSED_PATH = os.path.join(MENU_DIR, "icon_connect_pressed.png")
+ICON_UPDATE_NORMAL_PATH = os.path.join(MENU_DIR, "icon_update_normal.png")
+ICON_UPDATE_PRESSED_PATH = os.path.join(MENU_DIR, "icon_update_pressed.png")
+FOLDER_EXPLORER_NORMAL_PATH = os.path.join(MENU_DIR, "folder_explorer_normal.png")
+FOLDER_EXPLORER_PRESSED_PATH = os.path.join(MENU_DIR, "folder_explorer_pressed.png")
+ICON_PLAY_NORMAL_PATH = os.path.join(MENU_DIR, "icon_play_normal.png")
+ICON_PLAY_PRESSED_PATH = os.path.join(MENU_DIR, "icon_play_pressed.png")
+EMPTY_ICON_PATH = os.path.join(MENU_DIR, "empty.png")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
@@ -67,15 +89,23 @@ POWEROFF_BUTTON_LAYOUT = {
 PLAY_EXIT_LAYOUT = (22, 23, 60, 55)
 PLAY_RANDOM_LAYOUT = (183, 207, 272, 103)
 PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
+BACK_BUTTON_SCALE = 1.3
 BROWSE_VISIBLE_ITEMS = 5
 LOADING_MIN_DURATION_MS = 1000
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
 }
+LANGUAGE_BUTTON_MAP = {
+    "1x1": "en",
+    "1x2": "ca",
+    "2x1": "es",
+}
 
 
 def ensure_screen_on():
+    if DESKTOP_PREVIEW:
+        return
     subprocess.run(["raspi-gpio", "set", "19", "op", "a5"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
     subprocess.run(["raspi-gpio", "set", "18", "op", "dh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
@@ -96,6 +126,8 @@ def get_local_ip():
 
 
 def play_intro():
+    if DESKTOP_PREVIEW:
+        return
     if not os.path.isfile(INTRO_VIDEO_PATH):
         return
 
@@ -109,6 +141,8 @@ def play_intro():
 
 def generate_qr():
     url = get_local_ip()
+    if DESKTOP_PREVIEW:
+        return url
     subprocess.run(
         ["qrencode", "-o", QR_PNG, "-s", "12", "-m", "2", url],
         stdout=subprocess.DEVNULL,
@@ -119,7 +153,10 @@ def generate_qr():
 
 
 def run_command(command):
-    return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+    try:
+        return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+    except FileNotFoundError as exc:
+        return subprocess.CompletedProcess(command, 127, "", str(exc))
 
 
 def load_json_file(path, fallback):
@@ -243,6 +280,18 @@ def fit_image(image, size):
     return pygame.transform.smoothscale(image, size)
 
 
+def fit_image_contain(image, size):
+    if image is None:
+        return None
+    src_width, src_height = image.get_size()
+    max_width, max_height = size
+    if src_width <= 0 or src_height <= 0 or max_width <= 0 or max_height <= 0:
+        return None
+    scale = min(max_width / src_width, max_height / src_height)
+    target_size = (max(1, int(src_width * scale)), max(1, int(src_height * scale)))
+    return pygame.transform.smoothscale(image, target_size)
+
+
 def blit_centered(surface, image, width, height):
     rect = image.get_rect(center=(width // 2, height // 2))
     surface.blit(image, rect)
@@ -253,8 +302,11 @@ class RaspberryPiTVMenu:
         ensure_screen_on()
         pygame.display.init()
         pygame.font.init()
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        pygame.mouse.set_visible(False)
+        if DESKTOP_PREVIEW:
+            self.screen = pygame.display.set_mode((BASE_WIDTH, BASE_HEIGHT))
+        else:
+            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        pygame.mouse.set_visible(DESKTOP_PREVIEW)
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
         self.font = pygame.font.SysFont(FONT_FAMILY, 28)
@@ -321,14 +373,28 @@ class RaspberryPiTVMenu:
                     "2x2": os.path.join(MENU_DIR, "Settings_Menu_Button_2x2_Pressed.png"),
                 },
             ),
-            "language": self.prepare_screen_assets(
-                LANGUAGE_MENU_PATH,
+            "language": self.prepare_named_fullscreen_assets(
                 {
-                    "1x1": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Pressed.png"),
-                    "1x2": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Pressed.png"),
-                    "2x1": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Pressed.png"),
-                    "2x2": os.path.join(MENU_DIR, "Language_Menu_Button_2x2_Pressed.png"),
-                },
+                    "1x1": {
+                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Normal.png"),
+                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Pressed.png"),
+                        "selected": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Selected.png"),
+                    },
+                    "1x2": {
+                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Normal.png"),
+                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Pressed.png"),
+                        "selected": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Selected.png"),
+                    },
+                    "2x1": {
+                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Normal.png"),
+                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Pressed.png"),
+                        "selected": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Selected.png"),
+                    },
+                    "2x2": {
+                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_2x2_Normal.png"),
+                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_2x2_Pressed.png"),
+                    },
+                }
             ),
         }
         play_exit_rect = self.get_play_button_rects()["exit"]
@@ -352,6 +418,80 @@ class RaspberryPiTVMenu:
         self.browser_status = ""
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
         self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
+        self.web_pin_icons = {
+            "CLEAR": load_image(CLEAR_ICON_PATH),
+            "BACKSPACE": load_image(BACKSPACE_ICON_PATH),
+        }
+        wifi_layout = self.get_wifi_layout()
+        self.wifi_assets = {
+            "up": {
+                "normal": self.prepare_button_asset(ARROW_UP_NORMAL_PATH, wifi_layout["up"]),
+                "pressed": self.prepare_button_asset(ARROW_UP_PRESSED_PATH, wifi_layout["up"]),
+            },
+            "down": {
+                "normal": self.prepare_button_asset(ARROW_DOWN_NORMAL_PATH, wifi_layout["down"]),
+                "pressed": self.prepare_button_asset(ARROW_DOWN_PRESSED_PATH, wifi_layout["down"]),
+            },
+            "refresh": {
+                "normal": self.prepare_button_asset(WIFI_BUTTON_NORMAL_PATH, wifi_layout["refresh"]),
+                "pressed": self.prepare_button_asset(WIFI_BUTTON_PRESSED_PATH, wifi_layout["refresh"]),
+            },
+            "connect": {
+                "normal": self.prepare_button_asset(WIFI_BUTTON_NORMAL_PATH, wifi_layout["connect"]),
+                "pressed": self.prepare_button_asset(WIFI_BUTTON_PRESSED_PATH, wifi_layout["connect"]),
+            },
+        }
+        self.wifi_arrow_icons = {
+            "up": {
+                "normal": load_image(ARROW_UP_NORMAL_PATH),
+                "pressed": load_image(ARROW_UP_PRESSED_PATH),
+            },
+            "down": {
+                "normal": load_image(ARROW_DOWN_NORMAL_PATH),
+                "pressed": load_image(ARROW_DOWN_PRESSED_PATH),
+            },
+        }
+        self.wifi_button_icons = {
+            "refresh": {
+                "normal": load_image(ICON_UPDATE_NORMAL_PATH),
+                "pressed": load_image(ICON_UPDATE_PRESSED_PATH),
+            },
+            "connect": {
+                "normal": load_image(ICON_CONNECT_NORMAL_PATH),
+                "pressed": load_image(ICON_CONNECT_PRESSED_PATH),
+            },
+        }
+        browser_layout = self.get_browser_layout()
+        self.browser_assets = {
+            "up": {
+                "normal": self.prepare_button_asset(ARROW_UP_NORMAL_PATH, browser_layout["up"]),
+                "pressed": self.prepare_button_asset(ARROW_UP_PRESSED_PATH, browser_layout["up"]),
+            },
+            "down": {
+                "normal": self.prepare_button_asset(ARROW_DOWN_NORMAL_PATH, browser_layout["down"]),
+                "pressed": self.prepare_button_asset(ARROW_DOWN_PRESSED_PATH, browser_layout["down"]),
+            },
+            "action": {
+                "normal": self.prepare_button_asset(WIFI_BUTTON_NORMAL_PATH, browser_layout["action"]),
+                "pressed": self.prepare_button_asset(WIFI_BUTTON_PRESSED_PATH, browser_layout["action"]),
+            },
+        }
+        self.browser_icons = {
+            "browse": {
+                "normal": load_image(FOLDER_EXPLORER_NORMAL_PATH),
+                "pressed": load_image(FOLDER_EXPLORER_PRESSED_PATH),
+            },
+            "view": {
+                "normal": load_image(ICON_PLAY_NORMAL_PATH),
+                "pressed": load_image(ICON_PLAY_PRESSED_PATH),
+            },
+            "empty": load_image(EMPTY_ICON_PATH),
+        }
+        web_pin_layout = self.get_web_pin_layout()
+        self.save_pin_assets = {
+            "normal": self.prepare_button_asset(SAVE_PIN_NORMAL_PATH, web_pin_layout["save"]),
+            "pressed": self.prepare_button_asset(SAVE_PIN_PRESSED_PATH, web_pin_layout["save"]),
+        }
         self.loading_video_path = None
         self.loading_return_state = "play"
         self.loading_started_at = 0
@@ -406,6 +546,24 @@ class RaspberryPiTVMenu:
             "pressed": {button_id: self.prepare_asset(path) for button_id, path in pressed_paths.items()},
         }
 
+    def prepare_named_button_assets(self, asset_paths):
+        assets = {}
+        button_rects = self.get_button_rects()
+        for button_id, states in asset_paths.items():
+            rect = button_rects[button_id]
+            assets[button_id] = {
+                state_name: self.prepare_button_asset(path, rect) for state_name, path in states.items()
+            }
+        return assets
+
+    def prepare_named_fullscreen_assets(self, asset_paths):
+        assets = {}
+        for button_id, states in asset_paths.items():
+            assets[button_id] = {
+                state_name: self.prepare_asset(path) for state_name, path in states.items()
+            }
+        return assets
+
     def prepare_button_asset(self, path, rect):
         image = load_image(path)
         if image is None:
@@ -427,17 +585,8 @@ class RaspberryPiTVMenu:
     def refresh_qr_asset(self):
         self.qr_url = generate_qr()
         connected_wifi = get_connected_wifi_info()
-        qr = load_image(QR_PNG)
-        if qr is None:
-            self.qr_asset = None
-            return
-
-        qr_size = min(self.width, self.height) // 2
         qr_surface = pygame.Surface((self.width, self.height))
         qr_surface.fill(BLACK)
-        qr_scaled = fit_image(qr, (qr_size, qr_size))
-        qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
-        qr_surface.blit(qr_scaled, qr_rect)
 
         title = self.title_font.render(self.tr("qr.title"), True, WHITE)
         subtitle = self.font.render(self.qr_url, True, WHITE)
@@ -447,9 +596,26 @@ class RaspberryPiTVMenu:
             WHITE,
         )
 
+        qr = load_image(QR_PNG)
+        if qr is not None:
+            qr_size = min(self.width, self.height) // 2
+            qr_scaled = fit_image(qr, (qr_size, qr_size))
+            qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
+            qr_surface.blit(qr_scaled, qr_rect)
+            subtitle_y = qr_rect.bottom + 44
+            wifi_y = qr_rect.bottom + 78
+        else:
+            fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
+            pygame.draw.rect(qr_surface, DARK_GRAY, fallback_box, border_radius=24)
+            pygame.draw.rect(qr_surface, MID_GRAY, fallback_box, 2, border_radius=24)
+            fallback_label = self.font.render(self.qr_url, True, WHITE)
+            qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
+            subtitle_y = fallback_box.bottom + 38
+            wifi_y = fallback_box.bottom + 68
+
         qr_surface.blit(title, title.get_rect(center=(self.width // 2, 42)))
-        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, qr_rect.bottom + 44)))
-        qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, qr_rect.bottom + 78)))
+        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, subtitle_y)))
+        qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, wifi_y)))
         self.qr_asset = qr_surface.convert()
 
     def refresh_wifi_networks(self):
@@ -460,13 +626,23 @@ class RaspberryPiTVMenu:
         self.wifi_status = self.tr("wifi.networks_found", count=len(self.wifi_networks)) if self.wifi_networks else self.tr("wifi.no_networks")
 
     def get_wifi_layout(self):
+        list_rect = pygame.Rect(20, 108, 490, 236)
+        arrow_width = 62
+        arrow_height = 42
+        arrow_gap = 18
+        group_height = (arrow_height * 2) + arrow_gap
+        group_top = int(list_rect.centery - group_height / 2)
+        arrow_x = list_rect.right + 18
+        button_height = 56
+        bottom_y = int(list_rect.bottom + ((self.height - list_rect.bottom - button_height) / 2))
+        refresh_width = 238
+        connect_width = 238
         return {
-            "list": pygame.Rect(20, 70, 470, 260),
-            "up": pygame.Rect(505, 90, 115, 80),
-            "down": pygame.Rect(505, 185, 115, 80),
-            "refresh": pygame.Rect(20, 350, 180, 56),
-            "connect": pygame.Rect(210, 350, 200, 56),
-            "back": pygame.Rect(420, 350, 180, 56),
+            "list": list_rect,
+            "up": pygame.Rect(arrow_x, group_top, arrow_width, arrow_height),
+            "down": pygame.Rect(arrow_x, group_top + arrow_height + arrow_gap, arrow_width, arrow_height),
+            "refresh": pygame.Rect(list_rect.x, bottom_y, refresh_width, button_height),
+            "connect": pygame.Rect(list_rect.right - connect_width, bottom_y, connect_width, button_height),
         }
 
     def get_wifi_password_layout(self):
@@ -520,6 +696,14 @@ class RaspberryPiTVMenu:
             int(height * scale_y),
         )
 
+    def inflate_rect(self, rect, scale):
+        center = rect.center
+        width = int(rect.width * scale)
+        height = int(rect.height * scale)
+        inflated = pygame.Rect(0, 0, width, height)
+        inflated.center = center
+        return inflated
+
     def get_button_rects(self):
         return {
             button_id: self.scale_rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
@@ -533,8 +717,9 @@ class RaspberryPiTVMenu:
         }
 
     def get_play_button_rects(self):
+        exit_rect = self.inflate_rect(self.scale_rect(*PLAY_EXIT_LAYOUT), BACK_BUTTON_SCALE)
         return {
-            "exit": self.scale_rect(*PLAY_EXIT_LAYOUT),
+            "exit": exit_rect,
             "random": self.scale_rect(*PLAY_RANDOM_LAYOUT),
             "browse": self.scale_rect(*PLAY_BROWSE_LAYOUT),
         }
@@ -553,14 +738,22 @@ class RaspberryPiTVMenu:
         return None
 
     def get_browser_layout(self):
+        list_rect = pygame.Rect(20, 108, 490, 236)
+        arrow_width = 62
+        arrow_height = 42
+        arrow_gap = 18
+        group_height = (arrow_height * 2) + arrow_gap
+        group_top = int(list_rect.centery - group_height / 2)
+        arrow_x = list_rect.right + 18
+        button_width = 238
+        button_height = 56
+        action_y = int(list_rect.bottom + ((self.height - list_rect.bottom - button_height) / 2))
         return {
-            "back": pygame.Rect(20, 18, 100, 44),
-            "path": pygame.Rect(130, 18, self.width - 150, 44),
-            "list": pygame.Rect(20, 80, 470, 300),
-            "up": pygame.Rect(505, 100, 115, 70),
-            "down": pygame.Rect(505, 185, 115, 70),
-            "action": pygame.Rect(20, 400, 260, 56),
-            "close": pygame.Rect(320, 400, 260, 56),
+            "path": pygame.Rect(132, 24, self.width - 152, 34),
+            "list": list_rect,
+            "up": pygame.Rect(arrow_x, group_top, arrow_width, arrow_height),
+            "down": pygame.Rect(arrow_x, group_top + arrow_height + arrow_gap, arrow_width, arrow_height),
+            "action": pygame.Rect((self.width - button_width) // 2, action_y, button_width, button_height),
         }
 
     def rel_browser_path(self):
@@ -646,6 +839,12 @@ class RaspberryPiTVMenu:
             self.browser_page_start = self.browser_selected_index
         if self.browser_selected_index >= self.browser_page_start + BROWSE_VISIBLE_ITEMS:
             self.browser_page_start = self.browser_selected_index - BROWSE_VISIBLE_ITEMS + 1
+
+    def can_move_browser_up(self):
+        return bool(self.browser_entries) and self.browser_selected_index > 0
+
+    def can_move_browser_down(self):
+        return bool(self.browser_entries) and self.browser_selected_index < len(self.browser_entries) - 1
 
     def browser_entry_at_pos(self, pos):
         layout = self.get_browser_layout()
@@ -785,6 +984,8 @@ class RaspberryPiTVMenu:
             self.state = self.video_return_state
 
     def normalize_touch_pos(self, pos):
+        if DESKTOP_PREVIEW or self.touch_device is None:
+            return pos
         raw_x, raw_y = pos
         normalized_x = int(raw_y * self.width / self.height)
         normalized_y = int(self.height - (raw_x * self.height / self.width))
@@ -798,6 +999,24 @@ class RaspberryPiTVMenu:
             if rect.collidepoint(x, y):
                 return button_id
         return None
+
+    def get_selected_language_code(self):
+        return self.config.get("language", DEFAULT_SETTINGS["language"])
+
+    def get_selected_language_button(self):
+        selected_language = self.get_selected_language_code()
+        for button_id, language_code in LANGUAGE_BUTTON_MAP.items():
+            if language_code == selected_language:
+                return button_id
+        return "1x1"
+
+    def set_language(self, language_code):
+        if language_code == self.get_selected_language_code():
+            return
+        self.config["language"] = language_code
+        self.save_settings()
+        self.refresh_translated_state_texts()
+        self.qr_asset = None
 
     def poweroff_button_at_pos(self, pos):
         x, y = pos
@@ -826,25 +1045,17 @@ class RaspberryPiTVMenu:
                 self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
                 self.state = "web_pin"
             elif button_id == "2x1":
+                self.pressed_button = None
                 self.state = "language"
             elif button_id == "2x2":
                 self.state = "main"
         elif self.state == "language":
             if button_id == "1x1":
-                self.config["language"] = "en"
-                self.save_settings()
-                self.refresh_translated_state_texts()
-                self.qr_asset = None
+                self.set_language("en")
             elif button_id == "1x2":
-                self.config["language"] = "ca"
-                self.save_settings()
-                self.refresh_translated_state_texts()
-                self.qr_asset = None
+                self.set_language("ca")
             elif button_id == "2x1":
-                self.config["language"] = "es"
-                self.save_settings()
-                self.refresh_translated_state_texts()
-                self.qr_asset = None
+                self.set_language("es")
             elif button_id == "2x2":
                 self.state = "settings"
         elif self.state == "more":
@@ -878,13 +1089,25 @@ class RaspberryPiTVMenu:
             self.state = "browse"
 
     def handle_browser_touch_down(self, pos):
-        self.pressed_button = "browse-touch"
+        layout = self.get_browser_layout()
+        selected_entry = self.get_selected_browser_entry()
+        if self.top_back_at_pos(pos):
+            self.pressed_button = "top-back"
+        elif self.can_move_browser_up() and layout["up"].collidepoint(pos):
+            self.pressed_button = "browser-up"
+        elif self.can_move_browser_down() and layout["down"].collidepoint(pos):
+            self.pressed_button = "browser-down"
+        elif selected_entry and layout["action"].collidepoint(pos):
+            self.pressed_button = "browser-action"
+        else:
+            self.pressed_button = "browse-touch"
         log_debug(f"BROWSE DOWN pos={pos} path={self.rel_browser_path()} selected={self.browser_selected_index}")
 
     def handle_browser_touch_up(self, pos):
+        active_button = self.pressed_button
         self.pressed_button = None
         layout = self.get_browser_layout()
-        if layout["back"].collidepoint(pos):
+        if active_button == "top-back" and self.top_back_at_pos(pos):
             if os.path.abspath(self.browser_path) == os.path.abspath(VIDEOS_DIR):
                 self.state = "play"
             else:
@@ -893,18 +1116,15 @@ class RaspberryPiTVMenu:
                 self.browser_page_start = 0
                 self.refresh_browser_entries()
             return
-        if layout["up"].collidepoint(pos):
+        if active_button == "browser-up" and layout["up"].collidepoint(pos):
             self.move_browser_selection(-1)
             return
-        if layout["down"].collidepoint(pos):
+        if active_button == "browser-down" and layout["down"].collidepoint(pos):
             self.move_browser_selection(1)
-            return
-        if layout["close"].collidepoint(pos):
-            self.state = "play"
             return
 
         selected_entry = self.get_selected_browser_entry()
-        if layout["action"].collidepoint(pos):
+        if active_button == "browser-action" and layout["action"].collidepoint(pos):
             self.activate_browser_entry(selected_entry)
             return
 
@@ -913,7 +1133,20 @@ class RaspberryPiTVMenu:
             self.browser_selected_index = entry_index
 
     def handle_wifi_touch_down(self, pos):
-        self.pressed_button = "wifi-touch"
+        layout = self.get_wifi_layout()
+        connect_enabled = bool(self.wifi_selected_ssid)
+        if self.top_back_at_pos(pos):
+            self.pressed_button = "top-back"
+        elif layout["refresh"].collidepoint(pos):
+            self.pressed_button = "wifi-refresh"
+        elif connect_enabled and layout["connect"].collidepoint(pos):
+            self.pressed_button = "wifi-connect"
+        elif self.can_move_wifi_up() and layout["up"].collidepoint(pos):
+            self.pressed_button = "wifi-up"
+        elif self.can_move_wifi_down() and layout["down"].collidepoint(pos):
+            self.pressed_button = "wifi-down"
+        else:
+            self.pressed_button = "wifi-touch"
         log_debug(f"WIFI DOWN pos={pos} selected={self.wifi_selected_ssid} state={self.state}")
 
     def move_wifi_page(self, delta):
@@ -922,23 +1155,30 @@ class RaspberryPiTVMenu:
         max_start = max(0, len(self.wifi_networks) - 4)
         self.wifi_page_start = max(0, min(max_start, self.wifi_page_start + delta))
 
+    def can_move_wifi_up(self):
+        return self.wifi_page_start > 0
+
+    def can_move_wifi_down(self):
+        return self.wifi_page_start < max(0, len(self.wifi_networks) - 4)
+
     def handle_wifi_touch_up(self, pos):
+        active_button = self.pressed_button
         self.pressed_button = None
         if self.state == "wifi":
             layout = self.get_wifi_layout()
-            if layout["refresh"].collidepoint(pos):
-                self.refresh_wifi_networks()
-                return
-            if layout["up"].collidepoint(pos):
-                self.move_wifi_page(-1)
-                return
-            if layout["down"].collidepoint(pos):
-                self.move_wifi_page(1)
-                return
-            if layout["back"].collidepoint(pos):
+            if active_button == "top-back" and self.top_back_at_pos(pos):
                 self.state = "settings"
                 return
-            if layout["connect"].collidepoint(pos):
+            if active_button == "wifi-refresh" and layout["refresh"].collidepoint(pos):
+                self.refresh_wifi_networks()
+                return
+            if active_button == "wifi-up" and layout["up"].collidepoint(pos):
+                self.move_wifi_page(-1)
+                return
+            if active_button == "wifi-down" and layout["down"].collidepoint(pos):
+                self.move_wifi_page(1)
+                return
+            if active_button == "wifi-connect" and layout["connect"].collidepoint(pos):
                 if self.wifi_selected_ssid:
                     current_ssid = get_connected_wifi_info()
                     if self.wifi_selected_ssid == current_ssid:
@@ -985,10 +1225,9 @@ class RaspberryPiTVMenu:
     def get_web_pin_layout(self):
         return {
             "title": pygame.Rect(20, 18, self.width - 40, 40),
-            "value": pygame.Rect(140, 78, self.width - 280, 58),
-            "save": pygame.Rect(110, 154, 180, 52),
-            "back": pygame.Rect(350, 154, 180, 52),
-            "keyboard": pygame.Rect(80, 230, self.width - 160, self.height - 250),
+            "value": pygame.Rect(104, 86, self.width - 208, 72),
+            "save": pygame.Rect((self.width - 200) // 2, 176, 200, 52),
+            "keyboard": pygame.Rect(80, 246, self.width - 160, self.height - 264),
         }
 
     def get_web_pin_rows(self):
@@ -1013,17 +1252,27 @@ class RaspberryPiTVMenu:
         return row[col_index][1]
 
     def handle_web_pin_touch_down(self, pos):
-        self.pressed_button = "web-pin-touch"
+        if self.top_back_at_pos(pos):
+            self.pressed_button = "top-back"
+        else:
+            layout = self.get_web_pin_layout()
+            if layout["save"].collidepoint(pos) and len(self.web_pin_value) == 4:
+                self.pressed_button = "web-pin-save"
+                log_debug(f"WEB PIN DOWN pos={pos} value={self.web_pin_value}")
+                return
+            key_value = self.get_web_pin_key_at(pos)
+            self.pressed_button = f"web-pin-key:{key_value}" if key_value else "web-pin-touch"
         log_debug(f"WEB PIN DOWN pos={pos} value={self.web_pin_value}")
 
     def handle_web_pin_touch_up(self, pos):
+        active_button = self.pressed_button
         self.pressed_button = None
         layout = self.get_web_pin_layout()
-        if layout["back"].collidepoint(pos):
+        if active_button == "top-back" and self.top_back_at_pos(pos):
             self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
             self.state = "settings"
             return
-        if layout["save"].collidepoint(pos):
+        if active_button == "web-pin-save" and layout["save"].collidepoint(pos):
             if len(self.web_pin_value) == 4:
                 self.config["web_password"] = self.web_pin_value
                 self.save_settings()
@@ -1055,7 +1304,9 @@ class RaspberryPiTVMenu:
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=settings pressed={self.pressed_button}")
             return
         if self.state == "language":
-            self.pressed_button = self.button_at_pos(normalized_pos)
+            selected_button = self.get_selected_language_button()
+            next_button = self.button_at_pos(normalized_pos)
+            self.pressed_button = next_button if next_button != selected_button else None
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=language pressed={self.pressed_button}")
             return
         if self.state == "video":
@@ -1204,16 +1455,43 @@ class RaspberryPiTVMenu:
 
     def draw_clock(self):
         self.screen.fill(BLACK)
-        time_text = datetime.now().strftime("%H : %M")
-        text_surface = self.clock_font.render(time_text, True, WHITE)
-        self.screen.blit(text_surface, text_surface.get_rect(center=(self.width // 2, self.height // 2 - 10)))
+        hours_text = datetime.now().strftime("%H")
+        minutes_text = datetime.now().strftime("%M")
+        separator_text = ":"
+        gap = 18
+
+        hours_surface = self.clock_font.render(hours_text, True, WHITE)
+        separator_surface = self.clock_font.render(separator_text, True, WHITE)
+        minutes_surface = self.clock_font.render(minutes_text, True, WHITE)
+
+        total_width = (
+            hours_surface.get_width()
+            + separator_surface.get_width()
+            + minutes_surface.get_width()
+            + (gap * 2)
+        )
+        start_x = (self.width - total_width) // 2
+        center_y = self.height // 2 - 10
+
+        hours_rect = hours_surface.get_rect(midleft=(start_x, center_y))
+        separator_rect = separator_surface.get_rect(
+            midleft=(hours_rect.right + gap, center_y)
+        )
+        minutes_rect = minutes_surface.get_rect(
+            midleft=(separator_rect.right + gap, center_y)
+        )
+
+        self.screen.blit(hours_surface, hours_rect)
+        self.screen.blit(separator_surface, separator_rect)
+        self.screen.blit(minutes_surface, minutes_rect)
 
     def draw_wifi(self):
         layout = self.get_wifi_layout()
         self.screen.fill(BLACK)
 
         title = self.title_font.render(self.tr("wifi.title"), True, WHITE)
-        self.screen.blit(title, (20, 10))
+        title_y = self.get_top_back_rect().centery
+        self.screen.blit(title, title.get_rect(center=(layout["list"].centerx, title_y)))
 
         list_rect = layout["list"]
         pygame.draw.rect(self.screen, DARK_GRAY, list_rect)
@@ -1241,17 +1519,59 @@ class RaspberryPiTVMenu:
             self.screen.blit(security, (row_rect.x + 10, row_rect.y + 33))
             self.screen.blit(power, power.get_rect(midright=(row_rect.right - 10, row_rect.y + row_rect.height / 2)))
 
-        for key, rect, color in (
-            (self.tr("common.refresh"), layout["refresh"], MID_GRAY),
-            (self.tr("common.connect"), layout["connect"], GREEN if self.wifi_selected_ssid else MID_GRAY),
-            (self.tr("common.back"), layout["back"], RED),
-            (self.tr("common.up"), layout["up"], MID_GRAY),
-            (self.tr("common.down"), layout["down"], MID_GRAY),
+        for key_name, rect, enabled in (
+            ("up", layout["up"], self.can_move_wifi_up()),
+            ("down", layout["down"], self.can_move_wifi_down()),
         ):
-            pygame.draw.rect(self.screen, color, rect)
-            label_font = self.wifi_font if key in {self.tr("common.refresh"), self.tr("common.connect"), self.tr("common.back")} else self.small_font
-            label = label_font.render(key, True, WHITE)
-            self.screen.blit(label, label.get_rect(center=rect.center))
+            state = "pressed" if self.pressed_button == f"wifi-{key_name}" else "normal"
+            icon = self.wifi_arrow_icons[key_name][state]
+            if icon is not None:
+                scaled_icon = fit_image_contain(icon, rect.size)
+                if scaled_icon is not None:
+                    if not enabled:
+                        scaled_icon = scaled_icon.copy()
+                        scaled_icon.set_alpha(128)
+                    self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
+
+        connect_enabled = bool(self.wifi_selected_ssid)
+        for key_name, label_text, enabled in (
+            ("refresh", self.tr("common.refresh"), True),
+            ("connect", self.tr("common.connect"), connect_enabled),
+        ):
+            rect = layout[key_name]
+            is_pressed = self.pressed_button == f"wifi-{key_name}"
+            asset = self.wifi_assets[key_name]["pressed"] if is_pressed else self.wifi_assets[key_name]["normal"]
+            if asset is not None:
+                surface = asset.copy()
+                if not enabled:
+                    surface.set_alpha(128)
+                self.screen.blit(surface, rect)
+
+            icon = self.wifi_button_icons[key_name]["pressed"] if is_pressed else self.wifi_button_icons[key_name]["normal"]
+            if icon is not None:
+                icon_size = (rect.height - 18, rect.height - 18)
+                scaled_icon = fit_image_contain(icon, icon_size)
+                if scaled_icon is not None:
+                    icon_rect = scaled_icon.get_rect()
+                    icon_rect.left = rect.x + 16
+                    icon_rect.centery = rect.centery
+                    if not enabled:
+                        scaled_icon = scaled_icon.copy()
+                        scaled_icon.set_alpha(128)
+                    self.screen.blit(scaled_icon, icon_rect)
+                    text_left = icon_rect.right + 14
+                else:
+                    text_left = rect.x + 20
+            else:
+                text_left = rect.x + 20
+
+            label = self.wifi_font.render(label_text, True, WHITE)
+            if not enabled:
+                label.set_alpha(128)
+            label_rect = label.get_rect()
+            label_rect.left = text_left
+            label_rect.centery = rect.centery
+            self.screen.blit(label, label_rect)
 
     def draw_wifi_password(self):
         layout = self.get_wifi_password_layout()
@@ -1308,10 +1628,10 @@ class RaspberryPiTVMenu:
         line_2 = self.poweroff_title_font.render(title_line_2, True, WHITE)
         shadow_1 = self.poweroff_title_font.render(title_line_1, True, BLACK)
         shadow_2 = self.poweroff_title_font.render(title_line_2, True, BLACK)
-        self.screen.blit(shadow_1, shadow_1.get_rect(center=(self.width // 2 + 1, 38 + 1)))
-        self.screen.blit(shadow_2, shadow_2.get_rect(center=(self.width // 2 + 1, 78 + 1)))
-        self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 38)))
-        self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 78)))
+        self.screen.blit(shadow_1, shadow_1.get_rect(center=(self.width // 2 + 1, 78 + 1)))
+        self.screen.blit(shadow_2, shadow_2.get_rect(center=(self.width // 2 + 1, 118 + 1)))
+        self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 78)))
+        self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 118)))
 
     def draw_loading_video(self):
         if self.loading_asset is not None:
@@ -1364,35 +1684,62 @@ class RaspberryPiTVMenu:
 
     def draw_language(self):
         asset_pack = self.assets["language"]
-        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
-        if asset is None:
-            self.draw_missing("menu/Language_Menu.png")
-            return
-        self.screen.blit(asset, (0, 0))
-        title = self.font.render(self.tr("language.title"), True, WHITE)
-        self.screen.blit(title, title.get_rect(center=(self.width // 2, 34)))
+        selected_button = self.get_selected_language_button()
+        self.screen.fill(BLACK)
+
+        for button_id in ("1x1", "1x2", "2x1", "2x2"):
+            button_assets = asset_pack.get(button_id, {})
+            if button_id == "2x2":
+                asset = button_assets.get("pressed") if self.pressed_button == "2x2" else button_assets.get("normal")
+            elif button_id == selected_button and "selected" in button_assets:
+                asset = button_assets.get("selected")
+            elif button_id == self.pressed_button:
+                asset = button_assets.get("pressed")
+            else:
+                asset = button_assets.get("normal")
+
+            if asset is not None:
+                self.screen.blit(asset, (0, 0))
 
     def draw_web_pin(self):
         layout = self.get_web_pin_layout()
         self.screen.fill(BLACK)
         title = self.title_font.render(self.tr("web_pin.title"), True, WHITE)
-        self.screen.blit(title, title.get_rect(center=(self.width // 2, 34)))
+        title_y = self.get_top_back_rect().centery
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, title_y)))
+        value_rect = layout["value"]
+        cell_gap = 10
+        cell_width = (value_rect.width - (cell_gap * 3)) // 4
+        cell_height = value_rect.height
+        for index in range(4):
+            cell_rect = pygame.Rect(
+                value_rect.x + index * (cell_width + cell_gap),
+                value_rect.y,
+                cell_width,
+                cell_height,
+            )
+            pygame.draw.rect(self.screen, WHITE, cell_rect, 2, border_radius=10)
+            digit = self.web_pin_value[index] if index < len(self.web_pin_value) else "_"
+            digit_surface = self.title_font.render(digit, True, WHITE)
+            self.screen.blit(digit_surface, digit_surface.get_rect(center=cell_rect.center))
 
-        subtitle = self.font.render(self.tr("web_pin.subtitle"), True, WHITE)
-        self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, 78)))
+        save_enabled = len(self.web_pin_value) == 4
+        save_asset = self.save_pin_assets["pressed"] if self.pressed_button == "web-pin-save" else self.save_pin_assets["normal"]
+        if save_asset is not None:
+            save_surface = save_asset.copy()
+            if not save_enabled:
+                save_surface.set_alpha(128)
+            self.screen.blit(save_surface, layout["save"])
+        else:
+            save_color = GREEN if save_enabled else MID_GRAY
+            pygame.draw.rect(self.screen, save_color, layout["save"], border_radius=16)
 
-        pygame.draw.rect(self.screen, WHITE, layout["value"], 2)
-        value_text = self.clock_font.render(self.web_pin_value or "----", True, WHITE)
-        scaled = pygame.transform.smoothscale(value_text, (layout["value"].width - 20, layout["value"].height - 10))
-        self.screen.blit(scaled, scaled.get_rect(center=layout["value"].center))
-
-        for key, rect, color in (
-            (self.tr("common.save"), layout["save"], GREEN if len(self.web_pin_value) == 4 else MID_GRAY),
-            (self.tr("common.back"), layout["back"], RED),
-        ):
-            pygame.draw.rect(self.screen, color, rect)
-            label = self.wifi_font.render(key, True, WHITE)
-            self.screen.blit(label, label.get_rect(center=rect.center))
+        save_label = self.wifi_font.render(self.tr("common.save"), True, WHITE)
+        if not save_enabled:
+            save_label.set_alpha(128)
+        save_label_rect = save_label.get_rect(center=layout["save"].center)
+        save_label_rect.x += 8
+        self.screen.blit(save_label, save_label_rect)
 
         keyboard_rect = layout["keyboard"]
         rows = self.get_web_pin_rows()
@@ -1406,9 +1753,18 @@ class RaspberryPiTVMenu:
                     int(key_width - 4),
                     int(row_height - 4),
                 )
-                pygame.draw.rect(self.screen, MID_GRAY, rect)
-                text_surface = self.small_font.render(label, True, WHITE)
-                self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+                is_pressed = self.pressed_button == f"web-pin-key:{_value}"
+                key_color = (98, 98, 98) if is_pressed else MID_GRAY
+                pygame.draw.rect(self.screen, key_color, rect, border_radius=12)
+                icon = self.web_pin_icons.get(_value)
+                if icon is not None:
+                    icon_size = (rect.width - 24, rect.height - 24)
+                    scaled_icon = fit_image_contain(icon, icon_size)
+                    if scaled_icon is not None:
+                        self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
+                else:
+                    text_surface = self.small_font.render(label, True, WHITE)
+                    self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
     def draw_browser(self):
         layout = self.get_browser_layout()
@@ -1416,69 +1772,114 @@ class RaspberryPiTVMenu:
 
         selected_entry = self.get_selected_browser_entry()
         action_label = self.tr("browser.view")
+        action_key = "view"
         if selected_entry:
             action_label = self.tr("browser.view") if selected_entry["action"] == "view" else self.tr("browser.browse")
+            action_key = "view" if selected_entry["action"] == "view" else "browse"
 
-        for key, rect, color in (
-            (self.tr("common.back"), layout["back"], RED),
-            (self.tr("common.up"), layout["up"], MID_GRAY),
-            (self.tr("common.down"), layout["down"], MID_GRAY),
-            (self.tr("common.close"), layout["close"], RED),
+        for key_name, rect, enabled in (
+            ("up", layout["up"], self.can_move_browser_up()),
+            ("down", layout["down"], self.can_move_browser_down()),
         ):
-            pygame.draw.rect(self.screen, color, rect)
-            label = self.small_font.render(key, True, WHITE)
-            self.screen.blit(label, label.get_rect(center=rect.center))
-
-        for key, rect, color in ((action_label, layout["action"], GREEN if selected_entry else MID_GRAY),):
-            pygame.draw.rect(self.screen, color, rect)
-            label = self.wifi_font.render(key, True, WHITE)
-            self.screen.blit(label, label.get_rect(center=rect.center))
+            state = "pressed" if self.pressed_button == f"browser-{key_name}" else "normal"
+            icon = self.wifi_arrow_icons[key_name][state]
+            if icon is not None:
+                scaled_icon = fit_image_contain(icon, rect.size)
+                if scaled_icon is not None:
+                    if not enabled:
+                        scaled_icon = scaled_icon.copy()
+                        scaled_icon.set_alpha(128)
+                    self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
 
         path_text = self.truncate_text(self.tr("browser.path", path=self.rel_browser_path()), self.small_font, layout["path"].width)
         path_surface = self.small_font.render(path_text, True, WHITE)
-        self.screen.blit(path_surface, (layout["path"].x, layout["path"].y + 11))
+        path_rect = path_surface.get_rect()
+        path_rect.x = layout["path"].x
+        path_rect.centery = self.get_top_back_rect().centery
+        self.screen.blit(path_surface, path_rect)
 
         pygame.draw.rect(self.screen, DARK_GRAY, layout["list"])
-        row_height = layout["list"].height / BROWSE_VISIBLE_ITEMS
-        visible_entries = self.browser_entries[self.browser_page_start:self.browser_page_start + BROWSE_VISIBLE_ITEMS]
-        for row_offset, entry in enumerate(visible_entries):
-            index = self.browser_page_start + row_offset
-            row_rect = pygame.Rect(
-                layout["list"].x + 6,
-                int(layout["list"].y + 6 + row_offset * row_height),
-                layout["list"].width - 12,
-                int(row_height - 8),
-            )
-            selected = index == self.browser_selected_index
-            pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
-            if entry["type"] == "parent":
-                entry_label = ".."
-                meta_label = self.tr("browser.go_up")
-            else:
-                prefix = f"[{self.tr('browser.dir_prefix')}] " if entry["type"] == "directory" else f"[{self.tr('browser.file_prefix')}] "
-                entry_label = prefix + entry["label"]
-                if entry["type"] == "directory":
-                    noun = self.tr("browser.video") if entry["video_count"] == 1 else self.tr("browser.videos")
-                    action_label = self.tr("browser.view") if entry["action"] == "view" else self.tr("browser.browse")
-                    meta_label = f"{entry['video_count']} {noun} · {action_label}"
+        if not self.browser_entries:
+            empty_icon = self.browser_icons["empty"]
+            if empty_icon is not None:
+                scaled_empty = fit_image_contain(empty_icon, (120, 120))
+                if scaled_empty is not None:
+                    empty_rect = scaled_empty.get_rect(center=(layout["list"].centerx, layout["list"].centery - 30))
+                    self.screen.blit(scaled_empty, empty_rect)
+                    text_y = empty_rect.bottom + 20
                 else:
-                    meta_label = self.tr("browser.single_video")
+                    text_y = layout["list"].centery + 18
+            else:
+                text_y = layout["list"].centery
+            empty_line_1 = self.wifi_font.render("No hi ha videos", True, WHITE)
+            empty_line_2 = self.wifi_font.render("en aquesta carpeta", True, WHITE)
+            self.screen.blit(empty_line_1, empty_line_1.get_rect(center=(layout["list"].centerx, text_y)))
+            self.screen.blit(empty_line_2, empty_line_2.get_rect(center=(layout["list"].centerx, text_y + 32)))
+        else:
+            row_height = layout["list"].height / BROWSE_VISIBLE_ITEMS
+            visible_entries = self.browser_entries[self.browser_page_start:self.browser_page_start + BROWSE_VISIBLE_ITEMS]
+            for row_offset, entry in enumerate(visible_entries):
+                index = self.browser_page_start + row_offset
+                row_rect = pygame.Rect(
+                    layout["list"].x + 6,
+                    int(layout["list"].y + 6 + row_offset * row_height),
+                    layout["list"].width - 12,
+                    int(row_height - 8),
+                )
+                selected = index == self.browser_selected_index
+                pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
+                if entry["type"] == "parent":
+                    entry_label = ".."
+                    meta_label = self.tr("browser.go_up")
+                else:
+                    prefix = f"[{self.tr('browser.dir_prefix')}] " if entry["type"] == "directory" else f"[{self.tr('browser.file_prefix')}] "
+                    entry_label = prefix + entry["label"]
+                    if entry["type"] == "directory":
+                        noun = self.tr("browser.video") if entry["video_count"] == 1 else self.tr("browser.videos")
+                        next_action_label = self.tr("browser.view") if entry["action"] == "view" else self.tr("browser.browse")
+                        meta_label = f"{entry['video_count']} {noun} · {next_action_label}"
+                    else:
+                        meta_label = self.tr("browser.single_video")
 
-            entry_surface = self.browser_bold_font.render(
-                self.truncate_text(entry_label, self.browser_bold_font, row_rect.width - 20),
-                True,
-                WHITE,
-            )
-            meta_surface = self.small_font.render(
-                self.truncate_text(meta_label, self.small_font, row_rect.width - 20),
-                True,
-                GRAY,
-            )
-            self.screen.blit(entry_surface, (row_rect.x + 10, row_rect.y + 6))
-            self.screen.blit(meta_surface, (row_rect.x + 10, row_rect.y + 35))
+                entry_surface = self.browser_bold_font.render(
+                    self.truncate_text(entry_label, self.browser_bold_font, row_rect.width - 20),
+                    True,
+                    WHITE,
+                )
+                meta_surface = self.small_font.render(
+                    self.truncate_text(meta_label, self.small_font, row_rect.width - 20),
+                    True,
+                    GRAY,
+                )
+                self.screen.blit(entry_surface, (row_rect.x + 10, row_rect.y + 6))
+                self.screen.blit(meta_surface, (row_rect.x + 10, row_rect.y + 35))
 
-        status_surface = self.small_font.render(self.browser_status, True, GRAY)
-        self.screen.blit(status_surface, (20, self.height - 18))
+        action_enabled = bool(selected_entry)
+        if action_enabled:
+            action_asset = self.browser_assets["action"]["pressed"] if self.pressed_button == "browser-action" else self.browser_assets["action"]["normal"]
+            if action_asset is not None:
+                self.screen.blit(action_asset, layout["action"])
+
+            icon_state = "pressed" if self.pressed_button == "browser-action" else "normal"
+            action_icon = self.browser_icons[action_key][icon_state]
+            if action_icon is not None:
+                scaled_icon = fit_image_contain(action_icon, (layout["action"].height - 18, layout["action"].height - 18))
+                if scaled_icon is not None:
+                    icon_rect = scaled_icon.get_rect()
+                    icon_rect.left = layout["action"].x + 16
+                    icon_rect.centery = layout["action"].centery
+                    self.screen.blit(scaled_icon, icon_rect)
+                    text_left = icon_rect.right + 14
+                else:
+                    text_left = layout["action"].x + 20
+            else:
+                text_left = layout["action"].x + 20
+
+            action_surface = self.wifi_font.render(action_label, True, WHITE)
+            action_rect = action_surface.get_rect()
+            action_rect.left = text_left
+            action_rect.centery = layout["action"].centery
+            self.screen.blit(action_surface, action_rect)
 
     def draw(self):
         if self.state == "main":
@@ -1502,7 +1903,7 @@ class RaspberryPiTVMenu:
                 self.draw_missing("QR")
             else:
                 self.screen.blit(self.qr_asset, (0, 0))
-                self.draw_top_back_button()
+            self.draw_top_back_button()
         elif self.state == "clock":
             self.draw_clock()
             self.draw_top_back_button()
@@ -1518,12 +1919,15 @@ class RaspberryPiTVMenu:
             self.draw_play()
         elif self.state == "browse":
             self.draw_browser()
+            self.draw_top_back_button()
         elif self.state == "wifi":
             self.draw_wifi()
+            self.draw_top_back_button()
         elif self.state == "wifi_password":
             self.draw_wifi_password()
         elif self.state == "web_pin":
             self.draw_web_pin()
+            self.draw_top_back_button()
         elif self.state == "poweroff":
             self.draw_poweroff()
 
