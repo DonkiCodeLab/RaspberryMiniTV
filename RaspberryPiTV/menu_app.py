@@ -1540,8 +1540,12 @@ class RaspberryPiTVMenu:
                 if scaled_icon is not None:
                     if not enabled:
                         scaled_icon = scaled_icon.copy()
-                        scaled_icon.set_alpha(90)
+                        scaled_icon.set_alpha(70)
                     self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
+                    if not enabled:
+                        overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
+                        overlay.fill((0, 0, 0, 96))
+                        self.screen.blit(overlay, rect.topleft)
 
         connect_enabled = bool(self.wifi_selected_ssid)
         for key_name, label_text, enabled in (
@@ -1798,8 +1802,12 @@ class RaspberryPiTVMenu:
                 if scaled_icon is not None:
                     if not enabled:
                         scaled_icon = scaled_icon.copy()
-                        scaled_icon.set_alpha(90)
+                        scaled_icon.set_alpha(70)
                     self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
+                    if not enabled:
+                        overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
+                        overlay.fill((0, 0, 0, 96))
+                        self.screen.blit(overlay, rect.topleft)
 
         path_text = self.truncate_text(self.tr("browser.path", path=self.rel_browser_path()), self.small_font, layout["path"].width)
         path_surface = self.small_font.render(path_text, True, WHITE)
