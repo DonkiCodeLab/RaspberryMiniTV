@@ -1727,7 +1727,7 @@ class RaspberryPiTVMenu:
         layout = self.get_wifi_password_layout()
         self.screen.fill(BLACK)
 
-        title = self.title_font.render("Password de la Wi-FI", True, WHITE)
+        title = self.title_font.render("Password de", True, WHITE)
         title_y = self.get_top_back_rect().centery
         self.screen.blit(title, title.get_rect(center=(self.width // 2, title_y)))
 
