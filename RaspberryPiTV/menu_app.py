@@ -5,6 +5,7 @@ import select
 import socket
 import subprocess
 import sys
+import time
 from datetime import datetime
 
 DESKTOP_PREVIEW = os.environ.get("SIMPSONSTV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
@@ -235,7 +236,7 @@ def connect_wifi(ssid, password):
         nmcli_base.extend(["password", password])
     nmcli_result = run_command(nmcli_base)
     if nmcli_result.returncode == 0:
-        return True, "wifi.connected"
+        return wait_for_wifi_connection(ssid)
 
     if password:
         add_result = run_command(["wpa_cli", "-i", "wlan0", "add_network"])
@@ -246,11 +247,21 @@ def connect_wifi(ssid, password):
             run_command(["wpa_cli", "-i", "wlan0", "enable_network", network_id])
             save_result = run_command(["wpa_cli", "-i", "wlan0", "save_config"])
             if save_result.returncode == 0:
-                return True, "wifi.trying_to_connect"
+                return wait_for_wifi_connection(ssid)
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
     return False, stderr or stdout or "wifi.could_not_connect"
+
+
+def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds=1):
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        current_ssid = get_connected_wifi_info()
+        if current_ssid == expected_ssid:
+            return True, "wifi.connected"
+        time.sleep(interval_seconds)
+    return False, "wifi.could_not_connect"
 
 
 def get_connected_wifi_info():
@@ -1269,6 +1280,7 @@ class RaspberryPiTVMenu:
                 self.wifi_dialog_is_error = not success
                 if success:
                     self.refresh_wifi_networks()
+                    self.refresh_qr_asset()
                 return
 
             key_value = self.get_keyboard_key_at(pos)
@@ -1636,7 +1648,7 @@ class RaspberryPiTVMenu:
 
             label = self.wifi_font.render(label_text, True, WHITE)
             if not enabled:
-                label.set_alpha(128)
+                label.set_alpha(80)
             label_rect = label.get_rect()
             label_rect.left = text_left
             label_rect.centery = rect.centery
@@ -1646,16 +1658,16 @@ class RaspberryPiTVMenu:
         layout = self.get_wifi_password_layout()
         self.screen.fill(BLACK)
 
-        title = self.title_font.render(self.tr("wifi.connect_title"), True, WHITE)
+        title = self.title_font.render("Password de la Wi-FI", True, WHITE)
         title_y = self.get_top_back_rect().centery
         self.screen.blit(title, title.get_rect(center=(self.width // 2, title_y)))
 
-        selected_text = self.small_font.render(
-            self.tr("wifi.enter_password_for", ssid=self.wifi_selected_ssid or self.tr("common.none")),
+        selected_text = self.wifi_font.render(
+            self.wifi_selected_ssid or self.tr("common.none"),
             True,
             WHITE,
         )
-        self.screen.blit(selected_text, (layout["selected"].x, layout["selected"].y))
+        self.screen.blit(selected_text, selected_text.get_rect(center=layout["selected"].center))
 
         pygame.draw.rect(self.screen, WHITE, layout["password"], 2)
         password_text = self.wifi_font.render(self.wifi_password or " ", True, WHITE)
