@@ -415,6 +415,8 @@ class RaspberryPiTVMenu:
         self.qr_asset = None
         self.wifi_networks = []
         self.wifi_selected_ssid = None
+        self.wifi_selected_index = 0
+        self.current_wifi_ssid = None
         self.wifi_password = ""
         self.wifi_status = ""
         self.wifi_page_start = 0
@@ -630,9 +632,20 @@ class RaspberryPiTVMenu:
 
     def refresh_wifi_networks(self):
         self.wifi_networks = scan_wifi_networks()
+        self.current_wifi_ssid = get_connected_wifi_info()
         self.wifi_page_start = 0
         if self.wifi_selected_ssid and not any(item["ssid"] == self.wifi_selected_ssid for item in self.wifi_networks):
             self.wifi_selected_ssid = None
+        if self.wifi_selected_ssid:
+            for index, item in enumerate(self.wifi_networks):
+                if item["ssid"] == self.wifi_selected_ssid:
+                    self.wifi_selected_index = index
+                    break
+        elif self.wifi_networks:
+            self.wifi_selected_index = 0
+            self.wifi_selected_ssid = self.wifi_networks[0]["ssid"]
+        else:
+            self.wifi_selected_index = 0
         self.wifi_status = self.tr("wifi.networks_found", count=len(self.wifi_networks)) if self.wifi_networks else self.tr("wifi.no_networks")
 
     def get_wifi_layout(self):
@@ -1144,7 +1157,7 @@ class RaspberryPiTVMenu:
 
     def handle_wifi_touch_down(self, pos):
         layout = self.get_wifi_layout()
-        connect_enabled = bool(self.wifi_selected_ssid)
+        connect_enabled = bool(self.wifi_selected_ssid) and self.wifi_selected_ssid != self.current_wifi_ssid
         if self.top_back_at_pos(pos):
             self.pressed_button = "top-back"
         elif layout["refresh"].collidepoint(pos):
@@ -1166,10 +1179,21 @@ class RaspberryPiTVMenu:
         self.wifi_page_start = max(0, min(max_start, self.wifi_page_start + delta))
 
     def can_move_wifi_up(self):
-        return self.wifi_page_start > 0
+        return bool(self.wifi_networks) and self.wifi_selected_index > 0
 
     def can_move_wifi_down(self):
-        return self.wifi_page_start < max(0, len(self.wifi_networks) - 4)
+        return bool(self.wifi_networks) and self.wifi_selected_index < len(self.wifi_networks) - 1
+
+    def move_wifi_selection(self, delta):
+        if not self.wifi_networks:
+            return
+        self.wifi_selected_index = max(0, min(len(self.wifi_networks) - 1, self.wifi_selected_index + delta))
+        self.wifi_selected_ssid = self.wifi_networks[self.wifi_selected_index]["ssid"]
+        if self.wifi_selected_index < self.wifi_page_start:
+            self.wifi_page_start = self.wifi_selected_index
+        if self.wifi_selected_index >= self.wifi_page_start + 4:
+            self.wifi_page_start = self.wifi_selected_index - 3
+        self.wifi_status = self.tr("wifi.selected", ssid=self.wifi_selected_ssid)
 
     def handle_wifi_touch_up(self, pos):
         active_button = self.pressed_button
@@ -1183,15 +1207,14 @@ class RaspberryPiTVMenu:
                 self.refresh_wifi_networks()
                 return
             if active_button == "wifi-up" and layout["up"].collidepoint(pos):
-                self.move_wifi_page(-1)
+                self.move_wifi_selection(-1)
                 return
             if active_button == "wifi-down" and layout["down"].collidepoint(pos):
-                self.move_wifi_page(1)
+                self.move_wifi_selection(1)
                 return
             if active_button == "wifi-connect" and layout["connect"].collidepoint(pos):
                 if self.wifi_selected_ssid:
-                    current_ssid = get_connected_wifi_info()
-                    if self.wifi_selected_ssid == current_ssid:
+                    if self.wifi_selected_ssid == self.current_wifi_ssid:
                         self.wifi_status = self.tr("wifi.already_connected", ssid=self.wifi_selected_ssid)
                     else:
                         self.wifi_password = ""
@@ -1203,6 +1226,7 @@ class RaspberryPiTVMenu:
                 row_index = int((pos[1] - layout["list"].y) / row_height)
                 index = self.wifi_page_start + row_index
                 if 0 <= index < len(self.wifi_networks):
+                    self.wifi_selected_index = index
                     self.wifi_selected_ssid = self.wifi_networks[index]["ssid"]
                     self.wifi_status = self.tr("wifi.selected", ssid=self.wifi_selected_ssid)
                 return
@@ -1508,7 +1532,7 @@ class RaspberryPiTVMenu:
         row_height = 62
         visible_networks = self.wifi_networks[self.wifi_page_start:self.wifi_page_start + 4]
 
-        current_ssid = get_connected_wifi_info()
+        current_ssid = self.current_wifi_ssid
         for row_offset, network in enumerate(visible_networks):
             index = self.wifi_page_start + row_offset
             if index >= len(self.wifi_networks):
@@ -1547,7 +1571,7 @@ class RaspberryPiTVMenu:
                         overlay.fill((0, 0, 0, 96))
                         self.screen.blit(overlay, rect.topleft)
 
-        connect_enabled = bool(self.wifi_selected_ssid)
+        connect_enabled = bool(self.wifi_selected_ssid) and self.wifi_selected_ssid != current_ssid
         for key_name, label_text, enabled in (
             ("refresh", self.tr("common.refresh"), True),
             ("connect", self.tr("common.connect"), connect_enabled),
