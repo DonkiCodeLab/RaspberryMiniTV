@@ -369,6 +369,7 @@ def connect_wifi(ssid, password):
 
     pre_connect_ssid = get_connected_wifi_info()
     pre_connect_ip = get_wifi_ipv4()
+    pre_connect_uuid = get_active_wifi_connection_uuid()
     nmcli_base = ["nmcli", "dev", "wifi", "connect", ssid]
     if password:
         nmcli_base.extend(["password", password])
@@ -378,12 +379,17 @@ def connect_wifi(ssid, password):
         has_password=bool(password),
         previous_ssid=pre_connect_ssid,
         previous_ip=pre_connect_ip,
+        previous_uuid=pre_connect_uuid,
     )
 
     prepare_wifi_adapter_for_connection(ssid)
     preflight = preflight_wifi_visibility_check(ssid)
     if not preflight["allow_connect"] and preflight["reason"] == "target_not_visible":
-        return False, f"La red {ssid} ya no esta visible para el sistema. Pulsa Actualitza y vuelve a intentarlo."
+        rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
+        message = f"La red {ssid} ya no esta visible para el sistema. Pulsa Actualitza y vuelve a intentarlo."
+        if rollback_success and pre_connect_ssid:
+            message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
+        return False, message
 
     nmcli_result = run_command(nmcli_base)
     log_wifi_debug(
@@ -404,7 +410,12 @@ def connect_wifi(ssid, password):
             visible_networks=format_wifi_snapshot_for_log(post_fail_visible_networks),
         )
     if nmcli_result.returncode == 0:
-        return wait_for_wifi_connection(ssid)
+        success, message = wait_for_wifi_connection(ssid)
+        if not success:
+            rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
+            if rollback_success and pre_connect_ssid:
+                message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
+        return success, message
 
     if password:
         add_result = run_command(["wpa_cli", "-i", "wlan0", "add_network"])
@@ -447,17 +458,27 @@ def connect_wifi(ssid, password):
                 stdout=(reconnect_result.stdout or "").strip(),
                 stderr=(reconnect_result.stderr or "").strip(),
             )
-            return wait_for_wifi_connection(ssid)
+            success, message = wait_for_wifi_connection(ssid)
+            if not success:
+                rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
+                if rollback_success and pre_connect_ssid:
+                    message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
+            return success, message
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
-    return False, classify_wifi_error(stdout, stderr)
+    message = classify_wifi_error(stdout, stderr)
+    rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
+    if rollback_success and pre_connect_ssid:
+        message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
+    return False, message
 
 
 def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds=1):
     deadline = time.time() + timeout_seconds
     last_ssid = None
     last_ip = None
+    prioritized_uuid = None
     while time.time() < deadline:
         current_ssid = get_connected_wifi_info()
         current_ip = get_wifi_ipv4()
@@ -466,6 +487,9 @@ def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds
         log_wifi_debug("wifi_connect_poll", expected_ssid=expected_ssid, current_ssid=current_ssid, current_ip=current_ip)
         if current_ssid == expected_ssid:
             if current_ip:
+                if prioritized_uuid is None:
+                    prioritized_uuid = get_active_wifi_connection_uuid()
+                    prioritize_wifi_connection(prioritized_uuid)
                 return True, f"Conectado a {expected_ssid} ({current_ip})"
             return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
         time.sleep(interval_seconds)
@@ -491,6 +515,96 @@ def get_connected_wifi_info():
     iwgetid_result = run_command(["iwgetid", "-r"])
     ssid = iwgetid_result.stdout.strip()
     return ssid or None
+
+
+def get_active_wifi_connection_uuid(interface="wlan0"):
+    result = run_command(["nmcli", "-t", "-f", "UUID,TYPE,DEVICE", "connection", "show", "--active"])
+    if result.returncode != 0:
+        log_command_result("wifi_active_connection_query_failed", ["nmcli", "-t", "-f", "UUID,TYPE,DEVICE", "connection", "show", "--active"], result)
+        return None
+
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split(":")
+        if len(parts) < 3:
+            continue
+        uuid = parts[0].strip()
+        connection_type = parts[1].strip()
+        device = parts[2].strip()
+        if uuid and connection_type == "802-11-wireless" and device == interface:
+            return uuid
+    return None
+
+
+def restore_previous_wifi_connection(connection_uuid, ssid=None):
+    if not connection_uuid:
+        log_wifi_debug("wifi_restore_previous_skipped", reason="missing_previous_uuid", ssid=ssid)
+        return False
+
+    result = run_command(["nmcli", "connection", "up", connection_uuid])
+    log_command_result("wifi_restore_previous", ["nmcli", "connection", "up", connection_uuid], result)
+    if result.returncode != 0:
+        log_wifi_debug("wifi_restore_previous_failed", ssid=ssid, connection_uuid=connection_uuid)
+        return False
+
+    wait_deadline = time.time() + 12
+    while time.time() < wait_deadline:
+        current_ssid = get_connected_wifi_info()
+        current_ip = get_wifi_ipv4()
+        log_wifi_debug(
+            "wifi_restore_previous_poll",
+            expected_ssid=ssid,
+            current_ssid=current_ssid,
+            current_ip=current_ip,
+            connection_uuid=connection_uuid,
+        )
+        if current_ip and (not ssid or current_ssid == ssid):
+            return True
+        time.sleep(1)
+
+    log_wifi_debug("wifi_restore_previous_timeout", ssid=ssid, connection_uuid=connection_uuid)
+    return False
+
+
+def prioritize_wifi_connection(connection_uuid):
+    if not connection_uuid:
+        return
+
+    preferred_result = run_command(
+        ["nmcli", "connection", "modify", connection_uuid, "connection.autoconnect", "yes", "connection.autoconnect-priority", "100"]
+    )
+    log_command_result(
+        "wifi_set_preferred_connection",
+        ["nmcli", "connection", "modify", connection_uuid, "connection.autoconnect", "yes", "connection.autoconnect-priority", "100"],
+        preferred_result,
+    )
+    if preferred_result.returncode != 0:
+        return
+
+    wifi_connections_result = run_command(["nmcli", "-t", "-f", "UUID,TYPE", "connection", "show"])
+    log_command_result("wifi_list_saved_connections", ["nmcli", "-t", "-f", "UUID,TYPE", "connection", "show"], wifi_connections_result)
+    if wifi_connections_result.returncode != 0:
+        return
+
+    for line in wifi_connections_result.stdout.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split(":")
+        if len(parts) < 2:
+            continue
+        other_uuid = parts[0].strip()
+        connection_type = parts[1].strip()
+        if not other_uuid or other_uuid == connection_uuid or connection_type != "802-11-wireless":
+            continue
+        demote_result = run_command(
+            ["nmcli", "connection", "modify", other_uuid, "connection.autoconnect-priority", "0"]
+        )
+        log_command_result(
+            "wifi_demote_saved_connection",
+            ["nmcli", "connection", "modify", other_uuid, "connection.autoconnect-priority", "0"],
+            demote_result,
+        )
 
 
 def load_image(path):
