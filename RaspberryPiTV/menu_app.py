@@ -1485,27 +1485,64 @@ class RaspberryPiTVMenu:
                 self.state = "wifi"
                 return
             if active_button == "wifi-password-connect" and layout["connect"].collidepoint(pos):
-                success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
-                resolved_message = message
-                self.wifi_status = resolved_message
-                self.wifi_dialog_message = resolved_message
-                self.wifi_dialog_is_error = not success
-                if success:
-                    self.refresh_wifi_networks()
-                    self.refresh_qr_asset()
+                self.submit_wifi_password()
                 return
 
             key_value = self.get_keyboard_key_at(pos)
             if key_value is None:
                 return
-            if key_value == "BACKSPACE":
-                self.wifi_password = self.wifi_password[:-1]
-            elif key_value == "TOGGLE_CASE":
-                self.wifi_keyboard_upper = not self.wifi_keyboard_upper
-            elif key_value == "CLEAR":
-                self.wifi_password = ""
-            else:
-                self.wifi_password += key_value
+            self.apply_wifi_password_key(key_value)
+
+    def apply_wifi_password_key(self, key_value):
+        if key_value == "BACKSPACE":
+            self.wifi_password = self.wifi_password[:-1]
+        elif key_value == "TOGGLE_CASE":
+            self.wifi_keyboard_upper = not self.wifi_keyboard_upper
+        elif key_value == "CLEAR":
+            self.wifi_password = ""
+        elif key_value:
+            self.wifi_password += key_value
+
+    def submit_wifi_password(self):
+        success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
+        resolved_message = message
+        self.wifi_status = resolved_message
+        self.wifi_dialog_message = resolved_message
+        self.wifi_dialog_is_error = not success
+        if success:
+            self.refresh_wifi_networks()
+            self.refresh_qr_asset()
+
+    def handle_wifi_password_keydown(self, event):
+        if self.state != "wifi_password":
+            return False
+
+        if self.wifi_dialog_message:
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_ESCAPE):
+                was_error = self.wifi_dialog_is_error
+                self.wifi_dialog_message = ""
+                self.wifi_dialog_is_error = False
+                if not was_error and self.current_wifi_ssid == self.wifi_selected_ssid:
+                    self.state = "wifi"
+                return True
+            return False
+
+        if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+            self.submit_wifi_password()
+            return True
+        if event.key == pygame.K_BACKSPACE:
+            self.apply_wifi_password_key("BACKSPACE")
+            return True
+        if event.key == pygame.K_DELETE:
+            self.apply_wifi_password_key("CLEAR")
+            return True
+
+        typed_text = event.unicode or ""
+        if typed_text and typed_text.isprintable():
+            self.wifi_password += typed_text
+            return True
+
+        return False
 
     def get_web_pin_layout(self):
         return {
@@ -2271,6 +2308,8 @@ class RaspberryPiTVMenu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.KEYDOWN and self.handle_wifi_password_keydown(event):
+                    continue
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
                 elif self.touch_device is None and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
