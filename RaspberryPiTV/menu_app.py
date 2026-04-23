@@ -242,6 +242,43 @@ def format_wifi_snapshot_for_log(networks, limit=12):
     return ", ".join(preview)
 
 
+def preflight_wifi_visibility_check(ssid, attempts=3, delay_seconds=1.0):
+    saw_any_networks = False
+    for attempt in range(1, attempts + 1):
+        scan_result, visible_networks = get_nmcli_wifi_snapshot(rescan=True)
+        target_visible = any(network["ssid"] == ssid for network in visible_networks)
+        if visible_networks:
+            saw_any_networks = True
+        log_wifi_debug(
+            "wifi_connect_preflight_scan",
+            ssid=ssid,
+            attempt=attempt,
+            returncode=scan_result.returncode,
+            stderr=(scan_result.stderr or "").strip(),
+            target_visible=target_visible,
+            visible_count=len(visible_networks),
+            visible_networks=format_wifi_snapshot_for_log(visible_networks),
+        )
+        if scan_result.returncode == 0 and target_visible:
+            return {"allow_connect": True, "reason": "target_visible"}
+        if scan_result.returncode == 0 and visible_networks and not target_visible:
+            if attempt == attempts:
+                return {"allow_connect": False, "reason": "target_not_visible"}
+        if attempt < attempts:
+            time.sleep(delay_seconds)
+
+    if saw_any_networks:
+        return {"allow_connect": False, "reason": "target_not_visible"}
+
+    log_wifi_debug(
+        "wifi_connect_preflight_scan_empty",
+        ssid=ssid,
+        attempts=attempts,
+        note="nmcli no devolvio redes en ninguno de los intentos; se intentara conectar igualmente",
+    )
+    return {"allow_connect": True, "reason": "all_scans_empty"}
+
+
 def scan_wifi_networks():
     nmcli_result, networks = get_nmcli_wifi_snapshot(rescan=True)
     if nmcli_result.returncode == 0:
@@ -308,18 +345,8 @@ def connect_wifi(ssid, password):
         previous_ip=pre_connect_ip,
     )
 
-    scan_result, visible_networks = get_nmcli_wifi_snapshot(rescan=True)
-    target_visible = any(network["ssid"] == ssid for network in visible_networks)
-    log_wifi_debug(
-        "wifi_connect_preflight_scan",
-        ssid=ssid,
-        returncode=scan_result.returncode,
-        stderr=(scan_result.stderr or "").strip(),
-        target_visible=target_visible,
-        visible_count=len(visible_networks),
-        visible_networks=format_wifi_snapshot_for_log(visible_networks),
-    )
-    if scan_result.returncode == 0 and not target_visible:
+    preflight = preflight_wifi_visibility_check(ssid)
+    if not preflight["allow_connect"] and preflight["reason"] == "target_not_visible":
         return False, f"La red {ssid} ya no esta visible para el sistema. Pulsa Actualitza y vuelve a intentarlo."
 
     nmcli_result = run_command(nmcli_base)
