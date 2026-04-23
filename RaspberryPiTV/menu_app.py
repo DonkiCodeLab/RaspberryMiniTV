@@ -242,6 +242,41 @@ def format_wifi_snapshot_for_log(networks, limit=12):
     return ", ".join(preview)
 
 
+def log_command_result(event, command, result):
+    log_wifi_debug(
+        event,
+        command=" ".join(command),
+        returncode=result.returncode,
+        stdout=(result.stdout or "").strip(),
+        stderr=(result.stderr or "").strip(),
+    )
+
+
+def capture_wifi_adapter_state(tag):
+    for suffix, command in (
+        ("device_status", ["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device", "status"]),
+        ("wifi_list", ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list"]),
+        ("link", ["iw", "dev", "wlan0", "link"]),
+    ):
+        result = run_command(command)
+        log_command_result(f"{tag}_{suffix}", command, result)
+
+
+def prepare_wifi_adapter_for_connection(ssid):
+    capture_wifi_adapter_state("wifi_connect_before_prepare")
+
+    disconnect_result = run_command(["nmcli", "device", "disconnect", "wlan0"])
+    log_command_result("wifi_connect_disconnect", ["nmcli", "device", "disconnect", "wlan0"], disconnect_result)
+    time.sleep(1.0)
+
+    rescan_result = run_command(["nmcli", "device", "wifi", "rescan", "ifname", "wlan0"])
+    log_command_result("wifi_connect_rescan", ["nmcli", "device", "wifi", "rescan", "ifname", "wlan0"], rescan_result)
+    time.sleep(1.5)
+
+    capture_wifi_adapter_state("wifi_connect_after_prepare")
+    log_wifi_debug("wifi_connect_prepare_done", ssid=ssid)
+
+
 def preflight_wifi_visibility_check(ssid, attempts=3, delay_seconds=1.0):
     saw_any_networks = False
     for attempt in range(1, attempts + 1):
@@ -345,6 +380,7 @@ def connect_wifi(ssid, password):
         previous_ip=pre_connect_ip,
     )
 
+    prepare_wifi_adapter_for_connection(ssid)
     preflight = preflight_wifi_visibility_check(ssid)
     if not preflight["allow_connect"] and preflight["reason"] == "target_not_visible":
         return False, f"La red {ssid} ya no esta visible para el sistema. Pulsa Actualitza y vuelve a intentarlo."
@@ -390,11 +426,28 @@ def connect_wifi(ssid, password):
                 "wifi_connect_wpa_save",
                 ssid=ssid,
                 returncode=save_result.returncode,
-                stdout=(save_result.stdout or "").strip(),
-                stderr=(save_result.stderr or "").strip(),
+            stdout=(save_result.stdout or "").strip(),
+            stderr=(save_result.stderr or "").strip(),
+        )
+        if save_result.returncode == 0:
+            select_result = run_command(["wpa_cli", "-i", "wlan0", "select_network", network_id])
+            log_wifi_debug(
+                "wifi_connect_wpa_select_network",
+                ssid=ssid,
+                returncode=select_result.returncode,
+                stdout=(select_result.stdout or "").strip(),
+                stderr=(select_result.stderr or "").strip(),
+                network_id=network_id,
             )
-            if save_result.returncode == 0:
-                return wait_for_wifi_connection(ssid)
+            reconnect_result = run_command(["wpa_cli", "-i", "wlan0", "reconnect"])
+            log_wifi_debug(
+                "wifi_connect_wpa_reconnect",
+                ssid=ssid,
+                returncode=reconnect_result.returncode,
+                stdout=(reconnect_result.stdout or "").strip(),
+                stderr=(reconnect_result.stderr or "").strip(),
+            )
+            return wait_for_wifi_connection(ssid)
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
