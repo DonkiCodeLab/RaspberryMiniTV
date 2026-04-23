@@ -205,26 +205,48 @@ def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
+def parse_nmcli_wifi_list(raw_output):
+    networks = []
+    seen = set()
+    for line in raw_output.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split(":")
+        if len(parts) < 3:
+            continue
+        ssid = parts[0].strip()
+        signal = parts[1].strip() or "0"
+        security = ":".join(parts[2:]).strip()
+        if not ssid or ssid in seen:
+            continue
+        seen.add(ssid)
+        networks.append({"ssid": ssid, "signal": int(signal or 0), "security": security or "open"})
+    return sorted(networks, key=lambda item: (-item["signal"], item["ssid"].lower()))
+
+
+def get_nmcli_wifi_snapshot(rescan=True):
+    command = ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list"]
+    if rescan:
+        command.extend(["--rescan", "yes"])
+    result = run_command(command)
+    networks = parse_nmcli_wifi_list(result.stdout) if result.returncode == 0 else []
+    return result, networks
+
+
+def format_wifi_snapshot_for_log(networks, limit=12):
+    if not networks:
+        return "none"
+    preview = [f"{item['ssid']}({item['signal']})" for item in networks[:limit]]
+    if len(networks) > limit:
+        preview.append(f"...+{len(networks) - limit}")
+    return ", ".join(preview)
+
+
 def scan_wifi_networks():
-    nmcli_result = run_command(["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "yes"])
+    nmcli_result, networks = get_nmcli_wifi_snapshot(rescan=True)
     if nmcli_result.returncode == 0:
-        networks = []
-        seen = set()
-        for line in nmcli_result.stdout.splitlines():
-            if not line.strip():
-                continue
-            parts = line.split(":")
-            if len(parts) < 3:
-                continue
-            ssid = parts[0].strip()
-            signal = parts[1].strip() or "0"
-            security = ":".join(parts[2:]).strip()
-            if not ssid or ssid in seen:
-                continue
-            seen.add(ssid)
-            networks.append({"ssid": ssid, "signal": int(signal or 0), "security": security or "open"})
         if networks:
-            return sorted(networks, key=lambda item: (-item["signal"], item["ssid"].lower()))
+            return networks
         log_debug("WIFI nmcli returned no networks, falling back to iwlist")
 
     iw_result = run_command(["iwlist", "wlan0", "scan"])
@@ -273,10 +295,33 @@ def connect_wifi(ssid, password):
     if not ssid:
         return False, "Selecciona una red Wi-Fi primero."
 
+    pre_connect_ssid = get_connected_wifi_info()
+    pre_connect_ip = get_wifi_ipv4()
     nmcli_base = ["nmcli", "dev", "wifi", "connect", ssid]
     if password:
         nmcli_base.extend(["password", password])
-    log_wifi_debug("wifi_connect_start", ssid=ssid, has_password=bool(password))
+    log_wifi_debug(
+        "wifi_connect_start",
+        ssid=ssid,
+        has_password=bool(password),
+        previous_ssid=pre_connect_ssid,
+        previous_ip=pre_connect_ip,
+    )
+
+    scan_result, visible_networks = get_nmcli_wifi_snapshot(rescan=True)
+    target_visible = any(network["ssid"] == ssid for network in visible_networks)
+    log_wifi_debug(
+        "wifi_connect_preflight_scan",
+        ssid=ssid,
+        returncode=scan_result.returncode,
+        stderr=(scan_result.stderr or "").strip(),
+        target_visible=target_visible,
+        visible_count=len(visible_networks),
+        visible_networks=format_wifi_snapshot_for_log(visible_networks),
+    )
+    if scan_result.returncode == 0 and not target_visible:
+        return False, f"La red {ssid} ya no esta visible para el sistema. Pulsa Actualitza y vuelve a intentarlo."
+
     nmcli_result = run_command(nmcli_base)
     log_wifi_debug(
         "wifi_connect_nmcli",
@@ -285,6 +330,16 @@ def connect_wifi(ssid, password):
         stdout=(nmcli_result.stdout or "").strip(),
         stderr=(nmcli_result.stderr or "").strip(),
     )
+    if nmcli_result.returncode != 0:
+        post_fail_scan_result, post_fail_visible_networks = get_nmcli_wifi_snapshot(rescan=False)
+        log_wifi_debug(
+            "wifi_connect_nmcli_visible_networks",
+            ssid=ssid,
+            returncode=post_fail_scan_result.returncode,
+            stderr=(post_fail_scan_result.stderr or "").strip(),
+            visible_count=len(post_fail_visible_networks),
+            visible_networks=format_wifi_snapshot_for_log(post_fail_visible_networks),
+        )
     if nmcli_result.returncode == 0:
         return wait_for_wifi_connection(ssid)
 
@@ -321,15 +376,23 @@ def connect_wifi(ssid, password):
 
 def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds=1):
     deadline = time.time() + timeout_seconds
+    last_ssid = None
+    last_ip = None
     while time.time() < deadline:
         current_ssid = get_connected_wifi_info()
         current_ip = get_wifi_ipv4()
+        last_ssid = current_ssid
+        last_ip = current_ip
         log_wifi_debug("wifi_connect_poll", expected_ssid=expected_ssid, current_ssid=current_ssid, current_ip=current_ip)
         if current_ssid == expected_ssid:
             if current_ip:
                 return True, f"Conectado a {expected_ssid} ({current_ip})"
             return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
         time.sleep(interval_seconds)
+    if last_ssid:
+        return False, f"No se pudo conectar a {expected_ssid}. La Raspberry sigue en {last_ssid}."
+    if last_ip:
+        return False, f"No se pudo conectar a {expected_ssid}. La Raspberry mantiene la IP {last_ip}."
     return False, f"No se pudo confirmar la conexion a {expected_ssid}."
 
 
