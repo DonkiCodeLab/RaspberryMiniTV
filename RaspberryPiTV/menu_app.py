@@ -55,6 +55,7 @@ FOLDER_EXPLORER_PRESSED_PATH = os.path.join(MENU_DIR, "folder_explorer_pressed.p
 ICON_PLAY_NORMAL_PATH = os.path.join(MENU_DIR, "icon_play_normal.png")
 ICON_PLAY_PRESSED_PATH = os.path.join(MENU_DIR, "icon_play_pressed.png")
 EMPTY_ICON_PATH = os.path.join(MENU_DIR, "empty.png")
+NO_WIFI_IMAGE_PATH = os.path.join(MENU_DIR, "no_wifi.png")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
@@ -940,32 +941,50 @@ class RaspberryPiTVMenu:
         qr_surface.fill(BLACK)
 
         title = self.title_font.render(self.tr("qr.title"), True, WHITE)
-        subtitle = self.font.render(self.qr_url, True, WHITE)
         wifi_line = self.small_font.render(
             self.tr("qr.wifi_connected", ssid=connected_wifi) if connected_wifi else self.tr("qr.wifi_not_connected"),
             True,
             WHITE,
         )
+        subtitle = None
 
-        qr = load_image(QR_PNG)
-        if qr is not None:
-            qr_size = min(self.width, self.height) // 2
-            qr_scaled = fit_image(qr, (qr_size, qr_size))
-            qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
-            qr_surface.blit(qr_scaled, qr_rect)
-            subtitle_y = qr_rect.bottom + 44
-            wifi_y = qr_rect.bottom + 78
+        if connected_wifi:
+            subtitle = self.font.render(self.qr_url, True, WHITE)
+            qr = load_image(QR_PNG)
+            if qr is not None:
+                qr_size = min(self.width, self.height) // 2
+                qr_scaled = fit_image(qr, (qr_size, qr_size))
+                qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
+                qr_surface.blit(qr_scaled, qr_rect)
+                subtitle_y = qr_rect.bottom + 44
+                wifi_y = qr_rect.bottom + 78
+            else:
+                fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
+                draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
+                draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
+                fallback_label = self.font.render(self.qr_url, True, WHITE)
+                qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
+                subtitle_y = fallback_box.bottom + 38
+                wifi_y = fallback_box.bottom + 68
         else:
-            fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
-            draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
-            draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
-            fallback_label = self.font.render(self.qr_url, True, WHITE)
-            qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
-            subtitle_y = fallback_box.bottom + 38
-            wifi_y = fallback_box.bottom + 68
+            no_wifi = load_image(NO_WIFI_IMAGE_PATH)
+            if no_wifi is not None:
+                no_wifi_size = min(self.width, self.height) // 2
+                no_wifi_scaled = fit_image(no_wifi, (no_wifi_size, no_wifi_size))
+                no_wifi_rect = no_wifi_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
+                qr_surface.blit(no_wifi_scaled, no_wifi_rect)
+                wifi_y = no_wifi_rect.bottom + 52
+            else:
+                fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
+                draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
+                draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
+                fallback_label = self.font.render(self.tr("qr.wifi_not_connected"), True, WHITE)
+                qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
+                wifi_y = fallback_box.bottom + 52
 
         qr_surface.blit(title, title.get_rect(center=(self.width // 2, 42)))
-        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, subtitle_y)))
+        if subtitle is not None:
+            qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, subtitle_y)))
         qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, wifi_y)))
         self.qr_asset = qr_surface.convert()
 
