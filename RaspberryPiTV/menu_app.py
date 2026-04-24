@@ -479,6 +479,7 @@ def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds
     deadline = time.time() + timeout_seconds
     last_ssid = None
     last_ip = None
+    matched_expected_ssid = False
     prioritized_uuid = None
     while time.time() < deadline:
         current_ssid = get_connected_wifi_info()
@@ -487,13 +488,15 @@ def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds
         last_ip = current_ip
         log_wifi_debug("wifi_connect_poll", expected_ssid=expected_ssid, current_ssid=current_ssid, current_ip=current_ip)
         if current_ssid == expected_ssid:
+            matched_expected_ssid = True
             if current_ip:
                 if prioritized_uuid is None:
                     prioritized_uuid = get_active_wifi_connection_uuid()
                     prioritize_wifi_connection(prioritized_uuid)
                 return True, f"Conectado a {expected_ssid} ({current_ip})"
-            return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
         time.sleep(interval_seconds)
+    if matched_expected_ssid:
+        return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
     if last_ssid:
         return False, f"No se pudo conectar a {expected_ssid}. La Raspberry sigue en {last_ssid}."
     if last_ip:
