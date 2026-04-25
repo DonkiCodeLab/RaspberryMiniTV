@@ -662,6 +662,8 @@ class RaspberryPiTVMenu:
         pygame.mouse.set_visible(DESKTOP_PREVIEW)
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
+        self.startup_splash_asset = self.prepare_startup_splash_asset()
+        self.draw_startup_splash()
         self.font = pygame.font.SysFont(FONT_FAMILY, 28)
         self.title_font = pygame.font.SysFont(FONT_FAMILY, 42, bold=True)
         self.poweroff_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
@@ -773,7 +775,6 @@ class RaspberryPiTVMenu:
         self.browser_page_start = 0
         self.browser_entries = []
         self.browser_status = ""
-        self.startup_splash_asset = self.prepare_asset(SPLASH_IMAGE_PATH)
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
         self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
         self.web_pin_icons = {
@@ -865,6 +866,12 @@ class RaspberryPiTVMenu:
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
         self.setup_touch_input()
+
+    def prepare_startup_splash_asset(self):
+        splash_image = load_image(SPLASH_IMAGE_PATH)
+        if splash_image is None:
+            return None
+        return fit_image(splash_image, (self.width, self.height))
 
     def draw_startup_splash(self):
         if self.startup_splash_asset is not None:
