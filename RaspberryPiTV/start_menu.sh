@@ -16,4 +16,4 @@ export SDL_MOUSE_TOUCH_EVENTS=1
 
 pkill -f "python3 ${SCRIPT_DIR}/menu_app.py" >/dev/null 2>&1 || true
 
-exec /usr/bin/python3 "${SCRIPT_DIR}/menu_app.py" >>"${LOG_FILE}" 2>&1
+nohup /usr/bin/python3 "${SCRIPT_DIR}/menu_app.py" >>"${LOG_FILE}" 2>&1 &
