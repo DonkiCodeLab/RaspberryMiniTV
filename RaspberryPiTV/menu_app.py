@@ -56,6 +56,7 @@ ICON_PLAY_NORMAL_PATH = os.path.join(MENU_DIR, "icon_play_normal.png")
 ICON_PLAY_PRESSED_PATH = os.path.join(MENU_DIR, "icon_play_pressed.png")
 EMPTY_ICON_PATH = os.path.join(MENU_DIR, "empty.png")
 NO_WIFI_IMAGE_PATH = os.path.join(MENU_DIR, "no_wifi.png")
+SPLASH_IMAGE_PATH = os.path.join(MENU_DIR, "splash.png")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
@@ -95,6 +96,7 @@ PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
 BACK_BUTTON_SCALE = 1.3
 BROWSE_VISIBLE_ITEMS = 5
 LOADING_MIN_DURATION_MS = 1000
+STARTUP_SPLASH_MS = 2000
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
@@ -771,6 +773,7 @@ class RaspberryPiTVMenu:
         self.browser_page_start = 0
         self.browser_entries = []
         self.browser_status = ""
+        self.startup_splash_asset = self.prepare_asset(SPLASH_IMAGE_PATH)
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
         self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
         self.web_pin_icons = {
@@ -862,6 +865,19 @@ class RaspberryPiTVMenu:
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
         self.setup_touch_input()
+
+    def draw_startup_splash(self):
+        if self.startup_splash_asset is not None:
+            self.screen.blit(self.startup_splash_asset, (0, 0))
+        else:
+            self.screen.fill(BLACK)
+        pygame.display.flip()
+
+    def show_startup_splash(self, duration_ms=STARTUP_SPLASH_MS):
+        self.draw_startup_splash()
+        if duration_ms <= 0:
+            return
+        pygame.time.wait(duration_ms)
 
     def load_settings(self):
         loaded = load_json_file(USER_SETTINGS_PATH, {})
@@ -2436,6 +2452,7 @@ class RaspberryPiTVMenu:
         pygame.display.flip()
 
     def run(self):
+        self.show_startup_splash()
         play_intro()
 
         while self.running:
