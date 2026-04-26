@@ -14,6 +14,7 @@ EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/simpsonstv_qr.png"
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
+SERIES_LIBRARY_PATH = os.path.join(BASE_DIR, "web_series_library.json")
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
@@ -43,6 +44,133 @@ def load_settings():
     except Exception:
         pass
     return settings
+
+
+def slugify_series_name(value):
+    slug = re.sub(r"[^a-z0-9]+", "-", str(value or "").strip().lower()).strip("-")
+    return slug or "serie"
+
+
+def normalize_series_label(value):
+    return re.sub(r"[^a-z0-9]+", "", str(value or "").strip().lower())
+
+
+def load_series_library():
+    try:
+        with open(SERIES_LIBRARY_PATH, "r", encoding="utf-8") as handle:
+            loaded = json.load(handle)
+        if not isinstance(loaded, list):
+            return []
+    except Exception:
+        return []
+
+    items = []
+    for entry in loaded:
+        if not isinstance(entry, dict):
+            continue
+
+        tmdb_id = entry.get("tmdbId")
+        try:
+            tmdb_id = int(tmdb_id)
+        except Exception:
+            tmdb_id = None
+
+        name = str(entry.get("name") or "").strip()
+        relative_path = str(entry.get("relativePath") or "").strip()
+        if not tmdb_id or not name or not relative_path:
+            continue
+
+        items.append(
+            {
+                "tmdbId": tmdb_id,
+                "name": name,
+                "relativePath": relative_path.replace("\\", "/"),
+            }
+        )
+
+    return items
+
+
+def save_series_library(items):
+    safe_items = []
+    for entry in items:
+        if not isinstance(entry, dict):
+            continue
+        try:
+            tmdb_id = int(entry.get("tmdbId"))
+        except Exception:
+            continue
+
+        name = str(entry.get("name") or "").strip()
+        relative_path = str(entry.get("relativePath") or "").strip().replace("\\", "/")
+        if not name or not relative_path:
+            continue
+
+        safe_items.append(
+            {
+                "tmdbId": tmdb_id,
+                "name": name,
+                "relativePath": relative_path,
+            }
+        )
+
+    with open(SERIES_LIBRARY_PATH, "w", encoding="utf-8") as handle:
+        json.dump(safe_items, handle, indent=2, ensure_ascii=False)
+
+    return safe_items
+
+
+def create_unique_series_relative_path(name, existing_paths):
+    base_slug = slugify_series_name(name)
+    candidate = base_slug
+    suffix = 2
+
+    while candidate in existing_paths:
+        candidate = f"{base_slug}-{suffix}"
+        suffix += 1
+
+    return candidate
+
+
+def upsert_series_library_entry(name, tmdb_id):
+    library = load_series_library()
+    existing_paths = {entry["relativePath"] for entry in library}
+    normalized_name = normalize_series_label(name)
+
+    for entry in library:
+        if entry["tmdbId"] == tmdb_id:
+            entry["name"] = name
+            return save_series_library(library), entry
+
+    for entry in library:
+        if normalize_series_label(entry["name"]) == normalized_name:
+            entry["name"] = name
+            entry["tmdbId"] = tmdb_id
+            return save_series_library(library), entry
+
+    relative_path = create_unique_series_relative_path(name, existing_paths)
+    entry = {
+        "tmdbId": tmdb_id,
+        "name": name,
+        "relativePath": relative_path,
+    }
+    library.append(entry)
+    return save_series_library(library), entry
+
+
+def remove_series_library_entry(relative_path):
+    safe_relative_path = str(relative_path or "").strip().replace("\\", "/")
+    if not safe_relative_path:
+        return load_series_library(), False
+
+    library = load_series_library()
+    next_library = [entry for entry in library if entry["relativePath"] != safe_relative_path]
+    removed = len(next_library) != len(library)
+
+    if removed:
+        save_series_library(next_library)
+
+    return next_library, removed
 
 
 def current_web_pin():
@@ -183,6 +311,7 @@ def list_video_directories():
             {
                 "name": entry["directory"],
                 "relativePath": entry["directory_path"],
+                "tmdbId": None,
                 "videos": [],
             },
         )
@@ -206,6 +335,7 @@ def list_video_directories():
             {
                 "name": bucket["name"],
                 "relativePath": relative_path,
+                "tmdbId": bucket.get("tmdbId"),
                 "videoCount": len(videos),
                 "episodeCount": len([video for video in videos if EP_RE.fullmatch(video["id"])]),
                 "episodeIds": [video["id"] for video in videos if EP_RE.fullmatch(video["id"])],
@@ -213,10 +343,55 @@ def list_video_directories():
             }
         )
 
+    buckets_by_label = {
+        normalize_series_label(bucket["name"]): bucket
+        for bucket in directories
+        if normalize_series_label(bucket["name"])
+    }
+
+    existing_relative_paths = {bucket["relativePath"] for bucket in directories}
+
+    for entry in load_series_library():
+        existing_bucket = None
+
+        if entry["relativePath"] in grouped:
+            grouped_entry = grouped[entry["relativePath"]]
+            existing_bucket = next(
+                (
+                    bucket
+                    for bucket in directories
+                    if bucket["relativePath"] == grouped_entry["relativePath"]
+                ),
+                None,
+            )
+        else:
+            existing_bucket = buckets_by_label.get(normalize_series_label(entry["name"]))
+
+        if existing_bucket:
+            if not existing_bucket.get("tmdbId"):
+                existing_bucket["tmdbId"] = entry["tmdbId"]
+            continue
+
+        if entry["relativePath"] in existing_relative_paths:
+            continue
+
+        directories.append(
+            {
+                "name": entry["name"],
+                "relativePath": entry["relativePath"],
+                "tmdbId": entry["tmdbId"],
+                "videoCount": 0,
+                "episodeCount": 0,
+                "episodeIds": [],
+                "videos": [],
+            }
+        )
+        existing_relative_paths.add(entry["relativePath"])
+
     return {
         "ok": True,
         "root": VIDEOS_DIR,
-        "directories": directories,
+        "directories": sorted(directories, key=lambda item: item["name"].lower()),
         "rootFiles": root_files,
     }
 
@@ -320,6 +495,44 @@ def episodes():
 @app.route("/videos", methods=["GET"])
 def videos():
     return jsonify(list_video_directories())
+
+
+@app.route("/series", methods=["GET"])
+def list_series():
+    return jsonify({"ok": True, "items": load_series_library()})
+
+
+@app.route("/series", methods=["POST"])
+def add_series():
+    data = request.get_json(force=True, silent=True) or {}
+    name = str(data.get("name") or "").strip()
+
+    try:
+        tmdb_id = int(data.get("tmdbId"))
+    except Exception:
+        tmdb_id = 0
+
+    if not name:
+        return jsonify({"error": "Missing name"}), 400
+
+    if not tmdb_id:
+        return jsonify({"error": "Missing tmdbId"}), 400
+
+    items, entry = upsert_series_library_entry(name=name, tmdb_id=tmdb_id)
+    return jsonify({"ok": True, "item": entry, "items": items})
+
+
+@app.route("/series", methods=["DELETE"])
+def delete_series():
+    relative_path = request.args.get("relativePath", default="", type=str).strip()
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    items, removed = remove_series_library_entry(relative_path)
+    if not removed:
+        return jsonify({"error": "Series not found"}), 404
+
+    return jsonify({"ok": True, "items": items, "relativePath": relative_path})
 
 
 @app.route("/play", methods=["POST"])

@@ -74,10 +74,22 @@ npm install
 npm run dev
 ```
 
-Por defecto intenta usar la misma URL origen del navegador. Si durante desarrollo quieres apuntar a otra Raspberry:
+Si arrancas la web en tu Mac con `localhost` y no defines `VITE_RASPBERRY_API_BASE_URL`, entra automaticamente en `modo maqueta local`:
+
+- no pide PIN
+- usa un catalogo simulado de episodios
+- permite trabajar la maquetacion sin Raspberry encendida
+
+Si durante desarrollo quieres apuntar a una Raspberry real:
 
 ```bash
 VITE_RASPBERRY_API_BASE_URL=http://192.168.1.50:5050 npm run dev
+```
+
+Si quieres forzar el modo maqueta aunque cambies otras cosas del entorno:
+
+```bash
+VITE_WEB_DEV_MODE=mock npm run dev
 ```
 
 ## Despliegue recomendado en Raspberry
@@ -96,4 +108,3 @@ La migracion mas natural seria:
 2. adaptar las llamadas de `src/services/raspberryApi.js` a esta nueva web
 3. crear endpoints nuevos en `control_api.py` para persistencia
 4. servir el build de React desde la propia Raspberry
-

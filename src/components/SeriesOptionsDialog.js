@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import MaskedView from "@react-native-masked-view/masked-view";
 
 import SeriesCoverFrame, { CARTELL_LOGO_ASPECT_RATIO } from "./SeriesCoverFrame";
 
@@ -8,6 +9,11 @@ const DEFAULT_CROP = {
   focusY: 0.5,
   zoom: 1,
 };
+const IMAGE_TILE_HEIGHT = 132;
+const IMAGE_GRID_GAP = 10;
+const IMAGE_GRID_VISIBLE_ROWS = 2;
+const IMAGE_GRID_HEIGHT =
+  IMAGE_TILE_HEIGHT * IMAGE_GRID_VISIBLE_ROWS + IMAGE_GRID_GAP * (IMAGE_GRID_VISIBLE_ROWS - 1);
 
 export default function SeriesOptionsDialog({
   visible,
@@ -87,105 +93,157 @@ export default function SeriesOptionsDialog({
             {strings?.seriesOptionsTitle || "Opciones de la serie"}
           </Text>
 
-          <Text style={{ color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>
-            {strings?.seriesNameLabel || "Nombre"}
-          </Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder={strings?.seriesNamePlaceholder || "Nombre de la serie"}
-            placeholderTextColor="rgba(255,255,255,0.45)"
-            autoCapitalize="words"
-            autoCorrect={false}
-            style={{
-              color: "#fff",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.18)",
-              borderRadius: 12,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              backgroundColor: "rgba(255,255,255,0.06)",
-            }}
-          />
+          <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled>
+            <Text style={{ color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>
+              {strings?.seriesNameLabel || "Nombre"}
+            </Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder={strings?.seriesNamePlaceholder || "Nombre de la serie"}
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              autoCapitalize="words"
+              autoCorrect={false}
+              style={{
+                color: "#fff",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.18)",
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                backgroundColor: "rgba(255,255,255,0.06)",
+              }}
+            />
 
-          <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 14, marginBottom: 8 }}>
-            {strings?.seriesImageLabel || "Imagen"}
-          </Text>
+            <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 14, marginBottom: 8 }}>
+              {strings?.seriesImageLabel || "Imagen"}
+            </Text>
 
-          {normalizedImageOptions.length ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 4 }}
-            >
-              {normalizedImageOptions.map((imageUrl) => {
-                const isActive = imageUrl === selectedImage;
+            {normalizedImageOptions.length ? (
+              <View
+                style={{
+                  height: IMAGE_GRID_HEIGHT,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  padding: 8,
+                }}
+              >
+                <ScrollView showsVerticalScrollIndicator nestedScrollEnabled>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: IMAGE_GRID_GAP }}>
+                    {normalizedImageOptions.map((imageUrl) => {
+                      const isActive = imageUrl === selectedImage;
 
-                return (
-                  <Pressable
-                    key={imageUrl}
-                    onPress={() => {
-                      setSelectedImage(imageUrl);
-                      setSelectedImageCrop(
-                        imageUrl === selectedImage ? selectedImageCrop : DEFAULT_CROP
+                      return (
+                        <Pressable
+                          key={imageUrl}
+                          onPress={() => {
+                            setSelectedImage(imageUrl);
+                            setSelectedImageCrop(
+                              imageUrl === selectedImage ? selectedImageCrop : DEFAULT_CROP
+                            );
+                          }}
+                          style={({ pressed }) => ({
+                            width: "31.2%",
+                            borderRadius: 12,
+                            overflow: "hidden",
+                            borderWidth: 2,
+                            borderColor: isActive ? "#22c55e" : "rgba(255,255,255,0.18)",
+                            backgroundColor: "rgba(255,255,255,0.06)",
+                            opacity: pressed ? 0.82 : 1,
+                          })}
+                        >
+                          <Image
+                            source={{ uri: imageUrl }}
+                            style={{ width: "100%", height: IMAGE_TILE_HEIGHT }}
+                            resizeMode="cover"
+                          />
+                          <View style={{ paddingHorizontal: 8, paddingVertical: 8 }}>
+                            <Text
+                              style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}
+                              numberOfLines={2}
+                            >
+                              {isActive
+                                ? strings?.seriesImageSelected || "Carátula seleccionada"
+                                : strings?.seriesImageUse || "Usar esta imagen"}
+                            </Text>
+                          </View>
+                        </Pressable>
                       );
-                    }}
-                    style={({ pressed }) => ({
-                      width: 118,
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      borderWidth: 2,
-                      borderColor: isActive ? "#22c55e" : "rgba(255,255,255,0.18)",
-                      backgroundColor: "rgba(255,255,255,0.06)",
-                      opacity: pressed ? 0.82 : 1,
                     })}
-                  >
-                    <Image
-                      source={{ uri: imageUrl }}
-                      style={{ width: "100%", height: 168 }}
-                      resizeMode="cover"
-                    />
-                    <View style={{ paddingHorizontal: 10, paddingVertical: 8 }}>
-                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
-                        {isActive
-                          ? strings?.seriesImageSelected || "Carátula seleccionada"
-                          : strings?.seriesImageUse || "Usar esta imagen"}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          ) : (
+                  </View>
+                </ScrollView>
+              </View>
+            ) : (
+              <View
+                style={{
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  paddingHorizontal: 12,
+                  paddingVertical: 14,
+                }}
+              >
+                <Text style={{ color: "rgba(255,255,255,0.7)" }}>
+                  {strings?.seriesImagesEmpty || "No hay imágenes disponibles para esta serie."}
+                </Text>
+              </View>
+            )}
+
+            <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 16, marginBottom: 8 }}>
+              {strings?.seriesImageCropLabel || "Región visible del cartel"}
+            </Text>
             <View
               style={{
-                borderRadius: 12,
+                borderRadius: 16,
+                overflow: "hidden",
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.12)",
+                borderColor: "rgba(255,255,255,0.14)",
                 backgroundColor: "rgba(255,255,255,0.04)",
-                paddingHorizontal: 12,
-                paddingVertical: 14,
               }}
             >
-              <Text style={{ color: "rgba(255,255,255,0.7)" }}>
-                {strings?.seriesImagesEmpty || "No hay imágenes disponibles para esta serie."}
-              </Text>
+              <MaskedView
+                style={{ width: "100%" }}
+                maskElement={
+                  <Image
+                    source={require("../../assets/cartell_base_black_mask.png")}
+                    style={{ width: "100%", aspectRatio: CARTELL_LOGO_ASPECT_RATIO }}
+                    resizeMode="contain"
+                  />
+                }
+              >
+                <SeriesCoverFrame
+                  imageUri={selectedImage}
+                  crop={selectedImageCrop}
+                  onCropChange={setSelectedImageCrop}
+                  strings={strings}
+                  editable
+                  aspectRatio={CARTELL_LOGO_ASPECT_RATIO}
+                  showFrame={false}
+                />
+              </MaskedView>
+              {selectedImage ? (
+                <Image
+                  pointerEvents="none"
+                  source={require("../../assets/cartell_base.png")}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                  }}
+                  resizeMode="contain"
+                />
+              ) : null}
             </View>
-          )}
+          </ScrollView>
 
-          <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 16, marginBottom: 8 }}>
-            {strings?.seriesImageCropLabel || "Región visible del cartel"}
-          </Text>
-          <SeriesCoverFrame
-            imageUri={selectedImage}
-            crop={selectedImageCrop}
-            onCropChange={setSelectedImageCrop}
-            strings={strings}
-            editable
-            aspectRatio={CARTELL_LOGO_ASPECT_RATIO}
-          />
-
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }}>
+          <View style={{ marginTop: 16, gap: 10 }}>
             <Pressable
               onPress={() => {
                 Alert.alert(
@@ -206,15 +264,24 @@ export default function SeriesOptionsDialog({
                 paddingHorizontal: 14,
                 paddingVertical: 10,
                 backgroundColor: pressed ? "rgba(239,68,68,0.78)" : "#ef4444",
+                alignItems: "center",
               })}
             >
               <Text style={{ color: "#fff", fontWeight: "800" }}>
-                {strings?.delete || "Eliminar"}
+                {strings?.deleteSeriesTitle || "Eliminar serie"}
               </Text>
             </Pressable>
 
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <Pressable onPress={onClose} style={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  minWidth: 88,
+                  alignItems: "center",
+                }}
+              >
                 <Text style={{ color: "#fff", fontWeight: "700" }}>
                   {strings?.cancel || "Cancelar"}
                 </Text>
@@ -226,6 +293,8 @@ export default function SeriesOptionsDialog({
                   borderRadius: 12,
                   paddingHorizontal: 14,
                   paddingVertical: 10,
+                  minWidth: 96,
+                  alignItems: "center",
                   backgroundColor:
                     !trimmedName
                       ? "rgba(255,255,255,0.12)"
