@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
+import settingsIcon from "./assets/settings_icon.png";
 import tvGreen from "./assets/tele_green_2_fixed.png";
 import {
   addSeries,
@@ -15,8 +16,6 @@ import { loadSeriesProfiles, removeSeriesProfile, updateSeriesProfile } from "./
 import { getTvSeasonEpisodes, getTvSeriesById, resolveSeriesFromNames, searchTvSeries } from "./tmdbApi";
 
 const TMDB_LANGUAGE = "es-ES";
-const POSTER_ASPECT_RATIO = 714 / 228;
-const HERO_VISIBLE_WIDTH_RATIO = 0.83;
 const DEFAULT_HERO_CROP = {
   focusX: 0.5,
   focusY: 0.5,
@@ -31,55 +30,26 @@ function normalizeHeroCrop(crop) {
   return {
     focusX: clamp(Number(crop?.focusX) || 0.5, 0, 1),
     focusY: clamp(Number(crop?.focusY) || 0.5, 0, 1),
-    zoom: clamp(Number(crop?.zoom) || 1, 1, 3),
+    zoom: 1,
   };
 }
 
-function getHeroCropBounds(crop, imageSize, containerAspect = POSTER_ASPECT_RATIO) {
-  const normalized = normalizeHeroCrop(crop);
-  const fallbackVisibleFraction = 1 / normalized.zoom;
-  const effectiveContainerAspect = containerAspect * HERO_VISIBLE_WIDTH_RATIO;
-
-  if (!imageSize?.width || !imageSize?.height) {
-    const minFocusX = Math.min((fallbackVisibleFraction * HERO_VISIBLE_WIDTH_RATIO) / 2, 0.5);
-    const maxFocusX = 1 - minFocusX;
-    const minFocusY = fallbackVisibleFraction / 2;
-    const maxFocusY = 1 - minFocusY;
-    return {
-      minFocusX,
-      maxFocusX,
-      minFocusY,
-      maxFocusY,
-    };
-  }
-
-  const imageAspect = imageSize.width / imageSize.height;
-  let visibleFractionX = fallbackVisibleFraction;
-  let visibleFractionY = fallbackVisibleFraction;
-
-  if (imageAspect > effectiveContainerAspect) {
-    visibleFractionX = Math.min((effectiveContainerAspect / imageAspect) / normalized.zoom, 1);
-  } else {
-    visibleFractionY = Math.min((imageAspect / effectiveContainerAspect) / normalized.zoom, 1);
-  }
-
-  return {
-    minFocusX: visibleFractionX / 2,
-    maxFocusX: 1 - visibleFractionX / 2,
-    minFocusY: visibleFractionY / 2,
-    maxFocusY: 1 - visibleFractionY / 2,
-  };
+function clampHeroCrop(crop) {
+  return normalizeHeroCrop(crop);
 }
 
-function clampHeroCrop(crop, imageSize, containerAspect = POSTER_ASPECT_RATIO) {
-  const normalized = normalizeHeroCrop(crop);
-  const bounds = getHeroCropBounds(normalized, imageSize, containerAspect);
+function getHeroVerticalPosition(crop) {
+  return normalizeHeroCrop(crop).focusY;
+}
 
-  return {
+function setHeroVerticalPosition(position, crop) {
+  const normalized = normalizeHeroCrop(crop);
+  const nextPosition = clamp(Number(position) || 0, 0, 1);
+
+  return clampHeroCrop({
     ...normalized,
-    focusX: clamp(normalized.focusX, bounds.minFocusX, bounds.maxFocusX),
-    focusY: clamp(normalized.focusY, bounds.minFocusY, bounds.maxFocusY),
-  };
+    focusY: nextPosition,
+  });
 }
 
 function getHeaderImageStyle(crop) {
@@ -162,53 +132,17 @@ function SettingsModal({ visible, series, imageOptions, onClose, onSave, onDelet
   const [name, setName] = useState(series?.name || "");
   const [heroImage, setHeroImage] = useState(series?.heroImage || "");
   const [heroImageCrop, setHeroImageCrop] = useState(series?.heroImageCrop || DEFAULT_HERO_CROP);
-  const [heroImageSize, setHeroImageSize] = useState(null);
 
   useEffect(() => {
     setName(series?.name || "");
     setHeroImage(series?.heroImage || imageOptions?.[0] || "");
     setHeroImageCrop(normalizeHeroCrop(series?.heroImageCrop || DEFAULT_HERO_CROP));
-    setHeroImageSize(null);
   }, [series, imageOptions, visible]);
-
-  useEffect(() => {
-    if (!heroImage) {
-      setHeroImageSize(null);
-      return () => {};
-    }
-
-    let cancelled = false;
-    const image = new window.Image();
-
-    image.onload = () => {
-      if (cancelled) return;
-
-      const nextSize = {
-        width: image.naturalWidth || 0,
-        height: image.naturalHeight || 0,
-      };
-
-      setHeroImageSize(nextSize);
-      setHeroImageCrop((currentCrop) => clampHeroCrop(currentCrop, nextSize));
-    };
-
-    image.onerror = () => {
-      if (!cancelled) {
-        setHeroImageSize(null);
-      }
-    };
-
-    image.src = heroImage;
-
-    return () => {
-      cancelled = true;
-    };
-  }, [heroImage]);
 
   if (!visible || !series) return null;
 
   const normalizedImageOptions = Array.from(
-    new Set([heroImage, ...(Array.isArray(imageOptions) ? imageOptions : [])].filter(Boolean))
+    new Set((Array.isArray(imageOptions) ? imageOptions : []).filter(Boolean))
   );
 
   return (
@@ -246,7 +180,7 @@ function SettingsModal({ visible, series, imageOptions, onClose, onSave, onDelet
                     onClick={() => {
                       setHeroImage(imageUrl);
                       setHeroImageCrop(
-                        clampHeroCrop(imageUrl === heroImage ? heroImageCrop : DEFAULT_HERO_CROP, heroImageSize)
+                        clampHeroCrop(imageUrl === heroImage ? heroImageCrop : DEFAULT_HERO_CROP)
                       );
                     }}
                     type="button"
@@ -268,17 +202,9 @@ function SettingsModal({ visible, series, imageOptions, onClose, onSave, onDelet
                   min="0"
                   max="1"
                   step="0.01"
-                  value={normalizeHeroCrop(heroImageCrop).focusY}
+                  value={getHeroVerticalPosition(heroImageCrop)}
                   onChange={(event) =>
-                    setHeroImageCrop((currentCrop) =>
-                      clampHeroCrop(
-                        {
-                          ...normalizeHeroCrop(currentCrop),
-                          focusY: clamp(Number(event.target.value) || 0.5, 0, 1),
-                        },
-                        heroImageSize
-                      )
-                    )
+                    setHeroImageCrop((currentCrop) => setHeroVerticalPosition(event.target.value, currentCrop))
                   }
                   disabled={!heroImage}
                 />
@@ -314,7 +240,7 @@ function SettingsModal({ visible, series, imageOptions, onClose, onSave, onDelet
                 onSave({
                   name,
                   heroImage,
-                  heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop, heroImageSize) : null,
+                  heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop) : null,
                 })
               }
               type="button"
@@ -1028,18 +954,13 @@ export default function App() {
                       aria-label="Personalizar serie"
                       title="Personalizar serie"
                     >
-                      <svg
-                        className="series-icon-button__icon series-icon-button__icon--settings"
-                        viewBox="0 0 24 24"
+                      <img
+                        className="series-icon-button__image series-icon-button__image--settings"
+                        src={settingsIcon}
+                        alt=""
                         aria-hidden="true"
-                      >
-                        <line x1="4" y1="6" x2="20" y2="6" />
-                        <circle cx="9" cy="6" r="2.6" />
-                        <line x1="4" y1="12" x2="20" y2="12" />
-                        <circle cx="15" cy="12" r="2.6" />
-                        <line x1="4" y1="18" x2="20" y2="18" />
-                        <circle cx="8" cy="18" r="2.6" />
-                      </svg>
+                        draggable="false"
+                      />
                     </button>
 
                     <button
