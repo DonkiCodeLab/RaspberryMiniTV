@@ -873,23 +873,6 @@ img {
   line-height: 1.55;
 }
 
-.empty-state__card--games {
-  width: min(720px, 100%);
-}
-
-.empty-state__poster {
-  width: min(100%, 560px);
-  margin: 0 auto 1.15rem;
-}
-
-.empty-state__poster .series-hero__art {
-  position: relative;
-  aspect-ratio: 714 / 228;
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
 .empty-state__card button,
 .unlock-form button {
   border-radius: 999px;

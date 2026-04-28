@@ -935,12 +935,21 @@ export default function App() {
     movieOptions.find((movie) => Number(movie.id) === Number(selectedMovieId)) ||
     movieOptions[0] ||
     null;
-  const selectedItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
+  const selectedItem =
+    activeMediaType === "games"
+      ? null
+      : activeMediaType === "movies"
+        ? selectedMovie
+        : selectedSeries;
   const hasSettingsButton = activeMediaType !== "games" && Boolean(selectedItem);
 
   const seasons = selectedSeries?.seasons || [];
-  const headerImage = selectedItem?.heroImage || cartellLogo;
-  const headerImageCrop = selectedItem?.heroImageCrop || DEFAULT_HERO_CROP;
+  const headerImage =
+    activeMediaType === "games" ? cartellLogo : selectedItem?.heroImage || cartellLogo;
+  const headerImageCrop =
+    activeMediaType === "games"
+      ? DEFAULT_HERO_CROP
+      : selectedItem?.heroImageCrop || DEFAULT_HERO_CROP;
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) || null;
 
   useEffect(() => {
@@ -1473,14 +1482,7 @@ export default function App() {
 
                 {isGamesMode ? (
                   <section className="empty-state">
-                    <div className="empty-state__card empty-state__card--games">
-                      <div className="empty-state__poster">
-                        <HeaderArt
-                          image={cartellLogo}
-                          crop={DEFAULT_HERO_CROP}
-                          alt="Cartel por defecto de juegos"
-                        />
-                      </div>
+                    <div className="empty-state__card">
                       <h2>Juegos en construccion</h2>
                       <p>Este apartado todavia no tiene contenido disponible.</p>
                     </div>
