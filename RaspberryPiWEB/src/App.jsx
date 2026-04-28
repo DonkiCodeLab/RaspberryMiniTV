@@ -94,6 +94,8 @@ function getHeaderImageStyle(crop) {
 }
 
 function HeaderArt({ image, crop, alt, children }) {
+  const usesFullMaskArtwork = image === cartellLogo;
+
   return (
     <div
       className="series-hero__art"
@@ -104,16 +106,30 @@ function HeaderArt({ image, crop, alt, children }) {
       role="img"
       aria-label={alt}
     >
-      <div className="series-hero__visible-window">
-        <div className="series-hero__controls-backdrop" aria-hidden="true" />
+      {usesFullMaskArtwork ? (
         <img
+          className="series-hero__full-mask-image"
           src={image}
           alt=""
           aria-hidden="true"
           draggable="false"
           onDragStart={(event) => event.preventDefault()}
-          style={getHeaderImageStyle(crop)}
         />
+      ) : (
+        <div className="series-hero__visible-window">
+          <img
+            src={image}
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+            onDragStart={(event) => event.preventDefault()}
+            style={getHeaderImageStyle(crop)}
+          />
+        </div>
+      )}
+
+      <div className="series-hero__controls-layer">
+        <div className="series-hero__controls-backdrop" aria-hidden="true" />
         {children}
       </div>
     </div>

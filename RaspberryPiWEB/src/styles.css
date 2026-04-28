@@ -84,9 +84,12 @@ img {
 }
 
 .series-hero__banner {
+  --series-controls-band-height: 24cqh;
+  --series-controls-item-size: 15.36cqh;
   position: relative;
   width: 100%;
   aspect-ratio: 714 / 228;
+  container-type: size;
 }
 
 .series-hero__banner::after {
@@ -118,15 +121,24 @@ img {
 }
 
 .series-hero__visible-window {
-  --series-controls-band-height: 24cqh;
-  --series-controls-item-size: 15.36cqh;
   position: absolute;
   inset: 0 auto 0 0;
   width: var(--series-visible-width);
   height: 100%;
-  container-type: size;
   overflow: hidden;
   pointer-events: none;
+}
+
+.series-hero__full-mask-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  will-change: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .series-hero__art img {
@@ -138,6 +150,14 @@ img {
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+.series-hero__controls-layer {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--series-visible-width);
+  height: 100%;
+  pointer-events: none;
 }
 
 .series-hero__controls-backdrop {
@@ -378,6 +398,16 @@ img {
 
 .series-icon-button--hero-settings {
   top: clamp(0.7rem, 1.4vw, 1rem);
+  width: var(--series-controls-item-size);
+  height: var(--series-controls-item-size);
+  min-width: var(--series-controls-item-size);
+  min-height: var(--series-controls-item-size);
+  border-radius: 999px;
+  border-width: 2px;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+  justify-self: center;
+  align-self: center;
 }
 
 .series-icon-button--controls-plus {
@@ -397,6 +427,11 @@ img {
   height: 52%;
   display: block;
   margin: auto;
+}
+
+.series-icon-button--hero-settings .series-icon-button__image--settings {
+  width: 52%;
+  max-width: 52%;
 }
 
 .series-icon-button--plus .series-icon-button__icon {
@@ -1369,6 +1404,14 @@ img {
 
   .series-icon-button--hero-settings {
     top: 0.6rem;
+    width: var(--series-controls-item-size);
+    height: var(--series-controls-item-size);
+    min-width: var(--series-controls-item-size);
+    min-height: var(--series-controls-item-size);
+    border-radius: 999px;
+    border-width: 2px;
+    aspect-ratio: 1 / 1;
+    padding: 0;
   }
 
   .series-hero__tv-button--season {
@@ -1392,12 +1435,27 @@ img {
     border-radius: 18px;
   }
 
+  .series-icon-button--hero-settings {
+    width: var(--series-controls-item-size);
+    height: var(--series-controls-item-size);
+    min-width: var(--series-controls-item-size);
+    min-height: var(--series-controls-item-size);
+    border-radius: 999px;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+  }
+
   .series-icon-button--controls-plus {
     width: var(--series-controls-item-size);
     height: var(--series-controls-item-size);
     min-width: var(--series-controls-item-size);
     min-height: var(--series-controls-item-size);
     border-radius: 999px;
+  }
+
+  .series-icon-button--hero-settings .series-icon-button__image--settings {
+    width: 52%;
+    max-width: 52%;
   }
 
   .series-icon-button--controls-plus .series-icon-button__icon {
