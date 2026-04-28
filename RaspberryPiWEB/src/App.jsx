@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
+import cloudsBackground from "./assets/cloud.gif";
 import settingsIcon from "./assets/settings_icon.png";
 import tvGreen from "./assets/tele_green_2_fixed.png";
 import {
@@ -9,13 +10,32 @@ import {
   getStoredWebPin,
   getVideos,
   isMockMode,
+  playEpisode,
   removeSeries,
   setStoredWebPin,
 } from "./api/raspberryApi";
+import {
+  loadMediaLibrary,
+  removeMediaLibraryItem,
+  upsertMediaLibraryItem,
+} from "./mediaLibrary";
 import { loadSeriesProfiles, removeSeriesProfile, updateSeriesProfile } from "./seriesProfiles";
-import { getTvSeasonEpisodes, getTvSeriesById, resolveSeriesFromNames, searchTvSeries } from "./tmdbApi";
+import {
+  getMovieById,
+  getTvSeasonEpisodes,
+  getTvSeriesById,
+  resolveSeriesFromNames,
+  searchMovies,
+  searchTvSeries,
+} from "./tmdbApi";
 
 const TMDB_LANGUAGE = "es-ES";
+const HERO_SLIDER_MAX = 0.96;
+const MEDIA_TYPES = [
+  { id: "series", label: "Series" },
+  { id: "movies", label: "Peliculas" },
+  { id: "games", label: "Juegos" },
+];
 const DEFAULT_HERO_CROP = {
   focusX: 0.5,
   focusY: 0.5,
@@ -42,6 +62,10 @@ function getHeroVerticalPosition(crop) {
   return normalizeHeroCrop(crop).focusY;
 }
 
+function getHeroSliderValue(crop) {
+  return clamp(1 - getHeroVerticalPosition(crop), 0, HERO_SLIDER_MAX);
+}
+
 function setHeroVerticalPosition(position, crop) {
   const normalized = normalizeHeroCrop(crop);
   const nextPosition = clamp(Number(position) || 0, 0, 1);
@@ -50,6 +74,13 @@ function setHeroVerticalPosition(position, crop) {
     ...normalized,
     focusY: nextPosition,
   });
+}
+
+function setHeroVerticalFromSlider(value, crop) {
+  return setHeroVerticalPosition(
+    1 - clamp(Number(value) || 0, 0, HERO_SLIDER_MAX),
+    crop
+  );
 }
 
 function getHeaderImageStyle(crop) {
@@ -62,7 +93,7 @@ function getHeaderImageStyle(crop) {
   };
 }
 
-function HeaderArt({ image, crop, alt }) {
+function HeaderArt({ image, crop, alt, children }) {
   return (
     <div
       className="series-hero__art"
@@ -74,6 +105,7 @@ function HeaderArt({ image, crop, alt }) {
       aria-label={alt}
     >
       <div className="series-hero__visible-window">
+        <div className="series-hero__controls-backdrop" aria-hidden="true" />
         <img
           src={image}
           alt=""
@@ -82,6 +114,7 @@ function HeaderArt({ image, crop, alt }) {
           onDragStart={(event) => event.preventDefault()}
           style={getHeaderImageStyle(crop)}
         />
+        {children}
       </div>
     </div>
   );
@@ -109,9 +142,18 @@ function SeasonCard({ season, isActive, onSelect }) {
   );
 }
 
-function EpisodeRow({ episode }) {
+function toRaspberryEpisodeId(seasonNumber, episodeNumber) {
+  const safeSeason = Number(seasonNumber);
+  const safeEpisode = Number(episodeNumber);
+
+  if (!safeSeason || !safeEpisode) return "";
+
+  return `S${String(safeSeason).padStart(2, "0")}E${String(safeEpisode).padStart(2, "0")}`;
+}
+
+function EpisodeRow({ episode, onSelect }) {
   return (
-    <button className="episode-card" type="button">
+    <button className="episode-card" onClick={() => onSelect(episode)} type="button">
       <div className="episode-card__thumb">
         {episode.image ? <img src={episode.image} alt={episode.title} /> : null}
       </div>
@@ -128,35 +170,205 @@ function EpisodeRow({ episode }) {
   );
 }
 
-function SettingsModal({ visible, series, imageOptions, onClose, onSave, onDelete }) {
-  const [name, setName] = useState(series?.name || "");
-  const [heroImage, setHeroImage] = useState(series?.heroImage || "");
-  const [heroImageCrop, setHeroImageCrop] = useState(series?.heroImageCrop || DEFAULT_HERO_CROP);
+function EpisodeDetailsModal({
+  visible,
+  episode,
+  season,
+  seriesName,
+  playing,
+  onClose,
+  onPlay,
+}) {
+  useEffect(() => {
+    if (!visible) return () => {};
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [visible, onClose]);
+
+  if (!visible || !episode || !season) return null;
+
+  return (
+    <div className="modal-backdrop modal-backdrop--episode" onClick={onClose}>
+      <div
+        className="episode-dialog"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="episode-dialog-title"
+      >
+        <header className="episode-dialog__header">
+          <div className="episode-dialog__header-copy">
+            {seriesName ? <p>{seriesName}</p> : null}
+            <h2>{season.title}</h2>
+            <h3 id="episode-dialog-title">
+              Capitulo {episode.episodeNumber}: <span>{episode.title}</span>
+            </h3>
+          </div>
+
+          <button
+            className="episode-dialog__close"
+            onClick={onClose}
+            type="button"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </header>
+
+        <div className="episode-dialog__body">
+          <div className="episode-dialog__overview">
+            {episode.image ? (
+              <div className="episode-dialog__media">
+                <img src={episode.image} alt={episode.title} />
+              </div>
+            ) : (
+              <div className="episode-dialog__media episode-dialog__media--empty">
+                <span>{episode.title}</span>
+              </div>
+            )}
+
+            <div className="episode-dialog__facts">
+              <div className="episode-dialog__fact">
+                <strong>Duracion:</strong>
+                <span>{episode.runtime ? `${episode.runtime} minutos` : "No disponible"}</span>
+              </div>
+              <div className="episode-dialog__fact">
+                <strong>Emision:</strong>
+                <span>{episode.airDate || "No disponible"}</span>
+              </div>
+              <div className="episode-dialog__fact">
+                <strong>Valoracion:</strong>
+                <span>
+                  {typeof episode.voteAverage === "number" && episode.voteAverage > 0
+                    ? episode.voteAverage.toFixed(1)
+                    : "No disponible"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            className="episode-dialog__play"
+            onClick={onPlay}
+            type="button"
+            disabled={playing}
+          >
+            <img src={tvGreen} alt="" aria-hidden="true" />
+            <span>{playing ? "Reproduciendo..." : "Reproducir en Simpsons TV"}</span>
+          </button>
+
+          <div className="episode-dialog__synopsis">
+            <strong>Sinopsis:</strong>
+            <p>{episode.synopsis || "Sinopsis no disponible."}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave, onDelete }) {
+  const [name, setName] = useState(item?.name || "");
+  const [heroImage, setHeroImage] = useState(item?.heroImage || "");
+  const [heroImageCrop, setHeroImageCrop] = useState(item?.heroImageCrop || DEFAULT_HERO_CROP);
 
   useEffect(() => {
-    setName(series?.name || "");
-    setHeroImage(series?.heroImage || imageOptions?.[0] || "");
-    setHeroImageCrop(normalizeHeroCrop(series?.heroImageCrop || DEFAULT_HERO_CROP));
-  }, [series, imageOptions, visible]);
+    setName(item?.name || "");
+    setHeroImage(item?.heroImage || imageOptions?.[0] || "");
+    setHeroImageCrop(normalizeHeroCrop(item?.heroImageCrop || DEFAULT_HERO_CROP));
+  }, [item, imageOptions, visible]);
 
-  if (!visible || !series) return null;
+  if (!visible) return null;
+
+  if (mediaType === "games") {
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="dialog-card dialog-card--compact" onClick={(event) => event.stopPropagation()}>
+          <div className="dialog-card__header">
+            <div>
+              <p>Juegos</p>
+              <h2>En construccion</h2>
+            </div>
+            <button className="dialog-card__close" onClick={onClose} type="button">
+              ×
+            </button>
+          </div>
+          <p className="dialog-copy">
+            Esta seccion de customizacion todavia no tiene acciones disponibles.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!item) return null;
 
   const normalizedImageOptions = Array.from(
     new Set((Array.isArray(imageOptions) ? imageOptions : []).filter(Boolean))
   );
+  const mediaLabel = mediaType === "movies" ? "pelicula" : "serie";
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="dialog-card dialog-card--settings" onClick={(event) => event.stopPropagation()}>
-        <div className="dialog-card__header">
-          <div>
-            <p>Ajustes de la serie</p>
-            <h2>{series.name}</h2>
+        <div className="dialog-card dialog-card--settings" onClick={(event) => event.stopPropagation()}>
+          <div className="dialog-card__header">
+            <div>
+              <p>Ajustes de la {mediaLabel}</p>
+              <h2>{item.name}</h2>
+            </div>
+            <div className="dialog-card__header-actions">
+              <button
+                className="dialog-card__icon-button dialog-card__icon-button--danger"
+                onClick={() => {
+                  if (window.confirm(`¿Seguro que quieres eliminar la ${mediaLabel} "${item.name}"?`)) {
+                    onDelete();
+                  }
+                }}
+                type="button"
+                aria-label={`Eliminar ${mediaLabel}`}
+                title={`Eliminar ${mediaLabel}`}
+              >
+                🗑
+              </button>
+              <button
+                className="dialog-card__icon-button"
+                onClick={() =>
+                  onSave({
+                    name,
+                    heroImage,
+                    heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop) : null,
+                  })
+                }
+                type="button"
+                aria-label="Guardar"
+                title="Guardar"
+              >
+                💾
+              </button>
+              <button
+                className="dialog-card__icon-button dialog-card__close"
+                onClick={onClose}
+                type="button"
+                aria-label="Cancelar"
+                title="Cancelar"
+              >
+                ×
+              </button>
+            </div>
           </div>
-          <button className="dialog-card__close" onClick={onClose} type="button">
-            ×
-          </button>
-        </div>
 
         <div className="dialog-card__body">
           <label className="dialog-field">
@@ -165,7 +377,7 @@ function SettingsModal({ visible, series, imageOptions, onClose, onSave, onDelet
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Nombre de la serie"
+              placeholder={`Nombre de la ${mediaLabel}`}
             />
           </label>
 
@@ -195,66 +407,35 @@ function SettingsModal({ visible, series, imageOptions, onClose, onSave, onDelet
           <div className="dialog-field">
             <span>Vista previa del cartel</span>
             <div className="dialog-preview-editor">
-              <label className="dialog-vertical-control">
-                <span>Posicion</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={getHeroVerticalPosition(heroImageCrop)}
-                  onChange={(event) =>
-                    setHeroImageCrop((currentCrop) => setHeroVerticalPosition(event.target.value, currentCrop))
-                  }
-                  disabled={!heroImage}
-                />
-              </label>
+              <div className="dialog-poster-preview-shell">
+                <div className="dialog-vertical-control" aria-label="Posición vertical del cartel">
+                  <input
+                    type="range"
+                    min="0"
+                    max={HERO_SLIDER_MAX}
+                    step="0.01"
+                    value={getHeroSliderValue(heroImageCrop)}
+                    onChange={(event) =>
+              setHeroImageCrop((currentCrop) => setHeroVerticalFromSlider(event.target.value, currentCrop))
+                    }
+                    disabled={!heroImage}
+                  />
+                </div>
 
-              <div className="dialog-poster-preview">
-                <HeaderArt image={heroImage || cartellLogo} crop={heroImageCrop} alt="" />
+                <div className="dialog-poster-preview">
+                  <HeaderArt image={heroImage || cartellLogo} crop={heroImageCrop} alt="" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="dialog-card__footer">
-          <button
-            className="dialog-button dialog-button--danger"
-            onClick={() => {
-              if (window.confirm(`¿Seguro que quieres eliminar la serie "${series.name}"?`)) {
-                onDelete();
-              }
-            }}
-            type="button"
-          >
-            Eliminar serie
-          </button>
-
-          <div className="dialog-card__actions">
-            <button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">
-              Cancelar
-            </button>
-            <button
-              className="dialog-button"
-              onClick={() =>
-                onSave({
-                  name,
-                  heroImage,
-                  heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop) : null,
-                })
-              }
-              type="button"
-            >
-              Guardar
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
-function AddSeriesModal({ visible, onClose, onAdd }) {
+function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -279,7 +460,7 @@ function AddSeriesModal({ visible, onClose, onAdd }) {
     if (!trimmedQuery) {
       setResults([]);
       setSelectedId(null);
-      setError("Escribe una serie para buscar.");
+      setError(`Escribe una ${mediaType === "movies" ? "pelicula" : "serie"} para buscar.`);
       return;
     }
 
@@ -288,10 +469,17 @@ function AddSeriesModal({ visible, onClose, onAdd }) {
     setSelectedId(null);
 
     try {
-      const nextResults = await searchTvSeries(trimmedQuery, TMDB_LANGUAGE);
+      const nextResults =
+        mediaType === "movies"
+          ? await searchMovies(trimmedQuery, TMDB_LANGUAGE)
+          : await searchTvSeries(trimmedQuery, TMDB_LANGUAGE);
       setResults(nextResults);
       if (!nextResults.length) {
-        setError("No se han encontrado series para esa busqueda.");
+        setError(
+          mediaType === "movies"
+            ? "No se han encontrado peliculas para esa busqueda."
+            : "No se han encontrado series para esa busqueda."
+        );
       }
     } catch (nextError) {
       setError(nextError.message || "No se pudo buscar en TMDB.");
@@ -302,16 +490,19 @@ function AddSeriesModal({ visible, onClose, onAdd }) {
   }
 
   async function handleAdd() {
-    const selectedSeries = results.find((item) => item.id === selectedId);
-    if (!selectedSeries) return;
+    const selectedItem = results.find((entry) => entry.id === selectedId);
+    if (!selectedItem) return;
 
     setSubmitting(true);
     setError("");
 
     try {
-      await onAdd(selectedSeries);
+      await onAdd(selectedItem);
     } catch (nextError) {
-      setError(nextError.message || "No se pudo anadir la serie.");
+      setError(
+        nextError.message ||
+          `No se pudo anadir la ${mediaType === "movies" ? "pelicula" : "serie"}.`
+      );
     } finally {
       setSubmitting(false);
     }
@@ -319,12 +510,36 @@ function AddSeriesModal({ visible, onClose, onAdd }) {
 
   if (!visible) return null;
 
+  if (mediaType === "games") {
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="dialog-card dialog-card--compact" onClick={(event) => event.stopPropagation()}>
+          <div className="dialog-card__header">
+            <div>
+              <p>Juegos</p>
+              <h2>En construccion</h2>
+            </div>
+            <button className="dialog-card__close" onClick={onClose} type="button">
+              ×
+            </button>
+          </div>
+          <p className="dialog-copy">
+            Este dialogo queda reservado para futuras acciones de juegos.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const mediaLabel = mediaType === "movies" ? "pelicula" : "serie";
+  const searchPlaceholder = mediaType === "movies" ? "Ejemplo: Toy Story" : "Ejemplo: Futurama";
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="dialog-card dialog-card--add-series" onClick={(event) => event.stopPropagation()}>
         <div className="dialog-card__header">
           <div>
-            <p>Anadir serie</p>
+            <p>{`Anadir ${mediaLabel}`}</p>
             <h2>Buscar en TMDB</h2>
           </div>
           <button className="dialog-card__close" onClick={onClose} type="button">
@@ -339,7 +554,7 @@ function AddSeriesModal({ visible, onClose, onAdd }) {
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Ejemplo: Futurama"
+              placeholder={searchPlaceholder}
             />
           </label>
 
@@ -350,10 +565,23 @@ function AddSeriesModal({ visible, onClose, onAdd }) {
 
         <div className="add-series-results">
           {results.length ? (
-            <div className="add-series-results__list" role="listbox" aria-label="Resultados de series">
+            <div
+              className="add-series-results__list"
+              role="listbox"
+              aria-label={`Resultados de ${mediaType === "movies" ? "peliculas" : "series"}`}
+            >
               {results.map((result) => {
                 const isSelected = result.id === selectedId;
-                const meta = [result.firstAirDate ? result.firstAirDate.slice(0, 4) : "", result.originalName]
+                const meta = [
+                  mediaType === "movies"
+                    ? result.releaseDate
+                      ? result.releaseDate.slice(0, 4)
+                      : ""
+                    : result.firstAirDate
+                      ? result.firstAirDate.slice(0, 4)
+                      : "",
+                  result.originalName,
+                ]
                   .filter(Boolean)
                   .join(" · ");
 
@@ -381,7 +609,7 @@ function AddSeriesModal({ visible, onClose, onAdd }) {
             </div>
           ) : (
             <div className="add-series-results__empty">
-              <p>Busca una serie para ver los resultados aqui.</p>
+              <p>{`Busca una ${mediaLabel} para ver los resultados aqui.`}</p>
             </div>
           )}
         </div>
@@ -437,6 +665,7 @@ function MiniTvModal({ visible, onClose }) {
 
 export default function App() {
   const mockMode = isMockMode();
+  const [activeMediaType, setActiveMediaType] = useState("series");
   const [webPinInput, setWebPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [pinSubmitting, setPinSubmitting] = useState(false);
@@ -446,16 +675,23 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
+  const [selectedMovieId, setSelectedMovieId] = useState(null);
   const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   const [currentView, setCurrentView] = useState("series");
   const [seasonEpisodes, setSeasonEpisodes] = useState(null);
   const [seasonEpisodesLoading, setSeasonEpisodesLoading] = useState(false);
   const [seasonHeroImage, setSeasonHeroImage] = useState("");
-  const [seriesProfiles, setSeriesProfiles] = useState(() => loadSeriesProfiles());
+  const [seriesProfiles, setSeriesProfiles] = useState(() => loadSeriesProfiles("series"));
+  const [movieProfiles, setMovieProfiles] = useState(() => loadSeriesProfiles("movies"));
+  const [movieLibrary, setMovieLibrary] = useState(() => loadMediaLibrary("movies"));
   const [tmdbSeriesMap, setTmdbSeriesMap] = useState({});
+  const [tmdbMovieMap, setTmdbMovieMap] = useState({});
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [addSeriesOpen, setAddSeriesOpen] = useState(false);
   const [miniTvOpen, setMiniTvOpen] = useState(false);
+  const [selectedEpisode, setSelectedEpisode] = useState(null);
+  const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
+  const [episodePlaying, setEpisodePlaying] = useState(false);
   const seasonHeroShellRef = useRef(null);
 
   useEffect(() => {
@@ -556,6 +792,57 @@ export default function App() {
     };
   }, [directories, seriesProfiles]);
 
+  useEffect(() => {
+    if (!movieLibrary.length) {
+      setTmdbMovieMap({});
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadTmdbMovies() {
+      setTmdbLoading(true);
+      setError("");
+
+      try {
+        const entries = await Promise.all(
+          movieLibrary.map(async (movie) => {
+            const profile = movieProfiles[String(movie.id)] || {};
+            const tmdbMovie = await getMovieById(movie.id, TMDB_LANGUAGE);
+
+            return [
+              String(movie.id),
+              {
+                ...tmdbMovie,
+                key: String(movie.id),
+                name: profile.name || tmdbMovie?.name || movie.name,
+                heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
+                heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
+              },
+            ];
+          })
+        );
+
+        if (!cancelled) {
+          setTmdbMovieMap(Object.fromEntries(entries));
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setError(nextError.message || "No se pudo cargar TMDB.");
+        }
+      } finally {
+        if (!cancelled) {
+          setTmdbLoading(false);
+        }
+      }
+    }
+
+    loadTmdbMovies();
+    return () => {
+      cancelled = true;
+    };
+  }, [movieLibrary, movieProfiles]);
+
   const seriesOptions = useMemo(() => {
     return directories.map((directory) => {
       const profile = seriesProfiles[directory.relativePath] || {};
@@ -576,14 +863,40 @@ export default function App() {
     });
   }, [directories, seriesProfiles, tmdbSeriesMap]);
 
+  const movieOptions = useMemo(() => {
+    return movieLibrary.map((movie) => {
+      const tmdbMovie = tmdbMovieMap[String(movie.id)] || null;
+      const profile = movieProfiles[String(movie.id)] || {};
+
+      return {
+        key: String(movie.id),
+        id: Number(movie.id),
+        name: profile.name || tmdbMovie?.name || movie.name,
+        heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
+        heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
+        imageOptions: tmdbMovie?.imageOptions || [],
+        overview: tmdbMovie?.overview || "",
+        releaseDate: tmdbMovie?.releaseDate || "",
+        runtime: tmdbMovie?.runtime || 0,
+        voteAverage: tmdbMovie?.voteAverage || 0,
+      };
+    });
+  }, [movieLibrary, movieProfiles, tmdbMovieMap]);
+
   const selectedSeries =
     seriesOptions.find((series) => series.directoryPath === selectedDirectoryPath) ||
     seriesOptions[0] ||
     null;
+  const selectedMovie =
+    movieOptions.find((movie) => Number(movie.id) === Number(selectedMovieId)) ||
+    movieOptions[0] ||
+    null;
+  const selectedItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
+  const hasSettingsButton = activeMediaType !== "games" && Boolean(selectedItem);
 
   const seasons = selectedSeries?.seasons || [];
-  const headerImage = selectedSeries?.heroImage || cartellLogo;
-  const headerImageCrop = selectedSeries?.heroImageCrop || DEFAULT_HERO_CROP;
+  const headerImage = selectedItem?.heroImage || cartellLogo;
+  const headerImageCrop = selectedItem?.heroImageCrop || DEFAULT_HERO_CROP;
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) || null;
 
   useEffect(() => {
@@ -591,6 +904,12 @@ export default function App() {
       setSelectedDirectoryPath(seriesOptions[0].directoryPath);
     }
   }, [selectedSeries, seriesOptions]);
+
+  useEffect(() => {
+    if (!selectedMovie && movieOptions[0]) {
+      setSelectedMovieId(movieOptions[0].id);
+    }
+  }, [selectedMovie, movieOptions]);
 
   useEffect(() => {
     if (!seasons.length) {
@@ -684,11 +1003,11 @@ export default function App() {
         const shellElement = seasonHeroShellRef.current;
         if (!shellElement) return;
 
-        const minHeight = window.innerWidth <= 760 ? 190 : 242;
+        const minHeight = window.innerWidth <= 760 ? 168 : 208;
         const maxHeight =
           window.innerWidth <= 760
-            ? window.innerHeight * 0.52
-            : Math.min(window.innerHeight * 0.72, 720);
+            ? window.innerHeight * 0.44
+            : Math.min(window.innerHeight * 0.58, 560);
         const maxShift = Math.max(maxHeight - minHeight, 0);
         const nextShift = Math.min(window.scrollY, maxShift);
         const nextOffset = 0;
@@ -733,12 +1052,28 @@ export default function App() {
     }
   }
 
+  function handleMediaTypeChange(nextType) {
+    setActiveMediaType(nextType);
+    setCurrentView("series");
+    setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setEpisodeDialogOpen(false);
+    setSettingsOpen(false);
+    setAddSeriesOpen(false);
+  }
+
   function handleSaveSeriesSettings(updates) {
-    if (!selectedSeries) return;
+    const activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
+    if (!activeItem) return;
 
     try {
-      const nextProfiles = updateSeriesProfile(selectedSeries.directoryPath, updates);
-      setSeriesProfiles(nextProfiles);
+      if (activeMediaType === "movies") {
+        const nextProfiles = updateSeriesProfile(String(activeItem.id), updates, "movies");
+        setMovieProfiles(nextProfiles);
+      } else {
+        const nextProfiles = updateSeriesProfile(activeItem.directoryPath, updates, "series");
+        setSeriesProfiles(nextProfiles);
+      }
       setSettingsOpen(false);
     } catch (nextError) {
       window.alert(nextError.message || "No se pudieron guardar los cambios.");
@@ -746,24 +1081,38 @@ export default function App() {
   }
 
   async function handleDeleteSeries() {
-    if (!selectedSeries) return;
+    const activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
+    if (!activeItem) return;
 
     try {
-      await removeSeries(selectedSeries.directoryPath);
-      const nextProfiles = removeSeriesProfile(selectedSeries.directoryPath);
-      setSeriesProfiles(nextProfiles);
-      const nextVideos = await getVideos();
-      setVideos(nextVideos);
-      setSelectedDirectoryPath(nextVideos?.directories?.[0]?.relativePath || "");
+      if (activeMediaType === "movies") {
+        setMovieLibrary(removeMediaLibraryItem("movies", activeItem.id));
+        setMovieProfiles(removeSeriesProfile(String(activeItem.id), "movies"));
+        setSelectedMovieId((current) =>
+          Number(current) === Number(activeItem.id) ? null : current
+        );
+      } else {
+        await removeSeries(activeItem.directoryPath);
+        const nextProfiles = removeSeriesProfile(activeItem.directoryPath, "series");
+        setSeriesProfiles(nextProfiles);
+        const nextVideos = await getVideos();
+        setVideos(nextVideos);
+        setSelectedDirectoryPath(nextVideos?.directories?.[0]?.relativePath || "");
+      }
       setSettingsOpen(false);
     } catch (nextError) {
-      window.alert(nextError.message || "No se pudo eliminar la serie.");
+      window.alert(
+        nextError.message ||
+          `No se pudo eliminar la ${activeMediaType === "movies" ? "pelicula" : "serie"}.`
+      );
     }
   }
 
   function handleOpenSeason(seasonId) {
     setSelectedSeasonId(seasonId);
     setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setEpisodeDialogOpen(false);
     setCurrentView("season");
     window.scrollTo({ top: 0, behavior: "instant" });
   }
@@ -771,10 +1120,62 @@ export default function App() {
   function handleBackToSeries() {
     setCurrentView("series");
     setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setEpisodeDialogOpen(false);
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
+  function handleOpenEpisodeDetails(episode) {
+    setSelectedEpisode(episode);
+    setEpisodeDialogOpen(true);
+  }
+
+  function handleCloseEpisodeDetails() {
+    setEpisodeDialogOpen(false);
+    setSelectedEpisode(null);
+    setEpisodePlaying(false);
+  }
+
+  async function handlePlayEpisode() {
+    if (!selectedEpisode || !selectedSeason || !selectedSeries?.directoryPath) return;
+
+    const raspberryEpisodeId = toRaspberryEpisodeId(
+      selectedSeason.seasonNumber || selectedSeason.id,
+      selectedEpisode.episodeNumber
+    );
+
+    if (!raspberryEpisodeId) {
+      window.alert("No se pudo convertir el episodio al formato SxxExx.");
+      return;
+    }
+
+    try {
+      setEpisodePlaying(true);
+      await playEpisode({
+        id: raspberryEpisodeId,
+        directory: selectedSeries.directoryPath,
+      });
+      setEpisodeDialogOpen(false);
+      setSelectedEpisode(null);
+    } catch (nextError) {
+      window.alert(nextError.message || "No se pudo reproducir el episodio.");
+    } finally {
+      setEpisodePlaying(false);
+    }
+  }
+
   async function handleAddSeries(selectedSeriesResult) {
+    if (activeMediaType === "movies") {
+      const nextLibrary = upsertMediaLibraryItem("movies", {
+        id: selectedSeriesResult.id,
+        name: selectedSeriesResult.name,
+      });
+      setMovieLibrary(nextLibrary);
+      setSelectedMovieId(selectedSeriesResult.id);
+      setAddSeriesOpen(false);
+      return;
+    }
+
     const addResponse = await addSeries({
       name: selectedSeriesResult.name,
       tmdbId: selectedSeriesResult.id,
@@ -796,12 +1197,30 @@ export default function App() {
     setAddSeriesOpen(false);
   }
 
+  const isSeriesMode = activeMediaType === "series";
+  const isMoviesMode = activeMediaType === "movies";
+  const isGamesMode = activeMediaType === "games";
+  const selectorOptions = isGamesMode ? [] : isMoviesMode ? movieOptions : seriesOptions;
+  const selectorValue = isGamesMode
+    ? ""
+    : isMoviesMode
+    ? String(selectedMovie?.id || "")
+    : selectedSeries?.directoryPath || "";
+  const selectorLabel = isGamesMode
+    ? "Juegos en construccion"
+    : isMoviesMode
+      ? "Seleccionar pelicula"
+      : "Seleccionar serie";
+  const emptyTitle = isMoviesMode ? "Sin peliculas disponibles" : "Sin temporadas disponibles";
+  const emptyDescription = isMoviesMode
+    ? "Anade una pelicula desde TMDB con el boton + para empezar esta lista."
+    : "No he podido cargar la informacion de temporadas desde TMDB para la serie seleccionada.";
+
   return (
     <main
       className="app-shell"
       style={{
-        backgroundImage:
-          "radial-gradient(circle at 50% 0%, rgba(214, 235, 247, 0.32), transparent 34%), linear-gradient(180deg, rgba(118, 160, 188, 0.96), rgba(109, 153, 184, 0.96))",
+        backgroundImage: `url(${cloudsBackground})`,
       }}
     >
       <div className={`page-overlay${currentView === "season" ? " page-overlay--season" : ""}`}>
@@ -834,8 +1253,12 @@ export default function App() {
             {loading || tmdbLoading ? (
               <section className="empty-state">
                 <div className="empty-state__card">
-                  <h2>Cargando temporadas...</h2>
-                  <p>Estoy preparando la portada y la cartelera TMDB de la serie seleccionada.</p>
+                  <h2>{isMoviesMode ? "Cargando peliculas..." : "Cargando temporadas..."}</h2>
+                  <p>
+                    {isMoviesMode
+                      ? "Estoy preparando la portada y los datos TMDB de la pelicula seleccionada."
+                      : "Estoy preparando la portada y la cartelera TMDB de la serie seleccionada."}
+                  </p>
                 </div>
               </section>
             ) : error ? (
@@ -845,17 +1268,7 @@ export default function App() {
                   <p>{error}</p>
                 </div>
               </section>
-            ) : !selectedSeries || !seasons.length ? (
-              <section className="empty-state">
-                <div className="empty-state__card">
-                  <h2>Sin temporadas disponibles</h2>
-                  <p>
-                    No he podido cargar la informacion de temporadas desde TMDB para la serie
-                    seleccionada.
-                  </p>
-                </div>
-              </section>
-            ) : currentView === "season" && selectedSeason ? (
+            ) : isSeriesMode && currentView === "season" && selectedSeason ? (
               <section className="season-page">
                 <button
                   className="season-page__back season-page__back--fixed"
@@ -873,10 +1286,7 @@ export default function App() {
                   <img className="series-hero__tv" src={tvGreen} alt="Configurar mini-tele" />
                 </button>
 
-                <div
-                  ref={seasonHeroShellRef}
-                  className="season-page__hero-shell"
-                >
+                <div ref={seasonHeroShellRef} className="season-page__hero-shell">
                   <header
                     className="season-page__hero"
                     style={{
@@ -884,8 +1294,8 @@ export default function App() {
                     }}
                   >
                     <div className="season-page__hero-overlay">
-                      <h1>{selectedSeason.title}</h1>
-                      <p>{selectedSeries.name}</p>
+                      <h1>{selectedSeries.name}</h1>
+                      <p>{selectedSeason.title}</p>
                       <span>{selectedSeason.episodeCount} capitulos</span>
                     </div>
                   </header>
@@ -901,20 +1311,111 @@ export default function App() {
                 ) : (
                   <section className="season-page__episodes">
                     {(seasonEpisodes?.episodes || []).map((episode) => (
-                      <EpisodeRow key={episode.id} episode={episode} />
+                      <EpisodeRow
+                        key={episode.id}
+                        episode={episode}
+                        onSelect={handleOpenEpisodeDetails}
+                      />
                     ))}
                   </section>
                 )}
               </section>
             ) : (
               <>
+                <section
+                  className={`series-selector${hasSettingsButton ? "" : " series-selector--without-settings"}`}
+                >
+                  <div className="series-selector__header">
+                    <div className="media-switch" role="tablist" aria-label="Tipo de catalogo">
+                      {MEDIA_TYPES.map((mediaType) => {
+                        const isActive = mediaType.id === activeMediaType;
+                        return (
+                          <button
+                            key={mediaType.id}
+                            className={`media-switch__option${isActive ? " active" : ""}`}
+                            onClick={() => handleMediaTypeChange(mediaType.id)}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                          >
+                            {mediaType.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </section>
+
                 <header className="series-hero">
                   <div className="series-hero__banner">
                     <HeaderArt
                       image={headerImage}
                       crop={headerImageCrop}
-                      alt={selectedSeries?.name || "Cartell principal"}
-                    />
+                      alt={selectedItem?.name || "Cartell principal"}
+                    >
+                      <div className="series-hero__controls-row">
+                        <button
+                          className="series-icon-button series-icon-button--controls-plus"
+                          onClick={() => setAddSeriesOpen(true)}
+                          type="button"
+                          aria-label={isGamesMode ? "Añadir juego" : `Añadir ${isMoviesMode ? "pelicula" : "serie"}`}
+                          title={isGamesMode ? "Añadir juego" : `Añadir ${isMoviesMode ? "pelicula" : "serie"}`}
+                        >
+                          <svg
+                            className="series-icon-button__icon series-icon-button__icon--plus"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                        </button>
+
+                        <label className="series-select series-select--hero">
+                          <select
+                            aria-label={selectorLabel}
+                            value={selectorValue}
+                            disabled={isGamesMode}
+                            onChange={(event) =>
+                              isMoviesMode
+                                ? setSelectedMovieId(Number(event.target.value) || null)
+                                : setSelectedDirectoryPath(event.target.value)
+                            }
+                          >
+                            {selectorOptions.length ? (
+                              selectorOptions.map((item) => (
+                                <option
+                                  key={isMoviesMode ? item.id : item.directoryPath}
+                                  value={isMoviesMode ? item.id : item.directoryPath}
+                                >
+                                  {item.name}
+                                </option>
+                              ))
+                            ) : (
+                              <option value="">{isGamesMode ? "Proximamente" : "Sin elementos"}</option>
+                            )}
+                          </select>
+                        </label>
+                      </div>
+                    </HeaderArt>
+
+                    {hasSettingsButton ? (
+                      <button
+                        className="series-icon-button series-icon-button--hero series-icon-button--hero-settings"
+                        onClick={() => setSettingsOpen(true)}
+                        type="button"
+                        aria-label={`Personalizar ${isMoviesMode ? "pelicula" : "serie"}`}
+                        title={`Personalizar ${isMoviesMode ? "pelicula" : "serie"}`}
+                      >
+                        <img
+                          className="series-icon-button__image series-icon-button__image--settings"
+                          src={settingsIcon}
+                          alt=""
+                          aria-hidden="true"
+                          draggable="false"
+                        />
+                      </button>
+                    ) : null}
 
                     <button
                       className="series-hero__tv-button"
@@ -926,93 +1427,85 @@ export default function App() {
                   </div>
                 </header>
 
-                <section className="series-selector">
-                  <div className="series-selector__header">
-                    <div>
-                      <h1>Seleccionar serie</h1>
+                {isGamesMode ? (
+                  <section className="empty-state">
+                    <div className="empty-state__card">
+                      <h2>Juegos en construccion</h2>
+                      <p>Este apartado todavia no tiene contenido disponible.</p>
                     </div>
-                  </div>
-
-                  <div className="series-selector__controls">
-                    <label className="series-select">
-                      <select
-                        value={selectedSeries?.directoryPath || ""}
-                        onChange={(event) => setSelectedDirectoryPath(event.target.value)}
-                      >
-                        {seriesOptions.map((series) => (
-                          <option key={series.directoryPath} value={series.directoryPath}>
-                            {series.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <button
-                      className="series-icon-button series-icon-button--settings"
-                      onClick={() => setSettingsOpen(true)}
-                      type="button"
-                      aria-label="Personalizar serie"
-                      title="Personalizar serie"
-                    >
-                      <img
-                        className="series-icon-button__image series-icon-button__image--settings"
-                        src={settingsIcon}
-                        alt=""
-                        aria-hidden="true"
-                        draggable="false"
-                      />
-                    </button>
-
-                    <button
-                      className="series-icon-button series-icon-button--plus"
-                      onClick={() => setAddSeriesOpen(true)}
-                      type="button"
-                      aria-label="Añadir serie"
-                      title="Añadir serie"
-                    >
-                      <svg
-                        className="series-icon-button__icon series-icon-button__icon--plus"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                      </svg>
-                    </button>
-                  </div>
-
-                </section>
-
-                <section className="seasons-section">
-                  <div className="season-grid">
-                    {seasons.map((season) => (
-                      <SeasonCard
-                        key={season.id}
-                        season={season}
-                        isActive={season.id === selectedSeasonId}
-                        onSelect={handleOpenSeason}
-                      />
-                    ))}
-                  </div>
-                </section>
+                  </section>
+                ) : !selectedItem || (isSeriesMode && !seasons.length) ? (
+                  <section className="empty-state">
+                    <div className="empty-state__card">
+                      <h2>{emptyTitle}</h2>
+                      <p>{emptyDescription}</p>
+                    </div>
+                  </section>
+                ) : isSeriesMode ? (
+                  <section className="seasons-section">
+                    <div className="season-grid">
+                      {seasons.map((season) => (
+                        <SeasonCard
+                          key={season.id}
+                          season={season}
+                          isActive={season.id === selectedSeasonId}
+                          onSelect={handleOpenSeason}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ) : (
+                  <section className="empty-state">
+                    <div className="empty-state__card">
+                      <h2>{selectedMovie.name}</h2>
+                      <p>
+                        {selectedMovie.releaseDate
+                          ? `Estreno: ${selectedMovie.releaseDate}`
+                          : "Fecha de estreno no disponible."}
+                      </p>
+                      <p>
+                        {selectedMovie.runtime
+                          ? `Duracion: ${selectedMovie.runtime} minutos`
+                          : "Duracion no disponible."}
+                      </p>
+                      <p>
+                        {typeof selectedMovie.voteAverage === "number" && selectedMovie.voteAverage > 0
+                          ? `Valoracion TMDB: ${selectedMovie.voteAverage.toFixed(1)}`
+                          : "Valoracion TMDB no disponible."}
+                      </p>
+                      <p>{selectedMovie.overview || "Sin sinopsis disponible en TMDB."}</p>
+                    </div>
+                  </section>
+                )}
               </>
             )}
 
             <SettingsModal
               visible={settingsOpen}
-              series={selectedSeries}
-              imageOptions={selectedSeries?.imageOptions || []}
+              mediaType={activeMediaType}
+              item={selectedItem}
+              imageOptions={selectedItem?.imageOptions || []}
               onClose={() => setSettingsOpen(false)}
               onSave={handleSaveSeriesSettings}
               onDelete={handleDeleteSeries}
             />
 
-            <AddSeriesModal
+            <AddMediaModal
               visible={addSeriesOpen}
+              mediaType={activeMediaType}
               onClose={() => setAddSeriesOpen(false)}
               onAdd={handleAddSeries}
             />
             <MiniTvModal visible={miniTvOpen} onClose={() => setMiniTvOpen(false)} />
+            <EpisodeDetailsModal
+              visible={episodeDialogOpen}
+              episode={selectedEpisode}
+              season={selectedSeason}
+              seriesName={selectedSeries?.name || ""}
+              playing={episodePlaying}
+              onClose={handleCloseEpisodeDetails}
+              onPlay={handlePlayEpisode}
+            />
           </>
         )}
       </div>
