@@ -1496,7 +1496,8 @@ export default function App() {
                   </section>
                 ) : isSeriesMode ? (
                   <section className="seasons-section">
-                    <div className="season-grid">
+                    <div className="seasons-section__label">TEMPORADAS</div>
+                    <div className={`season-grid${seasons.length === 1 ? " season-grid--single" : ""}`}>
                       {seasons.map((season) => (
                         <SeasonCard
                           key={season.id}
