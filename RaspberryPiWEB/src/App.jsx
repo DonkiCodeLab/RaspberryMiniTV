@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
 import cloudsBackground from "./assets/cloud.gif";
+import deleteIcon from "./assets/delete.png";
+import saveIcon from "./assets/save.png";
 import settingsIcon from "./assets/settings_icon.png";
 import tvGreen from "./assets/tele_green_2_fixed.png";
 import {
@@ -357,7 +359,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
                 aria-label={`Eliminar ${mediaLabel}`}
                 title={`Eliminar ${mediaLabel}`}
               >
-                🗑
+                <img className="dialog-card__icon-image" src={deleteIcon} alt="" aria-hidden="true" />
               </button>
               <button
                 className="dialog-card__icon-button"
@@ -372,7 +374,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
                 aria-label="Guardar"
                 title="Guardar"
               >
-                💾
+                <img className="dialog-card__icon-image" src={saveIcon} alt="" aria-hidden="true" />
               </button>
               <button
                 className="dialog-card__icon-button dialog-card__close"
@@ -476,7 +478,7 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
     if (!trimmedQuery) {
       setResults([]);
       setSelectedId(null);
-      setError(`Escribe una ${mediaType === "movies" ? "pelicula" : "serie"} para buscar.`);
+      setError(`Escribe una ${mediaType === "movies" ? "película" : "serie"} para buscar.`);
       return;
     }
 
@@ -493,8 +495,8 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
       if (!nextResults.length) {
         setError(
           mediaType === "movies"
-            ? "No se han encontrado peliculas para esa busqueda."
-            : "No se han encontrado series para esa busqueda."
+            ? "No se han encontrado películas para esa búsqueda."
+            : "No se han encontrado series para esa búsqueda."
         );
       }
     } catch (nextError) {
@@ -517,11 +519,18 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
     } catch (nextError) {
       setError(
         nextError.message ||
-          `No se pudo anadir la ${mediaType === "movies" ? "pelicula" : "serie"}.`
+          `No se pudo añadir la ${mediaType === "movies" ? "película" : "serie"}.`
       );
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleClearSearch() {
+    setQuery("");
+    setResults([]);
+    setSelectedId(null);
+    setError("");
   }
 
   if (!visible) return null;
@@ -547,7 +556,7 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
     );
   }
 
-  const mediaLabel = mediaType === "movies" ? "pelicula" : "serie";
+  const mediaLabel = mediaType === "movies" ? "película" : "serie";
   const searchPlaceholder = mediaType === "movies" ? "Ejemplo: Toy Story" : "Ejemplo: Futurama";
 
   return (
@@ -555,7 +564,7 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
       <div className="dialog-card dialog-card--add-series" onClick={(event) => event.stopPropagation()}>
         <div className="dialog-card__header">
           <div>
-            <p>{`Anadir ${mediaLabel}`}</p>
+            <p>{`Añadir ${mediaLabel}`}</p>
             <h2>Buscar en TMDB</h2>
           </div>
           <button className="dialog-card__close" onClick={onClose} type="button">
@@ -565,13 +574,32 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
 
         <form className="add-series-search" onSubmit={handleSearch}>
           <label className="dialog-field">
-            <span>Busqueda</span>
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={searchPlaceholder}
-            />
+            <span>Búsqueda</span>
+            <div className="search-input-shell">
+              <span className="search-input-shell__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation">
+                  <circle cx="11" cy="11" r="6.5" />
+                  <path d="M16 16L21 21" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={searchPlaceholder}
+              />
+              {query ? (
+                <button
+                  className="search-input-shell__clear"
+                  onClick={handleClearSearch}
+                  type="button"
+                  aria-label="Borrar búsqueda"
+                  title="Borrar búsqueda"
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
           </label>
 
           <button className="dialog-button add-series-search__button" disabled={searching} type="submit">
@@ -584,7 +612,7 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
             <div
               className="add-series-results__list"
               role="listbox"
-              aria-label={`Resultados de ${mediaType === "movies" ? "peliculas" : "series"}`}
+              aria-label={`Resultados de ${mediaType === "movies" ? "películas" : "series"}`}
             >
               {results.map((result) => {
                 const isSelected = result.id === selectedId;
@@ -616,7 +644,7 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
                       <h3>{result.name}</h3>
                       {meta ? <p className="add-series-result__meta">{meta}</p> : null}
                       <p className="add-series-result__overview">
-                        {result.overview || "Sin descripcion disponible en TMDB."}
+                        {result.overview || "Sin descripción disponible en TMDB."}
                       </p>
                     </div>
                   </button>
@@ -625,7 +653,7 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
             </div>
           ) : (
             <div className="add-series-results__empty">
-              <p>{`Busca una ${mediaLabel} para ver los resultados aqui.`}</p>
+              <p>{`Busca una ${mediaLabel} para ver los resultados aquí.`}</p>
             </div>
           )}
         </div>
@@ -642,7 +670,7 @@ function AddMediaModal({ visible, mediaType, onClose, onAdd }) {
             onClick={handleAdd}
             type="button"
           >
-            {submitting ? "Anadiendo..." : "Anadir"}
+            {submitting ? "Añadiendo..." : "Añadir"}
           </button>
         </div>
       </div>
@@ -1445,7 +1473,14 @@ export default function App() {
 
                 {isGamesMode ? (
                   <section className="empty-state">
-                    <div className="empty-state__card">
+                    <div className="empty-state__card empty-state__card--games">
+                      <div className="empty-state__poster">
+                        <HeaderArt
+                          image={cartellLogo}
+                          crop={DEFAULT_HERO_CROP}
+                          alt="Cartel por defecto de juegos"
+                        />
+                      </div>
                       <h2>Juegos en construccion</h2>
                       <p>Este apartado todavia no tiene contenido disponible.</p>
                     </div>

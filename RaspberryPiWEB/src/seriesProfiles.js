@@ -1,4 +1,4 @@
-const STORAGE_KEY = "simpsonstv-web-series-profiles-v1";
+const STORAGE_PREFIX = "simpsonstv-web-media-profiles-v1";
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -19,12 +19,16 @@ function getStorage() {
   return window.localStorage;
 }
 
-export function loadSeriesProfiles() {
+function getStorageKey(collectionType = "series") {
+  return `${STORAGE_PREFIX}:${String(collectionType || "series").trim().toLowerCase()}`;
+}
+
+export function loadSeriesProfiles(collectionType = "series") {
   try {
     const storage = getStorage();
     if (!storage) return {};
 
-    const raw = storage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(getStorageKey(collectionType));
     if (!raw) return {};
 
     const parsed = JSON.parse(raw);
@@ -34,24 +38,24 @@ export function loadSeriesProfiles() {
   }
 }
 
-export function saveSeriesProfiles(profiles) {
+export function saveSeriesProfiles(profiles, collectionType = "series") {
   const safeProfiles = profiles && typeof profiles === "object" ? profiles : {};
   const storage = getStorage();
 
   if (storage) {
-    storage.setItem(STORAGE_KEY, JSON.stringify(safeProfiles));
+    storage.setItem(getStorageKey(collectionType), JSON.stringify(safeProfiles));
   }
 
   return safeProfiles;
 }
 
-export function updateSeriesProfile(seriesKey, updates = {}) {
+export function updateSeriesProfile(seriesKey, updates = {}, collectionType = "series") {
   const key = String(seriesKey || "").trim();
   if (!key) {
-    return loadSeriesProfiles();
+    return loadSeriesProfiles(collectionType);
   }
 
-  const current = loadSeriesProfiles();
+  const current = loadSeriesProfiles(collectionType);
   const currentEntry = current[key] && typeof current[key] === "object" ? current[key] : {};
 
   return saveSeriesProfiles({
@@ -64,21 +68,21 @@ export function updateSeriesProfile(seriesKey, updates = {}) {
         normalizeHeroImageCrop(updates?.heroImageCrop) ||
         normalizeHeroImageCrop(currentEntry.heroImageCrop),
     },
-  });
+  }, collectionType);
 }
 
-export function removeSeriesProfile(seriesKey) {
+export function removeSeriesProfile(seriesKey, collectionType = "series") {
   const key = String(seriesKey || "").trim();
   if (!key) {
-    return loadSeriesProfiles();
+    return loadSeriesProfiles(collectionType);
   }
 
-  const current = loadSeriesProfiles();
+  const current = loadSeriesProfiles(collectionType);
   if (!Object.prototype.hasOwnProperty.call(current, key)) {
     return current;
   }
 
   const next = { ...current };
   delete next[key];
-  return saveSeriesProfiles(next);
+  return saveSeriesProfiles(next, collectionType);
 }

@@ -155,6 +155,31 @@ export async function searchTvSeries(query, language) {
   }));
 }
 
+export async function searchMovies(query, language) {
+  const trimmedQuery = String(query || "").trim();
+  if (!trimmedQuery) return [];
+
+  const data = await fetchTmdbJson("/search/movie", {
+    language,
+    query: {
+      query: trimmedQuery,
+      include_adult: "false",
+      page: 1,
+    },
+  });
+
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return results.map((item) => ({
+    id: Number(item?.id),
+    name: item?.title || item?.original_title || "Unknown movie",
+    originalName: item?.original_title || "",
+    overview: item?.overview || "",
+    releaseDate: item?.release_date || "",
+    posterImage: buildTmdbImageUrl(item?.poster_path, "w342"),
+    backdropImage: buildTmdbImageUrl(item?.backdrop_path, "w780"),
+  }));
+}
+
 async function searchTvSeriesByName(query, language) {
   const results = await searchTvSeries(query, language);
   return results[0] || null;
@@ -162,6 +187,24 @@ async function searchTvSeriesByName(query, language) {
 
 async function getTvSeriesImages(seriesId, language) {
   const data = await fetchTmdbJson(`/tv/${seriesId}/images`, {
+    language,
+    query: {
+      include_image_language: "null,en,es",
+    },
+  });
+
+  const posters = (Array.isArray(data?.posters) ? data.posters : []).map((item) =>
+    buildTmdbImageUrl(item?.file_path, "w780")
+  );
+  const backdrops = (Array.isArray(data?.backdrops) ? data.backdrops : []).map((item) =>
+    buildTmdbImageUrl(item?.file_path, "w1280")
+  );
+
+  return uniqueImageList([...posters, ...backdrops]);
+}
+
+async function getMovieImages(movieId, language) {
+  const data = await fetchTmdbJson(`/movie/${movieId}/images`, {
     language,
     query: {
       include_image_language: "null,en,es",
@@ -219,6 +262,36 @@ export async function getTvSeriesById(seriesId, language) {
   };
 }
 
+export async function getMovieById(movieId, language) {
+  const [movie, availableImages] = await Promise.all([
+    fetchTmdbJson(`/movie/${movieId}`, { language }),
+    getMovieImages(movieId, language).catch(() => []),
+  ]);
+
+  const heroImage =
+    buildTmdbImageUrl(movie?.backdrop_path, "w1280") ||
+    buildTmdbImageUrl(movie?.poster_path, "w780") ||
+    null;
+  const imageOptions = uniqueImageList([
+    heroImage,
+    buildTmdbImageUrl(movie?.poster_path, "w780"),
+    buildTmdbImageUrl(movie?.backdrop_path, "w1280"),
+    ...availableImages,
+  ]);
+
+  return {
+    id: Number(movie?.id) || Number(movieId),
+    name: movie?.title || "Unknown movie",
+    originalName: movie?.original_title || "",
+    heroImage,
+    imageOptions,
+    overview: movie?.overview || "",
+    releaseDate: movie?.release_date || "",
+    runtime: Number(movie?.runtime) || 0,
+    voteAverage: Number(movie?.vote_average) || 0,
+  };
+}
+
 export async function resolveSeriesFromNames({ directoryName, displayName, language }) {
   const known = getKnownSeriesMatch(directoryName, displayName);
   let seriesId = Number(known?.id) || null;
@@ -253,6 +326,8 @@ export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language }) 
       synopsis: episode?.overview || "",
       airDate: episode?.air_date || "",
       image: buildTmdbImageUrl(episode?.still_path, "w780"),
+      runtime: Number(episode?.runtime) || 0,
+      voteAverage: Number(episode?.vote_average) || 0,
     };
   });
 
