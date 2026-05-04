@@ -1,5 +1,6 @@
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
+const TMDB_ENGLISH_FALLBACK_LANGUAGE = "en-US";
 
 const FALLBACK_SERIES = [
   {
@@ -47,6 +48,88 @@ function uniqueImageList(imageUrls) {
     seen.add(normalized);
     return true;
   });
+}
+
+function hasText(value) {
+  return String(value || "").trim().length > 0;
+}
+
+function isGenericEpisodeTitle(title, episodeNumber) {
+  const normalizedTitle = normalizeText(title);
+  const normalizedEpisode = String(Number(episodeNumber) || "").trim();
+
+  if (!normalizedTitle || !normalizedEpisode) return true;
+
+  return new Set([
+    `episodio ${normalizedEpisode}`,
+    `episodi ${normalizedEpisode}`,
+    `episode ${normalizedEpisode}`,
+    `capitulo ${normalizedEpisode}`,
+    `capitol ${normalizedEpisode}`,
+  ]).has(normalizedTitle);
+}
+
+async function fetchTmdbJsonWithEnglishOverview(path, { language, query } = {}) {
+  const data = await fetchTmdbJson(path, { language, query });
+
+  if (!hasText(data?.overview) && language && language !== TMDB_ENGLISH_FALLBACK_LANGUAGE) {
+    try {
+      const fallbackData = await fetchTmdbJson(path, {
+        language: TMDB_ENGLISH_FALLBACK_LANGUAGE,
+        query,
+      });
+
+      if (hasText(fallbackData?.overview)) {
+        return {
+          ...data,
+          overview: fallbackData.overview,
+        };
+      }
+    } catch {
+      return data;
+    }
+  }
+
+  return data;
+}
+
+async function fetchSearchResultsWithOverviewFallback(path, query, language) {
+  const primaryData = await fetchTmdbJson(path, {
+    language,
+    query,
+  });
+
+  const primaryResults = Array.isArray(primaryData?.results) ? primaryData.results : [];
+
+  if (!language || language === TMDB_ENGLISH_FALLBACK_LANGUAGE) {
+    return primaryResults;
+  }
+
+  const needsFallback = primaryResults.some((item) => !hasText(item?.overview));
+  if (!needsFallback) return primaryResults;
+
+  try {
+    const fallbackData = await fetchTmdbJson(path, {
+      language: TMDB_ENGLISH_FALLBACK_LANGUAGE,
+      query,
+    });
+    const fallbackResults = Array.isArray(fallbackData?.results) ? fallbackData.results : [];
+    const fallbackById = new Map(
+      fallbackResults.map((item) => [Number(item?.id), item]).filter(([id]) => Number.isFinite(id))
+    );
+
+    return primaryResults.map((item) => {
+      if (hasText(item?.overview)) return item;
+      const fallbackItem = fallbackById.get(Number(item?.id));
+      if (!hasText(fallbackItem?.overview)) return item;
+      return {
+        ...item,
+        overview: fallbackItem.overview,
+      };
+    });
+  } catch {
+    return primaryResults;
+  }
 }
 
 function readTmdbCredentials() {
@@ -134,16 +217,16 @@ export async function searchTvSeries(query, language) {
   const trimmedQuery = String(query || "").trim();
   if (!trimmedQuery) return [];
 
-  const data = await fetchTmdbJson("/search/tv", {
-    language,
-    query: {
+  const results = await fetchSearchResultsWithOverviewFallback(
+    "/search/tv",
+    {
       query: trimmedQuery,
       include_adult: "false",
       page: 1,
     },
-  });
+    language
+  );
 
-  const results = Array.isArray(data?.results) ? data.results : [];
   return results.map((item) => ({
     id: Number(item?.id),
     name: item?.name || item?.original_name || "Unknown show",
@@ -159,16 +242,16 @@ export async function searchMovies(query, language) {
   const trimmedQuery = String(query || "").trim();
   if (!trimmedQuery) return [];
 
-  const data = await fetchTmdbJson("/search/movie", {
-    language,
-    query: {
+  const results = await fetchSearchResultsWithOverviewFallback(
+    "/search/movie",
+    {
       query: trimmedQuery,
       include_adult: "false",
       page: 1,
     },
-  });
+    language
+  );
 
-  const results = Array.isArray(data?.results) ? data.results : [];
   return results.map((item) => ({
     id: Number(item?.id),
     name: item?.title || item?.original_title || "Unknown movie",
@@ -223,7 +306,7 @@ async function getMovieImages(movieId, language) {
 
 export async function getTvSeriesById(seriesId, language) {
   const [show, availableImages] = await Promise.all([
-    fetchTmdbJson(`/tv/${seriesId}`, { language }),
+    fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}`, { language }),
     getTvSeriesImages(seriesId, language).catch(() => []),
   ]);
   const heroImage =
@@ -264,7 +347,7 @@ export async function getTvSeriesById(seriesId, language) {
 
 export async function getMovieById(movieId, language) {
   const [movie, availableImages] = await Promise.all([
-    fetchTmdbJson(`/movie/${movieId}`, { language }),
+    fetchTmdbJsonWithEnglishOverview(`/movie/${movieId}`, { language }),
     getMovieImages(movieId, language).catch(() => []),
   ]);
 
@@ -315,15 +398,45 @@ export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language }) 
   const season = await fetchTmdbJson(`/tv/${seriesId}/season/${seasonNumber}`, {
     language,
   });
+  let englishEpisodesByNumber = new Map();
+
+  if (language && language !== TMDB_ENGLISH_FALLBACK_LANGUAGE) {
+    const primaryEpisodes = Array.isArray(season?.episodes) ? season.episodes : [];
+    const needsFallback = primaryEpisodes.some(
+      (episode) =>
+        !hasText(episode?.overview) ||
+        isGenericEpisodeTitle(episode?.name, Number(episode?.episode_number) || 0)
+    );
+
+    if (needsFallback) {
+      try {
+        const englishSeason = await fetchTmdbJson(`/tv/${seriesId}/season/${seasonNumber}`, {
+          language: TMDB_ENGLISH_FALLBACK_LANGUAGE,
+        });
+        englishEpisodesByNumber = new Map(
+          (Array.isArray(englishSeason?.episodes) ? englishSeason.episodes : []).map((episode) => [
+            Number(episode?.episode_number) || 0,
+            episode,
+          ])
+        );
+      } catch {
+        englishEpisodesByNumber = new Map();
+      }
+    }
+  }
 
   const episodes = (season?.episodes || []).map((episode) => {
     const episodeNumber = Number(episode?.episode_number) || 0;
+    const fallbackEpisode = englishEpisodesByNumber.get(episodeNumber);
 
     return {
       id: Number(episode?.id) || `${seasonNumber}-${episodeNumber}`,
       episodeNumber,
-      title: episode?.name || `Episodio ${episodeNumber}`,
-      synopsis: episode?.overview || "",
+      title:
+        isGenericEpisodeTitle(episode?.name, episodeNumber) && hasText(fallbackEpisode?.name)
+          ? fallbackEpisode.name
+          : episode?.name || `Episodio ${episodeNumber}`,
+      synopsis: episode?.overview || fallbackEpisode?.overview || "",
       airDate: episode?.air_date || "",
       image: buildTmdbImageUrl(episode?.still_path, "w780"),
       runtime: Number(episode?.runtime) || 0,

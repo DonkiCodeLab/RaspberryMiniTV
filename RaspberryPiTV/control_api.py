@@ -486,6 +486,16 @@ def volume_down_locked():
             pass
 
 
+def poweroff_locked():
+    hide_qr()
+    stop_locked()
+    subprocess.Popen(
+        ["shutdown", "-h", "now"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
 @app.route("/episodes", methods=["GET"])
 def episodes():
     directory = request.args.get("directory", default="", type=str).strip() or None
@@ -614,6 +624,13 @@ def volume_down():
     with lock:
         volume_down_locked()
     return jsonify({"ok": True})
+
+
+@app.route("/poweroff", methods=["POST"])
+def poweroff():
+    with lock:
+        poweroff_locked()
+    return jsonify({"ok": True, "shuttingDown": True})
 
 
 @app.route("/now", methods=["GET"])

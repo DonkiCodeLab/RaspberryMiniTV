@@ -5,6 +5,8 @@ const explicitMockMode = (import.meta.env.VITE_WEB_DEV_MODE || "").trim().toLowe
 const localhostHosts = new Set(["localhost", "127.0.0.1"]);
 
 let mockPlayback = "";
+let mockPlaybackDirectory = "";
+let mockPlaybackFile = "";
 
 function buildMockVideoLibrary() {
   const episodeIds = [
@@ -218,8 +220,8 @@ export function getHealth() {
       ok: true,
       ts: Math.floor(Date.now() / 1000),
       playing: mockPlayback || null,
-      directory: "the-simpsons",
-      file: mockPlayback ? `the-simpsons/${mockPlayback}.mp4` : null,
+      directory: mockPlaybackDirectory || "",
+      file: mockPlaybackFile || null,
       running: Boolean(mockPlayback),
       mock: true,
     });
@@ -302,11 +304,13 @@ export function removeSeries(relativePath) {
 export function playEpisode({ id, directory }) {
   if (isMockModeEnabled()) {
     mockPlayback = id;
+    mockPlaybackDirectory = directory || "";
+    mockPlaybackFile = `${directory || ""}${directory ? "/" : ""}${id}.mp4`;
     return Promise.resolve({
       ok: true,
       playing: id,
-      directory: directory || "the-simpsons",
-      file: `${directory || "the-simpsons"}/${id}.mp4`,
+      directory: mockPlaybackDirectory,
+      file: mockPlaybackFile,
       mock: true,
     });
   }
@@ -345,10 +349,26 @@ export function volumeDown() {
 export function stopPlayback() {
   if (isMockModeEnabled()) {
     mockPlayback = "";
+    mockPlaybackDirectory = "";
+    mockPlaybackFile = "";
     return Promise.resolve({ ok: true, mock: true });
   }
 
   return request("/stop", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export function powerOffRaspberry() {
+  if (isMockModeEnabled()) {
+    mockPlayback = "";
+    mockPlaybackDirectory = "";
+    mockPlaybackFile = "";
+    return Promise.resolve({ ok: true, mock: true, shuttingDown: true });
+  }
+
+  return request("/poweroff", {
     method: "POST",
     body: JSON.stringify({}),
   });

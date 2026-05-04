@@ -43,6 +43,7 @@ export default function RaspberryStatusBadge({
   const [changingVolume, setChangingVolume] = useState(false);
   const [tvFrame, setTvFrame] = useState(0);
   const anim = useRef(new Animated.Value(0)).current;
+  const hoverAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Parpadeo de tele cada segundo para estados con 2 frames.
@@ -226,6 +227,18 @@ export default function RaspberryStatusBadge({
   const badgeSize = size;
   const tvSize = badgeSize * 0.81;
   const badgeScale = scale;
+  const badgeTvScale = hoverAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.34],
+  });
+  const badgeTvTranslateY = hoverAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -6],
+  });
+  const badgeTvRotate = hoverAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "-4deg"],
+  });
 
   const stateLabel =
     health.status === "green"
@@ -255,21 +268,50 @@ export default function RaspberryStatusBadge({
       >
         <Pressable
           onPress={openModal}
+          onHoverIn={() => {
+            Animated.spring(hoverAnim, {
+              toValue: 1,
+              tension: 180,
+              friction: 12,
+              useNativeDriver: true,
+            }).start();
+          }}
+          onHoverOut={() => {
+            Animated.spring(hoverAnim, {
+              toValue: 0,
+              tension: 180,
+              friction: 12,
+              useNativeDriver: true,
+            }).start();
+          }}
           style={({ pressed }) => ({
             width: badgeSize,
             height: badgeSize,
             borderRadius: badgeSize / 2,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "rgba(255,255,255,0.50)",
-            borderWidth: 2,
-            borderColor:
-              health.status === "green" ? "#22c55e" : "#ef4444",
-            overflow: "hidden",
+            overflow: "visible",
             opacity: pressed ? 0.88 : 1,
           })}
         >
-          <Image
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              width: badgeSize,
+              height: badgeSize,
+              borderRadius: badgeSize / 2,
+              backgroundColor: "rgba(255,255,255,0.50)",
+              borderWidth: 2,
+              borderColor: health.status === "green" ? "#22c55e" : "#ef4444",
+              shadowColor: health.status === "green" ? "#22c55e" : "#ef4444",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: health.status === "green" ? 0.24 : 0.2,
+              shadowRadius: 12,
+              elevation: health.status === "green" ? 10 : 8,
+            }}
+          />
+          <Animated.Image
             source={
               health.status === "green"
                 ? tvFrame === 0
@@ -279,7 +321,16 @@ export default function RaspberryStatusBadge({
                 ? require("../../assets/tele_red_1.png")
                 : require("../../assets/tele_red_2.png")
             }
-            style={{ width: tvSize, height: tvSize, marginTop: 0 }}
+            style={{
+              width: tvSize,
+              height: tvSize,
+              marginTop: 0,
+              transform: [
+                { translateY: badgeTvTranslateY },
+                { rotate: badgeTvRotate },
+                { scale: badgeTvScale },
+              ],
+            }}
             resizeMode="contain"
           />
         </Pressable>
