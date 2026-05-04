@@ -18,10 +18,11 @@ os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 import pygame
 
 try:
-    from evdev import InputDevice, ecodes
+    from evdev import InputDevice, ecodes, list_devices
 except ImportError:
     InputDevice = None
     ecodes = None
+    list_devices = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
@@ -58,6 +59,14 @@ EMPTY_ICON_PATH = os.path.join(MENU_DIR, "empty.png")
 NO_WIFI_IMAGE_PATH = os.path.join(MENU_DIR, "no_wifi.png")
 SPLASH_IMAGE_PATH = os.path.join(MENU_DIR, "splash.png")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
+TOUCH_DEVICE_KEYWORDS = (
+    "touch",
+    "ft5406",
+    "goodix",
+    "edt-ft5x06",
+    "waveshare",
+    "raspberrypi-ts",
+)
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
@@ -100,6 +109,8 @@ STARTUP_SPLASH_MS = 0
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
+    "wifi_ssid": "",
+    "wifi_password": "",
 }
 LANGUAGE_BUTTON_MAP = {
     "1x1": "en",
@@ -619,6 +630,68 @@ def load_image(path):
     return pygame.image.load(path).convert_alpha()
 
 
+def score_touch_device(device):
+    score = 0
+    try:
+        capabilities = device.capabilities(verbose=False)
+    except Exception:
+        capabilities = {}
+
+    device_name = (getattr(device, "name", "") or "").lower()
+    if any(keyword in device_name for keyword in TOUCH_DEVICE_KEYWORDS):
+        score += 10
+
+    abs_codes = set(capabilities.get(ecodes.EV_ABS, [])) if ecodes is not None else set()
+    key_codes = set(capabilities.get(ecodes.EV_KEY, [])) if ecodes is not None else set()
+
+    if ecodes is not None:
+        if ecodes.ABS_X in abs_codes or ecodes.ABS_MT_POSITION_X in abs_codes:
+            score += 3
+        if ecodes.ABS_Y in abs_codes or ecodes.ABS_MT_POSITION_Y in abs_codes:
+            score += 3
+        if ecodes.BTN_TOUCH in key_codes:
+            score += 4
+
+    return score
+
+
+def find_touch_device():
+    if InputDevice is None or ecodes is None or list_devices is None:
+        return None, "evdev unavailable"
+
+    candidates = []
+    for path in list_devices():
+        try:
+            device = InputDevice(path)
+        except Exception as exc:
+            log_debug(f"TOUCH skip path={path} error={exc}")
+            continue
+
+        score = score_touch_device(device)
+        candidates.append((score, path, device))
+        log_debug(f"TOUCH candidate path={path} name={device.name} score={score}")
+
+    if not candidates:
+        return None, "no input devices found"
+
+    candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    best_score, best_path, best_device = candidates[0]
+    if best_score <= 0:
+        try:
+            best_device.close()
+        except Exception:
+            pass
+        return None, "no touchscreen-like device detected"
+
+    for _score, path, device in candidates[1:]:
+        try:
+            device.close()
+        except Exception:
+            pass
+
+    return best_device, best_path
+
+
 def fit_image(image, size):
     return pygame.transform.smoothscale(image, size)
 
@@ -912,6 +985,47 @@ class RaspberryPiTVMenu:
         self.play_status = self.tr("play.choose")
         self.browser_status = self.tr("browser.select")
 
+    def remember_successful_wifi(self, ssid, password):
+        safe_ssid = str(ssid or "").strip()
+        if not safe_ssid:
+            return
+
+        self.config["wifi_ssid"] = safe_ssid
+        self.config["wifi_password"] = str(password or "")
+        self.save_settings()
+        log_wifi_debug("wifi_saved_to_settings", ssid=safe_ssid, has_password=bool(password))
+
+    def ensure_startup_wifi_connection(self):
+        saved_ssid = str(self.config.get("wifi_ssid") or "").strip()
+        saved_password = str(self.config.get("wifi_password") or "")
+        if not saved_ssid:
+            log_wifi_debug("wifi_startup_restore_skipped", reason="missing_saved_ssid")
+            return
+
+        current_ssid = get_connected_wifi_info()
+        current_ip = get_wifi_ipv4()
+        log_wifi_debug(
+            "wifi_startup_restore_begin",
+            saved_ssid=saved_ssid,
+            current_ssid=current_ssid,
+            current_ip=current_ip,
+            has_saved_password=bool(saved_password),
+        )
+
+        if current_ssid == saved_ssid and current_ip:
+            log_wifi_debug("wifi_startup_restore_skipped", reason="already_connected", ssid=saved_ssid, ip=current_ip)
+            return
+
+        success, message = connect_wifi(saved_ssid, saved_password)
+        log_wifi_debug(
+            "wifi_startup_restore_result",
+            saved_ssid=saved_ssid,
+            success=success,
+            message=message,
+        )
+        if success:
+            self.wifi_status = message
+
     def prepare_asset(self, path):
         image = load_image(path)
         if image is None:
@@ -954,11 +1068,19 @@ class RaspberryPiTVMenu:
             return
 
         try:
-            self.touch_device = InputDevice(TOUCH_DEVICE_PATH)
-            log_debug(f"TOUCH device={TOUCH_DEVICE_PATH} name={self.touch_device.name}")
+            device, detected_path = find_touch_device()
+            if device is None:
+                self.touch_device = None
+                log_debug(
+                    f"TOUCH no autodetected device, falling back to pygame events (legacy default={TOUCH_DEVICE_PATH}, reason={detected_path})"
+                )
+                return
+
+            self.touch_device = device
+            log_debug(f"TOUCH device={detected_path} name={self.touch_device.name}")
         except Exception as exc:
             self.touch_device = None
-            log_debug(f"TOUCH failed to open {TOUCH_DEVICE_PATH}: {exc}")
+            log_debug(f"TOUCH failed to initialize autodetection: {exc}")
 
     def refresh_qr_asset(self):
         self.qr_url = generate_qr()
@@ -1669,6 +1791,7 @@ class RaspberryPiTVMenu:
         self.wifi_dialog_message = resolved_message
         self.wifi_dialog_is_error = not success
         if success:
+            self.remember_successful_wifi(self.wifi_selected_ssid, self.wifi_password)
             self.refresh_wifi_networks()
             self.refresh_qr_asset()
 
@@ -2460,6 +2583,7 @@ class RaspberryPiTVMenu:
 
     def run(self):
         self.show_startup_splash()
+        self.ensure_startup_wifi_connection()
         play_intro()
 
         while self.running:

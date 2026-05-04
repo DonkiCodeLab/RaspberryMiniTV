@@ -193,6 +193,7 @@ const UI_STRINGS = {
     poster_preview: "Vista previa del cartel",
     vertical_position: "Posición vertical del cartel",
     confirm_delete: "¿Seguro que quieres eliminar la {media} \"{name}\"?",
+    confirm_delete_title: "Eliminar {media}",
     delete_media: "Eliminar {media}",
     save: "Guardar",
     cancel: "Cancelar",
@@ -346,6 +347,7 @@ const UI_STRINGS = {
     poster_preview: "Vista prèvia del cartell",
     vertical_position: "Posició vertical del cartell",
     confirm_delete: "Segur que vols eliminar la {media} \"{name}\"?",
+    confirm_delete_title: "Eliminar {media}",
     delete_media: "Eliminar {media}",
     save: "Desar",
     cancel: "Cancel·lar",
@@ -499,6 +501,7 @@ const UI_STRINGS = {
     poster_preview: "Poster preview",
     vertical_position: "Poster vertical position",
     confirm_delete: "Are you sure you want to delete the {media} \"{name}\"?",
+    confirm_delete_title: "Delete {media}",
     delete_media: "Delete {media}",
     save: "Save",
     cancel: "Cancel",
@@ -1377,11 +1380,13 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
   const [name, setName] = useState(item?.name || "");
   const [heroImage, setHeroImage] = useState(item?.heroImage || "");
   const [heroImageCrop, setHeroImageCrop] = useState(item?.heroImageCrop || DEFAULT_HERO_CROP);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     setName(item?.name || "");
     setHeroImage(item?.heroImage || imageOptions?.[0] || "");
     setHeroImageCrop(normalizeHeroCrop(item?.heroImageCrop || DEFAULT_HERO_CROP));
+    setDeleteConfirmOpen(false);
   }, [item, imageOptions, visible]);
 
   if (!visible) return null;
@@ -1425,11 +1430,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
             <div className="dialog-card__header-actions">
               <button
                 className="dialog-card__icon-button dialog-card__icon-button--danger"
-                onClick={() => {
-                  if (window.confirm(t("confirm_delete", { media: mediaLabel, name: item.name }))) {
-                    onDelete();
-                  }
-                }}
+                onClick={() => setDeleteConfirmOpen(true)}
                 type="button"
                 aria-label={t("delete_media", { media: mediaLabel })}
                 title={t("delete_media", { media: mediaLabel })}
@@ -1462,6 +1463,40 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
               </button>
             </div>
           </div>
+
+          {deleteConfirmOpen ? (
+            <div className="settings-delete-confirm" role="alertdialog" aria-modal="true">
+              <div className="settings-delete-confirm__card">
+                <div className="settings-delete-confirm__icon">
+                  <img className="dialog-card__icon-image" src={deleteIcon} alt="" aria-hidden="true" />
+                </div>
+                <div className="settings-delete-confirm__copy">
+                  <p>{t("confirm_delete_title", { media: mediaLabel })}</p>
+                  <h3>{item.name}</h3>
+                  <span>{t("confirm_delete", { media: mediaLabel, name: item.name })}</span>
+                </div>
+                <div className="settings-delete-confirm__actions">
+                  <button
+                    className="dialog-button dialog-button--ghost"
+                    onClick={() => setDeleteConfirmOpen(false)}
+                    type="button"
+                  >
+                    {t("cancel")}
+                  </button>
+                  <button
+                    className="dialog-button dialog-button--danger"
+                    onClick={() => {
+                      setDeleteConfirmOpen(false);
+                      onDelete();
+                    }}
+                    type="button"
+                  >
+                    {t("delete_media", { media: mediaLabel })}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
         <div className="dialog-card__body">
           <label className="dialog-field">
