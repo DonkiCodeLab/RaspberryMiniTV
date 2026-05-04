@@ -94,6 +94,31 @@ sudo apt update
 sudo apt install -y python3-flask python3-pygame python3-rpi.gpio python3-evdev qrencode network-manager wireless-tools wpasupplicant
 ```
 
+Si quieres comparar reproductores en la Raspberry Pi Zero 2:
+
+```bash
+sudo apt install -y mpv vlc
+chmod +x RaspberryPiTV/test_players.sh
+```
+
+Pruebas rapidas:
+
+```bash
+cd ~/TvSimpsonsApp/RaspberryPiTV
+./test_players.sh omxplayer
+./test_players.sh mpv
+./test_players.sh vlc
+./test_players.sh all
+```
+
+Notas practicas para Zero 2:
+
+- hoy el proyecto usa `omxplayer` de forma hardcoded en `control_api.py` y `menu_app.py`.
+- `mpv` es el candidato mas realista si luego quieres seguir jugando con una UI propia.
+- `vlc` suele consumir mas y en Raspberry sin escritorio grafico puede dar mas guerra.
+- si arrancas en consola/TTY, el script intenta usar `mpv` sobre DRM/KMS; con `vlc` puede que necesites sesion grafica segun la imagen de Raspberry Pi OS.
+- los logs de cada prueba quedan en `/tmp/simpsonstv-player-tests/`.
+
 Para revisar estado y logs:
 
 ```bash
