@@ -134,7 +134,7 @@ function isLocalhost() {
 }
 
 function isMockModeEnabled() {
-  return import.meta.env.DEV && (explicitMockMode || (!configuredBaseUrl && isLocalhost()));
+  return explicitMockMode || (import.meta.env.DEV && !configuredBaseUrl && isLocalhost());
 }
 
 function getBaseUrl() {
