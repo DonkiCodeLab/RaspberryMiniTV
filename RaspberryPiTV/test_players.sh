@@ -68,8 +68,16 @@ run_logged() {
   echo "Comando: $*"
 
   set +e
-  /usr/bin/time -f 'elapsed=%E cpu=%P maxrss=%MKB exit=%x' "$@" >"${log_file}" 2>&1
-  local status=$?
+  if [[ -x /usr/bin/time ]]; then
+    /usr/bin/time -f 'elapsed=%E cpu=%P maxrss=%MKB exit=%x' "$@" >"${log_file}" 2>&1
+    local status=$?
+  elif command -v time >/dev/null 2>&1; then
+    time "$@" >"${log_file}" 2>&1
+    local status=$?
+  else
+    "$@" >"${log_file}" 2>&1
+    local status=$?
+  fi
   set -e
 
   tail -n 20 "${log_file}" || true
