@@ -19,10 +19,11 @@ os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 import pygame
 
 try:
-    from evdev import InputDevice, ecodes
+    from evdev import InputDevice, ecodes, list_devices
 except ImportError:
     InputDevice = None
     ecodes = None
+    list_devices = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
@@ -56,7 +57,6 @@ FOLDER_EXPLORER_PRESSED_PATH = os.path.join(MENU_DIR, "folder_explorer_pressed.p
 ICON_PLAY_NORMAL_PATH = os.path.join(MENU_DIR, "icon_play_normal.png")
 ICON_PLAY_PRESSED_PATH = os.path.join(MENU_DIR, "icon_play_pressed.png")
 EMPTY_ICON_PATH = os.path.join(MENU_DIR, "empty.png")
-TOUCH_DEVICE_PATH = "/dev/input/event0"
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
@@ -225,6 +225,62 @@ def append_debug_log(path, message):
             handle.write(f"[{timestamp}] {message}\n")
     except Exception:
         pass
+
+
+def score_touch_device(device):
+    try:
+        capabilities = device.capabilities(absinfo=False)
+    except Exception:
+        return -1
+
+    abs_codes = set(capabilities.get(ecodes.EV_ABS, []))
+    key_codes = set(capabilities.get(ecodes.EV_KEY, []))
+    name = (device.name or "").lower()
+    score = 0
+
+    if ecodes.BTN_TOUCH in key_codes:
+        score += 10
+    if ecodes.ABS_MT_POSITION_X in abs_codes and ecodes.ABS_MT_POSITION_Y in abs_codes:
+        score += 8
+    if ecodes.ABS_X in abs_codes and ecodes.ABS_Y in abs_codes:
+        score += 4
+    if "touch" in name:
+        score += 6
+    if "goodix" in name:
+        score += 6
+    if "mouse" in name:
+        score -= 8
+    if "keyboard" in name:
+        score -= 8
+
+    return score
+
+
+def detect_touch_device():
+    if InputDevice is None or list_devices is None or ecodes is None:
+        return None, "evdev unavailable"
+
+    candidates = []
+    for path in list_devices():
+        try:
+            device = InputDevice(path)
+            score = score_touch_device(device)
+            candidates.append((score, path, device.name or "unknown"))
+            device.close()
+        except Exception as exc:
+            log_debug(f"TOUCH skip path={path} reason={exc}")
+
+    if not candidates:
+        return None, "no input devices discovered"
+
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    best_score, best_path, best_name = candidates[0]
+    summary = ", ".join(f"{path}:{name}:score={score}" for score, path, name in candidates)
+    log_debug(f"TOUCH candidates {summary}")
+
+    if best_score <= 0:
+        return None, f"no touchscreen-like device found ({summary})"
+    return best_path, f"{best_name} score={best_score}"
 
 
 def scan_wifi_networks():
@@ -696,11 +752,16 @@ class RaspberryPiTVMenu:
             return
 
         try:
-            self.touch_device = InputDevice(TOUCH_DEVICE_PATH)
-            log_debug(f"TOUCH device={TOUCH_DEVICE_PATH} name={self.touch_device.name}")
+            touch_path, reason = detect_touch_device()
+            if not touch_path:
+                self.touch_device = None
+                log_debug(f"TOUCH autodetect failed: {reason}. Falling back to pygame mouse events")
+                return
+            self.touch_device = InputDevice(touch_path)
+            log_debug(f"TOUCH device={touch_path} name={self.touch_device.name} autodetect={reason}")
         except Exception as exc:
             self.touch_device = None
-            log_debug(f"TOUCH failed to open {TOUCH_DEVICE_PATH}: {exc}")
+            log_debug(f"TOUCH failed to initialize autodetected device: {exc}")
 
     def refresh_qr_asset(self):
         self.qr_url = generate_qr()
