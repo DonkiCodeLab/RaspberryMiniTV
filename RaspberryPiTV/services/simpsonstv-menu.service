@@ -1,7 +1,7 @@
 [Unit]
 Description=SimpsonsTV Menu
 After=network.target simpsonstv-startup-guard.service simpsonstv-api.service
-Wants=simpsonstv-startup-guard.service simpsonstv-api.service
+Wants=simpsonstv-api.service
 ConditionPathExists=!/run/tvsimpsons/skip_autostart
 
 [Service]

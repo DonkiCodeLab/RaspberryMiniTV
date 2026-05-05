@@ -35,7 +35,7 @@ install_service "simpsonstv-menu.service"
 
 systemctl daemon-reload
 systemctl enable simpsonstv-startup-guard.service simpsonstv-api.service simpsonstv-menu.service
-systemctl restart simpsonstv-startup-guard.service simpsonstv-api.service simpsonstv-menu.service
+systemctl restart simpsonstv-api.service simpsonstv-menu.service
 
 echo "Servicios instalados y reiniciados correctamente."
 echo "Puedes revisar su estado con:"
