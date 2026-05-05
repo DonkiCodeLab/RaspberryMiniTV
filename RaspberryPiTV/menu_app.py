@@ -97,6 +97,7 @@ BROWSE_VISIBLE_ITEMS = 5
 LOADING_MIN_DURATION_MS = 1000
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-mpv.sock")
 MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-video-preview.png")
+MPV_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "raspberrypitv-mpv.log")
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
@@ -159,7 +160,7 @@ def play_intro():
 
 
 def generate_qr():
-    url = get_local_ip()
+    url = f"http://{get_local_ip()}:{PORT}"
     if DESKTOP_PREVIEW:
         return url
     subprocess.run(
@@ -213,6 +214,15 @@ def remove_path_if_exists(path):
         os.remove(path)
     except FileNotFoundError:
         pass
+    except Exception:
+        pass
+
+
+def append_debug_log(path, message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(f"[{timestamp}] {message}\n")
     except Exception:
         pass
 
@@ -604,6 +614,7 @@ class RaspberryPiTVMenu:
         self.loading_started_at = 0
         self.loading_rotation = 0
         self.video_proc = None
+        self.video_log_handle = None
         self.video_current_path = ""
         self.video_return_state = "play"
         self.video_now_playing = ""
@@ -1094,6 +1105,16 @@ class RaspberryPiTVMenu:
         command.append(filepath)
         return command
 
+    def close_video_log_handle(self):
+        if self.video_log_handle is None:
+            return
+        try:
+            self.video_log_handle.flush()
+            self.video_log_handle.close()
+        except Exception:
+            pass
+        self.video_log_handle = None
+
     def send_mpv_command(self, *command_parts):
         if not os.path.exists(MPV_SOCKET_PATH):
             return None
@@ -1178,6 +1199,7 @@ class RaspberryPiTVMenu:
             except Exception:
                 pass
         self.video_proc = None
+        self.close_video_log_handle()
         remove_path_if_exists(MPV_SOCKET_PATH)
         self.video_preview_seconds = preview_seconds
         self.video_preview_path = self.video_current_path
@@ -1208,6 +1230,7 @@ class RaspberryPiTVMenu:
                     proc.terminate()
                 except Exception:
                     pass
+        self.close_video_log_handle()
         run_command(["pkill", "-f", "mpv"])
         remove_path_if_exists(MPV_SOCKET_PATH)
         self.video_proc = None
@@ -1226,8 +1249,36 @@ class RaspberryPiTVMenu:
         self.video_return_state = self.loading_return_state
         command = self.build_mpv_command(self.loading_video_path, self.loading_video_start_seconds)
         log_debug(f"VIDEO start via mpv file={self.loading_video_path} start={self.loading_video_start_seconds:.3f}")
-        self.video_proc = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        self.wait_for_mpv_ipc()
+        append_debug_log(MPV_DEBUG_LOG_PATH, f"Launching mpv: {' '.join(command)}")
+        self.close_video_log_handle()
+        try:
+            self.video_log_handle = open(MPV_DEBUG_LOG_PATH, "a", encoding="utf-8")
+            self.video_proc = subprocess.Popen(command, stdout=self.video_log_handle, stderr=self.video_log_handle)
+        except Exception as exc:
+            append_debug_log(MPV_DEBUG_LOG_PATH, f"Failed to launch mpv: {exc}")
+            log_debug(f"VIDEO failed to launch mpv: {exc}")
+            self.close_video_log_handle()
+            self.video_proc = None
+            self.loading_video_path = None
+            self.loading_video_start_seconds = 0.0
+            self.state = self.video_return_state
+            return
+
+        ipc_ready = self.wait_for_mpv_ipc()
+        if not ipc_ready:
+            append_debug_log(MPV_DEBUG_LOG_PATH, "mpv IPC socket was not created within 2.0s")
+        time.sleep(0.15)
+        if self.video_proc.poll() is not None:
+            return_code = self.video_proc.returncode
+            append_debug_log(MPV_DEBUG_LOG_PATH, f"mpv exited immediately with return code {return_code}")
+            log_debug(f"VIDEO mpv exited immediately returncode={return_code}")
+            self.close_video_log_handle()
+            self.video_proc = None
+            remove_path_if_exists(MPV_SOCKET_PATH)
+            self.loading_video_path = None
+            self.loading_video_start_seconds = 0.0
+            self.state = self.video_return_state
+            return
         self.loading_video_path = None
         self.loading_video_start_seconds = 0.0
         self.state = "video"
@@ -1237,7 +1288,11 @@ class RaspberryPiTVMenu:
             self.maybe_start_pending_video()
             return
         if self.state == "video" and self.video_proc and self.video_proc.poll() is not None:
+            return_code = self.video_proc.returncode
+            append_debug_log(MPV_DEBUG_LOG_PATH, f"mpv exited with return code {return_code}")
+            log_debug(f"VIDEO mpv exited returncode={return_code}")
             self.video_proc = None
+            self.close_video_log_handle()
             remove_path_if_exists(MPV_SOCKET_PATH)
             self.state = self.video_return_state
 

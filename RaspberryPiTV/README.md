@@ -153,7 +153,32 @@ journalctl -u simpsonstv-api.service -n 50 --no-pager
 journalctl -u simpsonstv-menu.service -n 50 --no-pager
 journalctl -u tvbutton.service -n 50 --no-pager
 tail -n 50 /tmp/raspberrypitv-menu.log
+tail -n 100 /tmp/raspberrypitv-mpv.log
 ```
+
+Si al tocar `Play` aparece el icono de pensar y vuelve al menu, normalmente significa que `mpv` ha arrancado y ha salido enseguida.
+Ahora `menu_app.py` deja tambien trazas en:
+
+```bash
+/tmp/raspberrypitv-mpv.log
+```
+
+Flujo rapido de diagnostico para ese caso:
+
+```bash
+tail -n 100 /tmp/raspberrypitv-menu.log
+tail -n 100 /tmp/raspberrypitv-mpv.log
+journalctl -u simpsonstv-menu.service -b -n 100 --no-pager
+cd ~/TvSimpsonsApp/RaspberryPiTV
+./test_players.sh mpv
+```
+
+Con eso puedes ver:
+
+- el comando exacto de `mpv` que lanzó el menu.
+- si el socket IPC de `mpv` no llegó a crearse.
+- si `mpv` salió inmediatamente y con qué código.
+- el error real de `mpv` en consola/log.
 
 ## Cancelar autostart en el arranque
 
