@@ -468,13 +468,9 @@ def blit_centered(surface, image, width, height):
 class RaspberryPiTVMenu:
     def __init__(self):
         ensure_screen_on()
-        pygame.display.init()
         pygame.font.init()
-        if DESKTOP_PREVIEW:
-            self.screen = pygame.display.set_mode((BASE_WIDTH, BASE_HEIGHT))
-        else:
-            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        pygame.mouse.set_visible(DESKTOP_PREVIEW)
+        self.display_suspended = False
+        self.initialize_display()
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
         self.font = pygame.font.SysFont(FONT_FAMILY, 28)
@@ -683,6 +679,42 @@ class RaspberryPiTVMenu:
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
         self.setup_touch_input()
+
+    def initialize_display(self):
+        log_debug(f"DISPLAY init start suspended={self.display_suspended}")
+        pygame.display.init()
+        if DESKTOP_PREVIEW:
+            self.screen = pygame.display.set_mode((BASE_WIDTH, BASE_HEIGHT))
+        else:
+            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        pygame.mouse.set_visible(DESKTOP_PREVIEW)
+        self.display_suspended = False
+        log_debug("DISPLAY init complete")
+
+    def suspend_display_for_video(self):
+        if self.display_suspended:
+            log_debug("DISPLAY suspend skipped: already suspended")
+            return
+        log_debug("DISPLAY suspend start for video playback")
+        try:
+            pygame.display.quit()
+            self.display_suspended = True
+            log_debug("DISPLAY suspend complete")
+        except Exception as exc:
+            log_debug(f"DISPLAY suspend failed: {exc}")
+
+    def resume_display_after_video(self):
+        if not self.display_suspended:
+            log_debug("DISPLAY resume skipped: display already active")
+            return
+        log_debug("DISPLAY resume start after video playback")
+        try:
+            self.initialize_display()
+            self.width, self.height = self.screen.get_size()
+            log_debug(f"DISPLAY resume complete size={self.width}x{self.height}")
+        except Exception as exc:
+            log_debug(f"DISPLAY resume failed: {exc}")
+            raise
 
     def load_settings(self):
         loaded = load_json_file(USER_SETTINGS_PATH, {})
@@ -1247,6 +1279,7 @@ class RaspberryPiTVMenu:
                 pass
         self.video_proc = None
         self.close_video_log_handle()
+        self.resume_display_after_video()
         remove_path_if_exists(MPV_SOCKET_PATH)
         self.video_preview_seconds = preview_seconds
         self.video_preview_path = self.video_current_path
@@ -1279,6 +1312,7 @@ class RaspberryPiTVMenu:
                     pass
         self.close_video_log_handle()
         run_command(["pkill", "-f", "mpv"])
+        self.resume_display_after_video()
         remove_path_if_exists(MPV_SOCKET_PATH)
         self.video_proc = None
         self.video_current_path = ""
@@ -1299,12 +1333,14 @@ class RaspberryPiTVMenu:
         append_debug_log(MPV_DEBUG_LOG_PATH, f"Launching mpv: {' '.join(command)}")
         self.close_video_log_handle()
         try:
+            self.suspend_display_for_video()
             self.video_log_handle = open(MPV_DEBUG_LOG_PATH, "a", encoding="utf-8")
             self.video_proc = subprocess.Popen(command, stdout=self.video_log_handle, stderr=self.video_log_handle)
         except Exception as exc:
             append_debug_log(MPV_DEBUG_LOG_PATH, f"Failed to launch mpv: {exc}")
             log_debug(f"VIDEO failed to launch mpv: {exc}")
             self.close_video_log_handle()
+            self.resume_display_after_video()
             self.video_proc = None
             self.loading_video_path = None
             self.loading_video_start_seconds = 0.0
@@ -1321,6 +1357,7 @@ class RaspberryPiTVMenu:
             log_debug(f"VIDEO mpv exited immediately returncode={return_code}")
             self.close_video_log_handle()
             self.video_proc = None
+            self.resume_display_after_video()
             remove_path_if_exists(MPV_SOCKET_PATH)
             self.loading_video_path = None
             self.loading_video_start_seconds = 0.0
@@ -1340,6 +1377,7 @@ class RaspberryPiTVMenu:
             log_debug(f"VIDEO mpv exited returncode={return_code}")
             self.video_proc = None
             self.close_video_log_handle()
+            self.resume_display_after_video()
             remove_path_if_exists(MPV_SOCKET_PATH)
             self.state = self.video_return_state
 
