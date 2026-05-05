@@ -2467,10 +2467,10 @@ class RaspberryPiTVMenu:
 
         while self.running:
             self.update_video_state()
+            self.poll_native_touch()
             if self.display_suspended:
                 time.sleep(0.05)
                 continue
-            self.poll_native_touch()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
