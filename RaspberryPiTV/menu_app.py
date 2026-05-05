@@ -1100,8 +1100,6 @@ class RaspberryPiTVMenu:
         ]
         if start_seconds > 0:
             command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
-        if not DESKTOP_PREVIEW:
-            command.extend(["--vo=gpu", "--gpu-context=drm"])
         command.append(filepath)
         return command
 
