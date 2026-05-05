@@ -1334,8 +1334,20 @@ class RaspberryPiTVMenu:
         self.close_video_log_handle()
         try:
             self.suspend_display_for_video()
+            mpv_env = os.environ.copy()
+            for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
+                mpv_env.pop(env_key, None)
+            append_debug_log(
+                MPV_DEBUG_LOG_PATH,
+                "Launching mpv with sanitized env (removed SDL_VIDEODRIVER, SDL_FBDEV, SDL_MOUSE_TOUCH_EVENTS)",
+            )
             self.video_log_handle = open(MPV_DEBUG_LOG_PATH, "a", encoding="utf-8")
-            self.video_proc = subprocess.Popen(command, stdout=self.video_log_handle, stderr=self.video_log_handle)
+            self.video_proc = subprocess.Popen(
+                command,
+                stdout=self.video_log_handle,
+                stderr=self.video_log_handle,
+                env=mpv_env,
+            )
         except Exception as exc:
             append_debug_log(MPV_DEBUG_LOG_PATH, f"Failed to launch mpv: {exc}")
             log_debug(f"VIDEO failed to launch mpv: {exc}")
@@ -2455,6 +2467,9 @@ class RaspberryPiTVMenu:
 
         while self.running:
             self.update_video_state()
+            if self.display_suspended:
+                time.sleep(0.05)
+                continue
             self.poll_native_touch()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
