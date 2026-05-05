@@ -5,7 +5,6 @@ import select
 import socket
 import subprocess
 import sys
-import tempfile
 import time
 from datetime import datetime
 
@@ -19,11 +18,10 @@ os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 import pygame
 
 try:
-    from evdev import InputDevice, ecodes, list_devices
+    from evdev import InputDevice, ecodes
 except ImportError:
     InputDevice = None
     ecodes = None
-    list_devices = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
@@ -57,17 +55,7 @@ FOLDER_EXPLORER_PRESSED_PATH = os.path.join(MENU_DIR, "folder_explorer_pressed.p
 ICON_PLAY_NORMAL_PATH = os.path.join(MENU_DIR, "icon_play_normal.png")
 ICON_PLAY_PRESSED_PATH = os.path.join(MENU_DIR, "icon_play_pressed.png")
 EMPTY_ICON_PATH = os.path.join(MENU_DIR, "empty.png")
-NO_WIFI_IMAGE_PATH = os.path.join(MENU_DIR, "no_wifi.png")
-SPLASH_IMAGE_PATH = os.path.join(MENU_DIR, "splash.png")
 TOUCH_DEVICE_PATH = "/dev/input/event0"
-TOUCH_DEVICE_KEYWORDS = (
-    "touch",
-    "ft5406",
-    "goodix",
-    "edt-ft5x06",
-    "waveshare",
-    "raspberrypi-ts",
-)
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
@@ -106,14 +94,9 @@ PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
 BACK_BUTTON_SCALE = 1.3
 BROWSE_VISIBLE_ITEMS = 5
 LOADING_MIN_DURATION_MS = 1000
-STARTUP_SPLASH_MS = 0
-MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-mpv.sock")
-MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-video-preview.png")
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
-    "wifi_ssid": "",
-    "wifi_password": "",
 }
 LANGUAGE_BUTTON_MAP = {
     "1x1": "en",
@@ -222,129 +205,26 @@ def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
-def remove_path_if_exists(path):
-    try:
-        os.remove(path)
-    except FileNotFoundError:
-        pass
-    except Exception:
-        pass
-
-
-def parse_nmcli_wifi_list(raw_output):
-    networks = []
-    seen = set()
-    for line in raw_output.splitlines():
-        if not line.strip():
-            continue
-        parts = line.split(":")
-        if len(parts) < 3:
-            continue
-        ssid = parts[0].strip()
-        signal = parts[1].strip() or "0"
-        security = ":".join(parts[2:]).strip()
-        if not ssid or ssid in seen:
-            continue
-        seen.add(ssid)
-        networks.append({"ssid": ssid, "signal": int(signal or 0), "security": security or "open"})
-    return sorted(networks, key=lambda item: (-item["signal"], item["ssid"].lower()))
-
-
-def get_nmcli_wifi_snapshot(rescan=True):
-    command = ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list"]
-    if rescan:
-        command.extend(["--rescan", "yes"])
-    result = run_command(command)
-    networks = parse_nmcli_wifi_list(result.stdout) if result.returncode == 0 else []
-    return result, networks
-
-
-def format_wifi_snapshot_for_log(networks, limit=12):
-    if not networks:
-        return "none"
-    preview = [f"{item['ssid']}({item['signal']})" for item in networks[:limit]]
-    if len(networks) > limit:
-        preview.append(f"...+{len(networks) - limit}")
-    return ", ".join(preview)
-
-
-def log_command_result(event, command, result):
-    log_wifi_debug(
-        event,
-        command=" ".join(command),
-        returncode=result.returncode,
-        stdout=(result.stdout or "").strip(),
-        stderr=(result.stderr or "").strip(),
-    )
-
-
-def capture_wifi_adapter_state(tag):
-    for suffix, command in (
-        ("device_status", ["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device", "status"]),
-        ("wifi_list", ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list"]),
-        ("link", ["iw", "dev", "wlan0", "link"]),
-    ):
-        result = run_command(command)
-        log_command_result(f"{tag}_{suffix}", command, result)
-
-
-def prepare_wifi_adapter_for_connection(ssid):
-    capture_wifi_adapter_state("wifi_connect_before_prepare")
-
-    disconnect_result = run_command(["nmcli", "device", "disconnect", "wlan0"])
-    log_command_result("wifi_connect_disconnect", ["nmcli", "device", "disconnect", "wlan0"], disconnect_result)
-    time.sleep(1.0)
-
-    rescan_result = run_command(["nmcli", "device", "wifi", "rescan", "ifname", "wlan0"])
-    log_command_result("wifi_connect_rescan", ["nmcli", "device", "wifi", "rescan", "ifname", "wlan0"], rescan_result)
-    time.sleep(1.5)
-
-    capture_wifi_adapter_state("wifi_connect_after_prepare")
-    log_wifi_debug("wifi_connect_prepare_done", ssid=ssid)
-
-
-def preflight_wifi_visibility_check(ssid, attempts=3, delay_seconds=1.0):
-    saw_any_networks = False
-    for attempt in range(1, attempts + 1):
-        scan_result, visible_networks = get_nmcli_wifi_snapshot(rescan=True)
-        target_visible = any(network["ssid"] == ssid for network in visible_networks)
-        if visible_networks:
-            saw_any_networks = True
-        log_wifi_debug(
-            "wifi_connect_preflight_scan",
-            ssid=ssid,
-            attempt=attempt,
-            returncode=scan_result.returncode,
-            stderr=(scan_result.stderr or "").strip(),
-            target_visible=target_visible,
-            visible_count=len(visible_networks),
-            visible_networks=format_wifi_snapshot_for_log(visible_networks),
-        )
-        if scan_result.returncode == 0 and target_visible:
-            return {"allow_connect": True, "reason": "target_visible"}
-        if scan_result.returncode == 0 and visible_networks and not target_visible:
-            if attempt == attempts:
-                return {"allow_connect": False, "reason": "target_not_visible"}
-        if attempt < attempts:
-            time.sleep(delay_seconds)
-
-    if saw_any_networks:
-        return {"allow_connect": False, "reason": "target_not_visible"}
-
-    log_wifi_debug(
-        "wifi_connect_preflight_scan_empty",
-        ssid=ssid,
-        attempts=attempts,
-        note="nmcli no devolvio redes en ninguno de los intentos; se intentara conectar igualmente",
-    )
-    return {"allow_connect": True, "reason": "all_scans_empty"}
-
-
 def scan_wifi_networks():
-    nmcli_result, networks = get_nmcli_wifi_snapshot(rescan=True)
+    nmcli_result = run_command(["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "yes"])
     if nmcli_result.returncode == 0:
+        networks = []
+        seen = set()
+        for line in nmcli_result.stdout.splitlines():
+            if not line.strip():
+                continue
+            parts = line.split(":")
+            if len(parts) < 3:
+                continue
+            ssid = parts[0].strip()
+            signal = parts[1].strip() or "0"
+            security = ":".join(parts[2:]).strip()
+            if not ssid or ssid in seen:
+                continue
+            seen.add(ssid)
+            networks.append({"ssid": ssid, "signal": int(signal or 0), "security": security or "open"})
         if networks:
-            return networks
+            return sorted(networks, key=lambda item: (-item["signal"], item["ssid"].lower()))
         log_debug("WIFI nmcli returned no networks, falling back to iwlist")
 
     iw_result = run_command(["iwlist", "wlan0", "scan"])
@@ -393,30 +273,10 @@ def connect_wifi(ssid, password):
     if not ssid:
         return False, "Selecciona una red Wi-Fi primero."
 
-    pre_connect_ssid = get_connected_wifi_info()
-    pre_connect_ip = get_wifi_ipv4()
-    pre_connect_uuid = get_active_wifi_connection_uuid()
     nmcli_base = ["nmcli", "dev", "wifi", "connect", ssid]
     if password:
         nmcli_base.extend(["password", password])
-    log_wifi_debug(
-        "wifi_connect_start",
-        ssid=ssid,
-        has_password=bool(password),
-        previous_ssid=pre_connect_ssid,
-        previous_ip=pre_connect_ip,
-        previous_uuid=pre_connect_uuid,
-    )
-
-    prepare_wifi_adapter_for_connection(ssid)
-    preflight = preflight_wifi_visibility_check(ssid)
-    if not preflight["allow_connect"] and preflight["reason"] == "target_not_visible":
-        rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
-        message = f"La red {ssid} ya no esta visible para el sistema. Pulsa Actualitza y vuelve a intentarlo."
-        if rollback_success and pre_connect_ssid:
-            message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
-        return False, message
-
+    log_wifi_debug("wifi_connect_start", ssid=ssid, has_password=bool(password))
     nmcli_result = run_command(nmcli_base)
     log_wifi_debug(
         "wifi_connect_nmcli",
@@ -425,23 +285,8 @@ def connect_wifi(ssid, password):
         stdout=(nmcli_result.stdout or "").strip(),
         stderr=(nmcli_result.stderr or "").strip(),
     )
-    if nmcli_result.returncode != 0:
-        post_fail_scan_result, post_fail_visible_networks = get_nmcli_wifi_snapshot(rescan=False)
-        log_wifi_debug(
-            "wifi_connect_nmcli_visible_networks",
-            ssid=ssid,
-            returncode=post_fail_scan_result.returncode,
-            stderr=(post_fail_scan_result.stderr or "").strip(),
-            visible_count=len(post_fail_visible_networks),
-            visible_networks=format_wifi_snapshot_for_log(post_fail_visible_networks),
-        )
     if nmcli_result.returncode == 0:
-        success, message = wait_for_wifi_connection(ssid)
-        if not success:
-            rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
-            if rollback_success and pre_connect_ssid:
-                message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
-        return success, message
+        return wait_for_wifi_connection(ssid)
 
     if password:
         add_result = run_command(["wpa_cli", "-i", "wlan0", "add_network"])
@@ -463,69 +308,28 @@ def connect_wifi(ssid, password):
                 "wifi_connect_wpa_save",
                 ssid=ssid,
                 returncode=save_result.returncode,
-            stdout=(save_result.stdout or "").strip(),
-            stderr=(save_result.stderr or "").strip(),
-        )
-        if save_result.returncode == 0:
-            select_result = run_command(["wpa_cli", "-i", "wlan0", "select_network", network_id])
-            log_wifi_debug(
-                "wifi_connect_wpa_select_network",
-                ssid=ssid,
-                returncode=select_result.returncode,
-                stdout=(select_result.stdout or "").strip(),
-                stderr=(select_result.stderr or "").strip(),
-                network_id=network_id,
+                stdout=(save_result.stdout or "").strip(),
+                stderr=(save_result.stderr or "").strip(),
             )
-            reconnect_result = run_command(["wpa_cli", "-i", "wlan0", "reconnect"])
-            log_wifi_debug(
-                "wifi_connect_wpa_reconnect",
-                ssid=ssid,
-                returncode=reconnect_result.returncode,
-                stdout=(reconnect_result.stdout or "").strip(),
-                stderr=(reconnect_result.stderr or "").strip(),
-            )
-            success, message = wait_for_wifi_connection(ssid)
-            if not success:
-                rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
-                if rollback_success and pre_connect_ssid:
-                    message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
-            return success, message
+            if save_result.returncode == 0:
+                return wait_for_wifi_connection(ssid)
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
-    message = classify_wifi_error(stdout, stderr)
-    rollback_success = restore_previous_wifi_connection(pre_connect_uuid, pre_connect_ssid)
-    if rollback_success and pre_connect_ssid:
-        message += f" Se ha restaurado la conexion anterior ({pre_connect_ssid})."
-    return False, message
+    return False, classify_wifi_error(stdout, stderr)
 
 
 def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds=1):
     deadline = time.time() + timeout_seconds
-    last_ssid = None
-    last_ip = None
-    matched_expected_ssid = False
-    prioritized_uuid = None
     while time.time() < deadline:
         current_ssid = get_connected_wifi_info()
         current_ip = get_wifi_ipv4()
-        last_ssid = current_ssid
-        last_ip = current_ip
         log_wifi_debug("wifi_connect_poll", expected_ssid=expected_ssid, current_ssid=current_ssid, current_ip=current_ip)
         if current_ssid == expected_ssid:
-            matched_expected_ssid = True
             if current_ip:
-                if prioritized_uuid is None:
-                    prioritized_uuid = get_active_wifi_connection_uuid()
-                    prioritize_wifi_connection(prioritized_uuid)
                 return True, f"Conectado a {expected_ssid} ({current_ip})"
+            return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
         time.sleep(interval_seconds)
-    if matched_expected_ssid:
-        return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
-    if last_ssid:
-        return False, f"No se pudo conectar a {expected_ssid}. La Raspberry sigue en {last_ssid}."
-    if last_ip:
-        return False, f"No se pudo conectar a {expected_ssid}. La Raspberry mantiene la IP {last_ip}."
     return False, f"No se pudo confirmar la conexion a {expected_ssid}."
 
 
@@ -546,162 +350,10 @@ def get_connected_wifi_info():
     return ssid or None
 
 
-def get_active_wifi_connection_uuid(interface="wlan0"):
-    result = run_command(["nmcli", "-t", "-f", "UUID,TYPE,DEVICE", "connection", "show", "--active"])
-    if result.returncode != 0:
-        log_command_result("wifi_active_connection_query_failed", ["nmcli", "-t", "-f", "UUID,TYPE,DEVICE", "connection", "show", "--active"], result)
-        return None
-
-    for line in result.stdout.splitlines():
-        if not line.strip():
-            continue
-        parts = line.split(":")
-        if len(parts) < 3:
-            continue
-        uuid = parts[0].strip()
-        connection_type = parts[1].strip()
-        device = parts[2].strip()
-        if uuid and connection_type == "802-11-wireless" and device == interface:
-            return uuid
-    return None
-
-
-def restore_previous_wifi_connection(connection_uuid, ssid=None):
-    if not connection_uuid:
-        log_wifi_debug("wifi_restore_previous_skipped", reason="missing_previous_uuid", ssid=ssid)
-        return False
-
-    result = run_command(["nmcli", "connection", "up", connection_uuid])
-    log_command_result("wifi_restore_previous", ["nmcli", "connection", "up", connection_uuid], result)
-    if result.returncode != 0:
-        log_wifi_debug("wifi_restore_previous_failed", ssid=ssid, connection_uuid=connection_uuid)
-        return False
-
-    wait_deadline = time.time() + 12
-    while time.time() < wait_deadline:
-        current_ssid = get_connected_wifi_info()
-        current_ip = get_wifi_ipv4()
-        log_wifi_debug(
-            "wifi_restore_previous_poll",
-            expected_ssid=ssid,
-            current_ssid=current_ssid,
-            current_ip=current_ip,
-            connection_uuid=connection_uuid,
-        )
-        if current_ip and (not ssid or current_ssid == ssid):
-            return True
-        time.sleep(1)
-
-    log_wifi_debug("wifi_restore_previous_timeout", ssid=ssid, connection_uuid=connection_uuid)
-    return False
-
-
-def prioritize_wifi_connection(connection_uuid):
-    if not connection_uuid:
-        return
-
-    preferred_result = run_command(
-        ["nmcli", "connection", "modify", connection_uuid, "connection.autoconnect", "yes", "connection.autoconnect-priority", "100"]
-    )
-    log_command_result(
-        "wifi_set_preferred_connection",
-        ["nmcli", "connection", "modify", connection_uuid, "connection.autoconnect", "yes", "connection.autoconnect-priority", "100"],
-        preferred_result,
-    )
-    if preferred_result.returncode != 0:
-        return
-
-    wifi_connections_result = run_command(["nmcli", "-t", "-f", "UUID,TYPE", "connection", "show"])
-    log_command_result("wifi_list_saved_connections", ["nmcli", "-t", "-f", "UUID,TYPE", "connection", "show"], wifi_connections_result)
-    if wifi_connections_result.returncode != 0:
-        return
-
-    for line in wifi_connections_result.stdout.splitlines():
-        if not line.strip():
-            continue
-        parts = line.split(":")
-        if len(parts) < 2:
-            continue
-        other_uuid = parts[0].strip()
-        connection_type = parts[1].strip()
-        if not other_uuid or other_uuid == connection_uuid or connection_type != "802-11-wireless":
-            continue
-        demote_result = run_command(
-            ["nmcli", "connection", "modify", other_uuid, "connection.autoconnect-priority", "0"]
-        )
-        log_command_result(
-            "wifi_demote_saved_connection",
-            ["nmcli", "connection", "modify", other_uuid, "connection.autoconnect-priority", "0"],
-            demote_result,
-        )
-
-
 def load_image(path):
     if not os.path.isfile(path):
         return None
     return pygame.image.load(path).convert_alpha()
-
-
-def score_touch_device(device):
-    score = 0
-    try:
-        capabilities = device.capabilities(verbose=False)
-    except Exception:
-        capabilities = {}
-
-    device_name = (getattr(device, "name", "") or "").lower()
-    if any(keyword in device_name for keyword in TOUCH_DEVICE_KEYWORDS):
-        score += 10
-
-    abs_codes = set(capabilities.get(ecodes.EV_ABS, [])) if ecodes is not None else set()
-    key_codes = set(capabilities.get(ecodes.EV_KEY, [])) if ecodes is not None else set()
-
-    if ecodes is not None:
-        if ecodes.ABS_X in abs_codes or ecodes.ABS_MT_POSITION_X in abs_codes:
-            score += 3
-        if ecodes.ABS_Y in abs_codes or ecodes.ABS_MT_POSITION_Y in abs_codes:
-            score += 3
-        if ecodes.BTN_TOUCH in key_codes:
-            score += 4
-
-    return score
-
-
-def find_touch_device():
-    if InputDevice is None or ecodes is None or list_devices is None:
-        return None, "evdev unavailable"
-
-    candidates = []
-    for path in list_devices():
-        try:
-            device = InputDevice(path)
-        except Exception as exc:
-            log_debug(f"TOUCH skip path={path} error={exc}")
-            continue
-
-        score = score_touch_device(device)
-        candidates.append((score, path, device))
-        log_debug(f"TOUCH candidate path={path} name={device.name} score={score}")
-
-    if not candidates:
-        return None, "no input devices found"
-
-    candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
-    best_score, best_path, best_device = candidates[0]
-    if best_score <= 0:
-        try:
-            best_device.close()
-        except Exception:
-            pass
-        return None, "no touchscreen-like device detected"
-
-    for _score, path, device in candidates[1:]:
-        try:
-            device.close()
-        except Exception:
-            pass
-
-    return best_device, best_path
 
 
 def fit_image(image, size):
@@ -747,8 +399,6 @@ class RaspberryPiTVMenu:
         pygame.mouse.set_visible(DESKTOP_PREVIEW)
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
-        self.startup_splash_asset = self.prepare_startup_splash_asset()
-        self.draw_startup_splash()
         self.font = pygame.font.SysFont(FONT_FAMILY, 28)
         self.title_font = pygame.font.SysFont(FONT_FAMILY, 42, bold=True)
         self.poweroff_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
@@ -937,42 +587,20 @@ class RaspberryPiTVMenu:
             "pressed": self.prepare_button_asset(SAVE_PIN_PRESSED_PATH, web_pin_layout["save"]),
         }
         self.loading_video_path = None
-        self.loading_video_start_seconds = 0.0
         self.loading_return_state = "play"
         self.loading_started_at = 0
         self.loading_rotation = 0
         self.video_proc = None
-        self.video_current_path = ""
+        self.video_paused = False
         self.video_return_state = "play"
         self.video_now_playing = ""
-        self.video_preview_seconds = 0.0
-        self.video_preview_asset = None
-        self.video_preview_path = ""
-        self.video_preview_available = False
+        self.last_video_tap_at = 0
+        self.video_double_tap_ms = 450
         self.refresh_translated_state_texts()
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
         self.setup_touch_input()
-
-    def prepare_startup_splash_asset(self):
-        splash_image = load_image(SPLASH_IMAGE_PATH)
-        if splash_image is None:
-            return None
-        return fit_image(splash_image, (self.width, self.height))
-
-    def draw_startup_splash(self):
-        if self.startup_splash_asset is not None:
-            self.screen.blit(self.startup_splash_asset, (0, 0))
-        else:
-            self.screen.fill(BLACK)
-        pygame.display.flip()
-
-    def show_startup_splash(self, duration_ms=STARTUP_SPLASH_MS):
-        self.draw_startup_splash()
-        if duration_ms <= 0:
-            return
-        pygame.time.wait(duration_ms)
 
     def load_settings(self):
         loaded = load_json_file(USER_SETTINGS_PATH, {})
@@ -999,33 +627,6 @@ class RaspberryPiTVMenu:
         self.wifi_status = self.tr("wifi.scan_prompt")
         self.play_status = self.tr("play.choose")
         self.browser_status = self.tr("browser.select")
-
-    def remember_successful_wifi(self, ssid, password):
-        safe_ssid = str(ssid or "").strip()
-        if not safe_ssid:
-            return
-
-        self.config["wifi_ssid"] = safe_ssid
-        self.config["wifi_password"] = str(password or "")
-        self.save_settings()
-        log_wifi_debug("wifi_saved_to_settings", ssid=safe_ssid, has_password=bool(password))
-
-    def sync_startup_wifi_state(self):
-        saved_ssid = str(self.config.get("wifi_ssid") or "").strip()
-        current_ssid = get_connected_wifi_info()
-        current_ip = get_wifi_ipv4()
-        self.current_wifi_ssid = current_ssid
-        log_wifi_debug(
-            "wifi_startup_state",
-            saved_ssid=saved_ssid,
-            current_ssid=current_ssid,
-            current_ip=current_ip,
-            note="startup no intenta reconectar ni escanear redes",
-        )
-        if current_ssid:
-            self.wifi_status = self.tr("wifi.already_connected", ssid=current_ssid)
-        else:
-            self.wifi_status = self.tr("wifi.scan_prompt")
 
     def prepare_asset(self, path):
         image = load_image(path)
@@ -1069,19 +670,11 @@ class RaspberryPiTVMenu:
             return
 
         try:
-            device, detected_path = find_touch_device()
-            if device is None:
-                self.touch_device = None
-                log_debug(
-                    f"TOUCH no autodetected device, falling back to pygame events (legacy default={TOUCH_DEVICE_PATH}, reason={detected_path})"
-                )
-                return
-
-            self.touch_device = device
-            log_debug(f"TOUCH device={detected_path} name={self.touch_device.name}")
+            self.touch_device = InputDevice(TOUCH_DEVICE_PATH)
+            log_debug(f"TOUCH device={TOUCH_DEVICE_PATH} name={self.touch_device.name}")
         except Exception as exc:
             self.touch_device = None
-            log_debug(f"TOUCH failed to initialize autodetection: {exc}")
+            log_debug(f"TOUCH failed to open {TOUCH_DEVICE_PATH}: {exc}")
 
     def refresh_qr_asset(self):
         self.qr_url = generate_qr()
@@ -1090,50 +683,32 @@ class RaspberryPiTVMenu:
         qr_surface.fill(BLACK)
 
         title = self.title_font.render(self.tr("qr.title"), True, WHITE)
+        subtitle = self.font.render(self.qr_url, True, WHITE)
         wifi_line = self.small_font.render(
             self.tr("qr.wifi_connected", ssid=connected_wifi) if connected_wifi else self.tr("qr.wifi_not_connected"),
             True,
             WHITE,
         )
-        subtitle = None
 
-        if connected_wifi:
-            subtitle = self.font.render(self.qr_url, True, WHITE)
-            qr = load_image(QR_PNG)
-            if qr is not None:
-                qr_size = min(self.width, self.height) // 2
-                qr_scaled = fit_image(qr, (qr_size, qr_size))
-                qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
-                qr_surface.blit(qr_scaled, qr_rect)
-                subtitle_y = qr_rect.bottom + 44
-                wifi_y = qr_rect.bottom + 78
-            else:
-                fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
-                draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
-                draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
-                fallback_label = self.font.render(self.qr_url, True, WHITE)
-                qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
-                subtitle_y = fallback_box.bottom + 38
-                wifi_y = fallback_box.bottom + 68
+        qr = load_image(QR_PNG)
+        if qr is not None:
+            qr_size = min(self.width, self.height) // 2
+            qr_scaled = fit_image(qr, (qr_size, qr_size))
+            qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
+            qr_surface.blit(qr_scaled, qr_rect)
+            subtitle_y = qr_rect.bottom + 44
+            wifi_y = qr_rect.bottom + 78
         else:
-            no_wifi = load_image(NO_WIFI_IMAGE_PATH)
-            if no_wifi is not None:
-                no_wifi_size = min(self.width, self.height) // 2
-                no_wifi_scaled = fit_image(no_wifi, (no_wifi_size, no_wifi_size))
-                no_wifi_rect = no_wifi_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
-                qr_surface.blit(no_wifi_scaled, no_wifi_rect)
-                wifi_y = no_wifi_rect.bottom + 52
-            else:
-                fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
-                draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
-                draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
-                fallback_label = self.font.render(self.tr("qr.wifi_not_connected"), True, WHITE)
-                qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
-                wifi_y = fallback_box.bottom + 52
+            fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
+            draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
+            draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
+            fallback_label = self.font.render(self.qr_url, True, WHITE)
+            qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
+            subtitle_y = fallback_box.bottom + 38
+            wifi_y = fallback_box.bottom + 68
 
         qr_surface.blit(title, title.get_rect(center=(self.width // 2, 42)))
-        if subtitle is not None:
-            qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, subtitle_y)))
+        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, subtitle_y)))
         qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, wifi_y)))
         self.qr_asset = qr_surface.convert()
 
@@ -1407,9 +982,8 @@ class RaspberryPiTVMenu:
         log_debug(f"PLAY file={relative_path}")
         self.stop_video_playback(silent=True)
         self.loading_video_path = full_path
-        self.loading_video_start_seconds = 0.0
         self.loading_started_at = pygame.time.get_ticks()
-        self.video_current_path = full_path
+        self.video_paused = False
         self.video_now_playing = os.path.basename(full_path)
         self.state = "loading_video"
 
@@ -1443,188 +1017,47 @@ class RaspberryPiTVMenu:
 
     def handle_video_touch_down(self, pos):
         self.pressed_button = "video-touch"
-        log_debug(f"VIDEO DOWN pos={pos}")
+        log_debug(f"VIDEO DOWN pos={pos} paused={self.video_paused}")
 
     def handle_video_touch_up(self, pos):
         self.pressed_button = None
-        log_debug(f"VIDEO TOUCH pos={pos} -> preview")
-        self.capture_video_preview()
-
-    def get_video_preview_layout(self):
-        button_width = 168
-        button_height = 58
-        button_gap = 28
-        total_width = (button_width * 2) + button_gap
-        start_x = (self.width - total_width) // 2
-        button_y = self.height - 88
-        return {
-            "play": pygame.Rect(start_x, button_y, button_width, button_height),
-            "stop": pygame.Rect(start_x + button_width + button_gap, button_y, button_width, button_height),
-        }
-
-    def handle_video_preview_touch_down(self, pos):
-        layout = self.get_video_preview_layout()
-        if layout["play"].collidepoint(pos):
-            self.pressed_button = "video-preview-play"
-        elif layout["stop"].collidepoint(pos):
-            self.pressed_button = "video-preview-stop"
-        else:
-            self.pressed_button = None
-
-    def handle_video_preview_touch_up(self, pos):
-        layout = self.get_video_preview_layout()
-        active_button = self.pressed_button
-        self.pressed_button = None
-        if active_button == "video-preview-play" and layout["play"].collidepoint(pos):
-            self.resume_video_from_preview()
+        now_ms = pygame.time.get_ticks()
+        if self.last_video_tap_at and now_ms - self.last_video_tap_at <= self.video_double_tap_ms:
+            log_debug(f"VIDEO double tap pos={pos} -> quit")
+            self.last_video_tap_at = 0
+            self.stop_video_playback()
             return
-        if active_button == "video-preview-stop" and layout["stop"].collidepoint(pos):
-            self.clear_video_preview()
-            self.state = self.video_return_state
 
-    def build_mpv_command(self, filepath, start_seconds=0.0):
-        remove_path_if_exists(MPV_SOCKET_PATH)
-        command = [
-            "mpv",
-            "--fullscreen",
-            "--no-config",
-            "--osc=no",
-            "--osd-level=0",
-            "--audio-display=no",
-            "--input-default-bindings=no",
-            "--input-vo-keyboard=no",
-            "--input-cursor=no",
-            "--really-quiet",
-            f"--input-ipc-server={MPV_SOCKET_PATH}",
-        ]
-        if start_seconds > 0:
-            command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
-        if not DESKTOP_PREVIEW:
-            command.extend(["--vo=gpu", "--gpu-context=drm"])
-        command.append(filepath)
-        return command
+        self.last_video_tap_at = now_ms
+        self.toggle_video_pause()
 
-    def send_mpv_command(self, *command_parts):
-        if not os.path.exists(MPV_SOCKET_PATH):
-            return None
-        payload = json.dumps({"command": list(command_parts)}).encode("utf-8") + b"\n"
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client.settimeout(1.5)
-        try:
-            client.connect(MPV_SOCKET_PATH)
-            client.sendall(payload)
-            data = b""
-            while not data.endswith(b"\n"):
-                chunk = client.recv(65536)
-                if not chunk:
-                    break
-                data += chunk
-            if not data:
-                return None
-            return json.loads(data.decode("utf-8").strip())
-        except Exception as exc:
-            log_debug(f"MPV IPC failed command={command_parts}: {exc}")
-            return None
-        finally:
-            client.close()
-
-    def wait_for_mpv_ipc(self, timeout_seconds=2.0):
-        deadline = time.time() + timeout_seconds
-        while time.time() < deadline:
-            if os.path.exists(MPV_SOCKET_PATH):
-                return True
-            time.sleep(0.05)
-        return False
-
-    def get_mpv_time_pos(self):
-        response = self.send_mpv_command("get_property", "time-pos")
-        if not isinstance(response, dict):
-            return 0.0
-        value = response.get("data")
-        try:
-            return max(0.0, float(value or 0.0))
-        except Exception:
-            return 0.0
-
-    def request_mpv_screenshot(self):
-        remove_path_if_exists(MPV_SCREENSHOT_PATH)
-        response = self.send_mpv_command("screenshot-to-file", MPV_SCREENSHOT_PATH, "video")
-        if not isinstance(response, dict) or response.get("error") != "success":
-            return False
-        deadline = time.time() + 2.0
-        while time.time() < deadline:
-            if os.path.isfile(MPV_SCREENSHOT_PATH) and os.path.getsize(MPV_SCREENSHOT_PATH) > 0:
-                return True
-            time.sleep(0.05)
-        return False
-
-    def load_video_preview_asset(self):
-        self.video_preview_asset = None
-        if not os.path.isfile(MPV_SCREENSHOT_PATH):
-            return
-        image = load_image(MPV_SCREENSHOT_PATH)
-        if image is None:
-            return
-        self.video_preview_asset = fit_image(image, (self.width, self.height))
-
-    def clear_video_preview(self):
-        self.video_preview_seconds = 0.0
-        self.video_preview_asset = None
-        self.video_preview_available = False
-        self.video_preview_path = ""
-        remove_path_if_exists(MPV_SCREENSHOT_PATH)
-
-    def capture_video_preview(self):
-        if not self.video_proc or self.video_proc.poll() is not None:
-            return
-        preview_seconds = self.get_mpv_time_pos()
-        screenshot_ok = self.request_mpv_screenshot()
-        self.send_mpv_command("quit")
-        try:
-            self.video_proc.wait(timeout=2.0)
-        except Exception:
+    def toggle_video_pause(self):
+        if self.video_proc and self.video_proc.poll() is None and self.video_proc.stdin:
             try:
-                self.video_proc.terminate()
-            except Exception:
-                pass
-        self.video_proc = None
-        remove_path_if_exists(MPV_SOCKET_PATH)
-        self.video_preview_seconds = preview_seconds
-        self.video_preview_path = self.video_current_path
-        self.video_preview_available = screenshot_ok
-        self.load_video_preview_asset()
-        self.state = "video_preview"
-
-    def resume_video_from_preview(self):
-        if not self.video_preview_path:
-            self.state = self.video_return_state
-            return
-        self.loading_video_path = self.video_preview_path
-        self.loading_video_start_seconds = self.video_preview_seconds
-        self.loading_started_at = pygame.time.get_ticks()
-        self.video_current_path = self.video_preview_path
-        self.video_now_playing = os.path.basename(self.video_preview_path)
-        self.clear_video_preview()
-        self.state = "loading_video"
+                self.video_proc.stdin.write(b"p")
+                self.video_proc.stdin.flush()
+                self.video_paused = not self.video_paused
+            except Exception as exc:
+                log_debug(f"VIDEO pause toggle failed: {exc}")
 
     def stop_video_playback(self, silent=False):
         proc = self.video_proc
         if proc and proc.poll() is None:
-            self.send_mpv_command("quit")
             try:
-                proc.wait(timeout=2.0)
+                if proc.stdin:
+                    proc.stdin.write(b"q")
+                    proc.stdin.flush()
             except Exception:
-                try:
-                    proc.terminate()
-                except Exception:
-                    pass
-        run_command(["pkill", "-f", "mpv"])
-        remove_path_if_exists(MPV_SOCKET_PATH)
+                pass
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+        run_command(["pkill", "-f", "omxplayer.bin"])
         self.video_proc = None
-        self.video_current_path = ""
+        self.video_paused = False
         self.loading_video_path = None
-        self.loading_video_start_seconds = 0.0
-        self.clear_video_preview()
+        self.last_video_tap_at = 0
         if not silent:
             self.state = self.video_return_state
 
@@ -1634,12 +1067,15 @@ class RaspberryPiTVMenu:
         if pygame.time.get_ticks() - self.loading_started_at < LOADING_MIN_DURATION_MS:
             return
         self.video_return_state = self.loading_return_state
-        command = self.build_mpv_command(self.loading_video_path, self.loading_video_start_seconds)
-        log_debug(f"VIDEO start via mpv file={self.loading_video_path} start={self.loading_video_start_seconds:.3f}")
-        self.video_proc = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        self.wait_for_mpv_ipc()
+        self.video_proc = subprocess.Popen(
+            ["omxplayer", "--no-osd", "--aspect-mode", "fill", self.loading_video_path],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         self.loading_video_path = None
-        self.loading_video_start_seconds = 0.0
+        self.video_paused = False
+        self.last_video_tap_at = 0
         self.state = "video"
 
     def update_video_state(self):
@@ -1648,7 +1084,8 @@ class RaspberryPiTVMenu:
             return
         if self.state == "video" and self.video_proc and self.video_proc.poll() is not None:
             self.video_proc = None
-            remove_path_if_exists(MPV_SOCKET_PATH)
+            self.video_paused = False
+            self.last_video_tap_at = 0
             self.state = self.video_return_state
 
     def normalize_touch_pos(self, pos):
@@ -1905,65 +1342,27 @@ class RaspberryPiTVMenu:
                 self.state = "wifi"
                 return
             if active_button == "wifi-password-connect" and layout["connect"].collidepoint(pos):
-                self.submit_wifi_password()
+                success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
+                resolved_message = message
+                self.wifi_status = resolved_message
+                self.wifi_dialog_message = resolved_message
+                self.wifi_dialog_is_error = not success
+                if success:
+                    self.refresh_wifi_networks()
+                    self.refresh_qr_asset()
                 return
 
             key_value = self.get_keyboard_key_at(pos)
             if key_value is None:
                 return
-            self.apply_wifi_password_key(key_value)
-
-    def apply_wifi_password_key(self, key_value):
-        if key_value == "BACKSPACE":
-            self.wifi_password = self.wifi_password[:-1]
-        elif key_value == "TOGGLE_CASE":
-            self.wifi_keyboard_upper = not self.wifi_keyboard_upper
-        elif key_value == "CLEAR":
-            self.wifi_password = ""
-        elif key_value:
-            self.wifi_password += key_value
-
-    def submit_wifi_password(self):
-        success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
-        resolved_message = message
-        self.wifi_status = resolved_message
-        self.wifi_dialog_message = resolved_message
-        self.wifi_dialog_is_error = not success
-        if success:
-            self.remember_successful_wifi(self.wifi_selected_ssid, self.wifi_password)
-            self.refresh_wifi_networks()
-            self.refresh_qr_asset()
-
-    def handle_wifi_password_keydown(self, event):
-        if self.state != "wifi_password":
-            return False
-
-        if self.wifi_dialog_message:
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_ESCAPE):
-                was_error = self.wifi_dialog_is_error
-                self.wifi_dialog_message = ""
-                self.wifi_dialog_is_error = False
-                if not was_error and self.current_wifi_ssid == self.wifi_selected_ssid:
-                    self.state = "wifi"
-                return True
-            return False
-
-        if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-            self.submit_wifi_password()
-            return True
-        if event.key == pygame.K_BACKSPACE:
-            self.apply_wifi_password_key("BACKSPACE")
-            return True
-        if event.key == pygame.K_DELETE:
-            self.apply_wifi_password_key("CLEAR")
-            return True
-
-        typed_text = event.unicode or ""
-        if typed_text and typed_text.isprintable():
-            self.wifi_password += typed_text
-            return True
-
-        return False
+            if key_value == "BACKSPACE":
+                self.wifi_password = self.wifi_password[:-1]
+            elif key_value == "TOGGLE_CASE":
+                self.wifi_keyboard_upper = not self.wifi_keyboard_upper
+            elif key_value == "CLEAR":
+                self.wifi_password = ""
+            else:
+                self.wifi_password += key_value
 
     def get_web_pin_layout(self):
         return {
@@ -2055,9 +1454,6 @@ class RaspberryPiTVMenu:
         if self.state == "video":
             self.handle_video_touch_down(normalized_pos)
             return
-        if self.state == "video_preview":
-            self.handle_video_preview_touch_down(normalized_pos)
-            return
         if self.state == "play":
             self.pressed_button = self.play_button_at_pos(normalized_pos)
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=play pressed={self.pressed_button}")
@@ -2123,11 +1519,7 @@ class RaspberryPiTVMenu:
             return
         if self.state == "video":
             self.handle_video_touch_up(normalized_pos)
-            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video")
-            return
-        if self.state == "video_preview":
-            self.handle_video_preview_touch_up(normalized_pos)
-            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video_preview second={self.video_preview_seconds:.3f}")
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video paused={self.video_paused}")
             return
         if self.state == "play":
             released_button = self.play_button_at_pos(normalized_pos)
@@ -2436,35 +1828,6 @@ class RaspberryPiTVMenu:
         title = self.title_font.render(self.tr("loading.title"), True, WHITE)
         self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height - 64)))
 
-    def draw_video_preview(self):
-        if self.video_preview_asset is not None:
-            self.screen.blit(self.video_preview_asset, (0, 0))
-        else:
-            self.screen.fill(BLACK)
-
-        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 92))
-        self.screen.blit(overlay, (0, 0))
-
-        info_text = self.small_font.render(
-            f"{self.video_now_playing} @ {self.video_preview_seconds:.1f}s",
-            True,
-            WHITE,
-        )
-        self.screen.blit(info_text, info_text.get_rect(center=(self.width // 2, 34)))
-
-        layout = self.get_video_preview_layout()
-        for key, label, color in (
-            ("play", "Play", GREEN),
-            ("stop", "Stop", RED),
-        ):
-            rect = layout[key]
-            pressed = self.pressed_button == f"video-preview-{key}"
-            draw_rect_compat(self.screen, color if pressed else MID_GRAY, rect, 0, 18)
-            draw_rect_compat(self.screen, WHITE, rect, 2, 18)
-            text_surface = self.wifi_bold_font.render(label, True, WHITE)
-            self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
-
     def draw_top_back_button(self):
         back_rect = self.get_top_back_rect()
         back_asset = self.play_exit_assets["pressed"] if self.pressed_button == "top-back" else self.play_exit_assets["default"]
@@ -2737,8 +2100,6 @@ class RaspberryPiTVMenu:
             self.draw_loading_video()
         elif self.state == "video":
             return
-        elif self.state == "video_preview":
-            self.draw_video_preview()
         elif self.state == "play":
             self.draw_play()
         elif self.state == "browse":
@@ -2759,8 +2120,6 @@ class RaspberryPiTVMenu:
         pygame.display.flip()
 
     def run(self):
-        self.show_startup_splash()
-        self.sync_startup_wifi_state()
         play_intro()
 
         while self.running:
@@ -2769,8 +2128,6 @@ class RaspberryPiTVMenu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == pygame.KEYDOWN and self.handle_wifi_password_keydown(event):
-                    continue
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
                 elif self.touch_device is None and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
