@@ -5,6 +5,7 @@ import select
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 
@@ -106,6 +107,8 @@ BACK_BUTTON_SCALE = 1.3
 BROWSE_VISIBLE_ITEMS = 5
 LOADING_MIN_DURATION_MS = 1000
 STARTUP_SPLASH_MS = 0
+MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-mpv.sock")
+MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-video-preview.png")
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
@@ -217,6 +220,15 @@ def save_json_file(path, payload):
 
 def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
+
+
+def remove_path_if_exists(path):
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
 
 
 def parse_nmcli_wifi_list(raw_output):
@@ -925,15 +937,18 @@ class RaspberryPiTVMenu:
             "pressed": self.prepare_button_asset(SAVE_PIN_PRESSED_PATH, web_pin_layout["save"]),
         }
         self.loading_video_path = None
+        self.loading_video_start_seconds = 0.0
         self.loading_return_state = "play"
         self.loading_started_at = 0
         self.loading_rotation = 0
         self.video_proc = None
-        self.video_paused = False
+        self.video_current_path = ""
         self.video_return_state = "play"
         self.video_now_playing = ""
-        self.last_video_tap_at = 0
-        self.video_double_tap_ms = 450
+        self.video_preview_seconds = 0.0
+        self.video_preview_asset = None
+        self.video_preview_path = ""
+        self.video_preview_available = False
         self.refresh_translated_state_texts()
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
@@ -1406,8 +1421,9 @@ class RaspberryPiTVMenu:
         log_debug(f"PLAY file={relative_path}")
         self.stop_video_playback(silent=True)
         self.loading_video_path = full_path
+        self.loading_video_start_seconds = 0.0
         self.loading_started_at = pygame.time.get_ticks()
-        self.video_paused = False
+        self.video_current_path = full_path
         self.video_now_playing = os.path.basename(full_path)
         self.state = "loading_video"
 
@@ -1441,47 +1457,188 @@ class RaspberryPiTVMenu:
 
     def handle_video_touch_down(self, pos):
         self.pressed_button = "video-touch"
-        log_debug(f"VIDEO DOWN pos={pos} paused={self.video_paused}")
+        log_debug(f"VIDEO DOWN pos={pos}")
 
     def handle_video_touch_up(self, pos):
         self.pressed_button = None
-        now_ms = pygame.time.get_ticks()
-        if self.last_video_tap_at and now_ms - self.last_video_tap_at <= self.video_double_tap_ms:
-            log_debug(f"VIDEO double tap pos={pos} -> quit")
-            self.last_video_tap_at = 0
-            self.stop_video_playback()
+        log_debug(f"VIDEO TOUCH pos={pos} -> preview")
+        self.capture_video_preview()
+
+    def get_video_preview_layout(self):
+        button_width = 168
+        button_height = 58
+        button_gap = 28
+        total_width = (button_width * 2) + button_gap
+        start_x = (self.width - total_width) // 2
+        button_y = self.height - 88
+        return {
+            "play": pygame.Rect(start_x, button_y, button_width, button_height),
+            "stop": pygame.Rect(start_x + button_width + button_gap, button_y, button_width, button_height),
+        }
+
+    def handle_video_preview_touch_down(self, pos):
+        layout = self.get_video_preview_layout()
+        if layout["play"].collidepoint(pos):
+            self.pressed_button = "video-preview-play"
+        elif layout["stop"].collidepoint(pos):
+            self.pressed_button = "video-preview-stop"
+        else:
+            self.pressed_button = None
+
+    def handle_video_preview_touch_up(self, pos):
+        layout = self.get_video_preview_layout()
+        active_button = self.pressed_button
+        self.pressed_button = None
+        if active_button == "video-preview-play" and layout["play"].collidepoint(pos):
+            self.resume_video_from_preview()
             return
+        if active_button == "video-preview-stop" and layout["stop"].collidepoint(pos):
+            self.clear_video_preview()
+            self.state = self.video_return_state
 
-        self.last_video_tap_at = now_ms
-        self.toggle_video_pause()
+    def build_mpv_command(self, filepath, start_seconds=0.0):
+        remove_path_if_exists(MPV_SOCKET_PATH)
+        command = [
+            "mpv",
+            "--fullscreen",
+            "--no-config",
+            "--osc=no",
+            "--osd-level=0",
+            "--audio-display=no",
+            "--input-default-bindings=no",
+            "--input-vo-keyboard=no",
+            "--input-cursor=no",
+            "--really-quiet",
+            f"--input-ipc-server={MPV_SOCKET_PATH}",
+        ]
+        if start_seconds > 0:
+            command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
+        if not DESKTOP_PREVIEW:
+            command.extend(["--vo=gpu", "--gpu-context=drm"])
+        command.append(filepath)
+        return command
 
-    def toggle_video_pause(self):
-        if self.video_proc and self.video_proc.poll() is None and self.video_proc.stdin:
+    def send_mpv_command(self, *command_parts):
+        if not os.path.exists(MPV_SOCKET_PATH):
+            return None
+        payload = json.dumps({"command": list(command_parts)}).encode("utf-8") + b"\n"
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.settimeout(1.5)
+        try:
+            client.connect(MPV_SOCKET_PATH)
+            client.sendall(payload)
+            data = b""
+            while not data.endswith(b"\n"):
+                chunk = client.recv(65536)
+                if not chunk:
+                    break
+                data += chunk
+            if not data:
+                return None
+            return json.loads(data.decode("utf-8").strip())
+        except Exception as exc:
+            log_debug(f"MPV IPC failed command={command_parts}: {exc}")
+            return None
+        finally:
+            client.close()
+
+    def wait_for_mpv_ipc(self, timeout_seconds=2.0):
+        deadline = time.time() + timeout_seconds
+        while time.time() < deadline:
+            if os.path.exists(MPV_SOCKET_PATH):
+                return True
+            time.sleep(0.05)
+        return False
+
+    def get_mpv_time_pos(self):
+        response = self.send_mpv_command("get_property", "time-pos")
+        if not isinstance(response, dict):
+            return 0.0
+        value = response.get("data")
+        try:
+            return max(0.0, float(value or 0.0))
+        except Exception:
+            return 0.0
+
+    def request_mpv_screenshot(self):
+        remove_path_if_exists(MPV_SCREENSHOT_PATH)
+        response = self.send_mpv_command("screenshot-to-file", MPV_SCREENSHOT_PATH, "video")
+        if not isinstance(response, dict) or response.get("error") != "success":
+            return False
+        deadline = time.time() + 2.0
+        while time.time() < deadline:
+            if os.path.isfile(MPV_SCREENSHOT_PATH) and os.path.getsize(MPV_SCREENSHOT_PATH) > 0:
+                return True
+            time.sleep(0.05)
+        return False
+
+    def load_video_preview_asset(self):
+        self.video_preview_asset = None
+        if not os.path.isfile(MPV_SCREENSHOT_PATH):
+            return
+        image = load_image(MPV_SCREENSHOT_PATH)
+        if image is None:
+            return
+        self.video_preview_asset = fit_image(image, (self.width, self.height))
+
+    def clear_video_preview(self):
+        self.video_preview_seconds = 0.0
+        self.video_preview_asset = None
+        self.video_preview_available = False
+        self.video_preview_path = ""
+        remove_path_if_exists(MPV_SCREENSHOT_PATH)
+
+    def capture_video_preview(self):
+        if not self.video_proc or self.video_proc.poll() is not None:
+            return
+        preview_seconds = self.get_mpv_time_pos()
+        screenshot_ok = self.request_mpv_screenshot()
+        self.send_mpv_command("quit")
+        try:
+            self.video_proc.wait(timeout=2.0)
+        except Exception:
             try:
-                self.video_proc.stdin.write(b"p")
-                self.video_proc.stdin.flush()
-                self.video_paused = not self.video_paused
-            except Exception as exc:
-                log_debug(f"VIDEO pause toggle failed: {exc}")
+                self.video_proc.terminate()
+            except Exception:
+                pass
+        self.video_proc = None
+        remove_path_if_exists(MPV_SOCKET_PATH)
+        self.video_preview_seconds = preview_seconds
+        self.video_preview_path = self.video_current_path
+        self.video_preview_available = screenshot_ok
+        self.load_video_preview_asset()
+        self.state = "video_preview"
+
+    def resume_video_from_preview(self):
+        if not self.video_preview_path:
+            self.state = self.video_return_state
+            return
+        self.loading_video_path = self.video_preview_path
+        self.loading_video_start_seconds = self.video_preview_seconds
+        self.loading_started_at = pygame.time.get_ticks()
+        self.video_current_path = self.video_preview_path
+        self.video_now_playing = os.path.basename(self.video_preview_path)
+        self.clear_video_preview()
+        self.state = "loading_video"
 
     def stop_video_playback(self, silent=False):
         proc = self.video_proc
         if proc and proc.poll() is None:
+            self.send_mpv_command("quit")
             try:
-                if proc.stdin:
-                    proc.stdin.write(b"q")
-                    proc.stdin.flush()
+                proc.wait(timeout=2.0)
             except Exception:
-                pass
-            try:
-                proc.terminate()
-            except Exception:
-                pass
-        run_command(["pkill", "-f", "omxplayer.bin"])
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
+        run_command(["pkill", "-f", "mpv"])
+        remove_path_if_exists(MPV_SOCKET_PATH)
         self.video_proc = None
-        self.video_paused = False
+        self.video_current_path = ""
         self.loading_video_path = None
-        self.last_video_tap_at = 0
+        self.loading_video_start_seconds = 0.0
+        self.clear_video_preview()
         if not silent:
             self.state = self.video_return_state
 
@@ -1491,15 +1648,12 @@ class RaspberryPiTVMenu:
         if pygame.time.get_ticks() - self.loading_started_at < LOADING_MIN_DURATION_MS:
             return
         self.video_return_state = self.loading_return_state
-        self.video_proc = subprocess.Popen(
-            ["omxplayer", "--no-osd", "--aspect-mode", "fill", self.loading_video_path],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        command = self.build_mpv_command(self.loading_video_path, self.loading_video_start_seconds)
+        log_debug(f"VIDEO start via mpv file={self.loading_video_path} start={self.loading_video_start_seconds:.3f}")
+        self.video_proc = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.wait_for_mpv_ipc()
         self.loading_video_path = None
-        self.video_paused = False
-        self.last_video_tap_at = 0
+        self.loading_video_start_seconds = 0.0
         self.state = "video"
 
     def update_video_state(self):
@@ -1508,8 +1662,7 @@ class RaspberryPiTVMenu:
             return
         if self.state == "video" and self.video_proc and self.video_proc.poll() is not None:
             self.video_proc = None
-            self.video_paused = False
-            self.last_video_tap_at = 0
+            remove_path_if_exists(MPV_SOCKET_PATH)
             self.state = self.video_return_state
 
     def normalize_touch_pos(self, pos):
@@ -1916,6 +2069,9 @@ class RaspberryPiTVMenu:
         if self.state == "video":
             self.handle_video_touch_down(normalized_pos)
             return
+        if self.state == "video_preview":
+            self.handle_video_preview_touch_down(normalized_pos)
+            return
         if self.state == "play":
             self.pressed_button = self.play_button_at_pos(normalized_pos)
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=play pressed={self.pressed_button}")
@@ -1981,7 +2137,11 @@ class RaspberryPiTVMenu:
             return
         if self.state == "video":
             self.handle_video_touch_up(normalized_pos)
-            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video paused={self.video_paused}")
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video")
+            return
+        if self.state == "video_preview":
+            self.handle_video_preview_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video_preview second={self.video_preview_seconds:.3f}")
             return
         if self.state == "play":
             released_button = self.play_button_at_pos(normalized_pos)
@@ -2290,6 +2450,35 @@ class RaspberryPiTVMenu:
         title = self.title_font.render(self.tr("loading.title"), True, WHITE)
         self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height - 64)))
 
+    def draw_video_preview(self):
+        if self.video_preview_asset is not None:
+            self.screen.blit(self.video_preview_asset, (0, 0))
+        else:
+            self.screen.fill(BLACK)
+
+        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 92))
+        self.screen.blit(overlay, (0, 0))
+
+        info_text = self.small_font.render(
+            f"{self.video_now_playing} @ {self.video_preview_seconds:.1f}s",
+            True,
+            WHITE,
+        )
+        self.screen.blit(info_text, info_text.get_rect(center=(self.width // 2, 34)))
+
+        layout = self.get_video_preview_layout()
+        for key, label, color in (
+            ("play", "Play", GREEN),
+            ("stop", "Stop", RED),
+        ):
+            rect = layout[key]
+            pressed = self.pressed_button == f"video-preview-{key}"
+            draw_rect_compat(self.screen, color if pressed else MID_GRAY, rect, 0, 18)
+            draw_rect_compat(self.screen, WHITE, rect, 2, 18)
+            text_surface = self.wifi_bold_font.render(label, True, WHITE)
+            self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+
     def draw_top_back_button(self):
         back_rect = self.get_top_back_rect()
         back_asset = self.play_exit_assets["pressed"] if self.pressed_button == "top-back" else self.play_exit_assets["default"]
@@ -2562,6 +2751,8 @@ class RaspberryPiTVMenu:
             self.draw_loading_video()
         elif self.state == "video":
             return
+        elif self.state == "video_preview":
+            self.draw_video_preview()
         elif self.state == "play":
             self.draw_play()
         elif self.state == "browse":
