@@ -3,10 +3,12 @@ const WEB_PIN_STORAGE_KEY = "simpsonstv-web-pin";
 const MOCK_SERIES_LIBRARY_STORAGE_KEY = "simpsonstv-web-mock-series-library-v1";
 const explicitMockMode = (import.meta.env.VITE_WEB_DEV_MODE || "").trim().toLowerCase() === "mock";
 const localhostHosts = new Set(["localhost", "127.0.0.1"]);
+const SUPPORTED_RASPBERRY_LANGUAGES = new Set(["es", "ca", "en"]);
 
 let mockPlayback = "";
 let mockPlaybackDirectory = "";
 let mockPlaybackFile = "";
+let mockLanguage = "es";
 
 function buildMockVideoLibrary() {
   const episodeIds = [
@@ -79,6 +81,11 @@ function normalizeLabel(value) {
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "");
+}
+
+function normalizeRaspberryLanguage(language) {
+  const safeLanguage = String(language || "").trim().toLowerCase();
+  return SUPPORTED_RASPBERRY_LANGUAGES.has(safeLanguage) ? safeLanguage : "es";
 }
 
 function getLocalStorage() {
@@ -219,6 +226,13 @@ export function getHealth() {
     return Promise.resolve({
       ok: true,
       ts: Math.floor(Date.now() / 1000),
+      language: mockLanguage,
+      storage: {
+        totalGb: 512,
+        usedGb: 128.4,
+        freeGb: 383.6,
+        percentUsed: 25.1,
+      },
       playing: mockPlayback || null,
       directory: mockPlaybackDirectory || "",
       file: mockPlaybackFile || null,
@@ -236,6 +250,30 @@ export function getVideos() {
   }
 
   return request("/videos");
+}
+
+export function getRaspberryLanguage() {
+  if (isMockModeEnabled()) {
+    return Promise.resolve({ ok: true, language: mockLanguage, mock: true });
+  }
+
+  return request("/settings/language");
+}
+
+export function updateRaspberryLanguage(language) {
+  const nextLanguage = normalizeRaspberryLanguage(language);
+
+  if (isMockModeEnabled()) {
+    mockLanguage = nextLanguage;
+    return Promise.resolve({ ok: true, language: nextLanguage, mock: true });
+  }
+
+  return request("/settings/language", {
+    method: "POST",
+    body: JSON.stringify({
+      language: nextLanguage,
+    }),
+  });
 }
 
 export function addSeries({ name, tmdbId }) {

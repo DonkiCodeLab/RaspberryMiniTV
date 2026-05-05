@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import socket
 import subprocess
 import threading
@@ -20,6 +21,7 @@ DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
 }
+SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 
 app = Flask(__name__)
 
@@ -49,6 +51,44 @@ def load_settings():
 
 def current_web_pin():
     return load_settings().get("web_password", DEFAULT_SETTINGS["web_password"])
+
+
+def current_language():
+    language = load_settings().get("language", DEFAULT_SETTINGS["language"])
+    return language if language in SUPPORTED_LANGUAGES else DEFAULT_SETTINGS["language"]
+
+
+def save_settings(settings):
+    safe_settings = dict(DEFAULT_SETTINGS)
+    if isinstance(settings, dict):
+        safe_settings.update(
+            {
+                key: value
+                for key, value in settings.items()
+                if key in safe_settings and isinstance(value, str)
+            }
+        )
+
+    with open(USER_SETTINGS_PATH, "w", encoding="utf-8") as handle:
+        json.dump(safe_settings, handle, ensure_ascii=False, indent=2)
+
+    return safe_settings
+
+
+def get_storage_stats():
+    target_path = VIDEOS_DIR if os.path.exists(VIDEOS_DIR) else BASE_DIR
+    usage = shutil.disk_usage(target_path)
+    total_gb = round(usage.total / (1024 ** 3), 1)
+    used_gb = round((usage.total - usage.free) / (1024 ** 3), 1)
+    percent = round(((usage.total - usage.free) / usage.total) * 100, 1) if usage.total else 0.0
+
+    return {
+        "path": target_path,
+        "totalGb": total_gb,
+        "usedGb": used_gb,
+        "freeGb": round(usage.free / (1024 ** 3), 1),
+        "percentUsed": percent,
+    }
 
 
 def web_dist_available():
@@ -479,6 +519,24 @@ def web_auth():
     return jsonify({"error": "Invalid PIN"}), 401
 
 
+@app.route("/settings/language", methods=["GET"])
+def get_language():
+    return jsonify({"ok": True, "language": current_language()})
+
+
+@app.route("/settings/language", methods=["POST"])
+def update_language():
+    data = request.get_json(force=True, silent=True) or {}
+    language = str(data.get("language") or "").strip().lower()
+    if language not in SUPPORTED_LANGUAGES:
+        return jsonify({"error": "Unsupported language", "supported": sorted(SUPPORTED_LANGUAGES)}), 400
+
+    settings = load_settings()
+    settings["language"] = language
+    save_settings(settings)
+    return jsonify({"ok": True, "language": language})
+
+
 @app.route("/health", methods=["GET"])
 def health():
     with lock:
@@ -487,6 +545,8 @@ def health():
             {
                 "ok": True,
                 "ts": int(time.time()),
+                "language": current_language(),
+                "storage": get_storage_stats(),
                 "playing": current["id"],
                 "directory": current["directory"],
                 "file": current["file"],

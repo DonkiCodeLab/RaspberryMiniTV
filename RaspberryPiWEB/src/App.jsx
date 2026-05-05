@@ -40,6 +40,7 @@ import {
   addSeries,
   authWebPin,
   getHealth,
+  getRaspberryLanguage,
   getStoredWebPin,
   powerOffRaspberry,
   getVideos,
@@ -48,6 +49,7 @@ import {
   removeSeries,
   setStoredWebPin,
   stopPlayback,
+  updateRaspberryLanguage,
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
@@ -71,7 +73,6 @@ const MAX_MOVIE_IMAGES = 5;
 const RASPBERRY_ALARM_STORAGE_KEY = "simpsonstv-raspberry-alarm-v1";
 const RASPBERRY_LANGUAGE_STORAGE_KEY = "simpsonstv-raspberry-language-v1";
 const RASPBERRY_CURRENT_PLAYBACK_STORAGE_KEY = "simpsonstv-raspberry-current-playback-v1";
-const RASPBERRY_STORAGE_TOTAL_GB = 512;
 const RASPBERRY_CATALOG_LIMITS = {
   series: 120,
   movies: 220,
@@ -225,6 +226,8 @@ const UI_STRINGS = {
     used_percent: "{percent} utilizado",
     language_title: "Idioma",
     language_microtv: "Selecciona el idioma de la mini tele.",
+    language_updating: "Actualizando idioma...",
+    language_update_failed: "No se pudo actualizar el idioma de la Raspberry.",
     microsd_capacity: "Capacidad de la MicroSD",
     occupied: "ocupado",
     alarms_title: "Alarmas de la televisión",
@@ -266,6 +269,8 @@ const UI_STRINGS = {
     access_protected: "Acceso protegido",
     unlock_copy: "Introduce el PIN numérico de 4 dígitos configurado en la Raspberry.",
     validating: "Validando...",
+    show_password: "Mostrar PIN",
+    hide_password: "Ocultar PIN",
     enter: "Entrar",
     loading_movies: "Cargando películas...",
     loading_seasons: "Cargando temporadas...",
@@ -379,6 +384,8 @@ const UI_STRINGS = {
     used_percent: "{percent} utilitzat",
     language_title: "Idioma",
     language_microtv: "Selecciona l'idioma de la mini tele.",
+    language_updating: "S'està actualitzant l'idioma...",
+    language_update_failed: "No s'ha pogut actualitzar l'idioma de la Raspberry.",
     microsd_capacity: "Capacitat de la MicroSD",
     occupied: "ocupat",
     alarms_title: "Alarmes de la televisió",
@@ -420,6 +427,8 @@ const UI_STRINGS = {
     access_protected: "Accés protegit",
     unlock_copy: "Introdueix el PIN numèric de 4 dígits configurat a la Raspberry.",
     validating: "Validant...",
+    show_password: "Mostra el PIN",
+    hide_password: "Amaga el PIN",
     enter: "Entrar",
     loading_movies: "Carregant pel·lícules...",
     loading_seasons: "Carregant temporades...",
@@ -533,6 +542,8 @@ const UI_STRINGS = {
     used_percent: "{percent} used",
     language_title: "Language",
     language_microtv: "Choose the mini TV language.",
+    language_updating: "Updating language...",
+    language_update_failed: "Could not update the Raspberry language.",
     microsd_capacity: "MicroSD capacity",
     occupied: "used",
     alarms_title: "TV alarms",
@@ -574,6 +585,8 @@ const UI_STRINGS = {
     access_protected: "Protected access",
     unlock_copy: "Enter the 4-digit numeric PIN configured on the Raspberry.",
     validating: "Validating...",
+    show_password: "Show PIN",
+    hide_password: "Hide PIN",
     enter: "Enter",
     loading_movies: "Loading movies...",
     loading_seasons: "Loading seasons...",
@@ -769,13 +782,8 @@ function formatPercent(value) {
   return `${Math.round(clamp(Number(value) || 0, 0, 100))}%`;
 }
 
-function estimateUsedStorageGb({ seriesCount, movieCount, gameCount, episodeCount }) {
-  const safeSeries = Number(seriesCount) || 0;
-  const safeMovies = Number(movieCount) || 0;
-  const safeGames = Number(gameCount) || 0;
-  const safeEpisodes = Number(episodeCount) || 0;
-
-  return Number((safeSeries * 2.4 + safeEpisodes * 0.78 + safeMovies * 4.6 + safeGames * 14).toFixed(1));
+function formatStorageGb(value) {
+  return Number(Number(value) || 0).toFixed(1);
 }
 
 function normalizeHeroCrop(crop) {
@@ -1931,6 +1939,7 @@ function RaspberryPage({
   gameCount,
   gamePercent,
   usedStorageGb,
+  totalStorageGb,
   storagePercent,
   alarm,
   onAlarmTimeChange,
@@ -1947,7 +1956,9 @@ function RaspberryPage({
   onPowerOff,
   canPlayNextEpisode,
   raspberryLanguage,
-  setRaspberryLanguage,
+  onSetRaspberryLanguage,
+  raspberryLanguageSaving,
+  raspberryLanguageError,
   uploadMediaType,
   onUploadMediaTypeChange,
   onUploadFiles,
@@ -2035,7 +2046,8 @@ function RaspberryPage({
                     <button
                       key={option.id}
                       className={`raspberry-language-option${isSelected ? " active" : ""}`}
-                      onClick={() => setRaspberryLanguage(option.id)}
+                      onClick={() => onSetRaspberryLanguage(option.id)}
+                      disabled={raspberryLanguageSaving}
                       type="button"
                     >
                       <img
@@ -2048,6 +2060,13 @@ function RaspberryPage({
                   );
                 })}
               </div>
+              {raspberryLanguageSaving ? (
+                <p className="raspberry-language-card__status">{t("language_updating")}</p>
+              ) : raspberryLanguageError ? (
+                <p className="raspberry-language-card__status raspberry-language-card__status--error">
+                  {raspberryLanguageError}
+                </p>
+              ) : null}
             </article>
             <RaspberryStatCard
               label={t("stats_series_installed")}
@@ -2080,7 +2099,7 @@ function RaspberryPage({
               </div>
               <div className="raspberry-storage-card__copy">
                 <p>{t("microsd_capacity")}</p>
-                <strong>{usedStorageGb} GB / {RASPBERRY_STORAGE_TOTAL_GB} GB</strong>
+                <strong>{formatStorageGb(usedStorageGb)} GB / {formatStorageGb(totalStorageGb)} GB</strong>
               </div>
             </article>
           </div>
@@ -2331,6 +2350,7 @@ export default function App() {
   const mockMode = isMockMode();
   const [activeMediaType, setActiveMediaType] = useState("series");
   const [webPinInput, setWebPinInput] = useState("");
+  const [webPinVisible, setWebPinVisible] = useState(false);
   const [pinError, setPinError] = useState("");
   const [pinSubmitting, setPinSubmitting] = useState(false);
   const [unlocked, setUnlocked] = useState(mockMode || Boolean(getStoredWebPin()));
@@ -2361,6 +2381,12 @@ export default function App() {
     playing: null,
     directory: "",
     file: "",
+    storage: {
+      totalGb: 0,
+      usedGb: 0,
+      freeGb: 0,
+      percentUsed: 0,
+    },
   });
   const [raspberryCurrentPlayback, setRaspberryCurrentPlayback] = useState(() =>
     loadStoredRaspberryCurrentPlayback()
@@ -2368,6 +2394,8 @@ export default function App() {
   const [raspberryControlsBusy, setRaspberryControlsBusy] = useState(false);
   const [raspberryAlarm, setRaspberryAlarm] = useState(() => loadStoredRaspberryAlarm());
   const [raspberryLanguage, setRaspberryLanguage] = useState(() => loadStoredRaspberryLanguage());
+  const [raspberryLanguageSaving, setRaspberryLanguageSaving] = useState(false);
+  const [raspberryLanguageError, setRaspberryLanguageError] = useState("");
   const [uploadMediaType, setUploadMediaType] = useState("series");
   const [uploadDragActive, setUploadDragActive] = useState(false);
   const [uploadLookupOpen, setUploadLookupOpen] = useState(false);
@@ -2393,12 +2421,16 @@ export default function App() {
     async function load() {
       setLoading(true);
       setError("");
+      setRaspberryLanguageError("");
 
       try {
-        const nextVideos = await getVideos();
+        const [nextVideos, nextLanguage] = await Promise.all([getVideos(), getRaspberryLanguage()]);
         if (cancelled) return;
 
         setVideos(nextVideos);
+        if (nextLanguage?.language) {
+          setRaspberryLanguage(nextLanguage.language);
+        }
 
         const firstDirectory = nextVideos?.directories?.[0]?.relativePath || "";
         setSelectedDirectoryPath((current) => current || firstDirectory);
@@ -2447,12 +2479,21 @@ export default function App() {
       try {
         const nextHealth = await getHealth();
         if (!cancelled) {
+          if (nextHealth?.language) {
+            setRaspberryLanguage(nextHealth.language);
+          }
           setRaspberryHealth({
             ok: Boolean(nextHealth?.ok),
             running: Boolean(nextHealth?.running),
             playing: nextHealth?.playing || null,
             directory: nextHealth?.directory || "",
             file: nextHealth?.file || "",
+            storage: {
+              totalGb: Number(nextHealth?.storage?.totalGb) || 0,
+              usedGb: Number(nextHealth?.storage?.usedGb) || 0,
+              freeGb: Number(nextHealth?.storage?.freeGb) || 0,
+              percentUsed: Number(nextHealth?.storage?.percentUsed) || 0,
+            },
           });
           if (!nextHealth?.running) {
             setRaspberryCurrentPlayback(null);
@@ -2466,6 +2507,12 @@ export default function App() {
             playing: null,
             directory: "",
             file: "",
+            storage: {
+              totalGb: 0,
+              usedGb: 0,
+              freeGb: 0,
+              percentUsed: 0,
+            },
           });
           setRaspberryCurrentPlayback(null);
         }
@@ -2876,6 +2923,29 @@ export default function App() {
     }
   }
 
+  async function handleRaspberryLanguageChange(nextLanguage) {
+    if (nextLanguage === raspberryLanguage || raspberryLanguageSaving) {
+      return;
+    }
+
+    setRaspberryLanguageSaving(true);
+    setRaspberryLanguageError("");
+    try {
+      const response = await updateRaspberryLanguage(nextLanguage);
+      setRaspberryLanguage(response?.language || nextLanguage);
+    } catch (nextError) {
+      if (nextError?.status === 401) {
+        setStoredWebPin("");
+        setUnlocked(false);
+        setPinError("PIN incorrecto o sesion caducada.");
+      } else {
+        setRaspberryLanguageError(nextError.message || t("language_update_failed"));
+      }
+    } finally {
+      setRaspberryLanguageSaving(false);
+    }
+  }
+
   function handleMediaTypeChange(nextType) {
     setActiveMediaType(nextType);
     setCurrentView("series");
@@ -2973,6 +3043,12 @@ export default function App() {
         playing: nextHealth?.playing || null,
         directory: nextHealth?.directory || "",
         file: nextHealth?.file || "",
+        storage: {
+          totalGb: Number(nextHealth?.storage?.totalGb) || 0,
+          usedGb: Number(nextHealth?.storage?.usedGb) || 0,
+          freeGb: Number(nextHealth?.storage?.freeGb) || 0,
+          percentUsed: Number(nextHealth?.storage?.percentUsed) || 0,
+        },
       });
       if (!nextHealth?.running) {
         setRaspberryCurrentPlayback(null);
@@ -3019,13 +3095,14 @@ export default function App() {
         playbackId: raspberryEpisodeId,
       });
       setRaspberryCurrentPlayback(playbackInfo);
-      setRaspberryHealth({
+      setRaspberryHealth((current) => ({
+        ...current,
         ok: true,
         running: true,
         playing: raspberryEpisodeId,
         directory: selectedSeries.directoryPath,
         file: playbackInfo?.filePath || `${selectedSeries.directoryPath}/${raspberryEpisodeId}.mp4`,
-      });
+      }));
       setEpisodeDialogOpen(false);
       setSelectedEpisode(null);
     } catch (nextError) {
@@ -3131,13 +3208,14 @@ export default function App() {
         movieEntry,
       });
       setRaspberryCurrentPlayback(playbackInfo);
-      setRaspberryHealth({
+      setRaspberryHealth((current) => ({
+        ...current,
         ok: true,
         running: true,
         playing: movieEntry.id,
         directory: movieEntry.directory || "",
         file: playbackInfo?.filePath || movieEntry.relativePath || "",
-      });
+      }));
     } catch (nextError) {
       window.alert(nextError.message || "No se pudo reproducir la película.");
     } finally {
@@ -3287,13 +3365,14 @@ export default function App() {
       setRaspberryControlsBusy(true);
       await powerOffRaspberry();
       setRaspberryCurrentPlayback(null);
-      setRaspberryHealth({
+      setRaspberryHealth((current) => ({
+        ...current,
         ok: false,
         running: false,
         playing: null,
         directory: "",
         file: "",
-      });
+      }));
     } catch (nextError) {
       window.alert(nextError.message || t("power_off_failed"));
     } finally {
@@ -3437,17 +3516,9 @@ export default function App() {
   const installedSeriesCount = seriesOptions.length;
   const installedMovieCount = movieOptions.length;
   const installedGameCount = 0;
-  const installedEpisodeCount = directories.reduce(
-    (total, directory) => total + (Number(directory?.episodeCount) || Number(directory?.videoCount) || 0),
-    0
-  );
-  const estimatedStorageUsedGb = estimateUsedStorageGb({
-    seriesCount: installedSeriesCount,
-    movieCount: installedMovieCount,
-    gameCount: installedGameCount,
-    episodeCount: installedEpisodeCount,
-  });
-  const estimatedStoragePercent = (estimatedStorageUsedGb / RASPBERRY_STORAGE_TOTAL_GB) * 100;
+  const usedStorageGb = Number(raspberryHealth?.storage?.usedGb) || 0;
+  const totalStorageGb = Number(raspberryHealth?.storage?.totalGb) || 0;
+  const storagePercent = Number(raspberryHealth?.storage?.percentUsed) || 0;
   const canPlayNextEpisode = useMemo(() => {
     if (!raspberryHealth.running || raspberryCurrentPlayback?.kind !== "episode") return false;
 
@@ -3475,17 +3546,41 @@ export default function App() {
               <h2>Acceso protegido</h2>
               <p>{t("unlock_copy")}</p>
               <form className="unlock-form" onSubmit={handleUnlock}>
-                <input
-                  className="unlock-form__input"
-                  inputMode="numeric"
-                  maxLength={4}
-                  pattern="[0-9]*"
-                  type="password"
-                  value={webPinInput}
-                  onChange={(event) =>
-                    setWebPinInput(event.target.value.replace(/\D/g, "").slice(0, 4))
-                  }
-                />
+                <div className="unlock-form__input-wrap">
+                  <input
+                    className="unlock-form__input"
+                    inputMode="numeric"
+                    maxLength={4}
+                    pattern="[0-9]*"
+                    type={webPinVisible ? "text" : "password"}
+                    value={webPinInput}
+                    onChange={(event) =>
+                      setWebPinInput(event.target.value.replace(/\D/g, "").slice(0, 4))
+                    }
+                  />
+                  <button
+                    className="unlock-form__toggle"
+                    type="button"
+                    onClick={() => setWebPinVisible((current) => !current)}
+                    aria-label={webPinVisible ? t("hide_password") : t("show_password")}
+                    aria-pressed={webPinVisible}
+                    title={webPinVisible ? t("hide_password") : t("show_password")}
+                  >
+                    {webPinVisible ? (
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 3l18 18" />
+                        <path d="M10.58 10.58a2 2 0 0 0 2.84 2.84" />
+                        <path d="M9.88 5.09A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8-0.51 1.45-1.32 2.79-2.36 3.91" />
+                        <path d="M6.61 6.61C4.62 8 3.15 9.88 2 12c1.73 4.89 6 8 10 8 1.73 0 3.38-0.37 4.88-1.03" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M2 12s3.64-7 10-7 10 7 10 7-3.64 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 <button disabled={pinSubmitting} type="submit">
                   {pinSubmitting ? t("validating") : t("enter")}
                 </button>
@@ -3525,8 +3620,9 @@ export default function App() {
                 moviePercent={(installedMovieCount / RASPBERRY_CATALOG_LIMITS.movies) * 100}
                 gameCount={installedGameCount}
                 gamePercent={(installedGameCount / RASPBERRY_CATALOG_LIMITS.games) * 100}
-                usedStorageGb={estimatedStorageUsedGb}
-                storagePercent={estimatedStoragePercent}
+                usedStorageGb={usedStorageGb}
+                totalStorageGb={totalStorageGb}
+                storagePercent={storagePercent}
                 alarm={raspberryAlarm}
                 onAlarmTimeChange={handleAlarmTimeChange}
                 onAlarmToggle={handleAlarmToggle}
@@ -3542,7 +3638,9 @@ export default function App() {
                 onPowerOff={handlePowerOffRaspberry}
                 canPlayNextEpisode={canPlayNextEpisode}
                 raspberryLanguage={raspberryLanguage}
-                setRaspberryLanguage={setRaspberryLanguage}
+                onSetRaspberryLanguage={handleRaspberryLanguageChange}
+                raspberryLanguageSaving={raspberryLanguageSaving}
+                raspberryLanguageError={raspberryLanguageError}
                 uploadMediaType={uploadMediaType}
                 onUploadMediaTypeChange={setUploadMediaType}
                 onUploadFiles={handleUploadFiles}

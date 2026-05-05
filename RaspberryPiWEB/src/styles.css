@@ -1236,10 +1236,27 @@ img {
   background: rgba(24, 40, 52, 0.92);
 }
 
+.raspberry-language-option:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .raspberry-language-option__icon {
   width: 2.8rem;
   height: 2.8rem;
   object-fit: contain;
+}
+
+.raspberry-language-card__status {
+  margin: 0;
+  justify-self: end;
+  color: rgba(233, 242, 252, 0.8);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.raspberry-language-card__status--error {
+  color: #ffd7d7;
 }
 
 .raspberry-storage-card__ring {
@@ -2183,9 +2200,13 @@ img {
   margin-top: 1rem;
 }
 
+.unlock-form__input-wrap {
+  position: relative;
+}
+
 .unlock-form__input {
   width: 100%;
-  padding: 0.95rem 1rem;
+  padding: 0.95rem 3.9rem 0.95rem 1rem;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.08);
@@ -2193,6 +2214,33 @@ img {
   font-size: 1.2rem;
   letter-spacing: 0.35em;
   text-align: center;
+}
+
+.unlock-form__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.unlock-form__toggle svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .unlock-form__error {
