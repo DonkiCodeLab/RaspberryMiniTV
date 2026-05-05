@@ -1,15 +1,17 @@
+import json
 import os
 import re
 import socket
 import subprocess
 import threading
 import time
-import json
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(BASE_DIR)
 VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
+WEB_DIST_DIR = os.path.join(REPO_DIR, "RaspberryPiWEB", "dist")
 EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/simpsonstv_qr.png"
@@ -49,6 +51,27 @@ def current_web_pin():
     return load_settings().get("web_password", DEFAULT_SETTINGS["web_password"])
 
 
+def web_dist_available():
+    return os.path.isdir(WEB_DIST_DIR) and os.path.isfile(os.path.join(WEB_DIST_DIR, "index.html"))
+
+
+def is_public_frontend_request():
+    if request.method != "GET":
+        return False
+    if not web_dist_available():
+        return False
+
+    path = request.path or "/"
+    if path in {"/", "/index.html"}:
+        return True
+
+    candidate = os.path.normpath(path.lstrip("/"))
+    if candidate.startswith(".."):
+        return False
+
+    return os.path.isfile(os.path.join(WEB_DIST_DIR, candidate))
+
+
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
     return submitted_pin == current_web_pin()
@@ -56,7 +79,7 @@ def is_authorized_request():
 
 @app.before_request
 def require_web_pin():
-    if request.path in {"/web/auth", "/ip"}:
+    if request.path in {"/web/auth", "/ip"} or is_public_frontend_request():
         return None
     if is_authorized_request():
         return None
@@ -309,6 +332,31 @@ def volume_down_locked():
             proc.stdin.flush()
         except Exception:
             pass
+
+
+@app.route("/", methods=["GET"])
+def web_index():
+    if not web_dist_available():
+        return jsonify({"error": "Web dist not found", "path": WEB_DIST_DIR}), 404
+    return send_from_directory(WEB_DIST_DIR, "index.html")
+
+
+@app.route("/<path:asset_path>", methods=["GET"])
+def web_assets(asset_path):
+    if not web_dist_available():
+        return jsonify({"error": "Web dist not found", "path": WEB_DIST_DIR}), 404
+
+    normalized_path = os.path.normpath(asset_path)
+    if normalized_path.startswith(".."):
+        return jsonify({"error": "Invalid path"}), 400
+
+    full_path = os.path.join(WEB_DIST_DIR, normalized_path)
+    if os.path.isfile(full_path):
+        directory = os.path.dirname(full_path)
+        filename = os.path.basename(full_path)
+        return send_from_directory(directory, filename)
+
+    return send_from_directory(WEB_DIST_DIR, "index.html")
 
 
 @app.route("/episodes", methods=["GET"])
