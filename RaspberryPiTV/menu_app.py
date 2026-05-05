@@ -1010,36 +1010,22 @@ class RaspberryPiTVMenu:
         self.save_settings()
         log_wifi_debug("wifi_saved_to_settings", ssid=safe_ssid, has_password=bool(password))
 
-    def ensure_startup_wifi_connection(self):
+    def sync_startup_wifi_state(self):
         saved_ssid = str(self.config.get("wifi_ssid") or "").strip()
-        saved_password = str(self.config.get("wifi_password") or "")
-        if not saved_ssid:
-            log_wifi_debug("wifi_startup_restore_skipped", reason="missing_saved_ssid")
-            return
-
         current_ssid = get_connected_wifi_info()
         current_ip = get_wifi_ipv4()
+        self.current_wifi_ssid = current_ssid
         log_wifi_debug(
-            "wifi_startup_restore_begin",
+            "wifi_startup_state",
             saved_ssid=saved_ssid,
             current_ssid=current_ssid,
             current_ip=current_ip,
-            has_saved_password=bool(saved_password),
+            note="startup no intenta reconectar ni escanear redes",
         )
-
-        if current_ssid == saved_ssid and current_ip:
-            log_wifi_debug("wifi_startup_restore_skipped", reason="already_connected", ssid=saved_ssid, ip=current_ip)
-            return
-
-        success, message = connect_wifi(saved_ssid, saved_password)
-        log_wifi_debug(
-            "wifi_startup_restore_result",
-            saved_ssid=saved_ssid,
-            success=success,
-            message=message,
-        )
-        if success:
-            self.wifi_status = message
+        if current_ssid:
+            self.wifi_status = self.tr("wifi.already_connected", ssid=current_ssid)
+        else:
+            self.wifi_status = self.tr("wifi.scan_prompt")
 
     def prepare_asset(self, path):
         image = load_image(path)
@@ -2774,7 +2760,7 @@ class RaspberryPiTVMenu:
 
     def run(self):
         self.show_startup_splash()
-        self.ensure_startup_wifi_connection()
+        self.sync_startup_wifi_state()
         play_intro()
 
         while self.running:

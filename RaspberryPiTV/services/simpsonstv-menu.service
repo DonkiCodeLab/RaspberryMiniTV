@@ -1,15 +1,18 @@
 [Unit]
 Description=SimpsonsTV Menu
-After=network.target simpsonstv-api.service
-Wants=simpsonstv-api.service
+After=network.target simpsonstv-startup-guard.service simpsonstv-api.service
+Wants=simpsonstv-startup-guard.service simpsonstv-api.service
+ConditionPathExists=!/run/tvsimpsons/skip_autostart
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
 User=root
 WorkingDirectory=/home/donkikochan/TvSimpsonsApp/RaspberryPiTV
 ExecStart=/bin/bash /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/start_menu.sh
 ExecStop=/usr/bin/pkill -f /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/menu_app.py
+Restart=on-failure
+RestartSec=2
+KillMode=control-group
 Environment=PYTHONUNBUFFERED=1
 StandardOutput=journal
 StandardError=journal

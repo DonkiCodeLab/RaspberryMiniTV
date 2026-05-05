@@ -1,0 +1,21 @@
+[Unit]
+Description=SimpsonsTV Startup Guard
+DefaultDependencies=no
+After=local-fs.target systemd-user-sessions.service
+Before=simpsonstv-api.service simpsonstv-menu.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/home/donkikochan/TvSimpsonsApp/RaspberryPiTV
+ExecStart=/bin/bash /home/donkikochan/TvSimpsonsApp/RaspberryPiTV/startup_guard.sh
+StandardInput=tty
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=no
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,8 @@
 [Unit]
 Description=SimpsonsTV Control API
-After=network.target
+After=network.target simpsonstv-startup-guard.service
+Wants=simpsonstv-startup-guard.service
+ConditionPathExists=!/run/tvsimpsons/skip_autostart
 
 [Service]
 Type=simple

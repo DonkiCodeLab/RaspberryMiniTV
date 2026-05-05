@@ -24,19 +24,22 @@ mkdir -p "${VIDEOS_DIR}"
 
 systemctl stop simpsonstv-api.service tvbutton.service 2>/dev/null || true
 systemctl stop simpsonstv-menu.service 2>/dev/null || true
-systemctl disable simpsonstv-api.service tvbutton.service simpsonstv-menu.service 2>/dev/null || true
+systemctl stop simpsonstv-startup-guard.service 2>/dev/null || true
+systemctl disable simpsonstv-api.service tvbutton.service simpsonstv-menu.service simpsonstv-startup-guard.service 2>/dev/null || true
 
+install_service "simpsonstv-startup-guard.service"
 install_service "simpsonstv-api.service"
 install_service "simpsonstv-menu.service"
 # Temporalmente no reinstalamos ni activamos tvbutton.service
 # mientras el cable del boton fisico esta desconectado.
 
 systemctl daemon-reload
-systemctl enable simpsonstv-api.service simpsonstv-menu.service
-systemctl restart simpsonstv-api.service simpsonstv-menu.service
+systemctl enable simpsonstv-startup-guard.service simpsonstv-api.service simpsonstv-menu.service
+systemctl restart simpsonstv-startup-guard.service simpsonstv-api.service simpsonstv-menu.service
 
 echo "Servicios instalados y reiniciados correctamente."
 echo "Puedes revisar su estado con:"
+echo "  sudo systemctl status simpsonstv-startup-guard.service"
 echo "  sudo systemctl status simpsonstv-api.service"
 echo "  sudo systemctl status simpsonstv-menu.service"
 echo "tvbutton.service queda desactivado temporalmente."

@@ -102,9 +102,10 @@ sudo ./install_services.sh
 El script:
 
 - crea `RaspberryPiTV/videos` si no existe.
+- instala un guardia de arranque que espera 5 segundos en consola por si pulsas `y` para cancelar menu y web en ese inicio.
 - reemplaza los servicios antiguos por los nuevos.
 - hace `daemon-reload`.
-- habilita y reinicia `simpsonstv-api.service`, `simpsonstv-menu.service` y `tvbutton.service`.
+- habilita y reinicia `simpsonstv-startup-guard.service`, `simpsonstv-api.service`, `simpsonstv-menu.service` y `tvbutton.service`.
 - deja la web disponible en la misma URL de la API siempre que `RaspberryPiWEB/dist/` este compilado.
 
 ## Dependencias recomendadas en Raspberry Pi
@@ -147,8 +148,59 @@ Para revisar estado y logs:
 sudo systemctl status simpsonstv-api.service
 sudo systemctl status simpsonstv-menu.service
 sudo systemctl status tvbutton.service
+journalctl -u simpsonstv-startup-guard.service -n 50 --no-pager
 journalctl -u simpsonstv-api.service -n 50 --no-pager
 journalctl -u simpsonstv-menu.service -n 50 --no-pager
 journalctl -u tvbutton.service -n 50 --no-pager
 tail -n 50 /tmp/raspberrypitv-menu.log
 ```
+
+## Cancelar autostart en el arranque
+
+Al arrancar la Raspberry, antes de iniciar la web y el menu, el sistema anuncia en `tty1` que va a ejecutar:
+
+```bash
+git -C /home/donkikochan/TvSimpsonsApp pull
+```
+
+Despues aparece un mensaje durante 5 segundos.
+Si en ese tiempo pulsas `y`, se cancela el arranque automatico de ambos solo para ese inicio.
+
+Eso te deja la consola libre para diagnosticar sin tocar la SD ni deshabilitar servicios permanentemente.
+
+## Modo diagnostico de arranque
+
+Si la Raspberry arranca en negro o el menu se queda colgado, no hace falta borrar la SD.
+Lo mas util es desactivar temporalmente el menu para que el sistema arranque mostrando la consola:
+
+```bash
+sudo systemctl disable --now simpsonstv-menu.service
+sudo reboot
+```
+
+Despues del reinicio ya deberias volver a ver la TTY con los mensajes normales del sistema.
+Desde ahi puedes revisar que ha pasado:
+
+```bash
+sudo systemctl status simpsonstv-menu.service
+journalctl -u simpsonstv-menu.service -b --no-pager
+tail -n 100 /tmp/raspberrypitv-menu.log
+```
+
+Cuando quieras volver al arranque normal del menu:
+
+```bash
+sudo systemctl enable --now simpsonstv-menu.service
+```
+
+Si ademas quieres que el menu no se lance automaticamente hasta que tu lo arranques a mano, dejalo deshabilitado y usa:
+
+```bash
+sudo systemctl start simpsonstv-api.service
+sudo systemctl start simpsonstv-menu.service
+```
+
+Nota importante:
+
+- `simpsonstv-menu.service` ahora queda gestionado como un proceso normal de `systemd`, asi que `stop`, `start`, `restart` y `status` son bastante mas fiables para depurar bloqueos.
+- Si alguna vez usas `start_with_splash.sh`, ese script pinta una imagen encima de la consola con `fbi`. Para depurar, no lo uses o mata `fbi` con `sudo pkill fbi`.
