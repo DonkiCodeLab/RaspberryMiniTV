@@ -1146,20 +1146,7 @@ class RaspberryPiTVMenu:
 
     def build_mpv_command(self, filepath, start_seconds=0.0):
         remove_path_if_exists(MPV_SOCKET_PATH)
-        command = [
-            "mpv",
-            "--fullscreen",
-            "--no-config",
-            "--vo=sdl",
-            "--osc=no",
-            "--osd-level=0",
-            "--audio-display=no",
-            "--input-default-bindings=no",
-            "--input-vo-keyboard=no",
-            "--input-cursor=no",
-            "--really-quiet",
-            f"--input-ipc-server={MPV_SOCKET_PATH}",
-        ]
+        command = ["mpv", "--fullscreen"]
         if start_seconds > 0:
             command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
         command.append(filepath)
