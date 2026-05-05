@@ -13,6 +13,9 @@ raspi-gpio set 18 op dh >/dev/null 2>&1 || true
 export SDL_VIDEODRIVER=fbcon
 export SDL_FBDEV=/dev/fb0
 export SDL_MOUSE_TOUCH_EVENTS=1
+export XDG_RUNTIME_DIR=/tmp/simpsonstv-xdg-runtime
+mkdir -p "${XDG_RUNTIME_DIR}"
+chmod 700 "${XDG_RUNTIME_DIR}" >/dev/null 2>&1 || true
 
 pkill -f "python3 ${SCRIPT_DIR}/menu_app.py" >/dev/null 2>&1 || true
 

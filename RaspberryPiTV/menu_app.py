@@ -1150,6 +1150,7 @@ class RaspberryPiTVMenu:
             "mpv",
             "--fullscreen",
             "--no-config",
+            "--vo=sdl",
             "--osc=no",
             "--osd-level=0",
             "--audio-display=no",
