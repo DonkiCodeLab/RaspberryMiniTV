@@ -29,6 +29,7 @@ La arquitectura queda separada en dos partes:
 
 - `control_api.py`: backend de reproducción y API HTTP.
 - `menu_app.py`: frontend a pantalla completa hecho con `pygame`.
+- `RaspberryPiWEB/dist`: frontend web compilado que la API sirve en `http://IP_DE_LA_RASPBERRY:5050/`.
 - `buttons.py`: deja la pantalla encendida al arrancar y permite alternarla con el botón físico.
 
 Al arrancar `menu_app.py`:
@@ -49,6 +50,26 @@ El menú ya usa `pygame`, así que es una base mejor para añadir:
 - transiciones entre pantallas.
 - elementos interactivos.
 - minijuegos como `Snake`.
+
+## Web remota al arrancar
+
+Cuando arrancan los servicios de la Raspberry:
+
+- `simpsonstv-api.service` levanta `control_api.py`.
+- esa API sirve tambien la web compilada si existe `RaspberryPiWEB/dist/`.
+- `simpsonstv-menu.service` arranca el menu y el QR apunta a `http://IP_DE_LA_RASPBERRY:5050/`.
+
+Eso significa que al encender la Raspberry, el movil puede abrir directamente la web desde la misma URL de la API, sin un puerto extra.
+
+Si haces cambios en `RaspberryPiWEB/`, recompila antes o despues de actualizar:
+
+```bash
+cd ~/TvSimpsonsApp/RaspberryPiWEB
+npm install
+npm run build
+```
+
+Si `dist/` no existe todavia, la API respondera indicando que falta compilar la web.
 
 ## Clonar solo RaspberryPiTV con sparse-checkout
 
@@ -84,6 +105,7 @@ El script:
 - reemplaza los servicios antiguos por los nuevos.
 - hace `daemon-reload`.
 - habilita y reinicia `simpsonstv-api.service`, `simpsonstv-menu.service` y `tvbutton.service`.
+- deja la web disponible en la misma URL de la API siempre que `RaspberryPiWEB/dist/` este compilado.
 
 ## Dependencias recomendadas en Raspberry Pi
 

@@ -6,10 +6,12 @@ import threading
 import time
 import json
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(BASE_DIR)
 VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
+WEB_DIST_DIR = os.path.join(REPO_DIR, "RaspberryPiWEB", "dist")
 EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/simpsonstv_qr.png"
@@ -177,6 +179,28 @@ def current_web_pin():
     return load_settings().get("web_password", DEFAULT_SETTINGS["web_password"])
 
 
+def web_dist_available():
+    return os.path.isdir(WEB_DIST_DIR) and os.path.isfile(os.path.join(WEB_DIST_DIR, "index.html"))
+
+
+def is_public_frontend_request():
+    if request.method != "GET":
+        return False
+
+    if not web_dist_available():
+        return False
+
+    path = request.path or "/"
+    if path in {"/", "/index.html"}:
+        return True
+
+    candidate = os.path.normpath(path.lstrip("/"))
+    if candidate.startswith(".."):
+        return False
+
+    return os.path.isfile(os.path.join(WEB_DIST_DIR, candidate))
+
+
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
     return submitted_pin == current_web_pin()
@@ -184,7 +208,7 @@ def is_authorized_request():
 
 @app.before_request
 def require_web_pin():
-    if request.path in {"/web/auth", "/ip"}:
+    if request.path in {"/web/auth", "/ip"} or is_public_frontend_request():
         return None
     if is_authorized_request():
         return None
@@ -675,6 +699,31 @@ def health():
                 "running": running,
             }
         )
+
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def web_app(path):
+    if not web_dist_available():
+        return (
+            jsonify(
+                {
+                    "error": "Web frontend not built",
+                    "hint": "Run `npm install && npm run build` inside RaspberryPiWEB.",
+                }
+            ),
+            503,
+        )
+
+    safe_path = os.path.normpath(path or "").lstrip("/")
+    if safe_path.startswith(".."):
+        safe_path = ""
+    requested_file = os.path.join(WEB_DIST_DIR, safe_path)
+
+    if safe_path and os.path.isfile(requested_file):
+        return send_from_directory(WEB_DIST_DIR, safe_path)
+
+    return send_from_directory(WEB_DIST_DIR, "index.html")
 
 
 if __name__ == "__main__":
