@@ -97,7 +97,7 @@ PLAY_EXIT_LAYOUT = (22, 23, 60, 55)
 PLAY_RANDOM_LAYOUT = (183, 207, 272, 103)
 PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
 BACK_BUTTON_SCALE = 1.3
-BROWSE_VISIBLE_ITEMS = 5
+BROWSE_VISIBLE_ITEMS = 4
 LOADING_MIN_DURATION_MS = 1000
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-mpv.sock")
 MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-video-preview.png")
@@ -1111,6 +1111,21 @@ class RaspberryPiTVMenu:
         while candidate and font.size(candidate + "...")[0] > max_width:
             candidate = candidate[:-1]
         return candidate + "..."
+
+    def draw_browser_empty_state(self, area_rect):
+        empty_icon = self.browser_icons["empty"]
+        text_y = area_rect.centery + 18
+        if empty_icon is not None:
+            icon_size = min(110, max(70, area_rect.height - 70))
+            scaled_empty = fit_image_contain(empty_icon, (icon_size, icon_size))
+            if scaled_empty is not None:
+                empty_rect = scaled_empty.get_rect(center=(area_rect.centerx, area_rect.centery - 18))
+                self.screen.blit(scaled_empty, empty_rect)
+                text_y = empty_rect.bottom + 14
+
+        empty_text = self.truncate_text(self.tr("browser.no_videos"), self.wifi_font, area_rect.width - 24)
+        empty_surface = self.wifi_font.render(empty_text, True, WHITE)
+        self.screen.blit(empty_surface, empty_surface.get_rect(center=(area_rect.centerx, text_y)))
 
     def play_video_path(self, full_path):
         relative_path = os.path.relpath(full_path, VIDEOS_DIR).replace(os.sep, "/")
@@ -2347,21 +2362,7 @@ class RaspberryPiTVMenu:
 
         pygame.draw.rect(self.screen, DARK_GRAY, layout["list"])
         if not self.browser_entries:
-            empty_icon = self.browser_icons["empty"]
-            if empty_icon is not None:
-                scaled_empty = fit_image_contain(empty_icon, (120, 120))
-                if scaled_empty is not None:
-                    empty_rect = scaled_empty.get_rect(center=(layout["list"].centerx, layout["list"].centery - 30))
-                    self.screen.blit(scaled_empty, empty_rect)
-                    text_y = empty_rect.bottom + 20
-                else:
-                    text_y = layout["list"].centery + 18
-            else:
-                text_y = layout["list"].centery
-            empty_line_1 = self.wifi_font.render("No hi ha videos", True, WHITE)
-            empty_line_2 = self.wifi_font.render("en aquesta carpeta", True, WHITE)
-            self.screen.blit(empty_line_1, empty_line_1.get_rect(center=(layout["list"].centerx, text_y)))
-            self.screen.blit(empty_line_2, empty_line_2.get_rect(center=(layout["list"].centerx, text_y + 32)))
+            self.draw_browser_empty_state(layout["list"])
         else:
             row_height = layout["list"].height / BROWSE_VISIBLE_ITEMS
             visible_entries = self.browser_entries[self.browser_page_start:self.browser_page_start + BROWSE_VISIBLE_ITEMS]
@@ -2369,9 +2370,9 @@ class RaspberryPiTVMenu:
                 index = self.browser_page_start + row_offset
                 row_rect = pygame.Rect(
                     layout["list"].x + 6,
-                    int(layout["list"].y + 6 + row_offset * row_height),
+                    int(layout["list"].y + 4 + row_offset * row_height),
                     layout["list"].width - 12,
-                    int(row_height - 8),
+                    int(row_height - 6),
                 )
                 selected = index == self.browser_selected_index
                 pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
@@ -2398,8 +2399,17 @@ class RaspberryPiTVMenu:
                     True,
                     GRAY,
                 )
-                self.screen.blit(entry_surface, (row_rect.x + 10, row_rect.y + 6))
-                self.screen.blit(meta_surface, (row_rect.x + 10, row_rect.y + 35))
+                self.screen.blit(entry_surface, (row_rect.x + 10, row_rect.y + 4))
+                self.screen.blit(meta_surface, (row_rect.x + 10, row_rect.y + 32))
+
+            if len(self.browser_entries) == 1 and self.browser_entries[0]["type"] == "parent":
+                empty_area = pygame.Rect(
+                    layout["list"].x + 12,
+                    int(layout["list"].y + row_height + 10),
+                    layout["list"].width - 24,
+                    int(layout["list"].height - row_height - 18),
+                )
+                self.draw_browser_empty_state(empty_area)
 
         action_enabled = bool(selected_entry)
         if action_enabled:
