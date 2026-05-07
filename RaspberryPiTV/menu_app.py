@@ -1038,7 +1038,7 @@ class RaspberryPiTVMenu:
                             "label": name,
                             "path": full_path,
                             "type": "directory",
-                            "action": "view" if len(videos) == 1 else "browse",
+                            "action": "browse",
                             "video_count": len(videos),
                             "videos": videos,
                         }
