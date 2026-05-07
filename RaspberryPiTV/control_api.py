@@ -384,7 +384,8 @@ def get_directory_size(path):
 def get_library_counts():
     ensure_media_directories()
     usage = shutil.disk_usage(VIDEOS_DIR if os.path.exists(VIDEOS_DIR) else BASE_DIR)
-    total_bytes = usage.total or 0
+    multimedia_bytes = get_directory_size(MULTIMEDIA_DIR)
+    multimedia_capacity_bytes = (usage.free or 0) + multimedia_bytes
     series_bytes = get_directory_size(TVSHOWS_DIR)
     movies_bytes = get_directory_size(MOVIES_DIR)
     games_bytes = get_directory_size(GAMES_DIR)
@@ -393,10 +394,11 @@ def get_library_counts():
         return {
             "count": count,
             "usedGb": round(used_bytes / (1024 ** 3), 1),
-            "percentUsed": round((used_bytes / total_bytes) * 100, 1) if total_bytes else 0.0,
+            "percentUsed": round((used_bytes / multimedia_capacity_bytes) * 100, 1) if multimedia_capacity_bytes else 0.0,
         }
 
     return {
+        "multimediaCapacityGb": round(multimedia_capacity_bytes / (1024 ** 3), 1),
         "series": usage_item(count_direct_directories(TVSHOWS_DIR), series_bytes),
         "movies": usage_item(count_direct_files(MOVIES_DIR), movies_bytes),
         "games": usage_item(count_direct_files(GAMES_DIR), games_bytes),
