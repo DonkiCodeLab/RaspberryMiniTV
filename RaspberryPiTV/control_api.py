@@ -15,6 +15,7 @@ MULTIMEDIA_DIR = os.path.join(REPO_DIR, "MultimediaContent")
 VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
+GAMES_DIR = os.path.join(MULTIMEDIA_DIR, "Games")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "RaspberryPiWEB", "dist")
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
 LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
@@ -329,6 +330,40 @@ def is_supported_upload_file(filename):
 def ensure_media_directories():
     os.makedirs(MOVIES_DIR, exist_ok=True)
     os.makedirs(TVSHOWS_DIR, exist_ok=True)
+    os.makedirs(GAMES_DIR, exist_ok=True)
+
+
+def count_direct_files(path):
+    if not os.path.isdir(path):
+        return 0
+    return len(
+        [
+            entry_name
+            for entry_name in os.listdir(path)
+            if os.path.isfile(os.path.join(path, entry_name))
+        ]
+    )
+
+
+def count_direct_directories(path):
+    if not os.path.isdir(path):
+        return 0
+    return len(
+        [
+            entry_name
+            for entry_name in os.listdir(path)
+            if os.path.isdir(os.path.join(path, entry_name))
+        ]
+    )
+
+
+def get_library_counts():
+    ensure_media_directories()
+    return {
+        "series": count_direct_directories(TVSHOWS_DIR),
+        "movies": count_direct_files(MOVIES_DIR),
+        "games": count_direct_files(GAMES_DIR),
+    }
 
 
 def slugify(value, fallback="media"):
@@ -568,6 +603,8 @@ def list_video_directories():
         "root": VIDEOS_DIR,
         "moviesRoot": MOVIES_DIR,
         "tvShowsRoot": TVSHOWS_DIR,
+        "gamesRoot": GAMES_DIR,
+        "libraryCounts": get_library_counts(),
         "mediaLibrary": media_library,
         "directories": tvshow_directories,
         "rootFiles": tvshow_root_files,
@@ -993,6 +1030,7 @@ def health():
                 "ts": int(time.time()),
                 "language": current_language(),
                 "storage": get_storage_stats(),
+                "libraryCounts": get_library_counts(),
                 "playing": current["id"],
                 "directory": current["directory"],
                 "file": current["file"],

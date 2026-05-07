@@ -2547,6 +2547,11 @@ export default function App() {
       freeGb: 0,
       percentUsed: 0,
     },
+    libraryCounts: {
+      series: 0,
+      movies: 0,
+      games: 0,
+    },
   });
   const [raspberryCurrentPlayback, setRaspberryCurrentPlayback] = useState(() =>
     loadStoredRaspberryCurrentPlayback()
@@ -2694,6 +2699,11 @@ export default function App() {
               freeGb: Number(nextHealth?.storage?.freeGb) || 0,
               percentUsed: Number(nextHealth?.storage?.percentUsed) || 0,
             },
+            libraryCounts: {
+              series: Number(nextHealth?.libraryCounts?.series) || 0,
+              movies: Number(nextHealth?.libraryCounts?.movies) || 0,
+              games: Number(nextHealth?.libraryCounts?.games) || 0,
+            },
           });
           if (!nextHealth?.running) {
             setRaspberryCurrentPlayback(null);
@@ -2712,6 +2722,11 @@ export default function App() {
               usedGb: 0,
               freeGb: 0,
               percentUsed: 0,
+            },
+            libraryCounts: {
+              series: 0,
+              movies: 0,
+              games: 0,
             },
           });
           setRaspberryCurrentPlayback(null);
@@ -3294,6 +3309,11 @@ export default function App() {
           freeGb: Number(nextHealth?.storage?.freeGb) || 0,
           percentUsed: Number(nextHealth?.storage?.percentUsed) || 0,
         },
+        libraryCounts: {
+          series: Number(nextHealth?.libraryCounts?.series) || 0,
+          movies: Number(nextHealth?.libraryCounts?.movies) || 0,
+          games: Number(nextHealth?.libraryCounts?.games) || 0,
+        },
       });
       if (!nextHealth?.running) {
         setRaspberryCurrentPlayback(null);
@@ -3796,9 +3816,10 @@ export default function App() {
   const safeMovieFrameIndex = movieImages.length
     ? Math.min(movieFrameIndex, movieImages.length - 1)
     : 0;
-  const installedSeriesCount = seriesOptions.length;
-  const installedMovieCount = movieOptions.length;
-  const installedGameCount = 0;
+  const raspberryLibraryCounts = videos?.libraryCounts || raspberryHealth?.libraryCounts || {};
+  const installedSeriesCount = Number(raspberryLibraryCounts.series) || 0;
+  const installedMovieCount = Number(raspberryLibraryCounts.movies) || 0;
+  const installedGameCount = Number(raspberryLibraryCounts.games) || 0;
   const usedStorageGb = Number(raspberryHealth?.storage?.usedGb) || 0;
   const totalStorageGb = Number(raspberryHealth?.storage?.totalGb) || 0;
   const storagePercent = Number(raspberryHealth?.storage?.percentUsed) || 0;
