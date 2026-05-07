@@ -443,6 +443,74 @@ export function uploadMovieFile({ file, movie, onProgress } = {}) {
   });
 }
 
+export function saveMovieFileMetadata({ relativePath, name, tmdbId }) {
+  const safeRelativePath = String(relativePath || "").trim();
+  const safeName = String(name || "").trim();
+  const safeTmdbId = Number(tmdbId) || 0;
+  if (!safeRelativePath || !safeName || !safeTmdbId) {
+    return Promise.reject(new Error("Missing movie metadata"));
+  }
+
+  if (isMockModeEnabled()) {
+    return Promise.resolve({
+      ok: true,
+      mock: true,
+      item: {
+        relativePath: safeRelativePath,
+        name: safeName,
+        tmdbId: safeTmdbId,
+        file: safeRelativePath.split("/").pop() || "",
+      },
+    });
+  }
+
+  return request("/movies", {
+    method: "POST",
+    body: JSON.stringify({
+      relativePath: safeRelativePath,
+      name: safeName,
+      tmdbId: safeTmdbId,
+    }),
+  });
+}
+
+export function saveMediaProfile({ collection, relativePath, name, tmdbId, file, heroImage, heroImageCrop }) {
+  const safeCollection = collection === "movies" ? "movies" : "series";
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) {
+    return Promise.reject(new Error("Missing relativePath"));
+  }
+
+  if (isMockModeEnabled()) {
+    return Promise.resolve({
+      ok: true,
+      mock: true,
+      item: {
+        collection: safeCollection,
+        relativePath: safeRelativePath,
+        name: String(name || "").trim(),
+        tmdbId: Number(tmdbId) || 0,
+        file: String(file || "").trim(),
+        heroImage: String(heroImage || "").trim(),
+        heroImageCrop: heroImageCrop || null,
+      },
+    });
+  }
+
+  return request("/media/profile", {
+    method: "POST",
+    body: JSON.stringify({
+      collection: safeCollection,
+      relativePath: safeRelativePath,
+      name,
+      tmdbId,
+      file,
+      heroImage,
+      heroImageCrop,
+    }),
+  });
+}
+
 export function removeMovieFile(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {

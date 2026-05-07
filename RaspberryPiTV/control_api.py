@@ -16,6 +16,8 @@ VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "RaspberryPiWEB", "dist")
+MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
+LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
 EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/simpsonstv_qr.png"
@@ -76,6 +78,181 @@ def save_settings(settings):
         json.dump(safe_settings, handle, ensure_ascii=False, indent=2)
 
     return safe_settings
+
+
+def empty_media_library():
+    return {
+        "version": 1,
+        "series": {},
+        "movies": {},
+    }
+
+
+def load_media_library():
+    library = empty_media_library()
+    try:
+        with open(MEDIA_LIBRARY_PATH, "r", encoding="utf-8") as handle:
+            loaded = json.load(handle)
+        if isinstance(loaded, dict):
+            library.update(
+                {
+                    "version": int(loaded.get("version") or 1),
+                    "series": loaded.get("series") if isinstance(loaded.get("series"), dict) else {},
+                    "movies": loaded.get("movies") if isinstance(loaded.get("movies"), dict) else {},
+                }
+            )
+    except Exception:
+        pass
+
+    if not library.get("movies") and os.path.exists(LEGACY_MOVIE_LIBRARY_PATH):
+        try:
+            with open(LEGACY_MOVIE_LIBRARY_PATH, "r", encoding="utf-8") as handle:
+                legacy_movies = json.load(handle)
+            if isinstance(legacy_movies, dict):
+                library["movies"] = legacy_movies
+        except Exception:
+            pass
+    return library
+
+
+def save_media_library(library):
+    ensure_media_directories()
+    current = empty_media_library()
+    if isinstance(library, dict):
+        current.update(
+            {
+                "version": int(library.get("version") or 1),
+                "series": library.get("series") if isinstance(library.get("series"), dict) else {},
+                "movies": library.get("movies") if isinstance(library.get("movies"), dict) else {},
+            }
+        )
+
+    with open(MEDIA_LIBRARY_PATH, "w", encoding="utf-8") as handle:
+        json.dump(current, handle, ensure_ascii=False, indent=2)
+
+    return current
+
+
+def load_movie_library():
+    return load_media_library().get("movies", {})
+
+
+def save_movie_library(items):
+    library = load_media_library()
+    safe_items = {}
+    if isinstance(items, dict):
+        for relative_path, item in items.items():
+            safe_relative_path = str(relative_path or "").strip()
+            if not safe_relative_path or not isinstance(item, dict):
+                continue
+            safe_items[safe_relative_path] = {
+                "relativePath": safe_relative_path,
+                "name": str(item.get("name") or "").strip(),
+                "tmdbId": int(item.get("tmdbId") or 0),
+                "file": str(item.get("file") or "").strip(),
+                "heroImage": str(item.get("heroImage") or "").strip(),
+                "heroImageCrop": item.get("heroImageCrop") if isinstance(item.get("heroImageCrop"), dict) else None,
+            }
+
+    library["movies"] = safe_items
+    save_media_library(library)
+    return safe_items
+
+
+def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
+    safe_relative_path = str(relative_path or "").strip()
+    if not safe_relative_path:
+        return None
+
+    items = load_movie_library()
+    item = {
+        "relativePath": safe_relative_path,
+        "name": str(name or "").strip(),
+        "tmdbId": int(tmdb_id or 0),
+        "file": str(filename or os.path.basename(safe_relative_path)).strip(),
+    }
+    items[safe_relative_path] = item
+    save_movie_library(items)
+    return item
+
+
+def remove_movie_metadata(relative_path):
+    safe_relative_path = str(relative_path or "").strip()
+    if not safe_relative_path:
+        return
+
+    items = load_movie_library()
+    if safe_relative_path in items:
+        del items[safe_relative_path]
+        save_movie_library(items)
+
+
+def upsert_media_profile(collection, key, updates):
+    safe_collection = "movies" if collection == "movies" else "series"
+    safe_key = str(key or "").strip()
+    if not safe_key:
+        return None
+
+    library = load_media_library()
+    collection_items = library.setdefault(safe_collection, {})
+    current_item = collection_items.get(safe_key) if isinstance(collection_items.get(safe_key), dict) else {}
+    item = dict(current_item)
+    item["relativePath"] = safe_key
+    if "name" in updates:
+        item["name"] = str(updates.get("name") or "").strip()
+    if "tmdbId" in updates:
+        item["tmdbId"] = int(updates.get("tmdbId") or 0)
+    if "file" in updates:
+        item["file"] = str(updates.get("file") or "").strip()
+    if "heroImage" in updates:
+        item["heroImage"] = str(updates.get("heroImage") or "").strip()
+    if "heroImageCrop" in updates:
+        item["heroImageCrop"] = updates.get("heroImageCrop") if isinstance(updates.get("heroImageCrop"), dict) else None
+
+    collection_items[safe_key] = item
+    save_media_library(library)
+    return item
+
+
+def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root_files):
+    library = load_media_library()
+    series_items = library.setdefault("series", {})
+    movie_items = library.setdefault("movies", {})
+
+    for directory in tvshow_directories:
+        relative_path = directory.get("relativePath")
+        if not relative_path:
+            continue
+        current_item = series_items.get(relative_path) if isinstance(series_items.get(relative_path), dict) else {}
+        series_items[relative_path] = {
+            **current_item,
+            "relativePath": relative_path,
+            "name": current_item.get("name") or directory.get("name") or "",
+            "tmdbId": int(current_item.get("tmdbId") or directory.get("tmdbId") or 0),
+            "episodes": directory.get("videos") if isinstance(directory.get("videos"), list) else [],
+            "episodeIds": directory.get("episodeIds") if isinstance(directory.get("episodeIds"), list) else [],
+        }
+
+    movie_entries = list(movie_root_files)
+    for directory in movie_directories:
+        for video in directory.get("videos") if isinstance(directory.get("videos"), list) else []:
+            movie_entries.append(video)
+
+    for movie in movie_entries:
+        relative_path = movie.get("relativePath")
+        if not relative_path:
+            continue
+        current_item = movie_items.get(relative_path) if isinstance(movie_items.get(relative_path), dict) else {}
+        movie_items[relative_path] = {
+            **current_item,
+            "relativePath": relative_path,
+            "name": current_item.get("name") or movie.get("name") or os.path.splitext(movie.get("file") or "")[0],
+            "tmdbId": int(current_item.get("tmdbId") or movie.get("tmdbId") or 0),
+            "file": current_item.get("file") or movie.get("file") or os.path.basename(relative_path),
+        }
+
+    save_media_library(library)
+    return library
 
 
 def get_storage_stats():
@@ -267,6 +444,20 @@ def build_media_buckets(category):
     root_files = []
     root_directory = "Movies" if category == "movies" else "TVShows"
     category_dir = MOVIES_DIR if category == "movies" else TVSHOWS_DIR
+    media_library = load_media_library()
+    metadata_items = media_library.get("movies" if category == "movies" else "series", {})
+
+    def with_movie_metadata(video):
+        metadata = metadata_items.get(video.get("relativePath") or "") if category == "movies" else None
+        if not isinstance(metadata, dict):
+            return video
+
+        enriched = dict(video)
+        if metadata.get("name"):
+            enriched["name"] = metadata.get("name")
+        if metadata.get("tmdbId"):
+            enriched["tmdbId"] = int(metadata.get("tmdbId") or 0)
+        return enriched
 
     if os.path.isdir(category_dir):
         for entry_name in sorted(os.listdir(category_dir)):
@@ -289,13 +480,15 @@ def build_media_buckets(category):
 
         if entry["directory_path"] == root_directory:
             root_files.append(
-                {
-                    "id": entry["id"],
-                    "file": entry["file"],
-                    "relativePath": entry["relative_path"],
-                    "seasonNumber": entry["season_number"],
-                    "episodeNumber": entry["episode_number"],
-                }
+                with_movie_metadata(
+                    {
+                        "id": entry["id"],
+                        "file": entry["file"],
+                        "relativePath": entry["relative_path"],
+                        "seasonNumber": entry["season_number"],
+                        "episodeNumber": entry["episode_number"],
+                    }
+                )
             )
             continue
 
@@ -308,13 +501,15 @@ def build_media_buckets(category):
             },
         )
         bucket["videos"].append(
-            {
-                "id": entry["id"],
-                "file": entry["file"],
-                "relativePath": entry["relative_path"],
-                "seasonNumber": entry["season_number"],
-                "episodeNumber": entry["episode_number"],
-            }
+            with_movie_metadata(
+                {
+                    "id": entry["id"],
+                    "file": entry["file"],
+                    "relativePath": entry["relative_path"],
+                    "seasonNumber": entry["season_number"],
+                    "episodeNumber": entry["episode_number"],
+                }
+            )
         )
 
     directories = []
@@ -323,16 +518,18 @@ def build_media_buckets(category):
             bucket["videos"],
             key=lambda video: (video["seasonNumber"] or 0, video["episodeNumber"] or 0, video["file"]),
         )
-        directories.append(
-            {
-                "name": bucket["name"],
-                "relativePath": relative_path,
-                "videoCount": len(videos),
-                "episodeCount": len([video for video in videos if EP_RE.fullmatch(video["id"])]),
-                "episodeIds": [video["id"] for video in videos if EP_RE.fullmatch(video["id"])],
-                "videos": videos,
-            }
-        )
+        metadata = metadata_items.get(relative_path) if category == "tvshows" else None
+        directory_item = {
+            "name": metadata.get("name") if isinstance(metadata, dict) and metadata.get("name") else bucket["name"],
+            "relativePath": relative_path,
+            "videoCount": len(videos),
+            "episodeCount": len([video for video in videos if EP_RE.fullmatch(video["id"])]),
+            "episodeIds": [video["id"] for video in videos if EP_RE.fullmatch(video["id"])],
+            "videos": videos,
+        }
+        if isinstance(metadata, dict) and metadata.get("tmdbId"):
+            directory_item["tmdbId"] = int(metadata.get("tmdbId") or 0)
+        directories.append(directory_item)
 
     return directories, sorted(root_files, key=lambda video: video["file"])
 
@@ -364,12 +561,14 @@ def list_video_directories():
     ensure_media_directories()
     tvshow_directories, tvshow_root_files = build_media_buckets("tvshows")
     movie_directories, movie_root_files = build_media_buckets("movies")
+    media_library = sync_scanned_media_library(tvshow_directories, movie_directories, movie_root_files)
 
     return {
         "ok": True,
         "root": VIDEOS_DIR,
         "moviesRoot": MOVIES_DIR,
         "tvShowsRoot": TVSHOWS_DIR,
+        "mediaLibrary": media_library,
         "directories": tvshow_directories,
         "rootFiles": tvshow_root_files,
         "movieDirectories": movie_directories,
@@ -543,6 +742,11 @@ def delete_series():
         return jsonify({"ok": True, "relativePath": relative_path, "removed": False})
 
     shutil.rmtree(series_path)
+    library = load_media_library()
+    series_items = library.setdefault("series", {})
+    if relative_path in series_items:
+        del series_items[relative_path]
+        save_media_library(library)
     return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
 
 
@@ -565,17 +769,70 @@ def upload_movie():
     uploaded_file.save(target_path)
 
     relative_path = os.path.relpath(target_path, VIDEOS_DIR).replace("\\", "/")
+    movie_item = upsert_movie_metadata(
+        relative_path,
+        name or os.path.splitext(original_filename)[0],
+        tmdb_id,
+        target_filename,
+    )
     return jsonify(
         {
             "ok": True,
-            "item": {
-                "name": name or os.path.splitext(original_filename)[0],
-                "tmdbId": tmdb_id,
-                "file": target_filename,
-                "relativePath": relative_path,
-            },
+            "item": movie_item,
         }
     )
+
+
+@app.route("/movies", methods=["POST"])
+def save_movie():
+    data = request.get_json(force=True, silent=True) or {}
+    relative_path = str(data.get("relativePath") or "").strip().strip("/\\")
+    name = str(data.get("name") or "").strip()
+    tmdb_id = int(data.get("tmdbId") or 0)
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+    if not name:
+        return jsonify({"error": "Missing name"}), 400
+    if not tmdb_id:
+        return jsonify({"error": "Missing tmdbId"}), 400
+
+    movie_path = resolve_relative_video_path(relative_path, MOVIES_DIR)
+    if not movie_path:
+        return jsonify({"error": "Movie must be inside Movies"}), 400
+    if not os.path.exists(movie_path):
+        return jsonify({"error": "Movie file not found"}), 404
+
+    item = upsert_movie_metadata(relative_path, name, tmdb_id, os.path.basename(movie_path))
+    return jsonify({"ok": True, "item": item})
+
+
+@app.route("/media/profile", methods=["POST"])
+def save_media_profile():
+    data = request.get_json(force=True, silent=True) or {}
+    collection = str(data.get("collection") or "").strip().lower()
+    relative_path = str(data.get("relativePath") or "").strip().strip("/\\")
+    if collection not in {"series", "movies"}:
+        return jsonify({"error": "Unsupported collection"}), 400
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    required_root = MOVIES_DIR if collection == "movies" else TVSHOWS_DIR
+    media_path = resolve_relative_video_path(relative_path, required_root)
+    if not media_path:
+        return jsonify({"error": "Invalid media path"}), 400
+
+    item = upsert_media_profile(
+        collection,
+        relative_path,
+        {
+            "name": data.get("name"),
+            "tmdbId": data.get("tmdbId"),
+            "file": data.get("file"),
+            "heroImage": data.get("heroImage"),
+            "heroImageCrop": data.get("heroImageCrop"),
+        },
+    )
+    return jsonify({"ok": True, "item": item})
 
 
 @app.route("/movies", methods=["DELETE"])
@@ -595,6 +852,7 @@ def delete_movie():
         shutil.rmtree(movie_path)
     else:
         os.remove(movie_path)
+    remove_movie_metadata(relative_path)
     return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
 
 

@@ -49,6 +49,7 @@ import {
   playEpisode,
   removeMovieFile,
   removeSeries,
+  saveMediaProfile,
   setStoredWebPin,
   stopPlayback,
   updateRaspberryLanguage,
@@ -59,9 +60,15 @@ import {
 import {
   loadMediaLibrary,
   removeMediaLibraryItem,
+  saveMediaLibrary,
   upsertMediaLibraryItem,
 } from "./mediaLibrary";
-import { loadSeriesProfiles, removeSeriesProfile, updateSeriesProfile } from "./seriesProfiles";
+import {
+  loadSeriesProfiles,
+  removeSeriesProfile,
+  saveSeriesProfiles,
+  updateSeriesProfile,
+} from "./seriesProfiles";
 import {
   getMovieById,
   getTvSeasonEpisodes,
@@ -710,6 +717,108 @@ function deriveUploadSearchLabel(file, mediaType) {
     .replace(/\b(19|20)\d{2}\b/g, "")
     .replace(/[._-]+/g, " ")
     .trim();
+}
+
+function getRaspberryMovieLibraryItems(videos) {
+  const rootFiles = Array.isArray(videos?.movieRootFiles) ? videos.movieRootFiles : [];
+  const directoryBuckets = Array.isArray(videos?.movieDirectories) ? videos.movieDirectories : [];
+  const entries = [
+    ...rootFiles,
+    ...directoryBuckets.flatMap((bucket) => (Array.isArray(bucket?.videos) ? bucket.videos : [])),
+  ];
+
+  return entries
+    .map((entry) => {
+      const id = Number(entry?.tmdbId) || 0;
+      const fileRelativePath = String(entry?.relativePath || "").trim();
+      const fileName = String(entry?.file || "").trim();
+      const name = String(entry?.name || stripFileExtension(fileName)).trim();
+
+      return id && name && fileRelativePath
+        ? {
+            id,
+            name,
+            fileRelativePath,
+            fileName,
+          }
+        : null;
+    })
+    .filter(Boolean);
+}
+
+function mergeMediaLibraryItems(currentItems, incomingItems) {
+  const nextItems = Array.isArray(currentItems) ? [...currentItems] : [];
+  let changed = false;
+
+  incomingItems.forEach((incomingItem) => {
+    const existingIndex = nextItems.findIndex((item) => Number(item.id) === Number(incomingItem.id));
+    if (existingIndex < 0) {
+      nextItems.push(incomingItem);
+      changed = true;
+      return;
+    }
+
+    const existingItem = nextItems[existingIndex];
+    const mergedItem = {
+      ...existingItem,
+      ...incomingItem,
+      name: existingItem.name || incomingItem.name,
+    };
+    if (JSON.stringify(existingItem) !== JSON.stringify(mergedItem)) {
+      nextItems[existingIndex] = mergedItem;
+      changed = true;
+    }
+  });
+
+  return changed ? nextItems : currentItems;
+}
+
+function getRaspberryProfiles(videos, collectionType) {
+  const libraryItems = videos?.mediaLibrary?.[collectionType];
+  if (!libraryItems || typeof libraryItems !== "object") return {};
+
+  return Object.values(libraryItems).reduce((profiles, item) => {
+    if (!item || typeof item !== "object") return profiles;
+    const profileKey =
+      collectionType === "movies"
+        ? String(Number(item.tmdbId) || "").trim()
+        : String(item.relativePath || "").trim();
+    if (!profileKey) return profiles;
+
+    const profile = {};
+    if (item.name) {
+      profile.name = String(item.name);
+    }
+    if (item.heroImage) {
+      profile.heroImage = String(item.heroImage);
+    }
+    if (item.heroImageCrop && typeof item.heroImageCrop === "object") {
+      profile.heroImageCrop = normalizeHeroCrop(item.heroImageCrop);
+    }
+    if (Object.keys(profile).length) {
+      profiles[profileKey] = profile;
+    }
+    return profiles;
+  }, {});
+}
+
+function mergeProfileMaps(currentProfiles, incomingProfiles) {
+  const nextProfiles = { ...(currentProfiles || {}) };
+  let changed = false;
+
+  Object.entries(incomingProfiles || {}).forEach(([key, incomingProfile]) => {
+    const currentProfile = nextProfiles[key] && typeof nextProfiles[key] === "object" ? nextProfiles[key] : {};
+    const mergedProfile = {
+      ...currentProfile,
+      ...incomingProfile,
+    };
+    if (JSON.stringify(currentProfile) !== JSON.stringify(mergedProfile)) {
+      nextProfiles[key] = mergedProfile;
+      changed = true;
+    }
+  });
+
+  return changed ? nextProfiles : currentProfiles;
 }
 
 function loadStoredRaspberryAlarm() {
@@ -2522,6 +2631,44 @@ export default function App() {
   }, [raspberryCurrentPlayback]);
 
   useEffect(() => {
+    const raspberryMovies = getRaspberryMovieLibraryItems(videos);
+    if (!raspberryMovies.length) return;
+
+    setMovieLibrary((currentLibrary) => {
+      const nextLibrary = mergeMediaLibraryItems(currentLibrary, raspberryMovies);
+      if (nextLibrary !== currentLibrary) {
+        saveMediaLibrary("movies", nextLibrary);
+      }
+      return nextLibrary;
+    });
+  }, [videos]);
+
+  useEffect(() => {
+    const raspberrySeriesProfiles = getRaspberryProfiles(videos, "series");
+    const raspberryMovieProfiles = getRaspberryProfiles(videos, "movies");
+
+    if (Object.keys(raspberrySeriesProfiles).length) {
+      setSeriesProfiles((currentProfiles) => {
+        const nextProfiles = mergeProfileMaps(currentProfiles, raspberrySeriesProfiles);
+        if (nextProfiles !== currentProfiles) {
+          saveSeriesProfiles(nextProfiles, "series");
+        }
+        return nextProfiles;
+      });
+    }
+
+    if (Object.keys(raspberryMovieProfiles).length) {
+      setMovieProfiles((currentProfiles) => {
+        const nextProfiles = mergeProfileMaps(currentProfiles, raspberryMovieProfiles);
+        if (nextProfiles !== currentProfiles) {
+          saveSeriesProfiles(nextProfiles, "movies");
+        }
+        return nextProfiles;
+      });
+    }
+  }, [videos]);
+
+  useEffect(() => {
     if (!unlocked || currentView !== "raspberry") {
       return () => {};
     }
@@ -3039,7 +3186,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
-  function handleSaveSeriesSettings(updates) {
+  async function handleSaveSeriesSettings(updates) {
     const activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
     if (!activeItem) return;
 
@@ -3047,9 +3194,31 @@ export default function App() {
       if (activeMediaType === "movies") {
         const nextProfiles = updateSeriesProfile(String(activeItem.id), updates, "movies");
         setMovieProfiles(nextProfiles);
+        const movieEntry = activeItem.fileRelativePath
+          ? { relativePath: activeItem.fileRelativePath }
+          : resolvePlayableMovieEntry(activeItem);
+        if (movieEntry?.relativePath) {
+          await saveMediaProfile({
+            collection: "movies",
+            relativePath: movieEntry.relativePath,
+            name: updates.name || activeItem.name,
+            tmdbId: activeItem.id,
+            file: activeItem.fileName || movieEntry.relativePath.split("/").pop() || "",
+            heroImage: updates.heroImage,
+            heroImageCrop: updates.heroImageCrop,
+          });
+        }
       } else {
         const nextProfiles = updateSeriesProfile(activeItem.directoryPath, updates, "series");
         setSeriesProfiles(nextProfiles);
+        await saveMediaProfile({
+          collection: "series",
+          relativePath: activeItem.directoryPath,
+          name: updates.name || activeItem.name,
+          tmdbId: activeItem.id,
+          heroImage: updates.heroImage,
+          heroImageCrop: updates.heroImageCrop,
+        });
       }
       setSettingsOpen(false);
     } catch (nextError) {
