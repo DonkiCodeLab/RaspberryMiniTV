@@ -145,6 +145,10 @@ def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
+def is_supported_upload_file(filename):
+    return is_video_file(filename)
+
+
 def ensure_media_directories():
     os.makedirs(MOVIES_DIR, exist_ok=True)
     os.makedirs(TVSHOWS_DIR, exist_ok=True)
@@ -157,6 +161,33 @@ def slugify(value, fallback="media"):
 
 def join_video_relative_path(*parts):
     return "/".join(str(part).strip("/\\") for part in parts if str(part or "").strip("/\\"))
+
+
+def unique_media_filename(target_dir, desired_filename):
+    base, extension = os.path.splitext(desired_filename)
+    safe_base = slugify(base, "movie")
+    safe_extension = extension.lower() if extension else ".mp4"
+    candidate = f"{safe_base}{safe_extension}"
+    index = 2
+
+    while os.path.exists(os.path.join(target_dir, candidate)):
+        candidate = f"{safe_base}-{index}{safe_extension}"
+        index += 1
+
+    return candidate
+
+
+def resolve_relative_video_path(relative_path, required_root):
+    normalized_path = os.path.normpath(str(relative_path or "").strip().strip("/\\"))
+    if not normalized_path or normalized_path.startswith("..") or os.path.isabs(normalized_path):
+        return None
+
+    target_path = os.path.abspath(os.path.join(VIDEOS_DIR, normalized_path))
+    required_root_abs = os.path.abspath(required_root)
+    if target_path == required_root_abs or os.path.commonpath([target_path, required_root_abs]) != required_root_abs:
+        return None
+
+    return target_path
 
 
 def parse_video_entry(filename):
@@ -504,20 +535,66 @@ def delete_series():
     if not relative_path:
         return jsonify({"error": "Missing relativePath"}), 400
 
-    normalized_path = os.path.normpath(relative_path)
-    if normalized_path.startswith("..") or os.path.isabs(normalized_path):
-        return jsonify({"error": "Invalid path"}), 400
-
-    series_path = os.path.join(VIDEOS_DIR, normalized_path)
-    tvshows_root = os.path.abspath(TVSHOWS_DIR)
-    series_path_abs = os.path.abspath(series_path)
-    if series_path_abs == tvshows_root or os.path.commonpath([series_path_abs, tvshows_root]) != tvshows_root:
+    series_path = resolve_relative_video_path(relative_path, TVSHOWS_DIR)
+    if not series_path:
         return jsonify({"error": "Series must be inside TVShows"}), 400
 
     if not os.path.exists(series_path):
         return jsonify({"ok": True, "relativePath": relative_path, "removed": False})
 
     shutil.rmtree(series_path)
+    return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
+
+
+@app.route("/movies/upload", methods=["POST"])
+def upload_movie():
+    uploaded_file = request.files.get("file")
+    name = str(request.form.get("name") or "").strip()
+    tmdb_id = int(request.form.get("tmdbId") or 0)
+    if not uploaded_file or not uploaded_file.filename:
+        return jsonify({"error": "Missing file"}), 400
+    if not is_supported_upload_file(uploaded_file.filename):
+        return jsonify({"error": "Unsupported movie file"}), 400
+
+    ensure_media_directories()
+    original_filename = os.path.basename(uploaded_file.filename)
+    original_extension = os.path.splitext(original_filename)[1]
+    desired_base = name or os.path.splitext(original_filename)[0]
+    target_filename = unique_media_filename(MOVIES_DIR, f"{desired_base}{original_extension}")
+    target_path = os.path.join(MOVIES_DIR, target_filename)
+    uploaded_file.save(target_path)
+
+    relative_path = os.path.relpath(target_path, VIDEOS_DIR).replace("\\", "/")
+    return jsonify(
+        {
+            "ok": True,
+            "item": {
+                "name": name or os.path.splitext(original_filename)[0],
+                "tmdbId": tmdb_id,
+                "file": target_filename,
+                "relativePath": relative_path,
+            },
+        }
+    )
+
+
+@app.route("/movies", methods=["DELETE"])
+def delete_movie():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    movie_path = resolve_relative_video_path(relative_path, MOVIES_DIR)
+    if not movie_path:
+        return jsonify({"error": "Movie must be inside Movies"}), 400
+
+    if not os.path.exists(movie_path):
+        return jsonify({"ok": True, "relativePath": relative_path, "removed": False})
+
+    if os.path.isdir(movie_path):
+        shutil.rmtree(movie_path)
+    else:
+        os.remove(movie_path)
     return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
 
 

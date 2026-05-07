@@ -1,6 +1,7 @@
 const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").trim();
 const WEB_PIN_STORAGE_KEY = "simpsonstv-web-pin";
 const MOCK_SERIES_LIBRARY_STORAGE_KEY = "simpsonstv-web-mock-series-library-v1";
+const MOCK_HIDDEN_SERIES_STORAGE_KEY = "simpsonstv-web-mock-hidden-series-v1";
 const explicitMockMode = (import.meta.env.VITE_WEB_DEV_MODE || "").trim().toLowerCase() === "mock";
 const localhostHosts = new Set(["localhost", "127.0.0.1"]);
 const SUPPORTED_RASPBERRY_LANGUAGES = new Set(["es", "ca", "en"]);
@@ -23,6 +24,7 @@ function buildMockVideoLibrary() {
   ];
 
   const customSeries = loadMockSeriesLibrary();
+  const hiddenSeries = loadMockHiddenSeries();
   const customSeriesByLabel = new Map(
     customSeries.map((series) => [normalizeLabel(series.name), series])
   );
@@ -40,7 +42,7 @@ function buildMockVideoLibrary() {
         relativePath: `TVShows/the-simpsons/${id}.mp4`,
       })),
     },
-  ];
+  ].filter((directory) => !hiddenSeries.has(directory.relativePath));
 
   directories.forEach((directory) => {
     const customEntry = customSeriesByLabel.get(normalizeLabel(directory.name));
@@ -108,6 +110,32 @@ function loadMockSeriesLibrary() {
   } catch (_error) {
     return [];
   }
+}
+
+function loadMockHiddenSeries() {
+  try {
+    const storage = getLocalStorage();
+    if (!storage) return new Set();
+
+    const raw = storage.getItem(MOCK_HIDDEN_SERIES_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed.map((value) => String(value || "").trim()).filter(Boolean) : []);
+  } catch (_error) {
+    return new Set();
+  }
+}
+
+function saveMockHiddenSeries(items) {
+  const storage = getLocalStorage();
+  const safeItems = Array.from(
+    new Set(Array.isArray(items) ? items.map((value) => String(value || "").trim()).filter(Boolean) : [])
+  );
+
+  if (storage) {
+    storage.setItem(MOCK_HIDDEN_SERIES_STORAGE_KEY, JSON.stringify(safeItems));
+  }
+
+  return new Set(safeItems);
 }
 
 function saveMockSeriesLibrary(items) {
@@ -286,6 +314,7 @@ export function addSeries({ name, tmdbId }) {
 
   if (isMockModeEnabled()) {
     const current = loadMockSeriesLibrary();
+    const hiddenSeries = loadMockHiddenSeries();
     const existingPaths = new Set(current.map((entry) => entry.relativePath));
     const normalizedName = normalizeLabel(safeName);
     const existing =
@@ -313,6 +342,10 @@ export function addSeries({ name, tmdbId }) {
       : [...current, item];
 
     saveMockSeriesLibrary(nextItems);
+    if (item?.relativePath && hiddenSeries.has(item.relativePath)) {
+      hiddenSeries.delete(item.relativePath);
+      saveMockHiddenSeries(Array.from(hiddenSeries));
+    }
     return Promise.resolve({ ok: true, item, items: nextItems });
   }
 
@@ -333,12 +366,94 @@ export function removeSeries(relativePath) {
 
   if (isMockModeEnabled()) {
     const current = loadMockSeriesLibrary();
+    const hiddenSeries = loadMockHiddenSeries();
     const nextItems = current.filter((entry) => entry.relativePath !== safeRelativePath);
+    hiddenSeries.add(safeRelativePath);
     saveMockSeriesLibrary(nextItems);
+    saveMockHiddenSeries(Array.from(hiddenSeries));
     return Promise.resolve({ ok: true, items: nextItems, relativePath: safeRelativePath });
   }
 
   return request(`/series?relativePath=${encodeURIComponent(safeRelativePath)}`, {
+    method: "DELETE",
+  });
+}
+
+export function uploadMovieFile({ file, movie, onProgress } = {}) {
+  if (!file) {
+    return Promise.reject(new Error("Missing file"));
+  }
+
+  const movieName = String(movie?.name || "").trim();
+  const tmdbId = Number(movie?.id || movie?.tmdbId) || 0;
+
+  if (isMockModeEnabled()) {
+    const relativePath = `Movies/${String(file.name || `${movieName || "movie"}.mp4`).trim()}`;
+    if (typeof onProgress === "function") {
+      onProgress(100);
+    }
+    return Promise.resolve({
+      ok: true,
+      mock: true,
+      item: {
+        name: movieName || file.name,
+        tmdbId,
+        file: file.name,
+        relativePath,
+      },
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("name", movieName);
+    formData.append("tmdbId", String(tmdbId));
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${getBaseUrl()}/movies/upload`);
+
+    const storedPin = getStoredWebPin();
+    if (storedPin) {
+      xhr.setRequestHeader("X-Web-Pin", storedPin);
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || typeof onProgress !== "function") return;
+      onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+
+    xhr.onload = () => {
+      const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (typeof onProgress === "function") {
+          onProgress(100);
+        }
+        resolve(payload);
+        return;
+      }
+
+      const error = new Error(payload?.error || `HTTP ${xhr.status}`);
+      error.status = xhr.status;
+      reject(error);
+    };
+
+    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.send(formData);
+  });
+}
+
+export function removeMovieFile(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) {
+    return Promise.reject(new Error("Missing relativePath"));
+  }
+
+  if (isMockModeEnabled()) {
+    return Promise.resolve({ ok: true, relativePath: safeRelativePath, removed: true, mock: true });
+  }
+
+  return request(`/movies?relativePath=${encodeURIComponent(safeRelativePath)}`, {
     method: "DELETE",
   });
 }

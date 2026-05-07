@@ -22,7 +22,15 @@ function normalizeItem(item) {
   const name = String(item.name || "").trim();
   if (!name) return null;
 
-  return { id, name };
+  const fileRelativePath = String(item.fileRelativePath || item.relativePath || "").trim();
+  const fileName = String(item.fileName || item.file || "").trim();
+
+  return {
+    id,
+    name,
+    ...(fileRelativePath ? { fileRelativePath } : {}),
+    ...(fileName ? { fileName } : {}),
+  };
 }
 
 export function loadMediaLibrary(collectionType) {

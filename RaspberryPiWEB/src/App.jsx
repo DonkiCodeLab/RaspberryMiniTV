@@ -4,6 +4,7 @@ import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
 import cloudsBackground from "./assets/cloud.gif";
 import deleteIcon from "./assets/delete.png";
+import emptyStateIcon from "./assets/empty.png";
 import controlsIconBlack from "./assets/icon_conrtols_black.png";
 import controlsIconYellow from "./assets/icon_conrtols_yelllow.png";
 import alarmIcon from "./assets/icon_alarm.png";
@@ -46,10 +47,12 @@ import {
   getVideos,
   isMockMode,
   playEpisode,
+  removeMovieFile,
   removeSeries,
   setStoredWebPin,
   stopPlayback,
   updateRaspberryLanguage,
+  uploadMovieFile,
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
@@ -296,11 +299,14 @@ const UI_STRINGS = {
     upload_games_detected: "Se han detectado {count} archivo(s). La subida guiada de juegos llegará después.",
     upload_name_not_detected: "No he podido detectar un nombre útil para buscar en TMDB.",
     upload_detected_summary: "{count} archivo(s) detectados. Búsqueda preparada para {media}: \"{name}\".",
+    upload_button: "Upload",
+    upload_copying: "Copiando archivo a la Raspberry...",
+    upload_done_summary: "{name} añadida a Movies: {path}",
     games_in_construction: "Juegos en construcción",
     select_movie: "Seleccionar película",
     select_series: "Seleccionar serie",
     no_movies_available: "Sin películas disponibles",
-    no_seasons_available: "Sin temporadas disponibles",
+    no_seasons_available: "Sin series disponibles",
     seasons_label: "TEMPORADAS",
     loading_movie_runtime: "{minutes} minutos",
     tmdb_rating_missing: "Valoración TMDB no disponible",
@@ -311,6 +317,11 @@ const UI_STRINGS = {
     synopsis: "Sinopsis",
     release_unknown: "Fecha de estreno no disponible",
     duration_unknown: "Duración no disponible",
+    empty_library_series_copy:
+      "Si quieres añadir contenido de series, puedes hacerlo desde la sección Uploads.",
+    empty_library_movies_copy:
+      "Si quieres añadir contenido de película, puedes hacerlo desde la sección Uploads.",
+    go_to_uploads: "Uploads",
   },
   cat: {
     media_series: "Sèries",
@@ -454,6 +465,9 @@ const UI_STRINGS = {
     upload_games_detected: "S'han detectat {count} arxiu(s). La pujada guiada de jocs arribarà després.",
     upload_name_not_detected: "No he pogut detectar un nom útil per cercar a TMDB.",
     upload_detected_summary: "{count} arxiu(s) detectats. Cerca preparada per a {media}: \"{name}\".",
+    upload_button: "Upload",
+    upload_copying: "Copiant el fitxer a la Raspberry...",
+    upload_done_summary: "{name} afegida a Movies: {path}",
     games_in_construction: "Jocs en construcció",
     select_movie: "Seleccionar pel·lícula",
     select_series: "Seleccionar sèrie",
@@ -469,6 +483,11 @@ const UI_STRINGS = {
     synopsis: "Sinopsi",
     release_unknown: "Data d'estrena no disponible",
     duration_unknown: "Durada no disponible",
+    empty_library_series_copy:
+      "Si vols afegir contingut de sèrie, ho pots fer des de la secció Uploads.",
+    empty_library_movies_copy:
+      "Si vols afegir contingut de pel·lícula, ho pots fer des de la secció Uploads.",
+    go_to_uploads: "Uploads",
   },
   en: {
     media_series: "Series",
@@ -612,6 +631,9 @@ const UI_STRINGS = {
     upload_games_detected: "{count} file(s) detected. Guided game uploads will arrive later.",
     upload_name_not_detected: "I couldn't detect a useful name to search on TMDB.",
     upload_detected_summary: "{count} file(s) detected. Search prepared for {media}: \"{name}\".",
+    upload_button: "Upload",
+    upload_copying: "Copying file to the Raspberry...",
+    upload_done_summary: "{name} added to Movies: {path}",
     games_in_construction: "Games under construction",
     select_movie: "Select movie",
     select_series: "Select series",
@@ -627,6 +649,11 @@ const UI_STRINGS = {
     synopsis: "Synopsis",
     release_unknown: "Release date unavailable",
     duration_unknown: "Duration unavailable",
+    empty_library_series_copy:
+      "If you want to add series content, you can do it from the Uploads section.",
+    empty_library_movies_copy:
+      "If you want to add movie content, you can do it from the Uploads section.",
+    go_to_uploads: "Uploads",
   },
 };
 
@@ -1571,7 +1598,18 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
   );
 }
 
-function AddMediaModal({ visible, mediaType, initialQuery = "", autoSearch = false, onClose, onAdd, t, tmdbLanguage }) {
+function AddMediaModal({
+  visible,
+  mediaType,
+  initialQuery = "",
+  autoSearch = false,
+  uploadFileName = "",
+  uploadProgress = null,
+  onClose,
+  onAdd,
+  t,
+  tmdbLanguage,
+}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -1793,13 +1831,26 @@ function AddMediaModal({ visible, mediaType, initialQuery = "", autoSearch = fal
           <button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">
             {t("cancel")}
           </button>
+          {uploadProgress !== null ? (
+            <div className="upload-progress" role="status" aria-live="polite">
+              <div className="upload-progress__copy">
+                <strong>{t("upload_copying")}</strong>
+                <span>{uploadFileName}</span>
+              </div>
+              <div className="upload-progress__bar" aria-hidden="true">
+                <span style={{ width: `${clamp(Number(uploadProgress) || 0, 0, 100)}%` }} />
+              </div>
+              <p>{`${clamp(Number(uploadProgress) || 0, 0, 100)}%`}</p>
+            </div>
+          ) : null}
+
           <button
             className={`dialog-button${selectedId && !submitting ? " dialog-button--accent" : ""}`}
             disabled={!selectedId || submitting}
             onClick={handleAdd}
             type="button"
           >
-            {submitting ? t("adding_button") : t("add_button")}
+            {submitting ? t("adding_button") : uploadFileName ? t("upload_button") : t("add_button")}
           </button>
         </div>
       </div>
@@ -2400,6 +2451,8 @@ export default function App() {
   const [uploadDragActive, setUploadDragActive] = useState(false);
   const [uploadLookupOpen, setUploadLookupOpen] = useState(false);
   const [uploadLookupQuery, setUploadLookupQuery] = useState("");
+  const [uploadSelectedFiles, setUploadSelectedFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
@@ -2664,6 +2717,8 @@ export default function App() {
         key: String(movie.id),
         id: Number(movie.id),
         name: profile.name || tmdbMovie?.name || movie.name,
+        fileRelativePath: movie.fileRelativePath || "",
+        fileName: movie.fileName || "",
         originalName: tmdbMovie?.originalName || "",
         heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
@@ -2971,6 +3026,19 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
+  function handleOpenUploadsForMedia(mediaType) {
+    const safeMediaType = mediaType === "movies" ? "movies" : "series";
+    setUploadMediaType(safeMediaType);
+    setRaspberryReturnView(currentView === "season" ? "season" : "series");
+    setRaspberryTab("uploads");
+    setCurrentView("raspberry");
+    setMiniTvOpen(false);
+    setSettingsOpen(false);
+    setAddSeriesOpen(false);
+    setUploadLookupOpen(false);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
   function handleSaveSeriesSettings(updates) {
     const activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
     if (!activeItem) return;
@@ -2995,11 +3063,19 @@ export default function App() {
 
     try {
       if (activeMediaType === "movies") {
+        const movieEntry = activeItem.fileRelativePath
+          ? { relativePath: activeItem.fileRelativePath }
+          : resolvePlayableMovieEntry(activeItem);
+        if (movieEntry?.relativePath) {
+          await removeMovieFile(movieEntry.relativePath);
+        }
         setMovieLibrary(removeMediaLibraryItem("movies", activeItem.id));
         setMovieProfiles(removeSeriesProfile(String(activeItem.id), "movies"));
         setSelectedMovieId((current) =>
           Number(current) === Number(activeItem.id) ? null : current
         );
+        const nextVideos = await getVideos();
+        setVideos(nextVideos);
       } else {
         await removeSeries(activeItem.directoryPath);
         const nextProfiles = removeSeriesProfile(activeItem.directoryPath, "series");
@@ -3156,6 +3232,13 @@ export default function App() {
       normalizedLabel: normalizeMediaLabel(entry.label),
       normalizedRelativePath: normalizeMediaLabel(entry.relativePath),
     }));
+    const requestedRelativePath = String(movie.fileRelativePath || "").trim();
+    if (requestedRelativePath) {
+      const fileMatch = normalizedEntries.find(
+        (entry) => entry.relativePath === requestedRelativePath
+      );
+      if (fileMatch) return fileMatch;
+    }
 
     for (const candidate of candidateLabels) {
       const exactMatch = normalizedEntries.find(
@@ -3225,14 +3308,40 @@ export default function App() {
 
   async function handleAddMediaItem(selectedSeriesResult, targetMediaType = activeMediaType) {
     if (targetMediaType === "movies") {
+      const uploadFile = uploadLookupOpen ? uploadSelectedFiles[0] : null;
+      let uploadedMovie = null;
+
+      if (uploadFile) {
+        setUploadProgress(0);
+        uploadedMovie = await uploadMovieFile({
+          file: uploadFile,
+          movie: selectedSeriesResult,
+          onProgress: setUploadProgress,
+        });
+      }
+
       const nextLibrary = upsertMediaLibraryItem("movies", {
         id: selectedSeriesResult.id,
         name: selectedSeriesResult.name,
+        fileRelativePath: uploadedMovie?.item?.relativePath || "",
+        fileName: uploadedMovie?.item?.file || uploadFile?.name || "",
       });
+      if (uploadFile) {
+        const nextVideos = await getVideos();
+        setVideos(nextVideos);
+        setUploadSummary(
+          t("upload_done_summary", {
+            name: selectedSeriesResult.name,
+            path: uploadedMovie?.item?.relativePath || uploadFile.name,
+          })
+        );
+      }
       setMovieLibrary(nextLibrary);
       setSelectedMovieId(selectedSeriesResult.id);
       setAddSeriesOpen(false);
       setUploadLookupOpen(false);
+      setUploadSelectedFiles([]);
+      setUploadProgress(null);
       return;
     }
 
@@ -3256,6 +3365,8 @@ export default function App() {
     });
     setAddSeriesOpen(false);
     setUploadLookupOpen(false);
+    setUploadSelectedFiles([]);
+    setUploadProgress(null);
   }
 
   function handleAlarmTimeChange(alarmId, nextTime) {
@@ -3469,6 +3580,8 @@ export default function App() {
       return;
     }
 
+    setUploadSelectedFiles(uploadMediaType === "movies" ? [safeFiles[0]] : safeFiles);
+    setUploadProgress(null);
     const nextLabel = deriveUploadSearchLabel(safeFiles[0], uploadMediaType);
     if (!nextLabel) {
       window.alert("No he podido detectar un nombre útil para buscar en TMDB.");
@@ -3496,6 +3609,7 @@ export default function App() {
     : isMoviesMode
       ? t("select_movie")
       : t("select_series");
+  const isLibraryEmpty = !selectedItem && !isGamesMode;
   const heroSelectorOptions = isGamesMode
     ? []
     : selectorOptions.map((item) => ({
@@ -3750,23 +3864,27 @@ export default function App() {
                           maskImage: `url(${cartellMask})`,
                         }}
                       />
-                      <div className="series-hero__controls-row">
-                        <button
-                          className="series-icon-button series-icon-button--controls-plus"
-                          onClick={() => setAddSeriesOpen(true)}
-                          type="button"
-                          aria-label={isGamesMode ? "Añadir juego" : `Añadir ${isMoviesMode ? "pelicula" : "serie"}`}
-                          title={isGamesMode ? "Añadir juego" : `Añadir ${isMoviesMode ? "pelicula" : "serie"}`}
-                        >
-                          <svg
-                            className="series-icon-button__icon series-icon-button__icon--plus"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
+                      <div
+                        className={`series-hero__controls-row${isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
+                      >
+                        {isGamesMode ? (
+                          <button
+                            className="series-icon-button series-icon-button--controls-plus"
+                            onClick={() => setAddSeriesOpen(true)}
+                            type="button"
+                            aria-label="Añadir juego"
+                            title="Añadir juego"
                           >
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                          </svg>
-                        </button>
+                            <svg
+                              className="series-icon-button__icon series-icon-button__icon--plus"
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                            >
+                              <line x1="12" y1="5" x2="12" y2="19" />
+                              <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                          </button>
+                        ) : null}
 
                         <HeroSelector
                           options={heroSelectorOptions}
@@ -3823,7 +3941,37 @@ export default function App() {
                       <p>Este apartado todavia no tiene contenido disponible.</p>
                     </div>
                   </section>
-                ) : !selectedItem || (isSeriesMode && !seasons.length) ? (
+                ) : isLibraryEmpty ? (
+                  <section className="empty-state">
+                    <div className="empty-state__card empty-state__card--library">
+                      <h2>{emptyTitle}</h2>
+                      <img
+                        className="empty-state__image"
+                        src={emptyStateIcon}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <p>
+                        {isMoviesMode
+                          ? t("empty_library_movies_copy")
+                          : t("empty_library_series_copy")}
+                      </p>
+                      <button
+                        className="empty-state__action empty-state__action--uploads"
+                        onClick={() => handleOpenUploadsForMedia(activeMediaType)}
+                        type="button"
+                      >
+                        <img
+                          className="empty-state__action-icon"
+                          src={uploadsIconBlack}
+                          alt=""
+                          aria-hidden="true"
+                        />
+                        {t("go_to_uploads")}
+                      </button>
+                    </div>
+                  </section>
+                ) : isSeriesMode && !seasons.length ? (
                   <section className="empty-state">
                     <div className="empty-state__card">
                       <h2>{emptyTitle}</h2>
@@ -3941,9 +4089,13 @@ export default function App() {
               mediaType={uploadLookupOpen ? uploadMediaType : activeMediaType}
               initialQuery={uploadLookupOpen ? uploadLookupQuery : ""}
               autoSearch={uploadLookupOpen}
+              uploadFileName={uploadLookupOpen && uploadMediaType === "movies" ? uploadSelectedFiles[0]?.name || "" : ""}
+              uploadProgress={uploadProgress}
               onClose={() => {
                 setAddSeriesOpen(false);
                 setUploadLookupOpen(false);
+                setUploadSelectedFiles([]);
+                setUploadProgress(null);
               }}
               onAdd={(item) =>
                 handleAddMediaItem(item, uploadLookupOpen ? uploadMediaType : activeMediaType)

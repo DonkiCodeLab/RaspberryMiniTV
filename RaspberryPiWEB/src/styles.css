@@ -210,6 +210,10 @@ img {
   z-index: 2;
 }
 
+.series-hero__controls-row--selector-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .series-hero__frame {
   position: absolute;
   inset: 0;
@@ -2169,9 +2173,22 @@ img {
   margin-top: 0;
 }
 
+.empty-state__card--library {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 0.95rem;
+}
+
 .empty-state__card p {
   color: rgba(233, 242, 252, 0.88);
   line-height: 1.55;
+}
+
+.empty-state__image {
+  width: min(180px, 62%);
+  height: auto;
+  object-fit: contain;
 }
 
 .empty-state__card button,
@@ -2182,6 +2199,47 @@ img {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   cursor: pointer;
+}
+
+.empty-state__action {
+  min-width: 180px;
+}
+
+.empty-state__card .empty-state__action--uploads {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  min-width: min(100%, 420px);
+  padding: 0.9rem 1.6rem;
+  border-radius: 999px;
+  background: #ffd429;
+  color: #000;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  font-weight: 900;
+  box-shadow:
+    0 10px 24px rgba(14, 24, 32, 0.16),
+    0 0 0 1px rgba(255, 244, 190, 0.45) inset;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.empty-state__card .empty-state__action--uploads:hover,
+.empty-state__card .empty-state__action--uploads:focus-visible {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 28px rgba(14, 24, 32, 0.2),
+    0 0 0 1px rgba(255, 244, 190, 0.55) inset;
+  filter: saturate(1.03);
+}
+
+.empty-state__action-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .empty-state__card code {
@@ -2906,6 +2964,48 @@ img {
   margin: 1rem 0 0;
   color: #ffd7d7;
   font-weight: 700;
+}
+
+.upload-progress {
+  width: min(320px, 100%);
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.upload-progress__copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.upload-progress__copy strong {
+  font-size: 0.88rem;
+  color: #fff;
+}
+
+.upload-progress__copy span,
+.upload-progress p {
+  margin: 0;
+  color: rgba(236, 243, 250, 0.78);
+  font-size: 0.82rem;
+}
+
+.upload-progress__bar {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(10, 18, 24, 0.58);
+}
+
+.upload-progress__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ffd429;
+  transition: width 160ms ease;
 }
 
 .dialog-card__actions {
