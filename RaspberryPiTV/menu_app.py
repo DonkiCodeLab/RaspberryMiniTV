@@ -62,7 +62,11 @@ TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 WIFI_DEBUG_LOG_PATH = os.path.join(BASE_DIR, "wifi_debug.log")
 PORT = 5050
-VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
+REPO_DIR = os.path.dirname(BASE_DIR)
+MULTIMEDIA_DIR = os.path.join(REPO_DIR, "MultimediaContent")
+VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
+MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
+TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 BACKGROUND = (245, 245, 245)
 TEXT = (10, 10, 10)
 BLACK = (0, 0, 0)
@@ -215,6 +219,11 @@ def save_json_file(path, payload):
 
 def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
+
+
+def ensure_media_directories():
+    os.makedirs(MOVIES_DIR, exist_ok=True)
+    os.makedirs(TVSHOWS_DIR, exist_ok=True)
 
 
 def remove_path_if_exists(path):
@@ -475,6 +484,7 @@ def blit_centered(surface, image, width, height):
 
 class RaspberryPiTVMenu:
     def __init__(self):
+        ensure_media_directories()
         ensure_screen_on()
         pygame.font.init()
         self.display_suspended = False

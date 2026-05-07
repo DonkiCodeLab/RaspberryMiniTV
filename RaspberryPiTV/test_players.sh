@@ -3,7 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VIDEOS_DIR="${SCRIPT_DIR}/videos"
+REPO_DIR="$(dirname "${SCRIPT_DIR}")"
+VIDEOS_DIR="${REPO_DIR}/MultimediaContent/Videos"
 LOG_DIR="/tmp/simpsonstv-player-tests"
 mkdir -p "${LOG_DIR}"
 
@@ -14,11 +15,11 @@ Uso:
 
 Ejemplos:
   ./test_players.sh mpv
-  ./test_players.sh vlc RaspberryPiTV/videos/demo.mp4
+  ./test_players.sh vlc MultimediaContent/Videos/Movies/demo.mp4
   ./test_players.sh all
 
 Notas:
-  - Si no pasas un video, se usa el primer archivo compatible dentro de RaspberryPiTV/videos.
+  - Si no pasas un video, se usa el primer archivo compatible dentro de MultimediaContent/Videos.
   - En Raspberry Pi Zero 2, `mpv` suele ser mejor candidato que `vlc` para seguir jugueteando con UI.
   - `vlc` y `mpv` no encajan igual de bien que `omxplayer` con el flujo actual por framebuffer/tty.
 EOF

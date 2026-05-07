@@ -3,8 +3,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "${SCRIPT_DIR}")"
 SYSTEMD_DIR="/etc/systemd/system"
-VIDEOS_DIR="${SCRIPT_DIR}/videos"
+VIDEOS_DIR="${REPO_DIR}/MultimediaContent/Videos"
 
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
@@ -20,7 +21,7 @@ install_service() {
 
 require_root
 
-mkdir -p "${VIDEOS_DIR}"
+mkdir -p "${VIDEOS_DIR}/Movies" "${VIDEOS_DIR}/TVShows"
 
 systemctl stop simpsonstv-api.service tvbutton.service 2>/dev/null || true
 systemctl stop simpsonstv-menu.service 2>/dev/null || true

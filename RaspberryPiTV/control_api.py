@@ -11,7 +11,10 @@ from flask import Flask, jsonify, request, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_DIR = os.path.dirname(BASE_DIR)
-VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
+MULTIMEDIA_DIR = os.path.join(REPO_DIR, "MultimediaContent")
+VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
+MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
+TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "RaspberryPiWEB", "dist")
 EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
@@ -76,6 +79,7 @@ def save_settings(settings):
 
 
 def get_storage_stats():
+    ensure_media_directories()
     target_path = VIDEOS_DIR if os.path.exists(VIDEOS_DIR) else BASE_DIR
     usage = shutil.disk_usage(target_path)
     total_gb = round(usage.total / (1024 ** 3), 1)
@@ -141,95 +145,118 @@ def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
+def ensure_media_directories():
+    os.makedirs(MOVIES_DIR, exist_ok=True)
+    os.makedirs(TVSHOWS_DIR, exist_ok=True)
+
+
+def slugify(value, fallback="media"):
+    slug = re.sub(r"[^a-z0-9]+", "-", str(value or "").strip().lower()).strip("-")
+    return slug or fallback
+
+
+def join_video_relative_path(*parts):
+    return "/".join(str(part).strip("/\\") for part in parts if str(part or "").strip("/\\"))
+
+
+def parse_video_entry(filename):
+    match = EP_RE.search(filename)
+    media_id = match.group(1).upper() if match else os.path.splitext(filename)[0].upper()
+    season_number = int(media_id[1:3]) if EP_RE.fullmatch(media_id) else None
+    episode_number = int(media_id[4:6]) if EP_RE.fullmatch(media_id) else None
+    return media_id, season_number, episode_number
+
+
 def iter_video_entries():
     if not os.path.isdir(VIDEOS_DIR):
         return []
 
     items = []
 
-    for entry_name in sorted(os.listdir(VIDEOS_DIR)):
-        full_entry = os.path.join(VIDEOS_DIR, entry_name)
-
-        if os.path.isdir(full_entry):
-            for root, _dirs, files in os.walk(full_entry):
-                rel_root = os.path.relpath(root, VIDEOS_DIR)
-                for filename in sorted(files):
-                    if not is_video_file(filename):
-                        continue
-
-                    full_path = os.path.join(root, filename)
-                    relative_path = os.path.relpath(full_path, VIDEOS_DIR)
-                    match = EP_RE.search(filename)
-                    episode_id = match.group(1).upper() if match else os.path.splitext(filename)[0].upper()
-                    season_number = int(episode_id[1:3]) if EP_RE.fullmatch(episode_id) else None
-                    episode_number = int(episode_id[4:6]) if EP_RE.fullmatch(episode_id) else None
-
-                    items.append(
-                        {
-                            "id": episode_id,
-                            "file": filename,
-                            "directory": entry_name,
-                            "directory_path": rel_root.replace("\\", "/"),
-                            "relative_path": relative_path.replace("\\", "/"),
-                            "full_path": full_path,
-                            "season_number": season_number,
-                            "episode_number": episode_number,
-                        }
-                    )
+    for category, category_dir, category_name in (
+        ("movies", MOVIES_DIR, "Movies"),
+        ("tvshows", TVSHOWS_DIR, "TVShows"),
+    ):
+        if not os.path.isdir(category_dir):
             continue
 
-        if not is_video_file(entry_name):
-            continue
+        for entry_name in sorted(os.listdir(category_dir)):
+            full_entry = os.path.join(category_dir, entry_name)
 
-        match = EP_RE.search(entry_name)
-        episode_id = match.group(1).upper() if match else os.path.splitext(entry_name)[0].upper()
-        season_number = int(episode_id[1:3]) if EP_RE.fullmatch(episode_id) else None
-        episode_number = int(episode_id[4:6]) if EP_RE.fullmatch(episode_id) else None
-        items.append(
-            {
-                "id": episode_id,
-                "file": entry_name,
-                "directory": None,
-                "directory_path": "",
-                "relative_path": entry_name,
-                "full_path": os.path.join(VIDEOS_DIR, entry_name),
-                "season_number": season_number,
-                "episode_number": episode_number,
-            }
-        )
+            if os.path.isdir(full_entry):
+                for root, _dirs, files in os.walk(full_entry):
+                    directory_path = join_video_relative_path(category_name, entry_name)
+
+                    for filename in sorted(files):
+                        if not is_video_file(filename):
+                            continue
+
+                        full_path = os.path.join(root, filename)
+                        relative_path = os.path.relpath(full_path, VIDEOS_DIR)
+                        media_id, season_number, episode_number = parse_video_entry(filename)
+
+                        items.append(
+                            {
+                                "id": media_id,
+                                "file": filename,
+                                "category": category,
+                                "directory": entry_name,
+                                "directory_path": directory_path.replace("\\", "/"),
+                                "relative_path": relative_path.replace("\\", "/"),
+                                "full_path": full_path,
+                                "season_number": season_number,
+                                "episode_number": episode_number,
+                            }
+                        )
+                continue
+
+            if not is_video_file(entry_name):
+                continue
+
+            media_id, season_number, episode_number = parse_video_entry(entry_name)
+            items.append(
+                {
+                    "id": media_id,
+                    "file": entry_name,
+                    "category": category,
+                    "directory": None,
+                    "directory_path": category_name,
+                    "relative_path": os.path.relpath(full_entry, VIDEOS_DIR).replace("\\", "/"),
+                    "full_path": full_entry,
+                    "season_number": season_number,
+                    "episode_number": episode_number,
+                }
+            )
 
     return items
 
 
-def list_episodes(directory=None):
-    normalized_directory = (directory or "").strip()
-    items = []
-
-    for entry in iter_video_entries():
-        if normalized_directory and entry["directory_path"] != normalized_directory:
-            continue
-
-        items.append(
-            {
-                "id": entry["id"],
-                "file": entry["file"],
-                "directory": entry["directory"],
-                "directoryPath": entry["directory_path"],
-                "relativePath": entry["relative_path"],
-                "seasonNumber": entry["season_number"],
-                "episodeNumber": entry["episode_number"],
-            }
-        )
-
-    return items
-
-
-def list_video_directories():
+def build_media_buckets(category):
     grouped = {}
     root_files = []
+    root_directory = "Movies" if category == "movies" else "TVShows"
+    category_dir = MOVIES_DIR if category == "movies" else TVSHOWS_DIR
+
+    if os.path.isdir(category_dir):
+        for entry_name in sorted(os.listdir(category_dir)):
+            full_entry = os.path.join(category_dir, entry_name)
+            if not os.path.isdir(full_entry):
+                continue
+            directory_path = join_video_relative_path(root_directory, entry_name)
+            grouped.setdefault(
+                directory_path,
+                {
+                    "name": entry_name,
+                    "relativePath": directory_path,
+                    "videos": [],
+                },
+            )
 
     for entry in iter_video_entries():
-        if not entry["directory"]:
+        if entry.get("category") != category:
+            continue
+
+        if entry["directory_path"] == root_directory:
             root_files.append(
                 {
                     "id": entry["id"],
@@ -276,11 +303,46 @@ def list_video_directories():
             }
         )
 
+    return directories, sorted(root_files, key=lambda video: video["file"])
+
+
+def list_episodes(directory=None):
+    normalized_directory = (directory or "").strip()
+    items = []
+
+    for entry in iter_video_entries():
+        if normalized_directory and entry["directory_path"] != normalized_directory:
+            continue
+
+        items.append(
+            {
+                "id": entry["id"],
+                "file": entry["file"],
+                "directory": entry["directory"],
+                "directoryPath": entry["directory_path"],
+                "relativePath": entry["relative_path"],
+                "seasonNumber": entry["season_number"],
+                "episodeNumber": entry["episode_number"],
+            }
+        )
+
+    return items
+
+
+def list_video_directories():
+    ensure_media_directories()
+    tvshow_directories, tvshow_root_files = build_media_buckets("tvshows")
+    movie_directories, movie_root_files = build_media_buckets("movies")
+
     return {
         "ok": True,
         "root": VIDEOS_DIR,
-        "directories": directories,
-        "rootFiles": root_files,
+        "moviesRoot": MOVIES_DIR,
+        "tvShowsRoot": TVSHOWS_DIR,
+        "directories": tvshow_directories,
+        "rootFiles": tvshow_root_files,
+        "movieDirectories": movie_directories,
+        "movieRootFiles": movie_root_files,
     }
 
 
@@ -408,6 +470,55 @@ def episodes():
 @app.route("/videos", methods=["GET"])
 def videos():
     return jsonify(list_video_directories())
+
+
+@app.route("/series", methods=["POST"])
+def create_series():
+    data = request.get_json(force=True, silent=True) or {}
+    name = str(data.get("name") or "").strip()
+    tmdb_id = int(data.get("tmdbId") or 0)
+    if not name:
+        return jsonify({"error": "Missing name"}), 400
+
+    ensure_media_directories()
+    base_slug = slugify(name, "serie")
+    slug = base_slug
+    index = 2
+    while os.path.exists(os.path.join(TVSHOWS_DIR, slug)):
+        slug = f"{base_slug}-{index}"
+        index += 1
+
+    series_dir = os.path.join(TVSHOWS_DIR, slug)
+    os.makedirs(series_dir, exist_ok=True)
+    item = {
+        "name": name,
+        "relativePath": join_video_relative_path("TVShows", slug),
+        "tmdbId": tmdb_id,
+    }
+    return jsonify({"ok": True, "item": item})
+
+
+@app.route("/series", methods=["DELETE"])
+def delete_series():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    normalized_path = os.path.normpath(relative_path)
+    if normalized_path.startswith("..") or os.path.isabs(normalized_path):
+        return jsonify({"error": "Invalid path"}), 400
+
+    series_path = os.path.join(VIDEOS_DIR, normalized_path)
+    tvshows_root = os.path.abspath(TVSHOWS_DIR)
+    series_path_abs = os.path.abspath(series_path)
+    if series_path_abs == tvshows_root or os.path.commonpath([series_path_abs, tvshows_root]) != tvshows_root:
+        return jsonify({"error": "Series must be inside TVShows"}), 400
+
+    if not os.path.exists(series_path):
+        return jsonify({"ok": True, "relativePath": relative_path, "removed": False})
+
+    shutil.rmtree(series_path)
+    return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
 
 
 @app.route("/play", methods=["POST"])
@@ -556,4 +667,5 @@ def health():
 
 
 if __name__ == "__main__":
+    ensure_media_directories()
     app.run(host="0.0.0.0", port=PORT)

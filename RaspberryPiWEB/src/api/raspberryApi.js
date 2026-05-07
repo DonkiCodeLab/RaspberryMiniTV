@@ -29,7 +29,7 @@ function buildMockVideoLibrary() {
   const directories = [
     {
       name: "The Simpsons",
-      relativePath: "the-simpsons",
+      relativePath: "TVShows/the-simpsons",
       tmdbId: 456,
       videoCount: episodeIds.length,
       episodeCount: episodeIds.length,
@@ -37,7 +37,7 @@ function buildMockVideoLibrary() {
       videos: episodeIds.map((id) => ({
         id,
         file: `${id}.mp4`,
-        relativePath: `the-simpsons/${id}.mp4`,
+        relativePath: `TVShows/the-simpsons/${id}.mp4`,
       })),
     },
   ];
@@ -70,9 +70,13 @@ function buildMockVideoLibrary() {
 
   return {
     ok: true,
-    root: "/mock/videos",
+    root: "/mock/MultimediaContent/Videos",
+    moviesRoot: "/mock/MultimediaContent/Videos/Movies",
+    tvShowsRoot: "/mock/MultimediaContent/Videos/TVShows",
     directories: directories.sort((a, b) => a.name.localeCompare(b.name)),
     rootFiles: [],
+    movieDirectories: [],
+    movieRootFiles: [],
   };
 }
 
@@ -124,11 +128,11 @@ function createMockSeriesRelativePath(name, existingPaths) {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "serie";
-  let candidate = baseSlug;
+  let candidate = `TVShows/${baseSlug}`;
   let index = 2;
 
   while (existingPaths.has(candidate)) {
-    candidate = `${baseSlug}-${index}`;
+    candidate = `TVShows/${baseSlug}-${index}`;
     index += 1;
   }
 

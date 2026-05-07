@@ -3132,8 +3132,8 @@ export default function App() {
       .filter(Boolean);
     if (!candidateLabels.length) return null;
 
-    const rootFiles = Array.isArray(videos?.rootFiles) ? videos.rootFiles : [];
-    const directoryBuckets = Array.isArray(videos?.directories) ? videos.directories : [];
+    const rootFiles = Array.isArray(videos?.movieRootFiles) ? videos.movieRootFiles : [];
+    const directoryBuckets = Array.isArray(videos?.movieDirectories) ? videos.movieDirectories : [];
     const entries = [
       ...rootFiles.map((entry) => ({
         id: entry.id,
@@ -3186,8 +3186,8 @@ export default function App() {
       (mockMode
         ? {
             id: `MOVIE-${selectedMovie.id}`,
-            directory: "movies",
-            relativePath: `movies/${selectedMovie.name || selectedMovie.id}.mp4`,
+            directory: "Movies",
+            relativePath: `Movies/${selectedMovie.name || selectedMovie.id}.mp4`,
           }
         : null);
     if (!movieEntry?.id) {
@@ -3314,7 +3314,7 @@ export default function App() {
       directories.find((entry) => Array.isArray(entry?.episodeIds) && entry.episodeIds.length) ||
       null;
 
-    const directory = preferredDirectory?.relativePath || "the-simpsons";
+    const directory = preferredDirectory?.relativePath || "TVShows/the-simpsons";
     const firstEpisodeId = preferredDirectory?.episodeIds?.[0] || "S01E01";
     const preferredSeries =
       seriesOptions.find((entry) => entry.directoryPath === directory) || selectedSeries || null;

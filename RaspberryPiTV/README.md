@@ -16,12 +16,12 @@ Scripts para ejecutar la TV en la Raspberry Pi.
 Cuando te bajes este repositorio en la Raspberry, crea manualmente:
 
 ```bash
-mkdir -p RaspberryPiTV/videos
+mkdir -p MultimediaContent/Videos/Movies MultimediaContent/Videos/TVShows
 ```
 
 Y copia ahí tus vídeos `.mp4`, `.m4v`, `.mov` o `.mkv`.
 
-`control_api.py` usa esa carpeta local `RaspberryPiTV/videos`, así que no depende de una ruta fija como `/home/...`.
+`control_api.py` usa `MultimediaContent/Videos`, con `Movies` para películas y `TVShows` para series, así que no depende de una ruta fija como `/home/...`.
 
 ## Menú táctil
 
@@ -84,7 +84,7 @@ git sparse-checkout set RaspberryPiTV
 Después crea la carpeta de vídeos:
 
 ```bash
-mkdir -p RaspberryPiTV/videos
+mkdir -p MultimediaContent/Videos/Movies MultimediaContent/Videos/TVShows
 ```
 
 Con eso, en la Raspberry trabajarás solo con `RaspberryPiTV` dentro del checkout.
@@ -101,7 +101,7 @@ sudo ./install_services.sh
 
 El script:
 
-- crea `RaspberryPiTV/videos` si no existe.
+- crea `MultimediaContent/Videos/Movies` y `MultimediaContent/Videos/TVShows` si no existen.
 - instala un guardia de arranque que espera 5 segundos en consola por si pulsas `y` para cancelar menu y web en ese inicio.
 - reemplaza los servicios antiguos por los nuevos.
 - hace `daemon-reload`.
