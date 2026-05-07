@@ -1164,10 +1164,15 @@ img {
 .raspberry-storage-card {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 0.9fr);
   align-items: center;
   gap: 1.5rem;
   padding: 1.3rem 1.4rem;
+}
+
+.raspberry-storage-card__copy--media {
+  justify-self: end;
+  text-align: right;
 }
 
 .raspberry-language-card {
@@ -3105,6 +3110,11 @@ img {
     display: grid;
     justify-items: center;
     gap: 0.35rem;
+  }
+
+  .raspberry-storage-card__copy--media {
+    justify-self: center;
+    text-align: center;
   }
 
   .raspberry-upload-card__selector {

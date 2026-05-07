@@ -260,9 +260,11 @@ def get_storage_stats():
     ensure_media_directories()
     target_path = VIDEOS_DIR if os.path.exists(VIDEOS_DIR) else BASE_DIR
     usage = shutil.disk_usage(target_path)
+    multimedia_bytes = get_directory_size(MULTIMEDIA_DIR)
     total_gb = round(usage.total / (1024 ** 3), 1)
     used_gb = round((usage.total - usage.free) / (1024 ** 3), 1)
     percent = round(((usage.total - usage.free) / usage.total) * 100, 1) if usage.total else 0.0
+    multimedia_percent = round((multimedia_bytes / usage.total) * 100, 1) if usage.total else 0.0
 
     return {
         "path": target_path,
@@ -270,6 +272,8 @@ def get_storage_stats():
         "usedGb": used_gb,
         "freeGb": round(usage.free / (1024 ** 3), 1),
         "percentUsed": percent,
+        "multimediaUsedGb": round(multimedia_bytes / (1024 ** 3), 1),
+        "multimediaPercentUsed": multimedia_percent,
     }
 
 
@@ -357,12 +361,45 @@ def count_direct_directories(path):
     )
 
 
+def get_directory_size(path):
+    if not os.path.exists(path):
+        return 0
+    if os.path.isfile(path):
+        try:
+            return os.path.getsize(path)
+        except OSError:
+            return 0
+
+    total = 0
+    for root, _dirs, files in os.walk(path):
+        for filename in files:
+            full_path = os.path.join(root, filename)
+            try:
+                total += os.path.getsize(full_path)
+            except OSError:
+                pass
+    return total
+
+
 def get_library_counts():
     ensure_media_directories()
+    usage = shutil.disk_usage(VIDEOS_DIR if os.path.exists(VIDEOS_DIR) else BASE_DIR)
+    total_bytes = usage.total or 0
+    series_bytes = get_directory_size(TVSHOWS_DIR)
+    movies_bytes = get_directory_size(MOVIES_DIR)
+    games_bytes = get_directory_size(GAMES_DIR)
+
+    def usage_item(count, used_bytes):
+        return {
+            "count": count,
+            "usedGb": round(used_bytes / (1024 ** 3), 1),
+            "percentUsed": round((used_bytes / total_bytes) * 100, 1) if total_bytes else 0.0,
+        }
+
     return {
-        "series": count_direct_directories(TVSHOWS_DIR),
-        "movies": count_direct_files(MOVIES_DIR),
-        "games": count_direct_files(GAMES_DIR),
+        "series": usage_item(count_direct_directories(TVSHOWS_DIR), series_bytes),
+        "movies": usage_item(count_direct_files(MOVIES_DIR), movies_bytes),
+        "games": usage_item(count_direct_files(GAMES_DIR), games_bytes),
     }
 
 

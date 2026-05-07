@@ -83,11 +83,6 @@ const MAX_MOVIE_IMAGES = 5;
 const RASPBERRY_ALARM_STORAGE_KEY = "simpsonstv-raspberry-alarm-v1";
 const RASPBERRY_LANGUAGE_STORAGE_KEY = "simpsonstv-raspberry-language-v1";
 const RASPBERRY_CURRENT_PLAYBACK_STORAGE_KEY = "simpsonstv-raspberry-current-playback-v1";
-const RASPBERRY_CATALOG_LIMITS = {
-  series: 120,
-  movies: 220,
-  games: 40,
-};
 const MEDIA_TYPES = [
   {
     id: "series",
@@ -233,12 +228,14 @@ const UI_STRINGS = {
     stats_series_installed: "Series instaladas",
     stats_movies_installed: "Películas instaladas",
     stats_games_installed: "Juegos instalados",
+    section_storage_used: "{gb} GB · {percent} de la SD",
     used_percent: "{percent} utilizado",
     language_title: "Idioma",
     language_microtv: "Selecciona el idioma de la mini tele.",
     language_updating: "Actualizando idioma...",
     language_update_failed: "No se pudo actualizar el idioma de la Raspberry.",
     microsd_capacity: "Capacidad de la MicroSD",
+    multimedia_occupied: "Ocupado por MultimediaContent",
     occupied: "ocupado",
     alarms_title: "Alarmas de la televisión",
     alarms_copy: "Programa la hora a la que debe sonar la alarma de la mini tele.",
@@ -399,12 +396,14 @@ const UI_STRINGS = {
     stats_series_installed: "Sèries instal·lades",
     stats_movies_installed: "Pel·lícules instal·lades",
     stats_games_installed: "Jocs instal·lats",
+    section_storage_used: "{gb} GB · {percent} de la SD",
     used_percent: "{percent} utilitzat",
     language_title: "Idioma",
     language_microtv: "Selecciona l'idioma de la mini tele.",
     language_updating: "S'està actualitzant l'idioma...",
     language_update_failed: "No s'ha pogut actualitzar l'idioma de la Raspberry.",
     microsd_capacity: "Capacitat de la MicroSD",
+    multimedia_occupied: "Ocupat per MultimediaContent",
     occupied: "ocupat",
     alarms_title: "Alarmes de la televisió",
     alarms_copy: "Programa l'hora a la qual ha de sonar l'alarma de la mini tele.",
@@ -565,12 +564,14 @@ const UI_STRINGS = {
     stats_series_installed: "Installed series",
     stats_movies_installed: "Installed movies",
     stats_games_installed: "Installed games",
+    section_storage_used: "{gb} GB · {percent} of SD",
     used_percent: "{percent} used",
     language_title: "Language",
     language_microtv: "Choose the mini TV language.",
     language_updating: "Updating language...",
     language_update_failed: "Could not update the Raspberry language.",
     microsd_capacity: "MicroSD capacity",
+    multimedia_occupied: "Used by MultimediaContent",
     occupied: "used",
     alarms_title: "TV alarms",
     alarms_copy: "Set the time when the mini TV alarm should ring.",
@@ -920,6 +921,30 @@ function formatPercent(value) {
 
 function formatStorageGb(value) {
   return Number(Number(value) || 0).toFixed(1);
+}
+
+function normalizeLibraryUsageItem(item) {
+  if (typeof item === "number") {
+    return {
+      count: Number(item) || 0,
+      usedGb: 0,
+      percentUsed: 0,
+    };
+  }
+
+  return {
+    count: Number(item?.count) || 0,
+    usedGb: Number(item?.usedGb) || 0,
+    percentUsed: Number(item?.percentUsed) || 0,
+  };
+}
+
+function normalizeLibraryCounts(counts) {
+  return {
+    series: normalizeLibraryUsageItem(counts?.series),
+    movies: normalizeLibraryUsageItem(counts?.movies),
+    games: normalizeLibraryUsageItem(counts?.games),
+  };
 }
 
 function normalizeHeroCrop(crop) {
@@ -1995,7 +2020,7 @@ function MiniTvModal({ visible, onClose, t }) {
   );
 }
 
-function RaspberryStatCard({ label, value, percent, icon, t }) {
+function RaspberryStatCard({ label, value, usedGb, percent, icon, t }) {
   return (
     <article className="raspberry-stat-card">
       <div className="raspberry-stat-card__label">
@@ -2003,7 +2028,12 @@ function RaspberryStatCard({ label, value, percent, icon, t }) {
         <p>{label}</p>
       </div>
       <strong>{value}</strong>
-      <span>{t("used_percent", { percent: formatPercent(percent) })}</span>
+      <span>
+        {t("section_storage_used", {
+          gb: formatStorageGb(usedGb),
+          percent: formatPercent(percent),
+        })}
+      </span>
     </article>
   );
 }
@@ -2093,14 +2123,18 @@ function RaspberryPage({
   onBack,
   t,
   seriesCount,
+  seriesUsedGb,
   seriesPercent,
   movieCount,
+  movieUsedGb,
   moviePercent,
   gameCount,
+  gameUsedGb,
   gamePercent,
   usedStorageGb,
   totalStorageGb,
-  storagePercent,
+  multimediaUsedGb,
+  multimediaPercent,
   alarm,
   onAlarmTimeChange,
   onAlarmToggle,
@@ -2231,6 +2265,7 @@ function RaspberryPage({
             <RaspberryStatCard
               label={t("stats_series_installed")}
               value={seriesCount}
+              usedGb={seriesUsedGb}
               percent={seriesPercent}
               icon={tvshowIconYellow}
               t={t}
@@ -2238,6 +2273,7 @@ function RaspberryPage({
             <RaspberryStatCard
               label={t("stats_movies_installed")}
               value={movieCount}
+              usedGb={movieUsedGb}
               percent={moviePercent}
               icon={movieIconYellow}
               t={t}
@@ -2245,21 +2281,26 @@ function RaspberryPage({
             <RaspberryStatCard
               label={t("stats_games_installed")}
               value={gameCount}
+              usedGb={gameUsedGb}
               percent={gamePercent}
               icon={gameIconYellow}
               t={t}
             />
             <article className="raspberry-storage-card">
-              <div className="raspberry-storage-card__ring" style={{ "--storage-fill": `${storagePercent}%` }}>
+              <div className="raspberry-storage-card__copy">
+                <p>{t("microsd_capacity")}</p>
+                <strong>{formatStorageGb(usedStorageGb)} GB / {formatStorageGb(totalStorageGb)} GB</strong>
+              </div>
+              <div className="raspberry-storage-card__ring" style={{ "--storage-fill": `${multimediaPercent}%` }}>
                 <div className="raspberry-storage-card__ring-inner">
-                  <strong>{formatPercent(storagePercent)}</strong>
+                  <strong>{formatPercent(multimediaPercent)}</strong>
                   <img className="raspberry-storage-card__sdcard" src={sdacrdIcon} alt="" aria-hidden="true" />
                   <span>{t("occupied")}</span>
                 </div>
               </div>
-              <div className="raspberry-storage-card__copy">
-                <p>{t("microsd_capacity")}</p>
-                <strong>{formatStorageGb(usedStorageGb)} GB / {formatStorageGb(totalStorageGb)} GB</strong>
+              <div className="raspberry-storage-card__copy raspberry-storage-card__copy--media">
+                <p>{t("multimedia_occupied")}</p>
+                <strong>{formatStorageGb(multimediaUsedGb)} GB</strong>
               </div>
             </article>
           </div>
@@ -2546,12 +2587,10 @@ export default function App() {
       usedGb: 0,
       freeGb: 0,
       percentUsed: 0,
+      multimediaUsedGb: 0,
+      multimediaPercentUsed: 0,
     },
-    libraryCounts: {
-      series: 0,
-      movies: 0,
-      games: 0,
-    },
+    libraryCounts: normalizeLibraryCounts(null),
   });
   const [raspberryCurrentPlayback, setRaspberryCurrentPlayback] = useState(() =>
     loadStoredRaspberryCurrentPlayback()
@@ -2698,12 +2737,10 @@ export default function App() {
               usedGb: Number(nextHealth?.storage?.usedGb) || 0,
               freeGb: Number(nextHealth?.storage?.freeGb) || 0,
               percentUsed: Number(nextHealth?.storage?.percentUsed) || 0,
+              multimediaUsedGb: Number(nextHealth?.storage?.multimediaUsedGb) || 0,
+              multimediaPercentUsed: Number(nextHealth?.storage?.multimediaPercentUsed) || 0,
             },
-            libraryCounts: {
-              series: Number(nextHealth?.libraryCounts?.series) || 0,
-              movies: Number(nextHealth?.libraryCounts?.movies) || 0,
-              games: Number(nextHealth?.libraryCounts?.games) || 0,
-            },
+            libraryCounts: normalizeLibraryCounts(nextHealth?.libraryCounts),
           });
           if (!nextHealth?.running) {
             setRaspberryCurrentPlayback(null);
@@ -2722,12 +2759,10 @@ export default function App() {
               usedGb: 0,
               freeGb: 0,
               percentUsed: 0,
+              multimediaUsedGb: 0,
+              multimediaPercentUsed: 0,
             },
-            libraryCounts: {
-              series: 0,
-              movies: 0,
-              games: 0,
-            },
+            libraryCounts: normalizeLibraryCounts(null),
           });
           setRaspberryCurrentPlayback(null);
         }
@@ -3308,12 +3343,10 @@ export default function App() {
           usedGb: Number(nextHealth?.storage?.usedGb) || 0,
           freeGb: Number(nextHealth?.storage?.freeGb) || 0,
           percentUsed: Number(nextHealth?.storage?.percentUsed) || 0,
+          multimediaUsedGb: Number(nextHealth?.storage?.multimediaUsedGb) || 0,
+          multimediaPercentUsed: Number(nextHealth?.storage?.multimediaPercentUsed) || 0,
         },
-        libraryCounts: {
-          series: Number(nextHealth?.libraryCounts?.series) || 0,
-          movies: Number(nextHealth?.libraryCounts?.movies) || 0,
-          games: Number(nextHealth?.libraryCounts?.games) || 0,
-        },
+        libraryCounts: normalizeLibraryCounts(nextHealth?.libraryCounts),
       });
       if (!nextHealth?.running) {
         setRaspberryCurrentPlayback(null);
@@ -3816,13 +3849,14 @@ export default function App() {
   const safeMovieFrameIndex = movieImages.length
     ? Math.min(movieFrameIndex, movieImages.length - 1)
     : 0;
-  const raspberryLibraryCounts = videos?.libraryCounts || raspberryHealth?.libraryCounts || {};
-  const installedSeriesCount = Number(raspberryLibraryCounts.series) || 0;
-  const installedMovieCount = Number(raspberryLibraryCounts.movies) || 0;
-  const installedGameCount = Number(raspberryLibraryCounts.games) || 0;
+  const raspberryLibraryCounts = normalizeLibraryCounts(videos?.libraryCounts || raspberryHealth?.libraryCounts);
+  const installedSeriesCount = raspberryLibraryCounts.series.count;
+  const installedMovieCount = raspberryLibraryCounts.movies.count;
+  const installedGameCount = raspberryLibraryCounts.games.count;
   const usedStorageGb = Number(raspberryHealth?.storage?.usedGb) || 0;
   const totalStorageGb = Number(raspberryHealth?.storage?.totalGb) || 0;
-  const storagePercent = Number(raspberryHealth?.storage?.percentUsed) || 0;
+  const multimediaUsedGb = Number(raspberryHealth?.storage?.multimediaUsedGb) || 0;
+  const multimediaPercent = Number(raspberryHealth?.storage?.multimediaPercentUsed) || 0;
   const canPlayNextEpisode = useMemo(() => {
     if (!raspberryHealth.running || raspberryCurrentPlayback?.kind !== "episode") return false;
 
@@ -3919,14 +3953,18 @@ export default function App() {
                 onBack={handleBackFromRaspberry}
                 t={t}
                 seriesCount={installedSeriesCount}
-                seriesPercent={(installedSeriesCount / RASPBERRY_CATALOG_LIMITS.series) * 100}
+                seriesUsedGb={raspberryLibraryCounts.series.usedGb}
+                seriesPercent={raspberryLibraryCounts.series.percentUsed}
                 movieCount={installedMovieCount}
-                moviePercent={(installedMovieCount / RASPBERRY_CATALOG_LIMITS.movies) * 100}
+                movieUsedGb={raspberryLibraryCounts.movies.usedGb}
+                moviePercent={raspberryLibraryCounts.movies.percentUsed}
                 gameCount={installedGameCount}
-                gamePercent={(installedGameCount / RASPBERRY_CATALOG_LIMITS.games) * 100}
+                gameUsedGb={raspberryLibraryCounts.games.usedGb}
+                gamePercent={raspberryLibraryCounts.games.percentUsed}
                 usedStorageGb={usedStorageGb}
                 totalStorageGb={totalStorageGb}
-                storagePercent={storagePercent}
+                multimediaUsedGb={multimediaUsedGb}
+                multimediaPercent={multimediaPercent}
                 alarm={raspberryAlarm}
                 onAlarmTimeChange={handleAlarmTimeChange}
                 onAlarmToggle={handleAlarmToggle}
