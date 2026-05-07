@@ -152,7 +152,15 @@ def play_intro():
         return
 
     subprocess.run(
-        ["omxplayer", "--no-osd", "--aspect-mode", "fill", INTRO_VIDEO_PATH],
+        [
+            "omxplayer",
+            "--no-osd",
+            "--aspect-mode",
+            "fill",
+            "--adev",
+            "alsa:plughw:1,0",
+            INTRO_VIDEO_PATH,
+        ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=False,
@@ -1178,7 +1186,12 @@ class RaspberryPiTVMenu:
 
     def build_mpv_command(self, filepath, start_seconds=0.0):
         remove_path_if_exists(MPV_SOCKET_PATH)
-        command = ["mpv", "--fullscreen", f"--input-ipc-server={MPV_SOCKET_PATH}"]
+        command = [
+            "mpv",
+            "--fullscreen",
+            "--audio-device=alsa/plughw:1,0",
+            f"--input-ipc-server={MPV_SOCKET_PATH}",
+        ]
         if start_seconds > 0:
             command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
         command.append(filepath)
