@@ -1033,8 +1033,6 @@ class RaspberryPiTVMenu:
                 full_path = os.path.join(self.browser_path, name)
                 if os.path.isdir(full_path):
                     videos = self.get_entry_video_files(full_path)
-                    if not videos:
-                        continue
                     entries.append(
                         {
                             "label": name,
