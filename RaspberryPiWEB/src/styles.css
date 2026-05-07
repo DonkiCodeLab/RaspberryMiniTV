@@ -717,6 +717,7 @@ img {
 }
 
 .season-card {
+  position: relative;
   overflow: hidden;
   padding: 0;
   text-align: left;
@@ -735,6 +736,54 @@ img {
   border-color: rgba(255, 255, 255, 0.42);
 }
 
+.season-card.is-disabled {
+  opacity: 0.42;
+  filter: grayscale(0.85);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.season-card.is-disabled::before,
+.season-card.is-disabled::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.season-card.is-disabled::before {
+  width: 4.4rem;
+  height: 4.4rem;
+  border: 0.42rem solid #ffd429;
+  border-radius: 999px;
+  background: rgba(10, 16, 22, 0.58);
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.season-card.is-disabled::after {
+  width: 4.9rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: #ffd429;
+  transform: translate(-50%, -50%) rotate(-45deg) scaleX(0.86);
+}
+
+.season-card.is-disabled:hover::before,
+.season-card.is-disabled:focus-visible::before,
+.season-card.is-disabled:hover::after,
+.season-card.is-disabled:focus-visible::after {
+  opacity: 1;
+}
+
+.season-card.is-disabled:hover::before,
+.season-card.is-disabled:focus-visible::before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
 .season-card:hover,
 .season-card:focus-visible {
   transform: translateY(-6px) scale(1.01);
@@ -743,12 +792,28 @@ img {
   border-color: #ffd429;
 }
 
+.season-card.is-disabled:hover,
+.season-card.is-disabled:focus-visible {
+  transform: none;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
 .season-card.active:hover,
 .season-card.active:focus-visible {
   transform: translateY(-6px) scale(1.01);
   box-shadow: 0 24px 42px rgba(24, 38, 49, 0.34);
   border-width: 2px;
   border-color: #ffd429;
+}
+
+.season-card.is-disabled.active:hover,
+.season-card.is-disabled.active:focus-visible {
+  transform: none;
+  box-shadow: none;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .season-card__image-wrap {
@@ -793,6 +858,16 @@ img {
 .season-card:hover .season-card__body p,
 .season-card:focus-visible .season-card__body p {
   color: #ffd429;
+}
+
+.season-card.is-disabled:hover .season-card__body h3,
+.season-card.is-disabled:focus-visible .season-card__body h3 {
+  color: #f5f8ff;
+}
+
+.season-card.is-disabled:hover .season-card__body p,
+.season-card.is-disabled:focus-visible .season-card__body p {
+  color: rgba(236, 243, 250, 0.84);
 }
 
 .season-card__body p {
@@ -1380,25 +1455,58 @@ img {
 }
 
 .raspberry-alarm-card__controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 0.85fr) minmax(0, 1.15fr);
   align-items: center;
   gap: 0.8rem;
 }
 
-.raspberry-alarm-card__controls input[type="time"] {
+.raspberry-alarm-card__controls input[type="time"],
+.raspberry-alarm-card__controls select,
+.raspberry-alarm-preview select {
+  width: 100%;
   padding: 0.92rem 1rem;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #fff;
   font: inherit;
+  min-width: 0;
+}
+
+.raspberry-alarm-card__controls select option,
+.raspberry-alarm-preview select option {
+  color: #111d26;
+}
+
+.raspberry-alarm-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.raspberry-alarm-preview button {
+  padding: 0.92rem 1.2rem;
+  border-radius: 18px;
+  background: #ffd429;
+  color: #111d26;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.raspberry-alarm-preview button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .raspberry-alarm-item.is-disabled .raspberry-alarm-item__top strong {
   color: rgba(236, 243, 250, 0.42);
 }
 
-.raspberry-alarm-card__controls input[type="time"]:disabled {
+.raspberry-alarm-card__controls input[type="time"]:disabled,
+.raspberry-alarm-card__controls select:disabled,
+.raspberry-alarm-preview select:disabled {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.08);
   color: rgba(236, 243, 250, 0.36);
@@ -1943,6 +2051,21 @@ img {
   margin: 0.35rem 0 0;
 }
 
+.raspberry-upload-summary--tmdb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.raspberry-upload-summary--tmdb strong {
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+}
+
+.raspberry-upload-summary__action {
+  flex: 0 0 auto;
+}
+
 .season-page {
   width: min(1360px, 100%);
   margin: 0 auto;
@@ -2062,6 +2185,7 @@ img {
 }
 
 .episode-card {
+  position: relative;
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr) 82px;
   align-items: center;
@@ -2088,6 +2212,68 @@ img {
   box-shadow: 0 22px 42px rgba(0, 0, 0, 0.22);
   border-width: 2px;
   border-color: #ffd429;
+}
+
+.episode-card.is-disabled {
+  opacity: 0.46;
+  filter: grayscale(0.8);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.episode-card.is-disabled::before,
+.episode-card.is-disabled::after {
+  content: "";
+  position: absolute;
+  left: calc(100% - 3.75rem);
+  top: 50%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.episode-card.is-disabled::before {
+  width: 3.4rem;
+  height: 3.4rem;
+  border: 0.34rem solid #ffd429;
+  border-radius: 999px;
+  background: rgba(10, 16, 22, 0.68);
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.episode-card.is-disabled::after {
+  width: 3.8rem;
+  height: 0.34rem;
+  border-radius: 999px;
+  background: #ffd429;
+  transform: translate(-50%, -50%) rotate(-45deg) scaleX(0.86);
+}
+
+.episode-card.is-disabled:hover,
+.episode-card.is-disabled:focus-visible {
+  transform: none;
+  background: rgba(18, 31, 41, 0.92);
+  box-shadow: none;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.episode-card.is-disabled:hover::before,
+.episode-card.is-disabled:focus-visible::before,
+.episode-card.is-disabled:hover::after,
+.episode-card.is-disabled:focus-visible::after {
+  opacity: 1;
+}
+
+.episode-card.is-disabled:hover::before,
+.episode-card.is-disabled:focus-visible::before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.episode-card.is-disabled .episode-card__arrow {
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .episode-card__thumb {
@@ -2132,6 +2318,12 @@ img {
 .episode-card:focus-visible .episode-card__arrow {
   color: #ffd429;
   background: rgba(255, 212, 41, 0.12);
+}
+
+.episode-card.is-disabled:hover .episode-card__arrow,
+.episode-card.is-disabled:focus-visible .episode-card__arrow {
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 @media (min-width: 1180px) {
@@ -2547,6 +2739,10 @@ img {
   width: min(860px, 100%);
 }
 
+.dialog-card--tmdb-browser {
+  width: min(1320px, 100%);
+}
+
 .dialog-card--settings {
   width: min(940px, 100%);
   position: relative;
@@ -2923,6 +3119,7 @@ img {
 .dialog-copy {
   color: rgba(233, 242, 252, 0.88);
   line-height: 1.55;
+  white-space: pre-wrap;
 }
 
 .dialog-button {
@@ -3101,6 +3298,11 @@ img {
     grid-template-columns: 1fr;
   }
 
+  .raspberry-alarm-card__controls,
+  .raspberry-alarm-preview {
+    grid-template-columns: 1fr;
+  }
+
   .raspberry-storage-card {
     justify-items: center;
     text-align: center;
@@ -3136,6 +3338,14 @@ img {
 
   .dialog-card__header-actions {
     gap: 0.45rem;
+  }
+
+  .raspberry-upload-summary--tmdb {
+    display: grid;
+  }
+
+  .raspberry-upload-summary__action {
+    width: 100%;
   }
 }
 
@@ -3255,6 +3465,128 @@ img {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
   overflow: hidden;
+}
+
+.tmdb-browser__search {
+  display: grid;
+  grid-template-columns: auto minmax(240px, 1fr) auto;
+  align-items: end;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.tmdb-browser__switch {
+  padding: 0.36rem;
+}
+
+.tmdb-browser__query {
+  margin-top: 0;
+}
+
+.tmdb-browser__search-button {
+  min-width: 126px;
+}
+
+.tmdb-browser__layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.42fr) minmax(0, 0.58fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  min-height: min(58vh, 620px);
+}
+
+.tmdb-browser__results,
+.tmdb-browser__preview {
+  min-width: 0;
+}
+
+.tmdb-browser__results .add-series-results__list {
+  max-height: min(58vh, 620px);
+}
+
+.tmdb-browser-result {
+  cursor: default;
+}
+
+.tmdb-browser-result:hover {
+  transform: none;
+}
+
+.tmdb-browser-result__button {
+  margin-top: 0.75rem;
+}
+
+.tmdb-browser__preview {
+  overflow-y: auto;
+  max-height: min(58vh, 620px);
+  padding-right: 0.2rem;
+}
+
+.tmdb-browser-series {
+  display: grid;
+  gap: 1rem;
+}
+
+.tmdb-browser-series__hero {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  gap: 0.35rem;
+  padding: 1.2rem;
+  border-radius: 24px;
+  background-position: center;
+  background-size: cover;
+  box-shadow: inset 0 -90px 80px rgba(0, 0, 0, 0.38);
+}
+
+.tmdb-browser-series__hero h3,
+.tmdb-browser-series__hero p {
+  margin: 0;
+}
+
+.tmdb-browser-series__hero h3 {
+  font-size: clamp(1.7rem, 3vw, 2.7rem);
+  line-height: 1;
+}
+
+.tmdb-browser-series__hero p {
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 800;
+}
+
+.tmdb-browser-series__seasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 0.8rem;
+}
+
+.tmdb-browser-series__seasons .season-card {
+  min-height: 0;
+}
+
+.tmdb-browser-series__episodes {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tmdb-browser-series__episodes .episode-card {
+  grid-template-columns: 118px minmax(0, 1fr) 58px;
+  padding: 0.8rem;
+  border-radius: 24px;
+}
+
+.tmdb-browser-movie .movie-panel__card {
+  grid-template-columns: minmax(260px, 0.82fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(18, 31, 41, 0.72);
+}
+
+.tmdb-browser-movie .movie-panel__gallery,
+.tmdb-browser-movie .movie-panel__content {
+  grid-row: auto;
 }
 
 @media (max-width: 760px) {
@@ -3442,6 +3774,36 @@ img {
 
   .add-series-result {
     grid-template-columns: 82px minmax(0, 1fr);
+  }
+
+  .tmdb-browser__search {
+    grid-template-columns: 1fr;
+  }
+
+  .tmdb-browser__layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .tmdb-browser__results .add-series-results__list,
+  .tmdb-browser__preview {
+    max-height: none;
+  }
+
+  .tmdb-browser-series__hero {
+    min-height: 180px;
+  }
+
+  .tmdb-browser-series__seasons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tmdb-browser-series__episodes .episode-card {
+    grid-template-columns: 92px minmax(0, 1fr) 52px;
+  }
+
+  .tmdb-browser-movie .movie-panel__card {
+    grid-template-columns: 1fr;
   }
 
   .season-grid {

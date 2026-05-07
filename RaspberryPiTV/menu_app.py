@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import re
 import select
 import socket
 import subprocess
@@ -60,6 +61,8 @@ EMPTY_ICON_PATH = os.path.join(MENU_DIR, "empty.png")
 QR_PNG = "/tmp/simpsonstv_qr.png"
 TRANSLATIONS_PATH = os.path.join(BASE_DIR, "translations.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
+ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
+ALARM_SOUND_EXTENSIONS = {".mp3"}
 WIFI_DEBUG_LOG_PATH = os.path.join(BASE_DIR, "wifi_debug.log")
 PORT = 5050
 REPO_DIR = os.path.dirname(BASE_DIR)
@@ -102,10 +105,17 @@ LOADING_MIN_DURATION_MS = 1000
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-mpv.sock")
 MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-video-preview.png")
 MPV_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "raspberrypitv-mpv.log")
+PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-playback.json")
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
+    "alarms": [
+        {"id": 1, "enabled": False, "time": "07:30", "sound": ""},
+        {"id": 2, "enabled": False, "time": "08:00", "sound": ""},
+        {"id": 3, "enabled": False, "time": "08:30", "sound": ""},
+    ],
 }
+SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 LANGUAGE_BUTTON_MAP = {
     "1x1": "en",
     "1x2": "ca",
@@ -217,6 +227,60 @@ def save_json_file(path, payload):
         json.dump(payload, handle, indent=2, ensure_ascii=False)
 
 
+def normalize_language_code(language):
+    language = str(language or "").strip().lower()
+    if language == "cat":
+        return "ca"
+    return language if language in SUPPORTED_LANGUAGES else DEFAULT_SETTINGS["language"]
+
+
+def normalize_alarm_sound(sound):
+    filename = os.path.basename(str(sound or "").strip())
+    extension = os.path.splitext(filename)[1].lower()
+    if not filename or extension not in ALARM_SOUND_EXTENSIONS:
+        return ""
+    return filename
+
+
+def list_alarm_sounds():
+    try:
+        entries = os.listdir(ALARM_SOUNDS_DIR)
+    except OSError:
+        return []
+
+    return sorted(
+        [
+            entry
+            for entry in entries
+            if os.path.isfile(os.path.join(ALARM_SOUNDS_DIR, entry))
+            and os.path.splitext(entry)[1].lower() in ALARM_SOUND_EXTENSIONS
+        ],
+        key=str.lower,
+    )
+
+
+def normalize_alarms(value):
+    source = value if isinstance(value, list) else []
+    fallback_sound = list_alarm_sounds()[0] if list_alarm_sounds() else ""
+    alarms = []
+    defaults = DEFAULT_SETTINGS["alarms"]
+    for index in range(3):
+        entry = source[index] if index < len(source) and isinstance(source[index], dict) else {}
+        time_value = str(entry.get("time") or defaults[index]["time"]).strip()
+        if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", time_value):
+            time_value = defaults[index]["time"]
+        alarms.append(
+            {
+                "id": index + 1,
+                "enabled": bool(entry.get("enabled")),
+                "time": time_value,
+                "sound": normalize_alarm_sound(entry.get("sound") or entry.get("soundFile") or entry.get("filename"))
+                or fallback_sound,
+            }
+        )
+    return alarms
+
+
 def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
@@ -240,6 +304,39 @@ def append_debug_log(path, message):
     try:
         with open(path, "a", encoding="utf-8") as handle:
             handle.write(f"[{timestamp}] {message}\n")
+    except Exception:
+        pass
+
+
+def parse_video_entry(filename):
+    match = re.search(r"(S\d{2}E\d{2})", filename, re.IGNORECASE)
+    return match.group(1).upper() if match else os.path.splitext(filename)[0].upper()
+
+
+def write_playback_state(filepath):
+    try:
+        relative_path = os.path.relpath(filepath, VIDEOS_DIR).replace(os.sep, "/")
+    except ValueError:
+        relative_path = os.path.basename(filepath)
+
+    payload = {
+        "playing": parse_video_entry(os.path.basename(filepath)),
+        "directory": os.path.dirname(relative_path).replace(os.sep, "/"),
+        "file": relative_path,
+        "updatedAt": int(time.time()),
+    }
+    try:
+        with open(PLAYBACK_STATE_PATH, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def clear_playback_state():
+    try:
+        os.remove(PLAYBACK_STATE_PATH)
+    except FileNotFoundError:
+        pass
     except Exception:
         pass
 
@@ -489,6 +586,7 @@ class RaspberryPiTVMenu:
         pygame.font.init()
         self.display_suspended = False
         self.initialize_display()
+        self.audio_available = self.initialize_audio()
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
         self.font = pygame.font.SysFont(FONT_FAMILY, 28)
@@ -505,6 +603,8 @@ class RaspberryPiTVMenu:
         self.video_button_font = pygame.font.SysFont(FONT_FAMILY, 30, bold=True)
         self.translations = load_json_file(TRANSLATIONS_PATH, {})
         self.config = self.load_settings()
+        self.settings_mtime = self.get_settings_mtime()
+        self.next_settings_poll = 0
         self.running = True
         self.state = "main"
         self.pressed_button = None
@@ -513,6 +613,10 @@ class RaspberryPiTVMenu:
         self.touch_position = (0, 0)
         self.touch_is_down = False
         self.touch_down_pos = None
+        self.alarm_playing = False
+        self.alarm_active_until = 0
+        self.alarm_triggered_keys = set()
+        self.alarm_triggered_date = datetime.now().date().isoformat()
         self.assets = {
             "main": self.prepare_screen_assets(
                 MAIN_SCREEN_PATH,
@@ -734,20 +838,133 @@ class RaspberryPiTVMenu:
             log_debug(f"DISPLAY resume failed: {exc}")
             raise
 
+    def initialize_audio(self):
+        try:
+            pygame.mixer.init()
+            log_debug("AUDIO init complete")
+            return True
+        except Exception as exc:
+            log_debug(f"AUDIO init failed: {exc}")
+            return False
+
     def load_settings(self):
         loaded = load_json_file(USER_SETTINGS_PATH, {})
         settings = dict(DEFAULT_SETTINGS)
         if isinstance(loaded, dict):
-            settings.update({key: value for key, value in loaded.items() if key in settings and isinstance(value, str)})
+            settings.update(
+                {
+                    key: value
+                    for key, value in loaded.items()
+                    if key in {"language", "web_password"} and isinstance(value, str)
+                }
+            )
+            settings["alarms"] = normalize_alarms(loaded.get("alarms"))
+        else:
+            settings["alarms"] = normalize_alarms(settings.get("alarms"))
+        settings["language"] = normalize_language_code(settings.get("language"))
         if not os.path.isfile(USER_SETTINGS_PATH):
             save_json_file(USER_SETTINGS_PATH, settings)
         return settings
 
     def save_settings(self):
+        self.config["alarms"] = normalize_alarms(self.config.get("alarms"))
         save_json_file(USER_SETTINGS_PATH, self.config)
+        self.settings_mtime = self.get_settings_mtime()
+
+    def get_settings_mtime(self):
+        try:
+            return os.path.getmtime(USER_SETTINGS_PATH)
+        except OSError:
+            return None
+
+    def poll_external_settings(self):
+        now = time.monotonic()
+        if now < self.next_settings_poll:
+            return
+        self.next_settings_poll = now + 0.5
+
+        current_mtime = self.get_settings_mtime()
+        if current_mtime == self.settings_mtime:
+            return
+
+        next_config = self.load_settings()
+        self.settings_mtime = current_mtime
+        if next_config == self.config:
+            return
+
+        previous_language = self.config.get("language")
+        self.config = next_config
+        self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
+        if self.config.get("language") != previous_language:
+            self.refresh_translated_state_texts()
+            self.qr_asset = None
+
+    def stop_alarm_sound(self):
+        if not self.alarm_playing:
+            return
+        try:
+            pygame.mixer.music.stop()
+        except Exception as exc:
+            log_debug(f"ALARM stop failed: {exc}")
+        self.alarm_playing = False
+        self.alarm_active_until = 0
+        log_debug("ALARM stopped")
+
+    def start_alarm_sound(self, alarm):
+        if self.alarm_playing:
+            return
+        sound_filename = normalize_alarm_sound(alarm.get("sound"))
+        if not sound_filename:
+            log_debug(f"ALARM skipped id={alarm.get('id')} missing sound")
+            return
+
+        sound_path = os.path.join(ALARM_SOUNDS_DIR, sound_filename)
+        if not os.path.isfile(sound_path):
+            log_debug(f"ALARM skipped id={alarm.get('id')} file not found: {sound_path}")
+            return
+        if not self.audio_available:
+            log_debug(f"ALARM skipped id={alarm.get('id')} audio unavailable")
+            return
+
+        try:
+            pygame.mixer.music.load(sound_path)
+            pygame.mixer.music.play(loops=-1)
+            self.alarm_playing = True
+            self.alarm_active_until = time.monotonic() + 30
+            log_debug(f"ALARM started id={alarm.get('id')} sound={sound_filename}")
+        except Exception as exc:
+            self.alarm_playing = False
+            self.alarm_active_until = 0
+            log_debug(f"ALARM start failed id={alarm.get('id')} sound={sound_filename}: {exc}")
+
+    def update_clock_alarms(self):
+        today = datetime.now().date().isoformat()
+        if today != self.alarm_triggered_date:
+            self.alarm_triggered_date = today
+            self.alarm_triggered_keys.clear()
+
+        if self.alarm_playing:
+            if self.state != "clock" or time.monotonic() >= self.alarm_active_until:
+                self.stop_alarm_sound()
+            return
+
+        if self.state != "clock":
+            return
+
+        now = datetime.now()
+        current_time = now.strftime("%H:%M")
+        for alarm in normalize_alarms(self.config.get("alarms")):
+            if not alarm.get("enabled") or alarm.get("time") != current_time:
+                continue
+            trigger_key = f"{today}:{alarm.get('id')}:{alarm.get('time')}"
+            if trigger_key in self.alarm_triggered_keys:
+                continue
+            self.alarm_triggered_keys.add(trigger_key)
+            self.start_alarm_sound(alarm)
+            break
 
     def tr(self, key, **kwargs):
-        language = self.config.get("language", "en")
+        language = normalize_language_code(self.config.get("language"))
         table = self.translations.get(language) or self.translations.get("en") or {}
         value = table.get(key) or key
         try:
@@ -1315,6 +1532,7 @@ class RaspberryPiTVMenu:
                 pass
         self.video_proc = None
         self.close_video_log_handle()
+        clear_playback_state()
         self.resume_display_after_video()
         remove_path_if_exists(MPV_SOCKET_PATH)
         self.video_preview_seconds = preview_seconds
@@ -1354,6 +1572,7 @@ class RaspberryPiTVMenu:
         self.video_current_path = ""
         self.loading_video_path = None
         self.loading_video_start_seconds = 0.0
+        clear_playback_state()
         self.clear_video_preview()
         if not silent:
             self.state = self.video_return_state
@@ -1409,10 +1628,12 @@ class RaspberryPiTVMenu:
             remove_path_if_exists(MPV_SOCKET_PATH)
             self.loading_video_path = None
             self.loading_video_start_seconds = 0.0
+            clear_playback_state()
             self.state = self.video_return_state
             return
         self.loading_video_path = None
         self.loading_video_start_seconds = 0.0
+        write_playback_state(self.video_current_path)
         self.state = "video"
 
     def update_video_state(self):
@@ -1427,6 +1648,7 @@ class RaspberryPiTVMenu:
             self.close_video_log_handle()
             self.resume_display_after_video()
             remove_path_if_exists(MPV_SOCKET_PATH)
+            clear_playback_state()
             self.state = self.video_return_state
 
     def normalize_touch_pos(self, pos):
@@ -1447,7 +1669,7 @@ class RaspberryPiTVMenu:
         return None
 
     def get_selected_language_code(self):
-        return self.config.get("language", DEFAULT_SETTINGS["language"])
+        return normalize_language_code(self.config.get("language"))
 
     def get_selected_language_button(self):
         selected_language = self.get_selected_language_code()
@@ -1457,6 +1679,7 @@ class RaspberryPiTVMenu:
         return "1x1"
 
     def set_language(self, language_code):
+        language_code = normalize_language_code(language_code)
         if language_code == self.get_selected_language_code():
             return
         self.config["language"] = language_code
@@ -1775,6 +1998,11 @@ class RaspberryPiTVMenu:
         normalized_pos = self.normalize_touch_pos(pos)
         self.touch_down_pos = normalized_pos
         if self.state == "clock":
+            if self.alarm_playing:
+                self.stop_alarm_sound()
+                self.pressed_button = None
+                log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=clock alarm_stopped=True")
+                return
             self.pressed_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=clock pressed={self.pressed_button}")
             return
@@ -1974,6 +2202,20 @@ class RaspberryPiTVMenu:
         self.screen.blit(hours_surface, hours_rect)
         self.screen.blit(separator_surface, separator_rect)
         self.screen.blit(minutes_surface, minutes_rect)
+
+        alarms = normalize_alarms(self.config.get("alarms"))
+        active_alarms = [alarm for alarm in alarms if alarm.get("enabled")]
+        alarm_lines = (
+            [f"Alarma {alarm.get('id')}: {alarm.get('time')}" for alarm in active_alarms]
+            if active_alarms
+            else ["No alarmas configuradas"]
+        )
+        first_line_y = minutes_rect.bottom + 22
+        line_gap = 30
+        for index, line in enumerate(alarm_lines[:3]):
+            surface = self.font.render(line, True, (210, 210, 210))
+            rect = surface.get_rect(center=(self.width // 2, first_line_y + (index * line_gap)))
+            self.screen.blit(surface, rect)
 
     def draw_wifi(self):
         layout = self.get_wifi_layout()
@@ -2498,6 +2740,8 @@ class RaspberryPiTVMenu:
 
         while self.running:
             self.update_video_state()
+            self.poll_external_settings()
+            self.update_clock_alarms()
             self.poll_native_touch()
             if self.display_suspended:
                 time.sleep(0.05)

@@ -40,7 +40,9 @@ import uploadDropzoneYellow from "./assets/upload_drag&drop_zone_yellow.png";
 import {
   addSeries,
   authWebPin,
+  getAlarmSoundUrl,
   getHealth,
+  getRaspberryAlarms,
   getRaspberryLanguage,
   getStoredWebPin,
   powerOffRaspberry,
@@ -52,8 +54,10 @@ import {
   saveMediaProfile,
   setStoredWebPin,
   stopPlayback,
+  updateRaspberryAlarms,
   updateRaspberryLanguage,
   uploadMovieFile,
+  uploadSeriesFiles,
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
@@ -136,7 +140,7 @@ const RASPBERRY_LANGUAGE_OPTIONS = [
     selectedIcon: languageEsSelected,
   },
   {
-    id: "cat",
+    id: "ca",
     label: "Català",
     normalIcon: languageCatNormal,
     selectedIcon: languageCatSelected,
@@ -155,7 +159,7 @@ const DEFAULT_HERO_CROP = {
 };
 const TMDB_LANGUAGE_BY_APP_LANGUAGE = {
   es: "es-ES",
-  cat: "ca-ES",
+  ca: "ca-ES",
   en: "en-US",
 };
 const UI_STRINGS = {
@@ -240,6 +244,9 @@ const UI_STRINGS = {
     alarms_title: "Alarmas de la televisión",
     alarms_copy: "Programa la hora a la que debe sonar la alarma de la mini tele.",
     alarm_item: "Alarma {index}",
+    alarm_sound_select: "Sonido de la alarma {index}",
+    alarm_preview_select: "Sonido para probar",
+    no_alarm_sounds: "No hay sonidos disponibles",
     on: "On",
     off: "Off",
     playback_current: "Reproducción actual",
@@ -303,9 +310,26 @@ const UI_STRINGS = {
     upload_games_detected: "Se han detectado {count} archivo(s). La subida guiada de juegos llegará después.",
     upload_name_not_detected: "No he podido detectar un nombre útil para buscar en TMDB.",
     upload_detected_summary: "{count} archivo(s) detectados. Búsqueda preparada para {media}: \"{name}\".",
+    upload_series_requires_directory: "Selecciona o arrastra un único directorio de serie.",
+    upload_series_subdirectories_error: "Todo el contenido de la serie debe estar dentro del directorio, sin subdirectorios.",
+    upload_series_format_error: "Todos los ficheros deben contener el formato SxxExx.",
     upload_button: "Upload",
-    upload_copying: "Copiando archivo a la Raspberry...",
+    tmdb_browser_title: "Visualizar ficha en TMDB",
+    tmdb_browser_copy:
+      "Consulta el contenido de la serie o película en TMDB antes de preparar tus archivos locales, así la carga queda lo más ordenada posible.",
+    tmdb_browser_open: "Visualizar TMDB",
+    tmdb_browser_preview: "Visualizar",
+    tmdb_browser_results: "Resultados TMDB",
+    tmdb_browser_select_prompt: "Visualiza un resultado para revisar temporadas, capítulos o datos de la película.",
+    tmdb_browser_loading: "Cargando ficha TMDB...",
+    tmdb_browser_load_failed: "No se pudo cargar la ficha TMDB.",
+    tmdb_browser_search_intro: "Busca una serie o película para ver su ficha aquí.",
+    tmdb_browser_season_prompt: "Selecciona una temporada para ver sus capítulos.",
+    upload_copying: "Copiando contenido a la Raspberry...",
     upload_done_summary: "{name} añadida a Movies: {path}",
+    upload_series_done_summary: "{name} añadida a TVShows: {path}",
+    unavailable_season: "Temporada sin capítulos cargados",
+    unavailable_episode: "Capítulo no cargado",
     games_in_construction: "Juegos en construcción",
     select_movie: "Seleccionar película",
     select_series: "Seleccionar serie",
@@ -327,7 +351,7 @@ const UI_STRINGS = {
       "Si quieres añadir contenido de película, puedes hacerlo desde la sección Uploads.",
     go_to_uploads: "Uploads",
   },
-  cat: {
+  ca: {
     media_series: "Sèries",
     media_movies: "Pel·lícules",
     media_games: "Jocs",
@@ -408,6 +432,9 @@ const UI_STRINGS = {
     alarms_title: "Alarmes de la televisió",
     alarms_copy: "Programa l'hora a la qual ha de sonar l'alarma de la mini tele.",
     alarm_item: "Alarma {index}",
+    alarm_sound_select: "So de l'alarma {index}",
+    alarm_preview_select: "So per provar",
+    no_alarm_sounds: "No hi ha sons disponibles",
     on: "On",
     off: "Off",
     playback_current: "Reproducció actual",
@@ -471,9 +498,26 @@ const UI_STRINGS = {
     upload_games_detected: "S'han detectat {count} arxiu(s). La pujada guiada de jocs arribarà després.",
     upload_name_not_detected: "No he pogut detectar un nom útil per cercar a TMDB.",
     upload_detected_summary: "{count} arxiu(s) detectats. Cerca preparada per a {media}: \"{name}\".",
+    upload_series_requires_directory: "Selecciona o arrossega un únic directori de sèrie.",
+    upload_series_subdirectories_error: "Tot el contingut de la sèrie ha d'estar dins del directori, sense subdirectoris.",
+    upload_series_format_error: "Tots els fitxers han de contenir el format SxxExx.",
     upload_button: "Upload",
-    upload_copying: "Copiant el fitxer a la Raspberry...",
+    tmdb_browser_title: "Visualitzar fitxa a TMDB",
+    tmdb_browser_copy:
+      "Consulta el contingut de la sèrie o pel·lícula a TMDB abans de preparar els fitxers locals, així la càrrega queda tan ordenada com sigui possible.",
+    tmdb_browser_open: "Visualitzar TMDB",
+    tmdb_browser_preview: "Visualitzar",
+    tmdb_browser_results: "Resultats TMDB",
+    tmdb_browser_select_prompt: "Visualitza un resultat per revisar temporades, capítols o dades de la pel·lícula.",
+    tmdb_browser_loading: "Carregant fitxa TMDB...",
+    tmdb_browser_load_failed: "No s'ha pogut carregar la fitxa TMDB.",
+    tmdb_browser_search_intro: "Cerca una sèrie o pel·lícula per veure'n la fitxa aquí.",
+    tmdb_browser_season_prompt: "Selecciona una temporada per veure'n els capítols.",
+    upload_copying: "Copiant el contingut a la Raspberry...",
     upload_done_summary: "{name} afegida a Movies: {path}",
+    upload_series_done_summary: "{name} afegida a TVShows: {path}",
+    unavailable_season: "Temporada sense capítols carregats",
+    unavailable_episode: "Capítol no carregat",
     games_in_construction: "Jocs en construcció",
     select_movie: "Seleccionar pel·lícula",
     select_series: "Seleccionar sèrie",
@@ -576,6 +620,9 @@ const UI_STRINGS = {
     alarms_title: "TV alarms",
     alarms_copy: "Set the time when the mini TV alarm should ring.",
     alarm_item: "Alarm {index}",
+    alarm_sound_select: "Alarm {index} sound",
+    alarm_preview_select: "Sound to preview",
+    no_alarm_sounds: "No sounds available",
     on: "On",
     off: "Off",
     playback_current: "Current playback",
@@ -639,9 +686,26 @@ const UI_STRINGS = {
     upload_games_detected: "{count} file(s) detected. Guided game uploads will arrive later.",
     upload_name_not_detected: "I couldn't detect a useful name to search on TMDB.",
     upload_detected_summary: "{count} file(s) detected. Search prepared for {media}: \"{name}\".",
+    upload_series_requires_directory: "Select or drop a single series directory.",
+    upload_series_subdirectories_error: "All series content must be inside the directory, without subdirectories.",
+    upload_series_format_error: "Every file must contain the SxxExx format.",
     upload_button: "Upload",
-    upload_copying: "Copying file to the Raspberry...",
+    tmdb_browser_title: "View TMDB details",
+    tmdb_browser_copy:
+      "Check the series or movie content on TMDB before preparing your local files, so the upload stays as tidy as possible.",
+    tmdb_browser_open: "View TMDB",
+    tmdb_browser_preview: "View",
+    tmdb_browser_results: "TMDB results",
+    tmdb_browser_select_prompt: "View a result to review seasons, episodes, or movie details.",
+    tmdb_browser_loading: "Loading TMDB details...",
+    tmdb_browser_load_failed: "Could not load TMDB details.",
+    tmdb_browser_search_intro: "Search for a series or movie to view its details here.",
+    tmdb_browser_season_prompt: "Select a season to view its episodes.",
+    upload_copying: "Copying content to the Raspberry...",
     upload_done_summary: "{name} added to Movies: {path}",
+    upload_series_done_summary: "{name} added to TVShows: {path}",
+    unavailable_season: "Season without uploaded episodes",
+    unavailable_episode: "Episode not uploaded",
     games_in_construction: "Games under construction",
     select_movie: "Select movie",
     select_series: "Select series",
@@ -665,12 +729,18 @@ const UI_STRINGS = {
   },
 };
 
+function normalizeRaspberryLanguage(language) {
+  const safeLanguage = String(language || "").trim().toLowerCase();
+  if (safeLanguage === "cat") return "ca";
+  return RASPBERRY_LANGUAGE_OPTIONS.some((option) => option.id === safeLanguage) ? safeLanguage : "es";
+}
+
 function getTmdbLanguage(language) {
-  return TMDB_LANGUAGE_BY_APP_LANGUAGE[language] || TMDB_LANGUAGE_BY_APP_LANGUAGE.es;
+  return TMDB_LANGUAGE_BY_APP_LANGUAGE[normalizeRaspberryLanguage(language)] || TMDB_LANGUAGE_BY_APP_LANGUAGE.es;
 }
 
 function translate(language, key, variables = {}) {
-  const strings = UI_STRINGS[language] || UI_STRINGS.es;
+  const strings = UI_STRINGS[normalizeRaspberryLanguage(language)] || UI_STRINGS.es;
   const fallback = UI_STRINGS.es[key] || key;
   const template = strings[key] || fallback;
 
@@ -718,6 +788,103 @@ function deriveUploadSearchLabel(file, mediaType) {
     .replace(/\b(19|20)\d{2}\b/g, "")
     .replace(/[._-]+/g, " ")
     .trim();
+}
+
+function getSeriesUploadValidation(files) {
+  const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
+  const roots = new Set();
+  const nestedFiles = [];
+  const invalidFiles = [];
+  const episodePattern = /S\d{2}E\d{2}/i;
+
+  safeFiles.forEach((file) => {
+    const relativePath = String(file?.webkitRelativePath || "").replace(/\\/g, "/").trim();
+    const parts = relativePath.split("/").filter(Boolean);
+    const filename = String(file?.name || parts.at(-1) || "").trim();
+
+    if (!relativePath || parts.length < 2) {
+      invalidFiles.push(filename || relativePath);
+      return;
+    }
+
+    roots.add(parts[0]);
+    if (parts.length > 2) {
+      nestedFiles.push(relativePath);
+    }
+    if (!episodePattern.test(filename)) {
+      invalidFiles.push(filename);
+    }
+  });
+
+  const directoryName = Array.from(roots)[0] || "";
+
+  return {
+    ok: safeFiles.length > 0 && roots.size === 1 && nestedFiles.length === 0 && invalidFiles.length === 0,
+    directoryName,
+    multipleDirectories: roots.size > 1,
+    nestedFiles,
+    invalidFiles,
+  };
+}
+
+function readEntryFiles(entry) {
+  if (!entry) return Promise.resolve([]);
+  if (entry.isFile) {
+    return new Promise((resolve) => {
+      entry.file(
+        (file) => {
+          const relativePath = String(entry.fullPath || file.name || "").replace(/^\/+/, "");
+          if (relativePath && !file.webkitRelativePath) {
+            try {
+              Object.defineProperty(file, "webkitRelativePath", {
+                value: relativePath,
+              });
+            } catch (_error) {
+              // Some browsers expose webkitRelativePath as read-only; validation will handle it.
+            }
+          }
+          resolve([file]);
+        },
+        () => resolve([])
+      );
+    });
+  }
+  if (!entry.isDirectory) return Promise.resolve([]);
+
+  const reader = entry.createReader();
+  const readBatch = () =>
+    new Promise((resolve) => {
+      reader.readEntries(resolve, () => resolve([]));
+    });
+
+  return new Promise((resolve) => {
+    const entries = [];
+    async function drain() {
+      const batch = await readBatch();
+      if (!batch.length) {
+        const files = await Promise.all(entries.map(readEntryFiles));
+        resolve(files.flat());
+        return;
+      }
+      entries.push(...batch);
+      drain();
+    }
+    drain();
+  });
+}
+
+async function readFilesFromDataTransfer(dataTransfer) {
+  const items = Array.from(dataTransfer?.items || []);
+  const entries = items
+    .map((item) => (typeof item.webkitGetAsEntry === "function" ? item.webkitGetAsEntry() : null))
+    .filter(Boolean);
+
+  if (entries.length) {
+    const files = await Promise.all(entries.map(readEntryFiles));
+    return files.flat();
+  }
+
+  return Array.from(dataTransfer?.files || []);
 }
 
 function getRaspberryMovieLibraryItems(videos) {
@@ -823,23 +990,29 @@ function mergeProfileMaps(currentProfiles, incomingProfiles) {
 }
 
 function loadStoredRaspberryAlarm() {
+  const fallbackAlarms = [
+    { id: 1, enabled: false, time: "07:30", sound: "" },
+    { id: 2, enabled: false, time: "08:00", sound: "" },
+    { id: 3, enabled: false, time: "08:30", sound: "" },
+  ];
   if (typeof window === "undefined") {
-    return [
-      { id: 1, enabled: false, time: "07:30" },
-      { id: 2, enabled: false, time: "08:00" },
-      { id: 3, enabled: false, time: "08:30" },
-    ];
+    return fallbackAlarms;
   }
 
   try {
     const raw = window.localStorage.getItem(RASPBERRY_ALARM_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : null;
     if (Array.isArray(parsed)) {
-      return parsed.slice(0, 3).map((entry, index) => ({
-        id: index + 1,
-        enabled: Boolean(entry?.enabled),
-        time: /^\d{2}:\d{2}$/.test(entry?.time || "") ? entry.time : `0${7 + index}:30`.slice(-5),
-      }));
+      return fallbackAlarms.map((fallback, index) => {
+        const entry = parsed[index] || {};
+        return {
+          ...fallback,
+          id: index + 1,
+          enabled: Boolean(entry?.enabled),
+          time: /^\d{2}:\d{2}$/.test(entry?.time || "") ? entry.time : fallback.time,
+          sound: String(entry?.sound || entry?.soundFile || ""),
+        };
+      });
     }
 
     return [
@@ -847,16 +1020,13 @@ function loadStoredRaspberryAlarm() {
         id: 1,
         enabled: Boolean(parsed?.enabled),
         time: /^\d{2}:\d{2}$/.test(parsed?.time || "") ? parsed.time : "07:30",
+        sound: String(parsed?.sound || parsed?.soundFile || ""),
       },
-      { id: 2, enabled: false, time: "08:00" },
-      { id: 3, enabled: false, time: "08:30" },
+      fallbackAlarms[1],
+      fallbackAlarms[2],
     ];
   } catch (_error) {
-    return [
-      { id: 1, enabled: false, time: "07:30" },
-      { id: 2, enabled: false, time: "08:00" },
-      { id: 3, enabled: false, time: "08:30" },
-    ];
+    return fallbackAlarms;
   }
 }
 
@@ -870,7 +1040,7 @@ function loadStoredRaspberryLanguage() {
 
   try {
     const raw = window.localStorage.getItem(RASPBERRY_LANGUAGE_STORAGE_KEY);
-    return RASPBERRY_LANGUAGE_OPTIONS.some((option) => option.id === raw) ? raw : "es";
+    return normalizeRaspberryLanguage(raw);
   } catch (_error) {
     return "es";
   }
@@ -878,7 +1048,7 @@ function loadStoredRaspberryLanguage() {
 
 function saveStoredRaspberryLanguage(language) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(RASPBERRY_LANGUAGE_STORAGE_KEY, language);
+  window.localStorage.setItem(RASPBERRY_LANGUAGE_STORAGE_KEY, normalizeRaspberryLanguage(language));
 }
 
 function loadStoredRaspberryCurrentPlayback() {
@@ -1152,11 +1322,17 @@ function HeroSelector({ options, value, placeholder, disabled, onChange }) {
   );
 }
 
-function SeasonCard({ season, isActive, onSelect, t }) {
+function SeasonCard({ season, isActive, disabled, onSelect, t }) {
   return (
     <button
-      className={`season-card${isActive ? " active" : ""}`}
-      onClick={() => onSelect(season.id)}
+      className={`season-card${isActive ? " active" : ""}${disabled ? " is-disabled" : ""}`}
+      onClick={() => {
+        if (!disabled) {
+          onSelect(season.id);
+        }
+      }}
+      aria-disabled={disabled}
+      title={disabled ? t("unavailable_season") : season.title}
       type="button"
     >
       <div className="season-card__image-wrap">
@@ -1195,6 +1371,29 @@ function parseRaspberryEpisodeId(value) {
     seasonNumber: Number(match[1]),
     episodeNumber: Number(match[2]),
   };
+}
+
+function getUploadedEpisodeIds(directory) {
+  return new Set(
+    (Array.isArray(directory?.episodeIds) ? directory.episodeIds : [])
+      .map((episodeId) => String(episodeId || "").trim().toUpperCase())
+      .filter(Boolean)
+  );
+}
+
+function isSeasonUploaded(season, uploadedEpisodeIds) {
+  const seasonNumber = Number(season?.seasonNumber || season?.id) || 0;
+  if (!seasonNumber || !uploadedEpisodeIds?.size) return false;
+  const prefix = `S${String(seasonNumber).padStart(2, "0")}E`;
+  return Array.from(uploadedEpisodeIds).some((episodeId) => episodeId.startsWith(prefix));
+}
+
+function isEpisodeUploaded(season, episode, uploadedEpisodeIds) {
+  const episodeId = toRaspberryEpisodeId(
+    season?.seasonNumber || season?.id,
+    episode?.episodeNumber
+  );
+  return Boolean(episodeId && uploadedEpisodeIds?.has(episodeId));
 }
 
 function isGenericEpisodeDisplayTitle(title, episodeNumber) {
@@ -1253,6 +1452,66 @@ function createMoviePlaybackInfo({ movie, movieEntry }) {
     image: movie.heroImage || movie.imageOptions?.[0] || cartellLogo,
     paused: false,
   };
+}
+
+function createPlaybackInfoFromHealth({ health, seriesOptions, movieOptions }) {
+  const playbackId = String(health?.playing || "").trim().toUpperCase();
+  const directory = String(health?.directory || "").trim();
+  const filePath = String(health?.file || "").trim();
+  if (!playbackId) return null;
+
+  const parsedEpisode = parseRaspberryEpisodeId(playbackId);
+  if (parsedEpisode) {
+    const activeSeries =
+      seriesOptions.find((series) => series.directoryPath === directory) ||
+      seriesOptions.find((series) => filePath.startsWith(`${series.directoryPath}/`)) ||
+      null;
+    const season =
+      activeSeries?.seasons?.find(
+        (entry) => Number(entry.seasonNumber || entry.id) === parsedEpisode.seasonNumber
+      ) || null;
+
+    return createEpisodePlaybackInfo({
+      series: activeSeries || {
+        id: null,
+        directoryPath: directory,
+        name: stripFileExtension(filePath.split("/").slice(-2, -1)[0] || directory || playbackId),
+        heroImage: cartellLogo,
+      },
+      season: {
+        seasonNumber: parsedEpisode.seasonNumber,
+        title: season?.title || "",
+        image: season?.image || activeSeries?.heroImage || cartellLogo,
+      },
+      episode: {
+        episodeNumber: parsedEpisode.episodeNumber,
+        title: playbackId,
+        image: season?.image || activeSeries?.heroImage || cartellLogo,
+      },
+      playbackId,
+    });
+  }
+
+  const fileName = filePath.split("/").pop() || playbackId;
+  const activeMovie =
+    movieOptions.find((movie) => movie.fileRelativePath === filePath) ||
+    movieOptions.find((movie) => normalizeMediaLabel(movie.fileName) === normalizeMediaLabel(fileName)) ||
+    movieOptions.find((movie) => normalizeMediaLabel(movie.name) === normalizeMediaLabel(playbackId)) ||
+    null;
+
+  return createMoviePlaybackInfo({
+    movie: activeMovie || {
+      id: null,
+      name: stripFileExtension(fileName || playbackId),
+      originalName: "",
+      heroImage: cartellLogo,
+    },
+    movieEntry: {
+      id: playbackId,
+      directory,
+      relativePath: filePath,
+    },
+  });
 }
 
 function resolveNextEpisodeTarget({ currentPlayback, raspberryHealth, seriesOptions, directories }) {
@@ -1323,9 +1582,19 @@ function resolveNextEpisodeTarget({ currentPlayback, raspberryHealth, seriesOpti
     : null;
 }
 
-function EpisodeRow({ episode, onSelect }) {
+function EpisodeRow({ episode, available, onSelect, t }) {
   return (
-    <button className="episode-card" onClick={() => onSelect(episode)} type="button">
+    <button
+      className={`episode-card${available ? "" : " is-disabled"}`}
+      onClick={() => {
+        if (available) {
+          onSelect(episode);
+        }
+      }}
+      aria-disabled={!available}
+      title={available ? episode.title : t("unavailable_episode")}
+      type="button"
+    >
       <div className="episode-card__thumb">
         {episode.image ? <img src={episode.image} alt={episode.title} /> : null}
       </div>
@@ -1334,7 +1603,7 @@ function EpisodeRow({ episode, onSelect }) {
         <h3>
           {episode.episodeNumber}. {episode.title}
         </h3>
-        {episode.airDate ? <p>{episode.airDate}</p> : null}
+        <p>{available ? episode.airDate : t("unavailable_episode")}</p>
       </div>
 
       <div className="episode-card__arrow">›</div>
@@ -1440,6 +1709,8 @@ function EpisodeDetailsModal({
   season,
   seriesName,
   playing,
+  available,
+  showPlayButton = true,
   onClose,
   onPlay,
   t,
@@ -1466,7 +1737,13 @@ function EpisodeDetailsModal({
   if (!visible || !episode || !season) return null;
 
   return (
-    <div className="modal-backdrop modal-backdrop--episode" onClick={onClose}>
+    <div
+      className="modal-backdrop modal-backdrop--episode"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClose();
+      }}
+    >
       <div
         className="episode-dialog"
         onClick={(event) => event.stopPropagation()}
@@ -1525,15 +1802,17 @@ function EpisodeDetailsModal({
             </div>
           </div>
 
-          <button
-            className="episode-dialog__play"
-            onClick={onPlay}
-            type="button"
-            disabled={playing}
-          >
-            <img src={tvGreen} alt="" aria-hidden="true" />
-            <span>{playing ? t("playing_now") : t("play_on_tv")}</span>
-          </button>
+          {showPlayButton ? (
+            <button
+              className="episode-dialog__play"
+              onClick={onPlay}
+              type="button"
+              disabled={playing || !available}
+            >
+              <img src={tvGreen} alt="" aria-hidden="true" />
+              <span>{available ? (playing ? t("playing_now") : t("play_on_tv")) : t("unavailable_episode")}</span>
+            </button>
+          ) : null}
 
           <div className="episode-dialog__synopsis">
             <strong>{`${t("synopsis")}:`}</strong>
@@ -1992,6 +2271,424 @@ function AddMediaModal({
   );
 }
 
+function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
+  const [mediaType, setMediaType] = useState("series");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedSeasonId, setSelectedSeasonId] = useState(null);
+  const [seasonEpisodes, setSeasonEpisodes] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+  const [selectedEpisode, setSelectedEpisode] = useState(null);
+  const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
+  const [movieFrameIndex, setMovieFrameIndex] = useState(0);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!visible) {
+      setMediaType("series");
+      setQuery("");
+      setResults([]);
+      setSelectedItem(null);
+      setSelectedSeasonId(null);
+      setSeasonEpisodes(null);
+      setSelectedEpisode(null);
+      setEpisodeDialogOpen(false);
+      setMovieFrameIndex(0);
+      setError("");
+      return;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [visible, onClose]);
+
+  async function runSearch(event) {
+    event?.preventDefault();
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      setResults([]);
+      setError(t("search_write_media", { media: mediaType === "movies" ? t("media_movies_singular") : t("media_series_singular") }));
+      return;
+    }
+
+    setSearching(true);
+    setError("");
+    setSelectedItem(null);
+    setSelectedSeasonId(null);
+    setSeasonEpisodes(null);
+
+    try {
+      const nextResults =
+        mediaType === "movies"
+          ? await searchMovies(trimmedQuery, tmdbLanguage)
+          : await searchTvSeries(trimmedQuery, tmdbLanguage);
+      setResults(nextResults);
+      if (!nextResults.length) {
+        setError(mediaType === "movies" ? t("no_movie_results") : t("no_series_results"));
+      }
+    } catch (nextError) {
+      setResults([]);
+      setError(nextError.message || t("tmdb_search_failed"));
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function handlePreview(result) {
+    setLoadingDetails(true);
+    setError("");
+    setSelectedItem(null);
+    setSelectedSeasonId(null);
+    setSeasonEpisodes(null);
+    setMovieFrameIndex(0);
+
+    try {
+      const details =
+        mediaType === "movies"
+          ? await getMovieById(result.id, tmdbLanguage)
+          : await getTvSeriesById(result.id, tmdbLanguage);
+      setSelectedItem(details);
+      if (mediaType === "series") {
+        setSelectedSeasonId(details.seasons?.[0]?.id || null);
+      }
+    } catch (nextError) {
+      setError(nextError.message || t("tmdb_browser_load_failed"));
+    } finally {
+      setLoadingDetails(false);
+    }
+  }
+
+  const selectedSeason =
+    mediaType === "series"
+      ? (selectedItem?.seasons || []).find((season) => season.id === selectedSeasonId) || null
+      : null;
+
+  useEffect(() => {
+    if (!visible || mediaType !== "series" || !selectedItem?.id || !selectedSeason) {
+      setSeasonEpisodes(null);
+      return;
+    }
+
+    let cancelled = false;
+    async function loadEpisodes() {
+      setLoadingEpisodes(true);
+      try {
+        const nextSeason = await getTvSeasonEpisodes({
+          seriesId: selectedItem.id,
+          seasonNumber: selectedSeason.seasonNumber || selectedSeason.id,
+          language: tmdbLanguage,
+        });
+        if (!cancelled) {
+          setSeasonEpisodes(nextSeason);
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setError(nextError.message || t("tmdb_browser_load_failed"));
+          setSeasonEpisodes(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingEpisodes(false);
+        }
+      }
+    }
+
+    loadEpisodes();
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, mediaType, selectedItem?.id, selectedSeason?.id, tmdbLanguage]);
+
+  if (!visible) return null;
+
+  const mediaLabel = mediaType === "movies" ? t("media_movies_singular") : t("media_series_singular");
+  const previewImages = selectedItem?.imageOptions?.length
+    ? selectedItem.imageOptions.slice(0, MAX_MOVIE_IMAGES)
+    : [selectedItem?.heroImage].filter(Boolean);
+  const safeMovieFrameIndex = previewImages.length
+    ? Math.min(movieFrameIndex, previewImages.length - 1)
+    : 0;
+
+  return (
+    <div className="modal-backdrop modal-backdrop--tmdb-browser" onClick={onClose}>
+      <div
+        className="dialog-card dialog-card--tmdb-browser"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="dialog-card__header">
+          <div>
+            <p>TMDB</p>
+            <h2>{t("tmdb_browser_title")}</h2>
+          </div>
+          <button className="dialog-card__close" onClick={onClose} type="button" aria-label={t("close")}>
+            ×
+          </button>
+        </div>
+
+        <form className="tmdb-browser__search" onSubmit={runSearch}>
+          <div className="media-switch tmdb-browser__switch" role="tablist" aria-label={t("raspberry_sections")}>
+            {["series", "movies"].map((nextType) => {
+              const isActive = nextType === mediaType;
+              return (
+                <button
+                  key={nextType}
+                  className={`media-switch__option${isActive ? " active" : ""}`}
+                  onClick={() => {
+                    setMediaType(nextType);
+                    setResults([]);
+                    setSelectedItem(null);
+                    setSelectedSeasonId(null);
+                    setSeasonEpisodes(null);
+                    setError("");
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                >
+                  <img
+                    className="media-switch__icon"
+                    src={isActive ? (nextType === "movies" ? movieIconBlack : tvshowIconBlack) : (nextType === "movies" ? movieIconYellow : tvshowIconYellow)}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span>{nextType === "movies" ? t("media_movies") : t("media_series")}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="dialog-field tmdb-browser__query">
+            <span>{t("search")}</span>
+            <div className="search-input-shell">
+              <span className="search-input-shell__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation">
+                  <circle cx="11" cy="11" r="6.5" />
+                  <path d="M16 16L21 21" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={mediaType === "movies" ? t("search_placeholder_movie") : t("search_placeholder_series")}
+              />
+            </div>
+          </label>
+
+          <button className="dialog-button tmdb-browser__search-button" disabled={searching} type="submit">
+            {searching ? t("searching_button") : t("search_button")}
+          </button>
+        </form>
+
+        {error ? <p className="dialog-error">{error}</p> : null}
+
+        <div className="tmdb-browser__layout">
+          <section className="tmdb-browser__results" aria-label={t("tmdb_browser_results")}>
+            {results.length ? (
+              <div className="add-series-results__list">
+                {results.map((result) => {
+                  const isSelected = Number(result.id) === Number(selectedItem?.id);
+                  const meta = [
+                    mediaType === "movies" ? result.releaseDate?.slice(0, 4) : result.firstAirDate?.slice(0, 4),
+                    result.originalName,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ");
+
+                  return (
+                    <article
+                      key={result.id}
+                      className={`add-series-result tmdb-browser-result${isSelected ? " active" : ""}`}
+                    >
+                      <div className="add-series-result__poster">
+                        {result.posterImage ? <img src={result.posterImage} alt={result.name} /> : <span>{t("no_images_available")}</span>}
+                      </div>
+                      <div className="add-series-result__body">
+                        <h3>{result.name}</h3>
+                        {meta ? <p className="add-series-result__meta">{meta}</p> : null}
+                        <p className="add-series-result__overview">{result.overview || t("no_tmdb_description")}</p>
+                        <button
+                          className="dialog-button dialog-button--accent tmdb-browser-result__button"
+                          onClick={() => handlePreview(result)}
+                          type="button"
+                        >
+                          {t("tmdb_browser_preview")}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="add-series-results__empty">
+                <p>{t("tmdb_browser_search_intro", { media: mediaLabel })}</p>
+              </div>
+            )}
+          </section>
+
+          <section className="tmdb-browser__preview">
+            {loadingDetails ? (
+              <div className="add-series-results__empty">
+                <p>{t("tmdb_browser_loading")}</p>
+              </div>
+            ) : !selectedItem ? (
+              <div className="add-series-results__empty">
+                <p>{t("tmdb_browser_select_prompt")}</p>
+              </div>
+            ) : mediaType === "series" ? (
+              <div className="tmdb-browser-series">
+                <header
+                  className="tmdb-browser-series__hero"
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(7, 12, 18, 0.18), rgba(7, 12, 18, 0.5)), url(${selectedItem.heroImage || cartellLogo})`,
+                  }}
+                >
+                  <h3>{selectedItem.name}</h3>
+                  <p>{`${selectedItem.seasonCount || selectedItem.seasons?.length || 0} ${t("seasons_label")} · ${selectedItem.totalEpisodeCount || 0} ${t("episodes")}`}</p>
+                </header>
+
+                <div className="tmdb-browser-series__seasons">
+                  {(selectedItem.seasons || []).map((season) => (
+                    <SeasonCard
+                      key={season.id}
+                      season={season}
+                      isActive={season.id === selectedSeasonId}
+                      disabled={false}
+                      onSelect={setSelectedSeasonId}
+                      t={t}
+                    />
+                  ))}
+                </div>
+
+                {selectedSeason ? (
+                  <div className="tmdb-browser-series__episodes">
+                    {loadingEpisodes ? (
+                      <div className="add-series-results__empty">
+                        <p>{t("loading_episodes")}</p>
+                      </div>
+                    ) : (
+                      (seasonEpisodes?.episodes || []).map((episode) => (
+                        <EpisodeRow
+                          key={episode.id}
+                          episode={episode}
+                          available
+                          onSelect={(nextEpisode) => {
+                            setSelectedEpisode(nextEpisode);
+                            setEpisodeDialogOpen(true);
+                          }}
+                          t={t}
+                        />
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <div className="add-series-results__empty">
+                    <p>{t("tmdb_browser_season_prompt")}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="movie-panel tmdb-browser-movie">
+                <div className="movie-panel__card">
+                  <MovieImageCarousel
+                    title={selectedItem.name}
+                    images={previewImages}
+                    activeIndex={safeMovieFrameIndex}
+                    onSelect={setMovieFrameIndex}
+                    onPrevious={() =>
+                      setMovieFrameIndex((current) =>
+                        previewImages.length
+                          ? (current - 1 + previewImages.length) % previewImages.length
+                          : 0
+                      )
+                    }
+                    onNext={() =>
+                      setMovieFrameIndex((current) =>
+                        previewImages.length ? (current + 1) % previewImages.length : 0
+                      )
+                    }
+                    t={t}
+                  />
+
+                  <div className="movie-panel__content">
+                    <div className="movie-panel__header">
+                      <h2>{selectedItem.name}</h2>
+                      {selectedItem.originalName && selectedItem.originalName !== selectedItem.name ? (
+                        <p>{selectedItem.originalName}</p>
+                      ) : null}
+                    </div>
+
+                    <div className="movie-panel__facts">
+                      <div className="movie-panel__fact">
+                        <strong>{t("release")}</strong>
+                        <span>{selectedItem.releaseDate || t("release_unknown")}</span>
+                      </div>
+                      <div className="movie-panel__fact">
+                        <strong>{t("duration")}</strong>
+                        <span>
+                          {selectedItem.runtime
+                            ? t("loading_movie_runtime", { minutes: selectedItem.runtime })
+                            : t("duration_unknown")}
+                        </span>
+                      </div>
+                      <div className="movie-panel__fact">
+                        <strong>{t("rating")}</strong>
+                        <span>
+                          {typeof selectedItem.voteAverage === "number" && selectedItem.voteAverage > 0
+                            ? `${selectedItem.voteAverage.toFixed(1)} / 10`
+                            : t("tmdb_rating_missing")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="movie-panel__overview">
+                      <strong>{t("synopsis")}</strong>
+                      <p>{selectedItem.overview || t("synopsis_unavailable")}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      <EpisodeDetailsModal
+        visible={episodeDialogOpen}
+        episode={selectedEpisode}
+        season={selectedSeason || seasonEpisodes}
+        seriesName={selectedItem?.name || ""}
+        playing={false}
+        available
+        showPlayButton={false}
+        onClose={() => {
+          setEpisodeDialogOpen(false);
+          setSelectedEpisode(null);
+        }}
+        onPlay={() => {}}
+        t={t}
+      />
+    </div>
+  );
+}
+
 function MiniTvModal({ visible, onClose, t }) {
   if (!visible) return null;
 
@@ -2013,6 +2710,32 @@ function MiniTvModal({ visible, onClose, t }) {
         <div className="dialog-card__actions">
           <button className="dialog-button" onClick={onClose} type="button">
             {t("done_close")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UploadValidationModal({ visible, title, message, onClose, t }) {
+  if (!visible) return null;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="dialog-card dialog-card--compact" onClick={(event) => event.stopPropagation()}>
+        <div className="dialog-card__header">
+          <div>
+            <p>{t("latest_detection")}</p>
+            <h2>{title}</h2>
+          </div>
+          <button className="dialog-card__close" onClick={onClose} type="button">
+            ×
+          </button>
+        </div>
+        <p className="dialog-copy">{message}</p>
+        <div className="dialog-card__actions">
+          <button className="dialog-button" onClick={onClose} type="button">
+            {t("close")}
           </button>
         </div>
       </div>
@@ -2136,8 +2859,13 @@ function RaspberryPage({
   multimediaUsedGb,
   multimediaPercent,
   alarm,
+  alarmSounds,
+  alarmPreviewSound,
   onAlarmTimeChange,
   onAlarmToggle,
+  onAlarmSoundChange,
+  onAlarmPreviewSoundChange,
+  onAlarmPreviewPlay,
   raspberryHealth,
   currentPlaybackInfo,
   controlsBusy,
@@ -2159,6 +2887,7 @@ function RaspberryPage({
   uploadDragActive,
   onUploadDragStateChange,
   uploadSummary,
+  onOpenTmdbBrowser,
 }) {
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
   const uploadDropzoneCopyKey =
@@ -2339,9 +3068,47 @@ function RaspberryPage({
                       disabled={!alarmEntry.enabled}
                       onChange={(event) => onAlarmTimeChange(alarmEntry.id, event.target.value)}
                     />
+                    <select
+                      value={alarmEntry.sound || alarmSounds[0] || ""}
+                      disabled={!alarmSounds.length}
+                      onChange={(event) => onAlarmSoundChange(alarmEntry.id, event.target.value)}
+                      aria-label={t("alarm_sound_select", { index: alarmEntry.id })}
+                    >
+                      {alarmSounds.length ? (
+                        alarmSounds.map((sound) => (
+                          <option key={sound} value={sound}>
+                            {sound}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">{t("no_alarm_sounds")}</option>
+                      )}
+                    </select>
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="raspberry-alarm-preview">
+              <select
+                value={alarmPreviewSound || alarmSounds[0] || ""}
+                disabled={!alarmSounds.length}
+                onChange={(event) => onAlarmPreviewSoundChange(event.target.value)}
+                aria-label={t("alarm_preview_select")}
+              >
+                {alarmSounds.length ? (
+                  alarmSounds.map((sound) => (
+                    <option key={sound} value={sound}>
+                      {sound}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">{t("no_alarm_sounds")}</option>
+                )}
+              </select>
+              <button type="button" onClick={onAlarmPreviewPlay} disabled={!alarmSounds.length}>
+                {t("play")}
+              </button>
             </div>
           </article>
         </div>
@@ -2499,16 +3266,18 @@ function RaspberryPage({
                 onUploadDragStateChange(true);
               }}
               onDragLeave={() => onUploadDragStateChange(false)}
-              onDrop={(event) => {
+              onDrop={async (event) => {
                 event.preventDefault();
                 onUploadDragStateChange(false);
-                onUploadFiles(Array.from(event.dataTransfer.files || []));
+                onUploadFiles(await readFilesFromDataTransfer(event.dataTransfer));
               }}
             >
               <input
                 className="raspberry-upload-dropzone__input"
                 type="file"
                 multiple
+                webkitdirectory={uploadMediaType === "series" ? "" : undefined}
+                directory={uploadMediaType === "series" ? "" : undefined}
                 onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
               />
               <div className="raspberry-upload-dropzone__title">
@@ -2539,6 +3308,20 @@ function RaspberryPage({
                 <p>{uploadSummary}</p>
               </div>
             ) : null}
+
+            <div className="raspberry-upload-summary raspberry-upload-summary--tmdb">
+              <div>
+                <strong>{t("tmdb_browser_title")}</strong>
+                <p>{t("tmdb_browser_copy")}</p>
+              </div>
+              <button
+                className="dialog-button dialog-button--accent raspberry-upload-summary__action"
+                onClick={onOpenTmdbBrowser}
+                type="button"
+              >
+                {t("tmdb_browser_open")}
+              </button>
+            </div>
 
           </article>
         </div>
@@ -2597,6 +3380,9 @@ export default function App() {
   );
   const [raspberryControlsBusy, setRaspberryControlsBusy] = useState(false);
   const [raspberryAlarm, setRaspberryAlarm] = useState(() => loadStoredRaspberryAlarm());
+  const [raspberryAlarmSounds, setRaspberryAlarmSounds] = useState([]);
+  const [alarmPreviewSound, setAlarmPreviewSound] = useState("");
+  const [raspberryAlarmsLoaded, setRaspberryAlarmsLoaded] = useState(false);
   const [raspberryLanguage, setRaspberryLanguage] = useState(() => loadStoredRaspberryLanguage());
   const [raspberryLanguageSaving, setRaspberryLanguageSaving] = useState(false);
   const [raspberryLanguageError, setRaspberryLanguageError] = useState("");
@@ -2605,14 +3391,18 @@ export default function App() {
   const [uploadLookupOpen, setUploadLookupOpen] = useState(false);
   const [uploadLookupQuery, setUploadLookupQuery] = useState("");
   const [uploadSelectedFiles, setUploadSelectedFiles] = useState([]);
+  const [uploadDirectoryName, setUploadDirectoryName] = useState("");
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
+  const [uploadValidationError, setUploadValidationError] = useState(null);
+  const [tmdbBrowserOpen, setTmdbBrowserOpen] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
   const [episodePlaying, setEpisodePlaying] = useState(false);
   const [movieFrameIndex, setMovieFrameIndex] = useState(0);
   const [moviePlaying, setMoviePlaying] = useState(false);
   const seasonHeroShellRef = useRef(null);
+  const alarmPreviewAudioRef = useRef(null);
   const t = (key, variables) => translate(raspberryLanguage, key, variables);
   const tmdbLanguage = getTmdbLanguage(raspberryLanguage);
 
@@ -2628,15 +3418,28 @@ export default function App() {
       setLoading(true);
       setError("");
       setRaspberryLanguageError("");
+      setRaspberryAlarmsLoaded(false);
 
       try {
-        const [nextVideos, nextLanguage] = await Promise.all([getVideos(), getRaspberryLanguage()]);
+        const [nextVideos, nextLanguage, nextAlarmSettings] = await Promise.all([
+          getVideos(),
+          getRaspberryLanguage(),
+          getRaspberryAlarms(),
+        ]);
         if (cancelled) return;
 
         setVideos(nextVideos);
         if (nextLanguage?.language) {
-          setRaspberryLanguage(nextLanguage.language);
+          setRaspberryLanguage(normalizeRaspberryLanguage(nextLanguage.language));
         }
+        if (Array.isArray(nextAlarmSettings?.alarms)) {
+          setRaspberryAlarm(nextAlarmSettings.alarms);
+        }
+        if (Array.isArray(nextAlarmSettings?.sounds)) {
+          setRaspberryAlarmSounds(nextAlarmSettings.sounds);
+          setAlarmPreviewSound((current) => current || nextAlarmSettings.sounds[0] || "");
+        }
+        setRaspberryAlarmsLoaded(true);
 
         const firstDirectory = nextVideos?.directories?.[0]?.relativePath || "";
         setSelectedDirectoryPath((current) => current || firstDirectory);
@@ -2665,6 +3468,35 @@ export default function App() {
   useEffect(() => {
     saveStoredRaspberryAlarm(raspberryAlarm);
   }, [raspberryAlarm]);
+
+  useEffect(() => {
+    if (!unlocked || !raspberryAlarmsLoaded) return () => {};
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await updateRaspberryAlarms(raspberryAlarm);
+        if (Array.isArray(response?.alarms)) {
+          setRaspberryAlarm((current) =>
+            JSON.stringify(current) === JSON.stringify(response.alarms) ? current : response.alarms
+          );
+        }
+        if (Array.isArray(response?.sounds)) {
+          setRaspberryAlarmSounds(response.sounds);
+          setAlarmPreviewSound((current) => current || response.sounds[0] || "");
+        }
+      } catch (nextError) {
+        if (nextError?.status === 401) {
+          setStoredWebPin("");
+          setUnlocked(false);
+          setPinError("PIN incorrecto o sesion caducada.");
+        }
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [raspberryAlarm, raspberryAlarmsLoaded, unlocked]);
 
   useEffect(() => {
     saveStoredRaspberryLanguage(raspberryLanguage);
@@ -2713,7 +3545,7 @@ export default function App() {
   }, [videos]);
 
   useEffect(() => {
-    if (!unlocked || currentView !== "raspberry") {
+    if (!unlocked) {
       return () => {};
     }
 
@@ -2724,7 +3556,7 @@ export default function App() {
         const nextHealth = await getHealth();
         if (!cancelled) {
           if (nextHealth?.language) {
-            setRaspberryLanguage(nextHealth.language);
+            setRaspberryLanguage(normalizeRaspberryLanguage(nextHealth.language));
           }
           setRaspberryHealth({
             ok: Boolean(nextHealth?.ok),
@@ -2770,13 +3602,13 @@ export default function App() {
     }
 
     refreshRaspberryStatus();
-    const intervalId = window.setInterval(refreshRaspberryStatus, 10000);
+    const intervalId = window.setInterval(refreshRaspberryStatus, 1000);
 
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [currentView, unlocked]);
+  }, [unlocked]);
 
   const directories = videos?.directories || [];
 
@@ -2932,10 +3764,42 @@ export default function App() {
     seriesOptions.find((series) => series.directoryPath === selectedDirectoryPath) ||
     seriesOptions[0] ||
     null;
+  const selectedDirectory =
+    directories.find((directory) => directory.relativePath === selectedSeries?.directoryPath) ||
+    null;
+  const uploadedEpisodeIds = useMemo(
+    () => getUploadedEpisodeIds(selectedDirectory),
+    [selectedDirectory]
+  );
   const selectedMovie =
     movieOptions.find((movie) => Number(movie.id) === Number(selectedMovieId)) ||
     movieOptions[0] ||
     null;
+
+  useEffect(() => {
+    if (!raspberryHealth.running) return;
+
+    const playbackId = String(raspberryHealth.playing || "").trim().toUpperCase();
+    const directory = String(raspberryHealth.directory || "").trim();
+    if (!playbackId) return;
+
+    setRaspberryCurrentPlayback((current) => {
+      if (
+        current &&
+        String(current.playbackId || "").trim().toUpperCase() === playbackId &&
+        String(current.directory || "").trim() === directory
+      ) {
+        return current;
+      }
+
+      return createPlaybackInfoFromHealth({
+        health: raspberryHealth,
+        seriesOptions,
+        movieOptions,
+      });
+    });
+  }, [movieOptions, raspberryHealth, seriesOptions]);
+
   const selectedItem =
     activeMediaType === "games"
       ? null
@@ -3044,9 +3908,9 @@ export default function App() {
       if (current && seasons.some((season) => season.id === current)) {
         return current;
       }
-      return seasons[0].id;
+      return seasons.find((season) => isSeasonUploaded(season, uploadedEpisodeIds))?.id || seasons[0].id;
     });
-  }, [seasons]);
+  }, [seasons, uploadedEpisodeIds]);
 
   useEffect(() => {
     if (currentView !== "season" || !selectedSeries?.id || !selectedSeason) {
@@ -3176,6 +4040,7 @@ export default function App() {
   }
 
   async function handleRaspberryLanguageChange(nextLanguage) {
+    nextLanguage = normalizeRaspberryLanguage(nextLanguage);
     if (nextLanguage === raspberryLanguage || raspberryLanguageSaving) {
       return;
     }
@@ -3184,7 +4049,7 @@ export default function App() {
     setRaspberryLanguageError("");
     try {
       const response = await updateRaspberryLanguage(nextLanguage);
-      setRaspberryLanguage(response?.language || nextLanguage);
+      setRaspberryLanguage(normalizeRaspberryLanguage(response?.language || nextLanguage));
     } catch (nextError) {
       if (nextError?.status === 401) {
         setStoredWebPin("");
@@ -3313,6 +4178,9 @@ export default function App() {
   }
 
   function handleOpenSeason(seasonId) {
+    const season = seasons.find((entry) => entry.id === seasonId);
+    if (!isSeasonUploaded(season, uploadedEpisodeIds)) return;
+
     setSelectedSeasonId(seasonId);
     setSeasonEpisodes(null);
     setSelectedEpisode(null);
@@ -3357,6 +4225,8 @@ export default function App() {
   }
 
   function handleOpenEpisodeDetails(episode) {
+    if (!isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)) return;
+
     setSelectedEpisode(episode);
     setEpisodeDialogOpen(true);
   }
@@ -3369,6 +4239,7 @@ export default function App() {
 
   async function handlePlayEpisode() {
     if (!selectedEpisode || !selectedSeason || !selectedSeries?.directoryPath) return;
+    if (!isEpisodeUploaded(selectedSeason, selectedEpisode, uploadedEpisodeIds)) return;
 
     const raspberryEpisodeId = toRaspberryEpisodeId(
       selectedSeason.seasonNumber || selectedSeason.id,
@@ -3563,14 +4434,42 @@ export default function App() {
       setAddSeriesOpen(false);
       setUploadLookupOpen(false);
       setUploadSelectedFiles([]);
+      setUploadDirectoryName("");
       setUploadProgress(null);
       return;
     }
 
-    const addResponse = await addSeries({
-      name: selectedSeriesResult.name,
-      tmdbId: selectedSeriesResult.id,
-    });
+    let addResponse = null;
+    if (uploadLookupOpen && targetMediaType === "series") {
+      const seriesDetails = await getTvSeriesById(selectedSeriesResult.id, tmdbLanguage);
+      setUploadProgress(0);
+      addResponse = await uploadSeriesFiles({
+        files: uploadSelectedFiles,
+        series: selectedSeriesResult,
+        directoryName: uploadDirectoryName || uploadLookupQuery,
+        heroImage: seriesDetails.heroImage,
+        heroImageCrop: DEFAULT_HERO_CROP,
+        onProgress: setUploadProgress,
+      });
+      const profileKey = addResponse?.item?.relativePath || "";
+      if (profileKey) {
+        const nextProfiles = updateSeriesProfile(
+          profileKey,
+          {
+            name: selectedSeriesResult.name,
+            heroImage: seriesDetails.heroImage,
+            heroImageCrop: DEFAULT_HERO_CROP,
+          },
+          "series"
+        );
+        setSeriesProfiles(nextProfiles);
+      }
+    } else {
+      addResponse = await addSeries({
+        name: selectedSeriesResult.name,
+        tmdbId: selectedSeriesResult.id,
+      });
+    }
     const nextVideos = await getVideos();
 
     setVideos(nextVideos);
@@ -3585,9 +4484,18 @@ export default function App() {
       );
       return addedByTmdbId?.relativePath || current;
     });
+    if (uploadLookupOpen && targetMediaType === "series") {
+      setUploadSummary(
+        t("upload_series_done_summary", {
+          name: selectedSeriesResult.name,
+          path: addResponse?.item?.relativePath || uploadDirectoryName || selectedSeriesResult.name,
+        })
+      );
+    }
     setAddSeriesOpen(false);
     setUploadLookupOpen(false);
     setUploadSelectedFiles([]);
+    setUploadDirectoryName("");
     setUploadProgress(null);
   }
 
@@ -3615,6 +4523,35 @@ export default function App() {
           : alarmEntry
       )
     );
+  }
+
+  function handleAlarmSoundChange(alarmId, nextSound) {
+    setRaspberryAlarm((current) =>
+      current.map((alarmEntry) =>
+        alarmEntry.id === alarmId
+          ? {
+              ...alarmEntry,
+              sound: String(nextSound || ""),
+            }
+          : alarmEntry
+      )
+    );
+  }
+
+  function handleAlarmPreviewSoundChange(nextSound) {
+    setAlarmPreviewSound(String(nextSound || ""));
+  }
+
+  function handlePlayAlarmPreview() {
+    const soundUrl = getAlarmSoundUrl(alarmPreviewSound);
+    if (!soundUrl) return;
+
+    if (alarmPreviewAudioRef.current) {
+      alarmPreviewAudioRef.current.pause();
+    }
+    const audio = new Audio(soundUrl);
+    alarmPreviewAudioRef.current = audio;
+    audio.play().catch(() => {});
   }
 
   async function handlePausePlayback() {
@@ -3802,16 +4739,55 @@ export default function App() {
       return;
     }
 
+    let nextLabel = "";
+    let nextDirectoryName = "";
+    if (uploadMediaType === "series") {
+      const validation = getSeriesUploadValidation(safeFiles);
+      if (validation.multipleDirectories) {
+        setUploadValidationError({
+          title: t("upload_series_requires_directory"),
+          message: t("upload_series_requires_directory"),
+        });
+        return;
+      }
+      if (validation.nestedFiles.length) {
+        setUploadValidationError({
+          title: t("upload_series_subdirectories_error"),
+          message: validation.nestedFiles.slice(0, 4).join("\n") || t("upload_series_subdirectories_error"),
+        });
+        return;
+      }
+      if (validation.invalidFiles.length || !validation.directoryName) {
+        const errorKey = validation.directoryName ? "upload_series_format_error" : "upload_series_requires_directory";
+        setUploadValidationError({
+          title: t(errorKey),
+          message: validation.invalidFiles.slice(0, 6).join("\n") || t(errorKey),
+        });
+        return;
+      }
+      nextLabel = validation.directoryName;
+      nextDirectoryName = validation.directoryName;
+    } else {
+      nextLabel = deriveUploadSearchLabel(safeFiles[0], uploadMediaType);
+    }
+
     setUploadSelectedFiles(uploadMediaType === "movies" ? [safeFiles[0]] : safeFiles);
+    setUploadDirectoryName(nextDirectoryName);
     setUploadProgress(null);
-    const nextLabel = deriveUploadSearchLabel(safeFiles[0], uploadMediaType);
     if (!nextLabel) {
-      window.alert("No he podido detectar un nombre útil para buscar en TMDB.");
+      setUploadValidationError({
+        title: t("upload_name_not_detected"),
+        message: t("upload_name_not_detected"),
+      });
       return;
     }
 
     setUploadSummary(
-      `${safeFiles.length} archivo(s) detectados. Búsqueda preparada para ${uploadMediaType === "movies" ? "película" : "serie"}: "${nextLabel}".`
+      t("upload_detected_summary", {
+        count: safeFiles.length,
+        media: uploadMediaType === "movies" ? t("media_movies_singular") : t("media_series_singular"),
+        name: nextLabel,
+      })
     );
     setUploadLookupQuery(nextLabel);
     setUploadLookupOpen(true);
@@ -3966,8 +4942,13 @@ export default function App() {
                 multimediaUsedGb={multimediaUsedGb}
                 multimediaPercent={multimediaPercent}
                 alarm={raspberryAlarm}
+                alarmSounds={raspberryAlarmSounds}
+                alarmPreviewSound={alarmPreviewSound}
                 onAlarmTimeChange={handleAlarmTimeChange}
                 onAlarmToggle={handleAlarmToggle}
+                onAlarmSoundChange={handleAlarmSoundChange}
+                onAlarmPreviewSoundChange={handleAlarmPreviewSoundChange}
+                onAlarmPreviewPlay={handlePlayAlarmPreview}
                 raspberryHealth={raspberryHealth}
                 currentPlaybackInfo={raspberryCurrentPlayback}
                 controlsBusy={raspberryControlsBusy}
@@ -3989,6 +4970,7 @@ export default function App() {
                 uploadDragActive={uploadDragActive}
                 onUploadDragStateChange={handleUploadDragStateChange}
                 uploadSummary={uploadSummary}
+                onOpenTmdbBrowser={() => setTmdbBrowserOpen(true)}
               />
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
               <section className="season-page">
@@ -4037,7 +5019,9 @@ export default function App() {
                       <EpisodeRow
                         key={episode.id}
                         episode={episode}
+                        available={isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)}
                         onSelect={handleOpenEpisodeDetails}
+                        t={t}
                       />
                     ))}
                   </section>
@@ -4215,6 +5199,7 @@ export default function App() {
                           key={season.id}
                           season={season}
                           isActive={season.id === selectedSeasonId}
+                          disabled={!isSeasonUploaded(season, uploadedEpisodeIds)}
                           onSelect={handleOpenSeason}
                           t={t}
                         />
@@ -4317,17 +5302,37 @@ export default function App() {
               mediaType={uploadLookupOpen ? uploadMediaType : activeMediaType}
               initialQuery={uploadLookupOpen ? uploadLookupQuery : ""}
               autoSearch={uploadLookupOpen}
-              uploadFileName={uploadLookupOpen && uploadMediaType === "movies" ? uploadSelectedFiles[0]?.name || "" : ""}
+              uploadFileName={
+                uploadLookupOpen
+                  ? uploadMediaType === "movies"
+                    ? uploadSelectedFiles[0]?.name || ""
+                    : `${uploadDirectoryName || uploadLookupQuery} · ${uploadSelectedFiles.length} ${t("episodes")}`
+                  : ""
+              }
               uploadProgress={uploadProgress}
               onClose={() => {
                 setAddSeriesOpen(false);
                 setUploadLookupOpen(false);
                 setUploadSelectedFiles([]);
+                setUploadDirectoryName("");
                 setUploadProgress(null);
               }}
               onAdd={(item) =>
                 handleAddMediaItem(item, uploadLookupOpen ? uploadMediaType : activeMediaType)
               }
+              t={t}
+              tmdbLanguage={tmdbLanguage}
+            />
+            <UploadValidationModal
+              visible={Boolean(uploadValidationError)}
+              title={uploadValidationError?.title || ""}
+              message={uploadValidationError?.message || ""}
+              onClose={() => setUploadValidationError(null)}
+              t={t}
+            />
+            <TmdbBrowserModal
+              visible={tmdbBrowserOpen}
+              onClose={() => setTmdbBrowserOpen(false)}
               t={t}
               tmdbLanguage={tmdbLanguage}
             />
@@ -4337,6 +5342,7 @@ export default function App() {
               season={selectedSeason}
               seriesName={selectedSeries?.name || ""}
               playing={episodePlaying}
+              available={isEpisodeUploaded(selectedSeason, selectedEpisode, uploadedEpisodeIds)}
               onClose={handleCloseEpisodeDetails}
               onPlay={handlePlayEpisode}
               t={t}

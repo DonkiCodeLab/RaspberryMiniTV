@@ -6,6 +6,7 @@ import socket
 import subprocess
 import threading
 import time
+import tempfile
 
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -22,10 +23,20 @@ LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
 EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/simpsonstv_qr.png"
+MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-mpv.sock")
+PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-playback.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
+ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
+ALARM_SOUND_EXTENSIONS = {".mp3"}
+DEFAULT_ALARMS = [
+    {"id": 1, "enabled": False, "time": "07:30", "sound": ""},
+    {"id": 2, "enabled": False, "time": "08:00", "sound": ""},
+    {"id": 3, "enabled": False, "time": "08:30", "sound": ""},
+]
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
+    "alarms": DEFAULT_ALARMS,
 }
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 
@@ -35,6 +46,13 @@ lock = threading.Lock()
 current = {"proc": None, "id": None, "directory": None, "file": None}
 qr_proc = {"proc": None}
 qr_visible = {"shown": False}
+
+
+def normalize_language_code(language):
+    language = str(language or "").strip().lower()
+    if language == "cat":
+        return "ca"
+    return language if language in SUPPORTED_LANGUAGES else DEFAULT_SETTINGS["language"]
 
 
 def load_settings():
@@ -47,11 +65,13 @@ def load_settings():
                 {
                     key: value
                     for key, value in loaded.items()
-                    if key in settings and isinstance(value, str)
+                    if key in {"language", "web_password"} and isinstance(value, str)
                 }
             )
+            settings["alarms"] = normalize_alarms(loaded.get("alarms"))
     except Exception:
         pass
+    settings["language"] = normalize_language_code(settings.get("language"))
     return settings
 
 
@@ -60,8 +80,7 @@ def current_web_pin():
 
 
 def current_language():
-    language = load_settings().get("language", DEFAULT_SETTINGS["language"])
-    return language if language in SUPPORTED_LANGUAGES else DEFAULT_SETTINGS["language"]
+    return normalize_language_code(load_settings().get("language"))
 
 
 def save_settings(settings):
@@ -71,14 +90,67 @@ def save_settings(settings):
             {
                 key: value
                 for key, value in settings.items()
-                if key in safe_settings and isinstance(value, str)
+                if key in {"language", "web_password"} and isinstance(value, str)
             }
         )
+        safe_settings["alarms"] = normalize_alarms(settings.get("alarms"))
+    safe_settings["language"] = normalize_language_code(safe_settings.get("language"))
 
     with open(USER_SETTINGS_PATH, "w", encoding="utf-8") as handle:
         json.dump(safe_settings, handle, ensure_ascii=False, indent=2)
 
     return safe_settings
+
+
+def normalize_alarm_sound(sound):
+    filename = os.path.basename(str(sound or "").strip())
+    extension = os.path.splitext(filename)[1].lower()
+    if not filename or extension not in ALARM_SOUND_EXTENSIONS:
+        return ""
+    return filename
+
+
+def list_alarm_sounds():
+    try:
+        entries = os.listdir(ALARM_SOUNDS_DIR)
+    except OSError:
+        return []
+
+    return sorted(
+        [
+            entry
+            for entry in entries
+            if os.path.isfile(os.path.join(ALARM_SOUNDS_DIR, entry))
+            and os.path.splitext(entry)[1].lower() in ALARM_SOUND_EXTENSIONS
+        ],
+        key=str.lower,
+    )
+
+
+def default_alarm_sound():
+    sounds = list_alarm_sounds()
+    return sounds[0] if sounds else ""
+
+
+def normalize_alarms(value):
+    source = value if isinstance(value, list) else []
+    fallback_sound = default_alarm_sound()
+    alarms = []
+    for index in range(3):
+        entry = source[index] if index < len(source) and isinstance(source[index], dict) else {}
+        time_value = str(entry.get("time") or DEFAULT_ALARMS[index]["time"]).strip()
+        if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", time_value):
+            time_value = DEFAULT_ALARMS[index]["time"]
+        sound = normalize_alarm_sound(entry.get("sound") or entry.get("soundFile") or entry.get("filename"))
+        alarms.append(
+            {
+                "id": index + 1,
+                "enabled": bool(entry.get("enabled")),
+                "time": time_value,
+                "sound": sound or fallback_sound,
+            }
+        )
+    return alarms
 
 
 def empty_media_library():
@@ -174,6 +246,37 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
     }
     items[safe_relative_path] = item
     save_movie_library(items)
+    return item
+
+
+def upsert_series_metadata(relative_path, updates):
+    safe_relative_path = str(relative_path or "").strip()
+    if not safe_relative_path:
+        return None
+
+    library = load_media_library()
+    series_items = library.setdefault("series", {})
+    current_item = series_items.get(safe_relative_path) if isinstance(series_items.get(safe_relative_path), dict) else {}
+    item = {
+        **current_item,
+        "relativePath": safe_relative_path,
+    }
+
+    if "name" in updates:
+        item["name"] = str(updates.get("name") or "").strip()
+    if "tmdbId" in updates:
+        item["tmdbId"] = int(updates.get("tmdbId") or 0)
+    if "episodes" in updates:
+        item["episodes"] = updates.get("episodes") if isinstance(updates.get("episodes"), list) else []
+    if "episodeIds" in updates:
+        item["episodeIds"] = updates.get("episodeIds") if isinstance(updates.get("episodeIds"), list) else []
+    if "heroImage" in updates:
+        item["heroImage"] = str(updates.get("heroImage") or "").strip()
+    if "heroImageCrop" in updates:
+        item["heroImageCrop"] = updates.get("heroImageCrop") if isinstance(updates.get("heroImageCrop"), dict) else None
+
+    series_items[safe_relative_path] = item
+    save_media_library(library)
     return item
 
 
@@ -305,7 +408,7 @@ def is_authorized_request():
 
 @app.before_request
 def require_web_pin():
-    if request.path in {"/web/auth", "/ip"} or is_public_frontend_request():
+    if request.path in {"/web/auth", "/ip"} or request.path.startswith("/alarm-sounds") or is_public_frontend_request():
         return None
     if is_authorized_request():
         return None
@@ -447,6 +550,116 @@ def parse_video_entry(filename):
     season_number = int(media_id[1:3]) if EP_RE.fullmatch(media_id) else None
     episode_number = int(media_id[4:6]) if EP_RE.fullmatch(media_id) else None
     return media_id, season_number, episode_number
+
+
+def playback_state_for_path(filepath):
+    try:
+        relative_path = os.path.relpath(filepath, VIDEOS_DIR).replace("\\", "/")
+    except ValueError:
+        relative_path = os.path.basename(filepath)
+
+    filename = os.path.basename(filepath)
+    media_id, _season_number, _episode_number = parse_video_entry(filename)
+    directory_path = os.path.dirname(relative_path).replace("\\", "/")
+    return {
+        "playing": media_id,
+        "directory": directory_path,
+        "file": relative_path,
+        "updatedAt": int(time.time()),
+    }
+
+
+def write_playback_state(filepath):
+    state = playback_state_for_path(filepath)
+    try:
+        with open(PLAYBACK_STATE_PATH, "w", encoding="utf-8") as handle:
+            json.dump(state, handle, ensure_ascii=False)
+    except Exception:
+        pass
+    return state
+
+
+def clear_playback_state():
+    try:
+        os.remove(PLAYBACK_STATE_PATH)
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+
+def read_playback_state():
+    try:
+        with open(PLAYBACK_STATE_PATH, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except Exception:
+        return None
+
+    if not isinstance(data, dict):
+        return None
+    return {
+        "playing": str(data.get("playing") or "").strip().upper() or None,
+        "directory": str(data.get("directory") or "").strip(),
+        "file": str(data.get("file") or "").strip(),
+    }
+
+
+def send_mpv_command(*command_parts):
+    if not os.path.exists(MPV_SOCKET_PATH):
+        return None
+
+    payload = json.dumps({"command": list(command_parts)}).encode("utf-8") + b"\n"
+    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    client.settimeout(1.0)
+    try:
+        client.connect(MPV_SOCKET_PATH)
+        client.sendall(payload)
+        data = b""
+        while not data.endswith(b"\n"):
+            chunk = client.recv(65536)
+            if not chunk:
+                break
+            data += chunk
+        if not data:
+            return None
+        return json.loads(data.decode("utf-8").strip())
+    except Exception:
+        return None
+    finally:
+        client.close()
+
+
+def mpv_is_running():
+    response = send_mpv_command("get_property", "path")
+    return isinstance(response, dict) and response.get("error") == "success"
+
+
+def current_playback_status():
+    omx_running = current["proc"] is not None and current["proc"].poll() is None
+    if omx_running:
+        return {
+            "playing": current["id"],
+            "directory": current["directory"],
+            "file": current["file"],
+            "running": True,
+        }
+
+    if mpv_is_running():
+        state = read_playback_state() or {}
+        return {
+            "playing": state.get("playing"),
+            "directory": state.get("directory") or "",
+            "file": state.get("file") or "",
+            "running": True,
+        }
+
+    clear_playback_state()
+    return {
+        "playing": None,
+        "directory": None,
+        "file": None,
+        "running": False,
+    }
 
 
 def iter_video_entries():
@@ -701,8 +914,15 @@ def stop_locked():
         except Exception:
             pass
 
+    send_mpv_command("quit")
+
     subprocess.run(
         ["pkill", "-f", "omxplayer.bin"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    subprocess.run(
+        ["pkill", "-f", "mpv"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -711,6 +931,7 @@ def stop_locked():
     current["id"] = None
     current["directory"] = None
     current["file"] = None
+    clear_playback_state()
 
 
 def start_play_locked(filepath):
@@ -730,6 +951,9 @@ def volume_up_locked():
             proc.stdin.flush()
         except Exception:
             pass
+        return
+
+    send_mpv_command("add", "volume", 5)
 
 
 def volume_down_locked():
@@ -740,6 +964,9 @@ def volume_down_locked():
             proc.stdin.flush()
         except Exception:
             pass
+        return
+
+    send_mpv_command("add", "volume", -5)
 
 
 @app.route("/", methods=["GET"])
@@ -857,6 +1084,117 @@ def upload_movie():
             "item": movie_item,
         }
     )
+
+
+@app.route("/series/upload", methods=["POST"])
+def upload_series():
+    uploaded_files = request.files.getlist("files")
+    name = str(request.form.get("name") or "").strip()
+    directory_name = str(request.form.get("directoryName") or name).strip()
+    tmdb_id = int(request.form.get("tmdbId") or 0)
+    hero_image = str(request.form.get("heroImage") or "").strip()
+    hero_image_crop = None
+    try:
+        parsed_crop = json.loads(request.form.get("heroImageCrop") or "null")
+        if isinstance(parsed_crop, dict):
+            hero_image_crop = parsed_crop
+    except Exception:
+        hero_image_crop = None
+
+    if not uploaded_files:
+        return jsonify({"error": "Missing files"}), 400
+    if not name:
+        return jsonify({"error": "Missing name"}), 400
+    if not tmdb_id:
+        return jsonify({"error": "Missing tmdbId"}), 400
+
+    normalized_files = []
+    detected_roots = set()
+    invalid_names = []
+    nested_files = []
+    unsupported_files = []
+
+    for uploaded_file in uploaded_files:
+        original_path = str(uploaded_file.filename or "").replace("\\", "/").strip("/")
+        if not original_path:
+            invalid_names.append("")
+            continue
+
+        parts = [part for part in original_path.split("/") if part and part not in {".", ".."}]
+        if len(parts) > 2:
+            nested_files.append(original_path)
+            continue
+        if len(parts) == 2:
+            detected_roots.add(parts[0])
+        filename = os.path.basename(parts[-1] if parts else original_path)
+
+        if not is_supported_upload_file(filename):
+            unsupported_files.append(filename)
+            continue
+        if not EP_RE.search(filename):
+            invalid_names.append(filename)
+            continue
+
+        media_id, season_number, episode_number = parse_video_entry(filename)
+        normalized_files.append(
+            {
+                "upload": uploaded_file,
+                "filename": filename,
+                "id": media_id,
+                "seasonNumber": season_number,
+                "episodeNumber": episode_number,
+            }
+        )
+
+    if len(detected_roots) != 1:
+        return jsonify({"error": "Series upload must contain a single directory"}), 400
+    if nested_files:
+        return jsonify({"error": "Series directory cannot contain subdirectories", "files": nested_files}), 400
+    if unsupported_files:
+        return jsonify({"error": "Unsupported series files", "files": unsupported_files}), 400
+    if invalid_names:
+        return jsonify({"error": "All files must include SxxExx in their name", "files": invalid_names}), 400
+    if not normalized_files:
+        return jsonify({"error": "No valid episode files found"}), 400
+
+    ensure_media_directories()
+    target_slug = slugify(name or directory_name, "serie")
+    target_dir = os.path.join(TVSHOWS_DIR, target_slug)
+    os.makedirs(target_dir, exist_ok=True)
+
+    videos = []
+    for entry in normalized_files:
+        target_filename = os.path.basename(entry["filename"])
+        target_path = os.path.join(target_dir, target_filename)
+        entry["upload"].save(target_path)
+        relative_path = os.path.relpath(target_path, VIDEOS_DIR).replace("\\", "/")
+        videos.append(
+            {
+                "id": entry["id"],
+                "file": target_filename,
+                "relativePath": relative_path,
+                "seasonNumber": entry["seasonNumber"],
+                "episodeNumber": entry["episodeNumber"],
+            }
+        )
+
+    videos = sorted(
+        videos,
+        key=lambda video: (video["seasonNumber"] or 0, video["episodeNumber"] or 0, video["file"]),
+    )
+    relative_path = join_video_relative_path("TVShows", target_slug)
+    item = upsert_series_metadata(
+        relative_path,
+        {
+            "name": name,
+            "tmdbId": tmdb_id,
+            "episodes": videos,
+            "episodeIds": [video["id"] for video in videos],
+            "heroImage": hero_image,
+            "heroImageCrop": hero_image_crop,
+        },
+    )
+    return jsonify({"ok": True, "item": item})
 
 
 @app.route("/movies", methods=["POST"])
@@ -981,6 +1319,7 @@ def play():
         current["id"] = ep_id
         current["directory"] = match["directory_path"]
         current["file"] = match["relative_path"]
+        write_playback_state(match["full_path"])
 
     return jsonify(
         {
@@ -1016,15 +1355,19 @@ def volume_down():
 @app.route("/now", methods=["GET"])
 def now():
     with lock:
-        running = current["proc"] is not None and current["proc"].poll() is None
-        return jsonify(
-            {
-                "playing": current["id"],
-                "directory": current["directory"],
-                "file": current["file"],
-                "running": running,
-            }
-        )
+        return jsonify(current_playback_status())
+
+
+@app.route("/poweroff", methods=["POST"])
+def poweroff():
+    with lock:
+        stop_locked()
+    subprocess.Popen(
+        ["shutdown", "-h", "now"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return jsonify({"ok": True, "shuttingDown": True})
 
 
 @app.route("/ip", methods=["GET"])
@@ -1050,6 +1393,8 @@ def get_language():
 def update_language():
     data = request.get_json(force=True, silent=True) or {}
     language = str(data.get("language") or "").strip().lower()
+    if language == "cat":
+        language = "ca"
     if language not in SUPPORTED_LANGUAGES:
         return jsonify({"error": "Unsupported language", "supported": sorted(SUPPORTED_LANGUAGES)}), 400
 
@@ -1059,10 +1404,41 @@ def update_language():
     return jsonify({"ok": True, "language": language})
 
 
+@app.route("/settings/alarms", methods=["GET"])
+def get_alarms():
+    settings = load_settings()
+    sounds = list_alarm_sounds()
+    return jsonify({"ok": True, "alarms": normalize_alarms(settings.get("alarms")), "sounds": sounds})
+
+
+@app.route("/settings/alarms", methods=["POST"])
+def update_alarms():
+    data = request.get_json(force=True, silent=True) or {}
+    settings = load_settings()
+    settings["alarms"] = normalize_alarms(data.get("alarms"))
+    saved_settings = save_settings(settings)
+    return jsonify({"ok": True, "alarms": saved_settings["alarms"], "sounds": list_alarm_sounds()})
+
+
+@app.route("/alarm-sounds", methods=["GET"])
+def alarm_sounds():
+    return jsonify({"ok": True, "sounds": list_alarm_sounds()})
+
+
+@app.route("/alarm-sounds/<path:filename>", methods=["GET"])
+def alarm_sound_file(filename):
+    safe_filename = normalize_alarm_sound(filename)
+    if not safe_filename or safe_filename != filename:
+        return jsonify({"error": "Invalid alarm sound"}), 400
+    if safe_filename not in list_alarm_sounds():
+        return jsonify({"error": "Alarm sound not found"}), 404
+    return send_from_directory(ALARM_SOUNDS_DIR, safe_filename, mimetype="audio/mpeg")
+
+
 @app.route("/health", methods=["GET"])
 def health():
     with lock:
-        running = current["proc"] is not None and current["proc"].poll() is None
+        playback = current_playback_status()
         return jsonify(
             {
                 "ok": True,
@@ -1070,10 +1446,10 @@ def health():
                 "language": current_language(),
                 "storage": get_storage_stats(),
                 "libraryCounts": get_library_counts(),
-                "playing": current["id"],
-                "directory": current["directory"],
-                "file": current["file"],
-                "running": running,
+                "playing": playback["playing"],
+                "directory": playback["directory"],
+                "file": playback["file"],
+                "running": playback["running"],
             }
         )
 

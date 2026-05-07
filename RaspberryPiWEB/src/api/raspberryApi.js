@@ -10,6 +10,29 @@ let mockPlayback = "";
 let mockPlaybackDirectory = "";
 let mockPlaybackFile = "";
 let mockLanguage = "es";
+let mockAlarmSounds = ["alarma_clasica.mp3", "despertador.mp3", "campana.mp3"];
+let mockAlarms = [
+  { id: 1, enabled: false, time: "07:30", sound: mockAlarmSounds[0] },
+  { id: 2, enabled: false, time: "08:00", sound: mockAlarmSounds[0] },
+  { id: 3, enabled: false, time: "08:30", sound: mockAlarmSounds[0] },
+];
+
+function normalizeAlarmEntry(entry, index, sounds = mockAlarmSounds) {
+  const fallbackTimes = ["07:30", "08:00", "08:30"];
+  const fallbackSound = sounds[0] || "";
+  const sound = String(entry?.sound || entry?.soundFile || "").trim();
+  return {
+    id: index + 1,
+    enabled: Boolean(entry?.enabled),
+    time: /^\d{2}:\d{2}$/.test(String(entry?.time || "")) ? entry.time : fallbackTimes[index],
+    sound: sounds.includes(sound) ? sound : fallbackSound,
+  };
+}
+
+function normalizeAlarms(alarms, sounds = mockAlarmSounds) {
+  const source = Array.isArray(alarms) ? alarms : [];
+  return [0, 1, 2].map((index) => normalizeAlarmEntry(source[index], index, sounds));
+}
 
 function buildMockVideoLibrary() {
   const episodeIds = [
@@ -63,10 +86,10 @@ function buildMockVideoLibrary() {
       name: series.name,
       relativePath: series.relativePath,
       tmdbId: series.tmdbId,
-      videoCount: 0,
-      episodeCount: 0,
-      episodeIds: [],
-      videos: [],
+      videoCount: Array.isArray(series.videos) ? series.videos.length : 0,
+      episodeCount: Array.isArray(series.episodeIds) ? series.episodeIds.length : 0,
+      episodeIds: Array.isArray(series.episodeIds) ? series.episodeIds : [],
+      videos: Array.isArray(series.videos) ? series.videos : [],
     });
   });
 
@@ -97,6 +120,7 @@ function normalizeLabel(value) {
 
 function normalizeRaspberryLanguage(language) {
   const safeLanguage = String(language || "").trim().toLowerCase();
+  if (safeLanguage === "cat") return "ca";
   return SUPPORTED_RASPBERRY_LANGUAGES.has(safeLanguage) ? safeLanguage : "es";
 }
 
@@ -321,6 +345,41 @@ export function updateRaspberryLanguage(language) {
   });
 }
 
+export function getRaspberryAlarms() {
+  if (isMockModeEnabled()) {
+    return Promise.resolve({
+      ok: true,
+      alarms: normalizeAlarms(mockAlarms, mockAlarmSounds),
+      sounds: mockAlarmSounds,
+      mock: true,
+    });
+  }
+
+  return request("/settings/alarms");
+}
+
+export function updateRaspberryAlarms(alarms) {
+  if (isMockModeEnabled()) {
+    mockAlarms = normalizeAlarms(alarms, mockAlarmSounds);
+    return Promise.resolve({ ok: true, alarms: mockAlarms, sounds: mockAlarmSounds, mock: true });
+  }
+
+  return request("/settings/alarms", {
+    method: "POST",
+    body: JSON.stringify({
+      alarms,
+    }),
+  });
+}
+
+export function getAlarmSoundUrl(filename) {
+  const safeFilename = encodeURIComponent(String(filename || "").trim());
+  if (!safeFilename || isMockModeEnabled()) {
+    return "";
+  }
+  return `${getBaseUrl()}/alarm-sounds/${safeFilename}`;
+}
+
 export function addSeries({ name, tmdbId }) {
   const safeName = String(name || "").trim();
   const safeTmdbId = Number(tmdbId) || 0;
@@ -448,6 +507,89 @@ export function uploadMovieFile({ file, movie, onProgress } = {}) {
 
       const error = new Error(payload?.error || `HTTP ${xhr.status}`);
       error.status = xhr.status;
+      reject(error);
+    };
+
+    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.send(formData);
+  });
+}
+
+export function uploadSeriesFiles({ files, series, directoryName, heroImage, heroImageCrop, onProgress } = {}) {
+  const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
+  if (!safeFiles.length) {
+    return Promise.reject(new Error("Missing files"));
+  }
+
+  const seriesName = String(series?.name || "").trim();
+  const tmdbId = Number(series?.id || series?.tmdbId) || 0;
+
+  if (isMockModeEnabled()) {
+    const current = loadMockSeriesLibrary();
+    const existingPaths = new Set(current.map((entry) => entry.relativePath));
+    const relativePath = createMockSeriesRelativePath(seriesName || directoryName || "serie", existingPaths);
+    const videos = safeFiles.map((file) => ({
+      id: String(file.name || "").match(/S\d{2}E\d{2}/i)?.[0]?.toUpperCase() || "",
+      file: file.name,
+      relativePath: `${relativePath}/${file.name}`,
+    }));
+    const item = {
+      name: seriesName,
+      tmdbId,
+      relativePath,
+      videos,
+      episodeIds: videos.map((video) => video.id).filter(Boolean),
+      heroImage: heroImage || "",
+      heroImageCrop: heroImageCrop || null,
+    };
+    saveMockSeriesLibrary([...current, item]);
+    if (typeof onProgress === "function") {
+      onProgress(100);
+    }
+    return Promise.resolve({
+      ok: true,
+      mock: true,
+      item,
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    safeFiles.forEach((file) => {
+      formData.append("files", file, file.webkitRelativePath || file.name);
+    });
+    formData.append("name", seriesName);
+    formData.append("directoryName", String(directoryName || "").trim());
+    formData.append("tmdbId", String(tmdbId));
+    formData.append("heroImage", String(heroImage || ""));
+    formData.append("heroImageCrop", JSON.stringify(heroImageCrop || null));
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${getBaseUrl()}/series/upload`);
+
+    const storedPin = getStoredWebPin();
+    if (storedPin) {
+      xhr.setRequestHeader("X-Web-Pin", storedPin);
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || typeof onProgress !== "function") return;
+      onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+
+    xhr.onload = () => {
+      const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (typeof onProgress === "function") {
+          onProgress(100);
+        }
+        resolve(payload);
+        return;
+      }
+
+      const error = new Error(payload?.error || `HTTP ${xhr.status}`);
+      error.status = xhr.status;
+      error.files = payload?.files || [];
       reject(error);
     };
 
