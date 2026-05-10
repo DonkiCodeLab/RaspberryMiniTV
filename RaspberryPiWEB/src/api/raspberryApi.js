@@ -2,6 +2,7 @@ const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").tr
 const WEB_PIN_STORAGE_KEY = "simpsonstv-web-pin";
 const MOCK_SERIES_LIBRARY_STORAGE_KEY = "simpsonstv-web-mock-series-library-v1";
 const MOCK_HIDDEN_SERIES_STORAGE_KEY = "simpsonstv-web-mock-hidden-series-v1";
+const MOCK_GAMES_LIBRARY_STORAGE_KEY = "simpsonstv-web-mock-games-library-v1";
 const explicitMockMode = (import.meta.env.VITE_WEB_DEV_MODE || "").trim().toLowerCase() === "mock";
 const localhostHosts = new Set(["localhost", "127.0.0.1"]);
 const SUPPORTED_RASPBERRY_LANGUAGES = new Set(["es", "ca", "en"]);
@@ -93,6 +94,8 @@ function buildMockVideoLibrary() {
     });
   });
 
+  const mockGames = loadMockGamesLibrary();
+
   return {
     ok: true,
     root: "/mock/MultimediaContent/Videos",
@@ -102,8 +105,9 @@ function buildMockVideoLibrary() {
     libraryCounts: {
       series: { count: directories.length, usedGb: 7.2, percentUsed: 1.4 },
       movies: { count: 0, usedGb: 0, percentUsed: 0 },
-      games: { count: 0, usedGb: 0, percentUsed: 0 },
+      games: { count: mockGames.length, usedGb: mockGames.length ? 0.1 : 0, percentUsed: mockGames.length ? 0.1 : 0 },
     },
+    games: mockGames,
     directories: directories.sort((a, b) => a.name.localeCompare(b.name)),
     rootFiles: [],
     movieDirectories: [],
@@ -166,6 +170,27 @@ function saveMockHiddenSeries(items) {
   }
 
   return new Set(safeItems);
+}
+
+function loadMockGamesLibrary() {
+  const storage = getLocalStorage();
+  if (!storage) return [];
+  try {
+    const raw = storage.getItem(MOCK_GAMES_LIBRARY_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+function saveMockGamesLibrary(items) {
+  const storage = getLocalStorage();
+  const safeItems = Array.isArray(items) ? items : [];
+  if (storage) {
+    storage.setItem(MOCK_GAMES_LIBRARY_STORAGE_KEY, JSON.stringify(safeItems));
+  }
+  return safeItems;
 }
 
 function saveMockSeriesLibrary(items) {
@@ -590,6 +615,107 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
       const error = new Error(payload?.error || `HTTP ${xhr.status}`);
       error.status = xhr.status;
       error.files = payload?.files || [];
+      reject(error);
+    };
+
+    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.send(formData);
+  });
+}
+
+export function searchGameMetadata({ query, extension } = {}) {
+  const safeQuery = String(query || "").trim();
+  const safeExtension = String(extension || "").trim().toLowerCase();
+  if (!safeQuery || !safeExtension) {
+    return Promise.resolve({ ok: true, configured: false, results: [] });
+  }
+
+  if (isMockModeEnabled()) {
+    return Promise.resolve({
+      ok: true,
+      configured: true,
+      mock: true,
+      defaultCover: "",
+      results: [
+        {
+          id: Date.now(),
+          name: safeQuery,
+          description: "Ficha de prueba para validar el flujo de subida de juegos.",
+          covers: [],
+          source: "mock",
+        },
+      ],
+    });
+  }
+
+  return request(`/games/search?query=${encodeURIComponent(safeQuery)}&extension=${encodeURIComponent(safeExtension)}`);
+}
+
+export function uploadGameFile({ file, game, cover, onProgress } = {}) {
+  if (!file) {
+    return Promise.reject(new Error("Missing file"));
+  }
+
+  const gameName = String(game?.name || "").trim() || String(file.name || "").replace(/\.[^.]+$/, "");
+  const description = String(game?.description || "").trim();
+  const coverUrl = String(cover?.url || "").trim();
+  const source = String(game?.source || (coverUrl ? "screenscraper" : "default")).trim();
+  const screenScraperId = Number(game?.id || game?.screenScraperId) || 0;
+
+  if (isMockModeEnabled()) {
+    const current = loadMockGamesLibrary();
+    const extension = String(file.name || "").split(".").pop()?.toLowerCase() || "";
+    const platformName = extension === "gba" ? "Game Boy Advance" : extension === "gbc" ? "Game Boy Color" : "Game Boy";
+    const item = {
+      name: gameName,
+      description,
+      file: file.name,
+      relativePath: `Games/${file.name}`,
+      platformName,
+      coverImage: "",
+      source,
+    };
+    saveMockGamesLibrary([...current, item]);
+    if (typeof onProgress === "function") {
+      onProgress(100);
+    }
+    return Promise.resolve({ ok: true, mock: true, item });
+  }
+
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("name", gameName);
+    formData.append("description", description);
+    formData.append("coverUrl", coverUrl);
+    formData.append("source", source);
+    formData.append("screenScraperId", String(screenScraperId));
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${getBaseUrl()}/games/upload`);
+
+    const storedPin = getStoredWebPin();
+    if (storedPin) {
+      xhr.setRequestHeader("X-Web-Pin", storedPin);
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || typeof onProgress !== "function") return;
+      onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+
+    xhr.onload = () => {
+      const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (typeof onProgress === "function") {
+          onProgress(100);
+        }
+        resolve(payload);
+        return;
+      }
+
+      const error = new Error(payload?.error || `HTTP ${xhr.status}`);
+      error.status = xhr.status;
       reject(error);
     };
 

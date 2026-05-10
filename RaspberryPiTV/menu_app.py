@@ -70,6 +70,7 @@ MULTIMEDIA_DIR = os.path.join(REPO_DIR, "MultimediaContent")
 VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
+GAMES_DIR = os.path.join(MULTIMEDIA_DIR, "Games")
 BACKGROUND = (245, 245, 245)
 TEXT = (10, 10, 10)
 BLACK = (0, 0, 0)
@@ -105,7 +106,24 @@ LOADING_MIN_DURATION_MS = 1000
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-mpv.sock")
 MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-video-preview.png")
 MPV_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "raspberrypitv-mpv.log")
+INTRO_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "raspberrypitv-intro.log")
+RETROARCH_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-retroarch.cfg")
+RETROARCH_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "raspberrypitv-retroarch.log")
 PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-playback.json")
+GAME_PLATFORM_BY_EXTENSION = {
+    ".gb": {
+        "name": "Game Boy",
+        "core": "/usr/lib/arm-linux-gnueabihf/libretro/gambatte_libretro.so",
+    },
+    ".gbc": {
+        "name": "Game Boy Color",
+        "core": "/usr/lib/arm-linux-gnueabihf/libretro/gambatte_libretro.so",
+    },
+    ".gba": {
+        "name": "Game Boy Advance",
+        "core": "/usr/lib/arm-linux-gnueabihf/libretro/mgba_libretro.so",
+    },
+}
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
@@ -165,20 +183,24 @@ def play_intro():
     if not os.path.isfile(INTRO_VIDEO_PATH):
         return
 
-    subprocess.run(
-        [
-            "omxplayer",
-            "--no-osd",
-            "--aspect-mode",
-            "fill",
-            "--adev",
-            "alsa:plughw:1,0",
-            INTRO_VIDEO_PATH,
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    alsa_device = os.environ.get("SIMPSONSTV_ALSA_DEVICE", "plughw:1,0")
+    command = ["omxplayer", "--no-osd", "--aspect-mode", "fill"]
+    if alsa_device.lower() not in ("", "auto", "default"):
+        command.extend(["--adev", f"alsa:{alsa_device}"])
+    command.append(INTRO_VIDEO_PATH)
+
+    append_debug_log(INTRO_DEBUG_LOG_PATH, f"Launching intro: {' '.join(command)}")
+    try:
+        with open(INTRO_DEBUG_LOG_PATH, "a", encoding="utf-8") as log_handle:
+            result = subprocess.run(
+                command,
+                stdout=log_handle,
+                stderr=log_handle,
+                check=False,
+            )
+        append_debug_log(INTRO_DEBUG_LOG_PATH, f"Intro exited with return code {result.returncode}")
+    except Exception as exc:
+        append_debug_log(INTRO_DEBUG_LOG_PATH, f"Intro failed to launch: {exc}")
 
 
 def generate_qr():
@@ -285,9 +307,14 @@ def is_video_file(filename):
     return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
+def is_game_rom_file(filename):
+    return os.path.splitext(str(filename or ""))[1].lower() in GAME_PLATFORM_BY_EXTENSION
+
+
 def ensure_media_directories():
     os.makedirs(MOVIES_DIR, exist_ok=True)
     os.makedirs(TVSHOWS_DIR, exist_ok=True)
+    os.makedirs(GAMES_DIR, exist_ok=True)
 
 
 def remove_path_if_exists(path):
@@ -706,6 +733,10 @@ class RaspberryPiTVMenu:
         self.browser_page_start = 0
         self.browser_entries = []
         self.browser_status = ""
+        self.games_selected_index = 0
+        self.games_page_start = 0
+        self.games_entries = []
+        self.games_status = ""
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
         self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
         self.web_pin_icons = {
@@ -796,6 +827,10 @@ class RaspberryPiTVMenu:
         self.video_preview_asset = None
         self.video_preview_path = ""
         self.video_preview_available = False
+        self.game_proc = None
+        self.game_log_handle = None
+        self.game_return_state = "games"
+        self.game_current_path = ""
         self.refresh_translated_state_texts()
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
@@ -836,6 +871,31 @@ class RaspberryPiTVMenu:
             log_debug(f"DISPLAY resume complete size={self.width}x{self.height}")
         except Exception as exc:
             log_debug(f"DISPLAY resume failed: {exc}")
+            raise
+
+    def suspend_display_for_external_app(self, reason):
+        if self.display_suspended:
+            log_debug(f"DISPLAY suspend skipped: already suspended reason={reason}")
+            return
+        log_debug(f"DISPLAY suspend start reason={reason}")
+        try:
+            pygame.display.quit()
+            self.display_suspended = True
+            log_debug("DISPLAY suspend complete")
+        except Exception as exc:
+            log_debug(f"DISPLAY suspend failed reason={reason}: {exc}")
+
+    def resume_display_after_external_app(self, reason):
+        if not self.display_suspended:
+            log_debug(f"DISPLAY resume skipped: display already active reason={reason}")
+            return
+        log_debug(f"DISPLAY resume start reason={reason}")
+        try:
+            self.initialize_display()
+            self.width, self.height = self.screen.get_size()
+            log_debug(f"DISPLAY resume complete reason={reason} size={self.width}x{self.height}")
+        except Exception as exc:
+            log_debug(f"DISPLAY resume failed reason={reason}: {exc}")
             raise
 
     def initialize_audio(self):
@@ -930,7 +990,7 @@ class RaspberryPiTVMenu:
             pygame.mixer.music.load(sound_path)
             pygame.mixer.music.play(loops=-1)
             self.alarm_playing = True
-            self.alarm_active_until = time.monotonic() + 30
+            self.alarm_active_until = time.monotonic() + 120
             log_debug(f"ALARM started id={alarm.get('id')} sound={sound_filename}")
         except Exception as exc:
             self.alarm_playing = False
@@ -976,6 +1036,7 @@ class RaspberryPiTVMenu:
         self.wifi_status = self.tr("wifi.scan_prompt")
         self.play_status = self.tr("play.choose")
         self.browser_status = self.tr("browser.select")
+        self.games_status = self.tr("games.select")
 
     def prepare_asset(self, path):
         image = load_image(path)
@@ -1344,6 +1405,189 @@ class RaspberryPiTVMenu:
         empty_surface = self.wifi_font.render(empty_text, True, WHITE)
         self.screen.blit(empty_surface, empty_surface.get_rect(center=(area_rect.centerx, text_y)))
 
+    def refresh_games_entries(self):
+        entries = []
+        if os.path.isdir(GAMES_DIR):
+            for name in sorted(os.listdir(GAMES_DIR), key=lambda item: item.lower()):
+                full_path = os.path.join(GAMES_DIR, name)
+                if os.path.isfile(full_path) and is_game_rom_file(name):
+                    extension = os.path.splitext(name)[1].lower()
+                    platform = GAME_PLATFORM_BY_EXTENSION.get(extension, {})
+                    entries.append(
+                        {
+                            "label": name,
+                            "path": full_path,
+                            "platform": platform.get("name", "Game Boy"),
+                            "core": platform.get("core", ""),
+                        }
+                    )
+
+        self.games_entries = entries
+        if not self.games_entries:
+            self.games_selected_index = 0
+            self.games_page_start = 0
+            self.games_status = self.tr("games.no_games")
+            return
+
+        self.games_selected_index = max(0, min(self.games_selected_index, len(self.games_entries) - 1))
+        max_start = max(0, len(self.games_entries) - BROWSE_VISIBLE_ITEMS)
+        self.games_page_start = min(self.games_page_start, max_start)
+        if self.games_selected_index < self.games_page_start:
+            self.games_page_start = self.games_selected_index
+        if self.games_selected_index >= self.games_page_start + BROWSE_VISIBLE_ITEMS:
+            self.games_page_start = self.games_selected_index - BROWSE_VISIBLE_ITEMS + 1
+        self.games_status = self.tr("games.select")
+
+    def move_games_selection(self, delta):
+        if not self.games_entries:
+            return
+        self.games_selected_index = max(0, min(len(self.games_entries) - 1, self.games_selected_index + delta))
+        if self.games_selected_index < self.games_page_start:
+            self.games_page_start = self.games_selected_index
+        if self.games_selected_index >= self.games_page_start + BROWSE_VISIBLE_ITEMS:
+            self.games_page_start = self.games_selected_index - BROWSE_VISIBLE_ITEMS + 1
+
+    def can_move_games_up(self):
+        return bool(self.games_entries) and self.games_selected_index > 0
+
+    def can_move_games_down(self):
+        return bool(self.games_entries) and self.games_selected_index < len(self.games_entries) - 1
+
+    def games_entry_at_pos(self, pos):
+        layout = self.get_browser_layout()
+        if not layout["list"].collidepoint(pos):
+            return None
+        row_height = layout["list"].height / BROWSE_VISIBLE_ITEMS
+        row_index = int((pos[1] - layout["list"].y) / row_height)
+        index = self.games_page_start + row_index
+        if 0 <= index < len(self.games_entries):
+            return index
+        return None
+
+    def get_selected_games_entry(self):
+        if not self.games_entries:
+            return None
+        if 0 <= self.games_selected_index < len(self.games_entries):
+            return self.games_entries[self.games_selected_index]
+        return None
+
+    def write_retroarch_config(self):
+        config = "\n".join(
+            [
+                'video_driver = "sdl2"',
+                'input_driver = "sdl2"',
+                'joypad_driver = "udev"',
+                'menu_driver = "rgui"',
+                'audio_driver = "null"',
+                'audio_enable = "false"',
+                'pause_nonactive = "false"',
+                "",
+            ]
+        )
+        with open(RETROARCH_CONFIG_PATH, "w", encoding="utf-8") as handle:
+            handle.write(config)
+
+    def build_retroarch_command(self, entry):
+        return [
+            "retroarch",
+            "--appendconfig",
+            RETROARCH_CONFIG_PATH,
+            "-f",
+            "-L",
+            entry["core"],
+            entry["path"],
+        ]
+
+    def close_game_log_handle(self):
+        if self.game_log_handle is None:
+            return
+        try:
+            self.game_log_handle.flush()
+            self.game_log_handle.close()
+        except Exception:
+            pass
+        self.game_log_handle = None
+
+    def play_game_entry(self, entry):
+        if not entry:
+            return
+        if not entry.get("core") or not os.path.isfile(entry["core"]):
+            self.games_status = self.tr("games.missing_core")
+            return
+
+        self.stop_video_playback(silent=True)
+        self.stop_game_playback(silent=True)
+        self.write_retroarch_config()
+        command = self.build_retroarch_command(entry)
+        log_debug(f"GAME start via retroarch file={entry['path']} core={entry['core']}")
+        append_debug_log(RETROARCH_DEBUG_LOG_PATH, f"Launching RetroArch: {' '.join(command)}")
+        self.close_game_log_handle()
+        try:
+            self.suspend_display_for_external_app("game")
+            game_env = os.environ.copy()
+            game_env["SDL_RENDER_DRIVER"] = "software"
+            self.game_log_handle = open(RETROARCH_DEBUG_LOG_PATH, "a", encoding="utf-8")
+            self.game_proc = subprocess.Popen(
+                command,
+                stdout=self.game_log_handle,
+                stderr=self.game_log_handle,
+                env=game_env,
+            )
+        except Exception as exc:
+            append_debug_log(RETROARCH_DEBUG_LOG_PATH, f"Failed to launch RetroArch: {exc}")
+            log_debug(f"GAME failed to launch retroarch: {exc}")
+            self.close_game_log_handle()
+            self.resume_display_after_external_app("game")
+            self.game_proc = None
+            self.games_status = self.tr("games.launch_failed")
+            self.state = self.game_return_state
+            return
+
+        time.sleep(0.15)
+        if self.game_proc.poll() is not None:
+            return_code = self.game_proc.returncode
+            append_debug_log(RETROARCH_DEBUG_LOG_PATH, f"RetroArch exited immediately with return code {return_code}")
+            log_debug(f"GAME retroarch exited immediately returncode={return_code}")
+            self.close_game_log_handle()
+            self.game_proc = None
+            self.resume_display_after_external_app("game")
+            self.games_status = self.tr("games.launch_failed")
+            self.state = self.game_return_state
+            return
+
+        self.game_current_path = entry["path"]
+        self.state = "game"
+
+    def stop_game_playback(self, silent=False):
+        proc = self.game_proc
+        if proc and proc.poll() is None:
+            try:
+                proc.terminate()
+                proc.wait(timeout=2.0)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+        self.close_game_log_handle()
+        self.game_proc = None
+        self.game_current_path = ""
+        if self.display_suspended:
+            self.resume_display_after_external_app("game")
+        if not silent:
+            self.state = self.game_return_state
+
+    def update_game_state(self):
+        if self.state == "game" and self.game_proc and self.game_proc.poll() is not None:
+            return_code = self.game_proc.returncode
+            append_debug_log(RETROARCH_DEBUG_LOG_PATH, f"RetroArch exited with return code {return_code}")
+            log_debug(f"GAME retroarch exited returncode={return_code}")
+            self.game_proc = None
+            self.close_game_log_handle()
+            self.resume_display_after_external_app("game")
+            self.refresh_games_entries()
+            self.state = self.game_return_state
+
     def play_video_path(self, full_path):
         relative_path = os.path.relpath(full_path, VIDEOS_DIR).replace(os.sep, "/")
         log_debug(f"PLAY file={relative_path}")
@@ -1429,9 +1673,11 @@ class RaspberryPiTVMenu:
         command = [
             "mpv",
             "--fullscreen",
-            "--audio-device=alsa/plughw:1,0",
             f"--input-ipc-server={MPV_SOCKET_PATH}",
         ]
+        alsa_device = os.environ.get("SIMPSONSTV_ALSA_DEVICE", "plughw:1,0")
+        if alsa_device.lower() not in ("", "auto", "default"):
+            command.append(f"--audio-device=alsa/{alsa_device}")
         if start_seconds > 0:
             command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
         command.append(filepath)
@@ -1728,7 +1974,12 @@ class RaspberryPiTVMenu:
             elif button_id == "2x2":
                 self.state = "settings"
         elif self.state == "more":
-            if button_id == "1x2":
+            if button_id == "1x1":
+                self.games_selected_index = 0
+                self.games_page_start = 0
+                self.refresh_games_entries()
+                self.state = "games"
+            elif button_id == "1x2":
                 self.state = "clock"
             elif button_id == "2x1":
                 self.state = "poweroff"
@@ -1800,6 +2051,45 @@ class RaspberryPiTVMenu:
         entry_index = self.browser_entry_at_pos(pos)
         if entry_index is not None:
             self.browser_selected_index = entry_index
+
+    def handle_games_touch_down(self, pos):
+        layout = self.get_browser_layout()
+        selected_entry = self.get_selected_games_entry()
+        if self.top_back_at_pos(pos):
+            self.pressed_button = "top-back"
+        elif self.can_move_games_up() and layout["up"].collidepoint(pos):
+            self.pressed_button = "games-up"
+        elif self.can_move_games_down() and layout["down"].collidepoint(pos):
+            self.pressed_button = "games-down"
+        elif selected_entry and layout["action"].collidepoint(pos):
+            self.pressed_button = "games-action"
+        else:
+            self.pressed_button = "games-touch"
+        log_debug(f"GAMES DOWN pos={pos} selected={self.games_selected_index}")
+
+    def handle_games_touch_up(self, pos):
+        active_button = self.pressed_button
+        self.pressed_button = None
+        layout = self.get_browser_layout()
+        if active_button == "top-back" and self.top_back_at_pos(pos):
+            self.state = "more"
+            return
+        if active_button == "games-up" and layout["up"].collidepoint(pos):
+            self.move_games_selection(-1)
+            return
+        if active_button == "games-down" and layout["down"].collidepoint(pos):
+            self.move_games_selection(1)
+            return
+
+        selected_entry = self.get_selected_games_entry()
+        if active_button == "games-action" and layout["action"].collidepoint(pos):
+            self.game_return_state = "games"
+            self.play_game_entry(selected_entry)
+            return
+
+        entry_index = self.games_entry_at_pos(pos)
+        if entry_index is not None:
+            self.games_selected_index = entry_index
 
     def handle_wifi_touch_down(self, pos):
         if self.state == "wifi_password":
@@ -2033,6 +2323,9 @@ class RaspberryPiTVMenu:
         if self.state == "browse":
             self.handle_browser_touch_down(normalized_pos)
             return
+        if self.state == "games":
+            self.handle_games_touch_down(normalized_pos)
+            return
         if self.state == "wifi":
             self.handle_wifi_touch_down(normalized_pos)
             return
@@ -2110,6 +2403,10 @@ class RaspberryPiTVMenu:
         if self.state == "browse":
             self.handle_browser_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=browse")
+            return
+        if self.state == "games":
+            self.handle_games_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=games")
             return
         if self.state == "wifi":
             self.handle_wifi_touch_up(normalized_pos)
@@ -2680,6 +2977,103 @@ class RaspberryPiTVMenu:
             action_rect.centery = layout["action"].centery
             self.screen.blit(action_surface, action_rect)
 
+    def draw_games(self):
+        layout = self.get_browser_layout()
+        self.screen.fill(BLACK)
+
+        selected_entry = self.get_selected_games_entry()
+        action_label = self.tr("games.play")
+
+        for key_name, rect, enabled in (
+            ("up", layout["up"], self.can_move_games_up()),
+            ("down", layout["down"], self.can_move_games_down()),
+        ):
+            state = "pressed" if self.pressed_button == f"games-{key_name}" else "normal"
+            icon = self.wifi_arrow_icons[key_name][state]
+            if icon is not None:
+                scaled_icon = fit_image_contain(icon, rect.size)
+                if scaled_icon is not None:
+                    if not enabled:
+                        scaled_icon = scaled_icon.copy()
+                        scaled_icon.set_alpha(70)
+                    self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
+                    if not enabled:
+                        overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
+                        overlay.fill((0, 0, 0, 96))
+                        self.screen.blit(overlay, rect.topleft)
+
+        title_text = self.truncate_text(self.tr("games.path", path="/Games"), self.small_font, layout["path"].width)
+        title_surface = self.small_font.render(title_text, True, WHITE)
+        title_rect = title_surface.get_rect()
+        title_rect.x = layout["path"].x
+        title_rect.centery = self.get_top_back_rect().centery
+        self.screen.blit(title_surface, title_rect)
+
+        pygame.draw.rect(self.screen, DARK_GRAY, layout["list"])
+        if not self.games_entries:
+            empty_icon = self.browser_icons["empty"]
+            text_y = layout["list"].centery + 18
+            if empty_icon is not None:
+                icon_size = min(110, max(70, layout["list"].height - 70))
+                scaled_empty = fit_image_contain(empty_icon, (icon_size, icon_size))
+                if scaled_empty is not None:
+                    empty_rect = scaled_empty.get_rect(center=(layout["list"].centerx, layout["list"].centery - 18))
+                    self.screen.blit(scaled_empty, empty_rect)
+                    text_y = empty_rect.bottom + 14
+            empty_text = self.truncate_text(self.tr("games.no_games"), self.wifi_font, layout["list"].width - 24)
+            empty_surface = self.wifi_font.render(empty_text, True, WHITE)
+            self.screen.blit(empty_surface, empty_surface.get_rect(center=(layout["list"].centerx, text_y)))
+        else:
+            row_height = layout["list"].height / BROWSE_VISIBLE_ITEMS
+            visible_entries = self.games_entries[self.games_page_start:self.games_page_start + BROWSE_VISIBLE_ITEMS]
+            for row_offset, entry in enumerate(visible_entries):
+                index = self.games_page_start + row_offset
+                row_rect = pygame.Rect(
+                    layout["list"].x + 6,
+                    int(layout["list"].y + 4 + row_offset * row_height),
+                    layout["list"].width - 12,
+                    int(row_height - 6),
+                )
+                selected = index == self.games_selected_index
+                pygame.draw.rect(self.screen, MID_GRAY if selected else DARK_GRAY, row_rect)
+                entry_label = f"[ROM] {entry['label']}"
+                meta_label = entry.get("platform") or self.tr("media.games")
+                entry_surface = self.browser_bold_font.render(
+                    self.truncate_text(entry_label, self.browser_bold_font, row_rect.width - 20),
+                    True,
+                    WHITE,
+                )
+                meta_surface = self.small_font.render(
+                    self.truncate_text(meta_label, self.small_font, row_rect.width - 20),
+                    True,
+                    GRAY,
+                )
+                self.screen.blit(entry_surface, (row_rect.x + 10, row_rect.y + 4))
+                self.screen.blit(meta_surface, (row_rect.x + 10, row_rect.y + 32))
+
+        if selected_entry:
+            action_asset = self.browser_assets["action"]["pressed"] if self.pressed_button == "games-action" else self.browser_assets["action"]["normal"]
+            if action_asset is not None:
+                self.screen.blit(action_asset, layout["action"])
+
+            icon_state = "pressed" if self.pressed_button == "games-action" else "normal"
+            action_icon = self.browser_icons["view"][icon_state]
+            text_left = layout["action"].x + 20
+            if action_icon is not None:
+                scaled_icon = fit_image_contain(action_icon, (layout["action"].height - 18, layout["action"].height - 18))
+                if scaled_icon is not None:
+                    icon_rect = scaled_icon.get_rect()
+                    icon_rect.left = layout["action"].x + 16
+                    icon_rect.centery = layout["action"].centery
+                    self.screen.blit(scaled_icon, icon_rect)
+                    text_left = icon_rect.right + 14
+
+            action_surface = self.wifi_font.render(action_label, True, WHITE)
+            action_rect = action_surface.get_rect()
+            action_rect.left = text_left
+            action_rect.centery = layout["action"].centery
+            self.screen.blit(action_surface, action_rect)
+
     def draw(self):
         if self.state == "main":
             asset_pack = self.assets["main"]
@@ -2721,6 +3115,11 @@ class RaspberryPiTVMenu:
         elif self.state == "browse":
             self.draw_browser()
             self.draw_top_back_button()
+        elif self.state == "games":
+            self.draw_games()
+            self.draw_top_back_button()
+        elif self.state == "game":
+            return
         elif self.state == "wifi":
             self.draw_wifi()
             self.draw_top_back_button()
@@ -2740,6 +3139,7 @@ class RaspberryPiTVMenu:
 
         while self.running:
             self.update_video_state()
+            self.update_game_state()
             self.poll_external_settings()
             self.update_clock_alarms()
             self.poll_native_touch()

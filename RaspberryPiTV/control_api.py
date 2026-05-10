@@ -7,6 +7,8 @@ import subprocess
 import threading
 import time
 import tempfile
+import urllib.parse
+import urllib.request
 
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -17,6 +19,7 @@ VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 GAMES_DIR = os.path.join(MULTIMEDIA_DIR, "Games")
+GAME_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "GameCovers")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "RaspberryPiWEB", "dist")
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
 LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
@@ -28,6 +31,13 @@ PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "simpsonstv-playback.j
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
+GAME_ROM_EXTENSIONS = {".gb", ".gbc", ".gba"}
+GAME_PLATFORM_BY_EXTENSION = {
+    ".gb": {"id": "gameboy", "name": "Game Boy", "screenScraperSystemId": 9},
+    ".gbc": {"id": "gameboy_color", "name": "Game Boy Color", "screenScraperSystemId": 10},
+    ".gba": {"id": "gameboy_advance", "name": "Game Boy Advance", "screenScraperSystemId": 12},
+}
+DEFAULT_GAME_COVER_FILENAME = "default-game-cover.svg"
 DEFAULT_ALARMS = [
     {"id": 1, "enabled": False, "time": "07:30", "sound": ""},
     {"id": 2, "enabled": False, "time": "08:00", "sound": ""},
@@ -158,6 +168,7 @@ def empty_media_library():
         "version": 1,
         "series": {},
         "movies": {},
+        "games": {},
     }
 
 
@@ -172,6 +183,7 @@ def load_media_library():
                     "version": int(loaded.get("version") or 1),
                     "series": loaded.get("series") if isinstance(loaded.get("series"), dict) else {},
                     "movies": loaded.get("movies") if isinstance(loaded.get("movies"), dict) else {},
+                    "games": loaded.get("games") if isinstance(loaded.get("games"), dict) else {},
                 }
             )
     except Exception:
@@ -197,6 +209,7 @@ def save_media_library(library):
                 "version": int(library.get("version") or 1),
                 "series": library.get("series") if isinstance(library.get("series"), dict) else {},
                 "movies": library.get("movies") if isinstance(library.get("movies"), dict) else {},
+                "games": library.get("games") if isinstance(library.get("games"), dict) else {},
             }
         )
 
@@ -291,6 +304,90 @@ def remove_movie_metadata(relative_path):
         save_movie_library(items)
 
 
+def normalize_game_platform(filename_or_extension):
+    extension = os.path.splitext(str(filename_or_extension or "").strip())[1].lower()
+    if not extension and str(filename_or_extension or "").startswith("."):
+        extension = str(filename_or_extension).lower()
+    return GAME_PLATFORM_BY_EXTENSION.get(extension)
+
+
+def is_game_rom_file(filename):
+    return normalize_game_platform(filename) is not None
+
+
+def game_relative_path(filename):
+    safe_filename = os.path.basename(str(filename or "").strip())
+    return f"Games/{safe_filename}" if safe_filename else ""
+
+
+def game_cover_url(filename):
+    safe_filename = os.path.basename(str(filename or "").strip())
+    if not safe_filename:
+        return f"/game-covers/{DEFAULT_GAME_COVER_FILENAME}"
+    return f"/game-covers/{urllib.parse.quote(safe_filename)}"
+
+
+def ensure_default_game_cover():
+    os.makedirs(GAME_COVERS_DIR, exist_ok=True)
+    target_path = os.path.join(GAME_COVERS_DIR, DEFAULT_GAME_COVER_FILENAME)
+    if os.path.exists(target_path):
+        return
+    with open(target_path, "w", encoding="utf-8") as handle:
+        handle.write(
+            """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 420">
+<rect width="320" height="420" rx="18" fill="#202832"/>
+<rect x="28" y="28" width="264" height="364" rx="14" fill="#2e3a46" stroke="#ffd429" stroke-width="8"/>
+<rect x="62" y="74" width="196" height="146" rx="8" fill="#111820"/>
+<path d="M96 274h128M160 238v72" stroke="#ffd429" stroke-width="20" stroke-linecap="round"/>
+<circle cx="222" cy="306" r="20" fill="#f05a4f"/>
+<circle cx="266" cy="278" r="20" fill="#4fb5f0"/>
+<text x="160" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">GAME</text>
+</svg>
+"""
+        )
+
+
+def normalize_cover_filename(relative_path):
+    slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game")
+    return f"{slug}.jpg"
+
+
+def upsert_game_metadata(relative_path, updates):
+    safe_relative_path = str(relative_path or "").strip()
+    if not safe_relative_path:
+        return None
+
+    library = load_media_library()
+    game_items = library.setdefault("games", {})
+    current_item = game_items.get(safe_relative_path) if isinstance(game_items.get(safe_relative_path), dict) else {}
+    filename = os.path.basename(safe_relative_path)
+    platform = normalize_game_platform(filename) or {}
+    item = {
+        **current_item,
+        "relativePath": safe_relative_path,
+        "file": filename,
+        "platform": platform.get("id", ""),
+        "platformName": platform.get("name", ""),
+    }
+    if "name" in updates:
+        item["name"] = str(updates.get("name") or "").strip() or os.path.splitext(filename)[0]
+    if "description" in updates:
+        item["description"] = str(updates.get("description") or "").strip()
+    if "screenScraperId" in updates:
+        try:
+            item["screenScraperId"] = int(updates.get("screenScraperId") or 0)
+        except Exception:
+            item["screenScraperId"] = 0
+    if "coverImage" in updates:
+        item["coverImage"] = str(updates.get("coverImage") or "").strip()
+    if "source" in updates:
+        item["source"] = str(updates.get("source") or "").strip()
+
+    game_items[safe_relative_path] = item
+    save_media_library(library)
+    return item
+
+
 def upsert_media_profile(collection, key, updates):
     safe_collection = "movies" if collection == "movies" else "series"
     safe_key = str(key or "").strip()
@@ -322,6 +419,7 @@ def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root
     library = load_media_library()
     series_items = library.setdefault("series", {})
     movie_items = library.setdefault("movies", {})
+    game_items = library.setdefault("games", {})
 
     for directory in tvshow_directories:
         relative_path = directory.get("relativePath")
@@ -354,6 +452,28 @@ def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root
             "tmdbId": int(current_item.get("tmdbId") or movie.get("tmdbId") or 0),
             "file": current_item.get("file") or movie.get("file") or os.path.basename(relative_path),
         }
+
+    if os.path.isdir(GAMES_DIR):
+        for entry_name in sorted(os.listdir(GAMES_DIR)):
+            if not is_game_rom_file(entry_name):
+                continue
+            full_entry = os.path.join(GAMES_DIR, entry_name)
+            if not os.path.isfile(full_entry):
+                continue
+            relative_path = game_relative_path(entry_name)
+            current_item = game_items.get(relative_path) if isinstance(game_items.get(relative_path), dict) else {}
+            platform = normalize_game_platform(entry_name) or {}
+            game_items[relative_path] = {
+                **current_item,
+                "relativePath": relative_path,
+                "file": entry_name,
+                "name": current_item.get("name") or os.path.splitext(entry_name)[0],
+                "description": current_item.get("description") or "",
+                "platform": current_item.get("platform") or platform.get("id", ""),
+                "platformName": current_item.get("platformName") or platform.get("name", ""),
+                "coverImage": current_item.get("coverImage") or game_cover_url(DEFAULT_GAME_COVER_FILENAME),
+                "source": current_item.get("source") or "scan",
+            }
 
     save_media_library(library)
     return library
@@ -408,7 +528,12 @@ def is_authorized_request():
 
 @app.before_request
 def require_web_pin():
-    if request.path in {"/web/auth", "/ip"} or request.path.startswith("/alarm-sounds") or is_public_frontend_request():
+    if (
+        request.path in {"/web/auth", "/ip"}
+        or request.path.startswith("/alarm-sounds")
+        or request.path.startswith("/game-covers")
+        or is_public_frontend_request()
+    ):
         return None
     if is_authorized_request():
         return None
@@ -438,6 +563,8 @@ def ensure_media_directories():
     os.makedirs(MOVIES_DIR, exist_ok=True)
     os.makedirs(TVSHOWS_DIR, exist_ok=True)
     os.makedirs(GAMES_DIR, exist_ok=True)
+    os.makedirs(GAME_COVERS_DIR, exist_ok=True)
+    ensure_default_game_cover()
 
 
 def count_direct_files(path):
@@ -504,7 +631,18 @@ def get_library_counts():
         "multimediaCapacityGb": round(multimedia_capacity_bytes / (1024 ** 3), 1),
         "series": usage_item(count_direct_directories(TVSHOWS_DIR), series_bytes),
         "movies": usage_item(count_direct_files(MOVIES_DIR), movies_bytes),
-        "games": usage_item(count_direct_files(GAMES_DIR), games_bytes),
+        "games": usage_item(
+            len(
+                [
+                    entry_name
+                    for entry_name in os.listdir(GAMES_DIR)
+                    if os.path.isfile(os.path.join(GAMES_DIR, entry_name)) and is_game_rom_file(entry_name)
+                ]
+            )
+            if os.path.isdir(GAMES_DIR)
+            else 0,
+            games_bytes,
+        ),
     }
 
 
@@ -529,6 +667,178 @@ def unique_media_filename(target_dir, desired_filename):
         index += 1
 
     return candidate
+
+
+def list_game_entries():
+    ensure_media_directories()
+    library = load_media_library()
+    game_items = library.get("games") if isinstance(library.get("games"), dict) else {}
+    items = []
+    if not os.path.isdir(GAMES_DIR):
+        return items
+
+    for entry_name in sorted(os.listdir(GAMES_DIR), key=str.lower):
+        full_entry = os.path.join(GAMES_DIR, entry_name)
+        if not os.path.isfile(full_entry) or not is_game_rom_file(entry_name):
+            continue
+        relative_path = game_relative_path(entry_name)
+        metadata = game_items.get(relative_path) if isinstance(game_items.get(relative_path), dict) else {}
+        platform = normalize_game_platform(entry_name) or {}
+        cover_image = str(metadata.get("coverImage") or "").strip() or game_cover_url(DEFAULT_GAME_COVER_FILENAME)
+        items.append(
+            {
+                "name": str(metadata.get("name") or os.path.splitext(entry_name)[0]).strip(),
+                "file": entry_name,
+                "relativePath": relative_path,
+                "platform": str(metadata.get("platform") or platform.get("id", "")).strip(),
+                "platformName": str(metadata.get("platformName") or platform.get("name", "")).strip(),
+                "description": str(metadata.get("description") or "").strip(),
+                "coverImage": cover_image,
+                "sizeBytes": os.path.getsize(full_entry),
+            }
+        )
+    return items
+
+
+def read_env_file_value(key):
+    env_path = os.path.join(REPO_DIR, ".env")
+    try:
+        with open(env_path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#") or "=" not in stripped:
+                    continue
+                name, value = stripped.split("=", 1)
+                if name.strip() == key:
+                    return value.strip().strip('"').strip("'")
+    except Exception:
+        pass
+    return ""
+
+
+def get_config_value(key, default=""):
+    return os.environ.get(key, "").strip() or read_env_file_value(key) or default
+
+
+def screen_scraper_credentials():
+    dev_id = get_config_value("SCREENSCRAPER_DEV_ID")
+    dev_password = get_config_value("SCREENSCRAPER_DEV_PASSWORD")
+    softname = get_config_value("SCREENSCRAPER_SOFTNAME", "TvSimpsonsApp")
+    username = get_config_value("SCREENSCRAPER_USER")
+    password = get_config_value("SCREENSCRAPER_PASSWORD")
+    if not dev_id or not dev_password:
+        return None
+    credentials = {
+        "devid": dev_id,
+        "devpassword": dev_password,
+        "softname": softname,
+        "output": "json",
+    }
+    if username and password:
+        credentials["ssid"] = username
+        credentials["sspassword"] = password
+    return credentials
+
+
+def pick_localized_value(values, language=None):
+    if not isinstance(values, list):
+        return ""
+    language = language or current_language()
+    preferred = [language, "es", "en", "fr"]
+    for preferred_language in preferred:
+        for entry in values:
+            if not isinstance(entry, dict):
+                continue
+            if str(entry.get("region") or entry.get("langue") or "").lower() == preferred_language:
+                return str(entry.get("text") or "").strip()
+    for entry in values:
+        if isinstance(entry, dict) and entry.get("text"):
+            return str(entry.get("text") or "").strip()
+    return ""
+
+
+def extract_screen_scraper_media(medias):
+    covers = []
+    if not isinstance(medias, list):
+        return covers
+    preferred_types = {"box-2D", "box-2d", "box-texture", "mixrbv2", "screenshot"}
+    for media in medias:
+        if not isinstance(media, dict):
+            continue
+        media_type = str(media.get("type") or "").strip()
+        url = str(media.get("url") or media.get("url2") or "").strip()
+        if not url:
+            continue
+        if preferred_types and media_type not in preferred_types:
+            continue
+        covers.append(
+            {
+                "id": f"{media_type}:{len(covers)}",
+                "type": media_type or "image",
+                "url": url,
+                "label": media_type or "Cover",
+            }
+        )
+    return covers[:8]
+
+
+def normalize_screen_scraper_game(raw_game):
+    if not isinstance(raw_game, dict):
+        return None
+    game_id = raw_game.get("id") or raw_game.get("idjeu") or 0
+    names = raw_game.get("noms") if isinstance(raw_game.get("noms"), list) else []
+    name = pick_localized_value(names) or str(raw_game.get("nom") or raw_game.get("name") or "").strip()
+    if not name:
+        return None
+    description = pick_localized_value(raw_game.get("synopsis"))
+    covers = extract_screen_scraper_media(raw_game.get("medias"))
+    return {
+        "id": int(game_id or 0),
+        "name": name,
+        "description": description,
+        "covers": covers,
+        "source": "screenscraper",
+    }
+
+
+def search_screen_scraper_games(query, platform):
+    credentials = screen_scraper_credentials()
+    if not credentials:
+        return [], False
+    params = dict(credentials)
+    params.update(
+        {
+            "recherche": query,
+            "systemeid": str(platform.get("screenScraperSystemId")),
+        }
+    )
+    url = "https://api.screenscraper.fr/api2/jeuRecherche.php?" + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(url, timeout=12) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    raw_games = payload.get("response", {}).get("jeux", [])
+    if isinstance(raw_games, dict):
+        raw_games = [raw_games]
+    games = [normalize_screen_scraper_game(game) for game in raw_games if isinstance(game, dict)]
+    return [game for game in games if game], True
+
+
+def download_game_cover(cover_url, relative_path):
+    if not cover_url:
+        return ""
+    ensure_media_directories()
+    target_filename = normalize_cover_filename(relative_path)
+    target_path = os.path.join(GAME_COVERS_DIR, target_filename)
+    try:
+        request_object = urllib.request.Request(cover_url, headers={"User-Agent": "TvSimpsonsApp/1.0"})
+        with urllib.request.urlopen(request_object, timeout=20) as response:
+            data = response.read()
+        if not data:
+            return ""
+        with open(target_path, "wb") as handle:
+            handle.write(data)
+        return game_cover_url(target_filename)
+    except Exception:
+        return ""
 
 
 def resolve_relative_video_path(relative_path, required_root):
@@ -858,6 +1168,7 @@ def list_video_directories():
         "gamesRoot": GAMES_DIR,
         "libraryCounts": get_library_counts(),
         "mediaLibrary": media_library,
+        "games": list_game_entries(),
         "directories": tvshow_directories,
         "rootFiles": tvshow_root_files,
         "movieDirectories": movie_directories,
@@ -1003,6 +1314,51 @@ def episodes():
 @app.route("/videos", methods=["GET"])
 def videos():
     return jsonify(list_video_directories())
+
+
+@app.route("/game-covers/<path:filename>", methods=["GET"])
+def game_cover_file(filename):
+    ensure_media_directories()
+    safe_filename = os.path.basename(str(filename or "").strip())
+    if not safe_filename or safe_filename != filename:
+        return jsonify({"error": "Invalid cover filename"}), 400
+    target_path = os.path.join(GAME_COVERS_DIR, safe_filename)
+    if not os.path.isfile(target_path):
+        safe_filename = DEFAULT_GAME_COVER_FILENAME
+    return send_from_directory(GAME_COVERS_DIR, safe_filename)
+
+
+@app.route("/games/search", methods=["GET"])
+def search_games():
+    query = str(request.args.get("query") or "").strip()
+    extension = str(request.args.get("extension") or "").strip().lower()
+    platform = normalize_game_platform(extension if extension.startswith(".") else f".{extension}")
+    if not query:
+        return jsonify({"ok": True, "configured": bool(screen_scraper_credentials()), "results": []})
+    if not platform:
+        return jsonify({"error": "Unsupported game platform"}), 400
+
+    try:
+        results, configured = search_screen_scraper_games(query, platform)
+    except Exception as exc:
+        return jsonify(
+            {
+                "ok": False,
+                "configured": bool(screen_scraper_credentials()),
+                "results": [],
+                "error": str(exc),
+            }
+        ), 502
+
+    return jsonify(
+        {
+            "ok": True,
+            "configured": configured,
+            "platform": platform,
+            "results": results,
+            "defaultCover": game_cover_url(DEFAULT_GAME_COVER_FILENAME),
+        }
+    )
 
 
 @app.route("/series", methods=["POST"])
@@ -1195,6 +1551,48 @@ def upload_series():
         },
     )
     return jsonify({"ok": True, "item": item})
+
+
+@app.route("/games/upload", methods=["POST"])
+def upload_game():
+    uploaded_file = request.files.get("file")
+    name = str(request.form.get("name") or "").strip()
+    description = str(request.form.get("description") or "").strip()
+    cover_url = str(request.form.get("coverUrl") or "").strip()
+    source = str(request.form.get("source") or "manual").strip()
+    try:
+        screen_scraper_id = int(request.form.get("screenScraperId") or 0)
+    except Exception:
+        screen_scraper_id = 0
+
+    if not uploaded_file or not uploaded_file.filename:
+        return jsonify({"error": "Missing file"}), 400
+    if not is_game_rom_file(uploaded_file.filename):
+        return jsonify({"error": "Unsupported game file"}), 400
+
+    ensure_media_directories()
+    original_filename = os.path.basename(uploaded_file.filename)
+    original_extension = os.path.splitext(original_filename)[1].lower()
+    desired_base = name or os.path.splitext(original_filename)[0]
+    target_filename = unique_media_filename(GAMES_DIR, f"{desired_base}{original_extension}")
+    target_path = os.path.join(GAMES_DIR, target_filename)
+    uploaded_file.save(target_path)
+
+    relative_path = game_relative_path(target_filename)
+    cover_image = download_game_cover(cover_url, relative_path) if cover_url else ""
+    if not cover_image:
+        cover_image = game_cover_url(DEFAULT_GAME_COVER_FILENAME)
+    item = upsert_game_metadata(
+        relative_path,
+        {
+            "name": name or os.path.splitext(original_filename)[0],
+            "description": description,
+            "coverImage": cover_image,
+            "screenScraperId": screen_scraper_id,
+            "source": source,
+        },
+    )
+    return jsonify({"ok": True, "item": item, "libraryCounts": get_library_counts()})
 
 
 @app.route("/movies", methods=["POST"])

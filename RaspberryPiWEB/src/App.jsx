@@ -51,11 +51,13 @@ import {
   playEpisode,
   removeMovieFile,
   removeSeries,
+  searchGameMetadata,
   saveMediaProfile,
   setStoredWebPin,
   stopPlayback,
   updateRaspberryAlarms,
   updateRaspberryLanguage,
+  uploadGameFile,
   uploadMovieFile,
   uploadSeriesFiles,
   volumeDown,
@@ -132,6 +134,12 @@ const UPLOAD_MEDIA_OPTIONS = [
   { key: "movies", value: "movies", labelKey: "upload_movie" },
   { key: "games", value: "games", labelKey: "upload_game" },
 ];
+const GAME_ROM_EXTENSIONS = new Set(["gb", "gbc", "gba"]);
+const GAME_PLATFORM_LABELS = {
+  gb: "Game Boy",
+  gbc: "Game Boy Color",
+  gba: "Game Boy Advance",
+};
 const RASPBERRY_LANGUAGE_OPTIONS = [
   {
     id: "es",
@@ -276,10 +284,25 @@ const UI_STRINGS = {
       "Se abrirá un diálogo de coincidencia TMDB usando el nombre del directorio seleccionado o arrastrado a esta zona. Antes de confirmar podrás editar la búsqueda.",
     upload_movie_dropzone_copy:
       "Se abrirá un diálogo de coincidencia TMDB usando el nombre del fichero seleccionado o arrastrado a esta zona. Antes de confirmar podrás editar la búsqueda.",
-    upload_game_dropzone_copy: "Aún no está disponible.",
+    upload_game_dropzone_copy: "Acepta ROMs .gb, .gbc y .gba. Después podrás buscar carátula y ficha antes de subir.",
     latest_detection: "Última detección",
     games: "Juegos",
     upload_games_pending: "La subida guiada para juegos queda preparada visualmente y la conectamos en la siguiente iteración.",
+    games_empty_title: "Sin juegos instalados",
+    games_empty_copy: "Sube una ROM de Game Boy, Game Boy Color o Game Boy Advance para crear tu biblioteca.",
+    games_upload_title: "Ficha del juego",
+    games_search_placeholder: "Ejemplo: Tetris DX",
+    games_default_cover: "Default",
+    games_manual_profile: "Ficha manual con carátula por defecto",
+    games_cover_picker: "Carátula",
+    games_no_results: "No se han encontrado juegos para esa búsqueda.",
+    games_search_failed: "No se pudo buscar la ficha del juego.",
+    games_api_not_configured: "ScreenScraper no está configurado en la Raspberry. Puedes subirlo con la carátula default.",
+    upload_game_invalid_title: "Archivo de juego no compatible",
+    upload_game_invalid_copy: "Selecciona un único fichero .gb, .gbc o .gba.",
+    upload_game_detected: "{name} detectado como {platform}. Revisa la ficha antes de subir.",
+    upload_game_done_summary: "{name} añadido a Games: {path}",
+    upload_game_failed: "No se pudo subir el juego.",
     access_protected: "Acceso protegido",
     unlock_copy: "Introduce el PIN numérico de 4 dígitos configurado en la Raspberry.",
     validating: "Validando...",
@@ -464,10 +487,25 @@ const UI_STRINGS = {
       "S'obrirà un diàleg de coincidència TMDB fent servir el nom del directori seleccionat o arrossegat a aquesta zona. Abans de confirmar podràs editar la cerca.",
     upload_movie_dropzone_copy:
       "S'obrirà un diàleg de coincidència TMDB fent servir el nom del fitxer seleccionat o arrossegat a aquesta zona. Abans de confirmar podràs editar la cerca.",
-    upload_game_dropzone_copy: "Encara no està disponible.",
+    upload_game_dropzone_copy: "Accepta ROMs .gb, .gbc i .gba. Després podràs buscar caràtula i fitxa abans de pujar.",
     latest_detection: "Última detecció",
     games: "Jocs",
     upload_games_pending: "La pujada guiada per a jocs queda preparada visualment i la connectem a la següent iteració.",
+    games_empty_title: "Sense jocs instal·lats",
+    games_empty_copy: "Puja una ROM de Game Boy, Game Boy Color o Game Boy Advance per crear la biblioteca.",
+    games_upload_title: "Fitxa del joc",
+    games_search_placeholder: "Exemple: Tetris DX",
+    games_default_cover: "Default",
+    games_manual_profile: "Fitxa manual amb caràtula per defecte",
+    games_cover_picker: "Caràtula",
+    games_no_results: "No s'han trobat jocs per a aquesta cerca.",
+    games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
+    games_api_not_configured: "ScreenScraper no està configurat a la Raspberry. Pots pujar-lo amb la caràtula default.",
+    upload_game_invalid_title: "Fitxer de joc no compatible",
+    upload_game_invalid_copy: "Selecciona un únic fitxer .gb, .gbc o .gba.",
+    upload_game_detected: "{name} detectat com {platform}. Revisa la fitxa abans de pujar.",
+    upload_game_done_summary: "{name} afegit a Games: {path}",
+    upload_game_failed: "No s'ha pogut pujar el joc.",
     access_protected: "Accés protegit",
     unlock_copy: "Introdueix el PIN numèric de 4 dígits configurat a la Raspberry.",
     validating: "Validant...",
@@ -652,10 +690,25 @@ const UI_STRINGS = {
       "A TMDB match dialog will open using the selected or dropped folder name. Before confirming, you will be able to edit the search.",
     upload_movie_dropzone_copy:
       "A TMDB match dialog will open using the selected or dropped file name. Before confirming, you will be able to edit the search.",
-    upload_game_dropzone_copy: "It is not available yet.",
+    upload_game_dropzone_copy: "Accepts .gb, .gbc, and .gba ROMs. You can search cover art and metadata before uploading.",
     latest_detection: "Latest detection",
     games: "Games",
     upload_games_pending: "Guided uploads for games are visually prepared and will be connected in the next iteration.",
+    games_empty_title: "No games installed",
+    games_empty_copy: "Upload a Game Boy, Game Boy Color, or Game Boy Advance ROM to build your library.",
+    games_upload_title: "Game profile",
+    games_search_placeholder: "Example: Tetris DX",
+    games_default_cover: "Default",
+    games_manual_profile: "Manual profile with the default cover",
+    games_cover_picker: "Cover art",
+    games_no_results: "No games were found for that search.",
+    games_search_failed: "Could not search the game profile.",
+    games_api_not_configured: "ScreenScraper is not configured on the Raspberry. You can upload it with the default cover.",
+    upload_game_invalid_title: "Unsupported game file",
+    upload_game_invalid_copy: "Select a single .gb, .gbc, or .gba file.",
+    upload_game_detected: "{name} detected as {platform}. Review the profile before uploading.",
+    upload_game_done_summary: "{name} added to Games: {path}",
+    upload_game_failed: "Could not upload the game.",
     access_protected: "Protected access",
     unlock_copy: "Enter the 4-digit numeric PIN configured on the Raspberry.",
     validating: "Validating...",
@@ -767,6 +820,14 @@ function stripFileExtension(value) {
   return String(value || "").replace(/\.[^.]+$/, "");
 }
 
+function getFileExtension(fileName) {
+  return String(fileName || "").split(".").pop()?.toLowerCase() || "";
+}
+
+function isSupportedGameRom(file) {
+  return GAME_ROM_EXTENSIONS.has(getFileExtension(file?.name));
+}
+
 function deriveUploadSearchLabel(file, mediaType) {
   const rawRelativePath = String(file?.webkitRelativePath || "").trim();
   const rawName = String(file?.name || "").trim();
@@ -784,10 +845,13 @@ function deriveUploadSearchLabel(file, mediaType) {
       .trim();
   }
 
-  return stripFileExtension(rawName)
+  const label = stripFileExtension(rawName)
     .replace(/\b(19|20)\d{2}\b/g, "")
+    .replace(/\b(World|USA|Europe|Japan)\b/gi, "")
+    .replace(/\([^)]*\)/g, "")
     .replace(/[._-]+/g, " ")
     .trim();
+  return label || stripFileExtension(rawName);
 }
 
 function getSeriesUploadValidation(files) {
@@ -2271,6 +2335,255 @@ function AddMediaModal({
   );
 }
 
+function GameUploadModal({
+  visible,
+  file,
+  initialQuery,
+  uploadProgress = null,
+  onClose,
+  onUpload,
+  t,
+}) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [selectedGameId, setSelectedGameId] = useState("default");
+  const [selectedCoverKey, setSelectedCoverKey] = useState("default");
+  const [searching, setSearching] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const extension = getFileExtension(file?.name);
+  const platformLabel = GAME_PLATFORM_LABELS[extension] || t("media_games_singular");
+
+  useEffect(() => {
+    if (!visible) {
+      setQuery("");
+      setResults([]);
+      setSelectedGameId("default");
+      setSelectedCoverKey("default");
+      setSearching(false);
+      setSubmitting(false);
+      setError("");
+      return;
+    }
+    setQuery(initialQuery || "");
+  }, [initialQuery, visible]);
+
+  async function runSearch(searchTerm) {
+    const trimmedQuery = String(searchTerm || "").trim();
+    if (!trimmedQuery || !file) return;
+
+    setSearching(true);
+    setError("");
+    try {
+      const payload = await searchGameMetadata({ query: trimmedQuery, extension });
+      const nextResults = Array.isArray(payload?.results) ? payload.results : [];
+      setResults(nextResults);
+      if (nextResults.length) {
+        setSelectedGameId(String(nextResults[0].id || nextResults[0].name));
+        setSelectedCoverKey(nextResults[0].covers?.[0]?.url || "default");
+      } else {
+        setSelectedGameId("default");
+        setSelectedCoverKey("default");
+        setError(payload?.configured === false ? t("games_api_not_configured") : t("games_no_results"));
+      }
+    } catch (nextError) {
+      setResults([]);
+      setSelectedGameId("default");
+      setSelectedCoverKey("default");
+      setError(nextError.message || t("games_search_failed"));
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!visible || !initialQuery || !file) return;
+    runSearch(initialQuery);
+  }, [file, initialQuery, visible]);
+
+  if (!visible || !file) return null;
+
+  const defaultGame = {
+    id: "default",
+    name: query || stripFileExtension(file.name),
+    description: "",
+    covers: [],
+    source: "default",
+  };
+  const selectedGame =
+    selectedGameId === "default"
+      ? defaultGame
+      : results.find((entry) => String(entry.id || entry.name) === selectedGameId) || defaultGame;
+  const coverOptions = [
+    { id: "default", url: "", label: t("games_default_cover") },
+    ...results.flatMap((result) =>
+      (Array.isArray(result.covers) ? result.covers : []).map((cover) => ({
+        ...cover,
+        id: `${result.id || result.name}-${cover.url}`,
+        gameId: String(result.id || result.name),
+      }))
+    ),
+  ];
+  const selectedCover =
+    coverOptions.find((cover) => cover.url && cover.url === selectedCoverKey) ||
+    coverOptions.find((cover) => cover.id === selectedCoverKey) ||
+    coverOptions[0];
+
+  async function handleSubmit() {
+    setSubmitting(true);
+    setError("");
+    try {
+      await onUpload({
+        game: selectedGame,
+        cover: selectedCover?.url ? selectedCover : null,
+      });
+    } catch (nextError) {
+      setError(nextError.message || t("upload_game_failed"));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="dialog-card dialog-card--add-series game-upload-dialog" onClick={(event) => event.stopPropagation()}>
+        <div className="dialog-card__header">
+          <div>
+            <p>{platformLabel}</p>
+            <h2>{t("games_upload_title")}</h2>
+          </div>
+          <button className="dialog-card__close" onClick={onClose} type="button">
+            ×
+          </button>
+        </div>
+
+        <form
+          className="add-series-search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            runSearch(query);
+          }}
+        >
+          <label className="dialog-field">
+            <span>{t("search")}</span>
+            <div className="search-input-shell">
+              <span className="search-input-shell__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation">
+                  <circle cx="11" cy="11" r="6.5" />
+                  <path d="M16 16L21 21" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t("games_search_placeholder")}
+              />
+            </div>
+          </label>
+          <button className="dialog-button add-series-search__button" disabled={searching} type="submit">
+            {searching ? t("searching_button") : t("search_button")}
+          </button>
+        </form>
+
+        <div className="game-upload-layout">
+          <div className="add-series-results game-upload-results">
+            <button
+              className={`add-series-result${selectedGameId === "default" ? " active" : ""}`}
+              onClick={() => {
+                setSelectedGameId("default");
+                setSelectedCoverKey("default");
+              }}
+              type="button"
+            >
+              <div className="add-series-result__poster add-series-result__poster--default">
+                <span>{t("games_default_cover")}</span>
+              </div>
+              <div className="add-series-result__body">
+                <h3>{defaultGame.name}</h3>
+                <p className="add-series-result__meta">{t("games_manual_profile")}</p>
+              </div>
+            </button>
+
+            {results.map((result) => {
+              const resultId = String(result.id || result.name);
+              const isSelected = resultId === selectedGameId;
+              return (
+                <button
+                  key={resultId}
+                  className={`add-series-result${isSelected ? " active" : ""}`}
+                  onClick={() => {
+                    setSelectedGameId(resultId);
+                    setSelectedCoverKey(result.covers?.[0]?.url || "default");
+                  }}
+                  type="button"
+                >
+                  <div className="add-series-result__poster">
+                    {result.covers?.[0]?.url ? (
+                      <img src={result.covers[0].url} alt={result.name} />
+                    ) : (
+                      <span>{t("games_default_cover")}</span>
+                    )}
+                  </div>
+                  <div className="add-series-result__body">
+                    <h3>{result.name}</h3>
+                    <p className="add-series-result__meta">ScreenScraper</p>
+                    <p className="add-series-result__overview">
+                      {result.description || t("synopsis_unavailable")}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="game-cover-picker">
+            <strong>{t("games_cover_picker")}</strong>
+            <div className="game-cover-picker__grid">
+              {coverOptions.map((cover) => {
+                const isSelected = selectedCover === cover;
+                return (
+                  <button
+                    key={cover.id || cover.url || "default"}
+                    className={`game-cover-option${isSelected ? " active" : ""}`}
+                    onClick={() => setSelectedCoverKey(cover.url || cover.id)}
+                    type="button"
+                  >
+                    {cover.url ? <img src={cover.url} alt="" /> : <span>{t("games_default_cover")}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {error ? <p className="dialog-error">{error}</p> : null}
+
+        <div className="dialog-card__actions">
+          <button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">
+            {t("cancel")}
+          </button>
+          {uploadProgress !== null ? (
+            <div className="upload-progress" role="status" aria-live="polite">
+              <div className="upload-progress__copy">
+                <strong>{t("upload_copying")}</strong>
+                <span>{file.name}</span>
+              </div>
+              <div className="upload-progress__bar" aria-hidden="true">
+                <span style={{ width: `${clamp(Number(uploadProgress) || 0, 0, 100)}%` }} />
+              </div>
+              <p>{`${clamp(Number(uploadProgress) || 0, 0, 100)}%`}</p>
+            </div>
+          ) : null}
+          <button className="dialog-button dialog-button--accent" onClick={handleSubmit} disabled={submitting} type="button">
+            {submitting ? t("adding_button") : t("upload_button")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
   const [mediaType, setMediaType] = useState("series");
   const [query, setQuery] = useState("");
@@ -2861,11 +3174,13 @@ function RaspberryPage({
   alarm,
   alarmSounds,
   alarmPreviewSound,
+  alarmPreviewPlaying,
   onAlarmTimeChange,
   onAlarmToggle,
   onAlarmSoundChange,
   onAlarmPreviewSoundChange,
   onAlarmPreviewPlay,
+  onAlarmPreviewStop,
   raspberryHealth,
   currentPlaybackInfo,
   controlsBusy,
@@ -3109,6 +3424,14 @@ function RaspberryPage({
               <button type="button" onClick={onAlarmPreviewPlay} disabled={!alarmSounds.length}>
                 {t("play")}
               </button>
+              <button
+                className="raspberry-alarm-preview__stop"
+                type="button"
+                onClick={onAlarmPreviewStop}
+                disabled={!alarmPreviewPlaying}
+              >
+                {t("stop")}
+              </button>
             </div>
           </article>
         </div>
@@ -3276,6 +3599,7 @@ function RaspberryPage({
                 className="raspberry-upload-dropzone__input"
                 type="file"
                 multiple
+                accept={uploadMediaType === "games" ? ".gb,.gbc,.gba" : undefined}
                 webkitdirectory={uploadMediaType === "series" ? "" : undefined}
                 directory={uploadMediaType === "series" ? "" : undefined}
                 onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
@@ -3382,6 +3706,7 @@ export default function App() {
   const [raspberryAlarm, setRaspberryAlarm] = useState(() => loadStoredRaspberryAlarm());
   const [raspberryAlarmSounds, setRaspberryAlarmSounds] = useState([]);
   const [alarmPreviewSound, setAlarmPreviewSound] = useState("");
+  const [alarmPreviewPlaying, setAlarmPreviewPlaying] = useState(false);
   const [raspberryAlarmsLoaded, setRaspberryAlarmsLoaded] = useState(false);
   const [raspberryLanguage, setRaspberryLanguage] = useState(() => loadStoredRaspberryLanguage());
   const [raspberryLanguageSaving, setRaspberryLanguageSaving] = useState(false);
@@ -3395,6 +3720,9 @@ export default function App() {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
   const [uploadValidationError, setUploadValidationError] = useState(null);
+  const [gameLookupOpen, setGameLookupOpen] = useState(false);
+  const [gameUploadFile, setGameUploadFile] = useState(null);
+  const [gameUploadQuery, setGameUploadQuery] = useState("");
   const [tmdbBrowserOpen, setTmdbBrowserOpen] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
@@ -3507,6 +3835,17 @@ export default function App() {
   }, [raspberryCurrentPlayback]);
 
   useEffect(() => {
+    return () => {
+      const audio = alarmPreviewAudioRef.current;
+      if (audio) {
+        audio.pause();
+        audio.onended = null;
+        audio.onerror = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const raspberryMovies = getRaspberryMovieLibraryItems(videos);
     if (!raspberryMovies.length) return;
 
@@ -3611,6 +3950,7 @@ export default function App() {
   }, [unlocked]);
 
   const directories = videos?.directories || [];
+  const gameLibrary = Array.isArray(videos?.games) ? videos.games : [];
 
   useEffect(() => {
     if (!directories.length) {
@@ -4499,6 +4839,32 @@ export default function App() {
     setUploadProgress(null);
   }
 
+  async function handleUploadGameSelection({ game, cover }) {
+    if (!gameUploadFile) return;
+
+    setUploadProgress(0);
+    const response = await uploadGameFile({
+      file: gameUploadFile,
+      game,
+      cover,
+      onProgress: setUploadProgress,
+    });
+    const nextVideos = await getVideos();
+    setVideos(nextVideos);
+    setUploadSummary(
+      t("upload_game_done_summary", {
+        name: response?.item?.name || game?.name || gameUploadFile.name,
+        path: response?.item?.relativePath || gameUploadFile.name,
+      })
+    );
+    setGameLookupOpen(false);
+    setGameUploadFile(null);
+    setGameUploadQuery("");
+    setUploadSelectedFiles([]);
+    setUploadProgress(null);
+    setActiveMediaType("games");
+  }
+
   function handleAlarmTimeChange(alarmId, nextTime) {
     setRaspberryAlarm((current) =>
       current.map((alarmEntry) =>
@@ -4539,19 +4905,45 @@ export default function App() {
   }
 
   function handleAlarmPreviewSoundChange(nextSound) {
+    handleStopAlarmPreview();
     setAlarmPreviewSound(String(nextSound || ""));
+  }
+
+  function handleStopAlarmPreview() {
+    const audio = alarmPreviewAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.onended = null;
+      audio.onerror = null;
+      alarmPreviewAudioRef.current = null;
+    }
+    setAlarmPreviewPlaying(false);
   }
 
   function handlePlayAlarmPreview() {
     const soundUrl = getAlarmSoundUrl(alarmPreviewSound);
     if (!soundUrl) return;
 
-    if (alarmPreviewAudioRef.current) {
-      alarmPreviewAudioRef.current.pause();
-    }
+    handleStopAlarmPreview();
     const audio = new Audio(soundUrl);
     alarmPreviewAudioRef.current = audio;
-    audio.play().catch(() => {});
+    audio.onended = () => {
+      if (alarmPreviewAudioRef.current === audio) {
+        alarmPreviewAudioRef.current = null;
+        setAlarmPreviewPlaying(false);
+      }
+    };
+    audio.onerror = audio.onended;
+    audio
+      .play()
+      .then(() => setAlarmPreviewPlaying(true))
+      .catch(() => {
+        if (alarmPreviewAudioRef.current === audio) {
+          alarmPreviewAudioRef.current = null;
+        }
+        setAlarmPreviewPlaying(false);
+      });
   }
 
   async function handlePausePlayback() {
@@ -4735,7 +5127,27 @@ export default function App() {
     if (!safeFiles.length) return;
 
     if (uploadMediaType === "games") {
-      setUploadSummary(`Se han detectado ${safeFiles.length} archivo(s). La subida guiada de juegos llegará después.`);
+      const gameFiles = safeFiles.filter(isSupportedGameRom);
+      if (gameFiles.length !== 1 || gameFiles.length !== safeFiles.length) {
+        setUploadValidationError({
+          title: t("upload_game_invalid_title"),
+          message: t("upload_game_invalid_copy"),
+        });
+        return;
+      }
+      const gameFile = gameFiles[0];
+      const nextLabel = deriveUploadSearchLabel(gameFile, "games");
+      setGameUploadFile(gameFile);
+      setGameUploadQuery(nextLabel);
+      setUploadSelectedFiles([gameFile]);
+      setUploadProgress(null);
+      setUploadSummary(
+        t("upload_game_detected", {
+          name: nextLabel,
+          platform: GAME_PLATFORM_LABELS[getFileExtension(gameFile.name)] || t("media_games_singular"),
+        })
+      );
+      setGameLookupOpen(true);
       return;
     }
 
@@ -4944,11 +5356,13 @@ export default function App() {
                 alarm={raspberryAlarm}
                 alarmSounds={raspberryAlarmSounds}
                 alarmPreviewSound={alarmPreviewSound}
+                alarmPreviewPlaying={alarmPreviewPlaying}
                 onAlarmTimeChange={handleAlarmTimeChange}
                 onAlarmToggle={handleAlarmToggle}
                 onAlarmSoundChange={handleAlarmSoundChange}
                 onAlarmPreviewSoundChange={handleAlarmPreviewSoundChange}
                 onAlarmPreviewPlay={handlePlayAlarmPreview}
+                onAlarmPreviewStop={handleStopAlarmPreview}
                 raspberryHealth={raspberryHealth}
                 currentPlaybackInfo={raspberryCurrentPlayback}
                 controlsBusy={raspberryControlsBusy}
@@ -5082,7 +5496,7 @@ export default function App() {
                         {isGamesMode ? (
                           <button
                             className="series-icon-button series-icon-button--controls-plus"
-                            onClick={() => setAddSeriesOpen(true)}
+                            onClick={() => handleOpenUploadsForMedia("games")}
                             type="button"
                             aria-label="Añadir juego"
                             title="Añadir juego"
@@ -5147,12 +5561,55 @@ export default function App() {
                 </header>
 
                 {isGamesMode ? (
-                  <section className="empty-state">
-                    <div className="empty-state__card">
-                      <h2>{t("games_in_construction")}</h2>
-                      <p>Este apartado todavia no tiene contenido disponible.</p>
-                    </div>
-                  </section>
+                  gameLibrary.length ? (
+                    <section className="games-library seasons-section">
+                      <div className="seasons-section__label">{`${gameLibrary.length} ${t("media_games")}`}</div>
+                      <div className="games-grid">
+                        {gameLibrary.map((game) => (
+                          <article className="game-card" key={game.relativePath || game.file}>
+                            <div className="game-card__cover">
+                              {game.coverImage ? (
+                                <img src={game.coverImage} alt={game.name} />
+                              ) : (
+                                <img src={emptyStateIcon} alt="" aria-hidden="true" />
+                              )}
+                            </div>
+                            <div className="game-card__body">
+                              <h2>{game.name || game.file}</h2>
+                              <p>{game.platformName || t("media_games_singular")}</p>
+                              {game.description ? <span>{game.description}</span> : null}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  ) : (
+                    <section className="empty-state">
+                      <div className="empty-state__card empty-state__card--library">
+                        <h2>{t("games_empty_title")}</h2>
+                        <img
+                          className="empty-state__image"
+                          src={emptyStateIcon}
+                          alt=""
+                          aria-hidden="true"
+                        />
+                        <p>{t("games_empty_copy")}</p>
+                        <button
+                          className="empty-state__action empty-state__action--uploads"
+                          onClick={() => handleOpenUploadsForMedia("games")}
+                          type="button"
+                        >
+                          <img
+                            className="empty-state__action-icon"
+                            src={uploadsIconBlack}
+                            alt=""
+                            aria-hidden="true"
+                          />
+                          {t("go_to_uploads")}
+                        </button>
+                      </div>
+                    </section>
+                  )
                 ) : isLibraryEmpty ? (
                   <section className="empty-state">
                     <div className="empty-state__card empty-state__card--library">
@@ -5322,6 +5779,21 @@ export default function App() {
               }
               t={t}
               tmdbLanguage={tmdbLanguage}
+            />
+            <GameUploadModal
+              visible={gameLookupOpen}
+              file={gameUploadFile}
+              initialQuery={gameUploadQuery}
+              uploadProgress={uploadProgress}
+              onClose={() => {
+                setGameLookupOpen(false);
+                setGameUploadFile(null);
+                setGameUploadQuery("");
+                setUploadSelectedFiles([]);
+                setUploadProgress(null);
+              }}
+              onUpload={handleUploadGameSelection}
+              t={t}
             />
             <UploadValidationModal
               visible={Boolean(uploadValidationError)}
