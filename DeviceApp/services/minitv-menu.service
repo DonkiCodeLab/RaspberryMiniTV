@@ -1,0 +1,18 @@
+[Unit]
+Description=MiniTV Menu
+After=network.target minitv-api.service
+Wants=minitv-api.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+WorkingDirectory=__DEVICE_APP_DIR__
+ExecStart=/bin/bash __DEVICE_APP_DIR__/start_menu.sh
+ExecStop=/usr/bin/pkill -f __DEVICE_APP_DIR__/menu_app.py
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

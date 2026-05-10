@@ -1,0 +1,17 @@
+[Unit]
+Description=MiniTV Control API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=__DEVICE_APP_DIR__
+ExecStart=/usr/bin/python3 __DEVICE_APP_DIR__/control_api.py
+Restart=always
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

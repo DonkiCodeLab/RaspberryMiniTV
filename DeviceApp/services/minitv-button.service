@@ -1,0 +1,16 @@
+[Unit]
+Description=MiniTV Button
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=__DEVICE_APP_DIR__
+ExecStart=/usr/bin/python3 __DEVICE_APP_DIR__/buttons.py
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

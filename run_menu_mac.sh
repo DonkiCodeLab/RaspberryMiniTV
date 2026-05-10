@@ -5,11 +5,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_BIN=""
 PROJECT_VENV="${SCRIPT_DIR}/.venv-mac-preview"
-LOG_FILE="/tmp/tvsimpsonsapp-menu-mac.log"
+LOG_FILE="/tmp/minitvapp-menu-mac.log"
 
 cd "${SCRIPT_DIR}"
 
-echo "TvSimpsonsApp: preparando preview del menu pygame para macOS..."
+echo "MiniTV: preparando preview del menu pygame para macOS..."
 
 for candidate in python3.12 python3.11 python3; do
   if command -v "${candidate}" >/dev/null 2>&1; then
@@ -50,12 +50,12 @@ if ! python -c "import pygame" >/dev/null 2>&1; then
   python -m pip install pygame
 fi
 
-export SIMPSONSTV_DESKTOP_PREVIEW=1
+export MINITV_DESKTOP_PREVIEW=1
 
 echo "Lanzando menu en ventana 640x480..."
 echo "Log: ${LOG_FILE}"
 
-python RaspberryPiTV/menu_app.py >>"${LOG_FILE}" 2>&1 || {
+python DeviceApp/menu_app.py >>"${LOG_FILE}" 2>&1 || {
   status=$?
   echo
   echo "El menu se ha cerrado con error (${status})."

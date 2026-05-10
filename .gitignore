@@ -184,10 +184,10 @@ fix_*.patch
 
 # Local project artifacts
 .venv-mac-preview/
-RaspberryPiTV/__pycache__/*.pyc
-RaspberryPiTV/user_settings.json
-RaspberryPiTV/menu/Loading_INTRO.png
-RaspberryPiTV/menu/Main_Menu_Button_2x1_Selectedpng.png
-RaspberryPiTV/menu/lock.png
-RaspberryPiWEB/src/simpsonsCatalog.js
+DeviceApp/__pycache__/*.pyc
+DeviceApp/user_settings.json
+DeviceApp/menu/Loading_INTRO.png
+DeviceApp/menu/Main_Menu_Button_2x1_Selectedpng.png
+DeviceApp/menu/lock.png
+WebApp/src/legacyCatalog.js
 assets/splashschreen_aux.psd
