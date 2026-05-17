@@ -388,21 +388,30 @@ def score_touch_device(device):
     key_codes = set(capabilities.get(ecodes.EV_KEY, []))
     name = (device.name or "").lower()
     score = 0
+    has_touch_marker = False
 
     if ecodes.BTN_TOUCH in key_codes:
         score += 10
+        has_touch_marker = True
     if ecodes.ABS_MT_POSITION_X in abs_codes and ecodes.ABS_MT_POSITION_Y in abs_codes:
         score += 8
+        has_touch_marker = True
     if ecodes.ABS_X in abs_codes and ecodes.ABS_Y in abs_codes:
         score += 4
     if "touch" in name:
         score += 6
+        has_touch_marker = True
     if "goodix" in name:
         score += 6
+        has_touch_marker = True
+    if any(token in name for token in ("gamepad", "joystick", "controller", "nacon", "xbox", "playstation")):
+        score -= 12
     if "mouse" in name:
         score -= 8
     if "keyboard" in name:
         score -= 8
+    if not has_touch_marker:
+        score -= 6
 
     return score
 
@@ -429,7 +438,7 @@ def detect_touch_device():
     summary = ", ".join(f"{path}:{name}:score={score}" for score, path, name in candidates)
     log_debug(f"TOUCH candidates {summary}")
 
-    if best_score <= 0:
+    if best_score < 8:
         return None, f"no touchscreen-like device found ({summary})"
     return best_path, f"{best_name} score={best_score}"
 
