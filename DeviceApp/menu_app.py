@@ -3,6 +3,7 @@ import os
 import random
 import re
 import select
+import shutil
 import socket
 import subprocess
 import sys
@@ -144,8 +145,12 @@ LANGUAGE_BUTTON_MAP = {
 def ensure_screen_on():
     if DESKTOP_PREVIEW:
         return
-    subprocess.run(["raspi-gpio", "set", "19", "op", "a5"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
-    subprocess.run(["raspi-gpio", "set", "18", "op", "dh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    raspi_gpio = shutil.which("raspi-gpio")
+    if not raspi_gpio:
+        log_debug("raspi-gpio not found; skipping display GPIO setup")
+        return
+    subprocess.run([raspi_gpio, "set", "19", "op", "a5"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    subprocess.run([raspi_gpio, "set", "18", "op", "dh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
 
 def log_debug(message):
