@@ -10,8 +10,15 @@ cd "${SCRIPT_DIR}"
 raspi-gpio set 19 op a5 >/dev/null 2>&1 || true
 raspi-gpio set 18 op dh >/dev/null 2>&1 || true
 
-export SDL_VIDEODRIVER=fbcon
-export SDL_FBDEV=/dev/fb0
+if [ -z "${SDL_VIDEODRIVER:-}" ]; then
+  if [ -e /dev/dri/card0 ]; then
+    export SDL_VIDEODRIVER=kmsdrm
+    export SDL_RENDER_DRIVER=software
+  else
+    export SDL_VIDEODRIVER=fbcon
+    export SDL_FBDEV=/dev/fb0
+  fi
+fi
 export SDL_MOUSE_TOUCH_EVENTS=1
 export XDG_RUNTIME_DIR=/tmp/minitv-xdg-runtime
 mkdir -p "${XDG_RUNTIME_DIR}"

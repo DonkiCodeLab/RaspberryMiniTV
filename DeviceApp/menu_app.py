@@ -14,8 +14,13 @@ from datetime import datetime
 DESKTOP_PREVIEW = os.environ.get("MINITV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
 
 if not DESKTOP_PREVIEW:
-    os.environ.setdefault("SDL_VIDEODRIVER", "fbcon")
-    os.environ.setdefault("SDL_FBDEV", "/dev/fb0")
+    if "SDL_VIDEODRIVER" not in os.environ:
+        if os.path.exists("/dev/dri/card0"):
+            os.environ["SDL_VIDEODRIVER"] = "kmsdrm"
+            os.environ.setdefault("SDL_RENDER_DRIVER", "software")
+        else:
+            os.environ["SDL_VIDEODRIVER"] = "fbcon"
+            os.environ.setdefault("SDL_FBDEV", "/dev/fb0")
 os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 
 import pygame
