@@ -13,6 +13,13 @@ from datetime import datetime
 
 DESKTOP_PREVIEW = os.environ.get("MINITV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
 
+
+def env_flag(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
 if not DESKTOP_PREVIEW:
     if "SDL_VIDEODRIVER" not in os.environ:
         if os.path.exists("/dev/dri/card0"):
@@ -443,6 +450,33 @@ def detect_touch_device():
     return best_path, f"{best_name} score={best_score}"
 
 
+def get_abs_range(device, primary_code, fallback_code):
+    for code in (primary_code, fallback_code):
+        try:
+            info = device.absinfo(code)
+        except Exception:
+            continue
+        if info and info.max > info.min:
+            return info.min, info.max
+    return None
+
+
+def get_touch_abs_ranges(device):
+    if ecodes is None:
+        return None
+
+    x_range = get_abs_range(device, ecodes.ABS_MT_POSITION_X, ecodes.ABS_X)
+    y_range = get_abs_range(device, ecodes.ABS_MT_POSITION_Y, ecodes.ABS_Y)
+    if not x_range or not y_range:
+        return None
+    return {
+        "x_min": x_range[0],
+        "x_max": x_range[1],
+        "y_min": y_range[0],
+        "y_max": y_range[1],
+    }
+
+
 def scan_wifi_networks():
     nmcli_result = run_command(["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "yes"])
     if nmcli_result.returncode == 0:
@@ -659,6 +693,10 @@ class DeviceAppMenu:
         self.touch_position = (0, 0)
         self.touch_is_down = False
         self.touch_down_pos = None
+        self.touch_abs_ranges = None
+        self.touch_swap_axes = env_flag("MINITV_TOUCH_SWAP_AXES")
+        self.touch_invert_x = env_flag("MINITV_TOUCH_INVERT_X")
+        self.touch_invert_y = env_flag("MINITV_TOUCH_INVERT_Y")
         self.alarm_playing = False
         self.alarm_active_until = 0
         self.alarm_triggered_keys = set()
@@ -1105,9 +1143,16 @@ class DeviceAppMenu:
                 log_debug(f"TOUCH autodetect failed: {reason}. Falling back to pygame mouse events")
                 return
             self.touch_device = InputDevice(touch_path)
-            log_debug(f"TOUCH device={touch_path} name={self.touch_device.name} autodetect={reason}")
+            self.touch_abs_ranges = get_touch_abs_ranges(self.touch_device)
+            log_debug(
+                "TOUCH device="
+                f"{touch_path} name={self.touch_device.name} autodetect={reason} "
+                f"ranges={self.touch_abs_ranges} swap={self.touch_swap_axes} "
+                f"invert_x={self.touch_invert_x} invert_y={self.touch_invert_y}"
+            )
         except Exception as exc:
             self.touch_device = None
+            self.touch_abs_ranges = None
             log_debug(f"TOUCH failed to initialize autodetected device: {exc}")
 
     def refresh_qr_asset(self):
@@ -1920,8 +1965,29 @@ class DeviceAppMenu:
         if DESKTOP_PREVIEW or self.touch_device is None:
             return pos
         raw_x, raw_y = pos
-        normalized_x = int(raw_y * self.width / self.height)
-        normalized_y = int(self.height - (raw_x * self.height / self.width))
+
+        x_min = 0
+        x_max = max(1, self.width - 1)
+        y_min = 0
+        y_max = max(1, self.height - 1)
+        if self.touch_abs_ranges:
+            x_min = self.touch_abs_ranges["x_min"]
+            x_max = self.touch_abs_ranges["x_max"]
+            y_min = self.touch_abs_ranges["y_min"]
+            y_max = self.touch_abs_ranges["y_max"]
+
+        if self.touch_swap_axes:
+            normalized_x = int((raw_y - y_min) * (self.width - 1) / (y_max - y_min))
+            normalized_y = int((raw_x - x_min) * (self.height - 1) / (x_max - x_min))
+        else:
+            normalized_x = int((raw_x - x_min) * (self.width - 1) / (x_max - x_min))
+            normalized_y = int((raw_y - y_min) * (self.height - 1) / (y_max - y_min))
+
+        if self.touch_invert_x:
+            normalized_x = self.width - 1 - normalized_x
+        if self.touch_invert_y:
+            normalized_y = self.height - 1 - normalized_y
+
         normalized_x = max(0, min(self.width - 1, normalized_x))
         normalized_y = max(0, min(self.height - 1, normalized_y))
         return normalized_x, normalized_y
