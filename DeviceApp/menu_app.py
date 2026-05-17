@@ -775,6 +775,7 @@ class DeviceAppMenu:
             "default": self.prepare_button_asset(PLAY_EXIT_NORMAL_PATH, play_exit_rect),
             "pressed": self.prepare_button_asset(PLAY_EXIT_PRESSED_PATH, play_exit_rect),
         }
+        self.menu_tile_assets = self.prepare_menu_tile_assets()
         self.qr_asset = None
         self.wifi_networks = []
         self.wifi_selected_ssid = None
@@ -1133,6 +1134,76 @@ class DeviceAppMenu:
         if image is None:
             return None
         return fit_image(image, rect.size)
+
+    def prepare_menu_tile_asset(self, normal_path, pressed_path, source_rect):
+        normal_image = load_image(normal_path)
+        pressed_image = load_image(pressed_path) if pressed_path else None
+        if normal_image is None:
+            return {"normal": None, "pressed": None}
+
+        crop_rect = pygame.Rect(source_rect).clip(normal_image.get_rect())
+        if crop_rect.width <= 0 or crop_rect.height <= 0:
+            return {"normal": None, "pressed": None}
+
+        normal_tile = normal_image.subsurface(crop_rect).copy()
+        pressed_tile = None
+        if pressed_image is not None:
+            pressed_rect = pygame.Rect(source_rect).clip(pressed_image.get_rect())
+            if pressed_rect.width > 0 and pressed_rect.height > 0:
+                pressed_tile = pressed_image.subsurface(pressed_rect).copy()
+        return {
+            "normal": normal_tile,
+            "pressed": pressed_tile or normal_tile,
+        }
+
+    def prepare_menu_tile_assets(self):
+        return {
+            "play": self.prepare_menu_tile_asset(
+                MAIN_SCREEN_PATH,
+                os.path.join(MENU_DIR, "Main_Menu_Button_2x1_Pressed.png"),
+                (124, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "games": self.prepare_menu_tile_asset(
+                MORE_OPTIONS_PATH,
+                os.path.join(MENU_DIR, "Screen_MoreOptions_Button_1x1_Pressed.png"),
+                (124, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "clock": self.prepare_menu_tile_asset(
+                MORE_OPTIONS_PATH,
+                os.path.join(MENU_DIR, "Screen_MoreOptions_Button_1x2_Pressed.png"),
+                (330, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "qr": self.prepare_menu_tile_asset(
+                MAIN_SCREEN_PATH,
+                os.path.join(MENU_DIR, "Main_Menu_Button_1x2_Pressed.png"),
+                (330, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "wifi": self.prepare_menu_tile_asset(
+                SETTINGS_MENU_PATH,
+                os.path.join(MENU_DIR, "Settings_Menu_Button_1x1_Pressed.png"),
+                (124, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "more": self.prepare_menu_tile_asset(
+                MAIN_SCREEN_PATH,
+                os.path.join(MENU_DIR, "Main_Menu_Button_2x2_Pressed.png"),
+                (330, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "language": self.prepare_menu_tile_asset(
+                SETTINGS_MENU_PATH,
+                os.path.join(MENU_DIR, "Settings_Menu_Button_2x1_Pressed.png"),
+                (124, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "web_pin": self.prepare_menu_tile_asset(
+                SETTINGS_MENU_PATH,
+                os.path.join(MENU_DIR, "Settings_Menu_Button_1x2_Pressed.png"),
+                (330, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+            "poweroff": self.prepare_menu_tile_asset(
+                MORE_OPTIONS_PATH,
+                os.path.join(MENU_DIR, "Screen_MoreOptions_Button_2x1_Pressed.png"),
+                (124, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
+            ),
+        }
 
     def setup_touch_input(self):
         if InputDevice is None:
@@ -2889,16 +2960,20 @@ class DeviceAppMenu:
         if back_asset is not None:
             self.screen.blit(back_asset, back_rect)
 
-    def draw_menu_tile(self, rect, label, pressed=False, color=MID_GRAY):
-        fill = color if pressed else DARK_GRAY
-        border = WHITE if pressed else (210, 210, 210)
-        draw_rect_compat(self.screen, fill, rect, 0, 8)
-        draw_rect_compat(self.screen, border, rect, 3 if pressed else 2, 8)
+    def draw_menu_tile(self, button_id, rect, label, pressed=False, color=MID_GRAY):
+        draw_rect_compat(self.screen, (18, 22, 28), rect, 0, 8)
+        asset_pack = self.menu_tile_assets.get(button_id, {})
+        asset = asset_pack.get("pressed" if pressed else "normal")
+        if asset is not None:
+            fitted = fit_image_contain(asset, (rect.width, rect.height))
+            if fitted is not None:
+                self.screen.blit(fitted, fitted.get_rect(center=rect.center))
+                return
 
+        fill = color if pressed else DARK_GRAY
+        draw_rect_compat(self.screen, fill, rect, 0, 8)
+        draw_rect_compat(self.screen, WHITE, rect, 3 if pressed else 2, 8)
         label_surface = self.wifi_bold_font.render(label, True, WHITE)
-        if label_surface.get_width() > rect.width - 18:
-            label = self.truncate_text(label, self.wifi_bold_font, rect.width - 18)
-            label_surface = self.wifi_bold_font.render(label, True, WHITE)
         self.screen.blit(label_surface, label_surface.get_rect(center=rect.center))
 
     def draw_main_menu(self):
@@ -2923,7 +2998,7 @@ class DeviceAppMenu:
             "more": (239, 68, 68),
         }
         for button_id, rect in self.get_main_button_rects().items():
-            self.draw_menu_tile(rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
+            self.draw_menu_tile(button_id, rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
 
     def draw_more_menu(self):
         self.screen.fill((18, 22, 28))
@@ -2944,7 +3019,7 @@ class DeviceAppMenu:
             "poweroff": (239, 68, 68),
         }
         for button_id, rect in self.get_menu_grid_rects((("language", "web_pin", "poweroff"),), 190).items():
-            self.draw_menu_tile(rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
+            self.draw_menu_tile(button_id, rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
 
     def draw_play(self):
         asset_pack = self.assets["play"]
