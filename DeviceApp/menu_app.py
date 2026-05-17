@@ -697,6 +697,9 @@ class DeviceAppMenu:
         self.touch_swap_axes = env_flag("MINITV_TOUCH_SWAP_AXES")
         self.touch_invert_x = env_flag("MINITV_TOUCH_INVERT_X")
         self.touch_invert_y = env_flag("MINITV_TOUCH_INVERT_Y")
+        self.language_return_state = "settings"
+        self.web_pin_return_state = "settings"
+        self.clock_return_state = "main"
         self.alarm_playing = False
         self.alarm_active_until = 0
         self.alarm_triggered_keys = set()
@@ -1289,9 +1292,45 @@ class DeviceAppMenu:
         return inflated
 
     def get_button_rects(self):
+        if self.state == "main":
+            return self.get_main_button_rects()
+        if self.state == "more":
+            return self.get_more_button_rects()
         return {
             button_id: self.scale_rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
             for button_id, (x, y) in BUTTON_LAYOUT.items()
+        }
+
+    def get_menu_grid_rects(self, rows, top):
+        gap_x = 34
+        gap_y = 26
+        side_margin = 44
+        available_width = self.width - (side_margin * 2) - (gap_x * 2)
+        available_height = self.height - top - 28 - gap_y
+        tile_size = max(92, min(156, available_width // 3, available_height // 2))
+        total_width = (tile_size * 3) + (gap_x * 2)
+        start_x = (self.width - total_width) // 2
+        rects = {}
+        for row_index, row in enumerate(rows):
+            y = top + row_index * (tile_size + gap_y)
+            for column_index, button_id in enumerate(row):
+                x = start_x + column_index * (tile_size + gap_x)
+                rects[button_id] = pygame.Rect(x, y, tile_size, tile_size)
+        return rects
+
+    def get_main_button_rects(self):
+        return self.get_menu_grid_rects(
+            (
+                ("play", "games", "clock"),
+                ("qr", "wifi", "more"),
+            ),
+            96,
+        )
+
+    def get_more_button_rects(self):
+        return {
+            **self.get_menu_grid_rects((("language", "web_pin", "poweroff"),), 190),
+            "back": self.get_top_back_rect(),
         }
 
     def get_poweroff_button_rects(self):
@@ -2028,24 +2067,37 @@ class DeviceAppMenu:
     def handle_button_action(self, button_id):
         log_debug(f"ACTION state={self.state} button={button_id}")
         if self.state == "main":
-            if button_id == "1x1":
-                self.state = "settings"
-            elif button_id == "1x2":
+            if button_id in ("play", "2x1"):
+                self.state = "play"
+            elif button_id in ("games",):
+                self.games_selected_index = 0
+                self.games_page_start = 0
+                self.refresh_games_entries()
+                self.state = "games"
+            elif button_id in ("clock",):
+                self.clock_return_state = "main"
+                self.state = "clock"
+            elif button_id in ("qr", "1x2"):
                 self.refresh_qr_asset()
                 self.state = "qr"
-            elif button_id == "2x1":
-                self.state = "play"
-            elif button_id == "2x2":
+            elif button_id in ("wifi",):
+                self.refresh_wifi_networks()
+                self.state = "wifi"
+            elif button_id in ("more", "2x2"):
                 self.state = "more"
+            elif button_id == "1x1":
+                self.state = "settings"
         elif self.state == "settings":
             if button_id == "1x1":
                 self.refresh_wifi_networks()
                 self.state = "wifi"
             elif button_id == "1x2":
+                self.web_pin_return_state = "settings"
                 self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
                 self.state = "web_pin"
             elif button_id == "2x1":
                 self.pressed_button = None
+                self.language_return_state = "settings"
                 self.state = "language"
             elif button_id == "2x2":
                 self.state = "main"
@@ -2057,18 +2109,19 @@ class DeviceAppMenu:
             elif button_id == "2x1":
                 self.set_language("es")
             elif button_id == "2x2":
-                self.state = "settings"
+                self.state = self.language_return_state
         elif self.state == "more":
-            if button_id == "1x1":
-                self.games_selected_index = 0
-                self.games_page_start = 0
-                self.refresh_games_entries()
-                self.state = "games"
-            elif button_id == "1x2":
-                self.state = "clock"
-            elif button_id == "2x1":
+            if button_id in ("language",):
+                self.pressed_button = None
+                self.language_return_state = "more"
+                self.state = "language"
+            elif button_id in ("web_pin",):
+                self.web_pin_return_state = "more"
+                self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
+                self.state = "web_pin"
+            elif button_id in ("poweroff", "2x1"):
                 self.state = "poweroff"
-            elif button_id == "2x2":
+            elif button_id in ("back", "2x2"):
                 self.state = "main"
         elif self.state == "qr":
             self.state = "main"
@@ -2351,13 +2404,13 @@ class DeviceAppMenu:
         layout = self.get_web_pin_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
             self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
-            self.state = "settings"
+            self.state = self.web_pin_return_state
             return
         if active_button == "web-pin-save" and layout["save"].collidepoint(pos):
             if len(self.web_pin_value) == 4:
                 self.config["web_password"] = self.web_pin_value
                 self.save_settings()
-                self.state = "settings"
+                self.state = self.web_pin_return_state
             return
         key_value = self.get_web_pin_key_at(pos)
         if key_value is None:
@@ -2439,7 +2492,7 @@ class DeviceAppMenu:
             self.pressed_button = None
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=clock down={active_button} up={released_button}")
             if active_button == "top-back" and released_button == "top-back":
-                self.state = "more"
+                self.state = self.clock_return_state
             return
         if self.state == "poweroff":
             released_button = self.poweroff_button_at_pos(normalized_pos)
@@ -2829,11 +2882,69 @@ class DeviceAppMenu:
             text_surface = self.wifi_bold_font.render(label, True, WHITE)
             self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
-    def draw_top_back_button(self):
+    def draw_top_back_button(self, pressed=None):
         back_rect = self.get_top_back_rect()
-        back_asset = self.play_exit_assets["pressed"] if self.pressed_button == "top-back" else self.play_exit_assets["default"]
+        is_pressed = self.pressed_button == "top-back" if pressed is None else pressed
+        back_asset = self.play_exit_assets["pressed"] if is_pressed else self.play_exit_assets["default"]
         if back_asset is not None:
             self.screen.blit(back_asset, back_rect)
+
+    def draw_menu_tile(self, rect, label, pressed=False, color=MID_GRAY):
+        fill = color if pressed else DARK_GRAY
+        border = WHITE if pressed else (210, 210, 210)
+        draw_rect_compat(self.screen, fill, rect, 0, 8)
+        draw_rect_compat(self.screen, border, rect, 3 if pressed else 2, 8)
+
+        label_surface = self.wifi_bold_font.render(label, True, WHITE)
+        if label_surface.get_width() > rect.width - 18:
+            label = self.truncate_text(label, self.wifi_bold_font, rect.width - 18)
+            label_surface = self.wifi_bold_font.render(label, True, WHITE)
+        self.screen.blit(label_surface, label_surface.get_rect(center=rect.center))
+
+    def draw_main_menu(self):
+        self.screen.fill((18, 22, 28))
+        title = self.title_font.render(self.tr("main.title"), True, WHITE)
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, 48)))
+
+        labels = {
+            "play": self.tr("main.play"),
+            "games": self.tr("main.games"),
+            "clock": self.tr("main.clock"),
+            "qr": self.tr("main.qr"),
+            "wifi": self.tr("main.wifi"),
+            "more": self.tr("main.more"),
+        }
+        colors = {
+            "play": (59, 130, 246),
+            "games": (72, 190, 120),
+            "clock": (168, 85, 247),
+            "qr": (245, 158, 11),
+            "wifi": (20, 184, 166),
+            "more": (239, 68, 68),
+        }
+        for button_id, rect in self.get_main_button_rects().items():
+            self.draw_menu_tile(rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
+
+    def draw_more_menu(self):
+        self.screen.fill((18, 22, 28))
+        back_pressed = self.pressed_button in ("back", "top-back")
+        self.draw_top_back_button(pressed=back_pressed)
+
+        title = self.title_font.render(self.tr("more.title"), True, WHITE)
+        self.screen.blit(title, title.get_rect(center=(self.width // 2, 118)))
+
+        labels = {
+            "language": self.tr("more.language"),
+            "web_pin": self.tr("more.web_pin"),
+            "poweroff": self.tr("more.poweroff"),
+        }
+        colors = {
+            "language": (59, 130, 246),
+            "web_pin": (245, 158, 11),
+            "poweroff": (239, 68, 68),
+        }
+        for button_id, rect in self.get_menu_grid_rects((("language", "web_pin", "poweroff"),), 190).items():
+            self.draw_menu_tile(rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
 
     def draw_play(self):
         asset_pack = self.assets["play"]
@@ -3161,19 +3272,9 @@ class DeviceAppMenu:
 
     def draw(self):
         if self.state == "main":
-            asset_pack = self.assets["main"]
-            asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
-            if asset is None:
-                self.draw_missing("menu/Main_Menu.png")
-            else:
-                self.screen.blit(asset, (0, 0))
+            self.draw_main_menu()
         elif self.state == "more":
-            asset_pack = self.assets["more"]
-            asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
-            if asset is None:
-                self.draw_missing("menu/Screen_MoreOptions.png")
-            else:
-                self.screen.blit(asset, (0, 0))
+            self.draw_more_menu()
         elif self.state == "qr":
             if self.qr_asset is None:
                 self.refresh_qr_asset()
