@@ -1144,25 +1144,17 @@ class DeviceAppMenu:
         crop_rect = pygame.Rect(source_rect).clip(normal_image.get_rect())
         if crop_rect.width <= 0 or crop_rect.height <= 0:
             return {"normal": None, "pressed": None}
-        crop_rect = self.square_crop_rect(crop_rect)
 
         normal_tile = normal_image.subsurface(crop_rect).copy()
         pressed_tile = None
         if pressed_image is not None:
             pressed_rect = pygame.Rect(source_rect).clip(pressed_image.get_rect())
             if pressed_rect.width > 0 and pressed_rect.height > 0:
-                pressed_rect = self.square_crop_rect(pressed_rect)
                 pressed_tile = pressed_image.subsurface(pressed_rect).copy()
         return {
             "normal": normal_tile,
             "pressed": pressed_tile or normal_tile,
         }
-
-    def square_crop_rect(self, rect):
-        size = min(rect.width, rect.height)
-        square = pygame.Rect(0, 0, size, size)
-        square.center = rect.center
-        return square
 
     def prepare_menu_tile_assets(self):
         return {
