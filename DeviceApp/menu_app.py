@@ -73,6 +73,7 @@ MENU_BUTTON_LANGUAGE_NORMAL_PATH = os.path.join(MENU_DIR, "button_language_norma
 MENU_BUTTON_LANGUAGE_PRESSED_PATH = os.path.join(MENU_DIR, "button_language_pressed.png")
 MENU_BUTTON_PWD_NORMAL_PATH = os.path.join(MENU_DIR, "button_pwd_normal.png")
 MENU_BUTTON_PWD_PRESSED_PATH = os.path.join(MENU_DIR, "button_pwd_pressed.png")
+MINI_LOGO_PATH = os.path.join(MENU_DIR, "miniLogo_donkicodeLab.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
 LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
@@ -804,6 +805,7 @@ class DeviceAppMenu:
             "pressed": load_image(MENU_BUTTON_BACKGROUND_PRESSED_PATH),
         }
         self.menu_tile_assets = self.prepare_menu_tile_assets()
+        self.mini_logo_asset = load_image(MINI_LOGO_PATH)
         self.qr_asset = None
         self.wifi_networks = []
         self.wifi_selected_ssid = None
@@ -2992,10 +2994,26 @@ class DeviceAppMenu:
             label_rect = label_surface.get_rect(center=rect.center)
         self.screen.blit(label_surface, label_rect)
 
-    def draw_main_menu(self):
+    def draw_main_header(self):
+        header_rect = pygame.Rect(0, 0, self.width, 82)
         self.screen.fill((18, 22, 28))
+        draw_rect_compat(self.screen, (28, 34, 42), header_rect, 0, 0)
+        pygame.draw.line(self.screen, (70, 78, 90), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
+
+        logo_left = 24
+        logo_size = 54
+        if self.mini_logo_asset is not None:
+            logo = fit_image_contain(self.mini_logo_asset, (logo_size, logo_size))
+            if logo is not None:
+                self.screen.blit(logo, logo.get_rect(midleft=(logo_left, header_rect.centery)))
+
         title = self.title_font.render(self.tr("main.title"), True, WHITE)
-        self.screen.blit(title, title.get_rect(center=(self.width // 2, 48)))
+        title_left = logo_left + logo_size + 18
+        title_rect = title.get_rect(midleft=(title_left, header_rect.centery))
+        self.screen.blit(title, title_rect)
+
+    def draw_main_menu(self):
+        self.draw_main_header()
 
         labels = {
             "play": self.tr("main.play"),
