@@ -2997,8 +2997,8 @@ class DeviceAppMenu:
     def draw_main_header(self):
         header_rect = pygame.Rect(0, 0, self.width, 82)
         self.screen.fill((18, 22, 28))
-        draw_rect_compat(self.screen, (28, 34, 42), header_rect, 0, 0)
-        pygame.draw.line(self.screen, (70, 78, 90), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
+        draw_rect_compat(self.screen, WHITE, header_rect, 0, 0)
+        pygame.draw.line(self.screen, (220, 220, 220), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
 
         logo_left = 24
         logo_size = 54
@@ -3007,9 +3007,8 @@ class DeviceAppMenu:
             if logo is not None:
                 self.screen.blit(logo, logo.get_rect(midleft=(logo_left, header_rect.centery)))
 
-        title = self.title_font.render(self.tr("main.title"), True, WHITE)
-        title_left = logo_left + logo_size + 18
-        title_rect = title.get_rect(midleft=(title_left, header_rect.centery))
+        title = self.title_font.render(self.tr("main.title"), True, (255, 212, 41))
+        title_rect = title.get_rect(center=(self.width // 2, header_rect.centery))
         self.screen.blit(title, title_rect)
 
     def draw_main_menu(self):
