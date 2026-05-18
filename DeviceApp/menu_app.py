@@ -41,6 +41,8 @@ except ImportError:
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MENU_DIR = os.path.join(BASE_DIR, "menu")
+FONTS_DIR = os.path.join(BASE_DIR, "fonts")
+MONTSERRAT_BLACK_PATH = os.path.join(FONTS_DIR, "Montserrat-Black.ttf")
 MAIN_SCREEN_PATH = os.path.join(MENU_DIR, "Main_Menu.png")
 MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
@@ -697,6 +699,7 @@ class DeviceAppMenu:
         self.width, self.height = self.screen.get_size()
         self.font = pygame.font.SysFont(FONT_FAMILY, 28)
         self.title_font = pygame.font.SysFont(FONT_FAMILY, 42, bold=True)
+        self.main_title_font = self.load_font(MONTSERRAT_BLACK_PATH, 42, self.title_font)
         self.poweroff_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
         self.clock_font = pygame.font.SysFont(FONT_FAMILY, 140, bold=True)
         self.small_font = pygame.font.SysFont(FONT_FAMILY, 20)
@@ -928,6 +931,14 @@ class DeviceAppMenu:
         for button_id, rect in self.get_button_rects().items():
             log_debug(f"BUTTON {button_id} rect={rect}")
         self.setup_touch_input()
+
+    def load_font(self, path, size, fallback):
+        try:
+            if os.path.exists(path):
+                return pygame.font.Font(path, size)
+        except Exception as exc:
+            log_debug(f"FONT failed to load path={path}: {exc}")
+        return fallback
 
     def initialize_display(self):
         log_debug(f"DISPLAY init start suspended={self.display_suspended}")
@@ -3021,7 +3032,7 @@ class DeviceAppMenu:
             if logo is not None:
                 self.screen.blit(logo, logo.get_rect(midleft=(logo_left, header_rect.centery)))
 
-        title = self.title_font.render(self.tr("main.title"), True, (255, 212, 41))
+        title = self.main_title_font.render(self.tr("main.title"), True, BLACK)
         title_rect = title.get_rect(center=(self.width // 2, header_rect.centery))
         self.screen.blit(title, title_rect)
 
