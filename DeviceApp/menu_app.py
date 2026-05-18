@@ -1377,9 +1377,10 @@ class DeviceAppMenu:
         gap_x = 34
         gap_y = 26
         side_margin = 44
+        row_count = max(1, len(rows))
         available_width = self.width - (side_margin * 2) - (gap_x * 2)
-        available_height = self.height - top - 28 - gap_y
-        tile_size = max(92, min(156, available_width // 3, available_height // 2))
+        available_height = self.height - top - 28 - (gap_y * (row_count - 1))
+        tile_size = max(92, min(156, available_width // 3, available_height // row_count))
         total_width = (tile_size * 3) + (gap_x * 2)
         start_x = (self.width - total_width) // 2
         rects = {}
