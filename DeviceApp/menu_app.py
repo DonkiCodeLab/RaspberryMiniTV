@@ -1437,9 +1437,10 @@ class DeviceAppMenu:
         return pygame.Rect(22, 22, 72, 72)
 
     def get_poweroff_button_rects(self):
+        button_rects = self.get_centered_menu_grid_rects((("poweroff",),), MAIN_HEADER_HEIGHT, self.height)
         return {
-            button_id: self.scale_rect(x, y, POWEROFF_BUTTON_WIDTH, POWEROFF_BUTTON_HEIGHT)
-            for button_id, (x, y) in POWEROFF_BUTTON_LAYOUT.items()
+            **button_rects,
+            "back": self.get_more_back_rect(),
         }
 
     def get_play_button_rects(self):
@@ -2231,9 +2232,9 @@ class DeviceAppMenu:
 
     def handle_poweroff_action(self, button_id):
         log_debug(f"POWEROFF action button={button_id}")
-        if button_id == "1x1":
+        if button_id in ("poweroff", "1x1"):
             run_command(["shutdown", "-h", "now"])
-        elif button_id == "1x2":
+        elif button_id in ("back", "1x2"):
             self.state = "more"
 
     def handle_play_action(self, button_id):
@@ -2925,22 +2926,12 @@ class DeviceAppMenu:
             self.screen.blit(hint_surface, hint_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.bottom - 24)))
 
     def draw_poweroff(self):
-        asset_pack = self.assets["poweroff"]
-        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button else asset_pack["default"]
-        if asset is None:
-            self.draw_missing("menu/PowerOff_Menu.png")
-            return
-        self.screen.blit(asset, (0, 0))
-        title_line_1 = self.tr("poweroff.line1")
-        title_line_2 = self.tr("poweroff.line2")
-        line_1 = self.poweroff_title_font.render(title_line_1, True, WHITE)
-        line_2 = self.poweroff_title_font.render(title_line_2, True, WHITE)
-        shadow_1 = self.poweroff_title_font.render(title_line_1, True, BLACK)
-        shadow_2 = self.poweroff_title_font.render(title_line_2, True, BLACK)
-        self.screen.blit(shadow_1, shadow_1.get_rect(center=(self.width // 2 + 1, 78 + 1)))
-        self.screen.blit(shadow_2, shadow_2.get_rect(center=(self.width // 2 + 1, 118 + 1)))
-        self.screen.blit(line_1, line_1.get_rect(center=(self.width // 2, 78)))
-        self.screen.blit(line_2, line_2.get_rect(center=(self.width // 2, 118)))
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("more.poweroff"))
+        for button_id, rect in self.get_poweroff_button_rects().items():
+            if button_id == "back":
+                continue
+            self.draw_menu_tile(button_id, rect, self.tr("more.poweroff"), self.pressed_button == button_id, RED)
 
     def draw_loading_video(self):
         if self.loading_asset is not None:
@@ -3036,6 +3027,19 @@ class DeviceAppMenu:
         title_rect = title.get_rect(center=(self.width // 2, header_rect.centery))
         self.screen.blit(title, title_rect)
 
+    def draw_submenu_header(self, title_text):
+        header_rect = pygame.Rect(0, 0, self.width, MAIN_HEADER_HEIGHT)
+        draw_rect_compat(self.screen, WHITE, header_rect, 0, 0)
+        pygame.draw.line(self.screen, (220, 220, 220), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
+
+        back_pressed = self.pressed_button in ("back", "top-back")
+        self.draw_menu_tile("back", self.get_more_back_rect(), self.tr("common.back"), back_pressed)
+
+        title_left = self.get_more_back_rect().right + 28
+        title = self.main_title_font.render(title_text, True, BLACK)
+        title_rect = title.get_rect(midleft=(title_left, header_rect.centery))
+        self.screen.blit(title, title_rect)
+
     def draw_main_menu(self):
         self.draw_main_header()
 
@@ -3060,11 +3064,7 @@ class DeviceAppMenu:
 
     def draw_more_menu(self):
         self.screen.fill((18, 22, 28))
-        back_pressed = self.pressed_button in ("back", "top-back")
-        self.draw_menu_tile("back", self.get_more_back_rect(), self.tr("common.back"), back_pressed)
-
-        title = self.title_font.render(self.tr("more.title"), True, WHITE)
-        self.screen.blit(title, title.get_rect(center=(self.width // 2, 118)))
+        self.draw_submenu_header(self.tr("more.title"))
 
         labels = {
             "language": self.tr("more.language"),
