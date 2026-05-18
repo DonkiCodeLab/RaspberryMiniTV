@@ -2366,7 +2366,7 @@ class DeviceAppMenu:
                 return
             layout = self.get_wifi_layout()
             if active_button == "top-back" and self.top_back_at_pos(pos):
-                self.state = "settings"
+                self.state = "main"
                 return
             if active_button == "wifi-refresh" and layout["refresh"].collidepoint(pos):
                 self.refresh_wifi_networks()
