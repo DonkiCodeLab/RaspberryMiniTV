@@ -121,6 +121,7 @@ RED = (210, 80, 80)
 FONT_FAMILY = "DejaVu Sans"
 BASE_WIDTH = 640
 BASE_HEIGHT = 480
+MAIN_HEADER_HEIGHT = 82
 BUTTON_WIDTH = 186
 BUTTON_HEIGHT = 177
 BUTTON_LAYOUT = {
@@ -1393,13 +1394,26 @@ class DeviceAppMenu:
                 rects[button_id] = pygame.Rect(x, y, tile_size, tile_size)
         return rects
 
+    def get_centered_menu_grid_rects(self, rows, area_top, area_bottom):
+        gap_x = 34
+        gap_y = 26
+        side_margin = 44
+        row_count = max(1, len(rows))
+        available_width = self.width - (side_margin * 2) - (gap_x * 2)
+        available_height = area_bottom - area_top - (gap_y * (row_count - 1))
+        tile_size = max(92, min(156, available_width // 3, available_height // row_count))
+        grid_height = (tile_size * row_count) + (gap_y * (row_count - 1))
+        top = area_top + max(0, (area_bottom - area_top - grid_height) // 2)
+        return self.get_menu_grid_rects(rows, top)
+
     def get_main_button_rects(self):
-        return self.get_menu_grid_rects(
+        return self.get_centered_menu_grid_rects(
             (
                 ("play", "games", "clock"),
                 ("qr", "wifi", "more"),
             ),
-            96,
+            MAIN_HEADER_HEIGHT,
+            self.height,
         )
 
     def get_more_button_rects(self):
@@ -2995,7 +3009,7 @@ class DeviceAppMenu:
         self.screen.blit(label_surface, label_rect)
 
     def draw_main_header(self):
-        header_rect = pygame.Rect(0, 0, self.width, 82)
+        header_rect = pygame.Rect(0, 0, self.width, MAIN_HEADER_HEIGHT)
         self.screen.fill((18, 22, 28))
         draw_rect_compat(self.screen, WHITE, header_rect, 0, 0)
         pygame.draw.line(self.screen, (220, 220, 220), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
