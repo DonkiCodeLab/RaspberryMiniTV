@@ -67,6 +67,12 @@ MENU_BUTTON_QR_NORMAL_PATH = os.path.join(MENU_DIR, "button_qr_normal.png")
 MENU_BUTTON_QR_PRESSED_PATH = os.path.join(MENU_DIR, "button_qr_pressed.png")
 MENU_BUTTON_SETTINGS_NORMAL_PATH = os.path.join(MENU_DIR, "button_settings_normal.png")
 MENU_BUTTON_SETTINGS_PRESSED_PATH = os.path.join(MENU_DIR, "button_settings_pressed.png")
+MENU_BUTTON_WIFI_NORMAL_PATH = os.path.join(MENU_DIR, "button_wifi_normal.png")
+MENU_BUTTON_WIFI_PRESSED_PATH = os.path.join(MENU_DIR, "button_wifi_pressed.png")
+MENU_BUTTON_LANGUAGE_NORMAL_PATH = os.path.join(MENU_DIR, "button_language_normal.png")
+MENU_BUTTON_LANGUAGE_PRESSED_PATH = os.path.join(MENU_DIR, "button_language_pressed.png")
+MENU_BUTTON_PWD_NORMAL_PATH = os.path.join(MENU_DIR, "button_pwd_normal.png")
+MENU_BUTTON_PWD_PRESSED_PATH = os.path.join(MENU_DIR, "button_pwd_pressed.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
 LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
@@ -1184,15 +1190,15 @@ class DeviceAppMenu:
                 MENU_BUTTON_QR_PRESSED_PATH,
             ),
             "wifi": self.prepare_menu_tile_asset(
-                MENU_BUTTON_SETTINGS_NORMAL_PATH,
-                MENU_BUTTON_SETTINGS_PRESSED_PATH,
+                MENU_BUTTON_WIFI_NORMAL_PATH,
+                MENU_BUTTON_WIFI_PRESSED_PATH,
             ),
             "more": self.prepare_menu_tile_asset(
                 MENU_BUTTON_MORE_NORMAL_PATH,
                 MENU_BUTTON_MORE_PRESSED_PATH,
             ),
-            "language": self.prepare_menu_tile_asset(None),
-            "web_pin": self.prepare_menu_tile_asset(None),
+            "language": self.prepare_menu_tile_asset(MENU_BUTTON_LANGUAGE_NORMAL_PATH, MENU_BUTTON_LANGUAGE_PRESSED_PATH),
+            "web_pin": self.prepare_menu_tile_asset(MENU_BUTTON_PWD_NORMAL_PATH, MENU_BUTTON_PWD_PRESSED_PATH),
             "poweroff": self.prepare_menu_tile_asset(
                 MENU_BUTTON_POWEROFF_NORMAL_PATH,
                 MENU_BUTTON_POWEROFF_PRESSED_PATH,
@@ -2974,8 +2980,7 @@ class DeviceAppMenu:
             fitted = fit_image_contain(asset, (rect.width, rect.height))
             if fitted is not None:
                 self.screen.blit(fitted, fitted.get_rect(center=rect.center))
-                if button_id != "wifi":
-                    return
+                return
 
         label_surface = self.wifi_bold_font.render(label, True, WHITE)
         if label_surface.get_width() > rect.width - 18:
