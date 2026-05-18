@@ -49,6 +49,24 @@ SETTINGS_MENU_PATH = os.path.join(MENU_DIR, "Settings_Menu.png")
 LANGUAGE_MENU_PATH = os.path.join(MENU_DIR, "Language_Menu.png")
 PLAY_EXIT_NORMAL_PATH = os.path.join(MENU_DIR, "button_exit_normal.png")
 PLAY_EXIT_PRESSED_PATH = os.path.join(MENU_DIR, "button_exit_pressed.png")
+MENU_BUTTON_BACKGROUND_NORMAL_PATH = os.path.join(MENU_DIR, "background_button_normal.png")
+MENU_BUTTON_BACKGROUND_PRESSED_PATH = os.path.join(MENU_DIR, "background_button_pressed.png")
+MENU_BUTTON_BACK_NORMAL_PATH = os.path.join(MENU_DIR, "button_back_normal.png")
+MENU_BUTTON_BACK_PRESSED_PATH = os.path.join(MENU_DIR, "button_back_pressed.png")
+MENU_BUTTON_CLOCK_NORMAL_PATH = os.path.join(MENU_DIR, "button_clock_normal.png")
+MENU_BUTTON_CLOCK_PRESSED_PATH = os.path.join(MENU_DIR, "button_clock_pressed.png")
+MENU_BUTTON_GAME_NORMAL_PATH = os.path.join(MENU_DIR, "button_game_normal.png")
+MENU_BUTTON_GAME_PRESSED_PATH = os.path.join(MENU_DIR, "button_game_pressed.png")
+MENU_BUTTON_MORE_NORMAL_PATH = os.path.join(MENU_DIR, "button_moreOptions_normal.png")
+MENU_BUTTON_MORE_PRESSED_PATH = os.path.join(MENU_DIR, "button_moreOptions_pressed.png")
+MENU_BUTTON_PLAY_NORMAL_PATH = os.path.join(MENU_DIR, "button_play_normal.png")
+MENU_BUTTON_PLAY_PRESSED_PATH = os.path.join(MENU_DIR, "button_play_pressed.png")
+MENU_BUTTON_POWEROFF_NORMAL_PATH = os.path.join(MENU_DIR, "button_poweroff_normal.png")
+MENU_BUTTON_POWEROFF_PRESSED_PATH = os.path.join(MENU_DIR, "button_poweroff_pressed.png")
+MENU_BUTTON_QR_NORMAL_PATH = os.path.join(MENU_DIR, "button_qr_normal.png")
+MENU_BUTTON_QR_PRESSED_PATH = os.path.join(MENU_DIR, "button_qr_pressed.png")
+MENU_BUTTON_SETTINGS_NORMAL_PATH = os.path.join(MENU_DIR, "button_settings_normal.png")
+MENU_BUTTON_SETTINGS_PRESSED_PATH = os.path.join(MENU_DIR, "button_settings_pressed.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
 LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
@@ -775,6 +793,10 @@ class DeviceAppMenu:
             "default": self.prepare_button_asset(PLAY_EXIT_NORMAL_PATH, play_exit_rect),
             "pressed": self.prepare_button_asset(PLAY_EXIT_PRESSED_PATH, play_exit_rect),
         }
+        self.menu_button_backgrounds = {
+            "normal": load_image(MENU_BUTTON_BACKGROUND_NORMAL_PATH),
+            "pressed": load_image(MENU_BUTTON_BACKGROUND_PRESSED_PATH),
+        }
         self.menu_tile_assets = self.prepare_menu_tile_assets()
         self.qr_asset = None
         self.wifi_networks = []
@@ -1135,74 +1157,47 @@ class DeviceAppMenu:
             return None
         return fit_image(image, rect.size)
 
-    def prepare_menu_tile_asset(self, normal_path, pressed_path, source_rect):
-        normal_image = load_image(normal_path)
+    def prepare_menu_tile_asset(self, normal_path, pressed_path=None):
+        normal_image = load_image(normal_path) if normal_path else None
         pressed_image = load_image(pressed_path) if pressed_path else None
-        if normal_image is None:
-            return {"normal": None, "pressed": None}
-
-        crop_rect = pygame.Rect(source_rect).clip(normal_image.get_rect())
-        if crop_rect.width <= 0 or crop_rect.height <= 0:
-            return {"normal": None, "pressed": None}
-
-        normal_tile = normal_image.subsurface(crop_rect).copy()
-        pressed_tile = None
-        if pressed_image is not None:
-            pressed_rect = pygame.Rect(source_rect).clip(pressed_image.get_rect())
-            if pressed_rect.width > 0 and pressed_rect.height > 0:
-                pressed_tile = pressed_image.subsurface(pressed_rect).copy()
         return {
-            "normal": normal_tile,
-            "pressed": pressed_tile or normal_tile,
+            "normal": normal_image,
+            "pressed": pressed_image or normal_image,
         }
 
     def prepare_menu_tile_assets(self):
         return {
             "play": self.prepare_menu_tile_asset(
-                MAIN_SCREEN_PATH,
-                os.path.join(MENU_DIR, "Main_Menu_Button_2x1_Pressed.png"),
-                (124, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
+                MENU_BUTTON_PLAY_NORMAL_PATH,
+                MENU_BUTTON_PLAY_PRESSED_PATH,
             ),
             "games": self.prepare_menu_tile_asset(
-                MORE_OPTIONS_PATH,
-                os.path.join(MENU_DIR, "Screen_MoreOptions_Button_1x1_Pressed.png"),
-                (124, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+                MENU_BUTTON_GAME_NORMAL_PATH,
+                MENU_BUTTON_GAME_PRESSED_PATH,
             ),
             "clock": self.prepare_menu_tile_asset(
-                MORE_OPTIONS_PATH,
-                os.path.join(MENU_DIR, "Screen_MoreOptions_Button_1x2_Pressed.png"),
-                (330, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+                MENU_BUTTON_CLOCK_NORMAL_PATH,
+                MENU_BUTTON_CLOCK_PRESSED_PATH,
             ),
             "qr": self.prepare_menu_tile_asset(
-                MAIN_SCREEN_PATH,
-                os.path.join(MENU_DIR, "Main_Menu_Button_1x2_Pressed.png"),
-                (330, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+                MENU_BUTTON_QR_NORMAL_PATH,
+                MENU_BUTTON_QR_PRESSED_PATH,
             ),
             "wifi": self.prepare_menu_tile_asset(
-                SETTINGS_MENU_PATH,
-                os.path.join(MENU_DIR, "Settings_Menu_Button_1x1_Pressed.png"),
-                (124, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
+                MENU_BUTTON_SETTINGS_NORMAL_PATH,
+                MENU_BUTTON_SETTINGS_PRESSED_PATH,
             ),
             "more": self.prepare_menu_tile_asset(
-                MAIN_SCREEN_PATH,
-                os.path.join(MENU_DIR, "Main_Menu_Button_2x2_Pressed.png"),
-                (330, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
+                MENU_BUTTON_MORE_NORMAL_PATH,
+                MENU_BUTTON_MORE_PRESSED_PATH,
             ),
-            "language": self.prepare_menu_tile_asset(
-                SETTINGS_MENU_PATH,
-                os.path.join(MENU_DIR, "Settings_Menu_Button_2x1_Pressed.png"),
-                (124, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
-            ),
-            "web_pin": self.prepare_menu_tile_asset(
-                SETTINGS_MENU_PATH,
-                os.path.join(MENU_DIR, "Settings_Menu_Button_1x2_Pressed.png"),
-                (330, 52, BUTTON_WIDTH, BUTTON_HEIGHT),
-            ),
+            "language": self.prepare_menu_tile_asset(None),
+            "web_pin": self.prepare_menu_tile_asset(None),
             "poweroff": self.prepare_menu_tile_asset(
-                MORE_OPTIONS_PATH,
-                os.path.join(MENU_DIR, "Screen_MoreOptions_Button_2x1_Pressed.png"),
-                (124, 250, BUTTON_WIDTH, BUTTON_HEIGHT),
+                MENU_BUTTON_POWEROFF_NORMAL_PATH,
+                MENU_BUTTON_POWEROFF_PRESSED_PATH,
             ),
+            "back": self.prepare_menu_tile_asset(MENU_BUTTON_BACK_NORMAL_PATH, MENU_BUTTON_BACK_PRESSED_PATH),
         }
 
     def setup_touch_input(self):
@@ -1401,8 +1396,11 @@ class DeviceAppMenu:
     def get_more_button_rects(self):
         return {
             **self.get_menu_grid_rects((("language", "web_pin", "poweroff"),), 190),
-            "back": self.get_top_back_rect(),
+            "back": self.get_more_back_rect(),
         }
+
+    def get_more_back_rect(self):
+        return pygame.Rect(22, 22, 72, 72)
 
     def get_poweroff_button_rects(self):
         return {
@@ -2962,19 +2960,31 @@ class DeviceAppMenu:
 
     def draw_menu_tile(self, button_id, rect, label, pressed=False, color=MID_GRAY):
         draw_rect_compat(self.screen, (18, 22, 28), rect, 0, 8)
+        background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
+        if background is not None:
+            self.screen.blit(fit_image(background, rect.size), rect)
+        else:
+            fill = color if pressed else DARK_GRAY
+            draw_rect_compat(self.screen, fill, rect, 0, 8)
+            draw_rect_compat(self.screen, WHITE, rect, 3 if pressed else 2, 8)
+
         asset_pack = self.menu_tile_assets.get(button_id, {})
         asset = asset_pack.get("pressed" if pressed else "normal")
         if asset is not None:
             fitted = fit_image_contain(asset, (rect.width, rect.height))
             if fitted is not None:
                 self.screen.blit(fitted, fitted.get_rect(center=rect.center))
-                return
+                if button_id != "wifi":
+                    return
 
-        fill = color if pressed else DARK_GRAY
-        draw_rect_compat(self.screen, fill, rect, 0, 8)
-        draw_rect_compat(self.screen, WHITE, rect, 3 if pressed else 2, 8)
         label_surface = self.wifi_bold_font.render(label, True, WHITE)
-        self.screen.blit(label_surface, label_surface.get_rect(center=rect.center))
+        if label_surface.get_width() > rect.width - 18:
+            label = self.truncate_text(label, self.wifi_bold_font, rect.width - 18)
+            label_surface = self.wifi_bold_font.render(label, True, WHITE)
+        label_rect = label_surface.get_rect(center=(rect.centerx, rect.bottom - 24))
+        if asset is None:
+            label_rect = label_surface.get_rect(center=rect.center)
+        self.screen.blit(label_surface, label_rect)
 
     def draw_main_menu(self):
         self.screen.fill((18, 22, 28))
@@ -3003,7 +3013,7 @@ class DeviceAppMenu:
     def draw_more_menu(self):
         self.screen.fill((18, 22, 28))
         back_pressed = self.pressed_button in ("back", "top-back")
-        self.draw_top_back_button(pressed=back_pressed)
+        self.draw_menu_tile("back", self.get_more_back_rect(), self.tr("common.back"), back_pressed)
 
         title = self.title_font.render(self.tr("more.title"), True, WHITE)
         self.screen.blit(title, title.get_rect(center=(self.width // 2, 118)))
