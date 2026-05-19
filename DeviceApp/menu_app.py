@@ -20,6 +20,16 @@ def env_flag(name, default=False):
         return default
     return value.strip().lower() in ("1", "true", "yes", "on")
 
+
+def env_int(name, default):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
 if not DESKTOP_PREVIEW:
     if "SDL_VIDEODRIVER" not in os.environ:
         if os.path.exists("/dev/dri/card0"):
@@ -123,6 +133,8 @@ RED = (210, 80, 80)
 FONT_FAMILY = "DejaVu Sans"
 BASE_WIDTH = 640
 BASE_HEIGHT = 480
+DESKTOP_PREVIEW_WIDTH = env_int("MINITV_DESKTOP_PREVIEW_WIDTH", 800)
+DESKTOP_PREVIEW_HEIGHT = env_int("MINITV_DESKTOP_PREVIEW_HEIGHT", 480)
 MAIN_HEADER_HEIGHT = 82
 BUTTON_WIDTH = 186
 BUTTON_HEIGHT = 177
@@ -944,7 +956,7 @@ class DeviceAppMenu:
         log_debug(f"DISPLAY init start suspended={self.display_suspended}")
         pygame.display.init()
         if DESKTOP_PREVIEW:
-            self.screen = pygame.display.set_mode((BASE_WIDTH, BASE_HEIGHT))
+            self.screen = pygame.display.set_mode((DESKTOP_PREVIEW_WIDTH, DESKTOP_PREVIEW_HEIGHT))
         else:
             self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         pygame.mouse.set_visible(DESKTOP_PREVIEW)
