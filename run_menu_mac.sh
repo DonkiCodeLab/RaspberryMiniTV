@@ -51,8 +51,10 @@ if ! python -c "import pygame" >/dev/null 2>&1; then
 fi
 
 export MINITV_DESKTOP_PREVIEW=1
+export MINITV_DESKTOP_PREVIEW_WIDTH="${MINITV_DESKTOP_PREVIEW_WIDTH:-800}"
+export MINITV_DESKTOP_PREVIEW_HEIGHT="${MINITV_DESKTOP_PREVIEW_HEIGHT:-480}"
 
-echo "Lanzando menu en ventana 640x480..."
+echo "Lanzando menu en ventana ${MINITV_DESKTOP_PREVIEW_WIDTH}x${MINITV_DESKTOP_PREVIEW_HEIGHT}..."
 echo "Log: ${LOG_FILE}"
 
 python DeviceApp/menu_app.py >>"${LOG_FILE}" 2>&1 || {
