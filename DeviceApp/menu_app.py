@@ -38,7 +38,11 @@ if not DESKTOP_PREVIEW:
         else:
             os.environ["SDL_VIDEODRIVER"] = "fbcon"
             os.environ.setdefault("SDL_FBDEV", "/dev/fb0")
-os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
+if DESKTOP_PREVIEW:
+    os.environ["SDL_MOUSE_TOUCH_EVENTS"] = "0"
+    os.environ["SDL_TOUCH_MOUSE_EVENTS"] = "0"
+else:
+    os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
 
 import pygame
 
@@ -58,11 +62,17 @@ MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
 SETTINGS_MENU_PATH = os.path.join(MENU_DIR, "Settings_Menu.png")
-LANGUAGE_MENU_PATH = os.path.join(MENU_DIR, "Language_Menu.png")
-PLAY_EXIT_NORMAL_PATH = os.path.join(MENU_DIR, "button_exit_normal.png")
-PLAY_EXIT_PRESSED_PATH = os.path.join(MENU_DIR, "button_exit_pressed.png")
+LANGUAGE_ICON_EN_NORMAL_PATH = os.path.join(MENU_DIR, "language_en_normal.png")
+LANGUAGE_ICON_EN_SELECTED_PATH = os.path.join(MENU_DIR, "language_en_selected.png")
+LANGUAGE_ICON_CAT_NORMAL_PATH = os.path.join(MENU_DIR, "language_cat_normal.png")
+LANGUAGE_ICON_CAT_SELECTED_PATH = os.path.join(MENU_DIR, "language_cat_selected.png")
+LANGUAGE_ICON_ES_NORMAL_PATH = os.path.join(MENU_DIR, "language_es_normal.png")
+LANGUAGE_ICON_ES_SELECTED_PATH = os.path.join(MENU_DIR, "language_es_selected.png")
 MENU_BUTTON_BACKGROUND_NORMAL_PATH = os.path.join(MENU_DIR, "background_button_normal.png")
 MENU_BUTTON_BACKGROUND_PRESSED_PATH = os.path.join(MENU_DIR, "background_button_pressed.png")
+MENU_BUTTON_BACKGROUND_RED_PRESSED_PATH = os.path.join(MENU_DIR, "background_button_red_pressed.png")
+MENU_BUTTON_2X_BACKGROUND_NORMAL_PATH = os.path.join(MENU_DIR, "background_2x_button_normal.png")
+MENU_BUTTON_2X_BACKGROUND_PRESSED_PATH = os.path.join(MENU_DIR, "background_2x_button_pressed.png")
 MENU_BUTTON_BACK_NORMAL_PATH = os.path.join(MENU_DIR, "button_back_normal.png")
 MENU_BUTTON_BACK_PRESSED_PATH = os.path.join(MENU_DIR, "button_back_pressed.png")
 MENU_BUTTON_CLOCK_NORMAL_PATH = os.path.join(MENU_DIR, "button_clock_normal.png")
@@ -73,6 +83,10 @@ MENU_BUTTON_MORE_NORMAL_PATH = os.path.join(MENU_DIR, "button_moreOptions_normal
 MENU_BUTTON_MORE_PRESSED_PATH = os.path.join(MENU_DIR, "button_moreOptions_pressed.png")
 MENU_BUTTON_PLAY_NORMAL_PATH = os.path.join(MENU_DIR, "button_play_normal.png")
 MENU_BUTTON_PLAY_PRESSED_PATH = os.path.join(MENU_DIR, "button_play_pressed.png")
+MENU_BUTTON_RANDOM_NORMAL_PATH = os.path.join(MENU_DIR, "button_random_normal.png")
+MENU_BUTTON_RANDOM_PRESSED_PATH = os.path.join(MENU_DIR, "button_random_pressed.png")
+MENU_BUTTON_BROWSE_NORMAL_PATH = os.path.join(MENU_DIR, "button_browse_normal.png")
+MENU_BUTTON_BROWSE_PRESSED_PATH = os.path.join(MENU_DIR, "button_browse_pressed.png")
 MENU_BUTTON_POWEROFF_NORMAL_PATH = os.path.join(MENU_DIR, "button_poweroff_normal.png")
 MENU_BUTTON_POWEROFF_PRESSED_PATH = os.path.join(MENU_DIR, "button_poweroff_pressed.png")
 MENU_BUTTON_QR_NORMAL_PATH = os.path.join(MENU_DIR, "button_qr_normal.png")
@@ -85,12 +99,19 @@ MENU_BUTTON_LANGUAGE_NORMAL_PATH = os.path.join(MENU_DIR, "button_language_norma
 MENU_BUTTON_LANGUAGE_PRESSED_PATH = os.path.join(MENU_DIR, "button_language_pressed.png")
 MENU_BUTTON_PWD_NORMAL_PATH = os.path.join(MENU_DIR, "button_pwd_normal.png")
 MENU_BUTTON_PWD_PRESSED_PATH = os.path.join(MENU_DIR, "button_pwd_pressed.png")
+MENU_BUTTON_PWD_WEB_NORMAL_PATH = os.path.join(MENU_DIR, "button_pwd_web_normal.png")
+MENU_BUTTON_PWD_WEB_PRESSED_PATH = os.path.join(MENU_DIR, "button_pwd_web_pressed.png")
+MENU_BUTTON_PWD_RASPBERRY_NORMAL_PATH = os.path.join(MENU_DIR, "button_pwd_raspberry_normal.png")
+MENU_BUTTON_PWD_RASPBERRY_PRESSED_PATH = os.path.join(MENU_DIR, "button_pwd_raspberry_pressed.png")
+NO_WIFI_PATH = os.path.join(MENU_DIR, "no_wifi.png")
 MINI_LOGO_PATH = os.path.join(MENU_DIR, "miniLogo_donkicodeLab.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
 LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
 CLEAR_ICON_PATH = os.path.join(MENU_DIR, "clear.png")
 BACKSPACE_ICON_PATH = os.path.join(MENU_DIR, "backspace.png")
+BUTTON_CLEAR_PATH = os.path.join(MENU_DIR, "button_clear.png")
+BUTTON_BACKSPACE_PATH = os.path.join(MENU_DIR, "button_backspace.png")
 SAVE_PIN_NORMAL_PATH = os.path.join(MENU_DIR, "save_pin_normal.png")
 SAVE_PIN_PRESSED_PATH = os.path.join(MENU_DIR, "save_pin_pressed.png")
 ARROW_UP_NORMAL_PATH = os.path.join(MENU_DIR, "arrow_up_normal.png")
@@ -125,9 +146,11 @@ BACKGROUND = (245, 245, 245)
 TEXT = (10, 10, 10)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+HEADER_BACKGROUND = (232, 232, 232)
 GRAY = (120, 120, 120)
 DARK_GRAY = (38, 38, 38)
 MID_GRAY = (70, 70, 70)
+DISABLED_ARROW_COLOR = (70, 74, 82)
 GREEN = (72, 190, 120)
 RED = (210, 80, 80)
 FONT_FAMILY = "DejaVu Sans"
@@ -150,11 +173,12 @@ POWEROFF_BUTTON_LAYOUT = {
     "1x1": (117, 248),
     "1x2": (335, 248),
 }
-PLAY_EXIT_LAYOUT = (22, 23, 60, 55)
+PLAY_EXIT_LAYOUT = (24, 12, 58, 58)
 PLAY_RANDOM_LAYOUT = (183, 207, 272, 103)
 PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
-BACK_BUTTON_SCALE = 1.3
 BROWSE_VISIBLE_ITEMS = 4
+BROWSE_DOUBLE_TAP_MS = 450
+RASPBERRY_PASSWORD_USER = "donkicodelab"
 LOADING_MIN_DURATION_MS = 1000
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.sock")
 MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "minitv-video-preview.png")
@@ -279,6 +303,35 @@ def run_command(command):
         return result
     except FileNotFoundError as exc:
         return subprocess.CompletedProcess(command, 127, "", str(exc))
+
+
+def change_raspberry_password(current_password, new_password):
+    if not current_password or not new_password:
+        return False, "password.empty"
+    if DESKTOP_PREVIEW:
+        return True, "password.raspberry_changed"
+
+    if os.geteuid() == 0:
+        command = ["chpasswd"]
+        command_input = f"{RASPBERRY_PASSWORD_USER}:{new_password}\n"
+    else:
+        command = ["sudo", "-k", "-S", "chpasswd"]
+        command_input = f"{current_password}\n{RASPBERRY_PASSWORD_USER}:{new_password}\n"
+    try:
+        result = subprocess.run(
+            command,
+            input=command_input,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return False, "password.command_missing"
+
+    if result.returncode == 0:
+        return True, "password.raspberry_changed"
+    return False, "password.raspberry_failed"
 
 
 def get_wifi_ipv4(interface="wlan0"):
@@ -668,6 +721,26 @@ def load_image(path):
     return pygame.image.load(path).convert_alpha()
 
 
+def clean_transparent_pixels(image, matte=BLACK):
+    if image is None:
+        return None
+    cleaned = image.copy()
+    try:
+        cleaned.lock()
+        width, height = cleaned.get_size()
+        for y in range(height):
+            for x in range(width):
+                red, green, blue, alpha = cleaned.get_at((x, y))
+                if alpha == 0 and (red, green, blue) != matte:
+                    cleaned.set_at((x, y), (*matte, 0))
+    finally:
+        try:
+            cleaned.unlock()
+        except pygame.error:
+            pass
+    return cleaned
+
+
 def fit_image(image, size):
     return pygame.transform.smoothscale(image, size)
 
@@ -682,6 +755,14 @@ def fit_image_contain(image, size):
     scale = min(max_width / src_width, max_height / src_height)
     target_size = (max(1, int(src_width * scale)), max(1, int(src_height * scale)))
     return pygame.transform.smoothscale(image, target_size)
+
+
+def tint_icon(image, color):
+    if image is None:
+        return None
+    tinted = image.copy()
+    tinted.fill((*color, 255), special_flags=pygame.BLEND_RGBA_MULT)
+    return tinted
 
 
 def draw_rect_compat(surface, color, rect, width=0, border_radius=0):
@@ -738,7 +819,9 @@ class DeviceAppMenu:
         self.touch_swap_axes = env_flag("MINITV_TOUCH_SWAP_AXES")
         self.touch_invert_x = env_flag("MINITV_TOUCH_INVERT_X")
         self.touch_invert_y = env_flag("MINITV_TOUCH_INVERT_Y")
+        self.last_mouse_event_ticks = 0
         self.language_return_state = "settings"
+        self.password_menu_return_state = "more"
         self.web_pin_return_state = "settings"
         self.clock_return_state = "main"
         self.alarm_playing = False
@@ -787,40 +870,21 @@ class DeviceAppMenu:
                     "2x2": os.path.join(MENU_DIR, "Settings_Menu_Button_2x2_Pressed.png"),
                 },
             ),
-            "language": self.prepare_named_fullscreen_assets(
-                {
-                    "1x1": {
-                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Normal.png"),
-                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Pressed.png"),
-                        "selected": os.path.join(MENU_DIR, "Language_Menu_Button_1x1_Selected.png"),
-                    },
-                    "1x2": {
-                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Normal.png"),
-                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Pressed.png"),
-                        "selected": os.path.join(MENU_DIR, "Language_Menu_Button_1x2_Selected.png"),
-                    },
-                    "2x1": {
-                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Normal.png"),
-                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Pressed.png"),
-                        "selected": os.path.join(MENU_DIR, "Language_Menu_Button_2x1_Selected.png"),
-                    },
-                    "2x2": {
-                        "normal": os.path.join(MENU_DIR, "Language_Menu_Button_2x2_Normal.png"),
-                        "pressed": os.path.join(MENU_DIR, "Language_Menu_Button_2x2_Pressed.png"),
-                    },
-                }
-            ),
-        }
-        play_exit_rect = self.get_play_button_rects()["exit"]
-        self.play_exit_assets = {
-            "default": self.prepare_button_asset(PLAY_EXIT_NORMAL_PATH, play_exit_rect),
-            "pressed": self.prepare_button_asset(PLAY_EXIT_PRESSED_PATH, play_exit_rect),
         }
         self.menu_button_backgrounds = {
             "normal": load_image(MENU_BUTTON_BACKGROUND_NORMAL_PATH),
             "pressed": load_image(MENU_BUTTON_BACKGROUND_PRESSED_PATH),
+            "red_pressed": load_image(MENU_BUTTON_BACKGROUND_RED_PRESSED_PATH),
+        }
+        self.menu_button_2x_backgrounds = {
+            "normal": load_image(MENU_BUTTON_2X_BACKGROUND_NORMAL_PATH),
+            "pressed": load_image(MENU_BUTTON_2X_BACKGROUND_PRESSED_PATH),
         }
         self.menu_tile_assets = self.prepare_menu_tile_assets()
+        self.language_icon_assets = self.prepare_language_icon_assets()
+        self.play_button_assets = self.prepare_play_button_assets()
+        self.password_menu_assets = self.prepare_password_menu_assets()
+        self.no_wifi_asset = load_image(NO_WIFI_PATH)
         self.mini_logo_asset = load_image(MINI_LOGO_PATH)
         self.qr_asset = None
         self.wifi_networks = []
@@ -828,27 +892,39 @@ class DeviceAppMenu:
         self.wifi_selected_index = 0
         self.current_wifi_ssid = None
         self.wifi_password = ""
+        self.password_keyboard_upper = True
         self.wifi_status = ""
         self.wifi_dialog_message = ""
         self.wifi_dialog_is_error = False
         self.wifi_page_start = 0
-        self.wifi_keyboard_upper = True
         self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
+        self.raspberry_current_password = ""
+        self.raspberry_new_password = ""
+        self.raspberry_password_field = "current"
+        self.raspberry_password_message = ""
+        self.raspberry_password_is_error = False
         self.play_status = ""
         self.browser_path = VIDEOS_DIR
         self.browser_selected_index = 0
         self.browser_page_start = 0
         self.browser_entries = []
         self.browser_status = ""
+        self.browser_last_touch_index = None
+        self.browser_last_touch_ticks = 0
         self.games_selected_index = 0
         self.games_page_start = 0
         self.games_entries = []
         self.games_status = ""
+        self.games_return_state = "main"
         self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
         self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
         self.web_pin_icons = {
             "CLEAR": load_image(CLEAR_ICON_PATH),
             "BACKSPACE": load_image(BACKSPACE_ICON_PATH),
+        }
+        self.password_keyboard_icons = {
+            "CLEAR": load_image(BUTTON_CLEAR_PATH),
+            "BACKSPACE": load_image(BUTTON_BACKSPACE_PATH),
         }
         wifi_layout = self.get_wifi_layout()
         self.wifi_assets = {
@@ -1147,6 +1223,59 @@ class DeviceAppMenu:
         except Exception:
             return value
 
+    def format_long_date(self, value):
+        language = normalize_language_code(self.config.get("language"))
+        if language == "ca":
+            months = [
+                "gener",
+                "febrer",
+                "març",
+                "abril",
+                "maig",
+                "juny",
+                "juliol",
+                "agost",
+                "setembre",
+                "octubre",
+                "novembre",
+                "desembre",
+            ]
+            month = months[value.month - 1]
+            prefix = "d'" if month[0] in "aeiou" else "de "
+            return f"{value.day} {prefix}{month} del {value.year}"
+        if language == "es":
+            months = [
+                "enero",
+                "febrero",
+                "marzo",
+                "abril",
+                "mayo",
+                "junio",
+                "julio",
+                "agosto",
+                "septiembre",
+                "octubre",
+                "noviembre",
+                "diciembre",
+            ]
+            return f"{value.day} de {months[value.month - 1]} de {value.year}"
+
+        months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ]
+        return f"{months[value.month - 1]} {value.day}, {value.year}"
+
     def refresh_translated_state_texts(self):
         self.wifi_status = self.tr("wifi.scan_prompt")
         self.play_status = self.tr("play.choose")
@@ -1190,8 +1319,8 @@ class DeviceAppMenu:
         return fit_image(image, rect.size)
 
     def prepare_menu_tile_asset(self, normal_path, pressed_path=None):
-        normal_image = load_image(normal_path) if normal_path else None
-        pressed_image = load_image(pressed_path) if pressed_path else None
+        normal_image = clean_transparent_pixels(load_image(normal_path)) if normal_path else None
+        pressed_image = clean_transparent_pixels(load_image(pressed_path)) if pressed_path else None
         return {
             "normal": normal_image,
             "pressed": pressed_image or normal_image,
@@ -1232,6 +1361,46 @@ class DeviceAppMenu:
             "back": self.prepare_menu_tile_asset(MENU_BUTTON_BACK_NORMAL_PATH, MENU_BUTTON_BACK_PRESSED_PATH),
         }
 
+    def prepare_language_icon_assets(self):
+        return {
+            "1x1": {
+                "normal": load_image(LANGUAGE_ICON_EN_NORMAL_PATH),
+                "selected": load_image(LANGUAGE_ICON_EN_SELECTED_PATH),
+            },
+            "1x2": {
+                "normal": load_image(LANGUAGE_ICON_CAT_NORMAL_PATH),
+                "selected": load_image(LANGUAGE_ICON_CAT_SELECTED_PATH),
+            },
+            "2x1": {
+                "normal": load_image(LANGUAGE_ICON_ES_NORMAL_PATH),
+                "selected": load_image(LANGUAGE_ICON_ES_SELECTED_PATH),
+            },
+        }
+
+    def prepare_play_button_assets(self):
+        return {
+            "random": {
+                "normal": clean_transparent_pixels(load_image(MENU_BUTTON_RANDOM_NORMAL_PATH)),
+                "pressed": clean_transparent_pixels(load_image(MENU_BUTTON_RANDOM_PRESSED_PATH)),
+            },
+            "browse": {
+                "normal": clean_transparent_pixels(load_image(MENU_BUTTON_BROWSE_NORMAL_PATH)),
+                "pressed": clean_transparent_pixels(load_image(MENU_BUTTON_BROWSE_PRESSED_PATH)),
+            },
+        }
+
+    def prepare_password_menu_assets(self):
+        return {
+            "web": {
+                "normal": clean_transparent_pixels(load_image(MENU_BUTTON_PWD_WEB_NORMAL_PATH)),
+                "pressed": clean_transparent_pixels(load_image(MENU_BUTTON_PWD_WEB_PRESSED_PATH)),
+            },
+            "raspberry": {
+                "normal": clean_transparent_pixels(load_image(MENU_BUTTON_PWD_RASPBERRY_NORMAL_PATH)),
+                "pressed": clean_transparent_pixels(load_image(MENU_BUTTON_PWD_RASPBERRY_PRESSED_PATH)),
+            },
+        }
+
     def setup_touch_input(self):
         if InputDevice is None:
             log_debug("TOUCH evdev unavailable, falling back to pygame mouse events")
@@ -1262,39 +1431,53 @@ class DeviceAppMenu:
         qr_surface = pygame.Surface((self.width, self.height))
         qr_surface.fill(BLACK)
 
-        title = self.title_font.render(self.tr("qr.title"), True, WHITE)
-        subtitle = self.font.render(self.qr_url, True, WHITE)
         wifi_line = self.small_font.render(
             self.tr("qr.wifi_connected", ssid=connected_wifi) if connected_wifi else self.tr("qr.wifi_not_connected"),
             True,
             WHITE,
         )
 
-        qr = load_image(QR_PNG)
-        if qr is not None:
-            qr_size = min(self.width, self.height) // 2
-            qr_scaled = fit_image(qr, (qr_size, qr_size))
-            qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
-            qr_surface.blit(qr_scaled, qr_rect)
-            subtitle_y = qr_rect.bottom + 44
-            wifi_y = qr_rect.bottom + 78
+        if not connected_wifi:
+            if self.no_wifi_asset is not None:
+                icon_size = min(170, max(110, self.height // 3))
+                no_wifi = fit_image_contain(self.no_wifi_asset, (icon_size, icon_size))
+                if no_wifi is not None:
+                    no_wifi_rect = no_wifi.get_rect(center=(self.width // 2, self.height // 2 - 6))
+                    qr_surface.blit(no_wifi, no_wifi_rect)
+                    wifi_y = no_wifi_rect.bottom + 34
+                else:
+                    wifi_y = self.height // 2 + 76
+            else:
+                wifi_y = self.height // 2 + 76
         else:
-            fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
-            draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
-            draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
-            fallback_label = self.font.render(self.qr_url, True, WHITE)
-            qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
-            subtitle_y = fallback_box.bottom + 38
-            wifi_y = fallback_box.bottom + 68
+            qr = load_image(QR_PNG)
+            qr_size = min(self.width, self.height) // 2
+            if qr is not None:
+                qr_scaled = fit_image(qr, (qr_size, qr_size))
+                qr_rect = qr_scaled.get_rect(center=(self.width // 2, self.height // 2 + 5))
+                qr_surface.blit(qr_scaled, qr_rect)
+                wifi_y = qr_rect.bottom + 44
+            else:
+                fallback_box = pygame.Rect(110, 120, self.width - 220, 150)
+                draw_rect_compat(qr_surface, DARK_GRAY, fallback_box, 0, 24)
+                draw_rect_compat(qr_surface, MID_GRAY, fallback_box, 2, 24)
+                fallback_label = self.font.render(self.qr_url, True, WHITE)
+                qr_surface.blit(fallback_label, fallback_label.get_rect(center=fallback_box.center))
+                wifi_y = fallback_box.bottom + 38
 
-        qr_surface.blit(title, title.get_rect(center=(self.width // 2, 42)))
-        qr_surface.blit(subtitle, subtitle.get_rect(center=(self.width // 2, subtitle_y)))
         qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, wifi_y)))
         self.qr_asset = qr_surface.convert()
 
     def refresh_wifi_networks(self):
-        self.wifi_networks = scan_wifi_networks()
-        self.current_wifi_ssid = get_connected_wifi_info()
+        if DESKTOP_PREVIEW:
+            self.wifi_networks = [
+                {"ssid": "Test1Wifi", "signal": 86, "security": "WPA2"},
+                {"ssid": "Test2Wifi", "signal": 64, "security": "WPA2"},
+            ]
+            self.current_wifi_ssid = None
+        else:
+            self.wifi_networks = scan_wifi_networks()
+            self.current_wifi_ssid = get_connected_wifi_info()
         self.wifi_page_start = 0
         if self.wifi_selected_ssid and not any(item["ssid"] == self.wifi_selected_ssid for item in self.wifi_networks):
             self.wifi_selected_ssid = None
@@ -1311,17 +1494,25 @@ class DeviceAppMenu:
         self.wifi_status = self.tr("wifi.networks_found", count=len(self.wifi_networks)) if self.wifi_networks else self.tr("wifi.no_networks")
 
     def get_wifi_layout(self):
-        list_rect = pygame.Rect(20, 108, 490, 236)
         arrow_width = 81
         arrow_height = 55
         arrow_gap = 18
+        side_margin = 20
+        arrow_gap_x = 14
+        list_rect = pygame.Rect(
+            side_margin,
+            108,
+            self.width - (side_margin * 2) - arrow_gap_x - arrow_width,
+            236,
+        )
         group_height = (arrow_height * 2) + arrow_gap
         group_top = int(list_rect.centery - group_height / 2)
-        arrow_x = list_rect.right + 18
+        arrow_x = list_rect.right + arrow_gap_x
         button_height = 56
         bottom_y = int(list_rect.bottom + ((self.height - list_rect.bottom - button_height) / 2))
-        refresh_width = 238
-        connect_width = 238
+        button_gap = 14
+        refresh_width = (list_rect.width - button_gap) // 2
+        connect_width = list_rect.width - button_gap - refresh_width
         return {
             "list": list_rect,
             "up": pygame.Rect(arrow_x, group_top, arrow_width, arrow_height),
@@ -1339,29 +1530,27 @@ class DeviceAppMenu:
             "dialog": pygame.Rect(66, 138, self.width - 132, 150),
         }
 
-    def get_wifi_rows(self):
+    def get_password_keyboard_rows(self):
         letters = [
             list("QWERTYUIOP"),
             list("ASDFGHJKL"),
             list("ZXCVBNM"),
         ]
-        if not self.wifi_keyboard_upper:
+        if not self.password_keyboard_upper:
             letters = [[char.lower() for char in row] for row in letters]
 
         return [
             [("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5"), ("6", "6"), ("7", "7"), ("8", "8"), ("9", "9"), ("0", "0")],
             [(char, char) for char in letters[0]],
             [(char, char) for char in letters[1]] + [("<-", "BACKSPACE")],
-            [(char, char) for char in letters[2]] + [(".", "."), ("Aa" if self.wifi_keyboard_upper else "aA", "TOGGLE_CASE"), (self.tr("common.clear"), "CLEAR")],
+            [(char, char) for char in letters[2]] + [(".", "."), ("Aa" if self.password_keyboard_upper else "aA", "TOGGLE_CASE"), (self.tr("common.clear"), "CLEAR")],
         ]
 
-    def get_keyboard_key_at(self, pos):
-        layout = self.get_wifi_password_layout()
-        keyboard_rect = layout["keyboard"]
+    def get_password_keyboard_key_at(self, pos, keyboard_rect):
         if not keyboard_rect.collidepoint(pos):
             return None
 
-        rows = self.get_wifi_rows()
+        rows = self.get_password_keyboard_rows()
         row_height = keyboard_rect.height / len(rows)
         row_index = int((pos[1] - keyboard_rect.y) / row_height)
         row_index = max(0, min(len(rows) - 1, row_index))
@@ -1370,6 +1559,44 @@ class DeviceAppMenu:
         column_index = int((pos[0] - keyboard_rect.x) / key_width)
         column_index = max(0, min(len(row) - 1, column_index))
         return row[column_index][1]
+
+    def get_keyboard_key_at(self, pos):
+        return self.get_password_keyboard_key_at(pos, self.get_wifi_password_layout()["keyboard"])
+
+    def apply_password_keyboard_key(self, value, key_value):
+        if key_value == "BACKSPACE":
+            return value[:-1]
+        if key_value == "TOGGLE_CASE":
+            self.password_keyboard_upper = not self.password_keyboard_upper
+            return value
+        if key_value == "CLEAR":
+            return ""
+        return value + key_value
+
+    def get_password_menu_layout(self):
+        button_width = 272
+        button_height = 103
+        center_x = (self.width - button_width) // 2
+        return {
+            "web": pygame.Rect(center_x, 162, button_width, button_height),
+            "raspberry": pygame.Rect(center_x, 322, button_width, button_height),
+            "back": self.get_more_back_rect(),
+        }
+
+    def password_menu_button_at_pos(self, pos):
+        for button_id, rect in self.get_password_menu_layout().items():
+            if rect.collidepoint(pos):
+                return button_id
+        return None
+
+    def get_raspberry_password_layout(self):
+        return {
+            "current": pygame.Rect(28, 96, self.width - 56, 44),
+            "new": pygame.Rect(28, 158, self.width - 56, 44),
+            "save": pygame.Rect((self.width - 238) // 2, 218, 238, 56),
+            "keyboard": pygame.Rect(20, 292, self.width - 40, self.height - 312),
+            "dialog": pygame.Rect(66, 138, self.width - 132, 150),
+        }
 
     def scale_rect(self, x, y, width, height):
         scale_x = self.width / BASE_WIDTH
@@ -1394,6 +1621,8 @@ class DeviceAppMenu:
             return self.get_main_button_rects()
         if self.state == "more":
             return self.get_more_button_rects()
+        if self.state == "language":
+            return self.get_language_button_rects()
         return {
             button_id: self.scale_rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
             for button_id, (x, y) in BUTTON_LAYOUT.items()
@@ -1404,14 +1633,15 @@ class DeviceAppMenu:
         gap_y = 26
         side_margin = 44
         row_count = max(1, len(rows))
-        available_width = self.width - (side_margin * 2) - (gap_x * 2)
+        max_columns = max((len(row) for row in rows), default=1)
+        available_width = self.width - (side_margin * 2) - (gap_x * max(0, max_columns - 1))
         available_height = self.height - top - 28 - (gap_y * (row_count - 1))
-        tile_size = max(92, min(156, available_width // 3, available_height // row_count))
-        total_width = (tile_size * 3) + (gap_x * 2)
-        start_x = (self.width - total_width) // 2
+        tile_size = max(92, min(156, available_width // max_columns, available_height // row_count))
         rects = {}
         for row_index, row in enumerate(rows):
             y = top + row_index * (tile_size + gap_y)
+            row_width = (tile_size * len(row)) + (gap_x * max(0, len(row) - 1))
+            start_x = (self.width - row_width) // 2
             for column_index, button_id in enumerate(row):
                 x = start_x + column_index * (tile_size + gap_x)
                 rects[button_id] = pygame.Rect(x, y, tile_size, tile_size)
@@ -1422,9 +1652,10 @@ class DeviceAppMenu:
         gap_y = 26
         side_margin = 44
         row_count = max(1, len(rows))
-        available_width = self.width - (side_margin * 2) - (gap_x * 2)
+        max_columns = max((len(row) for row in rows), default=1)
+        available_width = self.width - (side_margin * 2) - (gap_x * max(0, max_columns - 1))
         available_height = area_bottom - area_top - (gap_y * (row_count - 1))
-        tile_size = max(92, min(156, available_width // 3, available_height // row_count))
+        tile_size = max(92, min(156, available_width // max_columns, available_height // row_count))
         grid_height = (tile_size * row_count) + (gap_y * (row_count - 1))
         top = area_top + max(0, (area_bottom - area_top - grid_height) // 2)
         return self.get_menu_grid_rects(rows, top)
@@ -1441,24 +1672,31 @@ class DeviceAppMenu:
 
     def get_more_button_rects(self):
         return {
-            **self.get_menu_grid_rects((("language", "web_pin", "poweroff"),), 190),
+            **self.get_centered_menu_grid_rects((("language", "web_pin", "poweroff"),), MAIN_HEADER_HEIGHT, self.height),
             "back": self.get_more_back_rect(),
         }
 
     def get_more_back_rect(self):
-        return pygame.Rect(22, 22, 72, 72)
+        size = 58
+        return pygame.Rect(24, (MAIN_HEADER_HEIGHT - size) // 2, size, size)
 
     def get_poweroff_button_rects(self):
-        button_rects = self.get_centered_menu_grid_rects((("poweroff",),), MAIN_HEADER_HEIGHT, self.height)
+        button_rects = self.get_centered_menu_grid_rects((("poweroff",),), 210, self.height)
+        return {
+            **button_rects,
+            "back": self.get_more_back_rect(),
+        }
+
+    def get_language_button_rects(self):
+        button_rects = self.get_centered_menu_grid_rects((("1x1", "1x2", "2x1"),), MAIN_HEADER_HEIGHT, self.height)
         return {
             **button_rects,
             "back": self.get_more_back_rect(),
         }
 
     def get_play_button_rects(self):
-        exit_rect = self.inflate_rect(self.scale_rect(*PLAY_EXIT_LAYOUT), BACK_BUTTON_SCALE)
         return {
-            "exit": exit_rect,
+            "exit": self.get_more_back_rect(),
             "random": self.scale_rect(*PLAY_RANDOM_LAYOUT),
             "browse": self.scale_rect(*PLAY_BROWSE_LAYOUT),
         }
@@ -1477,13 +1715,20 @@ class DeviceAppMenu:
         return None
 
     def get_browser_layout(self):
-        list_rect = pygame.Rect(20, 108, 490, 236)
         arrow_width = 81
         arrow_height = 55
         arrow_gap = 18
+        side_margin = 20
+        arrow_gap_x = 14
+        list_rect = pygame.Rect(
+            side_margin,
+            108,
+            self.width - (side_margin * 2) - arrow_gap_x - arrow_width,
+            236,
+        )
         group_height = (arrow_height * 2) + arrow_gap
         group_top = int(list_rect.centery - group_height / 2)
-        arrow_x = list_rect.right + 18
+        arrow_x = list_rect.right + arrow_gap_x
         button_width = 238
         button_height = 56
         action_y = int(list_rect.bottom + ((self.height - list_rect.bottom - button_height) / 2))
@@ -1829,6 +2074,8 @@ class DeviceAppMenu:
     def activate_browser_entry(self, entry):
         if entry is None:
             return
+        self.browser_last_touch_index = None
+        self.browser_last_touch_ticks = 0
         if entry["type"] == "parent":
             self.browser_path = entry["path"]
             self.browser_selected_index = 0
@@ -2188,6 +2435,7 @@ class DeviceAppMenu:
             elif button_id in ("games",):
                 self.games_selected_index = 0
                 self.games_page_start = 0
+                self.games_return_state = self.state
                 self.refresh_games_entries()
                 self.state = "games"
             elif button_id in ("clock",):
@@ -2208,9 +2456,8 @@ class DeviceAppMenu:
                 self.refresh_wifi_networks()
                 self.state = "wifi"
             elif button_id == "1x2":
-                self.web_pin_return_state = "settings"
-                self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
-                self.state = "web_pin"
+                self.password_menu_return_state = "settings"
+                self.state = "password_menu"
             elif button_id == "2x1":
                 self.pressed_button = None
                 self.language_return_state = "settings"
@@ -2224,7 +2471,7 @@ class DeviceAppMenu:
                 self.set_language("ca")
             elif button_id == "2x1":
                 self.set_language("es")
-            elif button_id == "2x2":
+            elif button_id in ("back", "2x2"):
                 self.state = self.language_return_state
         elif self.state == "more":
             if button_id in ("language",):
@@ -2232,9 +2479,8 @@ class DeviceAppMenu:
                 self.language_return_state = "more"
                 self.state = "language"
             elif button_id in ("web_pin",):
-                self.web_pin_return_state = "more"
-                self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
-                self.state = "web_pin"
+                self.password_menu_return_state = "more"
+                self.state = "password_menu"
             elif button_id in ("poweroff", "2x1"):
                 self.state = "poweroff"
             elif button_id in ("back", "2x2"):
@@ -2282,6 +2528,8 @@ class DeviceAppMenu:
         self.pressed_button = None
         layout = self.get_browser_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
+            self.browser_last_touch_index = None
+            self.browser_last_touch_ticks = 0
             if os.path.abspath(self.browser_path) == os.path.abspath(VIDEOS_DIR):
                 self.state = "play"
             else:
@@ -2291,9 +2539,13 @@ class DeviceAppMenu:
                 self.refresh_browser_entries()
             return
         if active_button == "browser-up" and layout["up"].collidepoint(pos):
+            self.browser_last_touch_index = None
+            self.browser_last_touch_ticks = 0
             self.move_browser_selection(-1)
             return
         if active_button == "browser-down" and layout["down"].collidepoint(pos):
+            self.browser_last_touch_index = None
+            self.browser_last_touch_ticks = 0
             self.move_browser_selection(1)
             return
 
@@ -2304,7 +2556,18 @@ class DeviceAppMenu:
 
         entry_index = self.browser_entry_at_pos(pos)
         if entry_index is not None:
+            now = pygame.time.get_ticks()
+            is_double_touch = (
+                active_button == "browse-touch"
+                and entry_index == self.browser_last_touch_index
+                and now - self.browser_last_touch_ticks <= BROWSE_DOUBLE_TAP_MS
+            )
             self.browser_selected_index = entry_index
+            if is_double_touch:
+                self.activate_browser_entry(self.get_selected_browser_entry())
+                return
+            self.browser_last_touch_index = entry_index
+            self.browser_last_touch_ticks = now
 
     def handle_games_touch_down(self, pos):
         layout = self.get_browser_layout()
@@ -2326,7 +2589,7 @@ class DeviceAppMenu:
         self.pressed_button = None
         layout = self.get_browser_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
-            self.state = "more"
+            self.state = self.games_return_state
             return
         if active_button == "games-up" and layout["up"].collidepoint(pos):
             self.move_games_selection(-1)
@@ -2424,7 +2687,7 @@ class DeviceAppMenu:
                         self.wifi_status = self.tr("wifi.already_connected", ssid=self.wifi_selected_ssid)
                     else:
                         self.wifi_password = ""
-                        self.wifi_keyboard_upper = True
+                        self.password_keyboard_upper = True
                         self.state = "wifi_password"
                 return
             if layout["list"].collidepoint(pos):
@@ -2463,21 +2726,113 @@ class DeviceAppMenu:
             key_value = self.get_keyboard_key_at(pos)
             if key_value is None:
                 return
-            if key_value == "BACKSPACE":
-                self.wifi_password = self.wifi_password[:-1]
-            elif key_value == "TOGGLE_CASE":
-                self.wifi_keyboard_upper = not self.wifi_keyboard_upper
-            elif key_value == "CLEAR":
-                self.wifi_password = ""
-            else:
-                self.wifi_password += key_value
+            self.wifi_password = self.apply_password_keyboard_key(self.wifi_password, key_value)
+
+    def reset_raspberry_password_form(self):
+        self.raspberry_current_password = ""
+        self.raspberry_new_password = ""
+        self.raspberry_password_field = "current"
+        self.raspberry_password_message = ""
+        self.raspberry_password_is_error = False
+        self.password_keyboard_upper = True
+
+    def handle_password_menu_touch_down(self, pos):
+        self.pressed_button = self.password_menu_button_at_pos(pos)
+        log_debug(f"PASSWORD MENU DOWN pos={pos} pressed={self.pressed_button}")
+
+    def handle_password_menu_touch_up(self, pos):
+        active_button = self.pressed_button
+        released_button = self.password_menu_button_at_pos(pos)
+        self.pressed_button = None
+        log_debug(f"PASSWORD MENU UP pos={pos} down={active_button} up={released_button}")
+        if not active_button or active_button != released_button:
+            return
+        if active_button == "back":
+            self.state = self.password_menu_return_state
+            return
+        if active_button == "web":
+            self.web_pin_return_state = "password_menu"
+            self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
+            self.state = "web_pin"
+            return
+        if active_button == "raspberry":
+            self.reset_raspberry_password_form()
+            self.state = "raspberry_password"
+
+    def handle_raspberry_password_touch_down(self, pos):
+        if self.raspberry_password_message:
+            self.pressed_button = "raspberry-password-dialog"
+            return
+        layout = self.get_raspberry_password_layout()
+        if self.top_back_at_pos(pos):
+            self.pressed_button = "top-back"
+        elif layout["save"].collidepoint(pos) and self.can_save_raspberry_password():
+            self.pressed_button = "raspberry-password-save"
+        elif layout["current"].collidepoint(pos):
+            self.pressed_button = "raspberry-password-field:current"
+        elif layout["new"].collidepoint(pos):
+            self.pressed_button = "raspberry-password-field:new"
+        else:
+            key_value = self.get_password_keyboard_key_at(pos, layout["keyboard"])
+            self.pressed_button = f"raspberry-password-key:{key_value}" if key_value else "raspberry-password-touch"
+        log_debug(f"RASPBERRY PASSWORD DOWN pos={pos} field={self.raspberry_password_field}")
+
+    def handle_raspberry_password_touch_up(self, pos):
+        active_button = self.pressed_button
+        self.pressed_button = None
+        if self.raspberry_password_message:
+            if active_button == "raspberry-password-dialog":
+                success = not self.raspberry_password_is_error
+                self.raspberry_password_message = ""
+                self.raspberry_password_is_error = False
+                if success:
+                    self.state = "password_menu"
+            return
+
+        layout = self.get_raspberry_password_layout()
+        if active_button == "top-back" and self.top_back_at_pos(pos):
+            self.state = "password_menu"
+            return
+        if active_button == "raspberry-password-field:current" and layout["current"].collidepoint(pos):
+            self.raspberry_password_field = "current"
+            return
+        if active_button == "raspberry-password-field:new" and layout["new"].collidepoint(pos):
+            self.raspberry_password_field = "new"
+            return
+        if active_button == "raspberry-password-save" and layout["save"].collidepoint(pos):
+            success, message_key = change_raspberry_password(
+                self.raspberry_current_password,
+                self.raspberry_new_password,
+            )
+            self.raspberry_password_message = self.tr(message_key)
+            self.raspberry_password_is_error = not success
+            if success:
+                self.raspberry_current_password = ""
+                self.raspberry_new_password = ""
+            return
+
+        key_value = self.get_password_keyboard_key_at(pos, layout["keyboard"])
+        if key_value is None:
+            return
+        if self.raspberry_password_field == "current":
+            self.raspberry_current_password = self.apply_password_keyboard_key(
+                self.raspberry_current_password,
+                key_value,
+            )
+        else:
+            self.raspberry_new_password = self.apply_password_keyboard_key(
+                self.raspberry_new_password,
+                key_value,
+            )
+
+    def can_save_raspberry_password(self):
+        return bool(self.raspberry_current_password and self.raspberry_new_password)
 
     def get_web_pin_layout(self):
         return {
-            "title": pygame.Rect(20, 18, self.width - 40, 40),
-            "value": pygame.Rect(104, 86, self.width - 208, 72),
-            "save": pygame.Rect((self.width - 200) // 2, 176, 200, 52),
-            "keyboard": pygame.Rect(80, 246, self.width - 160, self.height - 264),
+            "value": pygame.Rect(104, 112, self.width - 208, 62),
+            "save": pygame.Rect((self.width - 200) // 2, 188, 200, 48),
+            "keyboard": pygame.Rect(96, 254, self.width - 192, self.height - 298),
         }
 
     def get_web_pin_rows(self):
@@ -2564,6 +2919,12 @@ class DeviceAppMenu:
             self.pressed_button = next_button if next_button != selected_button else None
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=language pressed={self.pressed_button}")
             return
+        if self.state == "password_menu":
+            self.handle_password_menu_touch_down(normalized_pos)
+            return
+        if self.state == "raspberry_password":
+            self.handle_raspberry_password_touch_down(normalized_pos)
+            return
         if self.state == "video":
             self.handle_video_touch_down(normalized_pos)
             return
@@ -2636,6 +2997,14 @@ class DeviceAppMenu:
             if active_button and active_button == released_button:
                 self.handle_button_action(active_button)
             return
+        if self.state == "password_menu":
+            self.handle_password_menu_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=password_menu")
+            return
+        if self.state == "raspberry_password":
+            self.handle_raspberry_password_touch_up(normalized_pos)
+            log_debug(f"UP raw={pos} normalized={normalized_pos} state=raspberry_password")
+            return
         if self.state == "video":
             self.handle_video_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=video")
@@ -2693,6 +3062,12 @@ class DeviceAppMenu:
         if active_button and active_button == released_button:
             self.handle_button_action(active_button)
 
+    def finger_event_pos(self, event):
+        return (int(event.x * self.width), int(event.y * self.height))
+
+    def should_ignore_finger_event(self):
+        return pygame.time.get_ticks() - self.last_mouse_event_ticks < 250
+
     def poll_native_touch(self):
         if self.touch_device is None or ecodes is None:
             return
@@ -2723,9 +3098,12 @@ class DeviceAppMenu:
         self.screen.blit(subtitle, subtitle.get_rect(center=(self.width // 2, self.height // 2 + 20)))
 
     def draw_clock(self):
-        self.screen.fill(BLACK)
-        hours_text = datetime.now().strftime("%H")
-        minutes_text = datetime.now().strftime("%M")
+        self.screen.fill((18, 22, 28))
+        now = datetime.now()
+        self.draw_submenu_header(self.format_long_date(now))
+
+        hours_text = now.strftime("%H")
+        minutes_text = now.strftime("%M")
         separator_text = ":"
         gap = 18
 
@@ -2740,7 +3118,7 @@ class DeviceAppMenu:
             + (gap * 2)
         )
         start_x = (self.width - total_width) // 2
-        center_y = self.height // 2 - 10
+        center_y = self.height // 2 + 16
 
         hours_rect = hours_surface.get_rect(midleft=(start_x, center_y))
         separator_rect = separator_surface.get_rect(
@@ -2757,9 +3135,9 @@ class DeviceAppMenu:
         alarms = normalize_alarms(self.config.get("alarms"))
         active_alarms = [alarm for alarm in alarms if alarm.get("enabled")]
         alarm_lines = (
-            [f"Alarma {alarm.get('id')}: {alarm.get('time')}" for alarm in active_alarms]
+            [self.tr("clock.alarm", id=alarm.get("id"), time=alarm.get("time")) for alarm in active_alarms]
             if active_alarms
-            else ["No alarmas configuradas"]
+            else [self.tr("clock.no_alarms")]
         )
         first_line_y = minutes_rect.bottom + 22
         line_gap = 30
@@ -2770,11 +3148,8 @@ class DeviceAppMenu:
 
     def draw_wifi(self):
         layout = self.get_wifi_layout()
-        self.screen.fill(BLACK)
-
-        title = self.title_font.render(self.tr("wifi.title"), True, WHITE)
-        title_y = self.get_top_back_rect().centery
-        self.screen.blit(title, title.get_rect(center=(layout["list"].centerx, title_y)))
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("wifi.title"))
 
         list_rect = layout["list"]
         pygame.draw.rect(self.screen, DARK_GRAY, list_rect)
@@ -2806,19 +3181,7 @@ class DeviceAppMenu:
             ("up", layout["up"], self.can_move_wifi_up()),
             ("down", layout["down"], self.can_move_wifi_down()),
         ):
-            state = "pressed" if self.pressed_button == f"wifi-{key_name}" else "normal"
-            icon = self.wifi_arrow_icons[key_name][state]
-            if icon is not None:
-                scaled_icon = fit_image_contain(icon, rect.size)
-                if scaled_icon is not None:
-                    if not enabled:
-                        scaled_icon = scaled_icon.copy()
-                        scaled_icon.set_alpha(70)
-                    self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
-                    if not enabled:
-                        overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
-                        overlay.fill((0, 0, 0, 96))
-                        self.screen.blit(overlay, rect.topleft)
+            self.draw_arrow_control(key_name, rect, enabled, f"wifi-{key_name}")
 
         connect_enabled = bool(self.wifi_selected_ssid) and self.wifi_selected_ssid != current_ssid
         for key_name, label_text, enabled in (
@@ -2850,18 +3213,11 @@ class DeviceAppMenu:
                         scaled_icon = scaled_icon.copy()
                         scaled_icon.set_alpha(128)
                     self.screen.blit(scaled_icon, icon_rect)
-                    text_left = icon_rect.right + 14
-                else:
-                    text_left = rect.x + 20
-            else:
-                text_left = rect.x + 20
 
             label = self.wifi_font.render(label_text, True, WHITE)
             if not enabled:
                 label.set_alpha(80)
-            label_rect = label.get_rect()
-            label_rect.left = text_left
-            label_rect.centery = rect.centery
+            label_rect = label.get_rect(center=rect.center)
             self.screen.blit(label, label_rect)
 
     def draw_wifi_password(self):
@@ -2883,43 +3239,9 @@ class DeviceAppMenu:
         password_text = self.wifi_font.render(self.wifi_password or " ", True, WHITE)
         self.screen.blit(password_text, (layout["password"].x + 10, layout["password"].y + 8))
 
-        connect_asset = self.wifi_assets["connect"]["pressed"] if self.pressed_button == "wifi-password-connect" else self.wifi_assets["connect"]["normal"]
-        if connect_asset is not None:
-            self.screen.blit(connect_asset, layout["connect"])
-        connect_icon = self.wifi_button_icons["connect"]["pressed"] if self.pressed_button == "wifi-password-connect" else self.wifi_button_icons["connect"]["normal"]
-        if connect_icon is not None:
-            scaled_icon = fit_image_contain(connect_icon, (layout["connect"].height - 18, layout["connect"].height - 18))
-            if scaled_icon is not None:
-                icon_rect = scaled_icon.get_rect()
-                icon_rect.left = layout["connect"].x + 16
-                icon_rect.centery = layout["connect"].centery
-                self.screen.blit(scaled_icon, icon_rect)
-                text_left = icon_rect.right + 14
-            else:
-                text_left = layout["connect"].x + 20
-        else:
-            text_left = layout["connect"].x + 20
-        connect_label = self.wifi_font.render(self.tr("common.connect"), True, WHITE)
-        connect_label_rect = connect_label.get_rect()
-        connect_label_rect.left = text_left
-        connect_label_rect.centery = layout["connect"].centery
-        self.screen.blit(connect_label, connect_label_rect)
+        self.draw_wifi_connect_button(layout["connect"], self.pressed_button == "wifi-password-connect")
 
-        keyboard_rect = layout["keyboard"]
-        rows = self.get_wifi_rows()
-        row_height = keyboard_rect.height / len(rows)
-        for row_index, row in enumerate(rows):
-            key_width = keyboard_rect.width / len(row)
-            for col_index, (label, _value) in enumerate(row):
-                rect = pygame.Rect(
-                    int(keyboard_rect.x + col_index * key_width + 2),
-                    int(keyboard_rect.y + row_index * row_height + 2),
-                    int(key_width - 4),
-                    int(row_height - 4),
-                )
-                pygame.draw.rect(self.screen, MID_GRAY, rect)
-                text_surface = self.small_font.render(label, True, WHITE)
-                self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+        self.draw_password_keyboard(layout["keyboard"], "wifi-password-key")
 
         if self.wifi_dialog_message:
             overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
@@ -2937,9 +3259,31 @@ class DeviceAppMenu:
             self.screen.blit(body_surface, body_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.centery)))
             self.screen.blit(hint_surface, hint_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.bottom - 24)))
 
+    def draw_wifi_connect_button(self, rect, pressed=False):
+        connect_asset = self.wifi_assets["connect"]["pressed"] if pressed else self.wifi_assets["connect"]["normal"]
+        if connect_asset is not None:
+            self.screen.blit(connect_asset, rect)
+        label_center_x = rect.centerx
+        connect_icon = self.wifi_button_icons["connect"]["pressed"] if pressed else self.wifi_button_icons["connect"]["normal"]
+        if connect_icon is not None:
+            scaled_icon = fit_image_contain(connect_icon, (rect.height - 18, rect.height - 18))
+            if scaled_icon is not None:
+                icon_rect = scaled_icon.get_rect()
+                icon_rect.left = rect.x + 16
+                icon_rect.centery = rect.centery
+                self.screen.blit(scaled_icon, icon_rect)
+                label_center_x = (icon_rect.right + rect.right) // 2
+        connect_label = self.wifi_font.render(self.tr("common.connect"), True, WHITE)
+        connect_label_rect = connect_label.get_rect(center=(label_center_x, rect.centery))
+        self.screen.blit(connect_label, connect_label_rect)
+
     def draw_poweroff(self):
         self.screen.fill((18, 22, 28))
         self.draw_submenu_header(self.tr("more.poweroff"))
+        line1 = self.poweroff_title_font.render(self.tr("poweroff.line1"), True, WHITE)
+        line2 = self.poweroff_title_font.render(self.tr("poweroff.line2"), True, WHITE)
+        self.screen.blit(line1, line1.get_rect(center=(self.width // 2, 128)))
+        self.screen.blit(line2, line2.get_rect(center=(self.width // 2, 168)))
         for button_id, rect in self.get_poweroff_button_rects().items():
             if button_id == "back":
                 continue
@@ -2991,13 +3335,25 @@ class DeviceAppMenu:
     def draw_top_back_button(self, pressed=None):
         back_rect = self.get_top_back_rect()
         is_pressed = self.pressed_button == "top-back" if pressed is None else pressed
-        back_asset = self.play_exit_assets["pressed"] if is_pressed else self.play_exit_assets["default"]
-        if back_asset is not None:
-            self.screen.blit(back_asset, back_rect)
+        self.draw_menu_tile("back", back_rect, self.tr("common.back"), is_pressed)
+
+    def draw_arrow_control(self, key_name, rect, enabled, pressed_button):
+        state = "pressed" if self.pressed_button == pressed_button else "normal"
+        icon = self.wifi_arrow_icons[key_name][state]
+        if icon is None:
+            return
+
+        scaled_icon = fit_image_contain(icon, rect.size)
+        if scaled_icon is None:
+            return
+
+        if not enabled:
+            scaled_icon = tint_icon(scaled_icon, DISABLED_ARROW_COLOR)
+        self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
 
     def draw_menu_tile(self, button_id, rect, label, pressed=False, color=MID_GRAY):
-        draw_rect_compat(self.screen, (18, 22, 28), rect, 0, 8)
-        background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
+        background_key = "red_pressed" if pressed and color == RED else "pressed" if pressed else "normal"
+        background = self.menu_button_backgrounds.get(background_key)
         if background is not None:
             self.screen.blit(fit_image(background, rect.size), rect)
         else:
@@ -3022,14 +3378,123 @@ class DeviceAppMenu:
             label_rect = label_surface.get_rect(center=rect.center)
         self.screen.blit(label_surface, label_rect)
 
+    def draw_language_tile(self, button_id, rect, selected=False, pressed=False):
+        background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
+        if background is not None:
+            self.screen.blit(fit_image(background, rect.size), rect)
+        else:
+            draw_rect_compat(self.screen, DARK_GRAY, rect, 0, 8)
+            draw_rect_compat(self.screen, WHITE, rect, 2, 8)
+
+        icon_state = "selected" if selected else "normal"
+        icon = self.language_icon_assets.get(button_id, {}).get(icon_state)
+        if icon is None:
+            fallback_labels = {"1x1": "EN", "1x2": "CAT", "2x1": "ES"}
+            label_surface = self.wifi_bold_font.render(fallback_labels.get(button_id, ""), True, WHITE)
+            self.screen.blit(label_surface, label_surface.get_rect(center=rect.center))
+            return
+
+        fitted = fit_image_contain(icon, (rect.width - 22, rect.height - 22))
+        if fitted is not None:
+            self.screen.blit(fitted, fitted.get_rect(center=rect.center))
+
+    def draw_play_choice_button(self, button_id, rect, label, pressed=False):
+        state = "pressed" if pressed else "normal"
+        background = self.menu_button_2x_backgrounds.get(state)
+        if background is not None:
+            self.screen.blit(fit_image(background, rect.size), rect)
+        else:
+            draw_rect_compat(self.screen, DARK_GRAY, rect, 0, 8)
+            draw_rect_compat(self.screen, WHITE, rect, 2, 8)
+
+        icon = self.play_button_assets.get(button_id, {}).get(state)
+        if icon is None:
+            icon = self.play_button_assets.get(button_id, {}).get("normal")
+        if icon is not None:
+            self.screen.blit(fit_image(icon, rect.size), rect)
+
+        label_surface = self.play_label_font.render(label, True, WHITE)
+        label_rect = label_surface.get_rect()
+        label_rect.left = rect.x + int(rect.width * 0.48)
+        label_rect.centery = rect.centery
+        self.screen.blit(label_surface, label_rect)
+
+    def draw_password_choice_button(self, button_id, rect, label, pressed=False):
+        state = "pressed" if pressed else "normal"
+        background = self.menu_button_2x_backgrounds.get(state)
+        background_rect = rect.inflate(int(rect.width * 0.25), 0)
+        background_rect.center = rect.center
+        if background is not None:
+            self.screen.blit(fit_image(background, background_rect.size), background_rect)
+        else:
+            draw_rect_compat(self.screen, DARK_GRAY, background_rect, 0, 8)
+            draw_rect_compat(self.screen, WHITE, background_rect, 2, 8)
+
+        icon = self.password_menu_assets.get(button_id, {}).get(state)
+        if icon is None:
+            icon = self.password_menu_assets.get(button_id, {}).get("normal")
+        if icon is not None:
+            fitted_icon = fit_image(icon, rect.size)
+            icon_rect = fitted_icon.get_rect()
+            icon_rect.left = background_rect.left + 18
+            icon_rect.centery = rect.centery
+            self.screen.blit(fitted_icon, icon_rect)
+
+        label_surface = self.play_label_font.render(label, True, WHITE)
+        label_rect = label_surface.get_rect()
+        label_rect.left = rect.x + int(rect.width * 0.48)
+        label_rect.centery = rect.centery
+        self.screen.blit(label_surface, label_rect)
+
+    def draw_password_choice_description(self, text, button_rect):
+        description = self.truncate_text(text, self.small_font, self.width - 96)
+        description_surface = self.small_font.render(description, True, WHITE)
+        description_rect = description_surface.get_rect(center=(self.width // 2, button_rect.y - 20))
+        self.screen.blit(description_surface, description_rect)
+
+    def draw_password_keyboard(self, keyboard_rect, pressed_prefix):
+        rows = self.get_password_keyboard_rows()
+        row_height = keyboard_rect.height / len(rows)
+        for row_index, row in enumerate(rows):
+            key_width = keyboard_rect.width / len(row)
+            for col_index, (label, value) in enumerate(row):
+                rect = pygame.Rect(
+                    int(keyboard_rect.x + col_index * key_width + 2),
+                    int(keyboard_rect.y + row_index * row_height + 2),
+                    int(key_width - 4),
+                    int(row_height - 4),
+                )
+                is_pressed = self.pressed_button == f"{pressed_prefix}:{value}"
+                key_color = (98, 98, 98) if is_pressed else MID_GRAY
+                draw_rect_compat(self.screen, key_color, rect, 0, 10)
+                icon = self.password_keyboard_icons.get(value)
+                if icon is not None:
+                    icon_size = (int(rect.width * 0.52), int(rect.height * 0.52))
+                    scaled_icon = fit_image_contain(icon, icon_size)
+                    if scaled_icon is not None:
+                        self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
+                        continue
+                text_surface = self.small_font.render(label, True, WHITE)
+                self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+
+    def draw_password_field(self, rect, label, value, active=False):
+        border_color = GREEN if active else WHITE
+        draw_rect_compat(self.screen, DARK_GRAY, rect, 0, 12)
+        draw_rect_compat(self.screen, border_color, rect, 2, 12)
+        label_surface = self.small_font.render(label, True, GRAY)
+        self.screen.blit(label_surface, (rect.x + 12, rect.y + 4))
+        masked = self.truncate_text("*" * len(value), self.wifi_font, rect.width - 24)
+        value_surface = self.wifi_font.render(masked or " ", True, WHITE)
+        self.screen.blit(value_surface, (rect.x + 12, rect.y + 20))
+
     def draw_main_header(self):
         header_rect = pygame.Rect(0, 0, self.width, MAIN_HEADER_HEIGHT)
         self.screen.fill((18, 22, 28))
-        draw_rect_compat(self.screen, WHITE, header_rect, 0, 0)
+        draw_rect_compat(self.screen, HEADER_BACKGROUND, header_rect, 0, 0)
         pygame.draw.line(self.screen, (220, 220, 220), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
 
         logo_left = 24
-        logo_size = 54
+        logo_size = 70
         if self.mini_logo_asset is not None:
             logo = fit_image_contain(self.mini_logo_asset, (logo_size, logo_size))
             if logo is not None:
@@ -3041,15 +3506,15 @@ class DeviceAppMenu:
 
     def draw_submenu_header(self, title_text):
         header_rect = pygame.Rect(0, 0, self.width, MAIN_HEADER_HEIGHT)
-        draw_rect_compat(self.screen, WHITE, header_rect, 0, 0)
+        draw_rect_compat(self.screen, HEADER_BACKGROUND, header_rect, 0, 0)
         pygame.draw.line(self.screen, (220, 220, 220), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
 
-        back_pressed = self.pressed_button in ("back", "top-back")
+        back_pressed = self.pressed_button in ("back", "top-back", "exit")
         self.draw_menu_tile("back", self.get_more_back_rect(), self.tr("common.back"), back_pressed)
 
-        title_left = self.get_more_back_rect().right + 28
+        title_text = self.truncate_text(title_text, self.main_title_font, self.width - 150)
         title = self.main_title_font.render(title_text, True, BLACK)
-        title_rect = title.get_rect(midleft=(title_left, header_rect.centery))
+        title_rect = title.get_rect(center=(self.width // 2, header_rect.centery))
         self.screen.blit(title, title_rect)
 
     def draw_main_menu(self):
@@ -3088,29 +3553,27 @@ class DeviceAppMenu:
             "web_pin": (245, 158, 11),
             "poweroff": (239, 68, 68),
         }
-        for button_id, rect in self.get_menu_grid_rects((("language", "web_pin", "poweroff"),), 190).items():
+        for button_id, rect in self.get_more_button_rects().items():
+            if button_id == "back":
+                continue
             self.draw_menu_tile(button_id, rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
 
     def draw_play(self):
-        asset_pack = self.assets["play"]
-        asset = asset_pack["pressed"].get(self.pressed_button) if self.pressed_button in {"random", "browse"} else asset_pack["default"]
-        if asset is None:
-            self.draw_missing("menu/PlayMenu.png")
-            return
-        self.screen.blit(asset, (0, 0))
-
-        exit_rect = self.get_play_button_rects()["exit"]
-        exit_asset = self.play_exit_assets["pressed"] if self.pressed_button == "exit" else self.play_exit_assets["default"]
-        if exit_asset is not None:
-            self.screen.blit(exit_asset, exit_rect)
-
-        title = self.play_title_font.render(self.tr("play.title"), True, WHITE)
-        random_text = self.play_label_font.render(self.tr("play.random"), True, WHITE)
-        browse_text = self.play_label_font.render(self.tr("play.browse"), True, WHITE)
-
-        self.screen.blit(title, title.get_rect(center=(self.width // 2 + 6, 106)))
-        self.screen.blit(random_text, random_text.get_rect(center=(372, 258)))
-        self.screen.blit(browse_text, browse_text.get_rect(center=(372, 387)))
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("play.title"))
+        button_rects = self.get_play_button_rects()
+        self.draw_play_choice_button(
+            "random",
+            button_rects["random"],
+            self.tr("play.random"),
+            self.pressed_button == "random",
+        )
+        self.draw_play_choice_button(
+            "browse",
+            button_rects["browse"],
+            self.tr("play.browse"),
+            self.pressed_button == "browse",
+        )
 
     def draw_settings(self):
         asset_pack = self.assets["settings"]
@@ -3121,30 +3584,97 @@ class DeviceAppMenu:
         self.screen.blit(asset, (0, 0))
 
     def draw_language(self):
-        asset_pack = self.assets["language"]
         selected_button = self.get_selected_language_button()
-        self.screen.fill(BLACK)
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("language.title"))
+        for button_id, rect in self.get_language_button_rects().items():
+            if button_id == "back":
+                continue
+            self.draw_language_tile(
+                button_id,
+                rect,
+                selected=button_id == selected_button,
+                pressed=self.pressed_button == button_id,
+            )
 
-        for button_id in ("1x1", "1x2", "2x1", "2x2"):
-            button_assets = asset_pack.get(button_id, {})
-            if button_id == "2x2":
-                asset = button_assets.get("pressed") if self.pressed_button == "2x2" else button_assets.get("normal")
-            elif button_id == selected_button and "selected" in button_assets:
-                asset = button_assets.get("selected")
-            elif button_id == self.pressed_button:
-                asset = button_assets.get("pressed")
-            else:
-                asset = button_assets.get("normal")
+    def draw_password_menu(self):
+        layout = self.get_password_menu_layout()
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("password.title"))
+        self.draw_password_choice_description(self.tr("password.web_description"), layout["web"])
+        self.draw_password_choice_button(
+            "web",
+            layout["web"],
+            self.tr("password.web"),
+            self.pressed_button == "web",
+        )
+        self.draw_password_choice_description(self.tr("password.raspberry_description"), layout["raspberry"])
+        self.draw_password_choice_button(
+            "raspberry",
+            layout["raspberry"],
+            self.tr("password.raspberry"),
+            self.pressed_button == "raspberry",
+        )
 
-            if asset is not None:
-                self.screen.blit(asset, (0, 0))
+    def draw_raspberry_password(self):
+        layout = self.get_raspberry_password_layout()
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("password.raspberry_title"))
+
+        self.draw_password_field(
+            layout["current"],
+            self.tr("password.current"),
+            self.raspberry_current_password,
+            self.raspberry_password_field == "current",
+        )
+        self.draw_password_field(
+            layout["new"],
+            self.tr("password.new"),
+            self.raspberry_new_password,
+            self.raspberry_password_field == "new",
+        )
+
+        save_enabled = self.can_save_raspberry_password()
+        save_asset = self.browser_assets["action"]["pressed"] if self.pressed_button == "raspberry-password-save" else self.browser_assets["action"]["normal"]
+        if save_asset is not None:
+            save_surface = save_asset.copy()
+            if not save_enabled:
+                save_surface.set_alpha(128)
+            self.screen.blit(save_surface, layout["save"])
+        else:
+            draw_rect_compat(self.screen, GREEN if save_enabled else MID_GRAY, layout["save"], 0, 16)
+
+        save_label = self.wifi_font.render(self.tr("common.save"), True, WHITE)
+        if not save_enabled:
+            save_label.set_alpha(128)
+        self.screen.blit(save_label, save_label.get_rect(center=layout["save"].center))
+
+        self.draw_password_keyboard(layout["keyboard"], "raspberry-password-key")
+
+        if self.raspberry_password_message:
+            overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 150))
+            self.screen.blit(overlay, (0, 0))
+            dialog_rect = layout["dialog"]
+            dialog_color = (110, 38, 38) if self.raspberry_password_is_error else (38, 72, 44)
+            draw_rect_compat(self.screen, dialog_color, dialog_rect, 0, 18)
+            draw_rect_compat(self.screen, WHITE, dialog_rect, 2, 18)
+            title_text = self.tr("password.error") if self.raspberry_password_is_error else self.tr("password.saved")
+            title_surface = self.wifi_bold_font.render(title_text, True, WHITE)
+            body_surface = self.small_font.render(
+                self.truncate_text(self.raspberry_password_message, self.small_font, dialog_rect.width - 24),
+                True,
+                WHITE,
+            )
+            hint_surface = self.small_font.render(self.tr("common.close"), True, WHITE)
+            self.screen.blit(title_surface, title_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.y + 32)))
+            self.screen.blit(body_surface, body_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.centery)))
+            self.screen.blit(hint_surface, hint_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.bottom - 24)))
 
     def draw_web_pin(self):
         layout = self.get_web_pin_layout()
-        self.screen.fill(BLACK)
-        title = self.title_font.render(self.tr("web_pin.title"), True, WHITE)
-        title_y = self.get_top_back_rect().centery
-        self.screen.blit(title, title.get_rect(center=(self.width // 2, title_y)))
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("web_pin.title"))
         value_rect = layout["value"]
         cell_gap = 10
         cell_width = (value_rect.width - (cell_gap * 3)) // 4
@@ -3206,7 +3736,8 @@ class DeviceAppMenu:
 
     def draw_browser(self):
         layout = self.get_browser_layout()
-        self.screen.fill(BLACK)
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("browser.path", path=self.rel_browser_path()))
 
         selected_entry = self.get_selected_browser_entry()
         action_label = self.tr("browser.view")
@@ -3219,26 +3750,7 @@ class DeviceAppMenu:
             ("up", layout["up"], self.can_move_browser_up()),
             ("down", layout["down"], self.can_move_browser_down()),
         ):
-            state = "pressed" if self.pressed_button == f"browser-{key_name}" else "normal"
-            icon = self.wifi_arrow_icons[key_name][state]
-            if icon is not None:
-                scaled_icon = fit_image_contain(icon, rect.size)
-                if scaled_icon is not None:
-                    if not enabled:
-                        scaled_icon = scaled_icon.copy()
-                        scaled_icon.set_alpha(70)
-                    self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
-                    if not enabled:
-                        overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
-                        overlay.fill((0, 0, 0, 96))
-                        self.screen.blit(overlay, rect.topleft)
-
-        path_text = self.truncate_text(self.tr("browser.path", path=self.rel_browser_path()), self.small_font, layout["path"].width)
-        path_surface = self.small_font.render(path_text, True, WHITE)
-        path_rect = path_surface.get_rect()
-        path_rect.x = layout["path"].x
-        path_rect.centery = self.get_top_back_rect().centery
-        self.screen.blit(path_surface, path_rect)
+            self.draw_arrow_control(key_name, rect, enabled, f"browser-{key_name}")
 
         pygame.draw.rect(self.screen, DARK_GRAY, layout["list"])
         if not self.browser_entries:
@@ -3320,7 +3832,8 @@ class DeviceAppMenu:
 
     def draw_games(self):
         layout = self.get_browser_layout()
-        self.screen.fill(BLACK)
+        self.screen.fill((18, 22, 28))
+        self.draw_submenu_header(self.tr("games.path", path="/Games"))
 
         selected_entry = self.get_selected_games_entry()
         action_label = self.tr("games.play")
@@ -3329,26 +3842,7 @@ class DeviceAppMenu:
             ("up", layout["up"], self.can_move_games_up()),
             ("down", layout["down"], self.can_move_games_down()),
         ):
-            state = "pressed" if self.pressed_button == f"games-{key_name}" else "normal"
-            icon = self.wifi_arrow_icons[key_name][state]
-            if icon is not None:
-                scaled_icon = fit_image_contain(icon, rect.size)
-                if scaled_icon is not None:
-                    if not enabled:
-                        scaled_icon = scaled_icon.copy()
-                        scaled_icon.set_alpha(70)
-                    self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
-                    if not enabled:
-                        overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
-                        overlay.fill((0, 0, 0, 96))
-                        self.screen.blit(overlay, rect.topleft)
-
-        title_text = self.truncate_text(self.tr("games.path", path="/Games"), self.small_font, layout["path"].width)
-        title_surface = self.small_font.render(title_text, True, WHITE)
-        title_rect = title_surface.get_rect()
-        title_rect.x = layout["path"].x
-        title_rect.centery = self.get_top_back_rect().centery
-        self.screen.blit(title_surface, title_rect)
+            self.draw_arrow_control(key_name, rect, enabled, f"games-{key_name}")
 
         pygame.draw.rect(self.screen, DARK_GRAY, layout["list"])
         if not self.games_entries:
@@ -3427,14 +3921,17 @@ class DeviceAppMenu:
                 self.draw_missing("QR")
             else:
                 self.screen.blit(self.qr_asset, (0, 0))
-            self.draw_top_back_button()
+            self.draw_submenu_header(self.tr("qr.title"))
         elif self.state == "clock":
             self.draw_clock()
-            self.draw_top_back_button()
         elif self.state == "settings":
             self.draw_settings()
         elif self.state == "language":
             self.draw_language()
+        elif self.state == "password_menu":
+            self.draw_password_menu()
+        elif self.state == "raspberry_password":
+            self.draw_raspberry_password()
         elif self.state == "loading_video":
             self.draw_loading_video()
         elif self.state == "video":
@@ -3445,21 +3942,17 @@ class DeviceAppMenu:
             self.draw_play()
         elif self.state == "browse":
             self.draw_browser()
-            self.draw_top_back_button()
         elif self.state == "games":
             self.draw_games()
-            self.draw_top_back_button()
         elif self.state == "game":
             return
         elif self.state == "wifi":
             self.draw_wifi()
-            self.draw_top_back_button()
         elif self.state == "wifi_password":
             self.draw_wifi_password()
             self.draw_top_back_button()
         elif self.state == "web_pin":
             self.draw_web_pin()
-            self.draw_top_back_button()
         elif self.state == "poweroff":
             self.draw_poweroff()
 
@@ -3483,9 +3976,21 @@ class DeviceAppMenu:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
                 elif self.touch_device is None and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.last_mouse_event_ticks = pygame.time.get_ticks()
                     self.handle_touch_down(event.pos)
+                    self.draw()
                 elif self.touch_device is None and event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    self.last_mouse_event_ticks = pygame.time.get_ticks()
                     self.handle_touch_up(event.pos)
+                elif self.touch_device is None and event.type == pygame.FINGERDOWN:
+                    if self.should_ignore_finger_event():
+                        continue
+                    self.handle_touch_down(self.finger_event_pos(event))
+                    self.draw()
+                elif self.touch_device is None and event.type == pygame.FINGERUP:
+                    if self.should_ignore_finger_event():
+                        continue
+                    self.handle_touch_up(self.finger_event_pos(event))
 
             self.draw()
             self.clock.tick(30)
