@@ -3998,8 +3998,6 @@ class DeviceAppMenu:
         pygame.display.flip()
 
     def run(self):
-        play_intro()
-
         while self.running:
             self.update_video_state()
             self.update_game_state()
@@ -4039,6 +4037,7 @@ class DeviceAppMenu:
 
 if __name__ == "__main__":
     try:
+        play_intro()
         DeviceAppMenu().run()
     except KeyboardInterrupt:
         pygame.quit()
