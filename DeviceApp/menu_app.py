@@ -329,6 +329,30 @@ def run_command(command):
         return subprocess.CompletedProcess(command, 127, "", str(exc))
 
 
+def command_needs_wifi_privileges(result):
+    combined = f"{result.stdout or ''}\n{result.stderr or ''}".lower()
+    return any(
+        token in combined
+        for token in (
+            "not authorized",
+            "operation not permitted",
+            "permission denied",
+            "not enough privileges",
+        )
+    )
+
+
+def run_privileged_wifi_command(command):
+    result = run_command(command)
+    if result.returncode == 0 or os.geteuid() == 0 or not command_needs_wifi_privileges(result):
+        return result, False
+    sudo_path = shutil.which("sudo")
+    if not sudo_path:
+        return result, False
+    sudo_result = run_command([sudo_path, "-n", *command])
+    return sudo_result, True
+
+
 def change_raspberry_password(current_password, new_password):
     if not current_password or not new_password:
         return False, "password.empty"
@@ -719,10 +743,11 @@ def parse_iwlist_wifi_scan(output):
 
 def scan_wifi_networks():
     run_command(["nmcli", "radio", "wifi", "on"])
-    rescan_result = run_command(["nmcli", "dev", "wifi", "rescan", "ifname", "wlan0"])
+    rescan_result, rescan_used_sudo = run_privileged_wifi_command(["nmcli", "dev", "wifi", "rescan", "ifname", "wlan0"])
     log_wifi_debug(
         "wifi_scan_nmcli_rescan",
         returncode=rescan_result.returncode,
+        sudo=rescan_used_sudo,
         stderr=(rescan_result.stderr or "").strip(),
     )
     time.sleep(2)
@@ -733,32 +758,35 @@ def scan_wifi_networks():
     ]
     collected_networks = []
     for command in nmcli_commands:
-        nmcli_result = run_command(command)
+        nmcli_result, nmcli_used_sudo = run_privileged_wifi_command(command)
         parsed_networks = parse_nmcli_wifi_list(nmcli_result.stdout) if nmcli_result.returncode == 0 else []
         log_wifi_debug(
             "wifi_scan_nmcli_list",
             command=" ".join(command),
             returncode=nmcli_result.returncode,
+            sudo=nmcli_used_sudo,
             count=len(parsed_networks),
             stderr=(nmcli_result.stderr or "").strip(),
         )
         collected_networks.extend(parsed_networks)
 
-    iw_result = run_command(["iw", "dev", "wlan0", "scan"])
+    iw_result, iw_used_sudo = run_privileged_wifi_command(["iw", "dev", "wlan0", "scan"])
     iw_networks = parse_iw_wifi_scan(iw_result.stdout) if iw_result.returncode == 0 else []
     log_wifi_debug(
         "wifi_scan_iw",
         returncode=iw_result.returncode,
+        sudo=iw_used_sudo,
         count=len(iw_networks),
         stderr=(iw_result.stderr or "").strip(),
     )
     collected_networks.extend(iw_networks)
 
-    iwlist_result = run_command(["iwlist", "wlan0", "scanning"])
+    iwlist_result, iwlist_used_sudo = run_privileged_wifi_command(["iwlist", "wlan0", "scanning"])
     iwlist_networks = parse_iwlist_wifi_scan(iwlist_result.stdout) if iwlist_result.returncode == 0 else []
     log_wifi_debug(
         "wifi_scan_iwlist",
         returncode=iwlist_result.returncode,
+        sudo=iwlist_used_sudo,
         count=len(iwlist_networks),
         stderr=(iwlist_result.stderr or "").strip(),
     )
