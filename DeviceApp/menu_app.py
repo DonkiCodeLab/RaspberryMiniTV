@@ -103,6 +103,8 @@ MENU_BUTTON_PWD_WEB_NORMAL_PATH = os.path.join(MENU_DIR, "button_pwd_web_normal.
 MENU_BUTTON_PWD_WEB_PRESSED_PATH = os.path.join(MENU_DIR, "button_pwd_web_pressed.png")
 MENU_BUTTON_PWD_RASPBERRY_NORMAL_PATH = os.path.join(MENU_DIR, "button_pwd_raspberry_normal.png")
 MENU_BUTTON_PWD_RASPBERRY_PRESSED_PATH = os.path.join(MENU_DIR, "button_pwd_raspberry_pressed.png")
+MENU_BUTTON_INFORMATION_NORMAL_PATH = os.path.join(MENU_DIR, "button_information_normal.png")
+MENU_BUTTON_INFORMATION_PRESSED_PATH = os.path.join(MENU_DIR, "button_information_pressed.png")
 NO_WIFI_PATH = os.path.join(MENU_DIR, "no_wifi.png")
 MINI_LOGO_PATH = os.path.join(MENU_DIR, "miniLogo_donkicodeLab.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
@@ -265,9 +267,17 @@ def play_intro():
         return
 
     alsa_device = os.environ.get("MINITV_ALSA_DEVICE", "plughw:1,0")
-    command = ["omxplayer", "--no-osd", "--aspect-mode", "fill"]
+    command = [
+        "mpv",
+        "--fullscreen",
+        "--no-osd-bar",
+        "--keep-open=no",
+        "--audio-display=no",
+    ]
     if alsa_device.lower() not in ("", "auto", "default"):
-        command.extend(["--adev", f"alsa:{alsa_device}"])
+        command.append(f"--audio-device=alsa/{alsa_device}")
+    if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
+        command.extend(["--vo=gpu", "--gpu-context=drm"])
     command.append(INTRO_VIDEO_PATH)
 
     append_debug_log(INTRO_DEBUG_LOG_PATH, f"Launching intro: {' '.join(command)}")
@@ -884,6 +894,10 @@ class DeviceAppMenu:
         self.language_icon_assets = self.prepare_language_icon_assets()
         self.play_button_assets = self.prepare_play_button_assets()
         self.password_menu_assets = self.prepare_password_menu_assets()
+        self.password_information_assets = {
+            "normal": load_image(MENU_BUTTON_INFORMATION_NORMAL_PATH),
+            "pressed": load_image(MENU_BUTTON_INFORMATION_PRESSED_PATH),
+        }
         self.no_wifi_asset = load_image(NO_WIFI_PATH)
         self.mini_logo_asset = load_image(MINI_LOGO_PATH)
         self.qr_asset = None
@@ -1577,9 +1591,15 @@ class DeviceAppMenu:
         button_width = 272
         button_height = 103
         center_x = (self.width - button_width) // 2
+        info_size = 58
+        info_gap = 50
+        web_rect = pygame.Rect(center_x, 162, button_width, button_height)
+        raspberry_rect = pygame.Rect(center_x, 322, button_width, button_height)
         return {
-            "web": pygame.Rect(center_x, 162, button_width, button_height),
-            "raspberry": pygame.Rect(center_x, 322, button_width, button_height),
+            "web": web_rect,
+            "web_info": pygame.Rect(web_rect.right + info_gap, web_rect.centery - info_size // 2, info_size, info_size),
+            "raspberry": raspberry_rect,
+            "raspberry_info": pygame.Rect(raspberry_rect.right + info_gap, raspberry_rect.centery - info_size // 2, info_size, info_size),
             "back": self.get_more_back_rect(),
         }
 
@@ -2747,6 +2767,8 @@ class DeviceAppMenu:
         log_debug(f"PASSWORD MENU UP pos={pos} down={active_button} up={released_button}")
         if not active_button or active_button != released_button:
             return
+        if active_button in ("web_info", "raspberry_info"):
+            return
         if active_button == "back":
             self.state = self.password_menu_return_state
             return
@@ -3452,6 +3474,19 @@ class DeviceAppMenu:
         description_rect = description_surface.get_rect(center=(self.width // 2, button_rect.y - 20))
         self.screen.blit(description_surface, description_rect)
 
+    def draw_password_information_button(self, rect, pressed=False):
+        state = "pressed" if pressed else "normal"
+        icon = self.password_information_assets.get(state) or self.password_information_assets.get("normal")
+        if icon is not None:
+            fitted = fit_image_contain(icon, rect.size)
+            if fitted is not None:
+                self.screen.blit(fitted, fitted.get_rect(center=rect.center))
+                return
+        draw_rect_compat(self.screen, MID_GRAY if pressed else DARK_GRAY, rect, 0, 12)
+        draw_rect_compat(self.screen, WHITE, rect, 2, 12)
+        label = self.wifi_bold_font.render("i", True, WHITE)
+        self.screen.blit(label, label.get_rect(center=rect.center))
+
     def draw_password_keyboard(self, keyboard_rect, pressed_prefix):
         rows = self.get_password_keyboard_rows()
         row_height = keyboard_rect.height / len(rows)
@@ -3601,20 +3636,24 @@ class DeviceAppMenu:
         layout = self.get_password_menu_layout()
         self.screen.fill((18, 22, 28))
         self.draw_submenu_header(self.tr("password.title"))
-        self.draw_password_choice_description(self.tr("password.web_description"), layout["web"])
+        if self.pressed_button == "web_info":
+            self.draw_password_choice_description(self.tr("password.web_description"), layout["web"])
         self.draw_password_choice_button(
             "web",
             layout["web"],
             self.tr("password.web"),
             self.pressed_button == "web",
         )
-        self.draw_password_choice_description(self.tr("password.raspberry_description"), layout["raspberry"])
+        self.draw_password_information_button(layout["web_info"], self.pressed_button == "web_info")
+        if self.pressed_button == "raspberry_info":
+            self.draw_password_choice_description(self.tr("password.raspberry_description"), layout["raspberry"])
         self.draw_password_choice_button(
             "raspberry",
             layout["raspberry"],
             self.tr("password.raspberry"),
             self.pressed_button == "raspberry",
         )
+        self.draw_password_information_button(layout["raspberry_info"], self.pressed_button == "raspberry_info")
 
     def draw_raspberry_password(self):
         layout = self.get_raspberry_password_layout()
