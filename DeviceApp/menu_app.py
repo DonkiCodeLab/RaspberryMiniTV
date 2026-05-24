@@ -298,12 +298,26 @@ def generate_qr():
     url = f"http://{get_local_ip()}:{PORT}"
     if DESKTOP_PREVIEW:
         return url
-    subprocess.run(
-        ["qrencode", "-o", QR_PNG, "-s", "12", "-m", "2", url],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    qrencode_path = shutil.which("qrencode")
+    if not qrencode_path:
+        log_debug("QR qrencode not found; showing URL fallback")
+        try:
+            if os.path.exists(QR_PNG):
+                os.remove(QR_PNG)
+        except OSError:
+            pass
+        return url
+    try:
+        result = subprocess.run(
+            [qrencode_path, "-o", QR_PNG, "-s", "12", "-m", "2", url],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if result.returncode != 0:
+            log_debug(f"QR qrencode exited with return code {result.returncode}")
+    except Exception as exc:
+        log_debug(f"QR failed to launch qrencode: {exc}")
     return url
 
 
@@ -580,53 +594,175 @@ def get_touch_abs_ranges(device):
     }
 
 
-def scan_wifi_networks():
-    nmcli_result = run_command(["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "yes"])
-    if nmcli_result.returncode == 0:
-        networks = []
-        seen = set()
-        for line in nmcli_result.stdout.splitlines():
-            if not line.strip():
-                continue
-            parts = line.split(":")
-            if len(parts) < 3:
-                continue
-            ssid = parts[0].strip()
-            signal = parts[1].strip() or "0"
-            security = ":".join(parts[2:]).strip()
-            if not ssid or ssid in seen:
-                continue
-            seen.add(ssid)
-            networks.append({"ssid": ssid, "signal": int(signal or 0), "security": security or "open"})
-        if networks:
-            return sorted(networks, key=lambda item: (-item["signal"], item["ssid"].lower()))
-        log_debug("WIFI nmcli returned no networks, falling back to iwlist")
+def split_nmcli_terse_line(line):
+    parts = []
+    current = []
+    escaped = False
+    for char in line:
+        if escaped:
+            current.append(char)
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == ":":
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(char)
+    if escaped:
+        current.append("\\")
+    parts.append("".join(current))
+    return parts
 
-    iw_result = run_command(["iwlist", "wlan0", "scan"])
+
+def clamp_wifi_signal(value):
+    try:
+        return max(0, min(100, int(float(value))))
+    except (TypeError, ValueError):
+        return 0
+
+
+def signal_dbm_to_percent(dbm):
+    try:
+        dbm = float(dbm)
+    except (TypeError, ValueError):
+        return 0
+    if dbm <= -100:
+        return 0
+    if dbm >= -50:
+        return 100
+    return int(2 * (dbm + 100))
+
+
+def merge_wifi_networks(networks):
+    unique = {}
+    for network in networks:
+        ssid = (network.get("ssid") or "").strip()
+        if not ssid:
+            continue
+        signal = clamp_wifi_signal(network.get("signal", 0))
+        security = (network.get("security") or "open").strip() or "open"
+        existing = unique.get(ssid)
+        if existing is None or signal > existing["signal"]:
+            unique[ssid] = {"ssid": ssid, "signal": signal, "security": security}
+        elif existing["security"] in ("unknown", "open") and security not in ("unknown", "open"):
+            existing["security"] = security
+    return sorted(unique.values(), key=lambda item: (-item["signal"], item["ssid"].lower()))
+
+
+def parse_nmcli_wifi_list(output):
+    networks = []
+    for line in output.splitlines():
+        if not line.strip():
+            continue
+        parts = split_nmcli_terse_line(line)
+        if len(parts) >= 4:
+            ssid = parts[1].strip()
+            signal = parts[2].strip()
+            security = ":".join(parts[3:]).strip()
+        elif len(parts) >= 3:
+            ssid = parts[0].strip()
+            signal = parts[1].strip()
+            security = ":".join(parts[2:]).strip()
+        else:
+            continue
+        if ssid:
+            networks.append({"ssid": ssid, "signal": signal, "security": security or "open"})
+    return merge_wifi_networks(networks)
+
+
+def parse_iw_wifi_scan(output):
     networks = []
     current = None
-    for raw_line in iw_result.stdout.splitlines():
+    for raw_line in output.splitlines():
         line = raw_line.strip()
-        if "ESSID:" in line:
-            ssid = line.split("ESSID:", 1)[1].strip().strip('"')
+        if line.startswith("BSS "):
             if current and current["ssid"]:
                 networks.append(current)
-            current = {"ssid": ssid, "signal": 0, "security": "unknown"}
-        elif current and "Quality=" in line:
+            current = {"ssid": "", "signal": 0, "security": "open"}
+        elif current is not None and line.startswith("SSID:"):
+            current["ssid"] = line.split("SSID:", 1)[1].strip()
+        elif current is not None and line.startswith("signal:"):
+            signal_value = line.split("signal:", 1)[1].strip().split(" ", 1)[0]
+            current["signal"] = signal_dbm_to_percent(signal_value)
+        elif current is not None and (line.startswith("RSN:") or line.startswith("WPA:")):
+            current["security"] = "WPA/WPA2"
+    if current and current["ssid"]:
+        networks.append(current)
+    return merge_wifi_networks(networks)
+
+
+def parse_iwlist_wifi_scan(output):
+    networks = []
+    current = None
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
+        if "Cell " in line and "Address:" in line:
+            if current and current["ssid"]:
+                networks.append(current)
+            current = {"ssid": "", "signal": 0, "security": "unknown"}
+        elif current is not None and "ESSID:" in line:
+            current["ssid"] = line.split("ESSID:", 1)[1].strip().strip('"')
+        elif current is not None and "Quality=" in line:
             try:
                 quality_part = line.split("Quality=", 1)[1].split(" ", 1)[0]
                 quality_value, quality_max = quality_part.split("/")
                 current["signal"] = int(int(quality_value) * 100 / int(quality_max))
             except Exception:
                 pass
-        elif current and "Encryption key:" in line and line.endswith("off"):
-            current["security"] = "open"
+        elif current is not None and "Encryption key:" in line:
+            current["security"] = "open" if line.endswith("off") else "encrypted"
     if current and current["ssid"]:
         networks.append(current)
-    unique = {}
-    for network in networks:
-        unique.setdefault(network["ssid"], network)
-    return sorted(unique.values(), key=lambda item: (-item["signal"], item["ssid"].lower()))
+    return merge_wifi_networks(networks)
+
+
+def scan_wifi_networks():
+    run_command(["nmcli", "radio", "wifi", "on"])
+    rescan_result = run_command(["nmcli", "dev", "wifi", "rescan", "ifname", "wlan0"])
+    log_wifi_debug(
+        "wifi_scan_nmcli_rescan",
+        returncode=rescan_result.returncode,
+        stderr=(rescan_result.stderr or "").strip(),
+    )
+    time.sleep(2)
+
+    nmcli_commands = [
+        ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "ifname", "wlan0"],
+        ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "yes"],
+    ]
+    collected_networks = []
+    for command in nmcli_commands:
+        nmcli_result = run_command(command)
+        parsed_networks = parse_nmcli_wifi_list(nmcli_result.stdout) if nmcli_result.returncode == 0 else []
+        log_wifi_debug(
+            "wifi_scan_nmcli_list",
+            command=" ".join(command),
+            returncode=nmcli_result.returncode,
+            count=len(parsed_networks),
+            stderr=(nmcli_result.stderr or "").strip(),
+        )
+        collected_networks.extend(parsed_networks)
+
+    iw_result = run_command(["iw", "dev", "wlan0", "scan"])
+    iw_networks = parse_iw_wifi_scan(iw_result.stdout) if iw_result.returncode == 0 else []
+    log_wifi_debug(
+        "wifi_scan_iw",
+        returncode=iw_result.returncode,
+        count=len(iw_networks),
+        stderr=(iw_result.stderr or "").strip(),
+    )
+    collected_networks.extend(iw_networks)
+
+    iwlist_result = run_command(["iwlist", "wlan0", "scanning"])
+    iwlist_networks = parse_iwlist_wifi_scan(iwlist_result.stdout) if iwlist_result.returncode == 0 else []
+    log_wifi_debug(
+        "wifi_scan_iwlist",
+        returncode=iwlist_result.returncode,
+        count=len(iwlist_networks),
+        stderr=(iwlist_result.stderr or "").strip(),
+    )
+    return merge_wifi_networks(collected_networks)
 
 
 def classify_wifi_error(stdout, stderr):
