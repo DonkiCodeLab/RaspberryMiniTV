@@ -1614,6 +1614,10 @@ class DeviceAppMenu:
             True,
             WHITE,
         )
+        qr_url_line = None
+        if connected_wifi:
+            qr_url_text = self.truncate_text(self.qr_url, self.small_font, self.width - 44)
+            qr_url_line = self.small_font.render(qr_url_text, True, GRAY)
 
         if not connected_wifi:
             if self.no_wifi_asset is not None:
@@ -1644,6 +1648,8 @@ class DeviceAppMenu:
                 wifi_y = fallback_box.bottom + 38
 
         qr_surface.blit(wifi_line, wifi_line.get_rect(center=(self.width // 2, wifi_y)))
+        if qr_url_line is not None:
+            qr_surface.blit(qr_url_line, qr_url_line.get_rect(center=(self.width // 2, wifi_y + 26)))
         self.qr_asset = qr_surface.convert()
 
     def refresh_wifi_networks(self):
