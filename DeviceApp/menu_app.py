@@ -192,15 +192,15 @@ PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "minitv-playback.json"
 GAME_PLATFORM_BY_EXTENSION = {
     ".gb": {
         "name": "Game Boy",
-        "core": "/usr/lib/arm-linux-gnueabihf/libretro/gambatte_libretro.so",
+        "core": "gambatte_libretro.so",
     },
     ".gbc": {
         "name": "Game Boy Color",
-        "core": "/usr/lib/arm-linux-gnueabihf/libretro/gambatte_libretro.so",
+        "core": "gambatte_libretro.so",
     },
     ".gba": {
         "name": "Game Boy Advance",
-        "core": "/usr/lib/arm-linux-gnueabihf/libretro/mgba_libretro.so",
+        "core": "mgba_libretro.so",
     },
 }
 DEFAULT_SETTINGS = {
@@ -467,6 +467,25 @@ def is_video_file(filename):
 
 def is_game_rom_file(filename):
     return os.path.splitext(str(filename or ""))[1].lower() in GAME_PLATFORM_BY_EXTENSION
+
+
+def find_libretro_core(core_filename):
+    if not core_filename:
+        return ""
+    if os.path.isabs(core_filename) and os.path.isfile(core_filename):
+        return core_filename
+    core_dirs = [
+        "/usr/lib/arm-linux-gnueabihf/libretro",
+        "/usr/lib/aarch64-linux-gnu/libretro",
+        "/usr/lib/arm-linux-gnueabi/libretro",
+        "/usr/lib/x86_64-linux-gnu/libretro",
+        "/usr/lib/libretro",
+    ]
+    for core_dir in core_dirs:
+        candidate = os.path.join(core_dir, core_filename)
+        if os.path.isfile(candidate):
+            return candidate
+    return ""
 
 
 def ensure_media_directories():
@@ -2072,7 +2091,7 @@ class DeviceAppMenu:
                             "label": name,
                             "path": full_path,
                             "platform": platform.get("name", "Game Boy"),
-                            "core": platform.get("core", ""),
+                            "core": find_libretro_core(platform.get("core", "")),
                         }
                     )
 
