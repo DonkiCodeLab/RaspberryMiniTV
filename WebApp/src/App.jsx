@@ -824,6 +824,18 @@ function getFileExtension(fileName) {
   return String(fileName || "").split(".").pop()?.toLowerCase() || "";
 }
 
+function isIgnoredUploadFile(file) {
+  const relativePath = String(file?.webkitRelativePath || file?.name || "").replace(/\\/g, "/");
+  const parts = relativePath.split("/").filter(Boolean);
+  const filename = String(file?.name || parts.at(-1) || "").trim();
+  const ignoredNames = new Set([".DS_Store", "Thumbs.db", "desktop.ini"]);
+
+  return (
+    ignoredNames.has(filename) ||
+    parts.some((part) => part === "__MACOSX" || part.startsWith("._"))
+  );
+}
+
 function isSupportedGameRom(file) {
   return GAME_ROM_EXTENSIONS.has(getFileExtension(file?.name));
 }
@@ -5123,7 +5135,7 @@ export default function App() {
   }
 
   function handleUploadFiles(files) {
-    const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
+    const safeFiles = Array.isArray(files) ? files.filter((file) => file && !isIgnoredUploadFile(file)) : [];
     if (!safeFiles.length) return;
 
     if (uploadMediaType === "games") {
