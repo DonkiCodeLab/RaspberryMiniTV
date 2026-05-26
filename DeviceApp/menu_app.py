@@ -12,6 +12,7 @@ import time
 from datetime import datetime
 
 DESKTOP_PREVIEW = os.environ.get("MINITV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
+DEFAULT_ALSA_DEVICE = "plughw:0,0"
 
 
 def env_flag(name, default=False):
@@ -43,6 +44,9 @@ if DESKTOP_PREVIEW:
     os.environ["SDL_TOUCH_MOUSE_EVENTS"] = "0"
 else:
     os.environ.setdefault("SDL_MOUSE_TOUCH_EVENTS", "1")
+    os.environ.setdefault("SDL_AUDIODRIVER", "alsa")
+    os.environ.setdefault("AUDIODEV", DEFAULT_ALSA_DEVICE)
+    os.environ.setdefault("MINITV_ALSA_DEVICE", DEFAULT_ALSA_DEVICE)
 
 import pygame
 
@@ -180,6 +184,7 @@ PLAY_RANDOM_LAYOUT = (183, 207, 272, 103)
 PLAY_BROWSE_LAYOUT = (183, 336, 272, 103)
 BROWSE_VISIBLE_ITEMS = 4
 BROWSE_DOUBLE_TAP_MS = 450
+EXTERNAL_APP_DOUBLE_TAP_MS = 500
 RASPBERRY_PASSWORD_USER = "donkicodelab"
 LOADING_MIN_DURATION_MS = 1000
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.sock")
@@ -260,13 +265,17 @@ def get_local_ip():
         sock.close()
 
 
+def get_alsa_device():
+    return os.environ.get("MINITV_ALSA_DEVICE") or os.environ.get("AUDIODEV") or DEFAULT_ALSA_DEVICE
+
+
 def play_intro():
     if DESKTOP_PREVIEW:
         return
     if not os.path.isfile(INTRO_VIDEO_PATH):
         return
 
-    alsa_device = os.environ.get("MINITV_ALSA_DEVICE", "plughw:1,0")
+    alsa_device = get_alsa_device()
     command = [
         "mpv",
         "--fullscreen",
@@ -980,6 +989,7 @@ class DeviceAppMenu:
         pygame.font.init()
         self.display_suspended = False
         self.initialize_display()
+        self.audio_suspended = False
         self.audio_available = self.initialize_audio()
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
@@ -1013,6 +1023,8 @@ class DeviceAppMenu:
         self.touch_invert_x = env_flag("MINITV_TOUCH_INVERT_X")
         self.touch_invert_y = env_flag("MINITV_TOUCH_INVERT_Y")
         self.last_mouse_event_ticks = 0
+        self.external_touch_is_down = False
+        self.external_last_touch_ticks = 0
         self.language_return_state = "settings"
         self.password_menu_return_state = "more"
         self.web_pin_return_state = "settings"
@@ -1245,10 +1257,12 @@ class DeviceAppMenu:
             pygame.display.quit()
             self.display_suspended = True
             log_debug("DISPLAY suspend complete")
+            self.suspend_audio_for_external_app("video")
         except Exception as exc:
             log_debug(f"DISPLAY suspend failed: {exc}")
 
     def resume_display_after_video(self):
+        self.resume_audio_after_external_app("video")
         if not self.display_suspended:
             log_debug("DISPLAY resume skipped: display already active")
             return
@@ -1270,10 +1284,12 @@ class DeviceAppMenu:
             pygame.display.quit()
             self.display_suspended = True
             log_debug("DISPLAY suspend complete")
+            self.suspend_audio_for_external_app(reason)
         except Exception as exc:
             log_debug(f"DISPLAY suspend failed reason={reason}: {exc}")
 
     def resume_display_after_external_app(self, reason):
+        self.resume_audio_after_external_app(reason)
         if not self.display_suspended:
             log_debug(f"DISPLAY resume skipped: display already active reason={reason}")
             return
@@ -1294,6 +1310,27 @@ class DeviceAppMenu:
         except Exception as exc:
             log_debug(f"AUDIO init failed: {exc}")
             return False
+
+    def suspend_audio_for_external_app(self, reason):
+        if not self.audio_available:
+            log_debug(f"AUDIO suspend skipped reason={reason}: unavailable")
+            return
+        try:
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
+            self.audio_available = False
+            self.audio_suspended = True
+            log_debug(f"AUDIO suspend complete reason={reason}")
+        except Exception as exc:
+            log_debug(f"AUDIO suspend failed reason={reason}: {exc}")
+
+    def resume_audio_after_external_app(self, reason):
+        if not self.audio_suspended:
+            log_debug(f"AUDIO resume skipped reason={reason}: not suspended")
+            return
+        self.audio_suspended = False
+        self.audio_available = self.initialize_audio()
+        log_debug(f"AUDIO resume complete reason={reason} available={self.audio_available}")
 
     def load_settings(self):
         loaded = load_json_file(USER_SETTINGS_PATH, {})
@@ -2145,36 +2182,38 @@ class DeviceAppMenu:
         return None
 
     def write_retroarch_config(self):
-        config = "\n".join(
-            [
-                'video_driver = "sdl2"',
-                'input_driver = "sdl2"',
-                'joypad_driver = "udev"',
-                'input_autodetect_enable = "false"',
-                'input_player1_joypad_index = "0"',
-                'input_player1_b_btn = "0"',
-                'input_player1_a_btn = "1"',
-                'input_player1_y_btn = "2"',
-                'input_player1_x_btn = "3"',
-                'input_player1_select_btn = "6"',
-                'input_player1_start_btn = "7"',
-                'input_player1_left_axis = "-0"',
-                'input_player1_right_axis = "+0"',
-                'input_player1_up_axis = "-1"',
-                'input_player1_down_axis = "+1"',
-                'input_player1_left_btn = "h0left"',
-                'input_player1_right_btn = "h0right"',
-                'input_player1_up_btn = "h0up"',
-                'input_player1_down_btn = "h0down"',
-                'input_enable_hotkey_btn = "6"',
-                'input_exit_emulator_btn = "7"',
-                'menu_driver = "rgui"',
-                'audio_driver = "null"',
-                'audio_enable = "false"',
-                'pause_nonactive = "false"',
-                "",
-            ]
-        )
+        config_lines = [
+            'video_driver = "sdl2"',
+            'input_driver = "sdl2"',
+            'joypad_driver = "udev"',
+            'input_autodetect_enable = "false"',
+            'input_player1_joypad_index = "0"',
+            'input_player1_b_btn = "0"',
+            'input_player1_a_btn = "1"',
+            'input_player1_y_btn = "2"',
+            'input_player1_x_btn = "3"',
+            'input_player1_select_btn = "6"',
+            'input_player1_start_btn = "7"',
+            'input_player1_left_axis = "-0"',
+            'input_player1_right_axis = "+0"',
+            'input_player1_up_axis = "-1"',
+            'input_player1_down_axis = "+1"',
+            'input_player1_left_btn = "h0left"',
+            'input_player1_right_btn = "h0right"',
+            'input_player1_up_btn = "h0up"',
+            'input_player1_down_btn = "h0down"',
+            'input_enable_hotkey_btn = "6"',
+            'input_exit_emulator_btn = "7"',
+            'menu_driver = "rgui"',
+            'audio_driver = "alsa"',
+            'audio_enable = "true"',
+            'pause_nonactive = "false"',
+        ]
+        alsa_device = get_alsa_device()
+        if alsa_device.lower() not in ("", "auto", "default"):
+            config_lines.append(f'audio_device = "{alsa_device}"')
+        config_lines.append("")
+        config = "\n".join(config_lines)
         with open(RETROARCH_CONFIG_PATH, "w", encoding="utf-8") as handle:
             handle.write(config)
 
@@ -2247,6 +2286,7 @@ class DeviceAppMenu:
             return
 
         self.game_current_path = entry["path"]
+        self.reset_external_touch_sequence()
         self.state = "game"
 
     def stop_game_playback(self, silent=False):
@@ -2263,6 +2303,7 @@ class DeviceAppMenu:
         self.close_game_log_handle()
         self.game_proc = None
         self.game_current_path = ""
+        self.reset_external_touch_sequence()
         if self.display_suspended:
             self.resume_display_after_external_app("game")
         if not silent:
@@ -2277,6 +2318,7 @@ class DeviceAppMenu:
             self.close_game_log_handle()
             self.resume_display_after_external_app("game")
             self.refresh_games_entries()
+            self.reset_external_touch_sequence()
             self.state = self.game_return_state
 
     def play_video_path(self, full_path):
@@ -2321,13 +2363,39 @@ class DeviceAppMenu:
             self.play_video_path(videos[0])
 
     def handle_video_touch_down(self, pos):
-        self.pressed_button = "video-touch"
-        log_debug(f"VIDEO DOWN pos={pos}")
+        self.handle_external_app_touch_down("video")
 
     def handle_video_touch_up(self, pos):
+        self.handle_external_app_touch_up("video")
+
+    def reset_external_touch_sequence(self):
+        self.external_touch_is_down = False
+        self.external_last_touch_ticks = 0
+
+    def handle_external_app_touch_down(self, app_state):
+        self.external_touch_is_down = True
         self.pressed_button = None
-        log_debug(f"VIDEO TOUCH pos={pos} -> preview")
-        self.capture_video_preview()
+
+    def handle_external_app_touch_up(self, app_state):
+        if not self.external_touch_is_down:
+            return
+        self.external_touch_is_down = False
+        now = pygame.time.get_ticks()
+        is_double_touch = (
+            self.external_last_touch_ticks > 0
+            and now - self.external_last_touch_ticks <= EXTERNAL_APP_DOUBLE_TAP_MS
+        )
+        self.external_last_touch_ticks = now
+        if not is_double_touch:
+            return
+
+        log_debug(f"{app_state.upper()} double touch -> main")
+        self.reset_external_touch_sequence()
+        if app_state == "game":
+            self.stop_game_playback(silent=True)
+        elif app_state == "video":
+            self.stop_video_playback(silent=True)
+        self.state = "main"
 
     def get_video_preview_layout(self):
         button_width = 168
@@ -2368,7 +2436,7 @@ class DeviceAppMenu:
             "--fullscreen",
             f"--input-ipc-server={MPV_SOCKET_PATH}",
         ]
-        alsa_device = os.environ.get("MINITV_ALSA_DEVICE", "plughw:1,0")
+        alsa_device = get_alsa_device()
         if alsa_device.lower() not in ("", "auto", "default"):
             command.append(f"--audio-device=alsa/{alsa_device}")
         if start_seconds > 0:
@@ -2511,6 +2579,7 @@ class DeviceAppMenu:
         self.video_current_path = ""
         self.loading_video_path = None
         self.loading_video_start_seconds = 0.0
+        self.reset_external_touch_sequence()
         clear_playback_state()
         self.clear_video_preview()
         if not silent:
@@ -2573,6 +2642,7 @@ class DeviceAppMenu:
         self.loading_video_path = None
         self.loading_video_start_seconds = 0.0
         write_playback_state(self.video_current_path)
+        self.reset_external_touch_sequence()
         self.state = "video"
 
     def update_video_state(self):
@@ -2588,6 +2658,7 @@ class DeviceAppMenu:
             self.resume_display_after_video()
             remove_path_if_exists(MPV_SOCKET_PATH)
             clear_playback_state()
+            self.reset_external_touch_sequence()
             self.state = self.video_return_state
 
     def normalize_touch_pos(self, pos):
@@ -3154,6 +3225,9 @@ class DeviceAppMenu:
         if self.state == "raspberry_password":
             self.handle_raspberry_password_touch_down(normalized_pos)
             return
+        if self.state == "game":
+            self.handle_external_app_touch_down("game")
+            return
         if self.state == "video":
             self.handle_video_touch_down(normalized_pos)
             return
@@ -3234,9 +3308,11 @@ class DeviceAppMenu:
             self.handle_raspberry_password_touch_up(normalized_pos)
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=raspberry_password")
             return
+        if self.state == "game":
+            self.handle_external_app_touch_up("game")
+            return
         if self.state == "video":
             self.handle_video_touch_up(normalized_pos)
-            log_debug(f"UP raw={pos} normalized={normalized_pos} state=video")
             return
         if self.state == "video_preview":
             self.handle_video_preview_touch_up(normalized_pos)
