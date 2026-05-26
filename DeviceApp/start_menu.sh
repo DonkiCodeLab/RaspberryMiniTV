@@ -20,6 +20,9 @@ if [ -z "${SDL_VIDEODRIVER:-}" ]; then
   fi
 fi
 export SDL_MOUSE_TOUCH_EVENTS=1
+export SDL_AUDIODRIVER="${SDL_AUDIODRIVER:-alsa}"
+export AUDIODEV="${AUDIODEV:-plughw:0,0}"
+export MINITV_ALSA_DEVICE="${MINITV_ALSA_DEVICE:-plughw:0,0}"
 export XDG_RUNTIME_DIR=/tmp/minitv-xdg-runtime
 mkdir -p "${XDG_RUNTIME_DIR}"
 chmod 700 "${XDG_RUNTIME_DIR}" >/dev/null 2>&1 || true
