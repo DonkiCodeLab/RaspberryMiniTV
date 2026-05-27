@@ -13,6 +13,8 @@ from datetime import datetime
 
 DESKTOP_PREVIEW = os.environ.get("MINITV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
 DEFAULT_ALSA_DEVICE = "plughw:0,0"
+DEFAULT_RETROARCH_AUDIO_DRIVER = "alsathread"
+DEFAULT_RETROARCH_AUDIO_LATENCY_MS = 128
 
 
 def env_flag(name, default=False):
@@ -267,6 +269,14 @@ def get_local_ip():
 
 def get_alsa_device():
     return os.environ.get("MINITV_ALSA_DEVICE") or os.environ.get("AUDIODEV") or DEFAULT_ALSA_DEVICE
+
+
+def get_retroarch_audio_driver():
+    return os.environ.get("MINITV_RETROARCH_AUDIO_DRIVER", DEFAULT_RETROARCH_AUDIO_DRIVER).strip() or DEFAULT_RETROARCH_AUDIO_DRIVER
+
+
+def get_retroarch_audio_latency():
+    return max(32, env_int("MINITV_RETROARCH_AUDIO_LATENCY_MS", DEFAULT_RETROARCH_AUDIO_LATENCY_MS))
 
 
 def play_intro():
@@ -2182,6 +2192,8 @@ class DeviceAppMenu:
         return None
 
     def write_retroarch_config(self):
+        audio_driver = get_retroarch_audio_driver()
+        audio_latency = get_retroarch_audio_latency()
         config_lines = [
             'video_driver = "sdl2"',
             'input_driver = "sdl2"',
@@ -2205,8 +2217,10 @@ class DeviceAppMenu:
             'input_enable_hotkey_btn = "6"',
             'input_exit_emulator_btn = "7"',
             'menu_driver = "rgui"',
-            'audio_driver = "alsa"',
+            f'audio_driver = "{audio_driver}"',
             'audio_enable = "true"',
+            'audio_sync = "true"',
+            f'audio_latency = "{audio_latency}"',
             'pause_nonactive = "false"',
         ]
         alsa_device = get_alsa_device()
@@ -2216,6 +2230,10 @@ class DeviceAppMenu:
         config = "\n".join(config_lines)
         with open(RETROARCH_CONFIG_PATH, "w", encoding="utf-8") as handle:
             handle.write(config)
+        append_debug_log(
+            RETROARCH_DEBUG_LOG_PATH,
+            f"RetroArch audio config driver={audio_driver} latency={audio_latency} device={alsa_device}",
+        )
 
     def build_retroarch_command(self, entry):
         return [
@@ -2256,6 +2274,7 @@ class DeviceAppMenu:
             self.suspend_display_for_external_app("game")
             game_env = os.environ.copy()
             game_env["SDL_RENDER_DRIVER"] = "software"
+            game_env.pop("SDL_AUDIODRIVER", None)
             self.game_log_handle = open(RETROARCH_DEBUG_LOG_PATH, "a", encoding="utf-8")
             self.game_proc = subprocess.Popen(
                 command,
