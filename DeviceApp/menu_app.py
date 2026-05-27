@@ -14,7 +14,7 @@ from datetime import datetime
 DESKTOP_PREVIEW = os.environ.get("MINITV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
 DEFAULT_ALSA_DEVICE = "plughw:0,0"
 DEFAULT_RETROARCH_AUDIO_DRIVER = "alsathread"
-DEFAULT_RETROARCH_AUDIO_LATENCY_MS = 128
+DEFAULT_RETROARCH_AUDIO_LATENCY_MS = 256
 
 
 def env_flag(name, default=False):
@@ -277,6 +277,12 @@ def get_retroarch_audio_driver():
 
 def get_retroarch_audio_latency():
     return max(32, env_int("MINITV_RETROARCH_AUDIO_LATENCY_MS", DEFAULT_RETROARCH_AUDIO_LATENCY_MS))
+
+
+def stop_existing_retroarch_processes():
+    result = run_command(["pkill", "-f", "retroarch"])
+    if result.returncode not in (0, 1):
+        append_debug_log(RETROARCH_DEBUG_LOG_PATH, f"RetroArch pkill returned {result.returncode}: {result.stderr}")
 
 
 def play_intro():
@@ -2220,7 +2226,10 @@ class DeviceAppMenu:
             f'audio_driver = "{audio_driver}"',
             'audio_enable = "true"',
             'audio_sync = "true"',
+            'audio_rate_control = "true"',
+            'audio_max_timing_skew = "0.050000"',
             f'audio_latency = "{audio_latency}"',
+            'video_threaded = "true"',
             'pause_nonactive = "false"',
         ]
         alsa_device = get_alsa_device()
@@ -2265,6 +2274,7 @@ class DeviceAppMenu:
 
         self.stop_video_playback(silent=True)
         self.stop_game_playback(silent=True)
+        stop_existing_retroarch_processes()
         self.write_retroarch_config()
         command = self.build_retroarch_command(entry)
         log_debug(f"GAME start via retroarch file={entry['path']} core={entry['core']}")
@@ -2320,6 +2330,7 @@ class DeviceAppMenu:
                 except Exception:
                     pass
         self.close_game_log_handle()
+        stop_existing_retroarch_processes()
         self.game_proc = None
         self.game_current_path = ""
         self.reset_external_touch_sequence()
