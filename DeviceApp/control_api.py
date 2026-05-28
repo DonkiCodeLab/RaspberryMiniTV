@@ -13,7 +13,23 @@ import urllib.request
 from flask import Flask, jsonify, request, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_DIR = os.path.dirname(BASE_DIR)
+
+
+def resolve_repo_dir():
+    candidates = [
+        os.environ.get("MINITV_REPO_DIR"),
+        "/home/donkicodelab/RaspberryMiniTV",
+        os.path.join(os.path.expanduser("~"), "RaspberryMiniTV"),
+        os.path.dirname(BASE_DIR),
+    ]
+    for candidate in candidates:
+        safe_candidate = str(candidate or "").strip()
+        if safe_candidate and os.path.isdir(safe_candidate):
+            return safe_candidate
+    return os.path.dirname(BASE_DIR)
+
+
+REPO_DIR = resolve_repo_dir()
 MULTIMEDIA_DIR = os.path.join(REPO_DIR, "MultimediaContent")
 VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
@@ -291,6 +307,37 @@ def upsert_series_metadata(relative_path, updates):
     series_items[safe_relative_path] = item
     save_media_library(library)
     return item
+
+
+def get_series_directory_videos(target_dir):
+    videos = []
+    if not os.path.isdir(target_dir):
+        return videos
+
+    for entry_name in os.listdir(target_dir):
+        target_path = os.path.join(target_dir, entry_name)
+        if not os.path.isfile(target_path) or not is_supported_upload_file(entry_name):
+            continue
+
+        media_id, season_number, episode_number = parse_video_entry(entry_name)
+        if not media_id:
+            continue
+
+        relative_path = os.path.relpath(target_path, VIDEOS_DIR).replace("\\", "/")
+        videos.append(
+            {
+                "id": media_id,
+                "file": entry_name,
+                "relativePath": relative_path,
+                "seasonNumber": season_number,
+                "episodeNumber": episode_number,
+            }
+        )
+
+    return sorted(
+        videos,
+        key=lambda video: (video["seasonNumber"] or 0, video["episodeNumber"] or 0, video["file"]),
+    )
 
 
 def remove_movie_metadata(relative_path):
@@ -1518,26 +1565,12 @@ def upload_series():
     target_dir = os.path.join(TVSHOWS_DIR, target_slug)
     os.makedirs(target_dir, exist_ok=True)
 
-    videos = []
     for entry in normalized_files:
         target_filename = os.path.basename(entry["filename"])
         target_path = os.path.join(target_dir, target_filename)
         entry["upload"].save(target_path)
-        relative_path = os.path.relpath(target_path, VIDEOS_DIR).replace("\\", "/")
-        videos.append(
-            {
-                "id": entry["id"],
-                "file": target_filename,
-                "relativePath": relative_path,
-                "seasonNumber": entry["seasonNumber"],
-                "episodeNumber": entry["episodeNumber"],
-            }
-        )
 
-    videos = sorted(
-        videos,
-        key=lambda video: (video["seasonNumber"] or 0, video["episodeNumber"] or 0, video["file"]),
-    )
+    videos = get_series_directory_videos(target_dir)
     relative_path = join_video_relative_path("TVShows", target_slug)
     item = upsert_series_metadata(
         relative_path,

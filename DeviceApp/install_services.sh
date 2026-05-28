@@ -3,7 +3,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(dirname "${SCRIPT_DIR}")"
+DEFAULT_REPO_DIR="$(dirname "${SCRIPT_DIR}")"
+RASPBERRY_REPO_DIR="/home/donkicodelab/RaspberryMiniTV"
+REPO_DIR="${MINITV_REPO_DIR:-}"
+if [[ -z "${REPO_DIR}" ]]; then
+  if [[ -d "${RASPBERRY_REPO_DIR}" ]]; then
+    REPO_DIR="${RASPBERRY_REPO_DIR}"
+  else
+    REPO_DIR="${DEFAULT_REPO_DIR}"
+  fi
+fi
 SYSTEMD_DIR="/etc/systemd/system"
 VIDEOS_DIR="${REPO_DIR}/MultimediaContent/Videos"
 GAMES_DIR="${REPO_DIR}/MultimediaContent/Games"
@@ -22,7 +31,9 @@ require_root() {
 
 install_service() {
   local service_name="$1"
-  sed "s#__DEVICE_APP_DIR__#${SCRIPT_DIR}#g" \
+  sed \
+    -e "s#__DEVICE_APP_DIR__#${SCRIPT_DIR}#g" \
+    -e "s#__REPO_DIR__#${REPO_DIR}#g" \
     "${SCRIPT_DIR}/services/${service_name}" >"${SYSTEMD_DIR}/${service_name}"
   chmod 0644 "${SYSTEMD_DIR}/${service_name}"
 }

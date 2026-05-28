@@ -144,7 +144,23 @@ ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
 WIFI_DEBUG_LOG_PATH = os.path.join(BASE_DIR, "wifi_debug.log")
 PORT = 5050
-REPO_DIR = os.path.dirname(BASE_DIR)
+
+
+def resolve_repo_dir():
+    candidates = [
+        os.environ.get("MINITV_REPO_DIR"),
+        "/home/donkicodelab/RaspberryMiniTV",
+        os.path.join(os.path.expanduser("~"), "RaspberryMiniTV"),
+        os.path.dirname(BASE_DIR),
+    ]
+    for candidate in candidates:
+        safe_candidate = str(candidate or "").strip()
+        if safe_candidate and os.path.isdir(safe_candidate):
+            return safe_candidate
+    return os.path.dirname(BASE_DIR)
+
+
+REPO_DIR = resolve_repo_dir()
 MULTIMEDIA_DIR = os.path.join(REPO_DIR, "MultimediaContent")
 VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")

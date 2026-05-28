@@ -349,6 +349,9 @@ const UI_STRINGS = {
     tmdb_browser_search_intro: "Busca una serie o película para ver su ficha aquí.",
     tmdb_browser_season_prompt: "Selecciona una temporada para ver sus capítulos.",
     upload_copying: "Copiando contenido a la Raspberry...",
+    upload_chapter_copying: "Cargando {current} de {total} capítulos",
+    upload_saving: "Guardando capítulo en la Raspberry...",
+    upload_all_done: "Todo subido correctamente.",
     upload_done_summary: "{name} añadida a Movies: {path}",
     upload_series_done_summary: "{name} añadida a TVShows: {path}",
     unavailable_season: "Temporada sin capítulos cargados",
@@ -552,6 +555,9 @@ const UI_STRINGS = {
     tmdb_browser_search_intro: "Cerca una sèrie o pel·lícula per veure'n la fitxa aquí.",
     tmdb_browser_season_prompt: "Selecciona una temporada per veure'n els capítols.",
     upload_copying: "Copiant el contingut a la Raspberry...",
+    upload_chapter_copying: "Carregant {current} de {total} capítols",
+    upload_saving: "Desant capítol a la Raspberry...",
+    upload_all_done: "Tot s'ha pujat correctament.",
     upload_done_summary: "{name} afegida a Movies: {path}",
     upload_series_done_summary: "{name} afegida a TVShows: {path}",
     unavailable_season: "Temporada sense capítols carregats",
@@ -755,6 +761,9 @@ const UI_STRINGS = {
     tmdb_browser_search_intro: "Search for a series or movie to view its details here.",
     tmdb_browser_season_prompt: "Select a season to view its episodes.",
     upload_copying: "Copying content to the Raspberry...",
+    upload_chapter_copying: "Loading {current} of {total} episodes",
+    upload_saving: "Saving episode on the Raspberry...",
+    upload_all_done: "Everything uploaded successfully.",
     upload_done_summary: "{name} added to Movies: {path}",
     upload_series_done_summary: "{name} added to TVShows: {path}",
     unavailable_season: "Season without uploaded episodes",
@@ -2214,6 +2223,27 @@ function AddMediaModal({
 
   const mediaLabel = mediaType === "movies" ? t("media_movies_singular") : t("media_series_singular");
   const searchPlaceholder = mediaType === "movies" ? t("search_placeholder_movie") : t("search_placeholder_series");
+  const progressValue =
+    uploadProgress && typeof uploadProgress === "object"
+      ? clamp(Number(uploadProgress.percent) || 0, 0, 100)
+      : clamp(Number(uploadProgress) || 0, 0, 100);
+  const progressFileName =
+    uploadProgress && typeof uploadProgress === "object"
+      ? uploadProgress.fileName || uploadFileName
+      : uploadFileName;
+  const progressCopy =
+    uploadProgress && typeof uploadProgress === "object"
+      ? uploadProgress.status === "done"
+        ? t("upload_all_done")
+        : uploadProgress.status === "saving"
+          ? t("upload_saving")
+          : uploadProgress.total
+            ? t("upload_chapter_copying", {
+                current: uploadProgress.current || 1,
+                total: uploadProgress.total,
+              })
+            : t("upload_copying")
+      : t("upload_copying");
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -2323,13 +2353,13 @@ function AddMediaModal({
           {uploadProgress !== null ? (
             <div className="upload-progress" role="status" aria-live="polite">
               <div className="upload-progress__copy">
-                <strong>{t("upload_copying")}</strong>
-                <span>{uploadFileName}</span>
+                <strong>{progressCopy}</strong>
+                <span>{progressFileName}</span>
               </div>
               <div className="upload-progress__bar" aria-hidden="true">
-                <span style={{ width: `${clamp(Number(uploadProgress) || 0, 0, 100)}%` }} />
+                <span style={{ width: `${progressValue}%` }} />
               </div>
-              <p>{`${clamp(Number(uploadProgress) || 0, 0, 100)}%`}</p>
+              <p>{`${progressValue}%`}</p>
             </div>
           ) : null}
 
@@ -4843,6 +4873,7 @@ export default function App() {
           path: addResponse?.item?.relativePath || uploadDirectoryName || selectedSeriesResult.name,
         })
       );
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
     }
     setAddSeriesOpen(false);
     setUploadLookupOpen(false);

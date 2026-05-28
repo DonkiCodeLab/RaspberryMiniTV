@@ -569,7 +569,13 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
     };
     saveMockSeriesLibrary([...current, item]);
     if (typeof onProgress === "function") {
-      onProgress(100);
+      onProgress({
+        percent: 100,
+        current: safeFiles.length,
+        total: safeFiles.length,
+        fileName: safeFiles.at(-1)?.name || "",
+        status: "done",
+      });
     }
     return Promise.resolve({
       ok: true,
@@ -578,49 +584,83 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
     });
   }
 
-  return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    safeFiles.forEach((file) => {
+  const sortedFiles = [...safeFiles].sort((a, b) =>
+    String(a?.webkitRelativePath || a?.name || "").localeCompare(String(b?.webkitRelativePath || b?.name || ""), undefined, {
+      numeric: true,
+      sensitivity: "base",
+    })
+  );
+  const uploadOneFile = (file, index) =>
+    new Promise((resolve, reject) => {
+      const formData = new FormData();
       formData.append("files", file, file.webkitRelativePath || file.name);
-    });
-    formData.append("name", seriesName);
-    formData.append("directoryName", String(directoryName || "").trim());
-    formData.append("tmdbId", String(tmdbId));
-    formData.append("heroImage", String(heroImage || ""));
-    formData.append("heroImageCrop", JSON.stringify(heroImageCrop || null));
+      formData.append("name", seriesName);
+      formData.append("directoryName", String(directoryName || "").trim());
+      formData.append("tmdbId", String(tmdbId));
+      formData.append("heroImage", String(heroImage || ""));
+      formData.append("heroImageCrop", JSON.stringify(heroImageCrop || null));
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${getBaseUrl()}/series/upload`);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${getBaseUrl()}/series/upload`);
 
-    const storedPin = getStoredWebPin();
-    if (storedPin) {
-      xhr.setRequestHeader("X-Web-Pin", storedPin);
-    }
-
-    xhr.upload.onprogress = (event) => {
-      if (!event.lengthComputable || typeof onProgress !== "function") return;
-      onProgress(Math.round((event.loaded / event.total) * 100));
-    };
-
-    xhr.onload = () => {
-      const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
-      if (xhr.status >= 200 && xhr.status < 300) {
-        if (typeof onProgress === "function") {
-          onProgress(100);
-        }
-        resolve(payload);
-        return;
+      const storedPin = getStoredWebPin();
+      if (storedPin) {
+        xhr.setRequestHeader("X-Web-Pin", storedPin);
       }
 
-      const error = new Error(payload?.error || `HTTP ${xhr.status}`);
-      error.status = xhr.status;
-      error.files = payload?.files || [];
-      reject(error);
-    };
+      xhr.upload.onprogress = (event) => {
+        if (!event.lengthComputable || typeof onProgress !== "function") return;
+        onProgress({
+          percent: Math.round((event.loaded / event.total) * 100),
+          current: index + 1,
+          total: sortedFiles.length,
+          fileName: file.name,
+          status: event.loaded >= event.total ? "saving" : "uploading",
+        });
+      };
 
-    xhr.onerror = () => reject(new Error("Upload failed"));
-    xhr.send(formData);
-  });
+      xhr.onload = () => {
+        const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
+        if (xhr.status >= 200 && xhr.status < 300) {
+          if (typeof onProgress === "function") {
+            onProgress({
+              percent: 100,
+              current: index + 1,
+              total: sortedFiles.length,
+              fileName: file.name,
+              status: index + 1 === sortedFiles.length ? "done" : "saving",
+            });
+          }
+          resolve(payload);
+          return;
+        }
+
+        const error = new Error(payload?.error || `HTTP ${xhr.status}`);
+        error.status = xhr.status;
+        error.files = payload?.files || [];
+        reject(error);
+      };
+
+      xhr.onerror = () => reject(new Error("Upload failed"));
+      xhr.send(formData);
+    });
+
+  return sortedFiles.reduce(
+    (promise, file, index) =>
+      promise.then(async (lastResponse) => {
+        if (typeof onProgress === "function") {
+          onProgress({
+            percent: 0,
+            current: index + 1,
+            total: sortedFiles.length,
+            fileName: file.name,
+            status: "uploading",
+          });
+        }
+        return uploadOneFile(file, index).then((response) => response || lastResponse);
+      }),
+    Promise.resolve(null)
+  );
 }
 
 export function searchGameMetadata({ query, extension } = {}) {

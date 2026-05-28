@@ -10,6 +10,7 @@ ExecStart=/usr/bin/python3 __DEVICE_APP_DIR__/control_api.py
 Restart=always
 RestartSec=2
 Environment=PYTHONUNBUFFERED=1
+Environment=MINITV_REPO_DIR=__REPO_DIR__
 StandardOutput=journal
 StandardError=journal
 
