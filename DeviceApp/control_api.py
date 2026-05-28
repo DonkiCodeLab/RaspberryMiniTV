@@ -43,6 +43,7 @@ EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/minitv_qr.png"
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.sock")
+MPV_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.log")
 PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "minitv-playback.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
@@ -576,7 +577,7 @@ def is_authorized_request():
 @app.before_request
 def require_web_pin():
     if (
-        request.path in {"/web/auth", "/ip"}
+        request.path in {"/web/auth", "/ip", "/favicon.ico"}
         or request.path.startswith("/alarm-sounds")
         or request.path.startswith("/game-covers")
         or is_public_frontend_request()
@@ -585,6 +586,11 @@ def require_web_pin():
     if is_authorized_request():
         return None
     return jsonify({"error": "Unauthorized"}), 401
+
+
+@app.route("/favicon.ico", methods=["GET"])
+def favicon():
+    return ("", 204)
 
 
 def get_local_ip():
@@ -1292,13 +1298,69 @@ def stop_locked():
     clear_playback_state()
 
 
+def remove_path_if_exists(path):
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+
+def append_debug_log(path, message):
+    try:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {message}\n")
+    except Exception:
+        pass
+
+
+def tail_file(path, max_lines=20):
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as handle:
+            return "".join(handle.readlines()[-max_lines:]).strip()
+    except Exception:
+        return ""
+
+
+def build_mpv_command(filepath):
+    remove_path_if_exists(MPV_SOCKET_PATH)
+    return [
+        "mpv",
+        "--fullscreen",
+        f"--input-ipc-server={MPV_SOCKET_PATH}",
+        filepath,
+    ]
+
+
 def start_play_locked(filepath):
-    current["proc"] = subprocess.Popen(
-        ["omxplayer", "--no-osd", "--aspect-mode", "fill", filepath],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    if shutil.which("mpv"):
+        command = build_mpv_command(filepath)
+        append_debug_log(MPV_DEBUG_LOG_PATH, f"Launching mpv from API: {' '.join(command)}")
+        try:
+            log_handle = open(MPV_DEBUG_LOG_PATH, "a", encoding="utf-8")
+            current["proc"] = subprocess.Popen(command, stdout=log_handle, stderr=log_handle)
+            time.sleep(0.25)
+            if current["proc"].poll() is not None:
+                log_handle.close()
+                current["proc"] = None
+                details = tail_file(MPV_DEBUG_LOG_PATH)
+                raise RuntimeError(details or "mpv exited immediately")
+            return
+        except Exception as exc:
+            current["proc"] = None
+            raise RuntimeError(f"mpv failed to start: {exc}") from exc
+
+    if shutil.which("omxplayer"):
+        current["proc"] = subprocess.Popen(
+            ["omxplayer", "--no-osd", "--aspect-mode", "fill", filepath],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return
+
+    raise RuntimeError("No video player found. Install mpv or omxplayer.")
 
 
 def volume_up_locked():
@@ -1746,7 +1808,20 @@ def play():
     with lock:
         hide_qr()
         stop_locked()
-        start_play_locked(match["full_path"])
+        try:
+            start_play_locked(match["full_path"])
+        except Exception as exc:
+            clear_playback_state()
+            return (
+                jsonify(
+                    {
+                        "error": "Could not start video player",
+                        "details": str(exc),
+                        "file": match["relative_path"],
+                    }
+                ),
+                500,
+            )
         current["id"] = ep_id
         current["directory"] = match["directory_path"]
         current["file"] = match["relative_path"]
