@@ -487,7 +487,11 @@ export function uploadMovieFile({ file, movie, onProgress } = {}) {
   if (isMockModeEnabled()) {
     const relativePath = `Movies/${String(file.name || `${movieName || "movie"}.mp4`).trim()}`;
     if (typeof onProgress === "function") {
-      onProgress(100);
+      onProgress({
+        percent: 100,
+        fileName: file.name,
+        status: "done",
+      });
     }
     return Promise.resolve({
       ok: true,
@@ -517,14 +521,22 @@ export function uploadMovieFile({ file, movie, onProgress } = {}) {
 
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable || typeof onProgress !== "function") return;
-      onProgress(Math.round((event.loaded / event.total) * 100));
+      onProgress({
+        percent: Math.round((event.loaded / event.total) * 100),
+        fileName: file.name,
+        status: event.loaded >= event.total ? "saving" : "uploading",
+      });
     };
 
     xhr.onload = () => {
       const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
       if (xhr.status >= 200 && xhr.status < 300) {
         if (typeof onProgress === "function") {
-          onProgress(100);
+          onProgress({
+            percent: 100,
+            fileName: file.name,
+            status: "done",
+          });
         }
         resolve(payload);
         return;

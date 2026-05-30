@@ -350,7 +350,7 @@ const UI_STRINGS = {
     tmdb_browser_season_prompt: "Selecciona una temporada para ver sus capítulos.",
     upload_copying: "Copiando contenido a la Raspberry...",
     upload_chapter_copying: "Cargando {current} de {total} capítulos",
-    upload_saving: "Guardando capítulo en la Raspberry...",
+    upload_saving: "Guardando en la Raspberry...",
     upload_all_done: "Todo subido correctamente.",
     upload_done_summary: "{name} añadida a Movies: {path}",
     upload_series_done_summary: "{name} añadida a TVShows: {path}",
@@ -556,7 +556,7 @@ const UI_STRINGS = {
     tmdb_browser_season_prompt: "Selecciona una temporada per veure'n els capítols.",
     upload_copying: "Copiant el contingut a la Raspberry...",
     upload_chapter_copying: "Carregant {current} de {total} capítols",
-    upload_saving: "Desant capítol a la Raspberry...",
+    upload_saving: "Desant a la Raspberry...",
     upload_all_done: "Tot s'ha pujat correctament.",
     upload_done_summary: "{name} afegida a Movies: {path}",
     upload_series_done_summary: "{name} afegida a TVShows: {path}",
@@ -762,7 +762,7 @@ const UI_STRINGS = {
     tmdb_browser_season_prompt: "Select a season to view its episodes.",
     upload_copying: "Copying content to the Raspberry...",
     upload_chapter_copying: "Loading {current} of {total} episodes",
-    upload_saving: "Saving episode on the Raspberry...",
+    upload_saving: "Saving on the Raspberry...",
     upload_all_done: "Everything uploaded successfully.",
     upload_done_summary: "{name} added to Movies: {path}",
     upload_series_done_summary: "{name} added to TVShows: {path}",
@@ -4810,6 +4810,7 @@ export default function App() {
             path: uploadedMovie?.item?.relativePath || uploadFile.name,
           })
         );
+        await new Promise((resolve) => window.setTimeout(resolve, 700));
       }
       setMovieLibrary(nextLibrary);
       setSelectedMovieId(selectedSeriesResult.id);
