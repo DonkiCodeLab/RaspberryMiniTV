@@ -578,6 +578,10 @@ def is_authorized_request():
 
 @app.before_request
 def require_web_pin():
+    if request.path in {"/movies/upload", "/series/upload"}:
+        log_upload_event(
+            f"request start path={request.path} method={request.method} contentLength={request.content_length} remote={request.remote_addr}"
+        )
     if (
         request.path in {"/web/auth", "/ip", "/favicon.ico"}
         or request.path.startswith("/alarm-sounds")
