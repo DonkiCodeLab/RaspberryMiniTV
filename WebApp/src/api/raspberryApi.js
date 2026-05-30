@@ -476,7 +476,28 @@ export function removeSeries(relativePath) {
   });
 }
 
-export function uploadMovieFile({ file, movie, onProgress } = {}) {
+function createAbortError() {
+  const error = new Error("Upload canceled");
+  error.name = "AbortError";
+  return error;
+}
+
+function attachUploadAbort(xhr, signal, reject) {
+  if (!signal) return () => {};
+  if (signal.aborted) {
+    xhr.abort();
+    reject(createAbortError());
+    return () => {};
+  }
+  const handleAbort = () => {
+    xhr.abort();
+    reject(createAbortError());
+  };
+  signal.addEventListener("abort", handleAbort, { once: true });
+  return () => signal.removeEventListener("abort", handleAbort);
+}
+
+export function uploadMovieFile({ file, movie, onProgress, signal } = {}) {
   if (!file) {
     return Promise.reject(new Error("Missing file"));
   }
@@ -513,6 +534,7 @@ export function uploadMovieFile({ file, movie, onProgress } = {}) {
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${getBaseUrl()}/movies/upload`);
+    const detachAbort = attachUploadAbort(xhr, signal, reject);
 
     const storedPin = getStoredWebPin();
     if (storedPin) {
@@ -529,6 +551,7 @@ export function uploadMovieFile({ file, movie, onProgress } = {}) {
     };
 
     xhr.onload = () => {
+      detachAbort();
       const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
       if (xhr.status >= 200 && xhr.status < 300) {
         if (typeof onProgress === "function") {
@@ -547,12 +570,16 @@ export function uploadMovieFile({ file, movie, onProgress } = {}) {
       reject(error);
     };
 
-    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.onerror = () => {
+      detachAbort();
+      reject(new Error("Upload failed"));
+    };
+    xhr.onabort = () => detachAbort();
     xhr.send(formData);
   });
 }
 
-export function uploadSeriesFiles({ files, series, directoryName, heroImage, heroImageCrop, onProgress } = {}) {
+export function uploadSeriesFiles({ files, series, directoryName, heroImage, heroImageCrop, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) {
     return Promise.reject(new Error("Missing files"));
@@ -614,6 +641,7 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
 
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${getBaseUrl()}/series/upload`);
+      const detachAbort = attachUploadAbort(xhr, signal, reject);
 
       const storedPin = getStoredWebPin();
       if (storedPin) {
@@ -632,6 +660,7 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
       };
 
       xhr.onload = () => {
+        detachAbort();
         const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
         if (xhr.status >= 200 && xhr.status < 300) {
           if (typeof onProgress === "function") {
@@ -653,13 +682,20 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
         reject(error);
       };
 
-      xhr.onerror = () => reject(new Error("Upload failed"));
+      xhr.onerror = () => {
+        detachAbort();
+        reject(new Error("Upload failed"));
+      };
+      xhr.onabort = () => detachAbort();
       xhr.send(formData);
     });
 
   return sortedFiles.reduce(
     (promise, file, index) =>
       promise.then(async (lastResponse) => {
+        if (signal?.aborted) {
+          throw createAbortError();
+        }
         if (typeof onProgress === "function") {
           onProgress({
             percent: 0,
@@ -703,7 +739,7 @@ export function searchGameMetadata({ query, extension } = {}) {
   return request(`/games/search?query=${encodeURIComponent(safeQuery)}&extension=${encodeURIComponent(safeExtension)}`);
 }
 
-export function uploadGameFile({ file, game, cover, onProgress } = {}) {
+export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
   if (!file) {
     return Promise.reject(new Error("Missing file"));
   }
@@ -745,6 +781,7 @@ export function uploadGameFile({ file, game, cover, onProgress } = {}) {
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${getBaseUrl()}/games/upload`);
+    const detachAbort = attachUploadAbort(xhr, signal, reject);
 
     const storedPin = getStoredWebPin();
     if (storedPin) {
@@ -757,6 +794,7 @@ export function uploadGameFile({ file, game, cover, onProgress } = {}) {
     };
 
     xhr.onload = () => {
+      detachAbort();
       const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
       if (xhr.status >= 200 && xhr.status < 300) {
         if (typeof onProgress === "function") {
@@ -771,7 +809,11 @@ export function uploadGameFile({ file, game, cover, onProgress } = {}) {
       reject(error);
     };
 
-    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.onerror = () => {
+      detachAbort();
+      reject(new Error("Upload failed"));
+    };
+    xhr.onabort = () => detachAbort();
     xhr.send(formData);
   });
 }

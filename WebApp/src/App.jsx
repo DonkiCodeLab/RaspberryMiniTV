@@ -352,6 +352,9 @@ const UI_STRINGS = {
     upload_chapter_copying: "Cargando {current} de {total} capítulos",
     upload_saving: "Guardando en la Raspberry...",
     upload_all_done: "Todo subido correctamente.",
+    upload_cancel_confirm: "Eips, se está subiendo contenido a la Raspberry. ¿Seguro que quieres cancelar la subida?",
+    upload_close_confirm: "Eips, se está subiendo contenido a la Raspberry. Si cierras esta ventana se cancelará la subida. ¿Seguro?",
+    upload_canceled: "Subida cancelada.",
     upload_done_summary: "{name} añadida a Movies: {path}",
     upload_series_done_summary: "{name} añadida a TVShows: {path}",
     unavailable_season: "Temporada sin capítulos cargados",
@@ -558,6 +561,9 @@ const UI_STRINGS = {
     upload_chapter_copying: "Carregant {current} de {total} capítols",
     upload_saving: "Desant a la Raspberry...",
     upload_all_done: "Tot s'ha pujat correctament.",
+    upload_cancel_confirm: "Eips, s'està pujant contingut a la Raspberry. Segur que vols cancel·lar la pujada?",
+    upload_close_confirm: "Eips, s'està pujant contingut a la Raspberry. Si tanques aquesta finestra es cancel·larà la pujada. Segur?",
+    upload_canceled: "Pujada cancel·lada.",
     upload_done_summary: "{name} afegida a Movies: {path}",
     upload_series_done_summary: "{name} afegida a TVShows: {path}",
     unavailable_season: "Temporada sense capítols carregats",
@@ -764,6 +770,9 @@ const UI_STRINGS = {
     upload_chapter_copying: "Loading {current} of {total} episodes",
     upload_saving: "Saving on the Raspberry...",
     upload_all_done: "Everything uploaded successfully.",
+    upload_cancel_confirm: "Heads up, content is uploading to the Raspberry. Are you sure you want to cancel the upload?",
+    upload_close_confirm: "Heads up, content is uploading to the Raspberry. Closing this window will cancel the upload. Are you sure?",
+    upload_canceled: "Upload canceled.",
     upload_done_summary: "{name} added to Movies: {path}",
     upload_series_done_summary: "{name} added to TVShows: {path}",
     unavailable_season: "Season without uploaded episodes",
@@ -2104,6 +2113,7 @@ function AddMediaModal({
   uploadFileName = "",
   uploadProgress = null,
   onClose,
+  onCancelUpload,
   onAdd,
   t,
   tmdbLanguage,
@@ -2183,7 +2193,9 @@ function AddMediaModal({
       await onAdd(selectedItem);
     } catch (nextError) {
       setError(
-        nextError.message ||
+        nextError.name === "AbortError"
+          ? t("upload_canceled")
+          : nextError.message ||
           t("add_media_failed", { media: mediaType === "movies" ? t("media_movies_singular") : t("media_series_singular") })
       );
     } finally {
@@ -2244,9 +2256,10 @@ function AddMediaModal({
               })
             : t("upload_copying")
       : t("upload_copying");
+  const uploadActive = uploadProgress !== null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="dialog-card dialog-card--add-series" onClick={(event) => event.stopPropagation()}>
         <div className="dialog-card__header">
           <div>
@@ -2347,7 +2360,11 @@ function AddMediaModal({
         {error ? <p className="dialog-error">{error}</p> : null}
 
         <div className="dialog-card__actions">
-          <button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">
+          <button
+            className="dialog-button dialog-button--ghost"
+            onClick={uploadActive ? onCancelUpload : onClose}
+            type="button"
+          >
             {t("cancel")}
           </button>
           {uploadProgress !== null ? (
@@ -2383,6 +2400,7 @@ function GameUploadModal({
   initialQuery,
   uploadProgress = null,
   onClose,
+  onCancelUpload,
   onUpload,
   t,
 }) {
@@ -2480,14 +2498,20 @@ function GameUploadModal({
         cover: selectedCover?.url ? selectedCover : null,
       });
     } catch (nextError) {
-      setError(nextError.message || t("upload_game_failed"));
+      setError(nextError.name === "AbortError" ? t("upload_canceled") : nextError.message || t("upload_game_failed"));
     } finally {
       setSubmitting(false);
     }
   }
 
+  const progressValue =
+    uploadProgress && typeof uploadProgress === "object"
+      ? clamp(Number(uploadProgress.percent) || 0, 0, 100)
+      : clamp(Number(uploadProgress) || 0, 0, 100);
+  const uploadActive = uploadProgress !== null;
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="dialog-card dialog-card--add-series game-upload-dialog" onClick={(event) => event.stopPropagation()}>
         <div className="dialog-card__header">
           <div>
@@ -2602,7 +2626,11 @@ function GameUploadModal({
         {error ? <p className="dialog-error">{error}</p> : null}
 
         <div className="dialog-card__actions">
-          <button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">
+          <button
+            className="dialog-button dialog-button--ghost"
+            onClick={uploadActive ? onCancelUpload : onClose}
+            type="button"
+          >
             {t("cancel")}
           </button>
           {uploadProgress !== null ? (
@@ -2612,9 +2640,9 @@ function GameUploadModal({
                 <span>{file.name}</span>
               </div>
               <div className="upload-progress__bar" aria-hidden="true">
-                <span style={{ width: `${clamp(Number(uploadProgress) || 0, 0, 100)}%` }} />
+                <span style={{ width: `${progressValue}%` }} />
               </div>
-              <p>{`${clamp(Number(uploadProgress) || 0, 0, 100)}%`}</p>
+              <p>{`${progressValue}%`}</p>
             </div>
           ) : null}
           <button className="dialog-button dialog-button--accent" onClick={handleSubmit} disabled={submitting} type="button">
@@ -3773,8 +3801,61 @@ export default function App() {
   const [moviePlaying, setMoviePlaying] = useState(false);
   const seasonHeroShellRef = useRef(null);
   const alarmPreviewAudioRef = useRef(null);
+  const uploadAbortControllerRef = useRef(null);
   const t = (key, variables) => translate(raspberryLanguage, key, variables);
   const tmdbLanguage = getTmdbLanguage(raspberryLanguage);
+
+  function createUploadSignal() {
+    uploadAbortControllerRef.current?.abort();
+    uploadAbortControllerRef.current = new AbortController();
+    return uploadAbortControllerRef.current.signal;
+  }
+
+  function clearUploadAbortController() {
+    uploadAbortControllerRef.current = null;
+  }
+
+  function resetUploadDialogState() {
+    setAddSeriesOpen(false);
+    setUploadLookupOpen(false);
+    setUploadSelectedFiles([]);
+    setUploadDirectoryName("");
+    setUploadProgress(null);
+  }
+
+  function resetGameUploadDialogState() {
+    setGameLookupOpen(false);
+    setGameUploadFile(null);
+    setGameUploadQuery("");
+    setUploadSelectedFiles([]);
+    setUploadProgress(null);
+  }
+
+  function handleCancelActiveUpload() {
+    if (!window.confirm(t("upload_cancel_confirm"))) return;
+    uploadAbortControllerRef.current?.abort();
+    clearUploadAbortController();
+    setUploadProgress(null);
+    setUploadSummary(t("upload_canceled"));
+  }
+
+  function handleCloseUploadDialog() {
+    if (uploadProgress !== null) {
+      if (!window.confirm(t("upload_close_confirm"))) return;
+      uploadAbortControllerRef.current?.abort();
+      clearUploadAbortController();
+    }
+    resetUploadDialogState();
+  }
+
+  function handleCloseGameUploadDialog() {
+    if (uploadProgress !== null) {
+      if (!window.confirm(t("upload_close_confirm"))) return;
+      uploadAbortControllerRef.current?.abort();
+      clearUploadAbortController();
+    }
+    resetGameUploadDialogState();
+  }
 
   useEffect(() => {
     if (!unlocked) {
@@ -4788,11 +4869,17 @@ export default function App() {
 
       if (uploadFile) {
         setUploadProgress(0);
-        uploadedMovie = await uploadMovieFile({
-          file: uploadFile,
-          movie: selectedSeriesResult,
-          onProgress: setUploadProgress,
-        });
+        const signal = createUploadSignal();
+        try {
+          uploadedMovie = await uploadMovieFile({
+            file: uploadFile,
+            movie: selectedSeriesResult,
+            onProgress: setUploadProgress,
+            signal,
+          });
+        } finally {
+          clearUploadAbortController();
+        }
       }
 
       const nextLibrary = upsertMediaLibraryItem("movies", {
@@ -4843,14 +4930,20 @@ export default function App() {
     if (uploadLookupOpen && targetMediaType === "series") {
       const seriesDetails = await getTvSeriesById(selectedSeriesResult.id, tmdbLanguage);
       setUploadProgress(0);
-      addResponse = await uploadSeriesFiles({
-        files: uploadSelectedFiles,
-        series: selectedSeriesResult,
-        directoryName: uploadDirectoryName || uploadLookupQuery,
-        heroImage: seriesDetails.heroImage,
-        heroImageCrop: DEFAULT_HERO_CROP,
-        onProgress: setUploadProgress,
-      });
+      const signal = createUploadSignal();
+      try {
+        addResponse = await uploadSeriesFiles({
+          files: uploadSelectedFiles,
+          series: selectedSeriesResult,
+          directoryName: uploadDirectoryName || uploadLookupQuery,
+          heroImage: seriesDetails.heroImage,
+          heroImageCrop: DEFAULT_HERO_CROP,
+          onProgress: setUploadProgress,
+          signal,
+        });
+      } finally {
+        clearUploadAbortController();
+      }
       const profileKey = addResponse?.item?.relativePath || "";
       if (profileKey) {
         const nextProfiles = updateSeriesProfile(
@@ -4904,12 +4997,19 @@ export default function App() {
     if (!gameUploadFile) return;
 
     setUploadProgress(0);
-    const response = await uploadGameFile({
-      file: gameUploadFile,
-      game,
-      cover,
-      onProgress: setUploadProgress,
-    });
+    const signal = createUploadSignal();
+    let response = null;
+    try {
+      response = await uploadGameFile({
+        file: gameUploadFile,
+        game,
+        cover,
+        onProgress: setUploadProgress,
+        signal,
+      });
+    } finally {
+      clearUploadAbortController();
+    }
     const nextVideos = await getVideos();
     setVideos(nextVideos);
     setUploadSummary(
@@ -5828,13 +5928,8 @@ export default function App() {
                   : ""
               }
               uploadProgress={uploadProgress}
-              onClose={() => {
-                setAddSeriesOpen(false);
-                setUploadLookupOpen(false);
-                setUploadSelectedFiles([]);
-                setUploadDirectoryName("");
-                setUploadProgress(null);
-              }}
+              onClose={handleCloseUploadDialog}
+              onCancelUpload={handleCancelActiveUpload}
               onAdd={(item) =>
                 handleAddMediaItem(item, uploadLookupOpen ? uploadMediaType : activeMediaType)
               }
@@ -5846,13 +5941,8 @@ export default function App() {
               file={gameUploadFile}
               initialQuery={gameUploadQuery}
               uploadProgress={uploadProgress}
-              onClose={() => {
-                setGameLookupOpen(false);
-                setGameUploadFile(null);
-                setGameUploadQuery("");
-                setUploadSelectedFiles([]);
-                setUploadProgress(null);
-              }}
+              onClose={handleCloseGameUploadDialog}
+              onCancelUpload={handleCancelActiveUpload}
               onUpload={handleUploadGameSelection}
               t={t}
             />
