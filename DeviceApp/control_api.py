@@ -46,6 +46,7 @@ MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.sock")
 MPV_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.log")
 PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "minitv-playback.json")
 MENU_COMMAND_PATH = os.path.join(tempfile.gettempdir(), "minitv-menu-command.json")
+UPLOAD_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-upload.log")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
@@ -1327,6 +1328,10 @@ def append_debug_log(path, message):
         pass
 
 
+def log_upload_event(message):
+    append_debug_log(UPLOAD_DEBUG_LOG_PATH, message)
+
+
 def tail_file(path, max_lines=20):
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as handle:
@@ -1536,8 +1541,10 @@ def upload_movie():
     name = str(request.form.get("name") or "").strip()
     tmdb_id = int(request.form.get("tmdbId") or 0)
     if not uploaded_file or not uploaded_file.filename:
+        log_upload_event("movie rejected missing file")
         return jsonify({"error": "Missing file"}), 400
     if not is_supported_upload_file(uploaded_file.filename):
+        log_upload_event(f"movie rejected unsupported filename={uploaded_file.filename}")
         return jsonify({"error": "Unsupported movie file"}), 400
 
     ensure_media_directories()
@@ -1546,9 +1553,17 @@ def upload_movie():
     desired_base = name or os.path.splitext(original_filename)[0]
     target_filename = unique_media_filename(MOVIES_DIR, f"{desired_base}{original_extension}")
     target_path = os.path.join(MOVIES_DIR, target_filename)
-    uploaded_file.save(target_path)
+    log_upload_event(
+        f"movie start original={original_filename} name={name} tmdbId={tmdb_id} target={target_path} moviesRoot={MOVIES_DIR}"
+    )
+    try:
+        uploaded_file.save(target_path)
+    except Exception as exc:
+        log_upload_event(f"movie save failed target={target_path} error={exc}")
+        return jsonify({"error": "Movie save failed", "details": str(exc), "targetPath": target_path}), 500
     saved_size = os.path.getsize(target_path) if os.path.exists(target_path) else 0
     if saved_size <= 0:
+        log_upload_event(f"movie save empty target={target_path} size={saved_size}")
         return (
             jsonify(
                 {
@@ -1567,6 +1582,7 @@ def upload_movie():
         tmdb_id,
         target_filename,
     )
+    log_upload_event(f"movie saved relative={relative_path} target={target_path} size={saved_size}")
     return jsonify(
         {
             "ok": True,
@@ -1597,10 +1613,13 @@ def upload_series():
         hero_image_crop = None
 
     if not uploaded_files:
+        log_upload_event("series rejected missing files")
         return jsonify({"error": "Missing files"}), 400
     if not name:
+        log_upload_event("series rejected missing name")
         return jsonify({"error": "Missing name"}), 400
     if not tmdb_id:
+        log_upload_event(f"series rejected missing tmdbId name={name}")
         return jsonify({"error": "Missing tmdbId"}), 400
 
     normalized_files = []
@@ -1642,14 +1661,19 @@ def upload_series():
         )
 
     if len(detected_roots) != 1:
+        log_upload_event(f"series rejected roots={sorted(detected_roots)} name={name}")
         return jsonify({"error": "Series upload must contain a single directory"}), 400
     if nested_files:
+        log_upload_event(f"series rejected nested files={nested_files[:8]} name={name}")
         return jsonify({"error": "Series directory cannot contain subdirectories", "files": nested_files}), 400
     if unsupported_files:
+        log_upload_event(f"series rejected unsupported files={unsupported_files[:8]} name={name}")
         return jsonify({"error": "Unsupported series files", "files": unsupported_files}), 400
     if invalid_names:
+        log_upload_event(f"series rejected invalid names={invalid_names[:8]} name={name}")
         return jsonify({"error": "All files must include SxxExx in their name", "files": invalid_names}), 400
     if not normalized_files:
+        log_upload_event(f"series rejected no valid episodes name={name}")
         return jsonify({"error": "No valid episode files found"}), 400
 
     ensure_media_directories()
@@ -1660,7 +1684,16 @@ def upload_series():
     for entry in normalized_files:
         target_filename = os.path.basename(entry["filename"])
         target_path = os.path.join(target_dir, target_filename)
-        entry["upload"].save(target_path)
+        log_upload_event(
+            f"series episode start id={entry['id']} filename={target_filename} target={target_path} tvShowsRoot={TVSHOWS_DIR}"
+        )
+        try:
+            entry["upload"].save(target_path)
+        except Exception as exc:
+            log_upload_event(f"series episode save failed target={target_path} error={exc}")
+            return jsonify({"error": "Series episode save failed", "details": str(exc), "targetPath": target_path}), 500
+        saved_size = os.path.getsize(target_path) if os.path.exists(target_path) else 0
+        log_upload_event(f"series episode saved id={entry['id']} target={target_path} size={saved_size}")
 
     videos = get_series_directory_videos(target_dir)
     relative_path = join_video_relative_path("TVShows", target_slug)
