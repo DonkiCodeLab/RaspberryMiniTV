@@ -212,6 +212,7 @@ INTRO_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-intro.log")
 RETROARCH_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.cfg")
 RETROARCH_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.log")
 PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "minitv-playback.json")
+MENU_COMMAND_PATH = os.path.join(tempfile.gettempdir(), "minitv-menu-command.json")
 GAME_PLATFORM_BY_EXTENSION = {
     ".gb": {
         "name": "Game Boy",
@@ -584,6 +585,21 @@ def clear_playback_state():
         pass
     except Exception:
         pass
+
+
+def pop_menu_command():
+    try:
+        with open(MENU_COMMAND_PATH, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        os.remove(MENU_COMMAND_PATH)
+    except FileNotFoundError:
+        return None
+    except Exception as exc:
+        log_debug(f"MENU command read failed: {exc}")
+        remove_path_if_exists(MENU_COMMAND_PATH)
+        return None
+
+    return payload if isinstance(payload, dict) else None
 
 
 def score_touch_device(device):
@@ -2377,6 +2393,27 @@ class DeviceAppMenu:
         self.video_current_path = full_path
         self.video_now_playing = os.path.basename(full_path)
         self.state = "loading_video"
+
+    def handle_menu_command(self, command):
+        action = str(command.get("action") or "").strip().lower()
+        if action == "play":
+            full_path = str(command.get("path") or "").strip()
+            if not full_path or not os.path.isfile(full_path):
+                log_debug(f"MENU command play ignored missing file={full_path}")
+                return
+            log_debug(f"MENU command play file={full_path}")
+            self.loading_return_state = "play"
+            self.stop_game_playback(silent=True)
+            self.play_video_path(full_path)
+            return
+        if action == "stop":
+            log_debug("MENU command stop")
+            self.stop_video_playback(silent=True)
+
+    def poll_menu_command(self):
+        command = pop_menu_command()
+        if command:
+            self.handle_menu_command(command)
 
     def start_random_video(self):
         all_videos = self.get_entry_video_files(VIDEOS_DIR)
@@ -4331,6 +4368,7 @@ class DeviceAppMenu:
             self.update_video_state()
             self.update_game_state()
             self.poll_external_settings()
+            self.poll_menu_command()
             self.update_clock_alarms()
             self.poll_native_touch()
             if self.display_suspended:

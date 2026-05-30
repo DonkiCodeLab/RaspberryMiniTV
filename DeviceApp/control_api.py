@@ -45,6 +45,7 @@ QR_PNG = "/tmp/minitv_qr.png"
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.sock")
 MPV_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.log")
 PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "minitv-playback.json")
+MENU_COMMAND_PATH = os.path.join(tempfile.gettempdir(), "minitv-menu-command.json")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
@@ -942,6 +943,17 @@ def write_playback_state(filepath):
     return state
 
 
+def write_menu_command(payload):
+    command_payload = {
+        **payload,
+        "createdAt": int(time.time()),
+    }
+    temp_path = f"{MENU_COMMAND_PATH}.{os.getpid()}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as handle:
+        json.dump(command_payload, handle, ensure_ascii=False)
+    os.replace(temp_path, MENU_COMMAND_PATH)
+
+
 def clear_playback_state():
     try:
         os.remove(PLAYBACK_STATE_PATH)
@@ -1808,28 +1820,23 @@ def play():
     with lock:
         hide_qr()
         stop_locked()
-        try:
-            start_play_locked(match["full_path"])
-        except Exception as exc:
-            clear_playback_state()
-            return (
-                jsonify(
-                    {
-                        "error": "Could not start video player",
-                        "details": str(exc),
-                        "file": match["relative_path"],
-                    }
-                ),
-                500,
-            )
+        write_menu_command(
+            {
+                "action": "play",
+                "path": match["full_path"],
+                "id": ep_id,
+                "directory": match["directory_path"],
+                "file": match["relative_path"],
+            }
+        )
         current["id"] = ep_id
         current["directory"] = match["directory_path"]
         current["file"] = match["relative_path"]
-        write_playback_state(match["full_path"])
 
     return jsonify(
         {
             "ok": True,
+            "queued": True,
             "playing": ep_id,
             "directory": match["directory_path"],
             "file": match["relative_path"],
