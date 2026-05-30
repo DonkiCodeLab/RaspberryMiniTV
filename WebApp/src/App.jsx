@@ -4804,10 +4804,27 @@ export default function App() {
       if (uploadFile) {
         const nextVideos = await getVideos();
         setVideos(nextVideos);
+        const uploadedPath = uploadedMovie?.item?.relativePath || "";
+        const uploadedExists = Boolean(
+          uploadedPath &&
+            [
+              ...(Array.isArray(nextVideos?.movieRootFiles) ? nextVideos.movieRootFiles : []),
+              ...(Array.isArray(nextVideos?.movieDirectories)
+                ? nextVideos.movieDirectories.flatMap((bucket) => (Array.isArray(bucket?.videos) ? bucket.videos : []))
+                : []),
+            ].some((entry) => entry?.relativePath === uploadedPath)
+        );
+        if (!uploadedExists) {
+          throw new Error(
+            uploadedMovie?.saved?.path
+              ? `La API dice que guardó la película en ${uploadedMovie.saved.path}, pero no aparece al refrescar la biblioteca.`
+              : "La película no aparece al refrescar la biblioteca de la Raspberry."
+          );
+        }
         setUploadSummary(
           t("upload_done_summary", {
             name: selectedSeriesResult.name,
-            path: uploadedMovie?.item?.relativePath || uploadFile.name,
+            path: uploadedPath || uploadFile.name,
           })
         );
         await new Promise((resolve) => window.setTimeout(resolve, 700));

@@ -1547,6 +1547,18 @@ def upload_movie():
     target_filename = unique_media_filename(MOVIES_DIR, f"{desired_base}{original_extension}")
     target_path = os.path.join(MOVIES_DIR, target_filename)
     uploaded_file.save(target_path)
+    saved_size = os.path.getsize(target_path) if os.path.exists(target_path) else 0
+    if saved_size <= 0:
+        return (
+            jsonify(
+                {
+                    "error": "Movie file was not saved",
+                    "targetPath": target_path,
+                    "moviesRoot": MOVIES_DIR,
+                }
+            ),
+            500,
+        )
 
     relative_path = os.path.relpath(target_path, VIDEOS_DIR).replace("\\", "/")
     movie_item = upsert_movie_metadata(
@@ -1559,6 +1571,12 @@ def upload_movie():
         {
             "ok": True,
             "item": movie_item,
+            "saved": {
+                "path": target_path,
+                "relativePath": relative_path,
+                "size": saved_size,
+                "moviesRoot": MOVIES_DIR,
+            },
         }
     )
 
