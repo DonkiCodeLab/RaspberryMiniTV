@@ -578,7 +578,7 @@ def is_authorized_request():
 
 @app.before_request
 def require_web_pin():
-    if request.path in {"/movies/upload", "/series/upload"}:
+    if request.path in {"/movies/upload", "/movies/upload/raw", "/series/upload"}:
         log_upload_event(
             f"request start path={request.path} method={request.method} contentLength={request.content_length} remote={request.remote_addr}"
         )
@@ -1587,6 +1587,105 @@ def upload_movie():
         target_filename,
     )
     log_upload_event(f"movie saved relative={relative_path} target={target_path} size={saved_size}")
+    return jsonify(
+        {
+            "ok": True,
+            "item": movie_item,
+            "saved": {
+                "path": target_path,
+                "relativePath": relative_path,
+                "size": saved_size,
+                "moviesRoot": MOVIES_DIR,
+            },
+        }
+    )
+
+
+@app.route("/movies/upload/raw", methods=["POST"])
+def upload_movie_raw():
+    original_filename = os.path.basename(str(request.args.get("filename") or "movie.mp4"))
+    name = str(request.args.get("name") or "").strip()
+    tmdb_id = int(request.args.get("tmdbId") or 0)
+    if not original_filename:
+        log_upload_event("movie raw rejected missing filename")
+        return jsonify({"error": "Missing filename"}), 400
+    if not is_supported_upload_file(original_filename):
+        log_upload_event(f"movie raw rejected unsupported filename={original_filename}")
+        return jsonify({"error": "Unsupported movie file"}), 400
+
+    ensure_media_directories()
+    original_extension = os.path.splitext(original_filename)[1]
+    desired_base = name or os.path.splitext(original_filename)[0]
+    target_filename = unique_media_filename(MOVIES_DIR, f"{desired_base}{original_extension}")
+    target_path = os.path.join(MOVIES_DIR, target_filename)
+    partial_path = f"{target_path}.part"
+    expected_size = int(request.content_length or 0)
+    log_upload_event(
+        f"movie raw start original={original_filename} name={name} tmdbId={tmdb_id} "
+        f"target={target_path} partial={partial_path} expected={expected_size} moviesRoot={MOVIES_DIR}"
+    )
+
+    saved_size = 0
+    next_log_at = 32 * 1024 * 1024
+    try:
+        with open(partial_path, "wb") as handle:
+            while True:
+                chunk = request.stream.read(1024 * 1024)
+                if not chunk:
+                    break
+                handle.write(chunk)
+                saved_size += len(chunk)
+                if saved_size >= next_log_at:
+                    percent = round((saved_size / expected_size) * 100, 1) if expected_size else 0
+                    log_upload_event(
+                        f"movie raw progress target={target_path} written={saved_size} expected={expected_size} percent={percent}"
+                    )
+                    next_log_at += 32 * 1024 * 1024
+        if expected_size and saved_size != expected_size:
+            raise ValueError(f"Incomplete upload: wrote {saved_size} of {expected_size} bytes")
+        os.replace(partial_path, target_path)
+    except Exception as exc:
+        log_upload_event(f"movie raw save failed target={target_path} partial={partial_path} written={saved_size} error={exc}")
+        try:
+            if os.path.exists(partial_path):
+                os.remove(partial_path)
+        except Exception:
+            pass
+        return (
+            jsonify(
+                {
+                    "error": "Movie save failed",
+                    "details": str(exc),
+                    "targetPath": target_path,
+                    "partialPath": partial_path,
+                    "written": saved_size,
+                    "expected": expected_size,
+                }
+            ),
+            500,
+        )
+
+    if saved_size <= 0:
+        log_upload_event(f"movie raw save empty target={target_path} size={saved_size}")
+        return (
+            jsonify(
+                {
+                    "error": "Movie file was not saved",
+                    "targetPath": target_path,
+                    "moviesRoot": MOVIES_DIR,
+                }
+            ),
+            500,
+        )
+
+    relative_path = os.path.relpath(target_path, VIDEOS_DIR).replace("\\", "/")
+    movie_item = upsert_movie_metadata(
+        relative_path,
+        name or os.path.splitext(original_filename)[0],
+        tmdb_id,
+        target_filename,
+    )
+    log_upload_event(f"movie raw saved relative={relative_path} target={target_path} size={saved_size}")
     return jsonify(
         {
             "ok": True,

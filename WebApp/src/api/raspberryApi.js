@@ -527,14 +527,16 @@ export function uploadMovieFile({ file, movie, onProgress, signal } = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("name", movieName);
-    formData.append("tmdbId", String(tmdbId));
+    const params = new URLSearchParams({
+      filename: file.name || "movie.mp4",
+      name: movieName,
+      tmdbId: String(tmdbId),
+    });
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${getBaseUrl()}/movies/upload`);
+    xhr.open("POST", `${getBaseUrl()}/movies/upload/raw?${params.toString()}`);
     const detachAbort = attachUploadAbort(xhr, signal, reject);
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
 
     const storedPin = getStoredWebPin();
     if (storedPin) {
@@ -575,7 +577,7 @@ export function uploadMovieFile({ file, movie, onProgress, signal } = {}) {
       reject(new Error("Upload failed"));
     };
     xhr.onabort = () => detachAbort();
-    xhr.send(formData);
+    xhr.send(file);
   });
 }
 
