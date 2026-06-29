@@ -2933,7 +2933,7 @@ img {
 }
 
 .dialog-card--tmdb-browser {
-  width: min(1320px, 100%);
+  width: min(1060px, 100%);
 }
 
 .dialog-card--settings {
@@ -3758,6 +3758,16 @@ img {
   min-width: 126px;
 }
 
+.tmdb-browser__toolbar {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.tmdb-browser__back {
+  margin: 0;
+}
+
 .game-browser__search {
   grid-template-columns: minmax(180px, 0.28fr) minmax(240px, 1fr) auto;
 }
@@ -3846,7 +3856,7 @@ img {
 
 .tmdb-browser__layout {
   display: grid;
-  grid-template-columns: minmax(280px, 0.42fr) minmax(0, 0.58fr);
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-top: 1rem;
   min-height: min(58vh, 620px);
@@ -3859,6 +3869,11 @@ img {
 
 .tmdb-browser__results .add-series-results__list {
   max-height: min(58vh, 620px);
+}
+
+.tmdb-browser__results .add-series-result {
+  grid-template-columns: 112px minmax(0, 1fr);
+  align-items: center;
 }
 
 .tmdb-browser-result {
@@ -3885,7 +3900,7 @@ img {
 }
 
 .tmdb-browser-series__hero {
-  min-height: 220px;
+  min-height: 190px;
   display: flex;
   flex-direction: column;
   justify-content: end;
@@ -3914,7 +3929,7 @@ img {
 
 .tmdb-browser-series__seasons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 0.8rem;
 }
 
@@ -3944,6 +3959,29 @@ img {
 .tmdb-browser-movie .movie-panel__gallery,
 .tmdb-browser-movie .movie-panel__content {
   grid-row: auto;
+}
+
+.tmdb-browser-episode {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.42fr) minmax(0, 0.58fr);
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(18, 31, 41, 0.72);
+}
+
+.tmdb-browser-episode .episode-dialog__media {
+  min-height: 0;
+}
+
+.tmdb-browser-episode .episode-dialog__media img {
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+}
+
+.tmdb-browser-episode .episode-dialog__content {
+  min-width: 0;
 }
 
 @media (max-width: 760px) {

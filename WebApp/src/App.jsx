@@ -3011,7 +3011,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
-  const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
+  const [browserView, setBrowserView] = useState("results");
   const [movieFrameIndex, setMovieFrameIndex] = useState(0);
   const [error, setError] = useState("");
 
@@ -3024,7 +3024,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
       setSelectedSeasonId(null);
       setSeasonEpisodes(null);
       setSelectedEpisode(null);
-      setEpisodeDialogOpen(false);
+      setBrowserView("results");
       setMovieFrameIndex(0);
       setError("");
       return;
@@ -3060,6 +3060,8 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
     setSelectedItem(null);
     setSelectedSeasonId(null);
     setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setBrowserView("results");
 
     try {
       const nextResults =
@@ -3084,6 +3086,8 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
     setSelectedItem(null);
     setSelectedSeasonId(null);
     setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setBrowserView(mediaType === "movies" ? "movie" : "seasons");
     setMovieFrameIndex(0);
 
     try {
@@ -3093,7 +3097,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
           : await getTvSeriesById(result.id, tmdbLanguage);
       setSelectedItem(details);
       if (mediaType === "series") {
-        setSelectedSeasonId(details.seasons?.[0]?.id || null);
+        setSelectedSeasonId(null);
       }
     } catch (nextError) {
       setError(nextError.message || t("tmdb_browser_load_failed"));
@@ -3108,7 +3112,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
       : null;
 
   useEffect(() => {
-    if (!visible || mediaType !== "series" || !selectedItem?.id || !selectedSeason) {
+    if (!visible || mediaType !== "series" || browserView !== "episodes" || !selectedItem?.id || !selectedSeason) {
       setSeasonEpisodes(null);
       return;
     }
@@ -3141,7 +3145,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
     return () => {
       cancelled = true;
     };
-  }, [visible, mediaType, selectedItem?.id, selectedSeason?.id, tmdbLanguage]);
+  }, [visible, mediaType, browserView, selectedItem?.id, selectedSeason?.id, tmdbLanguage]);
 
   if (!visible) return null;
 
@@ -3152,6 +3156,46 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
   const safeMovieFrameIndex = previewImages.length
     ? Math.min(movieFrameIndex, previewImages.length - 1)
     : 0;
+  const canShowSearch = browserView === "results";
+
+  function resetBrowserForMedia(nextType) {
+    setMediaType(nextType);
+    setResults([]);
+    setSelectedItem(null);
+    setSelectedSeasonId(null);
+    setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setBrowserView("results");
+    setError("");
+  }
+
+  function handleBack() {
+    setError("");
+    if (browserView === "episode") {
+      setSelectedEpisode(null);
+      setBrowserView("episodes");
+      return;
+    }
+    if (browserView === "episodes") {
+      setSelectedSeasonId(null);
+      setSeasonEpisodes(null);
+      setBrowserView("seasons");
+      return;
+    }
+    setSelectedItem(null);
+    setSelectedSeasonId(null);
+    setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setMovieFrameIndex(0);
+    setBrowserView("results");
+  }
+
+  function handleOpenSeason(seasonId) {
+    setSelectedSeasonId(seasonId);
+    setSeasonEpisodes(null);
+    setSelectedEpisode(null);
+    setBrowserView("episodes");
+  }
 
   return (
     <div className="modal-backdrop modal-backdrop--tmdb-browser" onClick={onClose}>
@@ -3171,6 +3215,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
           </button>
         </div>
 
+        {canShowSearch ? (
         <form className="tmdb-browser__search" onSubmit={runSearch}>
           <div className="media-switch tmdb-browser__switch" role="tablist" aria-label={t("raspberry_sections")}>
             {["series", "movies"].map((nextType) => {
@@ -3179,14 +3224,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
                 <button
                   key={nextType}
                   className={`media-switch__option${isActive ? " active" : ""}`}
-                  onClick={() => {
-                    setMediaType(nextType);
-                    setResults([]);
-                    setSelectedItem(null);
-                    setSelectedSeasonId(null);
-                    setSeasonEpisodes(null);
-                    setError("");
-                  }}
+                  onClick={() => resetBrowserForMedia(nextType)}
                   type="button"
                   role="tab"
                   aria-selected={isActive}
@@ -3225,10 +3263,19 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
             {searching ? t("searching_button") : t("search_button")}
           </button>
         </form>
+        ) : (
+          <div className="tmdb-browser__toolbar">
+            <button className="season-page__back tmdb-browser__back" onClick={handleBack} type="button">
+              <span className="season-page__back-arrow" aria-hidden="true">←</span>
+              <span className="season-page__back-label">{t("back")}</span>
+            </button>
+          </div>
+        )}
 
         {error ? <p className="dialog-error">{error}</p> : null}
 
-        <div className="tmdb-browser__layout">
+        <div className={`tmdb-browser__layout tmdb-browser__layout--${browserView}`}>
+          {browserView === "results" ? (
           <section className="tmdb-browser__results" aria-label={t("tmdb_browser_results")}>
             {results.length ? (
               <div className="add-series-results__list">
@@ -3271,7 +3318,9 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
               </div>
             )}
           </section>
+          ) : null}
 
+          {browserView !== "results" ? (
           <section className="tmdb-browser__preview">
             {loadingDetails ? (
               <div className="add-series-results__empty">
@@ -3281,7 +3330,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
               <div className="add-series-results__empty">
                 <p>{t("tmdb_browser_select_prompt")}</p>
               </div>
-            ) : mediaType === "series" ? (
+            ) : mediaType === "series" && browserView === "seasons" ? (
               <div className="tmdb-browser-series">
                 <header
                   className="tmdb-browser-series__hero"
@@ -3298,14 +3347,16 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
                     <SeasonCard
                       key={season.id}
                       season={season}
-                      isActive={season.id === selectedSeasonId}
+                      isActive={false}
                       disabled={false}
-                      onSelect={setSelectedSeasonId}
+                      onSelect={handleOpenSeason}
                       t={t}
                     />
                   ))}
                 </div>
-
+              </div>
+            ) : mediaType === "series" && browserView === "episodes" ? (
+              <div className="tmdb-browser-series">
                 {selectedSeason ? (
                   <div className="tmdb-browser-series__episodes">
                     {loadingEpisodes ? (
@@ -3320,7 +3371,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
                           available
                           onSelect={(nextEpisode) => {
                             setSelectedEpisode(nextEpisode);
-                            setEpisodeDialogOpen(true);
+                            setBrowserView("episode");
                           }}
                           t={t}
                         />
@@ -3332,6 +3383,30 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
                     <p>{t("tmdb_browser_season_prompt")}</p>
                   </div>
                 )}
+              </div>
+            ) : mediaType === "series" && browserView === "episode" && selectedEpisode ? (
+              <div className="tmdb-browser-episode">
+                <div className="episode-dialog__media">
+                  {selectedEpisode.image ? <img src={selectedEpisode.image} alt={selectedEpisode.title} /> : null}
+                </div>
+                <div className="episode-dialog__content">
+                  <p className="episode-dialog__eyebrow">
+                    {selectedSeason?.title || seasonEpisodes?.title || t("season_label")}
+                  </p>
+                  <h2>
+                    {selectedEpisode.episodeNumber}. {selectedEpisode.title}
+                  </h2>
+                  <dl className="episode-dialog__facts">
+                    <div>
+                      <strong>{`${t("release")}:`}</strong>
+                      <span>{selectedEpisode.airDate || t("not_available")}</span>
+                    </div>
+                  </dl>
+                  <div className="episode-dialog__synopsis">
+                    <strong>{`${t("synopsis")}:`}</strong>
+                    <p>{selectedEpisode.synopsis || t("synopsis_unavailable")}</p>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="movie-panel tmdb-browser-movie">
@@ -3396,24 +3471,9 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
               </div>
             )}
           </section>
+          ) : null}
         </div>
       </div>
-
-      <EpisodeDetailsModal
-        visible={episodeDialogOpen}
-        episode={selectedEpisode}
-        season={selectedSeason || seasonEpisodes}
-        seriesName={selectedItem?.name || ""}
-        playing={false}
-        available
-        showPlayButton={false}
-        onClose={() => {
-          setEpisodeDialogOpen(false);
-          setSelectedEpisode(null);
-        }}
-        onPlay={() => {}}
-        t={t}
-      />
     </div>
   );
 }
