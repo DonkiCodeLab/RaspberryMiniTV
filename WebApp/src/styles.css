@@ -3929,12 +3929,25 @@ img {
 
 .tmdb-browser-series__seasons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.8rem;
 }
 
 .tmdb-browser-series__seasons .season-card {
   min-height: 0;
+  border-radius: 18px;
+}
+
+.tmdb-browser-series__seasons .season-card__body {
+  padding: 0.85rem 0.95rem 1rem;
+}
+
+.tmdb-browser-series__seasons .season-card__body h3 {
+  font-size: 1.28rem;
+}
+
+.tmdb-browser-series__seasons .season-card__body p {
+  font-size: 0.98rem;
 }
 
 .tmdb-browser-series__episodes {
@@ -3943,9 +3956,34 @@ img {
 }
 
 .tmdb-browser-series__episodes .episode-card {
-  grid-template-columns: 118px minmax(0, 1fr) 58px;
-  padding: 0.8rem;
-  border-radius: 24px;
+  padding: 0.72rem;
+  border-radius: 20px;
+}
+
+.tmdb-browser-series__episodes .episode-card__main {
+  grid-template-columns: 172px minmax(0, 1fr) 44px;
+  gap: 0.85rem;
+}
+
+.tmdb-browser-series__episodes .episode-card__thumb {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+}
+
+.tmdb-browser-series__episodes .episode-card__body h3 {
+  font-size: 1.18rem;
+  line-height: 1.18;
+}
+
+.tmdb-browser-series__episodes .episode-card__body p {
+  margin-top: 0.35rem;
+  font-size: 0.92rem;
+}
+
+.tmdb-browser-series__episodes .episode-card__arrow {
+  width: 42px;
+  height: 42px;
+  font-size: 2rem;
 }
 
 .tmdb-browser-movie .movie-panel__card {
@@ -3963,8 +4001,9 @@ img {
 
 .tmdb-browser-episode {
   display: grid;
-  grid-template-columns: minmax(240px, 0.42fr) minmax(0, 0.58fr);
+  grid-template-columns: minmax(280px, 0.48fr) minmax(0, 0.52fr);
   gap: 1rem;
+  align-items: start;
   padding: 1rem;
   border-radius: 24px;
   background: rgba(18, 31, 41, 0.72);
@@ -3972,16 +4011,72 @@ img {
 
 .tmdb-browser-episode .episode-dialog__media {
   min-height: 0;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  background: rgba(8, 14, 20, 0.94);
 }
 
 .tmdb-browser-episode .episode-dialog__media img {
   width: 100%;
-  height: auto;
-  border-radius: 18px;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .tmdb-browser-episode .episode-dialog__content {
   min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tmdb-browser-episode .episode-dialog__eyebrow,
+.tmdb-browser-episode .episode-dialog__content h2,
+.tmdb-browser-episode .episode-dialog__facts,
+.tmdb-browser-episode .episode-dialog__synopsis,
+.tmdb-browser-episode .episode-dialog__synopsis p {
+  margin: 0;
+}
+
+.tmdb-browser-episode .episode-dialog__eyebrow {
+  color: rgba(236, 243, 250, 0.76);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.tmdb-browser-episode .episode-dialog__content h2 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.14;
+}
+
+.tmdb-browser-episode .episode-dialog__facts {
+  display: grid;
+  gap: 0.55rem;
+  color: rgba(236, 243, 250, 0.9);
+}
+
+.tmdb-browser-episode .episode-dialog__facts div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tmdb-browser-episode .episode-dialog__synopsis {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgba(8, 14, 20, 0.58);
+  color: rgba(236, 243, 250, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.tmdb-browser-episode .episode-dialog__synopsis strong {
+  color: #fff;
+}
+
+.tmdb-browser-episode .episode-dialog__synopsis p {
+  margin-top: 0.4rem;
+  font-size: 1rem;
+  line-height: 1.48;
 }
 
 @media (max-width: 760px) {
