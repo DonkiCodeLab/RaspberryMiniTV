@@ -343,6 +343,26 @@ def get_series_directory_videos(target_dir):
     )
 
 
+def refresh_series_metadata_from_disk(relative_path):
+    safe_relative_path = str(relative_path or "").strip()
+    series_path = resolve_relative_video_path(safe_relative_path, TVSHOWS_DIR)
+    if not safe_relative_path or not series_path:
+        return None
+
+    library = load_media_library()
+    series_items = library.setdefault("series", {})
+    current_item = series_items.get(safe_relative_path) if isinstance(series_items.get(safe_relative_path), dict) else {}
+    videos = get_series_directory_videos(series_path) if os.path.isdir(series_path) else []
+    series_items[safe_relative_path] = {
+        **current_item,
+        "relativePath": safe_relative_path,
+        "episodes": videos,
+        "episodeIds": [video["id"] for video in videos],
+    }
+    save_media_library(library)
+    return series_items[safe_relative_path]
+
+
 def remove_movie_metadata(relative_path):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
@@ -352,6 +372,18 @@ def remove_movie_metadata(relative_path):
     if safe_relative_path in items:
         del items[safe_relative_path]
         save_movie_library(items)
+
+
+def remove_series_metadata(relative_path):
+    safe_relative_path = str(relative_path or "").strip()
+    if not safe_relative_path:
+        return
+
+    library = load_media_library()
+    series_items = library.setdefault("series", {})
+    if safe_relative_path in series_items:
+        del series_items[safe_relative_path]
+        save_media_library(library)
 
 
 def normalize_game_platform(filename_or_extension):
@@ -368,6 +400,26 @@ def is_game_rom_file(filename):
 def game_relative_path(filename):
     safe_filename = os.path.basename(str(filename or "").strip())
     return f"Games/{safe_filename}" if safe_filename else ""
+
+
+def resolve_game_path(relative_path):
+    normalized_path = os.path.normpath(str(relative_path or "").strip().strip("/\\"))
+    if not normalized_path or normalized_path.startswith("..") or os.path.isabs(normalized_path):
+        return None
+
+    if normalized_path == "Games":
+        return None
+    if normalized_path.startswith(f"Games{os.sep}"):
+        normalized_path = normalized_path.split(os.sep, 1)[1]
+    elif normalized_path.startswith("Games/"):
+        normalized_path = normalized_path.split("/", 1)[1]
+
+    target_path = os.path.abspath(os.path.join(GAMES_DIR, normalized_path))
+    games_root_abs = os.path.abspath(GAMES_DIR)
+    if target_path == games_root_abs or os.path.commonpath([target_path, games_root_abs]) != games_root_abs:
+        return None
+
+    return target_path
 
 
 def game_cover_url(filename):
@@ -435,6 +487,20 @@ def upsert_game_metadata(relative_path, updates):
 
     game_items[safe_relative_path] = item
     save_media_library(library)
+    return item
+
+
+def remove_game_metadata(relative_path):
+    safe_relative_path = str(relative_path or "").strip()
+    if not safe_relative_path:
+        return None
+
+    library = load_media_library()
+    game_items = library.setdefault("games", {})
+    item = game_items.get(safe_relative_path) if isinstance(game_items.get(safe_relative_path), dict) else None
+    if safe_relative_path in game_items:
+        del game_items[safe_relative_path]
+        save_media_library(library)
     return item
 
 
@@ -1528,15 +1594,78 @@ def delete_series():
         return jsonify({"error": "Series must be inside TVShows"}), 400
 
     if not os.path.exists(series_path):
+        remove_series_metadata(relative_path)
         return jsonify({"ok": True, "relativePath": relative_path, "removed": False})
 
     shutil.rmtree(series_path)
-    library = load_media_library()
-    series_items = library.setdefault("series", {})
-    if relative_path in series_items:
-        del series_items[relative_path]
-        save_media_library(library)
+    remove_series_metadata(relative_path)
     return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
+
+
+@app.route("/series/episode", methods=["DELETE"])
+def delete_series_episode():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    episode_path = resolve_relative_video_path(relative_path, TVSHOWS_DIR)
+    if not episode_path:
+        return jsonify({"error": "Episode must be inside TVShows"}), 400
+
+    removed = False
+    if os.path.exists(episode_path):
+        if os.path.isdir(episode_path):
+            return jsonify({"error": "Episode path must be a file"}), 400
+        os.remove(episode_path)
+        removed = True
+
+    series_relative_path = os.path.dirname(relative_path).replace("\\", "/")
+    item = refresh_series_metadata_from_disk(series_relative_path)
+    return jsonify(
+        {
+            "ok": True,
+            "relativePath": relative_path,
+            "seriesRelativePath": series_relative_path,
+            "removed": removed,
+            "item": item,
+        }
+    )
+
+
+@app.route("/series/season", methods=["DELETE"])
+def delete_series_season():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    season_number = int(request.args.get("seasonNumber") or 0)
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+    if not season_number:
+        return jsonify({"error": "Missing seasonNumber"}), 400
+
+    series_path = resolve_relative_video_path(relative_path, TVSHOWS_DIR)
+    if not series_path:
+        return jsonify({"error": "Series must be inside TVShows"}), 400
+
+    removed = []
+    if os.path.isdir(series_path):
+        for video in get_series_directory_videos(series_path):
+            if int(video.get("seasonNumber") or 0) != season_number:
+                continue
+            episode_path = resolve_relative_video_path(video.get("relativePath"), TVSHOWS_DIR)
+            if episode_path and os.path.isfile(episode_path):
+                os.remove(episode_path)
+                removed.append(video.get("relativePath"))
+
+    item = refresh_series_metadata_from_disk(relative_path)
+    return jsonify(
+        {
+            "ok": True,
+            "relativePath": relative_path,
+            "seasonNumber": season_number,
+            "removed": len(removed),
+            "removedPaths": removed,
+            "item": item,
+        }
+    )
 
 
 @app.route("/movies/upload", methods=["POST"])
@@ -1856,6 +1985,40 @@ def upload_game():
     return jsonify({"ok": True, "item": item, "libraryCounts": get_library_counts()})
 
 
+@app.route("/games", methods=["DELETE"])
+def delete_game():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    game_path = resolve_game_path(relative_path)
+    if not game_path:
+        return jsonify({"error": "Game must be inside Games"}), 400
+
+    metadata = remove_game_metadata(game_relative_path(os.path.basename(game_path)))
+    removed = False
+    if os.path.exists(game_path):
+        if os.path.isdir(game_path):
+            return jsonify({"error": "Game path must be a file"}), 400
+        os.remove(game_path)
+        removed = True
+
+    cover_image = str(metadata.get("coverImage") or "") if isinstance(metadata, dict) else ""
+    cover_prefix = "/game-covers/"
+    if cover_image.startswith(cover_prefix):
+        cover_filename = urllib.parse.unquote(cover_image[len(cover_prefix) :])
+        if cover_filename and cover_filename != DEFAULT_GAME_COVER_FILENAME:
+            cover_path = os.path.abspath(os.path.join(GAME_COVERS_DIR, os.path.basename(cover_filename)))
+            covers_root_abs = os.path.abspath(GAME_COVERS_DIR)
+            if os.path.commonpath([cover_path, covers_root_abs]) == covers_root_abs and os.path.isfile(cover_path):
+                try:
+                    os.remove(cover_path)
+                except OSError:
+                    pass
+
+    return jsonify({"ok": True, "relativePath": relative_path, "removed": removed, "libraryCounts": get_library_counts()})
+
+
 @app.route("/movies", methods=["POST"])
 def save_movie():
     data = request.get_json(force=True, silent=True) or {}
@@ -1919,6 +2082,7 @@ def delete_movie():
         return jsonify({"error": "Movie must be inside Movies"}), 400
 
     if not os.path.exists(movie_path):
+        remove_movie_metadata(relative_path)
         return jsonify({"ok": True, "relativePath": relative_path, "removed": False})
 
     if os.path.isdir(movie_path):

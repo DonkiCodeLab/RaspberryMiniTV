@@ -719,7 +719,6 @@ img {
 .season-card {
   position: relative;
   overflow: hidden;
-  padding: 0;
   text-align: left;
   border-radius: 34px;
   background: rgba(41, 66, 81, 0.9);
@@ -728,6 +727,15 @@ img {
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(27, 42, 56, 0.2);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.season-card__main {
+  display: grid;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: inherit;
 }
 
 .season-card.active {
@@ -785,7 +793,7 @@ img {
 }
 
 .season-card:hover,
-.season-card:focus-visible {
+.season-card:focus-within {
   transform: translateY(-6px) scale(1.01);
   box-shadow: 0 20px 38px rgba(24, 38, 49, 0.3);
   border-width: 2px;
@@ -793,7 +801,7 @@ img {
 }
 
 .season-card.is-disabled:hover,
-.season-card.is-disabled:focus-visible {
+.season-card.is-disabled:focus-within {
   transform: none;
   border-width: 1px;
   border-color: rgba(255, 255, 255, 0.1);
@@ -801,7 +809,7 @@ img {
 }
 
 .season-card.active:hover,
-.season-card.active:focus-visible {
+.season-card.active:focus-within {
   transform: translateY(-6px) scale(1.01);
   box-shadow: 0 24px 42px rgba(24, 38, 49, 0.34);
   border-width: 2px;
@@ -809,7 +817,7 @@ img {
 }
 
 .season-card.is-disabled.active:hover,
-.season-card.is-disabled.active:focus-visible {
+.season-card.is-disabled.active:focus-within {
   transform: none;
   box-shadow: none;
   border-width: 1px;
@@ -877,6 +885,7 @@ img {
 }
 
 .movie-panel__card {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1.35rem;
@@ -951,9 +960,56 @@ img {
 }
 
 .game-card {
+  position: relative;
   display: grid;
   gap: 0.8rem;
   align-content: start;
+}
+
+.media-delete-button {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(14, 21, 28, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.media-delete-button img {
+  width: 1.05rem;
+  height: 1.05rem;
+  object-fit: contain;
+}
+
+.media-delete-button:hover,
+.media-delete-button:focus-visible {
+  transform: translateY(-2px) scale(1.04);
+  background: rgba(220, 64, 52, 0.24);
+  border-color: rgba(220, 64, 52, 0.5);
+}
+
+.media-delete-button--season,
+.media-delete-button--game,
+.media-delete-button--movie {
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.media-delete-button--episode {
+  top: 50%;
+  right: 1.15rem;
+  transform: translateY(-50%);
+}
+
+.media-delete-button--episode:hover,
+.media-delete-button--episode:focus-visible {
+  transform: translateY(-50%) scale(1.04);
 }
 
 .game-card__cover {
@@ -2124,6 +2180,14 @@ img {
 
 .raspberry-upload-summary__action {
   flex: 0 0 auto;
+  text-decoration: none;
+}
+
+.raspberry-upload-summary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 
 .season-page {
@@ -2175,6 +2239,33 @@ img {
   top: 0.45rem;
   left: max(1rem, calc((100vw - min(1360px, calc(100vw - 2.5rem))) / 2 + 1rem));
   z-index: 32;
+}
+
+.season-page__delete {
+  position: fixed;
+  top: 0.45rem;
+  left: max(8.5rem, calc((100vw - min(1360px, calc(100vw - 2.5rem))) / 2 + 8.5rem));
+  z-index: 32;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(24, 41, 54, 0.78);
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 180ms ease;
+}
+
+.season-page__delete img {
+  width: 1.08rem;
+  height: 1.08rem;
+  object-fit: contain;
+}
+
+.season-page__delete:hover,
+.season-page__delete:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(220, 64, 52, 0.24);
 }
 
 .series-hero__tv-button--season-fixed {
@@ -2247,9 +2338,8 @@ img {
 .episode-card {
   position: relative;
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) 82px;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: 1.2rem;
   padding: 1rem;
   border-radius: 30px;
   background: rgba(18, 31, 41, 0.92);
@@ -2265,8 +2355,20 @@ img {
     border-color 180ms ease;
 }
 
+.episode-card__main {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 82px;
+  align-items: center;
+  gap: 1.2rem;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: inherit;
+}
+
 .episode-card:hover,
-.episode-card:focus-visible {
+.episode-card:focus-within {
   transform: translateY(-3px);
   background: rgba(12, 22, 30, 0.96);
   box-shadow: 0 22px 42px rgba(0, 0, 0, 0.22);
@@ -2311,7 +2413,7 @@ img {
 }
 
 .episode-card.is-disabled:hover,
-.episode-card.is-disabled:focus-visible {
+.episode-card.is-disabled:focus-within {
   transform: none;
   background: rgba(18, 31, 41, 0.92);
   box-shadow: none;
@@ -2320,14 +2422,14 @@ img {
 }
 
 .episode-card.is-disabled:hover::before,
-.episode-card.is-disabled:focus-visible::before,
+.episode-card.is-disabled:focus-within::before,
 .episode-card.is-disabled:hover::after,
-.episode-card.is-disabled:focus-visible::after {
+.episode-card.is-disabled:focus-within::after {
   opacity: 1;
 }
 
 .episode-card.is-disabled:hover::before,
-.episode-card.is-disabled:focus-visible::before {
+.episode-card.is-disabled:focus-within::before {
   transform: translate(-50%, -50%) scale(1);
 }
 
@@ -2375,13 +2477,13 @@ img {
 }
 
 .episode-card:hover .episode-card__arrow,
-.episode-card:focus-visible .episode-card__arrow {
+.episode-card:focus-within .episode-card__arrow {
   color: #ffd429;
   background: rgba(255, 212, 41, 0.12);
 }
 
 .episode-card.is-disabled:hover .episode-card__arrow,
-.episode-card.is-disabled:focus-visible .episode-card__arrow {
+.episode-card.is-disabled:focus-within .episode-card__arrow {
   color: rgba(255, 255, 255, 0.45);
   background: rgba(255, 255, 255, 0.08);
 }
@@ -2391,7 +2493,7 @@ img {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .episode-card {
+  .episode-card__main {
     grid-template-columns: 126px minmax(0, 1fr) 64px;
     gap: 0.95rem;
   }
@@ -2733,13 +2835,20 @@ img {
   font-weight: 900;
 }
 
+.episode-dialog__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: stretch;
+  margin-top: 1rem;
+}
+
 .episode-dialog__play {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1rem;
   padding: 1.05rem 1.35rem;
   border-radius: 28px;
   background: #141414;
@@ -2753,6 +2862,30 @@ img {
     border-color 180ms ease,
     color 180ms ease,
     transform 160ms ease;
+}
+
+.episode-dialog__delete {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  border-radius: 28px;
+  background: rgba(220, 64, 52, 0.16);
+  border: 2px solid rgba(220, 64, 52, 0.28);
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.episode-dialog__delete img {
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
+}
+
+.episode-dialog__delete:hover,
+.episode-dialog__delete:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(220, 64, 52, 0.24);
+  border-color: rgba(220, 64, 52, 0.52);
 }
 
 .episode-dialog__play:not(:disabled):hover,
@@ -3404,6 +3537,11 @@ img {
     display: grid;
   }
 
+  .raspberry-upload-summary__actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
   .raspberry-upload-summary__action {
     width: 100%;
   }
@@ -3978,9 +4116,12 @@ img {
     gap: 0.9rem;
   }
 
-  .episode-card {
+  .episode-card__main {
     grid-template-columns: 112px minmax(0, 1fr) 56px;
     gap: 0.9rem;
+  }
+
+  .episode-card {
     padding: 0.85rem;
     border-radius: 26px;
   }

@@ -49,8 +49,11 @@ import {
   getVideos,
   isMockMode,
   playEpisode,
+  removeGameFile,
   removeMovieFile,
   removeSeries,
+  removeSeriesEpisode,
+  removeSeriesSeason,
   searchGameMetadata,
   saveMediaProfile,
   setStoredWebPin,
@@ -140,6 +143,23 @@ const GAME_PLATFORM_LABELS = {
   gbc: "Game Boy Color",
   gba: "Game Boy Advance",
 };
+const GAME_METADATA_SEARCH_SOURCES = [
+  {
+    key: "thegamesdb",
+    label: "TheGamesDB",
+    buildUrl: (query) => `https://thegamesdb.net/search.php?name=${encodeURIComponent(query)}`,
+  },
+  {
+    key: "mobygames",
+    label: "MobyGames",
+    buildUrl: (query) => `https://www.mobygames.com/search/?q=${encodeURIComponent(query)}`,
+  },
+  {
+    key: "rawg",
+    label: "RAWG",
+    buildUrl: (query) => `https://rawg.io/search?query=${encodeURIComponent(query)}`,
+  },
+];
 const RASPBERRY_LANGUAGE_OPTIONS = [
   {
     id: "es",
@@ -213,6 +233,8 @@ const UI_STRINGS = {
     confirm_delete: "¿Seguro que quieres eliminar la {media} \"{name}\"?",
     confirm_delete_title: "Eliminar {media}",
     delete_media: "Eliminar {media}",
+    delete_season: "Eliminar temporada",
+    delete_episode: "Eliminar capítulo",
     save: "Guardar",
     cancel: "Cancelar",
     name_of_media: "Nombre de la {media}",
@@ -341,6 +363,10 @@ const UI_STRINGS = {
     tmdb_browser_copy:
       "Consulta el contenido de la serie o película en TMDB antes de preparar tus archivos locales, así la carga queda lo más ordenada posible.",
     tmdb_browser_open: "Visualizar TMDB",
+    game_browser_title: "Buscar ficha de juego",
+    game_browser_copy:
+      "Consulta bases de datos de videojuegos para contrastar carátulas, plataforma y descripción antes de subir la ROM.",
+    game_browser_open: "Buscar ficha",
     tmdb_browser_preview: "Visualizar",
     tmdb_browser_results: "Resultados TMDB",
     tmdb_browser_select_prompt: "Visualiza un resultado para revisar temporadas, capítulos o datos de la película.",
@@ -422,6 +448,8 @@ const UI_STRINGS = {
     confirm_delete: "Segur que vols eliminar la {media} \"{name}\"?",
     confirm_delete_title: "Eliminar {media}",
     delete_media: "Eliminar {media}",
+    delete_season: "Eliminar temporada",
+    delete_episode: "Eliminar capítol",
     save: "Desar",
     cancel: "Cancel·lar",
     name_of_media: "Nom de la {media}",
@@ -550,6 +578,10 @@ const UI_STRINGS = {
     tmdb_browser_copy:
       "Consulta el contingut de la sèrie o pel·lícula a TMDB abans de preparar els fitxers locals, així la càrrega queda tan ordenada com sigui possible.",
     tmdb_browser_open: "Visualitzar TMDB",
+    game_browser_title: "Cercar fitxa de joc",
+    game_browser_copy:
+      "Consulta bases de dades de videojocs per contrastar caràtules, plataforma i descripció abans de pujar la ROM.",
+    game_browser_open: "Cercar fitxa",
     tmdb_browser_preview: "Visualitzar",
     tmdb_browser_results: "Resultats TMDB",
     tmdb_browser_select_prompt: "Visualitza un resultat per revisar temporades, capítols o dades de la pel·lícula.",
@@ -631,6 +663,8 @@ const UI_STRINGS = {
     confirm_delete: "Are you sure you want to delete the {media} \"{name}\"?",
     confirm_delete_title: "Delete {media}",
     delete_media: "Delete {media}",
+    delete_season: "Delete season",
+    delete_episode: "Delete episode",
     save: "Save",
     cancel: "Cancel",
     name_of_media: "{media} name",
@@ -759,6 +793,10 @@ const UI_STRINGS = {
     tmdb_browser_copy:
       "Check the series or movie content on TMDB before preparing your local files, so the upload stays as tidy as possible.",
     tmdb_browser_open: "View TMDB",
+    game_browser_title: "Search game details",
+    game_browser_copy:
+      "Check videogame databases for cover art, platform, and description before uploading the ROM.",
+    game_browser_open: "Search details",
     tmdb_browser_preview: "View",
     tmdb_browser_results: "TMDB results",
     tmdb_browser_select_prompt: "View a result to review seasons, episodes, or movie details.",
@@ -1416,19 +1454,22 @@ function HeroSelector({ options, value, placeholder, disabled, onChange }) {
   );
 }
 
-function SeasonCard({ season, isActive, disabled, onSelect, t }) {
+function SeasonCard({ season, isActive, disabled, onSelect, onDelete = () => {}, showDelete = false, t }) {
   return (
-    <button
+    <article
       className={`season-card${isActive ? " active" : ""}${disabled ? " is-disabled" : ""}`}
-      onClick={() => {
-        if (!disabled) {
-          onSelect(season.id);
-        }
-      }}
       aria-disabled={disabled}
-      title={disabled ? t("unavailable_season") : season.title}
-      type="button"
     >
+      <button
+        className="season-card__main"
+        onClick={() => {
+          if (!disabled) {
+            onSelect(season.id);
+          }
+        }}
+        title={disabled ? t("unavailable_season") : season.title}
+        type="button"
+      >
       <div className="season-card__image-wrap">
         {season.image ? (
           <img src={season.image} alt={season.title} className="season-card__image" />
@@ -1440,7 +1481,19 @@ function SeasonCard({ season, isActive, disabled, onSelect, t }) {
         <h3>{season.title}</h3>
         <p>{`${season.episodeCount} ${t("episodes")}`}</p>
       </div>
-    </button>
+      </button>
+      {showDelete ? (
+        <button
+          className="media-delete-button media-delete-button--season"
+          onClick={() => onDelete(season)}
+          type="button"
+          aria-label={t("delete_season")}
+          title={t("delete_season")}
+        >
+          <img src={deleteIcon} alt="" aria-hidden="true" />
+        </button>
+      ) : null}
+    </article>
   );
 }
 
@@ -1676,19 +1729,22 @@ function resolveNextEpisodeTarget({ currentPlayback, raspberryHealth, seriesOpti
     : null;
 }
 
-function EpisodeRow({ episode, available, onSelect, t }) {
+function EpisodeRow({ episode, available, onSelect, onDelete = () => {}, showDelete = false, t }) {
   return (
-    <button
+    <article
       className={`episode-card${available ? "" : " is-disabled"}`}
-      onClick={() => {
-        if (available) {
-          onSelect(episode);
-        }
-      }}
       aria-disabled={!available}
-      title={available ? episode.title : t("unavailable_episode")}
-      type="button"
     >
+      <button
+        className="episode-card__main"
+        onClick={() => {
+          if (available) {
+            onSelect(episode);
+          }
+        }}
+        title={available ? episode.title : t("unavailable_episode")}
+        type="button"
+      >
       <div className="episode-card__thumb">
         {episode.image ? <img src={episode.image} alt={episode.title} /> : null}
       </div>
@@ -1701,7 +1757,19 @@ function EpisodeRow({ episode, available, onSelect, t }) {
       </div>
 
       <div className="episode-card__arrow">›</div>
-    </button>
+      </button>
+      {available && showDelete ? (
+        <button
+          className="media-delete-button media-delete-button--episode"
+          onClick={() => onDelete(episode)}
+          type="button"
+          aria-label={t("delete_episode")}
+          title={t("delete_episode")}
+        >
+          <img src={deleteIcon} alt="" aria-hidden="true" />
+        </button>
+      ) : null}
+    </article>
   );
 }
 
@@ -1807,6 +1875,7 @@ function EpisodeDetailsModal({
   showPlayButton = true,
   onClose,
   onPlay,
+  onDelete,
   t,
 }) {
   useEffect(() => {
@@ -1897,15 +1966,28 @@ function EpisodeDetailsModal({
           </div>
 
           {showPlayButton ? (
-            <button
-              className="episode-dialog__play"
-              onClick={onPlay}
-              type="button"
-              disabled={playing || !available}
-            >
-              <img src={tvGreen} alt="" aria-hidden="true" />
-              <span>{available ? (playing ? t("playing_now") : t("play_on_tv")) : t("unavailable_episode")}</span>
-            </button>
+            <div className="episode-dialog__actions">
+              <button
+                className="episode-dialog__play"
+                onClick={onPlay}
+                type="button"
+                disabled={playing || !available}
+              >
+                <img src={tvGreen} alt="" aria-hidden="true" />
+                <span>{available ? (playing ? t("playing_now") : t("play_on_tv")) : t("unavailable_episode")}</span>
+              </button>
+              {available && onDelete ? (
+                <button
+                  className="episode-dialog__delete"
+                  onClick={() => onDelete(episode)}
+                  type="button"
+                  aria-label={t("delete_episode")}
+                  title={t("delete_episode")}
+                >
+                  <img src={deleteIcon} alt="" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
           ) : null}
 
           <div className="episode-dialog__synopsis">
@@ -3272,6 +3354,7 @@ function RaspberryPage({
   uploadDragActive,
   onUploadDragStateChange,
   uploadSummary,
+  gameMetadataQuery,
   onOpenTmdbBrowser,
 }) {
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
@@ -3297,6 +3380,7 @@ function RaspberryPage({
   const playbackPaused = Boolean(currentPlaybackInfo?.paused);
   const controlsDisabled = !playbackActive || controlsBusy;
   const poweroffDisabled = controlsBusy || !raspberryHealth.ok;
+  const gameSearchQuery = String(gameMetadataQuery || "").trim() || "Tetris DX";
 
   return (
     <section className="raspberry-page">
@@ -3705,16 +3789,32 @@ function RaspberryPage({
 
             <div className="raspberry-upload-summary raspberry-upload-summary--tmdb">
               <div>
-                <strong>{t("tmdb_browser_title")}</strong>
-                <p>{t("tmdb_browser_copy")}</p>
+                <strong>{uploadMediaType === "games" ? t("game_browser_title") : t("tmdb_browser_title")}</strong>
+                <p>{uploadMediaType === "games" ? t("game_browser_copy") : t("tmdb_browser_copy")}</p>
               </div>
-              <button
-                className="dialog-button dialog-button--accent raspberry-upload-summary__action"
-                onClick={onOpenTmdbBrowser}
-                type="button"
-              >
-                {t("tmdb_browser_open")}
-              </button>
+              {uploadMediaType === "games" ? (
+                <div className="raspberry-upload-summary__actions">
+                  {GAME_METADATA_SEARCH_SOURCES.map((source) => (
+                    <a
+                      key={source.key}
+                      className="dialog-button dialog-button--accent raspberry-upload-summary__action"
+                      href={source.buildUrl(gameSearchQuery)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {`${t("game_browser_open")} ${source.label}`}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  className="dialog-button dialog-button--accent raspberry-upload-summary__action"
+                  onClick={onOpenTmdbBrowser}
+                  type="button"
+                >
+                  {t("tmdb_browser_open")}
+                </button>
+              )}
             </div>
 
           </article>
@@ -3793,6 +3893,7 @@ export default function App() {
   const [gameLookupOpen, setGameLookupOpen] = useState(false);
   const [gameUploadFile, setGameUploadFile] = useState(null);
   const [gameUploadQuery, setGameUploadQuery] = useState("");
+  const [lastGameMetadataQuery, setLastGameMetadataQuery] = useState("");
   const [tmdbBrowserOpen, setTmdbBrowserOpen] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
@@ -4552,7 +4653,7 @@ export default function App() {
   }
 
   function handleOpenUploadsForMedia(mediaType) {
-    const safeMediaType = mediaType === "movies" ? "movies" : "series";
+    const safeMediaType = mediaType === "games" ? "games" : mediaType === "movies" ? "movies" : "series";
     setUploadMediaType(safeMediaType);
     setRaspberryReturnView(currentView === "season" ? "season" : "series");
     setRaspberryTab("uploads");
@@ -4604,9 +4705,21 @@ export default function App() {
     }
   }
 
-  async function handleDeleteSeries() {
+  async function handleDeleteSeries(skipConfirm = false) {
     const activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
     if (!activeItem) return;
+    const mediaLabel = activeMediaType === "movies" ? t("media_movies_singular") : t("media_series_singular");
+    if (
+      !skipConfirm &&
+      !window.confirm(
+        t("confirm_delete", {
+          media: mediaLabel.toLowerCase(),
+          name: activeItem.name,
+        })
+      )
+    ) {
+      return;
+    }
 
     try {
       if (activeMediaType === "movies") {
@@ -4637,6 +4750,104 @@ export default function App() {
         nextError.message ||
           `No se pudo eliminar la ${activeMediaType === "movies" ? "pelicula" : "serie"}.`
       );
+    }
+  }
+
+  function resolveUploadedEpisodePath(season, episode) {
+    const episodeId = toRaspberryEpisodeId(
+      season?.seasonNumber || season?.id,
+      episode?.episodeNumber
+    );
+    if (!episodeId) return "";
+
+    const match = (selectedDirectory?.videos || []).find(
+      (video) => String(video?.id || "").toUpperCase() === episodeId
+    );
+    return match?.relativePath || "";
+  }
+
+  async function handleDeleteSeason(season) {
+    const seasonNumber = Number(season?.seasonNumber || season?.id) || 0;
+    if (!selectedSeries?.directoryPath || !seasonNumber) return;
+    if (
+      !window.confirm(
+        t("confirm_delete", {
+          media: t("season_label").toLowerCase(),
+          name: season?.title || `${t("season_label")} ${seasonNumber}`,
+        })
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await removeSeriesSeason(selectedSeries.directoryPath, seasonNumber);
+      const nextVideos = await getVideos();
+      setVideos(nextVideos);
+      setSeasonEpisodes(null);
+      if (currentView === "season") {
+        setCurrentView("series");
+      }
+    } catch (nextError) {
+      window.alert(nextError.message || t("delete_media_failed", { media: t("season_label").toLowerCase() }));
+    }
+  }
+
+  async function handleDeleteEpisode(episode) {
+    const relativePath = resolveUploadedEpisodePath(selectedSeason, episode);
+    if (!relativePath) return;
+    const title = episode?.title || toRaspberryEpisodeId(selectedSeason?.seasonNumber || selectedSeason?.id, episode?.episodeNumber);
+    if (
+      !window.confirm(
+        t("confirm_delete", {
+          media: t("episode_label").toLowerCase(),
+          name: title,
+        })
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await removeSeriesEpisode(relativePath);
+      const nextVideos = await getVideos();
+      setVideos(nextVideos);
+      setEpisodeDialogOpen(false);
+      setSelectedEpisode(null);
+      setSeasonEpisodes((current) =>
+        current?.episodes
+          ? {
+              ...current,
+              episodes: current.episodes.filter(
+                (entry) => Number(entry.episodeNumber) !== Number(episode?.episodeNumber)
+              ),
+            }
+          : current
+      );
+    } catch (nextError) {
+      window.alert(nextError.message || t("delete_media_failed", { media: t("episode_label").toLowerCase() }));
+    }
+  }
+
+  async function handleDeleteGame(game) {
+    if (!game?.relativePath) return;
+    if (
+      !window.confirm(
+        t("confirm_delete", {
+          media: t("media_games_singular").toLowerCase(),
+          name: game.name || game.file,
+        })
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await removeGameFile(game.relativePath);
+      const nextVideos = await getVideos();
+      setVideos(nextVideos);
+    } catch (nextError) {
+      window.alert(nextError.message || t("delete_media_failed", { media: t("media_games_singular").toLowerCase() }));
     }
   }
 
@@ -5300,6 +5511,7 @@ export default function App() {
       const nextLabel = deriveUploadSearchLabel(gameFile, "games");
       setGameUploadFile(gameFile);
       setGameUploadQuery(nextLabel);
+      setLastGameMetadataQuery(nextLabel);
       setUploadSelectedFiles([gameFile]);
       setUploadProgress(null);
       setUploadSummary(
@@ -5545,6 +5757,7 @@ export default function App() {
                 uploadDragActive={uploadDragActive}
                 onUploadDragStateChange={handleUploadDragStateChange}
                 uploadSummary={uploadSummary}
+                gameMetadataQuery={lastGameMetadataQuery || gameUploadQuery}
                 onOpenTmdbBrowser={() => setTmdbBrowserOpen(true)}
               />
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
@@ -5556,6 +5769,16 @@ export default function App() {
                 >
                   <span className="season-page__back-arrow" aria-hidden="true">←</span>
                   <span className="season-page__back-label">{t("back")}</span>
+                </button>
+
+                <button
+                  className="season-page__delete"
+                  onClick={() => handleDeleteSeason(selectedSeason)}
+                  type="button"
+                  aria-label={t("delete_season")}
+                  title={t("delete_season")}
+                >
+                  <img src={deleteIcon} alt="" aria-hidden="true" />
                 </button>
 
                 <button
@@ -5591,13 +5814,15 @@ export default function App() {
                 ) : (
                   <section className="season-page__episodes">
                     {(seasonEpisodes?.episodes || []).map((episode) => (
-                      <EpisodeRow
-                        key={episode.id}
-                        episode={episode}
-                        available={isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)}
-                        onSelect={handleOpenEpisodeDetails}
-                        t={t}
-                      />
+                        <EpisodeRow
+                          key={episode.id}
+                          episode={episode}
+                          available={isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)}
+                          onSelect={handleOpenEpisodeDetails}
+                          onDelete={handleDeleteEpisode}
+                          showDelete
+                          t={t}
+                        />
                     ))}
                   </section>
                 )}
@@ -5728,6 +5953,15 @@ export default function App() {
                       <div className="games-grid">
                         {gameLibrary.map((game) => (
                           <article className="game-card" key={game.relativePath || game.file}>
+                            <button
+                              className="media-delete-button media-delete-button--game"
+                              onClick={() => handleDeleteGame(game)}
+                              type="button"
+                              aria-label={t("delete_media", { media: t("media_games_singular") })}
+                              title={t("delete_media", { media: t("media_games_singular") })}
+                            >
+                              <img src={deleteIcon} alt="" aria-hidden="true" />
+                            </button>
                             <div className="game-card__cover">
                               {game.coverImage ? (
                                 <img src={game.coverImage} alt={game.name} />
@@ -5819,6 +6053,8 @@ export default function App() {
                           isActive={season.id === selectedSeasonId}
                           disabled={!isSeasonUploaded(season, uploadedEpisodeIds)}
                           onSelect={handleOpenSeason}
+                          onDelete={handleDeleteSeason}
+                          showDelete
                           t={t}
                         />
                       ))}
@@ -5828,6 +6064,15 @@ export default function App() {
                   <section className="movie-panel seasons-section">
                     <div className="seasons-section__label">{t("movie_file_label")}</div>
                     <div className="movie-panel__card">
+                      <button
+                        className="media-delete-button media-delete-button--movie"
+                        onClick={handleDeleteSeries}
+                        type="button"
+                        aria-label={t("delete_media", { media: t("media_movies_singular") })}
+                        title={t("delete_media", { media: t("media_movies_singular") })}
+                      >
+                        <img src={deleteIcon} alt="" aria-hidden="true" />
+                      </button>
                       <button
                         className="movie-panel__play"
                         onClick={handlePlayMovie}
@@ -5911,7 +6156,7 @@ export default function App() {
               imageOptions={selectedItem?.imageOptions || []}
               onClose={() => setSettingsOpen(false)}
               onSave={handleSaveSeriesSettings}
-              onDelete={handleDeleteSeries}
+              onDelete={() => handleDeleteSeries(true)}
               t={t}
             />
 
@@ -5968,6 +6213,7 @@ export default function App() {
               available={isEpisodeUploaded(selectedSeason, selectedEpisode, uploadedEpisodeIds)}
               onClose={handleCloseEpisodeDetails}
               onPlay={handlePlayEpisode}
+              onDelete={handleDeleteEpisode}
               t={t}
             />
           </>

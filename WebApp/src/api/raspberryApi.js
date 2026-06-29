@@ -476,6 +476,67 @@ export function removeSeries(relativePath) {
   });
 }
 
+export function removeSeriesEpisode(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) {
+    return Promise.reject(new Error("Missing relativePath"));
+  }
+
+  if (isMockModeEnabled()) {
+    const current = loadMockSeriesLibrary();
+    const nextItems = current.map((entry) => {
+      if (!safeRelativePath.startsWith(`${entry.relativePath}/`)) return entry;
+      const nextVideos = Array.isArray(entry.videos)
+        ? entry.videos.filter((video) => video.relativePath !== safeRelativePath)
+        : [];
+      return {
+        ...entry,
+        videos: nextVideos,
+        episodeIds: nextVideos.map((video) => video.id).filter(Boolean),
+      };
+    });
+    saveMockSeriesLibrary(nextItems);
+    return Promise.resolve({ ok: true, relativePath: safeRelativePath, removed: true, items: nextItems, mock: true });
+  }
+
+  return request(`/series/episode?relativePath=${encodeURIComponent(safeRelativePath)}`, {
+    method: "DELETE",
+  });
+}
+
+export function removeSeriesSeason(relativePath, seasonNumber) {
+  const safeRelativePath = String(relativePath || "").trim();
+  const safeSeasonNumber = Number(seasonNumber) || 0;
+  if (!safeRelativePath || !safeSeasonNumber) {
+    return Promise.reject(new Error("Missing season"));
+  }
+
+  if (isMockModeEnabled()) {
+    const prefix = `S${String(safeSeasonNumber).padStart(2, "0")}E`;
+    const current = loadMockSeriesLibrary();
+    const nextItems = current.map((entry) => {
+      if (entry.relativePath !== safeRelativePath) return entry;
+      const nextVideos = Array.isArray(entry.videos)
+        ? entry.videos.filter((video) => !String(video.id || "").toUpperCase().startsWith(prefix))
+        : [];
+      return {
+        ...entry,
+        videos: nextVideos,
+        episodeIds: nextVideos.map((video) => video.id).filter(Boolean),
+      };
+    });
+    saveMockSeriesLibrary(nextItems);
+    return Promise.resolve({ ok: true, relativePath: safeRelativePath, seasonNumber: safeSeasonNumber, items: nextItems, mock: true });
+  }
+
+  return request(
+    `/series/season?relativePath=${encodeURIComponent(safeRelativePath)}&seasonNumber=${encodeURIComponent(String(safeSeasonNumber))}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
 function createAbortError() {
   const error = new Error("Upload canceled");
   error.name = "AbortError";
@@ -899,6 +960,24 @@ export function removeMovieFile(relativePath) {
   }
 
   return request(`/movies?relativePath=${encodeURIComponent(safeRelativePath)}`, {
+    method: "DELETE",
+  });
+}
+
+export function removeGameFile(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) {
+    return Promise.reject(new Error("Missing relativePath"));
+  }
+
+  if (isMockModeEnabled()) {
+    const current = loadMockGamesLibrary();
+    const nextItems = current.filter((entry) => entry.relativePath !== safeRelativePath);
+    saveMockGamesLibrary(nextItems);
+    return Promise.resolve({ ok: true, relativePath: safeRelativePath, removed: true, mock: true });
+  }
+
+  return request(`/games?relativePath=${encodeURIComponent(safeRelativePath)}`, {
     method: "DELETE",
   });
 }
