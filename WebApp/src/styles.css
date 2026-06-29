@@ -3758,6 +3758,92 @@ img {
   min-width: 126px;
 }
 
+.game-browser__search {
+  grid-template-columns: minmax(180px, 0.28fr) minmax(240px, 1fr) auto;
+}
+
+.game-browser__platform {
+  margin-top: 0;
+}
+
+.game-browser-profile {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.45fr) minmax(0, 0.55fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem;
+  border-radius: 24px;
+  background: rgba(18, 31, 41, 0.72);
+}
+
+.game-browser-profile__cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  color: rgba(233, 242, 252, 0.78);
+  font-weight: 800;
+  text-align: center;
+}
+
+.game-browser-profile__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-browser-profile__body {
+  min-width: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.game-browser-profile__body h3 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.5rem, 2.7vw, 2.35rem);
+  line-height: 1.05;
+}
+
+.game-browser-profile__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.game-browser-profile__facts div {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.game-browser-profile__facts dt {
+  color: rgba(233, 242, 252, 0.72);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.game-browser-profile__facts dd {
+  margin: 0;
+  color: #fff;
+  font-weight: 850;
+}
+
+.game-browser-profile__synopsis {
+  margin-top: 0;
+}
+
+.game-browser-profile__covers {
+  grid-column: 1 / -1;
+}
+
 .tmdb-browser__layout {
   display: grid;
   grid-template-columns: minmax(280px, 0.42fr) minmax(0, 0.58fr);
@@ -4059,6 +4145,10 @@ img {
     grid-template-columns: 1fr;
   }
 
+  .game-browser__search {
+    grid-template-columns: 1fr;
+  }
+
   .tmdb-browser__layout {
     grid-template-columns: 1fr;
     min-height: 0;
@@ -4082,6 +4172,19 @@ img {
   }
 
   .tmdb-browser-movie .movie-panel__card {
+    grid-template-columns: 1fr;
+  }
+
+  .game-browser-profile {
+    grid-template-columns: 1fr;
+  }
+
+  .game-browser-profile__cover {
+    width: min(220px, 100%);
+    margin: 0 auto;
+  }
+
+  .game-browser-profile__facts {
     grid-template-columns: 1fr;
   }
 

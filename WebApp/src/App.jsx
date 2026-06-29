@@ -143,22 +143,10 @@ const GAME_PLATFORM_LABELS = {
   gbc: "Game Boy Color",
   gba: "Game Boy Advance",
 };
-const GAME_METADATA_SEARCH_SOURCES = [
-  {
-    key: "thegamesdb",
-    label: "TheGamesDB",
-    buildUrl: (query) => `https://thegamesdb.net/search.php?name=${encodeURIComponent(query)}`,
-  },
-  {
-    key: "mobygames",
-    label: "MobyGames",
-    buildUrl: (query) => `https://www.mobygames.com/search/?q=${encodeURIComponent(query)}`,
-  },
-  {
-    key: "rawg",
-    label: "RAWG",
-    buildUrl: (query) => `https://rawg.io/search?query=${encodeURIComponent(query)}`,
-  },
+const GAME_METADATA_PLATFORM_OPTIONS = [
+  { key: "gb", value: "gb", label: "Game Boy" },
+  { key: "gbc", value: "gbc", label: "Game Boy Color" },
+  { key: "gba", value: "gba", label: "Game Boy Advance" },
 ];
 const RASPBERRY_LANGUAGE_OPTIONS = [
   {
@@ -318,6 +306,7 @@ const UI_STRINGS = {
     games_manual_profile: "Ficha manual con carátula por defecto",
     games_cover_picker: "Carátula",
     games_no_results: "No se han encontrado juegos para esa búsqueda.",
+    games_search_empty: "Escribe un juego para buscar.",
     games_search_failed: "No se pudo buscar la ficha del juego.",
     games_api_not_configured: "ScreenScraper no está configurado en la Raspberry. Puedes subirlo con la carátula default.",
     upload_game_invalid_title: "Archivo de juego no compatible",
@@ -365,8 +354,14 @@ const UI_STRINGS = {
     tmdb_browser_open: "Visualizar TMDB",
     game_browser_title: "Buscar ficha de juego",
     game_browser_copy:
-      "Consulta bases de datos de videojuegos para contrastar carátulas, plataforma y descripción antes de subir la ROM.",
+      "Busca una ROM por nombre para revisar carátula, plataforma y descripción dentro de la web antes de subirla.",
     game_browser_open: "Buscar ficha",
+    game_browser_results: "Resultados de juegos",
+    game_browser_select_prompt: "Marca un resultado para revisar su ficha y sus carátulas.",
+    game_browser_search_intro: "Busca un juego para ver los resultados aquí.",
+    game_browser_loading: "Cargando ficha del juego...",
+    game_browser_platform: "Plataforma",
+    game_browser_source: "Fuente",
     tmdb_browser_preview: "Visualizar",
     tmdb_browser_results: "Resultados TMDB",
     tmdb_browser_select_prompt: "Visualiza un resultado para revisar temporadas, capítulos o datos de la película.",
@@ -533,6 +528,7 @@ const UI_STRINGS = {
     games_manual_profile: "Fitxa manual amb caràtula per defecte",
     games_cover_picker: "Caràtula",
     games_no_results: "No s'han trobat jocs per a aquesta cerca.",
+    games_search_empty: "Escriu un joc per cercar.",
     games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
     games_api_not_configured: "ScreenScraper no està configurat a la Raspberry. Pots pujar-lo amb la caràtula default.",
     upload_game_invalid_title: "Fitxer de joc no compatible",
@@ -580,8 +576,14 @@ const UI_STRINGS = {
     tmdb_browser_open: "Visualitzar TMDB",
     game_browser_title: "Cercar fitxa de joc",
     game_browser_copy:
-      "Consulta bases de dades de videojocs per contrastar caràtules, plataforma i descripció abans de pujar la ROM.",
+      "Cerca una ROM pel nom per revisar caràtula, plataforma i descripció dins de la web abans de pujar-la.",
     game_browser_open: "Cercar fitxa",
+    game_browser_results: "Resultats de jocs",
+    game_browser_select_prompt: "Marca un resultat per revisar-ne la fitxa i les caràtules.",
+    game_browser_search_intro: "Cerca un joc per veure els resultats aquí.",
+    game_browser_loading: "Carregant fitxa del joc...",
+    game_browser_platform: "Plataforma",
+    game_browser_source: "Font",
     tmdb_browser_preview: "Visualitzar",
     tmdb_browser_results: "Resultats TMDB",
     tmdb_browser_select_prompt: "Visualitza un resultat per revisar temporades, capítols o dades de la pel·lícula.",
@@ -748,6 +750,7 @@ const UI_STRINGS = {
     games_manual_profile: "Manual profile with the default cover",
     games_cover_picker: "Cover art",
     games_no_results: "No games were found for that search.",
+    games_search_empty: "Type a game to search.",
     games_search_failed: "Could not search the game profile.",
     games_api_not_configured: "ScreenScraper is not configured on the Raspberry. You can upload it with the default cover.",
     upload_game_invalid_title: "Unsupported game file",
@@ -795,8 +798,14 @@ const UI_STRINGS = {
     tmdb_browser_open: "View TMDB",
     game_browser_title: "Search game details",
     game_browser_copy:
-      "Check videogame databases for cover art, platform, and description before uploading the ROM.",
+      "Search a ROM by name to review cover art, platform, and description inside the web app before uploading it.",
     game_browser_open: "Search details",
+    game_browser_results: "Game results",
+    game_browser_select_prompt: "Select a result to review its profile and cover art.",
+    game_browser_search_intro: "Search a game to see results here.",
+    game_browser_loading: "Loading game details...",
+    game_browser_platform: "Platform",
+    game_browser_source: "Source",
     tmdb_browser_preview: "View",
     tmdb_browser_results: "TMDB results",
     tmdb_browser_select_prompt: "View a result to review seasons, episodes, or movie details.",
@@ -2736,6 +2745,261 @@ function GameUploadModal({
   );
 }
 
+function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
+  const [query, setQuery] = useState("");
+  const [platformExtension, setPlatformExtension] = useState("gba");
+  const [results, setResults] = useState([]);
+  const [selectedGameId, setSelectedGameId] = useState("");
+  const [selectedCoverKey, setSelectedCoverKey] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!visible) {
+      setQuery("");
+      setPlatformExtension("gba");
+      setResults([]);
+      setSelectedGameId("");
+      setSelectedCoverKey("");
+      setSearching(false);
+      setError("");
+      return;
+    }
+
+    setQuery(initialQuery || "");
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [initialQuery, onClose, visible]);
+
+  async function runSearch(event) {
+    event?.preventDefault();
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      setResults([]);
+      setSelectedGameId("");
+      setSelectedCoverKey("");
+      setError(t("games_search_empty"));
+      return;
+    }
+
+    setSearching(true);
+    setError("");
+    setSelectedGameId("");
+    setSelectedCoverKey("");
+
+    try {
+      const payload = await searchGameMetadata({ query: trimmedQuery, extension: platformExtension });
+      const nextResults = Array.isArray(payload?.results) ? payload.results : [];
+      setResults(nextResults);
+      if (nextResults.length) {
+        const firstResult = nextResults[0];
+        setSelectedGameId(String(firstResult.id || firstResult.name));
+        setSelectedCoverKey(firstResult.covers?.[0]?.url || "");
+      } else {
+        setError(payload?.configured === false ? t("games_api_not_configured") : t("games_no_results"));
+      }
+    } catch (nextError) {
+      setResults([]);
+      setError(nextError.message || t("games_search_failed"));
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  if (!visible) return null;
+
+  const selectedGame =
+    results.find((entry) => String(entry.id || entry.name) === selectedGameId) || null;
+  const selectedCover =
+    (selectedGame?.covers || []).find((cover) => cover.url && cover.url === selectedCoverKey) ||
+    selectedGame?.covers?.[0] ||
+    null;
+  const platformLabel =
+    GAME_METADATA_PLATFORM_OPTIONS.find((option) => option.value === platformExtension)?.label ||
+    GAME_PLATFORM_LABELS[platformExtension] ||
+    t("media_games_singular");
+
+  return (
+    <div className="modal-backdrop modal-backdrop--tmdb-browser" onClick={onClose}>
+      <div
+        className="dialog-card dialog-card--tmdb-browser"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="dialog-card__header">
+          <div>
+            <p>ScreenScraper</p>
+            <h2>{t("game_browser_title")}</h2>
+          </div>
+          <button className="dialog-card__close" onClick={onClose} type="button" aria-label={t("close")}>
+            ×
+          </button>
+        </div>
+
+        <form className="tmdb-browser__search game-browser__search" onSubmit={runSearch}>
+          <label className="dialog-field game-browser__platform">
+            <span>{t("game_browser_platform")}</span>
+            <select
+              value={platformExtension}
+              onChange={(event) => {
+                setPlatformExtension(event.target.value);
+                setResults([]);
+                setSelectedGameId("");
+                setSelectedCoverKey("");
+                setError("");
+              }}
+            >
+              {GAME_METADATA_PLATFORM_OPTIONS.map((option) => (
+                <option key={option.key} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="dialog-field tmdb-browser__query">
+            <span>{t("search")}</span>
+            <div className="search-input-shell">
+              <span className="search-input-shell__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation">
+                  <circle cx="11" cy="11" r="6.5" />
+                  <path d="M16 16L21 21" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t("games_search_placeholder")}
+              />
+            </div>
+          </label>
+
+          <button className="dialog-button tmdb-browser__search-button" disabled={searching} type="submit">
+            {searching ? t("searching_button") : t("search_button")}
+          </button>
+        </form>
+
+        {error ? <p className="dialog-error">{error}</p> : null}
+
+        <div className="tmdb-browser__layout">
+          <section className="tmdb-browser__results" aria-label={t("game_browser_results")}>
+            {results.length ? (
+              <div className="add-series-results__list">
+                {results.map((result) => {
+                  const resultId = String(result.id || result.name);
+                  const isSelected = resultId === selectedGameId;
+                  return (
+                    <button
+                      key={resultId}
+                      className={`add-series-result tmdb-browser-result${isSelected ? " active" : ""}`}
+                      onClick={() => {
+                        setSelectedGameId(resultId);
+                        setSelectedCoverKey(result.covers?.[0]?.url || "");
+                      }}
+                      type="button"
+                    >
+                      <div className="add-series-result__poster">
+                        {result.covers?.[0]?.url ? (
+                          <img src={result.covers[0].url} alt={result.name} />
+                        ) : (
+                          <span>{t("games_default_cover")}</span>
+                        )}
+                      </div>
+                      <div className="add-series-result__body">
+                        <h3>{result.name}</h3>
+                        <p className="add-series-result__meta">{platformLabel}</p>
+                        <p className="add-series-result__overview">
+                          {result.description || t("synopsis_unavailable")}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="add-series-results__empty">
+                <p>{searching ? t("game_browser_loading") : t("game_browser_search_intro")}</p>
+              </div>
+            )}
+          </section>
+
+          <section className="tmdb-browser__preview">
+            {!selectedGame ? (
+              <div className="add-series-results__empty">
+                <p>{t("game_browser_select_prompt")}</p>
+              </div>
+            ) : (
+              <div className="game-browser-profile">
+                <div className="game-browser-profile__cover">
+                  {selectedCover?.url ? (
+                    <img src={selectedCover.url} alt={selectedGame.name} />
+                  ) : (
+                    <span>{t("games_default_cover")}</span>
+                  )}
+                </div>
+
+                <div className="game-browser-profile__body">
+                  <h3>{selectedGame.name}</h3>
+                  <dl className="game-browser-profile__facts">
+                    <div>
+                      <dt>{t("game_browser_platform")}</dt>
+                      <dd>{platformLabel}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("game_browser_source")}</dt>
+                      <dd>{selectedGame.source || "ScreenScraper"}</dd>
+                    </div>
+                  </dl>
+                  <div className="episode-dialog__synopsis game-browser-profile__synopsis">
+                    <strong>{`${t("synopsis")}:`}</strong>
+                    <p>{selectedGame.description || t("synopsis_unavailable")}</p>
+                  </div>
+                </div>
+
+                {selectedGame.covers?.length ? (
+                  <div className="game-cover-picker game-browser-profile__covers">
+                    <strong>{t("games_cover_picker")}</strong>
+                    <div className="game-cover-picker__grid">
+                      {selectedGame.covers.map((cover) => {
+                        const isSelected = cover.url === selectedCover?.url;
+                        return (
+                          <button
+                            key={cover.id || cover.url}
+                            className={`game-cover-option${isSelected ? " active" : ""}`}
+                            onClick={() => setSelectedCoverKey(cover.url || "")}
+                            type="button"
+                          >
+                            {cover.url ? <img src={cover.url} alt={cover.label || selectedGame.name} /> : <span>{cover.label || t("games_default_cover")}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
   const [mediaType, setMediaType] = useState("series");
   const [query, setQuery] = useState("");
@@ -3354,8 +3618,8 @@ function RaspberryPage({
   uploadDragActive,
   onUploadDragStateChange,
   uploadSummary,
-  gameMetadataQuery,
   onOpenTmdbBrowser,
+  onOpenGameMetadataBrowser,
 }) {
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
   const uploadDropzoneCopyKey =
@@ -3380,7 +3644,6 @@ function RaspberryPage({
   const playbackPaused = Boolean(currentPlaybackInfo?.paused);
   const controlsDisabled = !playbackActive || controlsBusy;
   const poweroffDisabled = controlsBusy || !raspberryHealth.ok;
-  const gameSearchQuery = String(gameMetadataQuery || "").trim() || "Tetris DX";
 
   return (
     <section className="raspberry-page">
@@ -3793,19 +4056,13 @@ function RaspberryPage({
                 <p>{uploadMediaType === "games" ? t("game_browser_copy") : t("tmdb_browser_copy")}</p>
               </div>
               {uploadMediaType === "games" ? (
-                <div className="raspberry-upload-summary__actions">
-                  {GAME_METADATA_SEARCH_SOURCES.map((source) => (
-                    <a
-                      key={source.key}
-                      className="dialog-button dialog-button--accent raspberry-upload-summary__action"
-                      href={source.buildUrl(gameSearchQuery)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {`${t("game_browser_open")} ${source.label}`}
-                    </a>
-                  ))}
-                </div>
+                <button
+                  className="dialog-button dialog-button--accent raspberry-upload-summary__action"
+                  onClick={onOpenGameMetadataBrowser}
+                  type="button"
+                >
+                  {t("game_browser_open")}
+                </button>
               ) : (
                 <button
                   className="dialog-button dialog-button--accent raspberry-upload-summary__action"
@@ -3895,6 +4152,7 @@ export default function App() {
   const [gameUploadQuery, setGameUploadQuery] = useState("");
   const [lastGameMetadataQuery, setLastGameMetadataQuery] = useState("");
   const [tmdbBrowserOpen, setTmdbBrowserOpen] = useState(false);
+  const [gameMetadataBrowserOpen, setGameMetadataBrowserOpen] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
   const [episodePlaying, setEpisodePlaying] = useState(false);
@@ -5757,8 +6015,8 @@ export default function App() {
                 uploadDragActive={uploadDragActive}
                 onUploadDragStateChange={handleUploadDragStateChange}
                 uploadSummary={uploadSummary}
-                gameMetadataQuery={lastGameMetadataQuery || gameUploadQuery}
                 onOpenTmdbBrowser={() => setTmdbBrowserOpen(true)}
+                onOpenGameMetadataBrowser={() => setGameMetadataBrowserOpen(true)}
               />
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
               <section className="season-page">
@@ -6203,6 +6461,12 @@ export default function App() {
               onClose={() => setTmdbBrowserOpen(false)}
               t={t}
               tmdbLanguage={tmdbLanguage}
+            />
+            <GameMetadataBrowserModal
+              visible={gameMetadataBrowserOpen}
+              initialQuery={lastGameMetadataQuery || gameUploadQuery}
+              onClose={() => setGameMetadataBrowserOpen(false)}
+              t={t}
             />
             <EpisodeDetailsModal
               visible={episodeDialogOpen}
