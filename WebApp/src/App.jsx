@@ -2767,6 +2767,10 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
     }
 
     setQuery(initialQuery || "");
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return () => {};
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
@@ -2782,7 +2786,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [initialQuery, onClose, visible]);
+  }, [visible]);
 
   async function runSearch(event) {
     event?.preventDefault();
@@ -3027,8 +3031,11 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
       setBrowserView("results");
       setMovieFrameIndex(0);
       setError("");
-      return;
     }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return () => {};
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
@@ -3044,7 +3051,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [visible, onClose]);
+  }, [visible]);
 
   async function runSearch(event) {
     event?.preventDefault();
