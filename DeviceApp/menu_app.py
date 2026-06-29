@@ -116,6 +116,7 @@ MINI_LOGO_PATH = os.path.join(MENU_DIR, "miniLogo_donkicodeLab.png")
 LOADING_VIDEO_PATH = os.path.join(MENU_DIR, "Loading_Video_Animation.png")
 LOADING_VIDEO_SPINNER_PATH = os.path.join(MENU_DIR, "loading.png")
 INTRO_VIDEO_PATH = os.path.join(MENU_DIR, "video_intro.mp4")
+UI_CLICK_SOUND_PATH = os.path.join(MENU_DIR, "ui_click.wav")
 CLEAR_ICON_PATH = os.path.join(MENU_DIR, "clear.png")
 BACKSPACE_ICON_PATH = os.path.join(MENU_DIR, "backspace.png")
 BUTTON_CLEAR_PATH = os.path.join(MENU_DIR, "button_clear.png")
@@ -1039,6 +1040,8 @@ class DeviceAppMenu:
         self.initialize_display()
         self.audio_suspended = False
         self.audio_available = self.initialize_audio()
+        self.ui_click_sound = None
+        self.load_ui_sounds()
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
         self.font = pygame.font.SysFont(FONT_FAMILY, 28)
@@ -1359,6 +1362,26 @@ class DeviceAppMenu:
             log_debug(f"AUDIO init failed: {exc}")
             return False
 
+    def load_ui_sounds(self):
+        self.ui_click_sound = None
+        if not self.audio_available or not os.path.isfile(UI_CLICK_SOUND_PATH):
+            return
+        try:
+            self.ui_click_sound = pygame.mixer.Sound(UI_CLICK_SOUND_PATH)
+            self.ui_click_sound.set_volume(0.55)
+            log_debug("UI sound loaded")
+        except Exception as exc:
+            log_debug(f"UI sound load failed: {exc}")
+            self.ui_click_sound = None
+
+    def play_ui_click_sound(self):
+        if not self.audio_available or self.ui_click_sound is None:
+            return
+        try:
+            self.ui_click_sound.play()
+        except Exception as exc:
+            log_debug(f"UI sound play failed: {exc}")
+
     def suspend_audio_for_external_app(self, reason):
         if not self.audio_available:
             log_debug(f"AUDIO suspend skipped reason={reason}: unavailable")
@@ -1366,6 +1389,7 @@ class DeviceAppMenu:
         try:
             pygame.mixer.music.stop()
             pygame.mixer.quit()
+            self.ui_click_sound = None
             self.audio_available = False
             self.audio_suspended = True
             log_debug(f"AUDIO suspend complete reason={reason}")
@@ -1378,6 +1402,7 @@ class DeviceAppMenu:
             return
         self.audio_suspended = False
         self.audio_available = self.initialize_audio()
+        self.load_ui_sounds()
         log_debug(f"AUDIO resume complete reason={reason} available={self.audio_available}")
 
     def load_settings(self):
@@ -2810,6 +2835,10 @@ class DeviceAppMenu:
 
     def handle_button_action(self, button_id):
         log_debug(f"ACTION state={self.state} button={button_id}")
+        if self.state == "main" or button_id in ("back", "exit") or (
+            button_id == "2x2" and self.state in ("settings", "language", "more")
+        ):
+            self.play_ui_click_sound()
         if self.state == "main":
             if button_id in ("play", "2x1"):
                 self.state = "play"
@@ -2874,11 +2903,13 @@ class DeviceAppMenu:
         if button_id in ("poweroff", "1x1"):
             run_command(["shutdown", "-h", "now"])
         elif button_id in ("back", "1x2"):
+            self.play_ui_click_sound()
             self.state = "more"
 
     def handle_play_action(self, button_id):
         log_debug(f"PLAYMENU action button={button_id}")
         if button_id == "exit":
+            self.play_ui_click_sound()
             self.state = "main"
         elif button_id == "random":
             self.start_random_video()
@@ -2909,6 +2940,7 @@ class DeviceAppMenu:
         self.pressed_button = None
         layout = self.get_browser_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
+            self.play_ui_click_sound()
             self.browser_last_touch_index = None
             self.browser_last_touch_ticks = 0
             if os.path.abspath(self.browser_path) == os.path.abspath(VIDEOS_DIR):
@@ -2970,6 +3002,7 @@ class DeviceAppMenu:
         self.pressed_button = None
         layout = self.get_browser_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
+            self.play_ui_click_sound()
             self.state = self.games_return_state
             return
         if active_button == "games-up" and layout["up"].collidepoint(pos):
@@ -3051,6 +3084,7 @@ class DeviceAppMenu:
                 return
             layout = self.get_wifi_layout()
             if active_button == "top-back" and self.top_back_at_pos(pos):
+                self.play_ui_click_sound()
                 self.state = "main"
                 return
             if active_button == "wifi-refresh" and layout["refresh"].collidepoint(pos):
@@ -3091,6 +3125,7 @@ class DeviceAppMenu:
                 return
             layout = self.get_wifi_password_layout()
             if active_button == "top-back" and self.top_back_at_pos(pos):
+                self.play_ui_click_sound()
                 self.state = "wifi"
                 return
             if active_button == "wifi-password-connect" and layout["connect"].collidepoint(pos):
@@ -3131,6 +3166,7 @@ class DeviceAppMenu:
         if active_button in ("web_info", "raspberry_info"):
             return
         if active_button == "back":
+            self.play_ui_click_sound()
             self.state = self.password_menu_return_state
             return
         if active_button == "web":
@@ -3174,6 +3210,7 @@ class DeviceAppMenu:
 
         layout = self.get_raspberry_password_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
+            self.play_ui_click_sound()
             self.state = "password_menu"
             return
         if active_button == "raspberry-password-field:current" and layout["current"].collidepoint(pos):
@@ -3257,6 +3294,7 @@ class DeviceAppMenu:
         self.pressed_button = None
         layout = self.get_web_pin_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
+            self.play_ui_click_sound()
             self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
             self.state = self.web_pin_return_state
             return
@@ -3355,6 +3393,7 @@ class DeviceAppMenu:
             self.pressed_button = None
             log_debug(f"UP raw={pos} normalized={normalized_pos} state=clock down={active_button} up={released_button}")
             if active_button == "top-back" and released_button == "top-back":
+                self.play_ui_click_sound()
                 self.state = self.clock_return_state
             return
         if self.state == "poweroff":
@@ -3439,6 +3478,7 @@ class DeviceAppMenu:
                 f"UP raw={pos} normalized={normalized_pos} state=qr down={active_button} up={released_button}"
             )
             if active_button == "top-back" and released_button == "top-back":
+                self.play_ui_click_sound()
                 self.state = "main"
             return
         released_button = self.button_at_pos(normalized_pos)
