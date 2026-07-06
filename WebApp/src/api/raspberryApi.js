@@ -809,8 +809,9 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
 
   const gameName = String(game?.name || "").trim() || String(file.name || "").replace(/\.[^.]+$/, "");
   const description = String(game?.description || "").trim();
+  const coverFile = cover?.file instanceof File ? cover.file : null;
   const coverUrl = String(cover?.url || "").trim();
-  const source = String(game?.source || (coverUrl ? "screenscraper" : "default")).trim();
+  const source = String(game?.source || (coverFile ? "local" : coverUrl ? "screenscraper" : "default")).trim();
   const screenScraperId = Number(game?.id || game?.screenScraperId) || 0;
 
   if (isMockModeEnabled()) {
@@ -823,7 +824,7 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
       file: file.name,
       relativePath: `Games/${file.name}`,
       platformName,
-      coverImage: "",
+      coverImage: cover?.previewUrl || "",
       source,
     };
     saveMockGamesLibrary([...current, item]);
@@ -838,6 +839,9 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
     formData.append("file", file);
     formData.append("name", gameName);
     formData.append("description", description);
+    if (coverFile) {
+      formData.append("coverFile", coverFile);
+    }
     formData.append("coverUrl", coverUrl);
     formData.append("source", source);
     formData.append("screenScraperId", String(screenScraperId));

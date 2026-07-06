@@ -51,6 +51,7 @@ USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
 GAME_ROM_EXTENSIONS = {".gb", ".gbc", ".gba"}
+GAME_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 GAME_PLATFORM_BY_EXTENSION = {
     ".gb": {"id": "gameboy", "name": "Game Boy", "screenScraperSystemId": 9},
     ".gbc": {"id": "gameboy_color", "name": "Game Boy Color", "screenScraperSystemId": 10},
@@ -452,6 +453,25 @@ def ensure_default_game_cover():
 def normalize_cover_filename(relative_path):
     slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game")
     return f"{slug}.jpg"
+
+
+def is_game_cover_file(filename):
+    return os.path.splitext(str(filename or "").strip())[1].lower() in GAME_COVER_EXTENSIONS
+
+
+def save_uploaded_game_cover(uploaded_cover, relative_path):
+    if not uploaded_cover or not uploaded_cover.filename or not is_game_cover_file(uploaded_cover.filename):
+        return ""
+
+    ensure_media_directories()
+    cover_extension = os.path.splitext(uploaded_cover.filename)[1].lower()
+    if cover_extension == ".jpeg":
+        cover_extension = ".jpg"
+    cover_slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game")
+    target_filename = f"{cover_slug}{cover_extension}"
+    target_path = os.path.join(GAME_COVERS_DIR, target_filename)
+    uploaded_cover.save(target_path)
+    return game_cover_url(target_filename)
 
 
 def upsert_game_metadata(relative_path, updates):
@@ -1946,6 +1966,7 @@ def upload_series():
 @app.route("/games/upload", methods=["POST"])
 def upload_game():
     uploaded_file = request.files.get("file")
+    uploaded_cover = request.files.get("coverFile")
     name = str(request.form.get("name") or "").strip()
     description = str(request.form.get("description") or "").strip()
     cover_url = str(request.form.get("coverUrl") or "").strip()
@@ -1969,7 +1990,9 @@ def upload_game():
     uploaded_file.save(target_path)
 
     relative_path = game_relative_path(target_filename)
-    cover_image = download_game_cover(cover_url, relative_path) if cover_url else ""
+    cover_image = save_uploaded_game_cover(uploaded_cover, relative_path)
+    if not cover_image:
+        cover_image = download_game_cover(cover_url, relative_path) if cover_url else ""
     if not cover_image:
         cover_image = game_cover_url(DEFAULT_GAME_COVER_FILENAME)
     item = upsert_game_metadata(
