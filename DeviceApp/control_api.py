@@ -2042,6 +2042,42 @@ def delete_game():
     return jsonify({"ok": True, "relativePath": relative_path, "removed": removed, "libraryCounts": get_library_counts()})
 
 
+@app.route("/games/play", methods=["POST"])
+def play_game():
+    data = request.get_json(force=True, silent=True) or {}
+    relative_path = str(data.get("relativePath") or "").strip().strip("/\\")
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    game_path = resolve_game_path(relative_path)
+    if not game_path or not os.path.isfile(game_path) or not is_game_rom_file(game_path):
+        return jsonify({"error": "Game not found", "relativePath": relative_path}), 404
+
+    with lock:
+        hide_qr()
+        stop_locked()
+        write_menu_command(
+            {
+                "action": "play_game",
+                "path": game_path,
+            }
+        )
+        clear_playback_state()
+        current["proc"] = None
+        current["id"] = os.path.basename(game_path)
+        current["directory"] = "Games"
+        current["file"] = game_relative_path(os.path.basename(game_path))
+
+    return jsonify(
+        {
+            "ok": True,
+            "playing": os.path.basename(game_path),
+            "directory": "Games",
+            "file": game_relative_path(os.path.basename(game_path)),
+        }
+    )
+
+
 @app.route("/movies", methods=["POST"])
 def save_movie():
     data = request.get_json(force=True, silent=True) or {}
@@ -2189,6 +2225,11 @@ def play():
 def stop():
     with lock:
         stop_locked()
+        write_menu_command({"action": "stop"})
+        current["proc"] = None
+        current["id"] = None
+        current["directory"] = None
+        current["file"] = None
     return jsonify({"ok": True})
 
 

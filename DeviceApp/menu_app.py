@@ -2431,9 +2431,27 @@ class DeviceAppMenu:
             self.stop_game_playback(silent=True)
             self.play_video_path(full_path)
             return
+        if action == "play_game":
+            full_path = str(command.get("path") or "").strip()
+            if not full_path or not os.path.isfile(full_path) or not is_game_rom_file(full_path):
+                log_debug(f"MENU command play_game ignored missing file={full_path}")
+                return
+            extension = os.path.splitext(full_path)[1].lower()
+            platform = GAME_PLATFORM_BY_EXTENSION.get(extension, {})
+            entry = {
+                "label": os.path.basename(full_path),
+                "path": full_path,
+                "platform": platform.get("name", "Game Boy"),
+                "core": find_libretro_core(platform.get("core", "")),
+            }
+            log_debug(f"MENU command play_game file={full_path}")
+            self.game_return_state = "games"
+            self.play_game_entry(entry)
+            return
         if action == "stop":
             log_debug("MENU command stop")
             self.stop_video_playback(silent=True)
+            self.stop_game_playback(silent=True)
 
     def poll_menu_command(self):
         command = pop_menu_command()

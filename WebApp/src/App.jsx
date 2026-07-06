@@ -49,6 +49,7 @@ import {
   getVideos,
   isMockMode,
   playEpisode,
+  playGameFile,
   removeGameFile,
   removeMovieFile,
   removeSeries,
@@ -300,6 +301,11 @@ const UI_STRINGS = {
     upload_games_pending: "La subida guiada para juegos queda preparada visualmente y la conectamos en la siguiente iteración.",
     games_empty_title: "Sin juegos instalados",
     games_empty_copy: "Sube una ROM de Game Boy, Game Boy Color o Game Boy Advance para crear tu biblioteca.",
+    game_file_label: "Ficha del juego",
+    game_platform_label: "Tipo de juego",
+    file_label: "Archivo",
+    play_game_on_raspberry: "Jugar en la Raspberry",
+    playing_game: "Abriendo juego...",
     games_upload_title: "Datos del juego",
     games_search_placeholder: "Ejemplo: Tetris DX",
     games_default_cover: "Default",
@@ -526,6 +532,11 @@ const UI_STRINGS = {
     upload_games_pending: "La pujada guiada per a jocs queda preparada visualment i la connectem a la següent iteració.",
     games_empty_title: "Sense jocs instal·lats",
     games_empty_copy: "Puja una ROM de Game Boy, Game Boy Color o Game Boy Advance per crear la biblioteca.",
+    game_file_label: "Fitxa del joc",
+    game_platform_label: "Tipus de joc",
+    file_label: "Fitxer",
+    play_game_on_raspberry: "Jugar a la Raspberry",
+    playing_game: "Obrint joc...",
     games_upload_title: "Dades del joc",
     games_search_placeholder: "Exemple: Tetris DX",
     games_default_cover: "Default",
@@ -752,6 +763,11 @@ const UI_STRINGS = {
     upload_games_pending: "Guided uploads for games are visually prepared and will be connected in the next iteration.",
     games_empty_title: "No games installed",
     games_empty_copy: "Upload a Game Boy, Game Boy Color, or Game Boy Advance ROM to build your library.",
+    game_file_label: "Game details",
+    game_platform_label: "Game type",
+    file_label: "File",
+    play_game_on_raspberry: "Play on Raspberry",
+    playing_game: "Opening game...",
     games_upload_title: "Game details",
     games_search_placeholder: "Example: Tetris DX",
     games_default_cover: "Default",
@@ -4075,6 +4091,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
   const [selectedMovieId, setSelectedMovieId] = useState(null);
+  const [selectedGamePath, setSelectedGamePath] = useState("");
   const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   const [currentView, setCurrentView] = useState("series");
   const [raspberryReturnView, setRaspberryReturnView] = useState("series");
@@ -4411,6 +4428,20 @@ export default function App() {
 
   const directories = videos?.directories || [];
   const gameLibrary = Array.isArray(videos?.games) ? videos.games : [];
+  const selectedGame =
+    gameLibrary.find((game) => game.relativePath === selectedGamePath) ||
+    gameLibrary[0] ||
+    null;
+
+  useEffect(() => {
+    if (!gameLibrary.length) {
+      setSelectedGamePath("");
+      return;
+    }
+    if (!gameLibrary.some((game) => game.relativePath === selectedGamePath)) {
+      setSelectedGamePath(gameLibrary[0].relativePath || "");
+    }
+  }, [gameLibrary, selectedGamePath]);
 
   useEffect(() => {
     if (!directories.length) {
@@ -5082,8 +5113,43 @@ export default function App() {
       await removeGameFile(game.relativePath);
       const nextVideos = await getVideos();
       setVideos(nextVideos);
+      setSelectedGamePath((current) => {
+        if (current !== game.relativePath) return current;
+        const nextGames = Array.isArray(nextVideos?.games) ? nextVideos.games : [];
+        return nextGames[0]?.relativePath || "";
+      });
     } catch (nextError) {
       window.alert(nextError.message || t("delete_media_failed", { media: t("media_games_singular").toLowerCase() }));
+    }
+  }
+
+  async function handlePlayGame() {
+    if (!selectedGame?.relativePath) return;
+
+    try {
+      setRaspberryControlsBusy(true);
+      const response = await playGameFile(selectedGame.relativePath);
+      setRaspberryCurrentPlayback({
+        kind: "game",
+        playbackId: response?.playing || selectedGame.file || selectedGame.name,
+        directory: "Games",
+        filePath: selectedGame.relativePath,
+        title: selectedGame.name || selectedGame.file,
+        image: selectedGame.coverImage || cartellLogo,
+        paused: false,
+      });
+      setRaspberryHealth((current) => ({
+        ...current,
+        ok: true,
+        running: true,
+        playing: response?.playing || selectedGame.file || selectedGame.name,
+        directory: "Games",
+        file: selectedGame.relativePath,
+      }));
+    } catch (nextError) {
+      window.alert(nextError.message || t("upload_game_failed"));
+    } finally {
+      setRaspberryControlsBusy(false);
     }
   }
 
@@ -5816,20 +5882,24 @@ export default function App() {
   const isSeriesMode = activeMediaType === "series";
   const isMoviesMode = activeMediaType === "movies";
   const isGamesMode = activeMediaType === "games";
-  const selectorOptions = isGamesMode ? [] : isMoviesMode ? movieOptions : seriesOptions;
+  const selectorOptions = isGamesMode ? gameLibrary : isMoviesMode ? movieOptions : seriesOptions;
   const selectorValue = isGamesMode
-    ? ""
+    ? selectedGame?.relativePath || ""
     : isMoviesMode
     ? String(selectedMovie?.id || "")
     : selectedSeries?.directoryPath || "";
   const selectorLabel = isGamesMode
-    ? t("games_in_construction")
+    ? t("select_type")
     : isMoviesMode
       ? t("select_movie")
       : t("select_series");
   const isLibraryEmpty = !selectedItem && !isGamesMode;
   const heroSelectorOptions = isGamesMode
-    ? []
+    ? gameLibrary.map((game) => ({
+        key: game.relativePath || game.file,
+        value: game.relativePath || "",
+        label: game.name || game.file,
+      }))
     : selectorOptions.map((item) => ({
         key: isMoviesMode ? String(item.id) : item.directoryPath,
         value: isMoviesMode ? String(item.id) : item.directoryPath,
@@ -6137,12 +6207,14 @@ export default function App() {
                             heroSelectorOptions.length
                               ? selectorLabel
                               : isGamesMode
-                                ? "Proximamente"
+                                ? t("games_empty_title")
                                 : "Sin elementos"
                           }
-                          disabled={isGamesMode || !heroSelectorOptions.length}
+                          disabled={!heroSelectorOptions.length}
                           onChange={(nextValue) =>
-                            isMoviesMode
+                            isGamesMode
+                              ? setSelectedGamePath(nextValue)
+                              : isMoviesMode
                               ? setSelectedMovieId(Number(nextValue) || null)
                               : setSelectedDirectoryPath(nextValue)
                           }
@@ -6179,35 +6251,58 @@ export default function App() {
                 </header>
 
                 {isGamesMode ? (
-                  gameLibrary.length ? (
-                    <section className="games-library seasons-section">
-                      <div className="seasons-section__label">{`${gameLibrary.length} ${t("media_games")}`}</div>
-                      <div className="games-grid">
-                        {gameLibrary.map((game) => (
-                          <article className="game-card" key={game.relativePath || game.file}>
-                            <button
-                              className="media-delete-button media-delete-button--game"
-                              onClick={() => handleDeleteGame(game)}
-                              type="button"
-                              aria-label={t("delete_media", { media: t("media_games_singular") })}
-                              title={t("delete_media", { media: t("media_games_singular") })}
-                            >
-                              <img src={deleteIcon} alt="" aria-hidden="true" />
-                            </button>
-                            <div className="game-card__cover">
-                              {game.coverImage ? (
-                                <img src={game.coverImage} alt={game.name} />
-                              ) : (
-                                <img src={emptyStateIcon} alt="" aria-hidden="true" />
-                              )}
+                  selectedGame ? (
+                    <section className="game-panel seasons-section">
+                      <div className="seasons-section__label">{t("game_file_label")}</div>
+                      <div className="game-panel__card">
+                        <button
+                          className="media-delete-button media-delete-button--game"
+                          onClick={() => handleDeleteGame(selectedGame)}
+                          type="button"
+                          aria-label={t("delete_media", { media: t("media_games_singular") })}
+                          title={t("delete_media", { media: t("media_games_singular") })}
+                        >
+                          <img src={deleteIcon} alt="" aria-hidden="true" />
+                        </button>
+
+                        <button
+                          className="movie-panel__play game-panel__play"
+                          onClick={handlePlayGame}
+                          type="button"
+                          disabled={raspberryControlsBusy}
+                        >
+                          <img src={tvGreen} alt="" aria-hidden="true" />
+                          <span>{raspberryControlsBusy ? t("playing_game") : t("play_game_on_raspberry")}</span>
+                        </button>
+
+                        <div className="game-panel__layout">
+                          <div className="game-panel__cover">
+                            {selectedGame.coverImage ? (
+                              <img src={selectedGame.coverImage} alt={selectedGame.name || selectedGame.file} />
+                            ) : (
+                              <img src={emptyStateIcon} alt="" aria-hidden="true" />
+                            )}
+                          </div>
+
+                          <div className="game-panel__content">
+                            <h2>{selectedGame.name || selectedGame.file}</h2>
+                            <div className="movie-panel__facts game-panel__facts">
+                              <div className="movie-panel__fact">
+                                <strong>{t("game_platform_label")}</strong>
+                                <span>{selectedGame.platformName || t("media_games_singular")}</span>
+                              </div>
+                              <div className="movie-panel__fact">
+                                <strong>{t("file_label")}</strong>
+                                <span>{selectedGame.file || selectedGame.relativePath}</span>
+                              </div>
                             </div>
-                            <div className="game-card__body">
-                              <h2>{game.name || game.file}</h2>
-                              <p>{game.platformName || t("media_games_singular")}</p>
-                              {game.description ? <span>{game.description}</span> : null}
+
+                            <div className="movie-panel__overview game-panel__overview">
+                              <strong>{t("synopsis")}</strong>
+                              <p>{selectedGame.description || t("synopsis_unavailable")}</p>
                             </div>
-                          </article>
-                        ))}
+                          </div>
+                        </div>
                       </div>
                     </section>
                   ) : (

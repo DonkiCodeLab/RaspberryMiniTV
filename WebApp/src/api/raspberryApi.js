@@ -986,6 +986,32 @@ export function removeGameFile(relativePath) {
   });
 }
 
+export function playGameFile(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) {
+    return Promise.reject(new Error("Missing relativePath"));
+  }
+
+  if (isMockModeEnabled()) {
+    const fileName = safeRelativePath.split("/").pop() || safeRelativePath;
+    mockPlayback = fileName;
+    mockPlaybackDirectory = "Games";
+    mockPlaybackFile = safeRelativePath;
+    return Promise.resolve({
+      ok: true,
+      playing: fileName,
+      directory: "Games",
+      file: safeRelativePath,
+      mock: true,
+    });
+  }
+
+  return request("/games/play", {
+    method: "POST",
+    body: JSON.stringify({ relativePath: safeRelativePath }),
+  });
+}
+
 export function playEpisode({ id, directory }) {
   if (isMockModeEnabled()) {
     mockPlayback = id;
