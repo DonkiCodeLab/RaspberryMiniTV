@@ -315,6 +315,7 @@ const UI_STRINGS = {
     games_description_field: "Descripción",
     games_description_placeholder: "Una descripción corta para reconocer el juego en la biblioteca.",
     games_cover_file_field: "Imagen de carátula",
+    games_extra_images_field: "Imágenes adicionales",
     games_no_results: "No se han encontrado juegos para esa búsqueda.",
     games_search_empty: "Escribe un juego para buscar.",
     games_search_failed: "No se pudo buscar la ficha del juego.",
@@ -546,6 +547,7 @@ const UI_STRINGS = {
     games_description_field: "Descripció",
     games_description_placeholder: "Una descripció curta per reconèixer el joc a la biblioteca.",
     games_cover_file_field: "Imatge de caràtula",
+    games_extra_images_field: "Imatges addicionals",
     games_no_results: "No s'han trobat jocs per a aquesta cerca.",
     games_search_empty: "Escriu un joc per cercar.",
     games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
@@ -777,6 +779,7 @@ const UI_STRINGS = {
     games_description_field: "Description",
     games_description_placeholder: "A short description to recognize the game in your library.",
     games_cover_file_field: "Cover image",
+    games_extra_images_field: "Additional images",
     games_no_results: "No games were found for that search.",
     games_search_empty: "Type a game to search.",
     games_search_failed: "Could not search the game profile.",
@@ -2516,6 +2519,8 @@ function GameUploadModal({
   const [description, setDescription] = useState("");
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState("");
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const extension = getFileExtension(file?.name);
@@ -2527,6 +2532,8 @@ function GameUploadModal({
       setDescription("");
       setCoverFile(null);
       setCoverPreviewUrl("");
+      setImageFiles([]);
+      setImagePreviewUrls([]);
       setSubmitting(false);
       setError("");
       return;
@@ -2535,6 +2542,8 @@ function GameUploadModal({
     setDescription("");
     setCoverFile(null);
     setCoverPreviewUrl("");
+    setImageFiles([]);
+    setImagePreviewUrls([]);
   }, [file, initialQuery, visible]);
 
   useEffect(() => {
@@ -2548,6 +2557,17 @@ function GameUploadModal({
     return () => URL.revokeObjectURL(nextPreviewUrl);
   }, [coverFile]);
 
+  useEffect(() => {
+    if (!imageFiles.length) {
+      setImagePreviewUrls([]);
+      return () => {};
+    }
+
+    const nextPreviewUrls = imageFiles.map((imageFile) => URL.createObjectURL(imageFile));
+    setImagePreviewUrls(nextPreviewUrls);
+    return () => nextPreviewUrls.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+  }, [imageFiles]);
+
   if (!visible || !file) return null;
 
   async function handleSubmit() {
@@ -2560,16 +2580,24 @@ function GameUploadModal({
           id: "manual",
           name: safeGameName,
           description: description.trim(),
-          source: coverFile ? "local" : "manual",
+          source: coverFile || imageFiles.length ? "local" : "manual",
         },
         cover: coverFile
           ? {
               id: "local",
               file: coverFile,
               previewUrl: coverPreviewUrl,
+              imageFiles,
+              imagePreviewUrls,
               label: coverFile.name,
             }
-          : null,
+          : imageFiles.length
+            ? {
+                id: "local-images",
+                imageFiles,
+                imagePreviewUrls,
+              }
+            : null,
       });
     } catch (nextError) {
       setError(nextError.name === "AbortError" ? t("upload_canceled") : nextError.message || t("upload_game_failed"));
@@ -2637,6 +2665,18 @@ function GameUploadModal({
                   }}
                 />
               </label>
+
+              <label className="dialog-field">
+                <span>{t("games_extra_images_field")}</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  multiple
+                  onChange={(event) => {
+                    setImageFiles(Array.from(event.target.files || []));
+                  }}
+                />
+              </label>
             </div>
 
             <div className="game-cover-picker game-cover-picker--manual">
@@ -2648,6 +2688,13 @@ function GameUploadModal({
                   <span>{t("games_default_cover")}</span>
                 )}
               </div>
+              {imagePreviewUrls.length ? (
+                <div className="game-extra-preview-grid" aria-label={t("games_extra_images_field")}>
+                  {imagePreviewUrls.map((previewUrl, index) => (
+                    <img key={previewUrl} src={previewUrl} alt={`${gameName || file.name} ${index + 1}`} />
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -4092,6 +4139,7 @@ export default function App() {
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
   const [selectedMovieId, setSelectedMovieId] = useState(null);
   const [selectedGamePath, setSelectedGamePath] = useState("");
+  const [selectedGameImageIndex, setSelectedGameImageIndex] = useState(0);
   const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   const [currentView, setCurrentView] = useState("series");
   const [raspberryReturnView, setRaspberryReturnView] = useState("series");
@@ -4442,6 +4490,10 @@ export default function App() {
       setSelectedGamePath(gameLibrary[0].relativePath || "");
     }
   }, [gameLibrary, selectedGamePath]);
+
+  useEffect(() => {
+    setSelectedGameImageIndex(0);
+  }, [selectedGame?.relativePath]);
 
   useEffect(() => {
     if (!directories.length) {
@@ -5915,6 +5967,12 @@ export default function App() {
   const safeMovieFrameIndex = movieImages.length
     ? Math.min(movieFrameIndex, movieImages.length - 1)
     : 0;
+  const gameImages = selectedGame?.imageOptions?.length
+    ? selectedGame.imageOptions.slice(0, MAX_MOVIE_IMAGES)
+    : [selectedGame?.coverImage].filter(Boolean);
+  const safeGameImageIndex = gameImages.length
+    ? Math.min(selectedGameImageIndex, gameImages.length - 1)
+    : 0;
   const raspberryLibraryCounts = normalizeLibraryCounts(videos?.libraryCounts || raspberryHealth?.libraryCounts);
   const installedSeriesCount = raspberryLibraryCounts.series.count;
   const installedMovieCount = raspberryLibraryCounts.movies.count;
@@ -6276,11 +6334,57 @@ export default function App() {
                         </button>
 
                         <div className="game-panel__layout">
-                          <div className="game-panel__cover">
-                            {selectedGame.coverImage ? (
-                              <img src={selectedGame.coverImage} alt={selectedGame.name || selectedGame.file} />
+                          <div className="game-panel__gallery">
+                            <div className="game-panel__cover">
+                              {gameImages[safeGameImageIndex] ? (
+                                <img src={gameImages[safeGameImageIndex]} alt={selectedGame.name || selectedGame.file} />
+                              ) : (
+                                <img src={emptyStateIcon} alt="" aria-hidden="true" />
+                              )}
+                            </div>
+                            {gameImages.length > 1 ? (
+                              <div className="movie-panel__gallery-controls game-panel__gallery-controls">
+                                <button
+                                  className="movie-panel__gallery-arrow"
+                                  onClick={() =>
+                                    setSelectedGameImageIndex((current) =>
+                                      current === 0 ? gameImages.length - 1 : current - 1
+                                    )
+                                  }
+                                  type="button"
+                                  aria-label={t("prev_image")}
+                                >
+                                  ‹
+                                </button>
+                                <div className="movie-panel__gallery-status">
+                                  <div className="movie-panel__dots" aria-hidden="true">
+                                    {gameImages.map((image, index) => (
+                                      <button
+                                        key={`${image}-${index}`}
+                                        className={`movie-panel__dot${index === safeGameImageIndex ? " active" : ""}`}
+                                        onClick={() => setSelectedGameImageIndex(index)}
+                                        type="button"
+                                        aria-label={`${index + 1} / ${gameImages.length}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span>{`${safeGameImageIndex + 1} / ${gameImages.length}`}</span>
+                                </div>
+                                <button
+                                  className="movie-panel__gallery-arrow"
+                                  onClick={() =>
+                                    setSelectedGameImageIndex((current) =>
+                                      current === gameImages.length - 1 ? 0 : current + 1
+                                    )
+                                  }
+                                  type="button"
+                                  aria-label={t("next_image")}
+                                >
+                                  ›
+                                </button>
+                              </div>
                             ) : (
-                              <img src={emptyStateIcon} alt="" aria-hidden="true" />
+                              null
                             )}
                           </div>
 

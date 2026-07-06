@@ -459,19 +459,39 @@ def is_game_cover_file(filename):
     return os.path.splitext(str(filename or "").strip())[1].lower() in GAME_COVER_EXTENSIONS
 
 
+def save_uploaded_game_image(uploaded_image, relative_path, suffix="cover"):
+    if not uploaded_image or not uploaded_image.filename or not is_game_cover_file(uploaded_image.filename):
+        return ""
+
+    ensure_media_directories()
+    image_extension = os.path.splitext(uploaded_image.filename)[1].lower()
+    if image_extension == ".jpeg":
+        image_extension = ".jpg"
+    image_slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game")
+    safe_suffix = slugify(suffix, "image")
+    target_filename = f"{image_slug}-{safe_suffix}{image_extension}"
+    target_path = os.path.join(GAME_COVERS_DIR, target_filename)
+    uploaded_image.save(target_path)
+    return game_cover_url(target_filename)
+
+
 def save_uploaded_game_cover(uploaded_cover, relative_path):
     if not uploaded_cover or not uploaded_cover.filename or not is_game_cover_file(uploaded_cover.filename):
         return ""
 
-    ensure_media_directories()
-    cover_extension = os.path.splitext(uploaded_cover.filename)[1].lower()
-    if cover_extension == ".jpeg":
-        cover_extension = ".jpg"
-    cover_slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game")
-    target_filename = f"{cover_slug}{cover_extension}"
-    target_path = os.path.join(GAME_COVERS_DIR, target_filename)
-    uploaded_cover.save(target_path)
-    return game_cover_url(target_filename)
+    return save_uploaded_game_image(uploaded_cover, relative_path, "cover")
+
+
+def unique_ordered_urls(urls):
+    safe_urls = []
+    seen = set()
+    for url in urls if isinstance(urls, list) else []:
+        safe_url = str(url or "").strip()
+        if not safe_url or safe_url in seen:
+            continue
+        seen.add(safe_url)
+        safe_urls.append(safe_url)
+    return safe_urls
 
 
 def upsert_game_metadata(relative_path, updates):
@@ -502,6 +522,8 @@ def upsert_game_metadata(relative_path, updates):
             item["screenScraperId"] = 0
     if "coverImage" in updates:
         item["coverImage"] = str(updates.get("coverImage") or "").strip()
+    if "imageOptions" in updates:
+        item["imageOptions"] = unique_ordered_urls(updates.get("imageOptions"))
     if "source" in updates:
         item["source"] = str(updates.get("source") or "").strip()
 
@@ -608,6 +630,11 @@ def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root
                 "platform": current_item.get("platform") or platform.get("id", ""),
                 "platformName": current_item.get("platformName") or platform.get("name", ""),
                 "coverImage": current_item.get("coverImage") or game_cover_url(DEFAULT_GAME_COVER_FILENAME),
+                "imageOptions": unique_ordered_urls(
+                    current_item.get("imageOptions")
+                    if isinstance(current_item.get("imageOptions"), list)
+                    else [current_item.get("coverImage")]
+                ),
                 "source": current_item.get("source") or "scan",
             }
 
@@ -830,6 +857,11 @@ def list_game_entries():
         metadata = game_items.get(relative_path) if isinstance(game_items.get(relative_path), dict) else {}
         platform = normalize_game_platform(entry_name) or {}
         cover_image = str(metadata.get("coverImage") or "").strip() or game_cover_url(DEFAULT_GAME_COVER_FILENAME)
+        image_options = unique_ordered_urls(
+            metadata.get("imageOptions") if isinstance(metadata.get("imageOptions"), list) else [cover_image]
+        )
+        if cover_image not in image_options:
+            image_options.insert(0, cover_image)
         items.append(
             {
                 "name": str(metadata.get("name") or os.path.splitext(entry_name)[0]).strip(),
@@ -839,6 +871,7 @@ def list_game_entries():
                 "platformName": str(metadata.get("platformName") or platform.get("name", "")).strip(),
                 "description": str(metadata.get("description") or "").strip(),
                 "coverImage": cover_image,
+                "imageOptions": image_options,
                 "sizeBytes": os.path.getsize(full_entry),
             }
         )
@@ -1967,6 +2000,7 @@ def upload_series():
 def upload_game():
     uploaded_file = request.files.get("file")
     uploaded_cover = request.files.get("coverFile")
+    uploaded_images = request.files.getlist("imageFiles")
     name = str(request.form.get("name") or "").strip()
     description = str(request.form.get("description") or "").strip()
     cover_url = str(request.form.get("coverUrl") or "").strip()
@@ -1995,12 +2029,18 @@ def upload_game():
         cover_image = download_game_cover(cover_url, relative_path) if cover_url else ""
     if not cover_image:
         cover_image = game_cover_url(DEFAULT_GAME_COVER_FILENAME)
+    extra_images = [
+        save_uploaded_game_image(uploaded_image, relative_path, f"image-{index + 1}")
+        for index, uploaded_image in enumerate(uploaded_images)
+    ]
+    image_options = unique_ordered_urls([cover_image, *extra_images])
     item = upsert_game_metadata(
         relative_path,
         {
             "name": name or os.path.splitext(original_filename)[0],
             "description": description,
             "coverImage": cover_image,
+            "imageOptions": image_options,
             "screenScraperId": screen_scraper_id,
             "source": source,
         },
@@ -2027,9 +2067,16 @@ def delete_game():
         removed = True
 
     cover_image = str(metadata.get("coverImage") or "") if isinstance(metadata, dict) else ""
+    image_options = (
+        metadata.get("imageOptions")
+        if isinstance(metadata, dict) and isinstance(metadata.get("imageOptions"), list)
+        else []
+    )
     cover_prefix = "/game-covers/"
-    if cover_image.startswith(cover_prefix):
-        cover_filename = urllib.parse.unquote(cover_image[len(cover_prefix) :])
+    for image_url in unique_ordered_urls([cover_image, *image_options]):
+        if not image_url.startswith(cover_prefix):
+            continue
+        cover_filename = urllib.parse.unquote(image_url[len(cover_prefix) :])
         if cover_filename and cover_filename != DEFAULT_GAME_COVER_FILENAME:
             cover_path = os.path.abspath(os.path.join(GAME_COVERS_DIR, os.path.basename(cover_filename)))
             covers_root_abs = os.path.abspath(GAME_COVERS_DIR)

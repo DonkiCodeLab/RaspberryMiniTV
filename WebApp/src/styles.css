@@ -1012,7 +1012,7 @@ img {
 .game-card__cover img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -1064,6 +1064,12 @@ img {
   align-items: start;
 }
 
+.game-panel__gallery {
+  display: grid;
+  gap: 0.9rem;
+  width: 100%;
+}
+
 .game-panel__cover {
   aspect-ratio: 3 / 4;
   overflow: hidden;
@@ -1076,8 +1082,13 @@ img {
 .game-panel__cover img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+}
+
+.game-panel__gallery-controls {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  width: 100%;
 }
 
 .game-panel__content {
@@ -3804,8 +3815,23 @@ img {
 .game-cover-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+}
+
+.game-extra-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.game-extra-preview-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .game-cover-picker__grid {
@@ -3831,7 +3857,7 @@ img {
 .game-cover-option img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 

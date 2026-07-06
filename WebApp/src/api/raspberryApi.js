@@ -810,8 +810,12 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
   const gameName = String(game?.name || "").trim() || String(file.name || "").replace(/\.[^.]+$/, "");
   const description = String(game?.description || "").trim();
   const coverFile = cover?.file instanceof File ? cover.file : null;
+  const imageFiles = Array.isArray(cover?.imageFiles)
+    ? cover.imageFiles.filter((entry) => entry instanceof File)
+    : [];
+  const imagePreviewUrls = Array.isArray(cover?.imagePreviewUrls) ? cover.imagePreviewUrls : [];
   const coverUrl = String(cover?.url || "").trim();
-  const source = String(game?.source || (coverFile ? "local" : coverUrl ? "screenscraper" : "default")).trim();
+  const source = String(game?.source || (coverFile || imageFiles.length ? "local" : coverUrl ? "screenscraper" : "default")).trim();
   const screenScraperId = Number(game?.id || game?.screenScraperId) || 0;
 
   if (isMockModeEnabled()) {
@@ -825,6 +829,7 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
       relativePath: `Games/${file.name}`,
       platformName,
       coverImage: cover?.previewUrl || "",
+      imageOptions: [cover?.previewUrl, ...imagePreviewUrls].filter(Boolean),
       source,
     };
     saveMockGamesLibrary([...current, item]);
@@ -842,6 +847,9 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
     if (coverFile) {
       formData.append("coverFile", coverFile);
     }
+    imageFiles.forEach((imageFile) => {
+      formData.append("imageFiles", imageFile);
+    });
     formData.append("coverUrl", coverUrl);
     formData.append("source", source);
     formData.append("screenScraperId", String(screenScraperId));
