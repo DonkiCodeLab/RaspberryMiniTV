@@ -61,6 +61,7 @@ import {
   stopPlayback,
   updateRaspberryAlarms,
   updateRaspberryLanguage,
+  updateGameFileMetadata,
   uploadGameFile,
   uploadMovieFile,
   uploadSeriesFiles,
@@ -307,15 +308,22 @@ const UI_STRINGS = {
     play_game_on_raspberry: "Jugar en la Raspberry",
     playing_game: "Abriendo juego...",
     games_upload_title: "Datos del juego",
+    games_edit_title: "Editar juego",
     games_search_placeholder: "Ejemplo: Tetris DX",
     games_default_cover: "Default",
     games_manual_profile: "Ficha manual con carátula por defecto",
     games_cover_picker: "Carátula",
+    games_current_images: "Imágenes actuales",
     games_name_field: "Nombre",
     games_description_field: "Descripción",
     games_description_placeholder: "Una descripción corta para reconocer el juego en la biblioteca.",
     games_cover_file_field: "Imagen de carátula",
+    games_new_cover_field: "Nueva carátula",
     games_extra_images_field: "Imágenes adicionales",
+    games_new_images_field: "Añadir imágenes al carrusel",
+    games_set_cover: "Usar como carátula",
+    games_remove_image: "Quitar imagen",
+    games_cover_selected: "Carátula seleccionada",
     games_no_results: "No se han encontrado juegos para esa búsqueda.",
     games_search_empty: "Escribe un juego para buscar.",
     games_search_failed: "No se pudo buscar la ficha del juego.",
@@ -539,15 +547,22 @@ const UI_STRINGS = {
     play_game_on_raspberry: "Jugar a la Raspberry",
     playing_game: "Obrint joc...",
     games_upload_title: "Dades del joc",
+    games_edit_title: "Editar joc",
     games_search_placeholder: "Exemple: Tetris DX",
     games_default_cover: "Default",
     games_manual_profile: "Fitxa manual amb caràtula per defecte",
     games_cover_picker: "Caràtula",
+    games_current_images: "Imatges actuals",
     games_name_field: "Nom",
     games_description_field: "Descripció",
     games_description_placeholder: "Una descripció curta per reconèixer el joc a la biblioteca.",
     games_cover_file_field: "Imatge de caràtula",
+    games_new_cover_field: "Nova caràtula",
     games_extra_images_field: "Imatges addicionals",
+    games_new_images_field: "Afegir imatges al carrusel",
+    games_set_cover: "Fer servir com a caràtula",
+    games_remove_image: "Treure imatge",
+    games_cover_selected: "Caràtula seleccionada",
     games_no_results: "No s'han trobat jocs per a aquesta cerca.",
     games_search_empty: "Escriu un joc per cercar.",
     games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
@@ -771,15 +786,22 @@ const UI_STRINGS = {
     play_game_on_raspberry: "Play on Raspberry",
     playing_game: "Opening game...",
     games_upload_title: "Game details",
+    games_edit_title: "Edit game",
     games_search_placeholder: "Example: Tetris DX",
     games_default_cover: "Default",
     games_manual_profile: "Manual profile with the default cover",
     games_cover_picker: "Cover art",
+    games_current_images: "Current images",
     games_name_field: "Name",
     games_description_field: "Description",
     games_description_placeholder: "A short description to recognize the game in your library.",
     games_cover_file_field: "Cover image",
+    games_new_cover_field: "New cover",
     games_extra_images_field: "Additional images",
+    games_new_images_field: "Add carousel images",
+    games_set_cover: "Use as cover",
+    games_remove_image: "Remove image",
+    games_cover_selected: "Selected cover",
     games_no_results: "No games were found for that search.",
     games_search_empty: "Type a game to search.",
     games_search_failed: "Could not search the game profile.",
@@ -2211,6 +2233,235 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
           </div>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+function GameSettingsModal({ visible, game, onClose, onSave, t }) {
+  const [name, setName] = useState(game?.name || "");
+  const [description, setDescription] = useState(game?.description || "");
+  const [coverImage, setCoverImage] = useState(game?.coverImage || "");
+  const [keptImages, setKeptImages] = useState([]);
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState("");
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const nextImages = Array.from(
+      new Set([game?.coverImage, ...(Array.isArray(game?.imageOptions) ? game.imageOptions : [])].filter(Boolean))
+    );
+    setName(game?.name || "");
+    setDescription(game?.description || "");
+    setCoverImage(game?.coverImage || nextImages[0] || "");
+    setKeptImages(nextImages);
+    setCoverFile(null);
+    setImageFiles([]);
+    setError("");
+  }, [game, visible]);
+
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreviewUrl("");
+      return () => {};
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(coverFile);
+    setCoverPreviewUrl(nextPreviewUrl);
+    return () => URL.revokeObjectURL(nextPreviewUrl);
+  }, [coverFile]);
+
+  useEffect(() => {
+    if (!imageFiles.length) {
+      setImagePreviewUrls([]);
+      return () => {};
+    }
+
+    const nextPreviewUrls = imageFiles.map((imageFile) => URL.createObjectURL(imageFile));
+    setImagePreviewUrls(nextPreviewUrls);
+    return () => nextPreviewUrls.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+  }, [imageFiles]);
+
+  if (!visible || !game) return null;
+
+  const displayCover = coverPreviewUrl || coverImage || keptImages[0] || "";
+  const mediaLabel = t("media_games_singular");
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    try {
+      await onSave({
+        name: name.trim(),
+        description: description.trim(),
+        coverFile,
+        coverImage,
+        imageFiles,
+        imageOptions: keptImages,
+      });
+      setSubmitting(false);
+      onClose();
+    } catch (nextError) {
+      setError(nextError.message || t("save_changes_failed"));
+      setSubmitting(false);
+    }
+  }
+
+  function handleRemoveImage(imageUrl) {
+    const nextImages = keptImages.filter((entry) => entry !== imageUrl);
+    setKeptImages(nextImages);
+    if (coverImage === imageUrl) {
+      setCoverImage(nextImages[0] || "");
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="dialog-card dialog-card--add-series game-upload-dialog" onClick={(event) => event.stopPropagation()}>
+        <div className="dialog-card__header">
+          <div>
+            <p>{game.platformName || mediaLabel}</p>
+            <h2>{t("games_edit_title")}</h2>
+          </div>
+          <div className="dialog-card__header-actions">
+            <button
+              className="dialog-card__icon-button dialog-card__icon-button--accent"
+              onClick={handleSubmit}
+              type="button"
+              aria-label={t("save")}
+              title={t("save")}
+              disabled={submitting}
+            >
+              <img className="dialog-card__icon-image" src={saveIcon} alt="" aria-hidden="true" />
+            </button>
+            <button
+              className="dialog-card__icon-button dialog-card__close"
+              onClick={onClose}
+              type="button"
+              aria-label={t("cancel")}
+              title={t("cancel")}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <form className="game-upload-form" onSubmit={handleSubmit}>
+          <div className="game-upload-layout">
+            <div className="game-upload-fields">
+              <label className="dialog-field">
+                <span>{t("games_name_field")}</span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder={game.file || game.relativePath}
+                />
+              </label>
+
+              <label className="dialog-field">
+                <span>{t("games_description_field")}</span>
+                <textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder={t("games_description_placeholder")}
+                  rows={5}
+                />
+              </label>
+
+              <label className="dialog-field">
+                <span>{t("games_new_cover_field")}</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(event) => setCoverFile(event.target.files?.[0] || null)}
+                />
+              </label>
+
+              <label className="dialog-field">
+                <span>{t("games_new_images_field")}</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  multiple
+                  onChange={(event) => setImageFiles(Array.from(event.target.files || []))}
+                />
+              </label>
+
+              {keptImages.length ? (
+                <div className="dialog-field">
+                  <span>{t("games_current_images")}</span>
+                  <div className="game-settings-image-grid">
+                    {keptImages.map((imageUrl) => (
+                      <div
+                        key={imageUrl}
+                        className={`game-settings-image${coverImage === imageUrl ? " active" : ""}`}
+                      >
+                        <button
+                          className="game-settings-image__preview"
+                          onClick={() => {
+                            setCoverFile(null);
+                            setCoverImage(imageUrl);
+                          }}
+                          type="button"
+                          aria-label={t("games_set_cover")}
+                          title={t("games_set_cover")}
+                        >
+                          <img src={imageUrl} alt="" />
+                          {coverImage === imageUrl && !coverFile ? (
+                            <span>{t("games_cover_selected")}</span>
+                          ) : null}
+                        </button>
+                        <button
+                          className="game-settings-image__remove"
+                          onClick={() => handleRemoveImage(imageUrl)}
+                          type="button"
+                          aria-label={t("games_remove_image")}
+                          title={t("games_remove_image")}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="game-cover-picker game-cover-picker--manual">
+              <strong>{t("games_cover_picker")}</strong>
+              <div className="game-cover-preview">
+                {displayCover ? (
+                  <img src={displayCover} alt={name || game.file} />
+                ) : (
+                  <span>{t("games_default_cover")}</span>
+                )}
+              </div>
+              {imagePreviewUrls.length ? (
+                <div className="game-extra-preview-grid" aria-label={t("games_new_images_field")}>
+                  {imagePreviewUrls.map((previewUrl, index) => (
+                    <img key={previewUrl} src={previewUrl} alt={`${name || game.file} ${index + 1}`} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {error ? <p className="dialog-error">{error}</p> : null}
+
+          <div className="dialog-card__actions">
+            <button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">
+              {t("cancel")}
+            </button>
+            <button className="dialog-button dialog-button--primary" disabled={submitting} type="submit">
+              {submitting ? t("upload_saving") : t("save")}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -4685,7 +4936,7 @@ export default function App() {
 
   const selectedItem =
     activeMediaType === "games"
-      ? null
+      ? selectedGame
       : activeMediaType === "movies"
         ? selectedMovie
         : selectedSeries;
@@ -4693,7 +4944,7 @@ export default function App() {
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage =
-    activeMediaType === "games" ? cartellLogo : selectedItem?.heroImage || cartellLogo;
+    activeMediaType === "games" ? selectedGame?.coverImage || cartellLogo : selectedItem?.heroImage || cartellLogo;
   const headerImageCrop =
     activeMediaType === "games"
       ? DEFAULT_HERO_CROP
@@ -5022,6 +5273,23 @@ export default function App() {
     } catch (nextError) {
       window.alert(nextError.message || "No se pudieron guardar los cambios.");
     }
+  }
+
+  async function handleSaveGameSettings(updates) {
+    if (!selectedGame?.relativePath) return;
+
+    const response = await updateGameFileMetadata({
+      relativePath: selectedGame.relativePath,
+      name: updates.name || selectedGame.name || selectedGame.file,
+      description: updates.description,
+      coverFile: updates.coverFile,
+      coverImage: updates.coverImage,
+      imageFiles: updates.imageFiles,
+      imageOptions: updates.imageOptions,
+    });
+    const nextVideos = await getVideos();
+    setVideos(nextVideos);
+    setSelectedGamePath(response?.item?.relativePath || selectedGame.relativePath);
   }
 
   async function handleDeleteSeries(skipConfirm = false) {
@@ -6239,13 +6507,29 @@ export default function App() {
                       <div
                         className={`series-hero__controls-row${isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
-                        {isGamesMode ? (
+                        {isGamesMode && selectedGame ? (
+                          <button
+                            className="series-icon-button series-icon-button--settings"
+                            onClick={() => setSettingsOpen(true)}
+                            type="button"
+                            aria-label={t("games_edit_title")}
+                            title={t("games_edit_title")}
+                          >
+                            <img
+                              className="series-icon-button__image series-icon-button__image--settings"
+                              src={settingsIcon}
+                              alt=""
+                              aria-hidden="true"
+                              draggable="false"
+                            />
+                          </button>
+                        ) : isGamesMode ? (
                           <button
                             className="series-icon-button series-icon-button--controls-plus"
                             onClick={() => handleOpenUploadsForMedia("games")}
                             type="button"
-                            aria-label="Añadir juego"
-                            title="Añadir juego"
+                            aria-label={t("add_media", { media: t("media_games_singular") })}
+                            title={t("add_media", { media: t("media_games_singular") })}
                           >
                             <svg
                               className="series-icon-button__icon series-icon-button__icon--plus"
@@ -6580,16 +6864,26 @@ export default function App() {
               </>
             )}
 
-            <SettingsModal
-              visible={settingsOpen}
-              mediaType={activeMediaType}
-              item={selectedItem}
-              imageOptions={selectedItem?.imageOptions || []}
-              onClose={() => setSettingsOpen(false)}
-              onSave={handleSaveSeriesSettings}
-              onDelete={() => handleDeleteSeries(true)}
-              t={t}
-            />
+            {activeMediaType === "games" ? (
+              <GameSettingsModal
+                visible={settingsOpen}
+                game={selectedGame}
+                onClose={() => setSettingsOpen(false)}
+                onSave={handleSaveGameSettings}
+                t={t}
+              />
+            ) : (
+              <SettingsModal
+                visible={settingsOpen}
+                mediaType={activeMediaType}
+                item={selectedItem}
+                imageOptions={selectedItem?.imageOptions || []}
+                onClose={() => setSettingsOpen(false)}
+                onSave={handleSaveSeriesSettings}
+                onDelete={() => handleDeleteSeries(true)}
+                t={t}
+              />
+            )}
 
             <AddMediaModal
               visible={addSeriesOpen || uploadLookupOpen}

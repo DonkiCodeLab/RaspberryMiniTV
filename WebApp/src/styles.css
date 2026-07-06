@@ -3834,6 +3834,84 @@ img {
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
+.game-settings-image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.game-settings-image {
+  position: relative;
+  min-width: 0;
+}
+
+.game-settings-image__preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.game-settings-image.active .game-settings-image__preview {
+  border-color: #ffd429;
+  box-shadow: 0 0 0 2px rgba(255, 212, 41, 0.32);
+}
+
+.game-settings-image__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.game-settings-image__preview span {
+  position: absolute;
+  left: 0.35rem;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(6, 11, 16, 0.74);
+  color: #ffd429;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.game-settings-image__remove {
+  position: absolute;
+  top: -0.42rem;
+  right: -0.42rem;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(17, 27, 36, 0.95);
+  color: #ffd429;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.game-settings-image__remove:hover,
+.game-settings-image__remove:focus-visible {
+  transform: translateY(-1px);
+  background: #ffd429;
+  color: #101820;
+}
+
 .game-cover-picker__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4433,6 +4511,10 @@ img {
 
   .game-cover-picker__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .game-settings-image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .tmdb-browser__search {

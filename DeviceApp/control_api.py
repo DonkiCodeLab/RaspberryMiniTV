@@ -494,6 +494,31 @@ def unique_ordered_urls(urls):
     return safe_urls
 
 
+def remove_local_game_image_url(image_url):
+    safe_image_url = str(image_url or "").strip()
+    cover_prefix = "/game-covers/"
+    if not safe_image_url.startswith(cover_prefix):
+        return
+
+    cover_filename = urllib.parse.unquote(safe_image_url[len(cover_prefix) :])
+    if not cover_filename or cover_filename == DEFAULT_GAME_COVER_FILENAME:
+        return
+
+    cover_path = os.path.abspath(os.path.join(GAME_COVERS_DIR, os.path.basename(cover_filename)))
+    covers_root_abs = os.path.abspath(GAME_COVERS_DIR)
+    try:
+        if os.path.commonpath([cover_path, covers_root_abs]) != covers_root_abs:
+            return
+    except ValueError:
+        return
+
+    if os.path.isfile(cover_path):
+        try:
+            os.remove(cover_path)
+        except OSError:
+            pass
+
+
 def upsert_game_metadata(relative_path, updates):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
@@ -2048,6 +2073,78 @@ def upload_game():
     return jsonify({"ok": True, "item": item, "libraryCounts": get_library_counts()})
 
 
+@app.route("/games/profile", methods=["POST"])
+def save_game_profile():
+    relative_path = str(request.form.get("relativePath") or "").strip().strip("/\\")
+    name = str(request.form.get("name") or "").strip()
+    description = str(request.form.get("description") or "").strip()
+    cover_image = str(request.form.get("coverImage") or "").strip()
+    uploaded_cover = request.files.get("coverFile")
+    uploaded_images = request.files.getlist("imageFiles")
+    try:
+        kept_image_options = json.loads(request.form.get("imageOptions") or "[]")
+    except Exception:
+        kept_image_options = []
+
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    game_path = resolve_game_path(relative_path)
+    if not game_path or not os.path.isfile(game_path) or not is_game_rom_file(game_path):
+        return jsonify({"error": "Game not found", "relativePath": relative_path}), 404
+
+    normalized_relative_path = game_relative_path(os.path.basename(game_path))
+    library = load_media_library()
+    game_items = library.setdefault("games", {})
+    current_item = (
+        game_items.get(normalized_relative_path)
+        if isinstance(game_items.get(normalized_relative_path), dict)
+        else {}
+    )
+    previous_urls = unique_ordered_urls(
+        [
+            str(current_item.get("coverImage") or ""),
+            *(
+                current_item.get("imageOptions")
+                if isinstance(current_item.get("imageOptions"), list)
+                else []
+            ),
+        ]
+    )
+
+    uploaded_cover_image = save_uploaded_game_cover(uploaded_cover, normalized_relative_path)
+    if uploaded_cover_image:
+        cover_image = uploaded_cover_image
+
+    new_extra_images = [
+        save_uploaded_game_image(uploaded_image, normalized_relative_path, f"image-{index + int(time.time())}")
+        for index, uploaded_image in enumerate(uploaded_images)
+    ]
+    final_image_options = unique_ordered_urls([cover_image, *kept_image_options, *new_extra_images])
+    if cover_image and cover_image not in final_image_options:
+        final_image_options.insert(0, cover_image)
+    if not cover_image:
+        cover_image = final_image_options[0] if final_image_options else game_cover_url(DEFAULT_GAME_COVER_FILENAME)
+        final_image_options = unique_ordered_urls([cover_image, *final_image_options])
+
+    item = upsert_game_metadata(
+        normalized_relative_path,
+        {
+            "name": name or os.path.splitext(os.path.basename(game_path))[0],
+            "description": description,
+            "coverImage": cover_image,
+            "imageOptions": final_image_options,
+            "source": "local",
+        },
+    )
+
+    for previous_url in previous_urls:
+        if previous_url not in final_image_options and previous_url != cover_image:
+            remove_local_game_image_url(previous_url)
+
+    return jsonify({"ok": True, "item": item, "libraryCounts": get_library_counts()})
+
+
 @app.route("/games", methods=["DELETE"])
 def delete_game():
     relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
@@ -2072,19 +2169,8 @@ def delete_game():
         if isinstance(metadata, dict) and isinstance(metadata.get("imageOptions"), list)
         else []
     )
-    cover_prefix = "/game-covers/"
     for image_url in unique_ordered_urls([cover_image, *image_options]):
-        if not image_url.startswith(cover_prefix):
-            continue
-        cover_filename = urllib.parse.unquote(image_url[len(cover_prefix) :])
-        if cover_filename and cover_filename != DEFAULT_GAME_COVER_FILENAME:
-            cover_path = os.path.abspath(os.path.join(GAME_COVERS_DIR, os.path.basename(cover_filename)))
-            covers_root_abs = os.path.abspath(GAME_COVERS_DIR)
-            if os.path.commonpath([cover_path, covers_root_abs]) == covers_root_abs and os.path.isfile(cover_path):
-                try:
-                    os.remove(cover_path)
-                except OSError:
-                    pass
+        remove_local_game_image_url(image_url)
 
     return jsonify({"ok": True, "relativePath": relative_path, "removed": removed, "libraryCounts": get_library_counts()})
 

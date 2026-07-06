@@ -245,9 +245,10 @@ function getBaseUrl() {
 
 async function request(path, options = {}) {
   const storedPin = getStoredWebPin();
+  const isFormDataBody = typeof FormData !== "undefined" && options.body instanceof FormData;
   const response = await fetch(`${getBaseUrl()}${path}`, {
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormDataBody ? {} : { "Content-Type": "application/json" }),
       ...(storedPin ? { "X-Web-Pin": storedPin } : {}),
       ...(options.headers || {}),
     },
@@ -890,6 +891,71 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
     };
     xhr.onabort = () => detachAbort();
     xhr.send(formData);
+  });
+}
+
+export function updateGameFileMetadata({
+  relativePath,
+  name,
+  description,
+  coverFile,
+  coverImage,
+  imageFiles,
+  imageOptions,
+} = {}) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) {
+    return Promise.reject(new Error("Missing relativePath"));
+  }
+
+  const safeName = String(name || "").trim();
+  const safeDescription = String(description || "").trim();
+  const safeCoverImage = String(coverImage || "").trim();
+  const safeImageFiles = Array.isArray(imageFiles)
+    ? imageFiles.filter((entry) => entry instanceof File)
+    : [];
+  const safeImageOptions = Array.isArray(imageOptions)
+    ? imageOptions.map((entry) => String(entry || "").trim()).filter(Boolean)
+    : [];
+
+  if (isMockModeEnabled()) {
+    const current = loadMockGamesLibrary();
+    const item = current.find((entry) => entry.relativePath === safeRelativePath) || {};
+    const newCoverPreview = coverFile instanceof File ? URL.createObjectURL(coverFile) : "";
+    const newImagePreviews = safeImageFiles.map((imageFile) => URL.createObjectURL(imageFile));
+    const nextCoverImage = newCoverPreview || safeCoverImage || item.coverImage || "";
+    const nextItem = {
+      ...item,
+      name: safeName || item.name || item.file || safeRelativePath,
+      description: safeDescription,
+      coverImage: nextCoverImage,
+      imageOptions: Array.from(
+        new Set([nextCoverImage, ...safeImageOptions, ...newImagePreviews].filter(Boolean))
+      ),
+      source: "local",
+    };
+    saveMockGamesLibrary(
+      current.map((entry) => (entry.relativePath === safeRelativePath ? nextItem : entry))
+    );
+    return Promise.resolve({ ok: true, mock: true, item: nextItem });
+  }
+
+  const formData = new FormData();
+  formData.append("relativePath", safeRelativePath);
+  formData.append("name", safeName);
+  formData.append("description", safeDescription);
+  formData.append("coverImage", safeCoverImage);
+  formData.append("imageOptions", JSON.stringify(safeImageOptions));
+  if (coverFile instanceof File) {
+    formData.append("coverFile", coverFile);
+  }
+  safeImageFiles.forEach((imageFile) => {
+    formData.append("imageFiles", imageFile);
+  });
+
+  return request("/games/profile", {
+    method: "POST",
+    body: formData,
   });
 }
 
