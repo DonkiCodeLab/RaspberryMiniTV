@@ -139,6 +139,8 @@ img {
 
 .series-hero__full-mask-image {
   display: block;
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -147,6 +149,136 @@ img {
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+.series-hero__flask-bubbles {
+  position: absolute;
+  left: 11.9%;
+  top: 25%;
+  width: 7.6%;
+  height: 27%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.series-hero__flask-bubbles span {
+  --bubble-size: 1.25cqw;
+  --bubble-x: 0cqw;
+  --bubble-y: 0cqh;
+  --bubble-drift: 0.35cqw;
+  --bubble-scale: 1;
+  --bubble-duration: 2.8s;
+  --bubble-delay: 0s;
+  position: absolute;
+  left: 48%;
+  bottom: 2%;
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.75) inset,
+    0 2px 5px rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transform: translate(-50%, 0) scale(0.35);
+  animation: flask-bubble-rise var(--bubble-duration) ease-out infinite;
+  animation-delay: var(--bubble-delay);
+  will-change: transform, opacity;
+}
+
+.series-hero__flask-bubbles span:nth-child(1) {
+  --bubble-size: 0.95cqw;
+  --bubble-x: -1.25cqw;
+  --bubble-y: -22cqh;
+  --bubble-drift: -0.65cqw;
+  --bubble-duration: 2.7s;
+  --bubble-delay: -0.3s;
+}
+
+.series-hero__flask-bubbles span:nth-child(2) {
+  --bubble-size: 1.35cqw;
+  --bubble-x: 0.65cqw;
+  --bubble-y: -29cqh;
+  --bubble-drift: 0.9cqw;
+  --bubble-duration: 3.2s;
+  --bubble-delay: -1.2s;
+}
+
+.series-hero__flask-bubbles span:nth-child(3) {
+  --bubble-size: 0.8cqw;
+  --bubble-x: 1.7cqw;
+  --bubble-y: -20cqh;
+  --bubble-drift: 0.5cqw;
+  --bubble-duration: 2.45s;
+  --bubble-delay: -2s;
+}
+
+.series-hero__flask-bubbles span:nth-child(4) {
+  --bubble-size: 1.1cqw;
+  --bubble-x: -0.3cqw;
+  --bubble-y: -34cqh;
+  --bubble-drift: -1cqw;
+  --bubble-duration: 3.45s;
+  --bubble-delay: -0.95s;
+}
+
+.series-hero__flask-bubbles span:nth-child(5) {
+  --bubble-size: 0.7cqw;
+  --bubble-x: 1.35cqw;
+  --bubble-y: -37cqh;
+  --bubble-drift: 0.9cqw;
+  --bubble-duration: 2.9s;
+  --bubble-delay: -1.75s;
+}
+
+.series-hero__flask-bubbles span:nth-child(6) {
+  --bubble-size: 0.9cqw;
+  --bubble-x: -1.6cqw;
+  --bubble-y: -30cqh;
+  --bubble-drift: -0.35cqw;
+  --bubble-duration: 3.1s;
+  --bubble-delay: -2.55s;
+}
+
+.series-hero__flask-bubbles span:nth-child(7) {
+  --bubble-size: 0.75cqw;
+  --bubble-x: 0.3cqw;
+  --bubble-y: -25cqh;
+  --bubble-drift: 1.1cqw;
+  --bubble-duration: 2.55s;
+  --bubble-delay: -3.1s;
+}
+
+@keyframes flask-bubble-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.25);
+  }
+
+  18% {
+    opacity: 0.98;
+  }
+
+  42% {
+    transform: translate(calc(-50% + (var(--bubble-x) * 0.35)), calc(var(--bubble-y) * 0.38)) scale(0.78);
+  }
+
+  72% {
+    opacity: 0.85;
+    transform: translate(calc(-50% + var(--bubble-x) + var(--bubble-drift)), calc(var(--bubble-y) * 0.78)) scale(var(--bubble-scale));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--bubble-x) + (var(--bubble-drift) * 1.25)), var(--bubble-y)) scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .series-hero__flask-bubbles span {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 .series-hero__art img {

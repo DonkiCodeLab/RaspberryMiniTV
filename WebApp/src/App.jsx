@@ -1372,14 +1372,21 @@ function HeaderArt({ image, crop, alt }) {
       aria-label={alt}
     >
       {usesFullMaskArtwork ? (
-        <img
-          className="series-hero__full-mask-image"
-          src={image}
-          alt=""
-          aria-hidden="true"
-          draggable="false"
-          onDragStart={(event) => event.preventDefault()}
-        />
+        <>
+          <img
+            className="series-hero__full-mask-image"
+            src={image}
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+            onDragStart={(event) => event.preventDefault()}
+          />
+          <div className="series-hero__flask-bubbles" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, index) => (
+              <span key={`flask-bubble-${index}`} />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="series-hero__visible-window">
           <img
