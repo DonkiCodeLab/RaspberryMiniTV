@@ -5,6 +5,9 @@ import cartellLogo from "./assets/cartell_logo.png";
 import cloudsBackground from "./assets/cloud.gif";
 import deleteIcon from "./assets/delete.png";
 import emptyStateIcon from "./assets/empty.png";
+import gameboyAdvanceIcon from "./assets/gameboy_advance.png";
+import gameboyColorIcon from "./assets/gameboy_color.png";
+import gameboyNormalIcon from "./assets/gameboy_normal.png";
 import controlsIconBlack from "./assets/icon_conrtols_black.png";
 import controlsIconYellow from "./assets/icon_conrtols_yelllow.png";
 import alarmIcon from "./assets/icon_alarm.png";
@@ -144,6 +147,11 @@ const GAME_PLATFORM_LABELS = {
   gb: "Game Boy",
   gbc: "Game Boy Color",
   gba: "Game Boy Advance",
+};
+const GAME_PLATFORM_ICONS = {
+  gb: gameboyNormalIcon,
+  gbc: gameboyColorIcon,
+  gba: gameboyAdvanceIcon,
 };
 const GAME_METADATA_PLATFORM_OPTIONS = [
   { key: "gb", value: "gb", label: "Game Boy" },
@@ -6248,6 +6256,9 @@ export default function App() {
   const safeGameImageIndex = gameImages.length
     ? Math.min(selectedGameImageIndex, gameImages.length - 1)
     : 0;
+  const selectedGamePlatformExtension = getFileExtension(selectedGame?.file || selectedGame?.relativePath);
+  const selectedGamePlatformIcon = GAME_PLATFORM_ICONS[selectedGamePlatformExtension] || null;
+  const selectedGamePlatformLabel = selectedGame?.platformName || GAME_PLATFORM_LABELS[selectedGamePlatformExtension] || t("media_games_singular");
   const raspberryLibraryCounts = normalizeLibraryCounts(videos?.libraryCounts || raspberryHealth?.libraryCounts);
   const installedSeriesCount = raspberryLibraryCounts.series.count;
   const installedMovieCount = raspberryLibraryCounts.movies.count;
@@ -6684,7 +6695,17 @@ export default function App() {
                             <div className="movie-panel__facts game-panel__facts">
                               <div className="movie-panel__fact">
                                 <strong>{t("game_platform_label")}</strong>
-                                <span>{selectedGame.platformName || t("media_games_singular")}</span>
+                                <span className="game-panel__platform">
+                                  {selectedGamePlatformIcon ? (
+                                    <img
+                                      className="game-panel__platform-icon"
+                                      src={selectedGamePlatformIcon}
+                                      alt=""
+                                      aria-hidden="true"
+                                    />
+                                  ) : null}
+                                  <span>{selectedGamePlatformLabel}</span>
+                                </span>
                               </div>
                               <div className="movie-panel__fact">
                                 <strong>{t("file_label")}</strong>
