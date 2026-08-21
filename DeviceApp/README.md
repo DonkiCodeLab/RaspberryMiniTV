@@ -71,7 +71,9 @@ Desde la raíz de `RaspberryMiniTV`, ejecuta:
 
 El script descarga la última versión de `main`, instala las dependencias web si faltan,
 compila la web y reinstala/reinicia `minitv-api.service` y `minitv-menu.service`.
-Se detiene sin modificar nada si detecta cambios locales pendientes.
+Los cambios locales generados dentro de `WebApp/dist` se guardan automáticamente en
+un `stash` recuperable antes de actualizar. Si encuentra cambios fuera de esa carpeta,
+se detiene para no sobrescribir trabajo manual.
 
 Si haces cambios en `WebApp/`, recompila antes o despues de actualizar:
 
