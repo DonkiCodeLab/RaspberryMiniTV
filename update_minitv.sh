@@ -4,7 +4,6 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="${SCRIPT_DIR}/WebApp"
-DEVICE_DIR="${SCRIPT_DIR}/DeviceApp"
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -44,8 +43,8 @@ if [[ -f "${WEB_DIR}/package.json" ]]; then
   cd "${SCRIPT_DIR}"
 fi
 
-log "Instalando y reiniciando la web y el menú"
-sudo /usr/bin/env MINITV_REPO_DIR="${SCRIPT_DIR}" /bin/bash "${DEVICE_DIR}/install_services.sh"
+log "Reiniciando los servicios existentes de la web y el menú"
+sudo systemctl restart minitv-api.service minitv-menu.service
 
 log "Estado de los servicios"
 sudo systemctl --no-pager --full status minitv-api.service minitv-menu.service || true
