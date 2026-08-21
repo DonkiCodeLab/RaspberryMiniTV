@@ -372,6 +372,9 @@ export async function getMovieById(movieId, language) {
     releaseDate: movie?.release_date || "",
     runtime: Number(movie?.runtime) || 0,
     voteAverage: Number(movie?.vote_average) || 0,
+    genres: (Array.isArray(movie?.genres) ? movie.genres : [])
+      .map((genre) => String(genre?.name || "").trim())
+      .filter(Boolean),
   };
 }
 

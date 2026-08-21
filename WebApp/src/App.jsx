@@ -419,6 +419,7 @@ const UI_STRINGS = {
     release: "Estreno",
     duration: "Duración",
     rating: "Valoración",
+    genres: "Categorías",
     synopsis: "Sinopsis",
     release_unknown: "Fecha de estreno no disponible",
     duration_unknown: "Duración no disponible",
@@ -658,6 +659,7 @@ const UI_STRINGS = {
     release: "Estrena",
     duration: "Durada",
     rating: "Valoració",
+    genres: "Categories",
     synopsis: "Sinopsi",
     release_unknown: "Data d'estrena no disponible",
     duration_unknown: "Durada no disponible",
@@ -897,6 +899,7 @@ const UI_STRINGS = {
     release: "Release",
     duration: "Duration",
     rating: "Rating",
+    genres: "Categories",
     synopsis: "Synopsis",
     release_unknown: "Release date unavailable",
     duration_unknown: "Duration unavailable",
@@ -3718,6 +3721,14 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
                             : t("tmdb_rating_missing")}
                         </span>
                       </div>
+                      <div className="movie-panel__fact">
+                        <strong>{t("genres")}</strong>
+                        <span>
+                          {selectedItem.genres?.length
+                            ? selectedItem.genres.join(" · ")
+                            : t("not_available")}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="movie-panel__overview">
@@ -4405,7 +4416,7 @@ export default function App() {
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
   const [selectedMovieId, setSelectedMovieId] = useState(null);
   const [selectedGamePath, setSelectedGamePath] = useState("");
-  const [selectedGameImageIndex, setSelectedGameImageIndex] = useState(0);
+  const [selectedGameImageIndex, setSelectedGameImageIndex] = useState(1);
   const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   const [currentView, setCurrentView] = useState("series");
   const [raspberryReturnView, setRaspberryReturnView] = useState("series");
@@ -4465,7 +4476,7 @@ export default function App() {
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
   const [episodePlaying, setEpisodePlaying] = useState(false);
-  const [movieFrameIndex, setMovieFrameIndex] = useState(0);
+  const [movieFrameIndex, setMovieFrameIndex] = useState(1);
   const [moviePlaying, setMoviePlaying] = useState(false);
   const seasonHeroShellRef = useRef(null);
   const alarmPreviewAudioRef = useRef(null);
@@ -4741,7 +4752,13 @@ export default function App() {
   }, [unlocked]);
 
   const directories = videos?.directories || [];
-  const gameLibrary = Array.isArray(videos?.games) ? videos.games : [];
+  const compareMediaNames = (first, second) =>
+    String(first?.name || first?.file || "").localeCompare(
+      String(second?.name || second?.file || ""),
+      normalizeRaspberryLanguage(language),
+      { sensitivity: "base", numeric: true }
+    );
+  const gameLibrary = Array.isArray(videos?.games) ? [...videos.games].sort(compareMediaNames) : [];
   const selectedGame =
     gameLibrary.find((game) => game.relativePath === selectedGamePath) ||
     gameLibrary[0] ||
@@ -4758,7 +4775,7 @@ export default function App() {
   }, [gameLibrary, selectedGamePath]);
 
   useEffect(() => {
-    setSelectedGameImageIndex(0);
+    setSelectedGameImageIndex(1);
   }, [selectedGame?.relativePath]);
 
   useEffect(() => {
@@ -4883,8 +4900,8 @@ export default function App() {
         seasonCount: tmdbSeries?.seasonCount || 0,
         episodeCount: tmdbSeries?.totalEpisodeCount || 0,
       };
-    });
-  }, [directories, seriesProfiles, tmdbSeriesMap]);
+    }).sort(compareMediaNames);
+  }, [directories, seriesProfiles, tmdbSeriesMap, language]);
 
   const movieOptions = useMemo(() => {
     return movieLibrary.map((movie) => {
@@ -4905,9 +4922,10 @@ export default function App() {
         releaseDate: tmdbMovie?.releaseDate || "",
         runtime: tmdbMovie?.runtime || 0,
         voteAverage: tmdbMovie?.voteAverage || 0,
+        genres: tmdbMovie?.genres || [],
       };
-    });
-  }, [movieLibrary, movieProfiles, tmdbMovieMap]);
+    }).sort(compareMediaNames);
+  }, [movieLibrary, movieProfiles, tmdbMovieMap, language]);
 
   const selectedSeries =
     seriesOptions.find((series) => series.directoryPath === selectedDirectoryPath) ||
@@ -5044,7 +5062,7 @@ export default function App() {
   }, [selectedMovie, movieOptions]);
 
   useEffect(() => {
-    setMovieFrameIndex(0);
+    setMovieFrameIndex(1);
   }, [selectedMovie?.id]);
 
   useEffect(() => {
@@ -6877,6 +6895,14 @@ export default function App() {
                               selectedMovie.voteAverage > 0
                                 ? `${selectedMovie.voteAverage.toFixed(1)} / 10`
                                 : t("tmdb_rating_missing")}
+                            </span>
+                          </div>
+                          <div className="movie-panel__fact">
+                            <strong>{t("genres")}</strong>
+                            <span>
+                              {selectedMovie.genres?.length
+                                ? selectedMovie.genres.join(" · ")
+                                : t("not_available")}
                             </span>
                           </div>
                         </div>
