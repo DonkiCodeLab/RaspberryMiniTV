@@ -61,6 +61,18 @@ Cuando arrancan los servicios de la Raspberry:
 
 Eso significa que al encender la Raspberry, el movil puede abrir directamente la web desde la misma URL de la API, sin un puerto extra.
 
+## Actualizar todo desde la Raspberry
+
+Desde la raíz de `RaspberryMiniTV`, ejecuta:
+
+```bash
+./update_minitv.sh
+```
+
+El script descarga la última versión de `main`, instala las dependencias web si faltan,
+compila la web y reinstala/reinicia `minitv-api.service` y `minitv-menu.service`.
+Se detiene sin modificar nada si detecta cambios locales pendientes.
+
 Si haces cambios en `WebApp/`, recompila antes o despues de actualizar:
 
 ```bash
