@@ -186,8 +186,11 @@ fix_*.patch
 .venv-mac-preview/
 DeviceApp/__pycache__/*.pyc
 DeviceApp/user_settings.json
+DeviceApp/alarm_sounds/*
+!DeviceApp/alarm_sounds/.gitkeep
 DeviceApp/menu/Loading_INTRO.png
 DeviceApp/menu/Main_Menu_Button_2x1_Selectedpng.png
 DeviceApp/menu/lock.png
 WebApp/src/legacyCatalog.js
 assets/splashschreen_aux.psd
+MultimediaContent/

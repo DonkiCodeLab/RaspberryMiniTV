@@ -20,17 +20,11 @@ command -v git >/dev/null 2>&1 || fail "git no está instalado."
 
 cd "${SCRIPT_DIR}"
 
-NON_BUILD_CHANGES="$(git status --porcelain -- . ':(exclude)WebApp/dist/**')"
-if [[ -n "${NON_BUILD_CHANGES}" ]]; then
-  printf '%s\n' "${NON_BUILD_CHANGES}" >&2
-  fail "Hay cambios locales fuera de WebApp/dist. Guárdalos antes de actualizar."
-fi
-
-BUILD_CHANGES="$(git status --porcelain -- WebApp/dist)"
-if [[ -n "${BUILD_CHANGES}" ]]; then
-  STASH_NAME="minitv-web-build-$(date +%Y%m%d-%H%M%S)"
-  log "Guardando temporalmente los cambios generados de la web (${STASH_NAME})"
-  git stash push --include-untracked -m "${STASH_NAME}" -- WebApp/dist
+LOCAL_CHANGES="$(git status --porcelain)"
+if [[ -n "${LOCAL_CHANGES}" ]]; then
+  STASH_NAME="minitv-local-backup-$(date +%Y%m%d-%H%M%S)"
+  log "Guardando temporalmente los cambios locales (${STASH_NAME})"
+  git stash push --include-untracked -m "${STASH_NAME}"
 fi
 
 log "Descargando la última versión de main"
