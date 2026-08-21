@@ -4753,9 +4753,9 @@ export default function App() {
 
   const directories = videos?.directories || [];
   const compareMediaNames = (first, second) =>
-    String(first?.name || first?.file || "").localeCompare(
+      String(first?.name || first?.file || "").localeCompare(
       String(second?.name || second?.file || ""),
-      normalizeRaspberryLanguage(language),
+      normalizeRaspberryLanguage(raspberryLanguage),
       { sensitivity: "base", numeric: true }
     );
   const gameLibrary = Array.isArray(videos?.games) ? [...videos.games].sort(compareMediaNames) : [];
@@ -4901,7 +4901,7 @@ export default function App() {
         episodeCount: tmdbSeries?.totalEpisodeCount || 0,
       };
     }).sort(compareMediaNames);
-  }, [directories, seriesProfiles, tmdbSeriesMap, language]);
+  }, [directories, seriesProfiles, tmdbSeriesMap, raspberryLanguage]);
 
   const movieOptions = useMemo(() => {
     return movieLibrary.map((movie) => {
@@ -4925,7 +4925,7 @@ export default function App() {
         genres: tmdbMovie?.genres || [],
       };
     }).sort(compareMediaNames);
-  }, [movieLibrary, movieProfiles, tmdbMovieMap, language]);
+  }, [movieLibrary, movieProfiles, tmdbMovieMap, raspberryLanguage]);
 
   const selectedSeries =
     seriesOptions.find((series) => series.directoryPath === selectedDirectoryPath) ||
