@@ -45,7 +45,7 @@ if [[ -f "${WEB_DIR}/package.json" ]]; then
 fi
 
 log "Instalando y reiniciando la web y el menú"
-sudo MINITV_REPO_DIR="${SCRIPT_DIR}" "${DEVICE_DIR}/install_services.sh"
+sudo /usr/bin/env MINITV_REPO_DIR="${SCRIPT_DIR}" /bin/bash "${DEVICE_DIR}/install_services.sh"
 
 log "Estado de los servicios"
 sudo systemctl --no-pager --full status minitv-api.service minitv-menu.service || true
