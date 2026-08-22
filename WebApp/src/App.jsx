@@ -117,6 +117,25 @@ const MEDIA_TYPES = [
     inactiveIcon: gameIconYellow,
   },
 ];
+
+const formatMovieRuntime = (runtime, t) => {
+  const minutes = Number(runtime);
+
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    return null;
+  }
+
+  const minutesLabel = t("loading_movie_runtime", { minutes });
+
+  if (minutes <= 60) {
+    return minutesLabel;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${minutesLabel} (${hours}:${String(remainingMinutes).padStart(2, "0")} h)`;
+};
 const RASPBERRY_TABS = [
   {
     id: "dashboard",
@@ -374,6 +393,10 @@ const UI_STRINGS = {
     upload_series_requires_directory: "Selecciona o arrastra un único directorio de serie.",
     upload_series_subdirectories_error: "Todo el contenido de la serie debe estar dentro del directorio, sin subdirectorios.",
     upload_series_format_error: "Todos los ficheros deben contener el formato SxxExx.",
+    upload_duplicates_title: "La serie ya contiene capítulos",
+    upload_duplicates_copy: "{existing} de {total} vídeos ya están cargados en la Raspberry. ¿Qué quieres hacer?",
+    upload_overwrite_existing: "Sobrescribir los existentes",
+    upload_only_new: "Subir solo los nuevos",
     upload_button: "Upload",
     tmdb_browser_title: "Visualizar ficha en TMDB",
     tmdb_browser_copy:
@@ -614,6 +637,10 @@ const UI_STRINGS = {
     upload_series_requires_directory: "Selecciona o arrossega un únic directori de sèrie.",
     upload_series_subdirectories_error: "Tot el contingut de la sèrie ha d'estar dins del directori, sense subdirectoris.",
     upload_series_format_error: "Tots els fitxers han de contenir el format SxxExx.",
+    upload_duplicates_title: "La sèrie ja conté capítols",
+    upload_duplicates_copy: "{existing} de {total} vídeos ja estan carregats a la Raspberry. Què vols fer?",
+    upload_overwrite_existing: "Sobreescriure els existents",
+    upload_only_new: "Pujar només els nous",
     upload_button: "Upload",
     tmdb_browser_title: "Visualitzar fitxa a TMDB",
     tmdb_browser_copy:
@@ -854,6 +881,10 @@ const UI_STRINGS = {
     upload_series_requires_directory: "Select or drop a single series directory.",
     upload_series_subdirectories_error: "All series content must be inside the directory, without subdirectories.",
     upload_series_format_error: "Every file must contain the SxxExx format.",
+    upload_duplicates_title: "The series already contains episodes",
+    upload_duplicates_copy: "{existing} of {total} videos are already on the Raspberry. What would you like to do?",
+    upload_overwrite_existing: "Overwrite existing videos",
+    upload_only_new: "Upload only new videos",
     upload_button: "Upload",
     tmdb_browser_title: "View TMDB details",
     tmdb_browser_copy:
@@ -1030,6 +1061,10 @@ function getSeriesUploadValidation(files) {
     nestedFiles,
     invalidFiles,
   };
+}
+
+function getUploadEpisodeId(file) {
+  return String(file?.name || "").match(/S\d{2}E\d{2}/i)?.[0]?.toUpperCase() || "";
 }
 
 function readEntryFiles(entry) {
@@ -1534,20 +1569,13 @@ function HeroSelector({ options, value, placeholder, disabled, onChange }) {
   );
 }
 
-function SeasonCard({ season, isActive, disabled, onSelect, onDelete = () => {}, showDelete = false, t }) {
+function SeasonCard({ season, isActive, onSelect, onDelete = () => {}, showDelete = false, t }) {
   return (
-    <article
-      className={`season-card${isActive ? " active" : ""}${disabled ? " is-disabled" : ""}`}
-      aria-disabled={disabled}
-    >
+    <article className={`season-card${isActive ? " active" : ""}`}>
       <button
         className="season-card__main"
-        onClick={() => {
-          if (!disabled) {
-            onSelect(season.id);
-          }
-        }}
-        title={disabled ? t("unavailable_season") : season.title}
+        onClick={() => onSelect(season.id)}
+        title={season.title}
         type="button"
       >
       <div className="season-card__image-wrap">
@@ -1809,20 +1837,13 @@ function resolveNextEpisodeTarget({ currentPlayback, raspberryHealth, seriesOpti
     : null;
 }
 
-function EpisodeRow({ episode, available, onSelect, t }) {
+function EpisodeRow({ episode, onSelect, t }) {
   return (
-    <article
-      className={`episode-card${available ? "" : " is-disabled"}`}
-      aria-disabled={!available}
-    >
+    <article className="episode-card">
       <button
         className="episode-card__main"
-        onClick={() => {
-          if (available) {
-            onSelect(episode);
-          }
-        }}
-        title={available ? episode.title : t("unavailable_episode")}
+        onClick={() => onSelect(episode)}
+        title={episode.title}
         type="button"
       >
       <div className="episode-card__thumb">
@@ -1833,7 +1854,7 @@ function EpisodeRow({ episode, available, onSelect, t }) {
         <h3>
           {episode.episodeNumber}. {episode.title}
         </h3>
-        <p>{available ? episode.airDate : t("unavailable_episode")}</p>
+        <p>{episode.airDate || t("not_available")}</p>
       </div>
 
       <div className="episode-card__arrow">›</div>
@@ -2480,6 +2501,34 @@ function GameSettingsModal({ visible, game, onClose, onSave, t }) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function SeriesDuplicateModal({ duplicateCount, totalCount, onChoose, t }) {
+  if (!duplicateCount) return null;
+
+  return (
+    <div className="modal-backdrop">
+      <div className="dialog-card dialog-card--compact" onClick={(event) => event.stopPropagation()}>
+        <div className="dialog-card__header">
+          <div>
+            <p>{t("upload_series")}</p>
+            <h2>{t("upload_duplicates_title")}</h2>
+          </div>
+        </div>
+        <p className="dialog-copy">
+          {t("upload_duplicates_copy", { existing: duplicateCount, total: totalCount })}
+        </p>
+        <div className="dialog-card__actions">
+          <button className="dialog-button dialog-button--ghost" onClick={() => onChoose("new")} type="button">
+            {t("upload_only_new")}
+          </button>
+          <button className="dialog-button dialog-button--accent" onClick={() => onChoose("overwrite")} type="button">
+            {t("upload_overwrite_existing")}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -3709,7 +3758,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
                         <strong>{t("duration")}</strong>
                         <span>
                           {selectedItem.runtime
-                            ? t("loading_movie_runtime", { minutes: selectedItem.runtime })
+                            ? formatMovieRuntime(selectedItem.runtime, t)
                             : t("duration_unknown")}
                         </span>
                       </div>
@@ -4469,6 +4518,7 @@ export default function App() {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
   const [uploadValidationError, setUploadValidationError] = useState(null);
+  const [seriesDuplicatePrompt, setSeriesDuplicatePrompt] = useState(null);
   const [gameLookupOpen, setGameLookupOpen] = useState(false);
   const [gameUploadFile, setGameUploadFile] = useState(null);
   const [gameUploadQuery, setGameUploadQuery] = useState("");
@@ -4481,6 +4531,7 @@ export default function App() {
   const seasonHeroShellRef = useRef(null);
   const alarmPreviewAudioRef = useRef(null);
   const uploadAbortControllerRef = useRef(null);
+  const seriesDuplicateResolverRef = useRef(null);
   const t = (key, variables) => translate(raspberryLanguage, key, variables);
   const tmdbLanguage = getTmdbLanguage(raspberryLanguage);
 
@@ -4492,6 +4543,19 @@ export default function App() {
 
   function clearUploadAbortController() {
     uploadAbortControllerRef.current = null;
+  }
+
+  function chooseSeriesDuplicateAction(action) {
+    seriesDuplicateResolverRef.current?.(action);
+    seriesDuplicateResolverRef.current = null;
+    setSeriesDuplicatePrompt(null);
+  }
+
+  function requestSeriesDuplicateAction(duplicateCount, totalCount) {
+    return new Promise((resolve) => {
+      seriesDuplicateResolverRef.current = resolve;
+      setSeriesDuplicatePrompt({ duplicateCount, totalCount });
+    });
   }
 
   function resetUploadDialogState() {
@@ -5507,9 +5571,6 @@ export default function App() {
   }
 
   function handleOpenSeason(seasonId) {
-    const season = seasons.find((entry) => entry.id === seasonId);
-    if (!isSeasonUploaded(season, uploadedEpisodeIds)) return;
-
     setSelectedSeasonId(seasonId);
     setSeasonEpisodes(null);
     setSelectedEpisode(null);
@@ -5554,8 +5615,6 @@ export default function App() {
   }
 
   function handleOpenEpisodeDetails(episode) {
-    if (!isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)) return;
-
     setSelectedEpisode(episode);
     setEpisodeDialogOpen(true);
   }
@@ -5795,20 +5854,48 @@ export default function App() {
     let addResponse = null;
     if (uploadLookupOpen && targetMediaType === "series") {
       const seriesDetails = await getTvSeriesById(selectedSeriesResult.id, tmdbLanguage);
+      const latestVideos = await getVideos();
+      const existingSeries = (latestVideos?.directories || []).find(
+        (item) =>
+          Number(item?.tmdbId) === Number(selectedSeriesResult.id) ||
+          normalizeMediaLabel(item?.name) === normalizeMediaLabel(selectedSeriesResult.name)
+      );
+      const existingEpisodeIds = new Set(
+        (existingSeries?.episodeIds || existingSeries?.videos?.map((video) => video?.id) || [])
+          .filter(Boolean)
+          .map((episodeId) => String(episodeId).toUpperCase())
+      );
+      const duplicateFiles = uploadSelectedFiles.filter((file) => existingEpisodeIds.has(getUploadEpisodeId(file)));
+      let filesToUpload = uploadSelectedFiles;
+      let overwriteExisting = true;
+
+      if (duplicateFiles.length) {
+        const duplicateAction = await requestSeriesDuplicateAction(duplicateFiles.length, uploadSelectedFiles.length);
+        overwriteExisting = duplicateAction === "overwrite";
+        if (!overwriteExisting) {
+          filesToUpload = uploadSelectedFiles.filter((file) => !existingEpisodeIds.has(getUploadEpisodeId(file)));
+        }
+      }
+
       setUploadProgress(0);
-      const signal = createUploadSignal();
-      try {
-        addResponse = await uploadSeriesFiles({
-          files: uploadSelectedFiles,
-          series: selectedSeriesResult,
-          directoryName: uploadDirectoryName || uploadLookupQuery,
-          heroImage: seriesDetails.heroImage,
-          heroImageCrop: DEFAULT_HERO_CROP,
-          onProgress: setUploadProgress,
-          signal,
-        });
-      } finally {
-        clearUploadAbortController();
+      if (filesToUpload.length) {
+        const signal = createUploadSignal();
+        try {
+          addResponse = await uploadSeriesFiles({
+            files: filesToUpload,
+            series: selectedSeriesResult,
+            directoryName: uploadDirectoryName || uploadLookupQuery,
+            heroImage: seriesDetails.heroImage,
+            heroImageCrop: DEFAULT_HERO_CROP,
+            overwriteExisting,
+            onProgress: setUploadProgress,
+            signal,
+          });
+        } finally {
+          clearUploadAbortController();
+        }
+      } else {
+        addResponse = { ok: true, item: existingSeries };
       }
       const profileKey = addResponse?.item?.relativePath || "";
       if (profileKey) {
@@ -6483,7 +6570,6 @@ export default function App() {
                         <EpisodeRow
                           key={episode.id}
                           episode={episode}
-                          available={isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)}
                           onSelect={handleOpenEpisodeDetails}
                           t={t}
                         />
@@ -6812,7 +6898,6 @@ export default function App() {
                           key={season.id}
                           season={season}
                           isActive={season.id === selectedSeasonId}
-                          disabled={!isSeasonUploaded(season, uploadedEpisodeIds)}
                           onSelect={handleOpenSeason}
                           onDelete={handleDeleteSeason}
                           showDelete
@@ -6884,7 +6969,7 @@ export default function App() {
                             <strong>{t("duration")}</strong>
                             <span>
                               {selectedMovie.runtime
-                                ? t("loading_movie_runtime", { minutes: selectedMovie.runtime })
+                                ? formatMovieRuntime(selectedMovie.runtime, t)
                                 : t("duration_unknown")}
                             </span>
                           </div>
@@ -6959,6 +7044,12 @@ export default function App() {
               }
               t={t}
               tmdbLanguage={tmdbLanguage}
+            />
+            <SeriesDuplicateModal
+              duplicateCount={seriesDuplicatePrompt?.duplicateCount || 0}
+              totalCount={seriesDuplicatePrompt?.totalCount || 0}
+              onChoose={chooseSeriesDuplicateAction}
+              t={t}
             />
             <GameUploadModal
               visible={gameLookupOpen}

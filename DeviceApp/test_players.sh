@@ -20,7 +20,9 @@ Ejemplos:
 
 Notas:
   - Si no pasas un video, se usa el primer archivo compatible dentro de MultimediaContent/Videos.
-  - En Raspberry Pi Zero 2, `mpv` suele ser mejor candidato que `vlc` para seguir jugueteando con UI.
+  - La prueba `vlc` abre la interfaz grafica nativa y el controlador de pantalla completa.
+  - Toca la pantalla durante la reproduccion para comprobar si aparecen y responden los controles.
+  - VLC con UI necesita una sesion grafica activa (DISPLAY o WAYLAND_DISPLAY).
   - `vlc` y `mpv` no encajan igual de bien que `omxplayer` con el flujo actual por framebuffer/tty.
 EOF
 }
@@ -115,14 +117,20 @@ run_mpv() {
 
 run_vlc() {
   local video="$1"
-  require_command cvlc || return 1
+  require_command vlc || return 1
+
+  if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+    echo "VLC con UI necesita una sesion grafica activa (DISPLAY o WAYLAND_DISPLAY)." >&2
+    echo "Ejecuta esta prueba desde el escritorio de Raspberry Pi, no desde una TTY sin entorno grafico." >&2
+    return 1
+  fi
 
   local -a cmd=(
-    cvlc
+    vlc
+    --intf=qt
     --fullscreen
     --play-and-exit
-    --no-video-title-show
-    --quiet
+    --qt-fs-controller
   )
 
   cmd+=("${video}")

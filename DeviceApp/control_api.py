@@ -1914,6 +1914,7 @@ def upload_series():
     directory_name = str(request.form.get("directoryName") or name).strip()
     tmdb_id = int(request.form.get("tmdbId") or 0)
     hero_image = str(request.form.get("heroImage") or "").strip()
+    overwrite_existing = str(request.form.get("overwriteExisting") or "true").strip().lower() not in {"0", "false", "no"}
     hero_image_crop = None
     try:
         parsed_crop = json.loads(request.form.get("heroImageCrop") or "null")
@@ -1990,10 +1991,26 @@ def upload_series():
     target_slug = slugify(name or directory_name, "serie")
     target_dir = os.path.join(TVSHOWS_DIR, target_slug)
     os.makedirs(target_dir, exist_ok=True)
+    existing_episode_ids = {
+        video.get("id") for video in get_series_directory_videos(target_dir) if video.get("id")
+    }
+    skipped_episode_ids = []
 
     for entry in normalized_files:
+        if not overwrite_existing and entry["id"] in existing_episode_ids:
+            skipped_episode_ids.append(entry["id"])
+            log_upload_event(f"series episode skipped existing id={entry['id']} name={name}")
+            continue
         target_filename = os.path.basename(entry["filename"])
         target_path = os.path.join(target_dir, target_filename)
+        if overwrite_existing and entry["id"] in existing_episode_ids:
+            for existing_video in get_series_directory_videos(target_dir):
+                if existing_video.get("id") != entry["id"]:
+                    continue
+                existing_path = os.path.join(target_dir, os.path.basename(existing_video.get("file") or ""))
+                if existing_path != target_path and os.path.isfile(existing_path):
+                    os.remove(existing_path)
+                    log_upload_event(f"series episode replaced old={existing_path} id={entry['id']}")
         log_upload_event(
             f"series episode start id={entry['id']} filename={target_filename} target={target_path} tvShowsRoot={TVSHOWS_DIR}"
         )
@@ -2018,7 +2035,7 @@ def upload_series():
             "heroImageCrop": hero_image_crop,
         },
     )
-    return jsonify({"ok": True, "item": item})
+    return jsonify({"ok": True, "item": item, "skippedEpisodeIds": skipped_episode_ids})
 
 
 @app.route("/games/upload", methods=["POST"])

@@ -3123,6 +3123,13 @@ img {
   transform: translateY(-2px);
 }
 
+.episode-dialog__play:disabled {
+  opacity: 0.46;
+  filter: grayscale(0.85);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .episode-dialog__synopsis {
   margin-top: 1rem;
   padding: 1rem 1.25rem 1.15rem;

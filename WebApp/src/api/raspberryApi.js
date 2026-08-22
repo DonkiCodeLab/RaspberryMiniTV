@@ -643,7 +643,7 @@ export function uploadMovieFile({ file, movie, onProgress, signal } = {}) {
   });
 }
 
-export function uploadSeriesFiles({ files, series, directoryName, heroImage, heroImageCrop, onProgress, signal } = {}) {
+export function uploadSeriesFiles({ files, series, directoryName, heroImage, heroImageCrop, overwriteExisting = true, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) {
     return Promise.reject(new Error("Missing files"));
@@ -655,13 +655,20 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
   if (isMockModeEnabled()) {
     const current = loadMockSeriesLibrary();
     const existingPaths = new Set(current.map((entry) => entry.relativePath));
-    const relativePath = createMockSeriesRelativePath(seriesName || directoryName || "serie", existingPaths);
-    const videos = safeFiles.map((file) => ({
+    const existingItem = current.find((entry) => Number(entry?.tmdbId) === tmdbId);
+    const relativePath = existingItem?.relativePath || createMockSeriesRelativePath(seriesName || directoryName || "serie", existingPaths);
+    const uploadedVideos = safeFiles.map((file) => ({
       id: String(file.name || "").match(/S\d{2}E\d{2}/i)?.[0]?.toUpperCase() || "",
       file: file.name,
       relativePath: `${relativePath}/${file.name}`,
     }));
+    const uploadedIds = new Set(uploadedVideos.map((video) => video.id));
+    const videos = [
+      ...(existingItem?.videos || []).filter((video) => !overwriteExisting || !uploadedIds.has(video.id)),
+      ...uploadedVideos,
+    ];
     const item = {
+      ...existingItem,
       name: seriesName,
       tmdbId,
       relativePath,
@@ -670,7 +677,7 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
       heroImage: heroImage || "",
       heroImageCrop: heroImageCrop || null,
     };
-    saveMockSeriesLibrary([...current, item]);
+    saveMockSeriesLibrary(existingItem ? current.map((entry) => entry === existingItem ? item : entry) : [...current, item]);
     if (typeof onProgress === "function") {
       onProgress({
         percent: 100,
@@ -702,6 +709,7 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
       formData.append("tmdbId", String(tmdbId));
       formData.append("heroImage", String(heroImage || ""));
       formData.append("heroImageCrop", JSON.stringify(heroImageCrop || null));
+      formData.append("overwriteExisting", overwriteExisting ? "true" : "false");
 
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${getBaseUrl()}/series/upload`);
