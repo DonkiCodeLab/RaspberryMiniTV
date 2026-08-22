@@ -1,23 +1,16 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-WEB_DIR="${REPO_DIR}/WebApp"
-LOG_FILE="/tmp/minitv-menu.log"
+UPDATE_SCRIPT="${REPO_DIR}/update_minitv.sh"
 
-cd "${REPO_DIR}"
-git pull
-
-if command -v npm >/dev/null 2>&1 && [ -f "${WEB_DIR}/package.json" ]; then
-  cd "${WEB_DIR}"
-  npm run build
-  cd "${REPO_DIR}"
+if [[ ! -x "${UPDATE_SCRIPT}" ]]; then
+  printf 'ERROR: no se encuentra el actualizador ejecutable: %s\n' "${UPDATE_SCRIPT}" >&2
+  exit 1
 fi
 
-sudo systemctl restart minitv-api.service
-sudo systemctl restart minitv-menu.service
-
-touch "${LOG_FILE}"
-tail -f "${LOG_FILE}"
+# Mantener un unico flujo de actualizacion. update_minitv.sh guarda en un stash
+# los cambios locales antes del pull, compila la web y reinicia los servicios.
+exec "${UPDATE_SCRIPT}"
