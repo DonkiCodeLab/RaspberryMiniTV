@@ -16,6 +16,11 @@ fi
 SYSTEMD_DIR="/etc/systemd/system"
 VIDEOS_DIR="${REPO_DIR}/MultimediaContent/Videos"
 GAMES_DIR="${REPO_DIR}/MultimediaContent/Games"
+KODI_USER="${MINITV_KODI_USER:-donkicodelab}"
+KODI_HOME="$(getent passwd "${KODI_USER}" | cut -d: -f6)"
+KODI_ADDON_SOURCE="${SCRIPT_DIR}/kodi/service.minitv.player"
+KODI_ADDON_DIR="${KODI_HOME}/.kodi/addons/service.minitv.player"
+KODI_ASOUNDRC_SOURCE="${SCRIPT_DIR}/kodi/asoundrc.minitv"
 
 NEW_SERVICES=(
   minitv-api.service
@@ -40,7 +45,24 @@ install_service() {
 
 require_root
 
+if [[ -z "${KODI_HOME}" ]]; then
+  echo "No se encuentra el usuario de Kodi: ${KODI_USER}" >&2
+  exit 1
+fi
+
 mkdir -p "${VIDEOS_DIR}/Movies" "${VIDEOS_DIR}/TVShows" "${GAMES_DIR}"
+
+mkdir -p "${KODI_ADDON_DIR}"
+cp "${KODI_ADDON_SOURCE}/addon.xml" "${KODI_ADDON_SOURCE}/service.py" "${KODI_ADDON_DIR}/"
+chown -R "${KODI_USER}:${KODI_USER}" "${KODI_HOME}/.kodi"
+
+if [[ ! -f "${KODI_HOME}/.asoundrc" ]]; then
+  cp "${KODI_ASOUNDRC_SOURCE}" "${KODI_HOME}/.asoundrc"
+  chown "${KODI_USER}:${KODI_USER}" "${KODI_HOME}/.asoundrc"
+elif ! grep -q '^pcm\.minitv_kodi ' "${KODI_HOME}/.asoundrc"; then
+  printf '\n' >>"${KODI_HOME}/.asoundrc"
+  cat "${KODI_ASOUNDRC_SOURCE}" >>"${KODI_HOME}/.asoundrc"
+fi
 
 systemctl stop "${NEW_SERVICES[@]}" 2>/dev/null || true
 

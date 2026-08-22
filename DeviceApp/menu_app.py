@@ -211,6 +211,9 @@ LOADING_MIN_DURATION_MS = 1000
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.sock")
 MPV_SCREENSHOT_PATH = os.path.join(tempfile.gettempdir(), "minitv-video-preview.png")
 MPV_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.log")
+KODI_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-kodi.log")
+KODI_USER = os.environ.get("MINITV_KODI_USER", "donkicodelab").strip() or "donkicodelab"
+KODI_ADDON_ID = "service.minitv.player"
 INTRO_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-intro.log")
 RETROARCH_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.cfg")
 RETROARCH_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.log")
@@ -1301,6 +1304,7 @@ class DeviceAppMenu:
         self.loading_rotation = 0
         self.video_proc = None
         self.video_log_handle = None
+        self.video_backend = ""
         self.video_current_path = ""
         self.video_return_state = "play"
         self.video_now_playing = ""
@@ -2548,9 +2552,13 @@ class DeviceAppMenu:
             self.play_video_path(videos[0])
 
     def handle_video_touch_down(self, pos):
+        if self.video_backend == "kodi":
+            return
         self.handle_external_app_touch_down("video")
 
     def handle_video_touch_up(self, pos):
+        if self.video_backend == "kodi":
+            return
         self.handle_external_app_touch_up("video")
 
     def reset_external_touch_sequence(self):
@@ -2628,6 +2636,64 @@ class DeviceAppMenu:
             command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
         command.append(filepath)
         return command
+
+    def get_kodi_home(self):
+        try:
+            import pwd
+
+            return pwd.getpwnam(KODI_USER).pw_dir
+        except Exception:
+            return os.path.join("/home", KODI_USER)
+
+    def kodi_is_available(self):
+        kodi_path = shutil.which("kodi")
+        runuser_path = shutil.which("runuser")
+        addon_path = os.path.join(
+            self.get_kodi_home(),
+            ".kodi",
+            "addons",
+            KODI_ADDON_ID,
+            "addon.xml",
+        )
+        return bool(kodi_path and runuser_path and os.path.isfile(addon_path))
+
+    def build_kodi_command(self, filepath):
+        kodi_home = self.get_kodi_home()
+        try:
+            import pwd
+
+            kodi_uid = pwd.getpwnam(KODI_USER).pw_uid
+        except Exception:
+            kodi_uid = 1000
+        kodi_runtime_dir = os.path.join("/run/user", str(kodi_uid))
+        return [
+            shutil.which("runuser") or "runuser",
+            "--user",
+            KODI_USER,
+            "--",
+            "env",
+            f"HOME={kodi_home}",
+            f"USER={KODI_USER}",
+            f"LOGNAME={KODI_USER}",
+            f"XDG_RUNTIME_DIR={kodi_runtime_dir}",
+            f"MINITV_KODI_MEDIA_PATH={filepath}",
+            shutil.which("kodi") or "kodi",
+            "--standalone",
+            "--fullscreen",
+        ]
+
+    def send_kodi_action(self, action):
+        kodi_send = shutil.which("kodi-send")
+        if not kodi_send:
+            return False
+        result = run_command([kodi_send, f"--action={action}"])
+        if result.returncode != 0:
+            append_debug_log(
+                KODI_DEBUG_LOG_PATH,
+                f"kodi-send failed action={action}: {result.stderr.strip()}",
+            )
+            return False
+        return True
 
     def close_video_log_handle(self):
         if self.video_log_handle is None:
@@ -2710,6 +2776,8 @@ class DeviceAppMenu:
         remove_path_if_exists(MPV_SCREENSHOT_PATH)
 
     def capture_video_preview(self):
+        if self.video_backend != "mpv":
+            return
         if not self.video_proc or self.video_proc.poll() is not None:
             return
         preview_seconds = self.get_mpv_time_pos()
@@ -2748,19 +2816,26 @@ class DeviceAppMenu:
     def stop_video_playback(self, silent=False):
         proc = self.video_proc
         if proc and proc.poll() is None:
-            self.send_mpv_command("quit")
+            if self.video_backend == "kodi":
+                self.send_kodi_action("Quit")
+            else:
+                self.send_mpv_command("quit")
             try:
-                proc.wait(timeout=2.0)
+                proc.wait(timeout=4.0)
             except Exception:
                 try:
                     proc.terminate()
                 except Exception:
                     pass
         self.close_video_log_handle()
-        run_command(["pkill", "-f", "mpv"])
+        if self.video_backend == "kodi":
+            run_command(["pkill", "-u", KODI_USER, "-f", "kodi.bin"])
+        else:
+            run_command(["pkill", "-f", "mpv"])
         self.resume_display_after_video()
         remove_path_if_exists(MPV_SOCKET_PATH)
         self.video_proc = None
+        self.video_backend = ""
         self.video_current_path = ""
         self.loading_video_path = None
         self.loading_video_start_seconds = 0.0
@@ -2776,29 +2851,38 @@ class DeviceAppMenu:
         if pygame.time.get_ticks() - self.loading_started_at < LOADING_MIN_DURATION_MS:
             return
         self.video_return_state = self.loading_return_state
-        command = self.build_mpv_command(self.loading_video_path, self.loading_video_start_seconds)
-        log_debug(f"VIDEO start via mpv file={self.loading_video_path} start={self.loading_video_start_seconds:.3f}")
-        append_debug_log(MPV_DEBUG_LOG_PATH, f"Launching mpv: {' '.join(command)}")
+        use_kodi = not DESKTOP_PREVIEW and self.kodi_is_available()
+        self.video_backend = "kodi" if use_kodi else "mpv"
+        if use_kodi:
+            command = self.build_kodi_command(self.loading_video_path)
+            debug_log_path = KODI_DEBUG_LOG_PATH
+            log_debug(f"VIDEO start via kodi file={self.loading_video_path}")
+            append_debug_log(debug_log_path, f"Launching Kodi: {' '.join(command)}")
+        else:
+            command = self.build_mpv_command(self.loading_video_path, self.loading_video_start_seconds)
+            debug_log_path = MPV_DEBUG_LOG_PATH
+            log_debug(f"VIDEO start via mpv file={self.loading_video_path} start={self.loading_video_start_seconds:.3f}")
+            append_debug_log(debug_log_path, f"Launching mpv: {' '.join(command)}")
         self.close_video_log_handle()
         try:
             self.suspend_display_for_video()
-            mpv_env = os.environ.copy()
+            player_env = os.environ.copy()
             for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
-                mpv_env.pop(env_key, None)
+                player_env.pop(env_key, None)
             append_debug_log(
-                MPV_DEBUG_LOG_PATH,
-                "Launching mpv with sanitized env (removed SDL_VIDEODRIVER, SDL_FBDEV, SDL_MOUSE_TOUCH_EVENTS)",
+                debug_log_path,
+                f"Launching {self.video_backend} with sanitized SDL environment",
             )
-            self.video_log_handle = open(MPV_DEBUG_LOG_PATH, "a", encoding="utf-8")
+            self.video_log_handle = open(debug_log_path, "a", encoding="utf-8")
             self.video_proc = subprocess.Popen(
                 command,
                 stdout=self.video_log_handle,
                 stderr=self.video_log_handle,
-                env=mpv_env,
+                env=player_env,
             )
         except Exception as exc:
-            append_debug_log(MPV_DEBUG_LOG_PATH, f"Failed to launch mpv: {exc}")
-            log_debug(f"VIDEO failed to launch mpv: {exc}")
+            append_debug_log(debug_log_path, f"Failed to launch {self.video_backend}: {exc}")
+            log_debug(f"VIDEO failed to launch {self.video_backend}: {exc}")
             self.close_video_log_handle()
             self.resume_display_after_video()
             self.video_proc = None
@@ -2807,14 +2891,15 @@ class DeviceAppMenu:
             self.state = self.video_return_state
             return
 
-        ipc_ready = self.wait_for_mpv_ipc()
-        if not ipc_ready:
-            append_debug_log(MPV_DEBUG_LOG_PATH, "mpv IPC socket was not created within 2.0s")
+        if self.video_backend == "mpv":
+            ipc_ready = self.wait_for_mpv_ipc()
+            if not ipc_ready:
+                append_debug_log(MPV_DEBUG_LOG_PATH, "mpv IPC socket was not created within 2.0s")
         time.sleep(0.15)
         if self.video_proc.poll() is not None:
             return_code = self.video_proc.returncode
-            append_debug_log(MPV_DEBUG_LOG_PATH, f"mpv exited immediately with return code {return_code}")
-            log_debug(f"VIDEO mpv exited immediately returncode={return_code}")
+            append_debug_log(debug_log_path, f"{self.video_backend} exited immediately with return code {return_code}")
+            log_debug(f"VIDEO {self.video_backend} exited immediately returncode={return_code}")
             self.close_video_log_handle()
             self.video_proc = None
             self.resume_display_after_video()
@@ -2836,9 +2921,11 @@ class DeviceAppMenu:
             return
         if self.state == "video" and self.video_proc and self.video_proc.poll() is not None:
             return_code = self.video_proc.returncode
-            append_debug_log(MPV_DEBUG_LOG_PATH, f"mpv exited with return code {return_code}")
-            log_debug(f"VIDEO mpv exited returncode={return_code}")
+            debug_log_path = KODI_DEBUG_LOG_PATH if self.video_backend == "kodi" else MPV_DEBUG_LOG_PATH
+            append_debug_log(debug_log_path, f"{self.video_backend} exited with return code {return_code}")
+            log_debug(f"VIDEO {self.video_backend} exited returncode={return_code}")
             self.video_proc = None
+            self.video_backend = ""
             self.close_video_log_handle()
             self.resume_display_after_video()
             remove_path_if_exists(MPV_SOCKET_PATH)

@@ -1,0 +1,20 @@
+pcm.minitv_kodi {
+    type plug
+
+    slave {
+        pcm "hw:CARD=wm8960soundcard,DEV=0"
+        format S16_LE
+        rate 48000
+        channels 2
+    }
+
+    hint {
+        show on
+        description "MiniTV WM8960 S16"
+    }
+}
+
+ctl.minitv_kodi {
+    type hw
+    card wm8960soundcard
+}

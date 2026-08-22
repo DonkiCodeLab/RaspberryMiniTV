@@ -76,6 +76,28 @@ Los cambios locales de código se guardan automáticamente en un `stash` recuper
 antes de actualizar. La biblioteca multimedia y los sonidos de alarma locales se
 conservan en su sitio y no bloquean las actualizaciones.
 
+## Reproductor Kodi sin escritorio
+
+En Raspberry Pi, el menú utiliza Kodi en modo standalone para reproducir vídeo con
+controles táctiles sin instalar un escritorio. Instala Kodi y su cliente de control:
+
+```bash
+sudo apt update
+sudo apt install kodi libgl1-mesa-dri kodi-eventclients-kodi-send
+```
+
+En las imágenes de Raspberry Pi OS que ofrecen Kodi 21 como paquete separado, usa
+`kodi21` y `kodi21-eventclients-kodi-send`. Después ejecuta de nuevo el instalador:
+
+```bash
+cd /home/donkicodelab/RaspberryMiniTV/DeviceApp
+sudo ./install_services.sh
+```
+
+El instalador copia el servicio `service.minitv.player` al perfil Kodi del usuario
+`donkicodelab` y registra la salida ALSA `minitv_kodi` para la WM8960. En Kodi, la
+salida de audio debe seleccionarse una vez como `ALSA: MiniTV WM8960 S16`.
+
 Si haces cambios en `WebApp/`, recompila antes o despues de actualizar:
 
 ```bash
