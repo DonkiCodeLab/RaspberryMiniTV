@@ -1011,7 +1011,7 @@ function deriveUploadSearchLabel(file, mediaType) {
     }
 
     return stripFileExtension(rawName)
-      .replace(/\bS\d{1,2}E\d{1,2}\b/gi, "")
+      .replace(/\bS\d{1,2}E\d{1,}\b/gi, "")
       .replace(/\b\d{3,4}p\b/gi, "")
       .replace(/[._-]+/g, " ")
       .trim();
@@ -1031,7 +1031,7 @@ function getSeriesUploadValidation(files) {
   const roots = new Set();
   const nestedFiles = [];
   const invalidFiles = [];
-  const episodePattern = /S\d{2}E\d{2}/i;
+  const episodePattern = /S\d{2}E\d{2,}/i;
 
   safeFiles.forEach((file) => {
     const relativePath = String(file?.webkitRelativePath || "").replace(/\\/g, "/").trim();
@@ -1618,7 +1618,7 @@ function parseRaspberryEpisodeId(value) {
   const match = String(value || "")
     .trim()
     .toUpperCase()
-    .match(/^S(\d{2})E(\d{2})$/);
+    .match(/^S(\d{2})E(\d{2,})$/);
 
   if (!match) return null;
 

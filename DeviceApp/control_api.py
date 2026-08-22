@@ -39,7 +39,7 @@ GAME_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "GameCovers")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "WebApp", "dist")
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
 LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
-EP_RE = re.compile(r"(S\d{2}E\d{2})", re.IGNORECASE)
+EP_RE = re.compile(r"(S(\d{2})E(\d{2,}))", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/minitv_qr.png"
 MPV_SOCKET_PATH = os.path.join(tempfile.gettempdir(), "minitv-mpv.sock")
@@ -1060,8 +1060,8 @@ def resolve_relative_video_path(relative_path, required_root):
 def parse_video_entry(filename):
     match = EP_RE.search(filename)
     media_id = match.group(1).upper() if match else os.path.splitext(filename)[0].upper()
-    season_number = int(media_id[1:3]) if EP_RE.fullmatch(media_id) else None
-    episode_number = int(media_id[4:6]) if EP_RE.fullmatch(media_id) else None
+    season_number = int(match.group(2)) if match else None
+    episode_number = int(match.group(3)) if match else None
     return media_id, season_number, episode_number
 
 
