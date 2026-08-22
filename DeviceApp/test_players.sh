@@ -11,16 +11,18 @@ mkdir -p "${LOG_DIR}"
 usage() {
   cat <<'EOF'
 Uso:
-  ./test_players.sh <omxplayer|mpv|vlc|all> [ruta_al_video]
+  ./test_players.sh <omxplayer|mpv|vlc|vlc-headless|all> [ruta_al_video]
 
 Ejemplos:
   ./test_players.sh mpv
   ./test_players.sh vlc MultimediaContent/Videos/Movies/demo.mp4
+  ./test_players.sh vlc-headless menu/video_intro.mp4
   ./test_players.sh all
 
 Notas:
   - Si no pasas un video, se usa el primer archivo compatible dentro de MultimediaContent/Videos.
   - La prueba `vlc` abre la interfaz grafica nativa y el controlador de pantalla completa.
+  - La prueba `vlc-headless` usa VLC directamente desde TTY, sin X11 ni Wayland.
   - Toca la pantalla durante la reproduccion para comprobar si aparecen y responden los controles.
   - VLC con UI necesita una sesion grafica activa (DISPLAY o WAYLAND_DISPLAY).
   - `vlc` y `mpv` no encajan igual de bien que `omxplayer` con el flujo actual por framebuffer/tty.
@@ -137,6 +139,25 @@ run_vlc() {
   run_logged "vlc" "${cmd[@]}"
 }
 
+run_vlc_headless() {
+  local video="$1"
+  require_command cvlc || return 1
+
+  local -a cmd=(
+    cvlc
+    --intf=dummy
+    --fullscreen
+    --play-and-exit
+    --no-video-title-show
+    --no-osd
+    --avcodec-hw=any
+  )
+
+  cmd+=("${video}")
+  echo "Prueba sin escritorio: pulsa Ctrl+C si necesitas detenerla."
+  run_logged "vlc-headless" "${cmd[@]}"
+}
+
 main() {
   if [[ "${1:-}" == "" || "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     usage
@@ -161,10 +182,14 @@ main() {
     vlc)
       run_vlc "${video}"
       ;;
+    vlc-headless)
+      run_vlc_headless "${video}"
+      ;;
     all)
       run_omxplayer "${video}" || true
       run_mpv "${video}" || true
       run_vlc "${video}" || true
+      run_vlc_headless "${video}" || true
       ;;
     *)
       usage
