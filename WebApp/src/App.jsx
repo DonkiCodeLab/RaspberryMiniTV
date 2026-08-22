@@ -134,7 +134,16 @@ const formatMovieRuntime = (runtime, t) => {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
 
-  return `${minutesLabel} (${hours}:${String(remainingMinutes).padStart(2, "0")} h)`;
+  return `${minutesLabel} (${hours}h ${remainingMinutes}min)`;
+};
+const formatSeriesRuntime = (runtime) => {
+  const minutes = Number(runtime);
+
+  if (!Number.isFinite(minutes) || minutes < 0) {
+    return "0h 0min";
+  }
+
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}min`;
 };
 const RASPBERRY_TABS = [
   {
@@ -436,6 +445,7 @@ const UI_STRINGS = {
     no_movies_available: "Sin películas disponibles",
     no_seasons_available: "Sin series disponibles",
     seasons_label: "TEMPORADAS",
+    chapters_summary: "Capítulos",
     loading_movie_runtime: "{minutes} minutos",
     tmdb_rating_missing: "Valoración TMDB no disponible",
     movie_file_label: "FICHA DE LA PELÍCULA",
@@ -680,6 +690,7 @@ const UI_STRINGS = {
     no_movies_available: "No hi ha pel·lícules disponibles",
     no_seasons_available: "No hi ha temporades disponibles",
     seasons_label: "TEMPORADES",
+    chapters_summary: "Capítols",
     loading_movie_runtime: "{minutes} minuts",
     tmdb_rating_missing: "Valoració TMDB no disponible",
     movie_file_label: "FITXA DE LA PEL·LÍCULA",
@@ -924,6 +935,7 @@ const UI_STRINGS = {
     no_movies_available: "No movies available",
     no_seasons_available: "No seasons available",
     seasons_label: "SEASONS",
+    chapters_summary: "Episodes",
     loading_movie_runtime: "{minutes} minutes",
     tmdb_rating_missing: "TMDB rating unavailable",
     movie_file_label: "MOVIE DETAILS",
@@ -4963,6 +4975,7 @@ export default function App() {
         seasons: tmdbSeries?.seasons || [],
         seasonCount: tmdbSeries?.seasonCount || 0,
         episodeCount: tmdbSeries?.totalEpisodeCount || 0,
+        totalRuntimeMinutes: tmdbSeries?.totalRuntimeMinutes || 0,
       };
     }).sort(compareMediaNames);
   }, [directories, seriesProfiles, tmdbSeriesMap, raspberryLanguage]);
@@ -6552,7 +6565,9 @@ export default function App() {
                     <div className="season-page__hero-overlay">
                       <h1>{selectedSeries.name}</h1>
                       <p>{selectedSeason.title}</p>
-                      <span>{`${selectedSeason.episodeCount} ${t("episodes")}`}</span>
+                      <span>
+                        {`${selectedSeason.episodeCount} ${t("chapters_summary")} / ${formatSeriesRuntime(selectedSeason.totalRuntimeMinutes)}`}
+                      </span>
                     </div>
                   </header>
                 </div>
@@ -6892,7 +6907,9 @@ export default function App() {
                   </section>
                 ) : isSeriesMode ? (
                   <section className="seasons-section">
-                    <div className="seasons-section__label">{`${seasons.length} ${t("seasons_label")}`}</div>
+                    <div className="seasons-section__label">
+                      {`${seasons.length} ${t("seasons_label")} (${selectedSeries?.episodeCount || 0} ${t("chapters_summary")} / ${formatSeriesRuntime(selectedSeries?.totalRuntimeMinutes)})`}
+                    </div>
                     <div className={`season-grid${seasons.length === 1 ? " season-grid--single" : ""}`}>
                       {seasons.map((season) => (
                         <SeasonCard

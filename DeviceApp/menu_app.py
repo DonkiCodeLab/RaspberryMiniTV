@@ -1181,6 +1181,8 @@ class DeviceAppMenu:
         self.ethernet_asset = load_image(ETHERNET_ICON_PATH)
         self.wifi_config_asset = load_image(NETWORK_ICON_PATH)
         self.ethernet_status = get_ethernet_status()
+        self.network_wifi_ssid = get_connected_wifi_info()
+        self.network_wifi_ip = get_wifi_ipv4() if self.network_wifi_ssid else None
         self.mini_logo_asset = load_image(MINI_LOGO_PATH)
         self.qr_asset = None
         self.wifi_networks = []
@@ -1845,10 +1847,22 @@ class DeviceAppMenu:
     def refresh_ethernet_status(self):
         self.ethernet_status = get_ethernet_status()
 
+    def refresh_network_status(self):
+        self.refresh_ethernet_status()
+        self.network_wifi_ssid = get_connected_wifi_info()
+        self.network_wifi_ip = get_wifi_ipv4() if self.network_wifi_ssid else None
+
     def get_network_layout(self):
+        margin = 20
+        gap = 20
+        panel_width = (self.width - (margin * 2) - gap) // 2
+        panel_y = 100
+        panel_height = self.height - panel_y - 20
         return {
-            "ethernet": pygame.Rect(70, 105, self.width - 140, 220),
-            "wifi": pygame.Rect(150, 355, self.width - 300, 72),
+            "ethernet_panel": pygame.Rect(margin, panel_y, panel_width, panel_height),
+            "wifi_panel": pygame.Rect(margin + panel_width + gap, panel_y, panel_width, panel_height),
+            "ethernet_refresh": pygame.Rect(margin + 24, panel_y + panel_height - 92, 72, 64),
+            "wifi_configure": pygame.Rect(margin + panel_width + gap + 24, panel_y + panel_height - 92, 72, 64),
         }
 
     def get_wifi_layout(self):
@@ -2918,7 +2932,7 @@ class DeviceAppMenu:
                 self.refresh_qr_asset()
                 self.state = "qr"
             elif button_id in ("wifi",):
-                self.refresh_ethernet_status()
+                self.refresh_network_status()
                 self.state = "network"
             elif button_id in ("more", "2x2"):
                 self.state = "more"
@@ -3090,8 +3104,10 @@ class DeviceAppMenu:
         layout = self.get_network_layout()
         if self.top_back_at_pos(pos):
             self.pressed_button = "top-back"
-        elif layout["wifi"].collidepoint(pos):
+        elif layout["wifi_configure"].collidepoint(pos):
             self.pressed_button = "network-wifi"
+        elif layout["ethernet_refresh"].collidepoint(pos):
+            self.pressed_button = "network-refresh"
         else:
             self.pressed_button = "network-touch"
 
@@ -3102,11 +3118,14 @@ class DeviceAppMenu:
         if active_button == "top-back" and self.top_back_at_pos(pos):
             self.play_ui_click_sound()
             self.state = "main"
-        elif active_button == "network-wifi" and layout["wifi"].collidepoint(pos):
+        elif active_button == "network-wifi" and layout["wifi_configure"].collidepoint(pos):
             self.play_ui_click_sound()
             self.wifi_return_state = "network"
             self.refresh_wifi_networks()
             self.state = "wifi"
+        elif active_button == "network-refresh" and layout["ethernet_refresh"].collidepoint(pos):
+            self.play_ui_click_sound()
+            self.refresh_network_status()
 
     def handle_wifi_touch_down(self, pos):
         if self.state == "wifi_password":
@@ -3669,51 +3688,75 @@ class DeviceAppMenu:
 
     def draw_network(self):
         layout = self.get_network_layout()
-        status = self.ethernet_status or {"connected": False, "ip": None}
+        ethernet_status = self.ethernet_status or {"connected": False, "ip": None}
         self.screen.fill((18, 22, 28))
         self.draw_submenu_header(self.tr("network.title"))
 
-        panel = layout["ethernet"]
-        draw_rect_compat(self.screen, DARK_GRAY, panel, 0, 12)
-        draw_rect_compat(self.screen, (92, 98, 110), panel, 2, 12)
-        if self.ethernet_asset is not None:
-            icon = fit_image_contain(self.ethernet_asset, (112, 112))
-            if icon is not None:
-                self.screen.blit(icon, icon.get_rect(center=(panel.x + 105, panel.centery)))
+        ethernet_panel = layout["ethernet_panel"]
+        wifi_panel = layout["wifi_panel"]
+        for panel in (ethernet_panel, wifi_panel):
+            draw_rect_compat(self.screen, DARK_GRAY, panel, 0, 12)
+            draw_rect_compat(self.screen, (92, 98, 110), panel, 2, 12)
 
-        text_x = panel.x + 190
-        title = self.wifi_bold_font.render(self.tr("network.ethernet"), True, WHITE)
-        self.screen.blit(title, (text_x, panel.y + 48))
-        if status.get("connected"):
-            connection_text = self.tr("network.ethernet_connected")
-            ip_text = self.tr("network.ip_address", ip=status.get("ip") or self.tr("network.ip_pending"))
-            connection_color = GREEN
-        else:
-            connection_text = self.tr("network.ethernet_disconnected")
-            ip_text = self.tr("network.no_ip")
-            connection_color = (235, 190, 55)
-        text_width = panel.right - text_x - 18
-        connection_text = self.truncate_text(connection_text, self.small_font, text_width)
-        ip_text = self.truncate_text(ip_text, self.small_font, text_width)
-        connection = self.small_font.render(connection_text, True, connection_color)
-        ip_surface = self.small_font.render(ip_text, True, WHITE)
-        self.screen.blit(connection, (text_x, panel.y + 96))
-        self.screen.blit(ip_surface, (text_x, panel.y + 132))
+        ethernet_title = self.wifi_bold_font.render(self.tr("network.ethernet"), True, WHITE)
+        wifi_title = self.wifi_bold_font.render(self.tr("network.wifi"), True, WHITE)
+        self.screen.blit(ethernet_title, ethernet_title.get_rect(center=(ethernet_panel.centerx, ethernet_panel.y + 38)))
+        self.screen.blit(wifi_title, wifi_title.get_rect(center=(wifi_panel.centerx, wifi_panel.y + 38)))
 
-        button = layout["wifi"]
-        pressed = self.pressed_button == "network-wifi"
-        background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
-        if background is not None:
-            self.screen.blit(fit_image(background, button.size), button)
+        if ethernet_status.get("connected"):
+            ethernet_connection = self.tr("network.ethernet_connected")
+            ethernet_color = GREEN
+            ethernet_ip = self.tr("network.ip_address", ip=ethernet_status.get("ip") or self.tr("network.ip_pending"))
         else:
-            draw_rect_compat(self.screen, (20, 184, 166) if pressed else DARK_GRAY, button, 0, 10)
-            draw_rect_compat(self.screen, WHITE, button, 2, 10)
-        if self.wifi_config_asset is not None:
-            icon = fit_image_contain(self.wifi_config_asset, (62, 62))
-            if icon is not None:
-                self.screen.blit(icon, icon.get_rect(center=(button.x + 52, button.centery)))
-        label = self.wifi_bold_font.render(self.tr("network.configure_wifi"), True, WHITE)
-        self.screen.blit(label, label.get_rect(center=(button.centerx + 30, button.centery)))
+            ethernet_connection = self.tr("network.ethernet_disconnected")
+            ethernet_color = RED
+            ethernet_ip = None
+
+        ethernet_connection = self.truncate_text(ethernet_connection, self.small_font, ethernet_panel.width - 32)
+        connection_surface = self.small_font.render(ethernet_connection, True, ethernet_color)
+        self.screen.blit(connection_surface, connection_surface.get_rect(center=(ethernet_panel.centerx, ethernet_panel.y + 94)))
+        if ethernet_ip:
+            ethernet_ip = self.truncate_text(ethernet_ip, self.small_font, ethernet_panel.width - 32)
+            ip_surface = self.small_font.render(ethernet_ip, True, WHITE)
+            self.screen.blit(ip_surface, ip_surface.get_rect(center=(ethernet_panel.centerx, ethernet_panel.y + 130)))
+
+        if self.network_wifi_ssid:
+            wifi_connection = self.tr("network.wifi_connected", ssid=self.network_wifi_ssid)
+            wifi_color = GREEN
+            wifi_ip = self.tr("network.ip_address", ip=self.network_wifi_ip or self.tr("network.ip_pending"))
+        else:
+            wifi_connection = self.tr("network.wifi_disconnected")
+            wifi_color = RED
+            wifi_ip = None
+
+        wifi_connection = self.truncate_text(wifi_connection, self.small_font, wifi_panel.width - 32)
+        wifi_surface = self.small_font.render(wifi_connection, True, wifi_color)
+        self.screen.blit(wifi_surface, wifi_surface.get_rect(center=(wifi_panel.centerx, wifi_panel.y + 94)))
+        if wifi_ip:
+            wifi_ip = self.truncate_text(wifi_ip, self.small_font, wifi_panel.width - 32)
+            ip_surface = self.small_font.render(wifi_ip, True, WHITE)
+            self.screen.blit(ip_surface, ip_surface.get_rect(center=(wifi_panel.centerx, wifi_panel.y + 130)))
+
+        actions = (
+            ("network-refresh", layout["ethernet_refresh"], self.ethernet_asset, self.tr("network.refresh"), ethernet_panel),
+            ("network-wifi", layout["wifi_configure"], self.wifi_config_asset, self.tr("network.configure_wifi"), wifi_panel),
+        )
+        for button_id, button, source_icon, label_text, panel in actions:
+            pressed = self.pressed_button == button_id
+            background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
+            if background is not None:
+                self.screen.blit(fit_image(background, button.size), button)
+            else:
+                draw_rect_compat(self.screen, (20, 184, 166) if pressed else MID_GRAY, button, 0, 10)
+                draw_rect_compat(self.screen, WHITE, button, 2, 10)
+            if source_icon is not None:
+                icon = fit_image_contain(source_icon, (52, 52))
+                if icon is not None:
+                    self.screen.blit(icon, icon.get_rect(center=button.center))
+            label_text = self.truncate_text(label_text, self.wifi_bold_font, panel.right - button.right - 26)
+            label = self.wifi_bold_font.render(label_text, True, WHITE)
+            label_rect = label.get_rect(midleft=(button.right + 16, button.centery))
+            self.screen.blit(label, label_rect)
 
     def draw_wifi(self):
         layout = self.get_wifi_layout()
@@ -3933,13 +3976,12 @@ class DeviceAppMenu:
         asset_pack = self.menu_tile_assets.get(button_id, {})
         asset = asset_pack.get("pressed" if pressed else "normal")
         if asset is not None:
-            asset_size = (rect.width - 34, rect.height - 52) if button_id == "wifi" else rect.size
+            asset_size = (rect.width - 30, rect.height - 30) if button_id == "wifi" else rect.size
             fitted = fit_image_contain(asset, asset_size)
             if fitted is not None:
-                asset_center = (rect.centerx, rect.centery - 12) if button_id == "wifi" else rect.center
+                asset_center = rect.center
                 self.screen.blit(fitted, fitted.get_rect(center=asset_center))
-                if button_id != "wifi":
-                    return
+                return
 
         label_surface = self.wifi_bold_font.render(label, True, WHITE)
         if label_surface.get_width() > rect.width - 18:

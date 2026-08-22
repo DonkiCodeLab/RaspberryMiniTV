@@ -333,6 +333,35 @@ export async function getTvSeriesById(seriesId, language) {
       };
     })
     .sort((a, b) => a.seasonNumber - b.seasonNumber);
+  const defaultEpisodeRuntime = (Array.isArray(show?.episode_run_time) ? show.episode_run_time : [])
+    .map(Number)
+    .find((runtime) => Number.isFinite(runtime) && runtime > 0) || 0;
+  const seasonRuntimeResults = await Promise.all(
+    seasons.map(async (season) => {
+      try {
+        const seasonDetails = await fetchTmdbJson(
+          `/tv/${seriesId}/season/${season.seasonNumber}`,
+          { language }
+        );
+
+        return (Array.isArray(seasonDetails?.episodes) ? seasonDetails.episodes : []).reduce(
+          (total, episode) => {
+            const episodeRuntime = Number(episode?.runtime);
+            return total + (Number.isFinite(episodeRuntime) && episodeRuntime > 0
+              ? episodeRuntime
+              : defaultEpisodeRuntime);
+          },
+          0
+        );
+      } catch {
+        return season.episodeCount * defaultEpisodeRuntime;
+      }
+    })
+  );
+  const seasonsWithRuntime = seasons.map((season, index) => ({
+    ...season,
+    totalRuntimeMinutes: seasonRuntimeResults[index] || 0,
+  }));
 
   return {
     id: Number(show?.id) || Number(seriesId),
@@ -341,7 +370,8 @@ export async function getTvSeriesById(seriesId, language) {
     imageOptions,
     seasonCount: seasons.length,
     totalEpisodeCount: seasons.reduce((total, season) => total + (season.episodeCount || 0), 0),
-    seasons,
+    totalRuntimeMinutes: seasonRuntimeResults.reduce((total, runtime) => total + runtime, 0),
+    seasons: seasonsWithRuntime,
   };
 }
 
