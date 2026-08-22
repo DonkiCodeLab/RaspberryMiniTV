@@ -1569,9 +1569,9 @@ function HeroSelector({ options, value, placeholder, disabled, onChange }) {
   );
 }
 
-function SeasonCard({ season, isActive, onSelect, onDelete = () => {}, showDelete = false, t }) {
+function SeasonCard({ season, isActive, disabled, onSelect, onDelete = () => {}, showDelete = false, t }) {
   return (
-    <article className={`season-card${isActive ? " active" : ""}`}>
+    <article className={`season-card${isActive ? " active" : ""}${disabled ? " is-disabled" : ""}`}>
       <button
         className="season-card__main"
         onClick={() => onSelect(season.id)}
@@ -1837,9 +1837,9 @@ function resolveNextEpisodeTarget({ currentPlayback, raspberryHealth, seriesOpti
     : null;
 }
 
-function EpisodeRow({ episode, onSelect, t }) {
+function EpisodeRow({ episode, available, onSelect, t }) {
   return (
-    <article className="episode-card">
+    <article className={`episode-card${available ? "" : " is-disabled"}`}>
       <button
         className="episode-card__main"
         onClick={() => onSelect(episode)}
@@ -6570,6 +6570,7 @@ export default function App() {
                         <EpisodeRow
                           key={episode.id}
                           episode={episode}
+                          available={isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)}
                           onSelect={handleOpenEpisodeDetails}
                           t={t}
                         />
@@ -6898,6 +6899,7 @@ export default function App() {
                           key={season.id}
                           season={season}
                           isActive={season.id === selectedSeasonId}
+                          disabled={!isSeasonUploaded(season, uploadedEpisodeIds)}
                           onSelect={handleOpenSeason}
                           onDelete={handleDeleteSeason}
                           showDelete
