@@ -154,6 +154,7 @@ def resolve_weather_location(location, language=None):
         forecast = json.load(response)
 
     return {
+        "query": safe_location,
         "name": place.get("name") or safe_location,
         "postalCode": place.get("postcodes", [None])[0] if place.get("postcodes") else place.get("postcode"),
         "admin1": place.get("admin1") or "",
@@ -244,7 +245,6 @@ def normalize_alarms(value):
 
 def empty_media_library():
     return {
-        "query": safe_location,
         "version": 1,
         "series": {},
         "movies": {},
@@ -2560,7 +2560,7 @@ def update_weather_settings():
     details = None
     if location:
         try:
-            details = resolve_weather_location(location, saved_settings.get("language"))
+            details = resolve_weather_location(location, settings.get("language"))
         except Exception:
             pass
     settings["weather_location_details"] = details
