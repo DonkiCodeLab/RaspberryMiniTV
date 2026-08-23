@@ -45,6 +45,7 @@ import {
   authWebPin,
   getAlarmSoundUrl,
   getHealth,
+  getMediaStreamUrl,
   getRaspberryAlarms,
   getRaspberryLanguage,
   getRaspberryWeatherSettings,
@@ -246,6 +247,8 @@ const UI_STRINGS = {
     close: "Cerrar",
     not_available: "No disponible",
     play_on_tv: "Reproducir en miniTV",
+    play_in_browser: "Reproducir en navegador",
+    browser_player: "Reproductor web",
     playing_now: "Reproduciendo...",
     synopsis_unavailable: "Sinopsis no disponible.",
     games_reserved: "Esta sección de customización todavía no tiene acciones disponibles.",
@@ -497,6 +500,8 @@ const UI_STRINGS = {
     close: "Tancar",
     not_available: "No disponible",
     play_on_tv: "Reproduir a miniTV",
+    play_in_browser: "Reproduir al navegador",
+    browser_player: "Reproductor web",
     playing_now: "Reproduint...",
     synopsis_unavailable: "Sinopsi no disponible.",
     games_reserved: "Aquesta secció de personalització encara no té accions disponibles.",
@@ -748,6 +753,8 @@ const UI_STRINGS = {
     close: "Close",
     not_available: "Not available",
     play_on_tv: "Play on miniTV",
+    play_in_browser: "Play in browser",
+    browser_player: "Web player",
     playing_now: "Playing...",
     synopsis_unavailable: "Synopsis unavailable.",
     games_reserved: "This customization section has no actions available yet.",
@@ -1997,6 +2004,7 @@ function EpisodeDetailsModal({
   showPlayButton = true,
   onClose,
   onPlay,
+  onPlayBrowser,
   onDelete,
   t,
 }) {
@@ -2098,6 +2106,15 @@ function EpisodeDetailsModal({
                 <img src={tvGreen} alt="" aria-hidden="true" />
                 <span>{available ? (playing ? t("playing_now") : t("play_on_tv")) : t("unavailable_episode")}</span>
               </button>
+              <button
+                className="episode-dialog__play episode-dialog__play--browser"
+                onClick={onPlayBrowser}
+                type="button"
+                disabled={!available}
+              >
+                <span className="episode-dialog__browser-icon" aria-hidden="true">▶</span>
+                <span>{available ? t("play_in_browser") : t("unavailable_episode")}</span>
+              </button>
               {available && onDelete ? (
                 <button
                   className="episode-dialog__delete"
@@ -2119,6 +2136,32 @@ function EpisodeDetailsModal({
         </div>
       </div>
     </div>
+  );
+}
+
+function BrowserPlayerModal({ playback, onClose, t }) {
+  useEffect(() => {
+    if (!playback) return () => {};
+    const handleKeyDown = (event) => event.key === "Escape" && onClose();
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [playback, onClose]);
+
+  if (!playback) return null;
+  return createPortal(
+    <div className="browser-player" role="dialog" aria-modal="true" aria-label={t("browser_player")}>
+      <div className="browser-player__panel">
+        <header>
+          <div>
+            <span>{t("browser_player")}</span>
+            <h2>{playback.title}</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
+        </header>
+        <video src={playback.url} controls autoPlay playsInline />
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -4536,6 +4579,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [addSeriesOpen, setAddSeriesOpen] = useState(false);
   const [miniTvOpen, setMiniTvOpen] = useState(false);
+  const [browserPlayback, setBrowserPlayback] = useState(null);
   const [raspberryHealth, setRaspberryHealth] = useState({
     ok: false,
     running: false,
@@ -5729,6 +5773,15 @@ export default function App() {
     }
   }
 
+  function handlePlayEpisodeInBrowser() {
+    const relativePath = resolveUploadedEpisodePath(selectedSeason, selectedEpisode);
+    if (!relativePath) return;
+    setBrowserPlayback({
+      title: `${selectedSeries?.name || ""} · ${selectedEpisode?.title || ""}`,
+      url: getMediaStreamUrl(relativePath),
+    });
+  }
+
   async function runRaspberryControl(action) {
     try {
       setRaspberryControlsBusy(true);
@@ -5845,6 +5898,18 @@ export default function App() {
     } finally {
       setMoviePlaying(false);
     }
+  }
+
+  function handlePlayMovieInBrowser() {
+    const movieEntry = resolvePlayableMovieEntry(selectedMovie);
+    if (!movieEntry?.relativePath) {
+      window.alert("No he encontrado el archivo de vídeo de esta película.");
+      return;
+    }
+    setBrowserPlayback({
+      title: selectedMovie?.name || movieEntry.id,
+      url: getMediaStreamUrl(movieEntry.relativePath),
+    });
   }
 
   async function handleAddMediaItem(selectedSeriesResult, targetMediaType = activeMediaType) {
@@ -7018,6 +7083,14 @@ export default function App() {
                         <img src={tvGreen} alt="" aria-hidden="true" />
                         <span>{moviePlaying ? t("playing_now") : t("play_on_tv")}</span>
                       </button>
+                      <button
+                        className="movie-panel__play movie-panel__play--browser"
+                        onClick={handlePlayMovieInBrowser}
+                        type="button"
+                      >
+                        <span aria-hidden="true">▶</span>
+                        <span>{t("play_in_browser")}</span>
+                      </button>
 
                       <MovieImageCarousel
                         title={selectedMovie.name}
@@ -7173,7 +7246,13 @@ export default function App() {
               available={isEpisodeUploaded(selectedSeason, selectedEpisode, uploadedEpisodeIds)}
               onClose={handleCloseEpisodeDetails}
               onPlay={handlePlayEpisode}
+              onPlayBrowser={handlePlayEpisodeInBrowser}
               onDelete={handleDeleteEpisode}
+              t={t}
+            />
+            <BrowserPlayerModal
+              playback={browserPlayback}
+              onClose={() => setBrowserPlayback(null)}
               t={t}
             />
           </>

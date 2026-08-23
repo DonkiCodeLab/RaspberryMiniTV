@@ -1137,6 +1137,16 @@ export function playEpisode({ id, directory }) {
   });
 }
 
+export function getMediaStreamUrl(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) return "";
+
+  const params = new URLSearchParams({ relativePath: safeRelativePath });
+  const storedPin = getStoredWebPin();
+  if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
+  return `${getBaseUrl()}/media/stream?${params.toString()}`;
+}
+
 export function volumeUp() {
   if (isMockModeEnabled()) {
     return Promise.resolve({ ok: true, mock: true });

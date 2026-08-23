@@ -4895,3 +4895,51 @@ img {
     font-size: 1.1rem;
   }
 }
+
+.browser-player {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.browser-player__panel {
+  width: min(1100px, 96vw);
+  overflow: hidden;
+  border-radius: 24px;
+  background: #090b0e;
+  color: #fff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.browser-player__panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.browser-player__panel header span { color: #ffd800; }
+.browser-player__panel h2 { margin: 0.2rem 0 0; font-size: 1.15rem; }
+.browser-player__panel header button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 2.2rem;
+  cursor: pointer;
+}
+.browser-player__panel video { display: block; width: 100%; max-height: 78vh; background: #000; }
+
+.episode-dialog__play--browser,
+.movie-panel__play--browser { background: #fff; color: #111; }
+.episode-dialog__browser-icon { font-size: 1.35rem; }
+.episode-dialog__actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+
+@media (max-width: 720px) {
+  .episode-dialog__actions { grid-template-columns: 1fr; }
+  .episode-dialog__delete { width: 100%; min-height: 58px; }
+}

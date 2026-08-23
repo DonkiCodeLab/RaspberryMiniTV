@@ -10,7 +10,7 @@ import tempfile
 import urllib.parse
 import urllib.request
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_file, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -712,6 +712,8 @@ def is_public_frontend_request():
 
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
+    if request.path == "/media/stream" and not submitted_pin:
+        submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
 
@@ -2370,6 +2372,20 @@ def play():
             "file": match["relative_path"],
         }
     )
+
+
+@app.route("/media/stream", methods=["GET"])
+def stream_media():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    if not relative_path:
+        return jsonify({"error": "Missing relativePath"}), 400
+
+    target_path = resolve_relative_video_path(relative_path, VIDEOS_DIR)
+    if not target_path or not os.path.isfile(target_path) or not is_video_file(target_path):
+        return jsonify({"error": "Video not found"}), 404
+
+    # conditional=True enables HTTP range requests, which browsers need for seeking.
+    return send_file(target_path, conditional=True)
 
 
 @app.route("/stop", methods=["POST"])
