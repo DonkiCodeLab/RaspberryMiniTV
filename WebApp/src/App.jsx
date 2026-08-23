@@ -47,6 +47,7 @@ import {
   getHealth,
   getRaspberryAlarms,
   getRaspberryLanguage,
+  getRaspberryWeatherSettings,
   getStoredWebPin,
   powerOffRaspberry,
   getVideos,
@@ -64,6 +65,7 @@ import {
   stopPlayback,
   updateRaspberryAlarms,
   updateRaspberryLanguage,
+  updateRaspberryWeatherLocation,
   updateGameFileMetadata,
   uploadGameFile,
   uploadMovieFile,
@@ -303,6 +305,12 @@ const UI_STRINGS = {
     alarm_sound_select: "Sonido de la alarma {index}",
     alarm_preview_select: "Sonido para probar",
     no_alarm_sounds: "No hay sonidos disponibles",
+    weather_location_title: "Ubicación del tiempo",
+    weather_location_copy: "Ciudad o código postal que se mostrará en el reloj de la mini tele.",
+    weather_location_placeholder: "Ej. Madrid, España",
+    weather_location_save: "Guardar ubicación",
+    weather_location_saved: "Ubicación guardada",
+    weather_location_error: "No se pudo guardar la ubicación.",
     on: "On",
     off: "Off",
     playback_current: "Reproducción actual",
@@ -548,6 +556,12 @@ const UI_STRINGS = {
     alarm_sound_select: "So de l'alarma {index}",
     alarm_preview_select: "So per provar",
     no_alarm_sounds: "No hi ha sons disponibles",
+    weather_location_title: "Ubicació del temps",
+    weather_location_copy: "Ciutat o codi postal que es mostrarà al rellotge de la mini tele.",
+    weather_location_placeholder: "Ex. Barcelona, Espanya",
+    weather_location_save: "Desa la ubicació",
+    weather_location_saved: "Ubicació desada",
+    weather_location_error: "No s'ha pogut desar la ubicació.",
     on: "On",
     off: "Off",
     playback_current: "Reproducció actual",
@@ -793,6 +807,12 @@ const UI_STRINGS = {
     alarm_sound_select: "Alarm {index} sound",
     alarm_preview_select: "Sound to preview",
     no_alarm_sounds: "No sounds available",
+    weather_location_title: "Weather location",
+    weather_location_copy: "City or postal code shown on the mini TV clock.",
+    weather_location_placeholder: "E.g. London, United Kingdom",
+    weather_location_save: "Save location",
+    weather_location_saved: "Location saved",
+    weather_location_error: "Could not save the location.",
     on: "On",
     off: "Off",
     playback_current: "Current playback",
@@ -3987,6 +4007,10 @@ function RaspberryPage({
   onAlarmPreviewSoundChange,
   onAlarmPreviewPlay,
   onAlarmPreviewStop,
+  weatherLocation,
+  weatherLocationStatus,
+  onWeatherLocationChange,
+  onWeatherLocationSave,
   raspberryHealth,
   currentPlaybackInfo,
   controlsBusy,
@@ -4239,6 +4263,25 @@ function RaspberryPage({
                 {t("stop")}
               </button>
             </div>
+          </article>
+
+          <article className="raspberry-weather-card">
+            <div className="raspberry-alarm-card__header-copy">
+              <p>{t("weather_location_title")}</p>
+              <span>{t("weather_location_copy")}</span>
+            </div>
+            <form className="raspberry-weather-card__form" onSubmit={onWeatherLocationSave}>
+              <input
+                type="text"
+                value={weatherLocation}
+                maxLength={120}
+                onChange={(event) => onWeatherLocationChange(event.target.value)}
+                placeholder={t("weather_location_placeholder")}
+                aria-label={t("weather_location_title")}
+              />
+              <button type="submit">{t("weather_location_save")}</button>
+            </form>
+            {weatherLocationStatus ? <span className="raspberry-weather-card__status">{weatherLocationStatus}</span> : null}
           </article>
         </div>
       ) : null}
@@ -4518,6 +4561,8 @@ export default function App() {
   const [alarmPreviewSound, setAlarmPreviewSound] = useState("");
   const [alarmPreviewPlaying, setAlarmPreviewPlaying] = useState(false);
   const [raspberryAlarmsLoaded, setRaspberryAlarmsLoaded] = useState(false);
+  const [weatherLocation, setWeatherLocation] = useState("");
+  const [weatherLocationStatus, setWeatherLocationStatus] = useState("");
   const [raspberryLanguage, setRaspberryLanguage] = useState(() => loadStoredRaspberryLanguage());
   const [raspberryLanguageSaving, setRaspberryLanguageSaving] = useState(false);
   const [raspberryLanguageError, setRaspberryLanguageError] = useState("");
@@ -4627,10 +4672,11 @@ export default function App() {
       setRaspberryAlarmsLoaded(false);
 
       try {
-        const [nextVideos, nextLanguage, nextAlarmSettings] = await Promise.all([
+        const [nextVideos, nextLanguage, nextAlarmSettings, nextWeatherSettings] = await Promise.all([
           getVideos(),
           getRaspberryLanguage(),
           getRaspberryAlarms(),
+          getRaspberryWeatherSettings(),
         ]);
         if (cancelled) return;
 
@@ -4646,6 +4692,7 @@ export default function App() {
           setAlarmPreviewSound((current) => current || nextAlarmSettings.sounds[0] || "");
         }
         setRaspberryAlarmsLoaded(true);
+        setWeatherLocation(String(nextWeatherSettings?.location || ""));
 
         const firstDirectory = nextVideos?.directories?.[0]?.relativePath || "";
         setSelectedDirectoryPath((current) => current || firstDirectory);
@@ -6005,6 +6052,23 @@ export default function App() {
     );
   }
 
+  async function handleWeatherLocationSave(event) {
+    event.preventDefault();
+    setWeatherLocationStatus("");
+    try {
+      const response = await updateRaspberryWeatherLocation(weatherLocation);
+      setWeatherLocation(String(response?.location || ""));
+      setWeatherLocationStatus(t("weather_location_saved"));
+    } catch (nextError) {
+      if (nextError?.status === 401) {
+        setStoredWebPin("");
+        setUnlocked(false);
+      } else {
+        setWeatherLocationStatus(t("weather_location_error"));
+      }
+    }
+  }
+
   function handleAlarmToggle(alarmId) {
     setRaspberryAlarm((current) =>
       current.map((alarmEntry) =>
@@ -6503,6 +6567,13 @@ export default function App() {
                 onAlarmPreviewSoundChange={handleAlarmPreviewSoundChange}
                 onAlarmPreviewPlay={handlePlayAlarmPreview}
                 onAlarmPreviewStop={handleStopAlarmPreview}
+                weatherLocation={weatherLocation}
+                weatherLocationStatus={weatherLocationStatus}
+                onWeatherLocationChange={(value) => {
+                  setWeatherLocation(value);
+                  setWeatherLocationStatus("");
+                }}
+                onWeatherLocationSave={handleWeatherLocationSave}
                 raspberryHealth={raspberryHealth}
                 currentPlaybackInfo={raspberryCurrentPlayback}
                 controlsBusy={raspberryControlsBusy}

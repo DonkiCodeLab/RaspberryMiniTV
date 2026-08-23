@@ -8,8 +8,12 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+import urllib.parse
+import urllib.request
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 DESKTOP_PREVIEW = os.environ.get("MINITV_DESKTOP_PREVIEW") == "1" or sys.platform == "darwin"
 DEFAULT_ALSA_DEVICE = "plughw:0,0"
@@ -241,6 +245,7 @@ DEFAULT_SETTINGS = {
         {"id": 2, "enabled": False, "time": "08:00", "sound": ""},
         {"id": 3, "enabled": False, "time": "08:30", "sound": ""},
     ],
+    "weather_location": "",
 }
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 LANGUAGE_BUTTON_MAP = {
@@ -1084,6 +1089,8 @@ class DeviceAppMenu:
         self.main_title_font = self.load_font(MONTSERRAT_BLACK_PATH, 42, self.title_font)
         self.poweroff_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
         self.clock_font = pygame.font.SysFont(FONT_FAMILY, 140, bold=True)
+        self.clock_date_font = pygame.font.SysFont(FONT_FAMILY, 30, bold=True)
+        self.weather_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
         self.small_font = pygame.font.SysFont(FONT_FAMILY, 20)
         self.wifi_font = pygame.font.SysFont(FONT_FAMILY, 24)
         self.wifi_bold_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
@@ -1094,6 +1101,9 @@ class DeviceAppMenu:
         self.video_button_font = pygame.font.SysFont(FONT_FAMILY, 30, bold=True)
         self.translations = load_json_file(TRANSLATIONS_PATH, {})
         self.config = self.load_settings()
+        self.weather = None
+        self.weather_loading = False
+        self.weather_next_refresh = 0
         self.settings_mtime = self.get_settings_mtime()
         self.next_settings_poll = 0
         self.running = True
@@ -1455,7 +1465,7 @@ class DeviceAppMenu:
                 {
                     key: value
                     for key, value in loaded.items()
-                    if key in {"language", "web_password"} and isinstance(value, str)
+                    if key in {"language", "web_password", "weather_location"} and isinstance(value, str)
                 }
             )
             settings["alarms"] = normalize_alarms(loaded.get("alarms"))
@@ -1493,7 +1503,11 @@ class DeviceAppMenu:
             return
 
         previous_language = self.config.get("language")
+        previous_weather_location = self.config.get("weather_location", "")
         self.config = next_config
+        if self.config.get("weather_location", "") != previous_weather_location:
+            self.weather = None
+            self.weather_next_refresh = 0
         self.web_pin_value = self.config.get("web_password", DEFAULT_SETTINGS["web_password"])
         if self.config.get("language") != previous_language:
             self.refresh_translated_state_texts()
@@ -1538,7 +1552,8 @@ class DeviceAppMenu:
             log_debug(f"ALARM start failed id={alarm.get('id')} sound={sound_filename}: {exc}")
 
     def update_clock_alarms(self):
-        today = datetime.now().date().isoformat()
+        now = self.clock_datetime()
+        today = now.date().isoformat()
         if today != self.alarm_triggered_date:
             self.alarm_triggered_date = today
             self.alarm_triggered_keys.clear()
@@ -1551,7 +1566,6 @@ class DeviceAppMenu:
         if self.state != "clock":
             return
 
-        now = datetime.now()
         current_time = now.strftime("%H:%M")
         for alarm in normalize_alarms(self.config.get("alarms")):
             if not alarm.get("enabled") or alarm.get("time") != current_time:
@@ -1575,6 +1589,7 @@ class DeviceAppMenu:
     def format_long_date(self, value):
         language = normalize_language_code(self.config.get("language"))
         if language == "ca":
+            weekdays = ["dilluns", "dimarts", "dimecres", "dijous", "divendres", "dissabte", "diumenge"]
             months = [
                 "gener",
                 "febrer",
@@ -1591,8 +1606,9 @@ class DeviceAppMenu:
             ]
             month = months[value.month - 1]
             prefix = "d'" if month[0] in "aeiou" else "de "
-            return f"{value.day} {prefix}{month} del {value.year}"
+            return f"{value.day} ({weekdays[value.weekday()]}) {prefix}{month} del {value.year}"
         if language == "es":
+            weekdays = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
             months = [
                 "enero",
                 "febrero",
@@ -1607,8 +1623,9 @@ class DeviceAppMenu:
                 "noviembre",
                 "diciembre",
             ]
-            return f"{value.day} de {months[value.month - 1]} de {value.year}"
+            return f"{value.day} ({weekdays[value.weekday()]}) de {months[value.month - 1]} de {value.year}"
 
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         months = [
             "January",
             "February",
@@ -1623,7 +1640,48 @@ class DeviceAppMenu:
             "November",
             "December",
         ]
-        return f"{months[value.month - 1]} {value.day}, {value.year}"
+        return f"{months[value.month - 1]} {value.day} ({weekdays[value.weekday()]}), {value.year}"
+
+    def weather_description(self, code):
+        key = "clear" if code == 0 else "partly_cloudy" if code in (1, 2, 3) else "fog" if code in (45, 48) else "rain" if code in (51, 53, 55, 61, 63, 65, 80, 81, 82) else "snow" if code in (56, 57, 66, 67, 71, 73, 75, 77, 85, 86) else "storm" if code in (95, 96, 99) else "unknown"
+        return self.tr(f"weather.{key}")
+
+    def request_weather_refresh(self):
+        location = str(self.config.get("weather_location") or "").strip()
+        if not location or self.weather_loading or time.monotonic() < self.weather_next_refresh:
+            return
+        self.weather_loading = True
+        self.weather_next_refresh = time.monotonic() + 900
+
+        def worker():
+            try:
+                query = urllib.parse.urlencode({"name": location, "count": 1, "language": normalize_language_code(self.config.get("language")), "format": "json"})
+                with urllib.request.urlopen(f"https://geocoding-api.open-meteo.com/v1/search?{query}", timeout=10) as response:
+                    results = json.load(response).get("results") or []
+                if not results:
+                    raise ValueError("location not found")
+                place = results[0]
+                forecast_query = urllib.parse.urlencode({"latitude": place["latitude"], "longitude": place["longitude"], "current": "temperature_2m,apparent_temperature,weather_code,wind_speed_10m", "timezone": "auto"})
+                with urllib.request.urlopen(f"https://api.open-meteo.com/v1/forecast?{forecast_query}", timeout=10) as response:
+                    forecast = json.load(response)
+                if location == str(self.config.get("weather_location") or "").strip():
+                    self.weather = {"name": place.get("name") or location, "country": place.get("country_code") or "", "timezone": forecast.get("timezone") or place.get("timezone") or "", **(forecast.get("current") or {})}
+            except Exception as exc:
+                log_debug(f"WEATHER refresh failed location={location}: {exc}")
+                self.weather_next_refresh = time.monotonic() + 60
+            finally:
+                self.weather_loading = False
+
+        threading.Thread(target=worker, daemon=True, name="weather-refresh").start()
+
+    def clock_datetime(self):
+        timezone_name = (self.weather or {}).get("timezone")
+        if timezone_name:
+            try:
+                return datetime.now(ZoneInfo(timezone_name))
+            except Exception:
+                pass
+        return datetime.now()
 
     def refresh_translated_state_texts(self):
         self.wifi_status = self.tr("wifi.scan_prompt")
@@ -3726,8 +3784,26 @@ class DeviceAppMenu:
 
     def draw_clock(self):
         self.screen.fill((18, 22, 28))
-        now = datetime.now()
-        self.draw_submenu_header(self.format_long_date(now))
+        self.request_weather_refresh()
+        now = self.clock_datetime()
+        self.draw_submenu_header(self.format_long_date(now), self.clock_date_font)
+
+        weather_line = ""
+        if self.weather:
+            temperature = round(float(self.weather.get("temperature_2m", 0)))
+            apparent = round(float(self.weather.get("apparent_temperature", temperature)))
+            place = self.weather.get("name", "")
+            description = self.weather_description(int(self.weather.get("weather_code", -1)))
+            weather_line = self.tr("weather.summary", place=place, description=description, temperature=temperature, apparent=apparent)
+        elif self.config.get("weather_location"):
+            weather_line = self.tr("weather.loading")
+        else:
+            weather_line = self.tr("weather.no_location")
+        weather_surface = self.weather_font.render(weather_line, True, (255, 212, 41))
+        if weather_surface.get_width() > self.width - 80:
+            weather_line = self.truncate_text(weather_line, self.weather_font, self.width - 80)
+            weather_surface = self.weather_font.render(weather_line, True, (255, 212, 41))
+        self.screen.blit(weather_surface, weather_surface.get_rect(center=(self.width // 2, MAIN_HEADER_HEIGHT + 34)))
 
         hours_text = now.strftime("%H")
         minutes_text = now.strftime("%M")
@@ -3745,7 +3821,7 @@ class DeviceAppMenu:
             + (gap * 2)
         )
         start_x = (self.width - total_width) // 2
-        center_y = self.height // 2 + 16
+        center_y = self.height // 2 + 24
 
         hours_rect = hours_surface.get_rect(midleft=(start_x, center_y))
         separator_rect = separator_surface.get_rect(
@@ -4218,7 +4294,7 @@ class DeviceAppMenu:
         title_rect = title.get_rect(center=(self.width // 2, header_rect.centery))
         self.screen.blit(title, title_rect)
 
-    def draw_submenu_header(self, title_text):
+    def draw_submenu_header(self, title_text, title_font=None):
         header_rect = pygame.Rect(0, 0, self.width, MAIN_HEADER_HEIGHT)
         draw_rect_compat(self.screen, HEADER_BACKGROUND, header_rect, 0, 0)
         pygame.draw.line(self.screen, (220, 220, 220), (0, header_rect.bottom - 1), (self.width, header_rect.bottom - 1), 2)
@@ -4226,8 +4302,9 @@ class DeviceAppMenu:
         back_pressed = self.pressed_button in ("back", "top-back", "exit")
         self.draw_menu_tile("back", self.get_more_back_rect(), self.tr("common.back"), back_pressed)
 
-        title_text = self.truncate_text(title_text, self.main_title_font, self.width - 150)
-        title = self.main_title_font.render(title_text, True, BLACK)
+        title_font = title_font or self.main_title_font
+        title_text = self.truncate_text(title_text, title_font, self.width - 150)
+        title = title_font.render(title_text, True, BLACK)
         title_rect = title.get_rect(center=(self.width // 2, header_rect.centery))
         self.screen.blit(title, title_rect)
 

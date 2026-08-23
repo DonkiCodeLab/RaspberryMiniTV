@@ -67,6 +67,7 @@ DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
     "alarms": DEFAULT_ALARMS,
+    "weather_location": "",
 }
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 
@@ -95,7 +96,7 @@ def load_settings():
                 {
                     key: value
                     for key, value in loaded.items()
-                    if key in {"language", "web_password"} and isinstance(value, str)
+                    if key in {"language", "web_password", "weather_location"} and isinstance(value, str)
                 }
             )
             settings["alarms"] = normalize_alarms(loaded.get("alarms"))
@@ -120,7 +121,7 @@ def save_settings(settings):
             {
                 key: value
                 for key, value in settings.items()
-                if key in {"language", "web_password"} and isinstance(value, str)
+                if key in {"language", "web_password", "weather_location"} and isinstance(value, str)
             }
         )
         safe_settings["alarms"] = normalize_alarms(settings.get("alarms"))
@@ -2463,6 +2464,22 @@ def update_alarms():
     settings["alarms"] = normalize_alarms(data.get("alarms"))
     saved_settings = save_settings(settings)
     return jsonify({"ok": True, "alarms": saved_settings["alarms"], "sounds": list_alarm_sounds()})
+
+
+@app.route("/settings/weather", methods=["GET"])
+def get_weather_settings():
+    settings = load_settings()
+    return jsonify({"ok": True, "location": settings.get("weather_location", "")})
+
+
+@app.route("/settings/weather", methods=["POST"])
+def update_weather_settings():
+    data = request.get_json(force=True, silent=True) or {}
+    location = str(data.get("location") or "").strip()[:120]
+    settings = load_settings()
+    settings["weather_location"] = location
+    saved_settings = save_settings(settings)
+    return jsonify({"ok": True, "location": saved_settings["weather_location"]})
 
 
 @app.route("/alarm-sounds", methods=["GET"])

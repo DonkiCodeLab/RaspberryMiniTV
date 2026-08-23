@@ -11,6 +11,7 @@ let mockPlayback = "";
 let mockPlaybackDirectory = "";
 let mockPlaybackFile = "";
 let mockLanguage = "es";
+let mockWeatherLocation = "Madrid";
 let mockAlarmSounds = ["alarma_clasica.mp3", "despertador.mp3", "campana.mp3"];
 let mockAlarms = [
   { id: 1, enabled: false, time: "07:30", sound: mockAlarmSounds[0] },
@@ -395,6 +396,25 @@ export function updateRaspberryAlarms(alarms) {
     body: JSON.stringify({
       alarms,
     }),
+  });
+}
+
+export function getRaspberryWeatherSettings() {
+  if (isMockModeEnabled()) {
+    return Promise.resolve({ ok: true, location: mockWeatherLocation, mock: true });
+  }
+  return request("/settings/weather");
+}
+
+export function updateRaspberryWeatherLocation(location) {
+  const safeLocation = String(location || "").trim().slice(0, 120);
+  if (isMockModeEnabled()) {
+    mockWeatherLocation = safeLocation;
+    return Promise.resolve({ ok: true, location: mockWeatherLocation, mock: true });
+  }
+  return request("/settings/weather", {
+    method: "POST",
+    body: JSON.stringify({ location: safeLocation }),
   });
 }
 
