@@ -246,6 +246,7 @@ DEFAULT_SETTINGS = {
         {"id": 3, "enabled": False, "time": "08:30", "sound": ""},
     ],
     "weather_location": "",
+    "weather_location_details": None,
 }
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 LANGUAGE_BUTTON_MAP = {
@@ -1212,6 +1213,8 @@ class DeviceAppMenu:
         self.raspberry_current_password = ""
         self.raspberry_new_password = ""
         self.raspberry_password_field = "current"
+        self.raspberry_current_password_visible = False
+        self.raspberry_new_password_visible = False
         self.raspberry_password_message = ""
         self.raspberry_password_is_error = False
         self.play_status = ""
@@ -1469,6 +1472,8 @@ class DeviceAppMenu:
                 }
             )
             settings["alarms"] = normalize_alarms(loaded.get("alarms"))
+            details = loaded.get("weather_location_details")
+            settings["weather_location_details"] = details if isinstance(details, dict) else None
         else:
             settings["alarms"] = normalize_alarms(settings.get("alarms"))
         settings["language"] = normalize_language_code(settings.get("language"))
@@ -2030,9 +2035,24 @@ class DeviceAppMenu:
         return None
 
     def get_raspberry_password_layout(self):
+        current_rect = pygame.Rect(28, 96, self.width - 56, 44)
+        new_rect = pygame.Rect(28, 158, self.width - 56, 44)
+        visibility_button_width = 48
         return {
-            "current": pygame.Rect(28, 96, self.width - 56, 44),
-            "new": pygame.Rect(28, 158, self.width - 56, 44),
+            "current": current_rect,
+            "current_visibility": pygame.Rect(
+                current_rect.right - visibility_button_width,
+                current_rect.y,
+                visibility_button_width,
+                current_rect.height,
+            ),
+            "new": new_rect,
+            "new_visibility": pygame.Rect(
+                new_rect.right - visibility_button_width,
+                new_rect.y,
+                visibility_button_width,
+                new_rect.height,
+            ),
             "save": pygame.Rect((self.width - 238) // 2, 218, 238, 56),
             "keyboard": pygame.Rect(20, 292, self.width - 40, self.height - 312),
             "dialog": pygame.Rect(66, 138, self.width - 132, 150),
@@ -3398,6 +3418,8 @@ class DeviceAppMenu:
         self.raspberry_current_password = ""
         self.raspberry_new_password = ""
         self.raspberry_password_field = "current"
+        self.raspberry_current_password_visible = False
+        self.raspberry_new_password_visible = False
         self.raspberry_password_message = ""
         self.raspberry_password_is_error = False
         self.password_keyboard_upper = True
@@ -3437,6 +3459,10 @@ class DeviceAppMenu:
             self.pressed_button = "top-back"
         elif layout["save"].collidepoint(pos) and self.can_save_raspberry_password():
             self.pressed_button = "raspberry-password-save"
+        elif layout["current_visibility"].collidepoint(pos):
+            self.pressed_button = "raspberry-password-visibility:current"
+        elif layout["new_visibility"].collidepoint(pos):
+            self.pressed_button = "raspberry-password-visibility:new"
         elif layout["current"].collidepoint(pos):
             self.pressed_button = "raspberry-password-field:current"
         elif layout["new"].collidepoint(pos):
@@ -3462,6 +3488,12 @@ class DeviceAppMenu:
         if active_button == "top-back" and self.top_back_at_pos(pos):
             self.play_ui_click_sound()
             self.state = "password_menu"
+            return
+        if active_button == "raspberry-password-visibility:current" and layout["current_visibility"].collidepoint(pos):
+            self.raspberry_current_password_visible = not self.raspberry_current_password_visible
+            return
+        if active_button == "raspberry-password-visibility:new" and layout["new_visibility"].collidepoint(pos):
+            self.raspberry_new_password_visible = not self.raspberry_new_password_visible
             return
         if active_button == "raspberry-password-field:current" and layout["current"].collidepoint(pos):
             self.raspberry_password_field = "current"
@@ -4267,15 +4299,35 @@ class DeviceAppMenu:
                 text_surface = self.small_font.render(label, True, WHITE)
                 self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
-    def draw_password_field(self, rect, label, value, active=False):
+    def draw_password_field(self, rect, label, value, active=False, visible=False, visibility_rect=None, visibility_pressed=False):
         border_color = GREEN if active else WHITE
         draw_rect_compat(self.screen, DARK_GRAY, rect, 0, 12)
         draw_rect_compat(self.screen, border_color, rect, 2, 12)
         label_surface = self.small_font.render(label, True, GRAY)
         self.screen.blit(label_surface, (rect.x + 12, rect.y + 4))
-        masked = self.truncate_text("*" * len(value), self.wifi_font, rect.width - 24)
-        value_surface = self.wifi_font.render(masked or " ", True, WHITE)
+        value_width = rect.width - 24
+        if visibility_rect is not None:
+            value_width -= visibility_rect.width
+        displayed_value = value if visible else "*" * len(value)
+        displayed_value = self.truncate_text(displayed_value, self.wifi_font, value_width)
+        value_surface = self.wifi_font.render(displayed_value or " ", True, WHITE)
         self.screen.blit(value_surface, (rect.x + 12, rect.y + 20))
+
+        if visibility_rect is not None:
+            if visibility_pressed:
+                draw_rect_compat(self.screen, MID_GRAY, visibility_rect.inflate(-6, -6), 0, 8)
+            eye_rect = pygame.Rect(0, 0, 24, 14)
+            eye_rect.center = visibility_rect.center
+            pygame.draw.ellipse(self.screen, WHITE, eye_rect, 2)
+            pygame.draw.circle(self.screen, WHITE, eye_rect.center, 3)
+            if not visible:
+                pygame.draw.line(
+                    self.screen,
+                    WHITE,
+                    (eye_rect.left - 2, eye_rect.bottom + 2),
+                    (eye_rect.right + 2, eye_rect.top - 2),
+                    3,
+                )
 
     def draw_main_header(self):
         header_rect = pygame.Rect(0, 0, self.width, MAIN_HEADER_HEIGHT)
@@ -4421,12 +4473,18 @@ class DeviceAppMenu:
             self.tr("password.current"),
             self.raspberry_current_password,
             self.raspberry_password_field == "current",
+            self.raspberry_current_password_visible,
+            layout["current_visibility"],
+            self.pressed_button == "raspberry-password-visibility:current",
         )
         self.draw_password_field(
             layout["new"],
             self.tr("password.new"),
             self.raspberry_new_password,
             self.raspberry_password_field == "new",
+            self.raspberry_new_password_visible,
+            layout["new_visibility"],
+            self.pressed_button == "raspberry-password-visibility:new",
         )
 
         save_enabled = self.can_save_raspberry_password()

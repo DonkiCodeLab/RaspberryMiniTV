@@ -68,6 +68,7 @@ DEFAULT_SETTINGS = {
     "web_password": "1234",
     "alarms": DEFAULT_ALARMS,
     "weather_location": "",
+    "weather_location_details": None,
 }
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 
@@ -100,6 +101,8 @@ def load_settings():
                 }
             )
             settings["alarms"] = normalize_alarms(loaded.get("alarms"))
+            details = loaded.get("weather_location_details")
+            settings["weather_location_details"] = details if isinstance(details, dict) else None
     except Exception:
         pass
     settings["language"] = normalize_language_code(settings.get("language"))
@@ -114,6 +117,59 @@ def current_language():
     return normalize_language_code(load_settings().get("language"))
 
 
+def resolve_weather_location(location, language=None):
+    safe_location = str(location or "").strip()
+    if not safe_location:
+        return None
+
+    geocoding_query = urllib.parse.urlencode(
+        {
+            "name": safe_location,
+            "count": 1,
+            "language": normalize_language_code(language or current_language()),
+            "format": "json",
+        }
+    )
+    with urllib.request.urlopen(
+        f"https://geocoding-api.open-meteo.com/v1/search?{geocoding_query}",
+        timeout=10,
+    ) as response:
+        results = json.load(response).get("results") or []
+    if not results:
+        return None
+
+    place = results[0]
+    forecast_query = urllib.parse.urlencode(
+        {
+            "latitude": place["latitude"],
+            "longitude": place["longitude"],
+            "current": "temperature_2m,apparent_temperature,weather_code,wind_speed_10m",
+            "timezone": "auto",
+        }
+    )
+    with urllib.request.urlopen(
+        f"https://api.open-meteo.com/v1/forecast?{forecast_query}",
+        timeout=10,
+    ) as response:
+        forecast = json.load(response)
+
+    return {
+        "name": place.get("name") or safe_location,
+        "postalCode": place.get("postcodes", [None])[0] if place.get("postcodes") else place.get("postcode"),
+        "admin1": place.get("admin1") or "",
+        "admin2": place.get("admin2") or "",
+        "admin3": place.get("admin3") or "",
+        "country": place.get("country") or "",
+        "countryCode": place.get("country_code") or "",
+        "latitude": place.get("latitude"),
+        "longitude": place.get("longitude"),
+        "elevation": place.get("elevation"),
+        "timezone": forecast.get("timezone") or place.get("timezone") or "",
+        "current": forecast.get("current") or {},
+        "currentUnits": forecast.get("current_units") or {},
+    }
+
+
 def save_settings(settings):
     safe_settings = dict(DEFAULT_SETTINGS)
     if isinstance(settings, dict):
@@ -126,6 +182,8 @@ def save_settings(settings):
         )
         safe_settings["alarms"] = normalize_alarms(settings.get("alarms"))
     safe_settings["language"] = normalize_language_code(safe_settings.get("language"))
+    details = settings.get("weather_location_details") if isinstance(settings, dict) else None
+    safe_settings["weather_location_details"] = details if isinstance(details, dict) else None
 
     with open(USER_SETTINGS_PATH, "w", encoding="utf-8") as handle:
         json.dump(safe_settings, handle, ensure_ascii=False, indent=2)
@@ -186,6 +244,7 @@ def normalize_alarms(value):
 
 def empty_media_library():
     return {
+        "query": safe_location,
         "version": 1,
         "series": {},
         "movies": {},
@@ -2485,7 +2544,11 @@ def update_alarms():
 @app.route("/settings/weather", methods=["GET"])
 def get_weather_settings():
     settings = load_settings()
-    return jsonify({"ok": True, "location": settings.get("weather_location", "")})
+    location = settings.get("weather_location", "")
+    details = settings.get("weather_location_details")
+    if not isinstance(details, dict) or details.get("query") != location:
+        details = None
+    return jsonify({"ok": True, "location": location, "details": details})
 
 
 @app.route("/settings/weather", methods=["POST"])
@@ -2494,8 +2557,15 @@ def update_weather_settings():
     location = str(data.get("location") or "").strip()[:120]
     settings = load_settings()
     settings["weather_location"] = location
+    details = None
+    if location:
+        try:
+            details = resolve_weather_location(location, saved_settings.get("language"))
+        except Exception:
+            pass
+    settings["weather_location_details"] = details
     saved_settings = save_settings(settings)
-    return jsonify({"ok": True, "location": saved_settings["weather_location"]})
+    return jsonify({"ok": True, "location": saved_settings["weather_location"], "details": details})
 
 
 @app.route("/alarm-sounds", methods=["GET"])

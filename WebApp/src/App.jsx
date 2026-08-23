@@ -314,6 +314,17 @@ const UI_STRINGS = {
     weather_location_save: "Guardar ubicación",
     weather_location_saved: "Ubicación guardada",
     weather_location_error: "No se pudo guardar la ubicación.",
+    weather_location_not_found: "Ubicación guardada, pero no se pudo encontrar información para ese código postal.",
+    weather_resolved_title: "Información de la ubicación",
+    weather_city: "Ciudad",
+    weather_region: "Provincia / región",
+    weather_country: "País",
+    weather_postal_code: "Código postal",
+    weather_coordinates: "Coordenadas",
+    weather_timezone: "Zona horaria",
+    weather_temperature: "Temperatura",
+    weather_feels_like: "Sensación térmica",
+    weather_wind: "Viento",
     on: "On",
     off: "Off",
     playback_current: "Reproducción actual",
@@ -567,6 +578,17 @@ const UI_STRINGS = {
     weather_location_save: "Desa la ubicació",
     weather_location_saved: "Ubicació desada",
     weather_location_error: "No s'ha pogut desar la ubicació.",
+    weather_location_not_found: "Ubicació desada, però no s'ha pogut trobar informació per a aquest codi postal.",
+    weather_resolved_title: "Informació de la ubicació",
+    weather_city: "Ciutat",
+    weather_region: "Província / regió",
+    weather_country: "País",
+    weather_postal_code: "Codi postal",
+    weather_coordinates: "Coordenades",
+    weather_timezone: "Zona horària",
+    weather_temperature: "Temperatura",
+    weather_feels_like: "Sensació tèrmica",
+    weather_wind: "Vent",
     on: "On",
     off: "Off",
     playback_current: "Reproducció actual",
@@ -820,6 +842,17 @@ const UI_STRINGS = {
     weather_location_save: "Save location",
     weather_location_saved: "Location saved",
     weather_location_error: "Could not save the location.",
+    weather_location_not_found: "Location saved, but no information was found for that postal code.",
+    weather_resolved_title: "Location information",
+    weather_city: "City",
+    weather_region: "Province / region",
+    weather_country: "Country",
+    weather_postal_code: "Postal code",
+    weather_coordinates: "Coordinates",
+    weather_timezone: "Time zone",
+    weather_temperature: "Temperature",
+    weather_feels_like: "Feels like",
+    weather_wind: "Wind",
     on: "On",
     off: "Off",
     playback_current: "Current playback",
@@ -4052,6 +4085,7 @@ function RaspberryPage({
   onAlarmPreviewStop,
   weatherLocation,
   weatherLocationStatus,
+  weatherLocationDetails,
   onWeatherLocationChange,
   onWeatherLocationSave,
   raspberryHealth,
@@ -4325,6 +4359,22 @@ function RaspberryPage({
               <button type="submit">{t("weather_location_save")}</button>
             </form>
             {weatherLocationStatus ? <span className="raspberry-weather-card__status">{weatherLocationStatus}</span> : null}
+            {weatherLocationDetails ? (
+              <div className="raspberry-weather-card__details">
+                <strong>{t("weather_resolved_title")}</strong>
+                <dl>
+                  <div><dt>{t("weather_city")}</dt><dd>{weatherLocationDetails.name}</dd></div>
+                  {weatherLocationDetails.postalCode ? <div><dt>{t("weather_postal_code")}</dt><dd>{weatherLocationDetails.postalCode}</dd></div> : null}
+                  {[weatherLocationDetails.admin2, weatherLocationDetails.admin1].filter(Boolean).length ? <div><dt>{t("weather_region")}</dt><dd>{[weatherLocationDetails.admin2, weatherLocationDetails.admin1].filter(Boolean).join(", ")}</dd></div> : null}
+                  {weatherLocationDetails.country ? <div><dt>{t("weather_country")}</dt><dd>{weatherLocationDetails.country}{weatherLocationDetails.countryCode ? ` (${weatherLocationDetails.countryCode})` : ""}</dd></div> : null}
+                  {weatherLocationDetails.latitude != null && weatherLocationDetails.longitude != null ? <div><dt>{t("weather_coordinates")}</dt><dd>{Number(weatherLocationDetails.latitude).toFixed(4)}, {Number(weatherLocationDetails.longitude).toFixed(4)}</dd></div> : null}
+                  {weatherLocationDetails.timezone ? <div><dt>{t("weather_timezone")}</dt><dd>{weatherLocationDetails.timezone}</dd></div> : null}
+                  {weatherLocationDetails.current?.temperature_2m != null ? <div><dt>{t("weather_temperature")}</dt><dd>{weatherLocationDetails.current.temperature_2m} {weatherLocationDetails.currentUnits?.temperature_2m || "°C"}</dd></div> : null}
+                  {weatherLocationDetails.current?.apparent_temperature != null ? <div><dt>{t("weather_feels_like")}</dt><dd>{weatherLocationDetails.current.apparent_temperature} {weatherLocationDetails.currentUnits?.apparent_temperature || "°C"}</dd></div> : null}
+                  {weatherLocationDetails.current?.wind_speed_10m != null ? <div><dt>{t("weather_wind")}</dt><dd>{weatherLocationDetails.current.wind_speed_10m} {weatherLocationDetails.currentUnits?.wind_speed_10m || "km/h"}</dd></div> : null}
+                </dl>
+              </div>
+            ) : null}
           </article>
         </div>
       ) : null}
@@ -4607,6 +4657,7 @@ export default function App() {
   const [raspberryAlarmsLoaded, setRaspberryAlarmsLoaded] = useState(false);
   const [weatherLocation, setWeatherLocation] = useState("");
   const [weatherLocationStatus, setWeatherLocationStatus] = useState("");
+  const [weatherLocationDetails, setWeatherLocationDetails] = useState(null);
   const [raspberryLanguage, setRaspberryLanguage] = useState(() => loadStoredRaspberryLanguage());
   const [raspberryLanguageSaving, setRaspberryLanguageSaving] = useState(false);
   const [raspberryLanguageError, setRaspberryLanguageError] = useState("");
@@ -4737,6 +4788,7 @@ export default function App() {
         }
         setRaspberryAlarmsLoaded(true);
         setWeatherLocation(String(nextWeatherSettings?.location || ""));
+        setWeatherLocationDetails(nextWeatherSettings?.details || null);
 
         const firstDirectory = nextVideos?.directories?.[0]?.relativePath || "";
         setSelectedDirectoryPath((current) => current || firstDirectory);
@@ -6123,7 +6175,8 @@ export default function App() {
     try {
       const response = await updateRaspberryWeatherLocation(weatherLocation);
       setWeatherLocation(String(response?.location || ""));
-      setWeatherLocationStatus(t("weather_location_saved"));
+      setWeatherLocationDetails(response?.details || null);
+      setWeatherLocationStatus(response?.details ? t("weather_location_saved") : t("weather_location_not_found"));
     } catch (nextError) {
       if (nextError?.status === 401) {
         setStoredWebPin("");
@@ -6634,9 +6687,11 @@ export default function App() {
                 onAlarmPreviewStop={handleStopAlarmPreview}
                 weatherLocation={weatherLocation}
                 weatherLocationStatus={weatherLocationStatus}
+                weatherLocationDetails={weatherLocationDetails}
                 onWeatherLocationChange={(value) => {
                   setWeatherLocation(value);
                   setWeatherLocationStatus("");
+                  setWeatherLocationDetails(null);
                 }}
                 onWeatherLocationSave={handleWeatherLocationSave}
                 raspberryHealth={raspberryHealth}

@@ -401,7 +401,7 @@ export function updateRaspberryAlarms(alarms) {
 
 export function getRaspberryWeatherSettings() {
   if (isMockModeEnabled()) {
-    return Promise.resolve({ ok: true, location: mockWeatherLocation, mock: true });
+    return Promise.resolve({ ok: true, location: mockWeatherLocation, details: null, mock: true });
   }
   return request("/settings/weather");
 }
@@ -410,7 +410,7 @@ export function updateRaspberryWeatherLocation(location) {
   const safeLocation = String(location || "").trim().slice(0, 120);
   if (isMockModeEnabled()) {
     mockWeatherLocation = safeLocation;
-    return Promise.resolve({ ok: true, location: mockWeatherLocation, mock: true });
+    return Promise.resolve({ ok: true, location: mockWeatherLocation, details: null, mock: true });
   }
   return request("/settings/weather", {
     method: "POST",
