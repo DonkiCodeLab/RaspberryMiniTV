@@ -101,6 +101,7 @@ MENU_BUTTON_POWEROFF_NORMAL_PATH = os.path.join(MENU_DIR, "button_poweroff_norma
 MENU_BUTTON_POWEROFF_PRESSED_PATH = os.path.join(MENU_DIR, "button_poweroff_pressed.png")
 MENU_BUTTON_QR_NORMAL_PATH = os.path.join(MENU_DIR, "button_qr_normal.png")
 MENU_BUTTON_QR_PRESSED_PATH = os.path.join(MENU_DIR, "button_qr_pressed.png")
+MENU_BUTTON_CAMERA_PATH = os.path.join(MENU_DIR, "camera.png")
 MENU_BUTTON_SETTINGS_NORMAL_PATH = os.path.join(MENU_DIR, "button_settings_normal.png")
 MENU_BUTTON_SETTINGS_PRESSED_PATH = os.path.join(MENU_DIR, "button_settings_pressed.png")
 MENU_BUTTON_WIFI_NORMAL_PATH = os.path.join(MENU_DIR, "button_wifi_normal.png")
@@ -150,6 +151,7 @@ USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
 WIFI_DEBUG_LOG_PATH = os.path.join(BASE_DIR, "wifi_debug.log")
+CAMERA_DEBUG_LOG_PATH = os.path.join(BASE_DIR, "camera_debug.log")
 PORT = 5050
 
 
@@ -348,8 +350,8 @@ def play_intro():
         append_debug_log(INTRO_DEBUG_LOG_PATH, f"Intro failed to launch: {exc}")
 
 
-def generate_qr():
-    url = f"http://{get_local_ip()}:{PORT}"
+def generate_qr(ip_address=None):
+    url = f"http://{ip_address or get_local_ip()}:{PORT}"
     if DESKTOP_PREVIEW:
         return url
     qrencode_path = shutil.which("qrencode")
@@ -1193,12 +1195,26 @@ class DeviceAppMenu:
         }
         self.no_wifi_asset = load_image(NO_WIFI_PATH)
         self.ethernet_asset = load_image(ETHERNET_ICON_PATH)
-        self.wifi_config_asset = load_image(NETWORK_ICON_PATH)
+        self.network_action_assets = {
+            "refresh": {
+                "normal": load_image(ICON_UPDATE_NORMAL_PATH),
+                "pressed": load_image(ICON_UPDATE_PRESSED_PATH),
+            },
+            "wifi": {
+                "normal": load_image(MENU_BUTTON_WIFI_NORMAL_PATH),
+                "pressed": load_image(MENU_BUTTON_WIFI_PRESSED_PATH),
+            },
+            "qr": {
+                "normal": load_image(MENU_BUTTON_QR_NORMAL_PATH),
+                "pressed": load_image(MENU_BUTTON_QR_PRESSED_PATH),
+            },
+        }
         self.ethernet_status = get_ethernet_status()
         self.network_wifi_ssid = get_connected_wifi_info()
         self.network_wifi_ip = get_wifi_ipv4() if self.network_wifi_ssid else None
         self.mini_logo_asset = load_image(MINI_LOGO_PATH)
         self.qr_asset = None
+        self.qr_return_state = "network"
         self.wifi_networks = []
         self.wifi_selected_ssid = None
         self.wifi_selected_index = 0
@@ -1329,6 +1345,8 @@ class DeviceAppMenu:
         self.game_log_handle = None
         self.game_return_state = "games"
         self.game_current_path = ""
+        self.camera_proc = None
+        self.camera_log_handle = None
         self.refresh_translated_state_texts()
         log_debug(f"SCREEN size={self.width}x{self.height}")
         for button_id, rect in self.get_button_rects().items():
@@ -1752,9 +1770,9 @@ class DeviceAppMenu:
                 MENU_BUTTON_CLOCK_NORMAL_PATH,
                 MENU_BUTTON_CLOCK_PRESSED_PATH,
             ),
-            "qr": self.prepare_menu_tile_asset(
-                MENU_BUTTON_QR_NORMAL_PATH,
-                MENU_BUTTON_QR_PRESSED_PATH,
+            "camera": self.prepare_menu_tile_asset(
+                MENU_BUTTON_CAMERA_PATH,
+                MENU_BUTTON_CAMERA_PATH,
             ),
             "wifi": self.prepare_menu_tile_asset(
                 NETWORK_ICON_PATH,
@@ -1837,23 +1855,30 @@ class DeviceAppMenu:
             self.touch_abs_ranges = None
             log_debug(f"TOUCH failed to initialize autodetected device: {exc}")
 
-    def refresh_qr_asset(self):
-        self.qr_url = generate_qr()
+    def refresh_qr_asset(self, ip_address=None):
+        target_ip = ip_address or get_local_ip()
+        self.qr_url = generate_qr(target_ip)
         connected_wifi = get_connected_wifi_info()
+        ethernet_status = get_ethernet_status()
         qr_surface = pygame.Surface((self.width, self.height))
         qr_surface.fill(BLACK)
 
+        if target_ip and target_ip == ethernet_status.get("ip"):
+            connection_text = self.tr("network.ethernet_connected")
+        elif connected_wifi:
+            connection_text = self.tr("qr.wifi_connected", ssid=connected_wifi)
+        else:
+            connection_text = self.tr("qr.wifi_not_connected")
         wifi_line = self.small_font.render(
-            self.tr("qr.wifi_connected", ssid=connected_wifi) if connected_wifi else self.tr("qr.wifi_not_connected"),
+            connection_text,
             True,
             WHITE,
         )
         qr_url_line = None
-        if connected_wifi:
-            qr_url_text = self.truncate_text(self.qr_url, self.small_font, self.width - 44)
-            qr_url_line = self.small_font.render(qr_url_text, True, GRAY)
+        qr_url_text = self.truncate_text(self.qr_url, self.small_font, self.width - 44)
+        qr_url_line = self.small_font.render(qr_url_text, True, GRAY)
 
-        if not connected_wifi:
+        if not target_ip:
             if self.no_wifi_asset is not None:
                 icon_size = min(170, max(110, self.height // 3))
                 no_wifi = fit_image_contain(self.no_wifi_asset, (icon_size, icon_size))
@@ -1928,6 +1953,8 @@ class DeviceAppMenu:
         return {
             "ethernet_panel": pygame.Rect(margin, panel_y, panel_width, panel_height),
             "wifi_panel": pygame.Rect(margin + panel_width + gap, panel_y, panel_width, panel_height),
+            "ethernet_qr": pygame.Rect(margin + (panel_width - 72) // 2, panel_y + 154, 72, 64),
+            "wifi_qr": pygame.Rect(margin + panel_width + gap + (panel_width - 72) // 2, panel_y + 154, 72, 64),
             "ethernet_refresh": pygame.Rect(margin + 24, panel_y + panel_height - 92, 72, 64),
             "wifi_configure": pygame.Rect(margin + panel_width + gap + 24, panel_y + panel_height - 92, 72, 64),
         }
@@ -2124,7 +2151,7 @@ class DeviceAppMenu:
         return self.get_centered_menu_grid_rects(
             (
                 ("play", "games", "clock"),
-                ("qr", "wifi", "more"),
+                ("camera", "wifi", "more"),
             ),
             MAIN_HEADER_HEIGHT,
             self.height,
@@ -2537,6 +2564,71 @@ class DeviceAppMenu:
         if not silent:
             self.state = self.game_return_state
 
+    def start_camera_preview(self):
+        camera_command = shutil.which("rpicam-hello")
+        if not camera_command:
+            log_debug("CAMERA rpicam-hello not found")
+            return
+        self.stop_video_playback(silent=True)
+        self.stop_game_playback(silent=True)
+        command = [
+            camera_command,
+            "--timeout", "0",
+            "--fullscreen",
+            "--autofocus-mode", "continuous",
+        ]
+        try:
+            self.suspend_display_for_external_app("camera")
+            camera_env = os.environ.copy()
+            for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
+                camera_env.pop(env_key, None)
+            self.camera_log_handle = open(CAMERA_DEBUG_LOG_PATH, "a", encoding="utf-8")
+            self.camera_proc = subprocess.Popen(
+                command,
+                stdout=self.camera_log_handle,
+                stderr=self.camera_log_handle,
+                env=camera_env,
+            )
+        except Exception as exc:
+            log_debug(f"CAMERA failed to launch: {exc}")
+            self.close_camera_preview()
+            return
+        time.sleep(0.15)
+        if self.camera_proc.poll() is not None:
+            log_debug(f"CAMERA exited immediately returncode={self.camera_proc.returncode}")
+            self.close_camera_preview()
+            return
+        self.reset_external_touch_sequence()
+        self.state = "camera"
+
+    def close_camera_preview(self):
+        proc = self.camera_proc
+        if proc and proc.poll() is None:
+            try:
+                proc.terminate()
+                proc.wait(timeout=2.0)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+        self.camera_proc = None
+        if self.camera_log_handle is not None:
+            try:
+                self.camera_log_handle.close()
+            except Exception:
+                pass
+            self.camera_log_handle = None
+        if self.display_suspended:
+            self.resume_display_after_external_app("camera")
+        self.reset_external_touch_sequence()
+
+    def update_camera_state(self):
+        if self.state == "camera" and self.camera_proc and self.camera_proc.poll() is not None:
+            log_debug(f"CAMERA exited returncode={self.camera_proc.returncode}")
+            self.close_camera_preview()
+            self.state = "main"
+
     def update_game_state(self):
         if self.state == "game" and self.game_proc and self.game_proc.poll() is not None:
             return_code = self.game_proc.returncode
@@ -2666,6 +2758,8 @@ class DeviceAppMenu:
             self.stop_game_playback(silent=True)
         elif app_state == "video":
             self.stop_video_playback(silent=True)
+        elif app_state == "camera":
+            self.close_camera_preview()
         self.state = "main"
 
     def get_video_preview_layout(self):
@@ -3093,9 +3187,8 @@ class DeviceAppMenu:
             elif button_id in ("clock",):
                 self.clock_return_state = "main"
                 self.state = "clock"
-            elif button_id in ("qr", "1x2"):
-                self.refresh_qr_asset()
-                self.state = "qr"
+            elif button_id in ("camera", "qr", "1x2"):
+                self.start_camera_preview()
             elif button_id in ("wifi",):
                 self.refresh_network_status()
                 self.state = "network"
@@ -3139,7 +3232,7 @@ class DeviceAppMenu:
             elif button_id in ("back", "2x2"):
                 self.state = "main"
         elif self.state == "qr":
-            self.state = "main"
+            self.state = self.qr_return_state
 
     def handle_poweroff_action(self, button_id):
         log_debug(f"POWEROFF action button={button_id}")
@@ -3269,6 +3362,10 @@ class DeviceAppMenu:
         layout = self.get_network_layout()
         if self.top_back_at_pos(pos):
             self.pressed_button = "top-back"
+        elif self.ethernet_status.get("ip") and layout["ethernet_qr"].collidepoint(pos):
+            self.pressed_button = "network-ethernet-qr"
+        elif self.network_wifi_ip and layout["wifi_qr"].collidepoint(pos):
+            self.pressed_button = "network-wifi-qr"
         elif layout["wifi_configure"].collidepoint(pos):
             self.pressed_button = "network-wifi"
         elif layout["ethernet_refresh"].collidepoint(pos):
@@ -3283,6 +3380,16 @@ class DeviceAppMenu:
         if active_button == "top-back" and self.top_back_at_pos(pos):
             self.play_ui_click_sound()
             self.state = "main"
+        elif active_button == "network-ethernet-qr" and layout["ethernet_qr"].collidepoint(pos):
+            self.play_ui_click_sound()
+            self.refresh_qr_asset(self.ethernet_status.get("ip"))
+            self.qr_return_state = "network"
+            self.state = "qr"
+        elif active_button == "network-wifi-qr" and layout["wifi_qr"].collidepoint(pos):
+            self.play_ui_click_sound()
+            self.refresh_qr_asset(self.network_wifi_ip)
+            self.qr_return_state = "network"
+            self.state = "qr"
         elif active_button == "network-wifi" and layout["wifi_configure"].collidepoint(pos):
             self.play_ui_click_sound()
             self.wifi_return_state = "network"
@@ -3631,6 +3738,9 @@ class DeviceAppMenu:
         if self.state == "game":
             self.handle_external_app_touch_down("game")
             return
+        if self.state == "camera":
+            self.handle_external_app_touch_down("camera")
+            return
         if self.state == "video":
             self.handle_video_touch_down(normalized_pos)
             return
@@ -3718,6 +3828,9 @@ class DeviceAppMenu:
         if self.state == "game":
             self.handle_external_app_touch_up("game")
             return
+        if self.state == "camera":
+            self.handle_external_app_touch_up("camera")
+            return
         if self.state == "video":
             self.handle_video_touch_up(normalized_pos)
             return
@@ -3768,7 +3881,7 @@ class DeviceAppMenu:
             )
             if active_button == "top-back" and released_button == "top-back":
                 self.play_ui_click_sound()
-                self.state = "main"
+                self.state = self.qr_return_state
             return
         released_button = self.button_at_pos(normalized_pos)
         active_button = self.pressed_button
@@ -3932,22 +4045,29 @@ class DeviceAppMenu:
             ip_surface = self.small_font.render(wifi_ip, True, WHITE)
             self.screen.blit(ip_surface, ip_surface.get_rect(center=(wifi_panel.centerx, wifi_panel.y + 130)))
 
-        actions = (
-            ("network-refresh", layout["ethernet_refresh"], self.ethernet_asset, self.tr("network.refresh"), ethernet_panel),
-            ("network-wifi", layout["wifi_configure"], self.wifi_config_asset, self.tr("network.configure_wifi"), wifi_panel),
+        qr_actions = (
+            ("network-ethernet-qr", layout["ethernet_qr"], ethernet_status.get("ip")),
+            ("network-wifi-qr", layout["wifi_qr"], self.network_wifi_ip),
         )
-        for button_id, button, source_icon, label_text, panel in actions:
+        for button_id, button, ip_address in qr_actions:
+            if not ip_address:
+                continue
             pressed = self.pressed_button == button_id
-            background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
-            if background is not None:
-                self.screen.blit(fit_image(background, button.size), button)
-            else:
-                draw_rect_compat(self.screen, (20, 184, 166) if pressed else MID_GRAY, button, 0, 10)
-                draw_rect_compat(self.screen, WHITE, button, 2, 10)
-            if source_icon is not None:
-                icon = fit_image_contain(source_icon, (52, 52))
-                if icon is not None:
-                    self.screen.blit(icon, icon.get_rect(center=button.center))
+            source = self.network_action_assets["qr"]["pressed" if pressed else "normal"]
+            icon = fit_image_contain(source, button.size)
+            if icon is not None:
+                self.screen.blit(icon, icon.get_rect(center=button.center))
+
+        actions = (
+            ("network-refresh", layout["ethernet_refresh"], "refresh", self.tr("network.refresh"), ethernet_panel),
+            ("network-wifi", layout["wifi_configure"], "wifi", self.tr("network.configure_wifi"), wifi_panel),
+        )
+        for button_id, button, asset_key, label_text, panel in actions:
+            pressed = self.pressed_button == button_id
+            source = self.network_action_assets[asset_key]["pressed" if pressed else "normal"]
+            icon = fit_image_contain(source, button.size)
+            if icon is not None:
+                self.screen.blit(icon, icon.get_rect(center=button.center))
             label_text = self.truncate_text(label_text, self.wifi_bold_font, panel.right - button.right - 26)
             label = self.wifi_bold_font.render(label_text, True, WHITE)
             label_rect = label.get_rect(midleft=(button.right + 16, button.centery))
@@ -4367,7 +4487,7 @@ class DeviceAppMenu:
             "play": self.tr("main.play"),
             "games": self.tr("main.games"),
             "clock": self.tr("main.clock"),
-            "qr": self.tr("main.qr"),
+            "camera": self.tr("main.camera"),
             "wifi": self.tr("main.wifi"),
             "more": self.tr("main.more"),
         }
@@ -4375,7 +4495,7 @@ class DeviceAppMenu:
             "play": (59, 130, 246),
             "games": (72, 190, 120),
             "clock": (168, 85, 247),
-            "qr": (245, 158, 11),
+            "camera": (245, 158, 11),
             "wifi": (20, 184, 166),
             "more": (239, 68, 68),
         }
@@ -4789,6 +4909,8 @@ class DeviceAppMenu:
             self.draw_loading_video()
         elif self.state == "video":
             return
+        elif self.state == "camera":
+            return
         elif self.state == "video_preview":
             self.draw_video_preview()
         elif self.state == "play":
@@ -4817,6 +4939,7 @@ class DeviceAppMenu:
         while self.running:
             self.update_video_state()
             self.update_game_state()
+            self.update_camera_state()
             self.poll_external_settings()
             self.poll_menu_command()
             self.update_clock_alarms()
