@@ -1051,6 +1051,16 @@ def fit_image_contain(image, size):
     return pygame.transform.smoothscale(image, target_size)
 
 
+def fit_visible_image_contain(image, size):
+    """Scale visible pixels, ignoring unequal transparent padding in icon files."""
+    if image is None:
+        return None
+    visible_rect = image.get_bounding_rect(min_alpha=1)
+    if visible_rect.width <= 0 or visible_rect.height <= 0:
+        return None
+    return fit_image_contain(image.subsurface(visible_rect), size)
+
+
 def tint_icon(image, color):
     if image is None:
         return None
@@ -4064,8 +4074,15 @@ class DeviceAppMenu:
         )
         for button_id, button, asset_key, label_text, panel in actions:
             pressed = self.pressed_button == button_id
+            background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
+            if background is not None:
+                self.screen.blit(fit_image(background, button.size), button)
+            else:
+                draw_rect_compat(self.screen, (20, 184, 166) if pressed else MID_GRAY, button, 0, 10)
+                draw_rect_compat(self.screen, WHITE, button, 2, 10)
             source = self.network_action_assets[asset_key]["pressed" if pressed else "normal"]
-            icon = fit_image_contain(source, button.size)
+            icon_box = (42, 42)
+            icon = fit_visible_image_contain(source, icon_box)
             if icon is not None:
                 self.screen.blit(icon, icon.get_rect(center=button.center))
             label_text = self.truncate_text(label_text, self.wifi_bold_font, panel.right - button.right - 26)

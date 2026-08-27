@@ -1147,6 +1147,26 @@ export function getMediaStreamUrl(relativePath) {
   return `${getBaseUrl()}/media/stream?${params.toString()}`;
 }
 
+export async function captureCameraImage() {
+  if (isMockModeEnabled()) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="1280" height="720" fill="#111d26"/><circle cx="640" cy="330" r="105" fill="none" stroke="#ffd429" stroke-width="22"/><circle cx="640" cy="330" r="42" fill="#ffd429"/><path d="M470 235h95l32-45h86l32 45h95c28 0 50 22 50 50v250c0 28-22 50-50 50H470c-28 0-50-22-50-50V285c0-28 22-50 50-50Z" fill="none" stroke="#eef2f6" stroke-width="18"/><text x="640" y="650" text-anchor="middle" fill="#eef2f6" font-family="sans-serif" font-size="38">Vista previa de cámara</text></svg>`;
+    return new Blob([svg], { type: "image/svg+xml" });
+  }
+
+  const storedPin = getStoredWebPin();
+  const response = await fetch(`${getBaseUrl()}/camera/capture`, {
+    headers: storedPin ? { "X-Web-Pin": storedPin } : {},
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const payload = tryParseJson(await response.text());
+    const error = new Error(payload?.error || `HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return response.blob();
+}
+
 export function volumeUp() {
   if (isMockModeEnabled()) {
     return Promise.resolve({ ok: true, mock: true });

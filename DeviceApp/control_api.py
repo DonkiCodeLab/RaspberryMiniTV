@@ -1,4 +1,5 @@
 import json
+import io
 import os
 import re
 import shutil
@@ -78,6 +79,7 @@ lock = threading.Lock()
 current = {"proc": None, "id": None, "directory": None, "file": None}
 qr_proc = {"proc": None}
 qr_visible = {"shown": False}
+camera_lock = threading.Lock()
 
 
 def normalize_language_code(language):
@@ -2445,6 +2447,56 @@ def stream_media():
 
     # conditional=True enables HTTP range requests, which browsers need for seeking.
     return send_file(target_path, conditional=True)
+
+
+@app.route("/camera/capture", methods=["GET"])
+def capture_camera():
+    camera_command = shutil.which("rpicam-still") or shutil.which("libcamera-still")
+    if not camera_command:
+        return jsonify({"error": "Camera capture command is not available"}), 503
+
+    capture_fd, capture_path = tempfile.mkstemp(prefix="minitv-camera-", suffix=".jpg")
+    os.close(capture_fd)
+    try:
+        with camera_lock:
+            completed = subprocess.run(
+                [
+                    camera_command,
+                    "--nopreview",
+                    "--timeout",
+                    "800",
+                    "--width",
+                    "1280",
+                    "--height",
+                    "720",
+                    "--output",
+                    capture_path,
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                timeout=12,
+                check=False,
+            )
+            if completed.returncode != 0 or not os.path.isfile(capture_path):
+                return jsonify({"error": "Could not capture an image from the camera"}), 503
+            with open(capture_path, "rb") as handle:
+                image_data = handle.read()
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Camera capture timed out"}), 504
+    except OSError:
+        return jsonify({"error": "Could not capture an image from the camera"}), 503
+    finally:
+        try:
+            os.remove(capture_path)
+        except OSError:
+            pass
+
+    return send_file(
+        io.BytesIO(image_data),
+        mimetype="image/jpeg",
+        download_name="camera.jpg",
+        max_age=0,
+    )
 
 
 @app.route("/stop", methods=["POST"])

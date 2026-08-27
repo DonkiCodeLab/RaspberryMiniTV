@@ -43,6 +43,7 @@ import uploadDropzoneYellow from "./assets/upload_drag&drop_zone_yellow.png";
 import {
   addSeries,
   authWebPin,
+  captureCameraImage,
   getAlarmSoundUrl,
   getHealth,
   getMediaStreamUrl,
@@ -328,6 +329,12 @@ const UI_STRINGS = {
     on: "On",
     off: "Off",
     playback_current: "Reproducción actual",
+    camera_title: "Cámara",
+    camera_capture: "Ver cámara",
+    camera_capturing: "Capturando...",
+    camera_preview_hint: "Pulsa el botón para ver lo que captura la cámara.",
+    camera_preview_alt: "Captura actual de la cámara",
+    camera_capture_error: "No se pudo obtener la imagen de la cámara.",
     content_in_progress: "Contenido en curso",
     nothing_playing: "Nada reproduciéndose",
     season_label: "Temporada",
@@ -592,6 +599,12 @@ const UI_STRINGS = {
     on: "On",
     off: "Off",
     playback_current: "Reproducció actual",
+    camera_title: "Càmera",
+    camera_capture: "Veure càmera",
+    camera_capturing: "Capturant...",
+    camera_preview_hint: "Prem el botó per veure què captura la càmera.",
+    camera_preview_alt: "Captura actual de la càmera",
+    camera_capture_error: "No s'ha pogut obtenir la imatge de la càmera.",
     content_in_progress: "Contingut en curs",
     nothing_playing: "No s'està reproduint res",
     season_label: "Temporada",
@@ -856,6 +869,12 @@ const UI_STRINGS = {
     on: "On",
     off: "Off",
     playback_current: "Current playback",
+    camera_title: "Camera",
+    camera_capture: "View camera",
+    camera_capturing: "Capturing...",
+    camera_preview_hint: "Press the button to see what the camera captures.",
+    camera_preview_alt: "Current camera capture",
+    camera_capture_error: "Could not get an image from the camera.",
     content_in_progress: "Content in progress",
     nothing_playing: "Nothing is playing",
     season_label: "Season",
@@ -4112,6 +4131,26 @@ function RaspberryPage({
   onOpenTmdbBrowser,
 }) {
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
+  const [cameraImageUrl, setCameraImageUrl] = useState("");
+  const [cameraBusy, setCameraBusy] = useState(false);
+  const [cameraError, setCameraError] = useState("");
+
+  useEffect(() => () => {
+    if (cameraImageUrl) URL.revokeObjectURL(cameraImageUrl);
+  }, [cameraImageUrl]);
+
+  async function handleCameraCapture() {
+    try {
+      setCameraBusy(true);
+      setCameraError("");
+      const imageBlob = await captureCameraImage();
+      setCameraImageUrl(URL.createObjectURL(imageBlob));
+    } catch (error) {
+      setCameraError(error?.message || t("camera_capture_error"));
+    } finally {
+      setCameraBusy(false);
+    }
+  }
   const uploadDropzoneCopyKey =
     uploadMediaType === "series"
       ? "upload_series_dropzone_copy"
@@ -4488,6 +4527,32 @@ function RaspberryPage({
                 </button>
               </div>
             </div>
+          </article>
+
+          <article className="raspberry-camera-card">
+            <div className="raspberry-camera-card__header">
+              <p>{t("camera_title")}</p>
+              <button
+                className="dialog-button dialog-button--accent raspberry-camera-card__button"
+                onClick={handleCameraCapture}
+                disabled={cameraBusy}
+                type="button"
+              >
+                <span className="raspberry-camera-card__button-icon" aria-hidden="true">●</span>
+                <span>{t(cameraBusy ? "camera_capturing" : "camera_capture")}</span>
+              </button>
+            </div>
+            <div className={`raspberry-camera-card__preview${cameraImageUrl ? " has-image" : ""}`}>
+              {cameraImageUrl ? (
+                <img src={cameraImageUrl} alt={t("camera_preview_alt")} />
+              ) : (
+                <div className="raspberry-camera-card__placeholder">
+                  <span className="raspberry-camera-card__lens" aria-hidden="true" />
+                  <span>{t("camera_preview_hint")}</span>
+                </div>
+              )}
+            </div>
+            {cameraError ? <p className="raspberry-camera-card__error" role="alert">{cameraError}</p> : null}
           </article>
 
           <RaspberryPoweroffModal
