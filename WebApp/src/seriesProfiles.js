@@ -67,6 +67,10 @@ export function updateSeriesProfile(seriesKey, updates = {}, collectionType = "s
       heroImageCrop:
         normalizeHeroImageCrop(updates?.heroImageCrop) ||
         normalizeHeroImageCrop(currentEntry.heroImageCrop),
+      imdbUrl:
+        updates?.imdbUrl !== undefined
+          ? String(updates.imdbUrl || "").trim()
+          : String(currentEntry.imdbUrl || "").trim(),
     },
   }, collectionType);
 }

@@ -16,6 +16,9 @@ import dashboardIconYellow from "./assets/icon_dashboard_yellow.png";
 import gameIconBlack from "./assets/icon_game_black.png";
 import gameIconWhite from "./assets/icon_game_white.png";
 import gameIconYellow from "./assets/icon_game_yellow.png";
+import bookIconBlack from "./assets/icon_book_black.svg";
+import bookIconWhite from "./assets/icon_book_white.svg";
+import bookIconYellow from "./assets/icon_book_yellow.svg";
 import languagesIcon from "./assets/icon_languages.png";
 import languageCatNormal from "./assets/language_cat_normal.png";
 import languageCatSelected from "./assets/language_cat_selected.png";
@@ -47,6 +50,7 @@ import {
   getAlarmSoundUrl,
   getHealth,
   getMediaStreamUrl,
+  getBookContentUrl,
   getRaspberryAlarms,
   getRaspberryLanguage,
   getRaspberryWeatherSettings,
@@ -57,6 +61,7 @@ import {
   playEpisode,
   playGameFile,
   removeGameFile,
+  removeBookFile,
   removeMovieFile,
   removeSeries,
   removeSeriesEpisode,
@@ -70,6 +75,7 @@ import {
   updateRaspberryWeatherLocation,
   updateGameFileMetadata,
   uploadGameFile,
+  uploadBookFiles,
   uploadMovieFile,
   uploadSeriesFiles,
   volumeDown,
@@ -119,6 +125,12 @@ const MEDIA_TYPES = [
     labelKey: "media_games",
     activeIcon: gameIconBlack,
     inactiveIcon: gameIconYellow,
+  },
+  {
+    id: "books",
+    labelKey: "media_books",
+    activeIcon: bookIconBlack,
+    inactiveIcon: bookIconYellow,
   },
 ];
 
@@ -173,6 +185,7 @@ const UPLOAD_MEDIA_OPTIONS = [
   { key: "series", value: "series", labelKey: "upload_series" },
   { key: "movies", value: "movies", labelKey: "upload_movie" },
   { key: "games", value: "games", labelKey: "upload_game" },
+  { key: "books", value: "books", labelKey: "upload_books" },
 ];
 const GAME_ROM_EXTENSIONS = new Set(["gb", "gbc", "gba"]);
 const GAME_PLATFORM_LABELS = {
@@ -225,15 +238,18 @@ const UI_STRINGS = {
     media_series: "Series",
     media_movies: "Películas",
     media_games: "Juegos",
+    media_books: "Libros",
     media_series_singular: "serie",
     media_movies_singular: "película",
     media_games_singular: "juego",
+    media_books_singular: "libro",
     raspberry_dashboard: "Dashboard",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
     upload_series: "Serie",
     upload_movie: "Película",
     upload_game: "Juego",
+    upload_books: "Libros",
     language_spanish: "Castellano",
     language_catalan: "Català",
     language_english: "English",
@@ -259,6 +275,10 @@ const UI_STRINGS = {
     done_close: "Cerrar",
     settings_of: "Ajustes de la {media}",
     visible_name: "Nombre visible",
+    imdb_url: "URL de IMDb",
+    imdb_url_placeholder: "https://www.imdb.com/title/tt.../",
+    imdb_link: "Enlace a la ficha de IMDb",
+    imdb_no_link: "Sin enlace a URL",
     image_header: "Imagen de cabecera",
     poster_preview: "Vista previa del cartel",
     vertical_position: "Posición vertical del cartel",
@@ -362,6 +382,7 @@ const UI_STRINGS = {
     upload_movie_dropzone_copy:
       "Se abrirá un diálogo de coincidencia TMDB usando el nombre del fichero seleccionado o arrastrado a esta zona. Antes de confirmar podrás editar la búsqueda.",
     upload_game_dropzone_copy: "Acepta ROMs .gb, .gbc y .gba. Después podrás añadir carátula local y descripción antes de subir.",
+    upload_books_dropzone_copy: "Adjunta uno o varios PDF, EPUB, CBZ o CBR, o arrastra una carpeta completa para crear una colección.",
     latest_detection: "Última detección",
     games: "Juegos",
     upload_games_pending: "La subida guiada para juegos queda preparada visualmente y la conectamos en la siguiente iteración.",
@@ -399,6 +420,8 @@ const UI_STRINGS = {
     upload_game_done_summary: "{name} añadido a Games: {path}",
     upload_game_failed: "No se pudo subir el juego.",
     access_protected: "Acceso protegido",
+    app_title: "Gestor de MiniTV Raspberry",
+    protected_access: "Acceso protegido",
     unlock_copy: "Introduce el PIN numérico de 4 dígitos configurado en la Raspberry.",
     validating: "Validando...",
     show_password: "Mostrar PIN",
@@ -495,15 +518,18 @@ const UI_STRINGS = {
     media_series: "Sèries",
     media_movies: "Pel·lícules",
     media_games: "Jocs",
+    media_books: "Llibres",
     media_series_singular: "sèrie",
     media_movies_singular: "pel·lícula",
     media_games_singular: "joc",
+    media_books_singular: "llibre",
     raspberry_dashboard: "Dashboard",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
     upload_series: "Sèrie",
     upload_movie: "Pel·lícula",
     upload_game: "Joc",
+    upload_books: "Llibres",
     language_spanish: "Castellà",
     language_catalan: "Català",
     language_english: "English",
@@ -529,6 +555,10 @@ const UI_STRINGS = {
     done_close: "Tancar",
     settings_of: "Ajustos de la {media}",
     visible_name: "Nom visible",
+    imdb_url: "URL d'IMDb",
+    imdb_url_placeholder: "https://www.imdb.com/title/tt.../",
+    imdb_link: "Enllaç a la fitxa d'IMDb",
+    imdb_no_link: "Sense enllaç a URL",
     image_header: "Imatge de capçalera",
     poster_preview: "Vista prèvia del cartell",
     vertical_position: "Posició vertical del cartell",
@@ -632,6 +662,7 @@ const UI_STRINGS = {
     upload_movie_dropzone_copy:
       "S'obrirà un diàleg de coincidència TMDB fent servir el nom del fitxer seleccionat o arrossegat a aquesta zona. Abans de confirmar podràs editar la cerca.",
     upload_game_dropzone_copy: "Accepta ROMs .gb, .gbc i .gba. Després podràs afegir caràtula local i descripció abans de pujar.",
+    upload_books_dropzone_copy: "Adjunta PDF, EPUB, CBZ o CBR, o arrossega una carpeta completa per crear una col·lecció.",
     latest_detection: "Última detecció",
     games: "Jocs",
     upload_games_pending: "La pujada guiada per a jocs queda preparada visualment i la connectem a la següent iteració.",
@@ -669,6 +700,8 @@ const UI_STRINGS = {
     upload_game_done_summary: "{name} afegit a Games: {path}",
     upload_game_failed: "No s'ha pogut pujar el joc.",
     access_protected: "Accés protegit",
+    app_title: "Gestor de MiniTV Raspberry",
+    protected_access: "Accés protegit",
     unlock_copy: "Introdueix el PIN numèric de 4 dígits configurat a la Raspberry.",
     validating: "Validant...",
     show_password: "Mostra el PIN",
@@ -765,15 +798,18 @@ const UI_STRINGS = {
     media_series: "Series",
     media_movies: "Movies",
     media_games: "Games",
+    media_books: "Books",
     media_series_singular: "series",
     media_movies_singular: "movie",
     media_games_singular: "game",
+    media_books_singular: "book",
     raspberry_dashboard: "Dashboard",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
     upload_series: "Series",
     upload_movie: "Movie",
     upload_game: "Game",
+    upload_books: "Books",
     language_spanish: "Spanish",
     language_catalan: "Catalan",
     language_english: "English",
@@ -799,6 +835,10 @@ const UI_STRINGS = {
     done_close: "Close",
     settings_of: "{media} settings",
     visible_name: "Visible name",
+    imdb_url: "IMDb URL",
+    imdb_url_placeholder: "https://www.imdb.com/title/tt.../",
+    imdb_link: "Link to the IMDb page",
+    imdb_no_link: "No URL link",
     image_header: "Header image",
     poster_preview: "Poster preview",
     vertical_position: "Poster vertical position",
@@ -902,6 +942,7 @@ const UI_STRINGS = {
     upload_movie_dropzone_copy:
       "A TMDB match dialog will open using the selected or dropped file name. Before confirming, you will be able to edit the search.",
     upload_game_dropzone_copy: "Accepts .gb, .gbc, and .gba ROMs. You can add a local cover and description before uploading.",
+    upload_books_dropzone_copy: "Attach PDF, EPUB, CBZ, or CBR files, or drag a whole folder to create a collection.",
     latest_detection: "Latest detection",
     games: "Games",
     upload_games_pending: "Guided uploads for games are visually prepared and will be connected in the next iteration.",
@@ -939,6 +980,8 @@ const UI_STRINGS = {
     upload_game_done_summary: "{name} added to Games: {path}",
     upload_game_failed: "Could not upload the game.",
     access_protected: "Protected access",
+    app_title: "Raspberry MiniTV Manager",
+    protected_access: "Protected access",
     unlock_copy: "Enter the 4-digit numeric PIN configured on the Raspberry.",
     validating: "Validating...",
     show_password: "Show PIN",
@@ -1065,6 +1108,22 @@ function normalizeMediaLabel(value) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "");
+}
+
+function normalizeImdbUrl(value) {
+  const rawValue = String(value || "").trim();
+  if (!rawValue) return "";
+
+  try {
+    const candidate = /^https?:\/\//i.test(rawValue) ? rawValue : `https://${rawValue}`;
+    const parsedUrl = new URL(candidate);
+    const hostname = parsedUrl.hostname.toLowerCase();
+    if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") return "";
+    if (hostname !== "imdb.com" && !hostname.endsWith(".imdb.com")) return "";
+    return parsedUrl.toString();
+  } catch (_error) {
+    return "";
+  }
 }
 
 function stripFileExtension(value) {
@@ -1294,6 +1353,9 @@ function getRaspberryProfiles(videos, collectionType) {
     if (item.heroImageCrop && typeof item.heroImageCrop === "object") {
       profile.heroImageCrop = normalizeHeroCrop(item.heroImageCrop);
     }
+    if (item.imdbUrl !== undefined) {
+      profile.imdbUrl = String(item.imdbUrl || "").trim();
+    }
     if (Object.keys(profile).length) {
       profiles[profileKey] = profile;
     }
@@ -1445,6 +1507,7 @@ function normalizeLibraryCounts(counts) {
     series: normalizeLibraryUsageItem(counts?.series),
     movies: normalizeLibraryUsageItem(counts?.movies),
     games: normalizeLibraryUsageItem(counts?.games),
+    books: normalizeLibraryUsageItem(counts?.books),
   };
 }
 
@@ -2219,12 +2282,14 @@ function BrowserPlayerModal({ playback, onClose, t }) {
 
 function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave, onDelete, t }) {
   const [name, setName] = useState(item?.name || "");
+  const [imdbUrl, setImdbUrl] = useState(item?.imdbUrl || "");
   const [heroImage, setHeroImage] = useState(item?.heroImage || "");
   const [heroImageCrop, setHeroImageCrop] = useState(item?.heroImageCrop || DEFAULT_HERO_CROP);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     setName(item?.name || "");
+    setImdbUrl(item?.imdbUrl || "");
     setHeroImage(item?.heroImage || imageOptions?.[0] || "");
     setHeroImageCrop(normalizeHeroCrop(item?.heroImageCrop || DEFAULT_HERO_CROP));
     setDeleteConfirmOpen(false);
@@ -2285,6 +2350,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
                     name,
                     heroImage,
                     heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop) : null,
+                    imdbUrl: mediaType === "movies" ? normalizeImdbUrl(imdbUrl) : undefined,
                   })
                 }
                 type="button"
@@ -2349,6 +2415,19 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
               placeholder={t("name_of_media", { media: mediaLabel })}
             />
           </label>
+
+          {mediaType === "movies" ? (
+            <label className="dialog-field">
+              <span>{t("imdb_url")}</span>
+              <input
+                type="url"
+                value={imdbUrl}
+                onChange={(event) => setImdbUrl(event.target.value)}
+                placeholder={t("imdb_url_placeholder")}
+                inputMode="url"
+              />
+            </label>
+          ) : null}
 
           <div className="dialog-field">
             <span>{t("image_header")}</span>
@@ -4156,19 +4235,21 @@ function RaspberryPage({
       ? "upload_series_dropzone_copy"
       : uploadMediaType === "movies"
         ? "upload_movie_dropzone_copy"
-        : "upload_game_dropzone_copy";
+        : uploadMediaType === "books"
+          ? "upload_books_dropzone_copy"
+          : "upload_game_dropzone_copy";
   const uploadTypeIconNormal =
     uploadMediaType === "series"
       ? tvshowIconWhite
       : uploadMediaType === "movies"
         ? movieIconWhite
-        : gameIconWhite;
+        : uploadMediaType === "books" ? bookIconWhite : gameIconWhite;
   const uploadTypeIconHover =
     uploadMediaType === "series"
       ? tvshowIconYellow
       : uploadMediaType === "movies"
         ? movieIconYellow
-        : gameIconYellow;
+        : uploadMediaType === "books" ? bookIconYellow : gameIconYellow;
   const playbackActive = Boolean(raspberryHealth.running);
   const playbackPaused = Boolean(currentPlaybackInfo?.paused);
   const controlsDisabled = !playbackActive || controlsBusy;
@@ -4606,7 +4687,7 @@ function RaspberryPage({
                 className="raspberry-upload-dropzone__input"
                 type="file"
                 multiple
-                accept={uploadMediaType === "games" ? ".gb,.gbc,.gba" : undefined}
+                accept={uploadMediaType === "games" ? ".gb,.gbc,.gba" : uploadMediaType === "books" ? ".pdf,.epub,.cbz,.cbr" : undefined}
                 webkitdirectory={uploadMediaType === "series" ? "" : undefined}
                 directory={uploadMediaType === "series" ? "" : undefined}
                 onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
@@ -4633,6 +4714,20 @@ function RaspberryPage({
               <p>{t(uploadDropzoneCopyKey)}</p>
             </label>
 
+            {uploadMediaType === "books" ? (
+              <label className="dialog-button dialog-button--ghost books-directory-picker">
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.epub,.cbz,.cbr"
+                  webkitdirectory=""
+                  directory=""
+                  onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
+                />
+                Seleccionar una carpeta o colección
+              </label>
+            ) : null}
+
             {uploadSummary ? (
               <div className="raspberry-upload-summary">
                 <strong>{t("latest_detection")}</strong>
@@ -4640,7 +4735,7 @@ function RaspberryPage({
               </div>
             ) : null}
 
-            {uploadMediaType !== "games" ? (
+            {!['games', 'books'].includes(uploadMediaType) ? (
               <div className="raspberry-upload-summary raspberry-upload-summary--tmdb">
                 <div>
                   <strong>{t("tmdb_browser_title")}</strong>
@@ -4663,6 +4758,80 @@ function RaspberryPage({
   );
 }
 
+function BooksLibrary({ books, selectedPath, onSelect, onOpen, onDelete, onUpload }) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleBooks = books.filter((book) =>
+    `${book.name} ${book.file} ${book.collection}`.toLowerCase().includes(normalizedQuery)
+  );
+  const selectedBook = books.find((book) => book.relativePath === selectedPath) || visibleBooks[0] || null;
+
+  return (
+    <section className="books-library seasons-section">
+      <div className="books-library__toolbar">
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar por título, archivo o colección…"
+          aria-label="Buscar libros"
+        />
+        <button className="dialog-button dialog-button--accent" onClick={onUpload} type="button">Añadir libros</button>
+      </div>
+      {!visibleBooks.length ? (
+        <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
+      ) : (
+        <div className="books-library__layout">
+          <div className="books-library__list">
+            {visibleBooks.map((book) => (
+              <button
+                key={book.relativePath}
+                className={`books-library__item${selectedBook?.relativePath === book.relativePath ? " active" : ""}`}
+                onClick={() => onSelect(book.relativePath)}
+                type="button"
+              >
+                <span className="books-library__format">{book.format}</span>
+                <span><strong>{book.name}</strong><small>{book.collection || "Sin colección"}</small></span>
+              </button>
+            ))}
+          </div>
+          {selectedBook ? (
+            <article className="books-library__detail">
+              <span className="books-library__cover">📖</span>
+              <h2>{selectedBook.name}</h2>
+              <p>{selectedBook.collection || "Libro individual"} · {selectedBook.format.toUpperCase()}</p>
+              <div className="books-library__actions">
+                <button className="dialog-button dialog-button--accent" onClick={() => onOpen(selectedBook)} type="button">Abrir lector</button>
+                <button className="dialog-button dialog-button--danger" onClick={() => onDelete(selectedBook)} type="button">Eliminar</button>
+              </div>
+            </article>
+          ) : null}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function BookReader({ book, onClose }) {
+  if (!book) return null;
+  const source = getBookContentUrl(book.relativePath);
+  return createPortal(
+    <div className="book-reader" role="dialog" aria-modal="true" aria-label={book.name}>
+      <header><strong>{book.name}</strong><button onClick={onClose} type="button" aria-label="Cerrar lector">×</button></header>
+      {book.format === "pdf" ? (
+        <iframe src={source} title={book.name} />
+      ) : (
+        <div className="book-reader__fallback">
+          <span>📚</span><h2>{book.name}</h2>
+          <p>Este formato se abrirá con el lector compatible del navegador o del dispositivo.</p>
+          <a className="dialog-button dialog-button--accent" href={source} target="_blank" rel="noreferrer">Abrir {book.format.toUpperCase()}</a>
+        </div>
+      )}
+    </div>,
+    document.body
+  );
+}
+
 export default function App() {
   const mockMode = isMockMode();
   const [activeMediaType, setActiveMediaType] = useState("series");
@@ -4678,6 +4847,8 @@ export default function App() {
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
   const [selectedMovieId, setSelectedMovieId] = useState(null);
   const [selectedGamePath, setSelectedGamePath] = useState("");
+  const [selectedBookPath, setSelectedBookPath] = useState("");
+  const [openBook, setOpenBook] = useState(null);
   const [selectedGameImageIndex, setSelectedGameImageIndex] = useState(1);
   const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   const [currentView, setCurrentView] = useState("series");
@@ -5043,10 +5214,17 @@ export default function App() {
       { sensitivity: "base", numeric: true }
     );
   const gameLibrary = Array.isArray(videos?.games) ? [...videos.games].sort(compareMediaNames) : [];
+  const bookLibrary = Array.isArray(videos?.books) ? [...videos.books].sort(compareMediaNames) : [];
   const selectedGame =
     gameLibrary.find((game) => game.relativePath === selectedGamePath) ||
     gameLibrary[0] ||
     null;
+  const selectedBook = bookLibrary.find((book) => book.relativePath === selectedBookPath) || bookLibrary[0] || null;
+
+  useEffect(() => {
+    if (!bookLibrary.length) setSelectedBookPath("");
+    else if (!bookLibrary.some((book) => book.relativePath === selectedBookPath)) setSelectedBookPath(bookLibrary[0].relativePath);
+  }, [bookLibrary, selectedBookPath]);
 
   useEffect(() => {
     if (!gameLibrary.length) {
@@ -5142,6 +5320,7 @@ export default function App() {
                 name: profile.name || tmdbMovie?.name || movie.name,
                 heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
                 heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
+                imdbUrl: String(profile.imdbUrl || "").trim(),
               },
             ];
           })
@@ -5202,6 +5381,7 @@ export default function App() {
         originalName: tmdbMovie?.originalName || "",
         heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
+        imdbUrl: normalizeImdbUrl(profile.imdbUrl),
         imageOptions: tmdbMovie?.imageOptions || [],
         overview: tmdbMovie?.overview || "",
         releaseDate: tmdbMovie?.releaseDate || "",
@@ -5253,18 +5433,20 @@ export default function App() {
   }, [movieOptions, raspberryHealth, seriesOptions]);
 
   const selectedItem =
-    activeMediaType === "games"
+    activeMediaType === "books"
+      ? selectedBook
+      : activeMediaType === "games"
       ? selectedGame
       : activeMediaType === "movies"
         ? selectedMovie
         : selectedSeries;
-  const hasSettingsButton = activeMediaType !== "games" && Boolean(selectedItem);
+  const hasSettingsButton = !["games", "books"].includes(activeMediaType) && Boolean(selectedItem);
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage =
     activeMediaType === "games" ? selectedGame?.coverImage || cartellLogo : selectedItem?.heroImage || cartellLogo;
   const headerImageCrop =
-    activeMediaType === "games"
+    ["games", "books"].includes(activeMediaType)
       ? DEFAULT_HERO_CROP
       : selectedItem?.heroImageCrop || DEFAULT_HERO_CROP;
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) || null;
@@ -5541,7 +5723,7 @@ export default function App() {
   }
 
   function handleOpenUploadsForMedia(mediaType) {
-    const safeMediaType = mediaType === "games" ? "games" : mediaType === "movies" ? "movies" : "series";
+    const safeMediaType = ["games", "movies", "books"].includes(mediaType) ? mediaType : "series";
     setUploadMediaType(safeMediaType);
     setRaspberryReturnView(currentView === "season" ? "season" : "series");
     setRaspberryTab("uploads");
@@ -5573,6 +5755,7 @@ export default function App() {
             file: activeItem.fileName || movieEntry.relativePath.split("/").pop() || "",
             heroImage: updates.heroImage,
             heroImageCrop: updates.heroImageCrop,
+            imdbUrl: updates.imdbUrl,
           });
         }
       } else {
@@ -6496,9 +6679,43 @@ export default function App() {
     setUploadDragActive(Boolean(nextValue));
   }
 
-  function handleUploadFiles(files) {
+  async function handleDeleteBook(book) {
+    if (!book || !window.confirm(`¿Eliminar “${book.name}”?`)) return;
+    try {
+      await removeBookFile(book.relativePath);
+      setOpenBook(null);
+      setVideos(await getVideos());
+    } catch (nextError) {
+      window.alert(nextError.message || "No se pudo eliminar el libro.");
+    }
+  }
+
+  async function handleUploadFiles(files) {
     const safeFiles = Array.isArray(files) ? files.filter((file) => file && !isIgnoredUploadFile(file)) : [];
     if (!safeFiles.length) return;
+
+    if (uploadMediaType === "books") {
+      const supported = new Set(["pdf", "epub", "cbz", "cbr"]);
+      const bookFiles = safeFiles.filter((file) => supported.has(getFileExtension(file.name)));
+      if (!bookFiles.length || bookFiles.length !== safeFiles.length) {
+        setUploadValidationError({ title: "Formato no compatible", message: "Usa archivos PDF, EPUB, CBZ o CBR." });
+        return;
+      }
+      const firstPath = String(bookFiles[0].webkitRelativePath || "").replace(/\\/g, "/");
+      const collection = firstPath.includes("/") ? firstPath.split("/")[0] : "";
+      try {
+        setUploadSummary(`Subiendo ${bookFiles.length} libro(s)…`);
+        await uploadBookFiles({ files: bookFiles, collection });
+        const nextVideos = await getVideos();
+        setVideos(nextVideos);
+        setUploadSummary(`${bookFiles.length} libro(s) añadidos${collection ? ` a ${collection}` : ""}.`);
+        setCurrentView("series");
+        setActiveMediaType("books");
+      } catch (nextError) {
+        setUploadValidationError({ title: "No se pudieron subir los libros", message: nextError.message });
+      }
+      return;
+    }
 
     if (uploadMediaType === "games") {
       const gameFiles = safeFiles.filter(isSupportedGameRom);
@@ -6582,19 +6799,26 @@ export default function App() {
   const isSeriesMode = activeMediaType === "series";
   const isMoviesMode = activeMediaType === "movies";
   const isGamesMode = activeMediaType === "games";
+  const isBooksMode = activeMediaType === "books";
   const selectorOptions = isGamesMode ? gameLibrary : isMoviesMode ? movieOptions : seriesOptions;
-  const selectorValue = isGamesMode
+  const selectorValue = isBooksMode
+    ? selectedBook?.relativePath || ""
+    : isGamesMode
     ? selectedGame?.relativePath || ""
     : isMoviesMode
     ? String(selectedMovie?.id || "")
     : selectedSeries?.directoryPath || "";
-  const selectorLabel = isGamesMode
+  const selectorLabel = isBooksMode
+    ? selectedBook?.name || t("media_books")
+    : isGamesMode
     ? t("select_type")
     : isMoviesMode
       ? t("select_movie")
       : t("select_series");
-  const isLibraryEmpty = !selectedItem && !isGamesMode;
-  const heroSelectorOptions = isGamesMode
+  const isLibraryEmpty = !selectedItem && !isGamesMode && !isBooksMode;
+  const heroSelectorOptions = isBooksMode
+    ? bookLibrary.map((item) => ({ key: item.relativePath, value: item.relativePath, label: item.name }))
+    : isGamesMode
     ? gameLibrary.map((game) => ({
         key: game.relativePath || game.file,
         value: game.relativePath || "",
@@ -6656,7 +6880,11 @@ export default function App() {
         {!unlocked ? (
           <section className="empty-state">
             <div className="empty-state__card unlock-card">
-              <h2>Acceso protegido</h2>
+              <header className="unlock-card__header">
+                <img className="unlock-card__logo" src={cartellLogo} alt="DonkiCodeLab" />
+                <h1>{t("app_title")}</h1>
+                <p className="unlock-card__eyebrow">{t("protected_access")}</p>
+              </header>
               <p>{t("unlock_copy")}</p>
               <form className="unlock-form" onSubmit={handleUnlock}>
                 <div className="unlock-form__input-wrap">
@@ -6948,7 +7176,9 @@ export default function App() {
                           }
                           disabled={!heroSelectorOptions.length}
                           onChange={(nextValue) =>
-                            isGamesMode
+                            isBooksMode
+                              ? setSelectedBookPath(nextValue)
+                              : isGamesMode
                               ? setSelectedGamePath(nextValue)
                               : isMoviesMode
                               ? setSelectedMovieId(Number(nextValue) || null)
@@ -6986,7 +7216,16 @@ export default function App() {
                   </div>
                 </header>
 
-                {isGamesMode ? (
+                {isBooksMode ? (
+                  <BooksLibrary
+                    books={bookLibrary}
+                    selectedPath={selectedBookPath}
+                    onSelect={setSelectedBookPath}
+                    onOpen={setOpenBook}
+                    onDelete={handleDeleteBook}
+                    onUpload={() => handleOpenUploadsForMedia("books")}
+                  />
+                ) : isGamesMode ? (
                   selectedGame ? (
                     <section className="game-panel seasons-section">
                       <div className="seasons-section__label">{t("game_file_label")}</div>
@@ -7273,6 +7512,17 @@ export default function App() {
                                 : t("not_available")}
                             </span>
                           </div>
+                          <div className="movie-panel__fact movie-panel__fact--imdb">
+                            <strong>IMDb</strong>
+                            {selectedMovie.imdbUrl ? (
+                              <a href={selectedMovie.imdbUrl} target="_blank" rel="noreferrer">
+                                <span className="imdb-icon" aria-hidden="true">IMDb</span>
+                                <span>{t("imdb_link")}</span>
+                              </a>
+                            ) : (
+                              <span>{t("imdb_no_link")}</span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="movie-panel__overview">
@@ -7286,7 +7536,7 @@ export default function App() {
               </>
             )}
 
-            {activeMediaType === "games" ? (
+            {activeMediaType === "books" ? null : activeMediaType === "games" ? (
               <GameSettingsModal
                 visible={settingsOpen}
                 game={selectedGame}
@@ -7351,6 +7601,7 @@ export default function App() {
               onClose={() => setUploadValidationError(null)}
               t={t}
             />
+            <BookReader book={openBook} onClose={() => setOpenBook(null)} />
             <TmdbBrowserModal
               visible={tmdbBrowserOpen}
               onClose={() => setTmdbBrowserOpen(false)}

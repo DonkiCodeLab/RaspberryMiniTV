@@ -40,9 +40,11 @@ Al arrancar `menu_app.py`:
 Comportamiento actual del touch:
 
 - menú principal, botón Cámara: abre la vista en directo de la Camera Module con autofoco continuo; un doble toque vuelve al menú.
-- menú principal, botón Red: muestra los estados de Ethernet y Wi-Fi, con un QR para cada IP disponible.
+- menú principal, botón Book reader: abre una pantalla inicial preparada para el futuro lector de cómics.
+- menú principal, botón Configuración: abre Idioma, Password y Red en la fila superior, con Apagar centrado debajo.
+- configuración, botón Red: muestra los estados de Ethernet y Wi-Fi, con un QR para cada IP disponible.
 - cada QR de red apunta al servicio web en `http://IP_DE_LA_RASPBERRY:5050/`.
-- menú de opciones, botón Volver: vuelve al menú principal.
+- configuración, botón Volver: vuelve al menú principal.
 - pantalla QR, botón Volver: vuelve a la pantalla de red.
 
 El menú ya usa `pygame`, así que es una base mejor para añadir:

@@ -1405,6 +1405,43 @@ img {
   color: rgba(245, 248, 255, 0.96);
 }
 
+.movie-panel__fact--imdb a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+  color: #ffd429;
+  font-weight: 800;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.movie-panel__fact--imdb a:hover,
+.movie-panel__fact--imdb a:focus-visible {
+  text-decoration: underline;
+}
+
+.movie-panel__fact--imdb a span {
+  margin-top: 0;
+  color: inherit;
+}
+
+.movie-panel__fact--imdb .imdb-icon {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.8rem;
+  min-height: 1.45rem;
+  padding: 0.1rem 0.28rem;
+  border-radius: 4px;
+  background: #f5c518;
+  color: #111;
+  font-family: Arial Black, Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
 .movie-panel__overview {
   padding: 1rem 1.05rem 1.1rem;
 }
@@ -3021,6 +3058,36 @@ img {
 
 .unlock-card {
   width: min(440px, 100%);
+  text-align: center;
+}
+
+.unlock-card__header {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.unlock-card__logo {
+  width: min(300px, 86%);
+  height: auto;
+  object-fit: contain;
+}
+
+.unlock-card__header h1 {
+  margin: 0.25rem 0 0;
+  color: #fff;
+  font-size: clamp(1.65rem, 5vw, 2.25rem);
+  line-height: 1.08;
+}
+
+.unlock-card__header .unlock-card__eyebrow {
+  margin: 0;
+  color: #ffd429;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .unlock-form {
@@ -5069,3 +5136,24 @@ img {
   .episode-dialog__actions { grid-template-columns: 1fr; }
   .episode-dialog__delete { width: 100%; min-height: 58px; }
 }
+.books-library__toolbar { display:flex; gap:16px; margin-bottom:24px; }
+.books-library__toolbar input { flex:1; min-width:0; border:2px solid #d9dee3; border-radius:14px; padding:14px 18px; font:inherit; }
+.books-library__layout { display:grid; grid-template-columns:minmax(260px, 1fr) minmax(280px, .8fr); gap:24px; }
+.books-library__list { display:grid; gap:10px; align-content:start; max-height:560px; overflow:auto; }
+.books-library__item { width:100%; display:flex; align-items:center; gap:14px; border:2px solid transparent; border-radius:14px; padding:12px; text-align:left; background:#fff; color:#17212b; cursor:pointer; }
+.books-library__item.active { border-color:#ffd429; background:#fff9d9; }
+.books-library__item span:last-child { display:grid; gap:3px; }
+.books-library__item small { color:#66717c; }
+.books-library__format { min-width:48px; border-radius:8px; padding:8px 5px; background:#17212b; color:#ffd429; font-weight:800; font-size:11px; text-align:center; text-transform:uppercase; }
+.books-library__detail { border-radius:20px; padding:28px; background:#fff; text-align:center; box-shadow:0 12px 34px rgba(0,0,0,.09); }
+.books-library__cover { display:block; font-size:92px; }
+.books-library__actions { display:flex; justify-content:center; gap:10px; margin-top:22px; }
+.book-reader { position:fixed; inset:0; z-index:9999; display:grid; grid-template-rows:64px 1fr; background:#111820; color:#fff; }
+.book-reader header { display:flex; align-items:center; justify-content:space-between; padding:0 22px; background:#0c1117; }
+.book-reader header button { border:0; background:transparent; color:#fff; font-size:40px; cursor:pointer; }
+.book-reader iframe { width:100%; height:100%; border:0; background:#fff; }
+.book-reader__fallback { display:grid; place-items:center; align-content:center; gap:16px; text-align:center; padding:30px; }
+.book-reader__fallback > span { font-size:100px; }
+.books-directory-picker { display:flex; width:max-content; margin:16px auto 0; cursor:pointer; }
+.books-directory-picker input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+@media (max-width: 760px) { .books-library__layout { grid-template-columns:1fr; } .books-library__toolbar { flex-direction:column; } }

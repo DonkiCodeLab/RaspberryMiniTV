@@ -16,6 +16,7 @@ fi
 SYSTEMD_DIR="/etc/systemd/system"
 VIDEOS_DIR="${REPO_DIR}/MultimediaContent/Videos"
 GAMES_DIR="${REPO_DIR}/MultimediaContent/Games"
+BOOKS_DIR="${REPO_DIR}/MultimediaContent/Books"
 KODI_USER="${MINITV_KODI_USER:-donkicodelab}"
 KODI_HOME="$(getent passwd "${KODI_USER}" | cut -d: -f6)"
 KODI_ADDON_SOURCE="${SCRIPT_DIR}/kodi/service.minitv.player"
@@ -50,7 +51,7 @@ if [[ -z "${KODI_HOME}" ]]; then
   exit 1
 fi
 
-mkdir -p "${VIDEOS_DIR}/Movies" "${VIDEOS_DIR}/TVShows" "${GAMES_DIR}"
+mkdir -p "${VIDEOS_DIR}/Movies" "${VIDEOS_DIR}/TVShows" "${GAMES_DIR}" "${BOOKS_DIR}"
 
 mkdir -p "${KODI_ADDON_DIR}"
 cp "${KODI_ADDON_SOURCE}/addon.xml" "${KODI_ADDON_SOURCE}/service.py" "${KODI_ADDON_DIR}/"

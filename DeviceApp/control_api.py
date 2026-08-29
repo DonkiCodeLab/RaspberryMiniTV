@@ -36,6 +36,7 @@ VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 GAMES_DIR = os.path.join(MULTIMEDIA_DIR, "Games")
+BOOKS_DIR = os.path.join(MULTIMEDIA_DIR, "Books")
 GAME_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "GameCovers")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "WebApp", "dist")
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
@@ -53,6 +54,7 @@ ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
 GAME_ROM_EXTENSIONS = {".gb", ".gbc", ".gba"}
 GAME_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+BOOK_EXTENSIONS = {".pdf", ".epub", ".cbz", ".cbr"}
 GAME_PLATFORM_BY_EXTENSION = {
     ".gb": {"id": "gameboy", "name": "Game Boy", "screenScraperSystemId": 9},
     ".gbc": {"id": "gameboy_color", "name": "Game Boy Color", "screenScraperSystemId": 10},
@@ -320,6 +322,7 @@ def save_movie_library(items):
                 "file": str(item.get("file") or "").strip(),
                 "heroImage": str(item.get("heroImage") or "").strip(),
                 "heroImageCrop": item.get("heroImageCrop") if isinstance(item.get("heroImageCrop"), dict) else None,
+                "imdbUrl": str(item.get("imdbUrl") or "").strip(),
             }
 
     library["movies"] = safe_items
@@ -369,7 +372,6 @@ def upsert_series_metadata(relative_path, updates):
         item["heroImage"] = str(updates.get("heroImage") or "").strip()
     if "heroImageCrop" in updates:
         item["heroImageCrop"] = updates.get("heroImageCrop") if isinstance(updates.get("heroImageCrop"), dict) else None
-
     series_items[safe_relative_path] = item
     save_media_library(library)
     return item
@@ -654,6 +656,8 @@ def upsert_media_profile(collection, key, updates):
         item["heroImage"] = str(updates.get("heroImage") or "").strip()
     if "heroImageCrop" in updates:
         item["heroImageCrop"] = updates.get("heroImageCrop") if isinstance(updates.get("heroImageCrop"), dict) else None
+    if "imdbUrl" in updates:
+        item["imdbUrl"] = str(updates.get("imdbUrl") or "").strip()
 
     collection_items[safe_key] = item
     save_media_library(library)
@@ -773,7 +777,7 @@ def is_public_frontend_request():
 
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
-    if request.path == "/media/stream" and not submitted_pin:
+    if request.path in {"/media/stream", "/books/content"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -820,10 +824,15 @@ def is_supported_upload_file(filename):
     return is_video_file(filename)
 
 
+def is_book_file(filename):
+    return os.path.splitext(str(filename or ""))[1].lower() in BOOK_EXTENSIONS
+
+
 def ensure_media_directories():
     os.makedirs(MOVIES_DIR, exist_ok=True)
     os.makedirs(TVSHOWS_DIR, exist_ok=True)
     os.makedirs(GAMES_DIR, exist_ok=True)
+    os.makedirs(BOOKS_DIR, exist_ok=True)
     os.makedirs(GAME_COVERS_DIR, exist_ok=True)
     ensure_default_game_cover()
 
@@ -880,6 +889,7 @@ def get_library_counts():
     series_bytes = get_directory_size(TVSHOWS_DIR)
     movies_bytes = get_directory_size(MOVIES_DIR)
     games_bytes = get_directory_size(GAMES_DIR)
+    books_bytes = get_directory_size(BOOKS_DIR)
 
     def usage_item(count, used_bytes):
         return {
@@ -904,6 +914,7 @@ def get_library_counts():
             else 0,
             games_bytes,
         ),
+        "books": usage_item(len(list_book_entries()), books_bytes),
     }
 
 
@@ -928,6 +939,40 @@ def unique_media_filename(target_dir, desired_filename):
         index += 1
 
     return candidate
+
+
+def resolve_book_path(relative_path):
+    normalized = str(relative_path or "").replace("\\", "/").strip("/")
+    if normalized == "Books":
+        return BOOKS_DIR
+    if normalized.startswith("Books/"):
+        normalized = normalized[len("Books/"):]
+    candidate = os.path.abspath(os.path.join(BOOKS_DIR, normalized))
+    books_root = os.path.abspath(BOOKS_DIR)
+    if candidate != books_root and not candidate.startswith(books_root + os.sep):
+        return None
+    return candidate
+
+
+def list_book_entries():
+    ensure_media_directories()
+    items = []
+    for root, _dirs, files in os.walk(BOOKS_DIR):
+        for filename in sorted(files, key=str.lower):
+            if not is_book_file(filename):
+                continue
+            full_path = os.path.join(root, filename)
+            relative = os.path.relpath(full_path, BOOKS_DIR).replace("\\", "/")
+            collection = os.path.dirname(relative).replace("\\", "/")
+            items.append({
+                "name": os.path.splitext(filename)[0],
+                "file": filename,
+                "format": os.path.splitext(filename)[1].lower().lstrip("."),
+                "collection": "" if collection == "." else collection,
+                "relativePath": f"Books/{relative}",
+                "sizeBytes": os.path.getsize(full_path),
+            })
+    return items
 
 
 def list_game_entries():
@@ -1444,9 +1489,11 @@ def list_video_directories():
         "moviesRoot": MOVIES_DIR,
         "tvShowsRoot": TVSHOWS_DIR,
         "gamesRoot": GAMES_DIR,
+        "booksRoot": BOOKS_DIR,
         "libraryCounts": get_library_counts(),
         "mediaLibrary": media_library,
         "games": list_game_entries(),
+        "books": list_book_entries(),
         "directories": tvshow_directories,
         "rootFiles": tvshow_root_files,
         "movieDirectories": movie_directories,
@@ -1664,6 +1711,61 @@ def game_cover_file(filename):
     if not os.path.isfile(target_path):
         safe_filename = DEFAULT_GAME_COVER_FILENAME
     return send_from_directory(GAME_COVERS_DIR, safe_filename)
+
+
+@app.route("/books/upload", methods=["POST"])
+def upload_books():
+    uploaded_files = request.files.getlist("files")
+    requested_collection = str(request.form.get("collection") or "").strip()
+    if not uploaded_files:
+        return jsonify({"error": "Missing book files"}), 400
+
+    ensure_media_directories()
+    saved = []
+    rejected = []
+    for uploaded in uploaded_files:
+        original_path = str(uploaded.filename or "").replace("\\", "/").strip("/")
+        filename = os.path.basename(original_path)
+        if not filename or not is_book_file(filename):
+            rejected.append(original_path or filename)
+            continue
+        file_parent = os.path.dirname(original_path)
+        collection = requested_collection or (file_parent if file_parent not in {"", "."} else "")
+        safe_parts = [slugify(part, "collection") for part in collection.split("/") if part and part not in {".", ".."}]
+        target_dir = os.path.join(BOOKS_DIR, *safe_parts)
+        os.makedirs(target_dir, exist_ok=True)
+        target_name = unique_media_filename(target_dir, filename)
+        target_path = os.path.join(target_dir, target_name)
+        uploaded.save(target_path)
+        relative = os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
+        saved.append({"name": os.path.splitext(target_name)[0], "file": target_name, "relativePath": f"Books/{relative}"})
+
+    if not saved:
+        return jsonify({"error": "No supported books", "supported": sorted(BOOK_EXTENSIONS), "rejected": rejected}), 400
+    return jsonify({"ok": True, "items": saved, "rejected": rejected})
+
+
+@app.route("/books", methods=["DELETE"])
+def delete_book():
+    relative_path = str(request.args.get("relativePath") or "").strip()
+    target_path = resolve_book_path(relative_path)
+    if not target_path or target_path == BOOKS_DIR or not os.path.isfile(target_path) or not is_book_file(target_path):
+        return jsonify({"error": "Book not found"}), 404
+    os.remove(target_path)
+    parent = os.path.dirname(target_path)
+    while parent != BOOKS_DIR and os.path.isdir(parent) and not os.listdir(parent):
+        os.rmdir(parent)
+        parent = os.path.dirname(parent)
+    return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
+
+
+@app.route("/books/content", methods=["GET"])
+def stream_book():
+    relative_path = str(request.args.get("relativePath") or "").strip()
+    target_path = resolve_book_path(relative_path)
+    if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
+        return jsonify({"error": "Book not found"}), 404
+    return send_file(target_path, conditional=True, as_attachment=False, download_name=os.path.basename(target_path))
 
 
 @app.route("/games/search", methods=["GET"])
@@ -2339,6 +2441,7 @@ def save_media_profile():
             "file": data.get("file"),
             "heroImage": data.get("heroImage"),
             "heroImageCrop": data.get("heroImageCrop"),
+            "imdbUrl": data.get("imdbUrl"),
         },
     )
     return jsonify({"ok": True, "item": item})

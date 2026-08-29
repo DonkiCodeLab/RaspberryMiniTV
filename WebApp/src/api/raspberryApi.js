@@ -1018,7 +1018,7 @@ export function saveMovieFileMetadata({ relativePath, name, tmdbId }) {
   });
 }
 
-export function saveMediaProfile({ collection, relativePath, name, tmdbId, file, heroImage, heroImageCrop }) {
+export function saveMediaProfile({ collection, relativePath, name, tmdbId, file, heroImage, heroImageCrop, imdbUrl }) {
   const safeCollection = collection === "movies" ? "movies" : "series";
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
@@ -1037,6 +1037,7 @@ export function saveMediaProfile({ collection, relativePath, name, tmdbId, file,
         file: String(file || "").trim(),
         heroImage: String(heroImage || "").trim(),
         heroImageCrop: heroImageCrop || null,
+        imdbUrl: String(imdbUrl || "").trim(),
       },
     });
   }
@@ -1051,6 +1052,7 @@ export function saveMediaProfile({ collection, relativePath, name, tmdbId, file,
       file,
       heroImage,
       heroImageCrop,
+      imdbUrl,
     }),
   });
 }
@@ -1145,6 +1147,29 @@ export function getMediaStreamUrl(relativePath) {
   const storedPin = getStoredWebPin();
   if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
   return `${getBaseUrl()}/media/stream?${params.toString()}`;
+}
+
+export function getBookContentUrl(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) return "";
+  const params = new URLSearchParams({ relativePath: safeRelativePath });
+  const storedPin = getStoredWebPin();
+  if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
+  return `${getBaseUrl()}/books/content?${params.toString()}`;
+}
+
+export async function uploadBookFiles({ files, collection = "" } = {}) {
+  const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
+  if (!safeFiles.length) throw new Error("Missing book files");
+  if (isMockModeEnabled()) return { ok: true, mock: true, items: [] };
+  const form = new FormData();
+  safeFiles.forEach((file) => form.append("files", file, file.webkitRelativePath || file.name));
+  form.append("collection", collection);
+  return request("/books/upload", { method: "POST", body: form });
+}
+
+export function removeBookFile(relativePath) {
+  return request(`/books?relativePath=${encodeURIComponent(relativePath)}`, { method: "DELETE" });
 }
 
 export async function captureCameraImage() {

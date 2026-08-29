@@ -102,6 +102,8 @@ MENU_BUTTON_POWEROFF_PRESSED_PATH = os.path.join(MENU_DIR, "button_poweroff_pres
 MENU_BUTTON_QR_NORMAL_PATH = os.path.join(MENU_DIR, "button_qr_normal.png")
 MENU_BUTTON_QR_PRESSED_PATH = os.path.join(MENU_DIR, "button_qr_pressed.png")
 MENU_BUTTON_CAMERA_PATH = os.path.join(MENU_DIR, "camera.png")
+MENU_BUTTON_BOOK_READER_PATH = os.path.join(MENU_DIR, "book_reader.png")
+MENU_BUTTON_SETTINGS_CUSTOM_PATH = os.path.join(MENU_DIR, "settgins.png")
 MENU_BUTTON_SETTINGS_NORMAL_PATH = os.path.join(MENU_DIR, "button_settings_normal.png")
 MENU_BUTTON_SETTINGS_PRESSED_PATH = os.path.join(MENU_DIR, "button_settings_pressed.png")
 MENU_BUTTON_WIFI_NORMAL_PATH = os.path.join(MENU_DIR, "button_wifi_normal.png")
@@ -175,6 +177,8 @@ VIDEOS_DIR = os.path.join(MULTIMEDIA_DIR, "Videos")
 MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 GAMES_DIR = os.path.join(MULTIMEDIA_DIR, "Games")
+BOOKS_DIR = os.path.join(MULTIMEDIA_DIR, "Books")
+BOOK_EXTENSIONS = {".pdf", ".epub", ".cbz", ".cbr"}
 BACKGROUND = (245, 245, 245)
 TEXT = (10, 10, 10)
 BLACK = (0, 0, 0)
@@ -1136,6 +1140,7 @@ class DeviceAppMenu:
         self.external_last_touch_ticks = 0
         self.language_return_state = "settings"
         self.wifi_return_state = "network"
+        self.network_return_state = "more"
         self.password_menu_return_state = "more"
         self.web_pin_return_state = "settings"
         self.clock_return_state = "main"
@@ -1245,6 +1250,8 @@ class DeviceAppMenu:
         self.raspberry_password_is_error = False
         self.play_status = ""
         self.browser_path = VIDEOS_DIR
+        self.browser_root = VIDEOS_DIR
+        self.browser_mode = "videos"
         self.browser_selected_index = 0
         self.browser_page_start = 0
         self.browser_entries = []
@@ -1784,13 +1791,17 @@ class DeviceAppMenu:
                 MENU_BUTTON_CAMERA_PATH,
                 MENU_BUTTON_CAMERA_PATH,
             ),
+            "reader": self.prepare_menu_tile_asset(
+                MENU_BUTTON_BOOK_READER_PATH,
+                MENU_BUTTON_BOOK_READER_PATH,
+            ),
             "wifi": self.prepare_menu_tile_asset(
                 NETWORK_ICON_PATH,
                 NETWORK_ICON_PATH,
             ),
             "more": self.prepare_menu_tile_asset(
-                MENU_BUTTON_MORE_NORMAL_PATH,
-                MENU_BUTTON_MORE_PRESSED_PATH,
+                MENU_BUTTON_SETTINGS_CUSTOM_PATH,
+                MENU_BUTTON_SETTINGS_CUSTOM_PATH,
             ),
             "language": self.prepare_menu_tile_asset(MENU_BUTTON_LANGUAGE_NORMAL_PATH, MENU_BUTTON_LANGUAGE_PRESSED_PATH),
             "web_pin": self.prepare_menu_tile_asset(MENU_BUTTON_PWD_NORMAL_PATH, MENU_BUTTON_PWD_PRESSED_PATH),
@@ -2161,7 +2172,7 @@ class DeviceAppMenu:
         return self.get_centered_menu_grid_rects(
             (
                 ("play", "games", "clock"),
-                ("camera", "wifi", "more"),
+                ("camera", "reader", "more"),
             ),
             MAIN_HEADER_HEIGHT,
             self.height,
@@ -2169,7 +2180,11 @@ class DeviceAppMenu:
 
     def get_more_button_rects(self):
         return {
-            **self.get_centered_menu_grid_rects((("language", "web_pin", "poweroff"),), MAIN_HEADER_HEIGHT, self.height),
+            **self.get_centered_menu_grid_rects(
+                (("language", "web_pin", "wifi"), ("poweroff",)),
+                MAIN_HEADER_HEIGHT,
+                self.height,
+            ),
             "back": self.get_more_back_rect(),
         }
 
@@ -2238,7 +2253,7 @@ class DeviceAppMenu:
         }
 
     def rel_browser_path(self):
-        rel_path = os.path.relpath(self.browser_path, VIDEOS_DIR)
+        rel_path = os.path.relpath(self.browser_path, self.browser_root)
         return "/" if rel_path == "." else f"/{rel_path.replace(os.sep, '/')}"
 
     def get_entry_video_files(self, entry_path):
@@ -2254,9 +2269,20 @@ class DeviceAppMenu:
                         videos.append(full_path)
         return sorted(videos)
 
+    def get_entry_browser_files(self, entry_path):
+        if self.browser_mode == "videos":
+            return self.get_entry_video_files(entry_path)
+        if os.path.isfile(entry_path) and os.path.splitext(entry_path)[1].lower() in BOOK_EXTENSIONS:
+            return [entry_path]
+        books = []
+        if os.path.isdir(entry_path):
+            for root, _dirs, files in os.walk(entry_path):
+                books.extend(os.path.join(root, name) for name in files if os.path.splitext(name)[1].lower() in BOOK_EXTENSIONS)
+        return sorted(books)
+
     def refresh_browser_entries(self):
         entries = []
-        if os.path.abspath(self.browser_path) != os.path.abspath(VIDEOS_DIR):
+        if os.path.abspath(self.browser_path) != os.path.abspath(self.browser_root):
             entries.append(
                 {
                     "label": "..",
@@ -2271,7 +2297,7 @@ class DeviceAppMenu:
             for name in sorted(os.listdir(self.browser_path), key=lambda item: item.lower()):
                 full_path = os.path.join(self.browser_path, name)
                 if os.path.isdir(full_path):
-                    videos = self.get_entry_video_files(full_path)
+                    videos = self.get_entry_browser_files(full_path)
                     entries.append(
                         {
                             "label": name,
@@ -2282,7 +2308,9 @@ class DeviceAppMenu:
                             "videos": videos,
                         }
                     )
-                elif is_video_file(full_path):
+                elif (self.browser_mode == "videos" and is_video_file(full_path)) or (
+                    self.browser_mode == "books" and os.path.splitext(full_path)[1].lower() in BOOK_EXTENSIONS
+                ):
                     entries.append(
                         {
                             "label": name,
@@ -2728,8 +2756,25 @@ class DeviceAppMenu:
             return
         videos = entry.get("videos") or []
         if videos:
+            if self.browser_mode == "books":
+                self.open_book_path(videos[0])
+                return
             self.loading_return_state = "browse"
             self.play_video_path(videos[0])
+
+    def open_book_path(self, full_path):
+        extension = os.path.splitext(full_path)[1].lower()
+        preferred = [["ebook-viewer", full_path]] if extension == ".epub" else [["mupdf", full_path]]
+        commands = preferred + [["xdg-open", full_path]]
+        for command in commands:
+            if shutil.which(command[0]):
+                try:
+                    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    self.browser_status = os.path.basename(full_path)
+                    return
+                except Exception as exc:
+                    log_debug(f"BOOK reader failed command={command[0]} error={exc}")
+        self.browser_status = "No book reader installed"
 
     def handle_video_touch_down(self, pos):
         if self.video_backend == "kodi":
@@ -3199,9 +3244,15 @@ class DeviceAppMenu:
                 self.state = "clock"
             elif button_id in ("camera", "qr", "1x2"):
                 self.start_camera_preview()
-            elif button_id in ("wifi",):
-                self.refresh_network_status()
-                self.state = "network"
+            elif button_id == "reader":
+                os.makedirs(BOOKS_DIR, exist_ok=True)
+                self.browser_root = BOOKS_DIR
+                self.browser_mode = "books"
+                self.browser_path = BOOKS_DIR
+                self.browser_selected_index = 0
+                self.browser_page_start = 0
+                self.refresh_browser_entries()
+                self.state = "browse"
             elif button_id in ("more", "2x2"):
                 self.state = "more"
             elif button_id == "1x1":
@@ -3237,6 +3288,10 @@ class DeviceAppMenu:
             elif button_id in ("web_pin",):
                 self.password_menu_return_state = "more"
                 self.state = "password_menu"
+            elif button_id in ("wifi",):
+                self.network_return_state = "more"
+                self.refresh_network_status()
+                self.state = "network"
             elif button_id in ("poweroff", "2x1"):
                 self.state = "poweroff"
             elif button_id in ("back", "2x2"):
@@ -3260,6 +3315,8 @@ class DeviceAppMenu:
         elif button_id == "random":
             self.start_random_video()
         elif button_id == "browse":
+            self.browser_root = VIDEOS_DIR
+            self.browser_mode = "videos"
             self.browser_path = VIDEOS_DIR
             self.browser_selected_index = 0
             self.browser_page_start = 0
@@ -3289,8 +3346,8 @@ class DeviceAppMenu:
             self.play_ui_click_sound()
             self.browser_last_touch_index = None
             self.browser_last_touch_ticks = 0
-            if os.path.abspath(self.browser_path) == os.path.abspath(VIDEOS_DIR):
-                self.state = "play"
+            if os.path.abspath(self.browser_path) == os.path.abspath(self.browser_root):
+                self.state = "main" if self.browser_mode == "books" else "play"
             else:
                 self.browser_path = os.path.dirname(self.browser_path)
                 self.browser_selected_index = 0
@@ -3389,7 +3446,7 @@ class DeviceAppMenu:
         layout = self.get_network_layout()
         if active_button == "top-back" and self.top_back_at_pos(pos):
             self.play_ui_click_sound()
-            self.state = "main"
+            self.state = self.network_return_state
         elif active_button == "network-ethernet-qr" and layout["ethernet_qr"].collidepoint(pos):
             self.play_ui_click_sound()
             self.refresh_qr_asset(self.ethernet_status.get("ip"))
@@ -3716,6 +3773,9 @@ class DeviceAppMenu:
     def handle_touch_down(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
         self.touch_down_pos = normalized_pos
+        if self.state == "reader":
+            self.pressed_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
+            return
         if self.state == "clock":
             if self.alarm_playing:
                 self.stop_alarm_sound()
@@ -3792,6 +3852,13 @@ class DeviceAppMenu:
 
     def handle_touch_up(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
+        if self.state == "reader":
+            active_button = self.pressed_button
+            self.pressed_button = None
+            if active_button == "top-back" and self.top_back_at_pos(normalized_pos):
+                self.play_ui_click_sound()
+                self.state = "main"
+            return
         if self.state == "clock":
             active_button = self.pressed_button
             released_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
@@ -4505,7 +4572,7 @@ class DeviceAppMenu:
             "games": self.tr("main.games"),
             "clock": self.tr("main.clock"),
             "camera": self.tr("main.camera"),
-            "wifi": self.tr("main.wifi"),
+            "reader": self.tr("main.reader"),
             "more": self.tr("main.more"),
         }
         colors = {
@@ -4513,7 +4580,7 @@ class DeviceAppMenu:
             "games": (72, 190, 120),
             "clock": (168, 85, 247),
             "camera": (245, 158, 11),
-            "wifi": (20, 184, 166),
+            "reader": (20, 184, 166),
             "more": (239, 68, 68),
         }
         for button_id, rect in self.get_main_button_rects().items():
@@ -4526,17 +4593,23 @@ class DeviceAppMenu:
         labels = {
             "language": self.tr("more.language"),
             "web_pin": self.tr("more.web_pin"),
+            "wifi": self.tr("main.wifi"),
             "poweroff": self.tr("more.poweroff"),
         }
         colors = {
             "language": (59, 130, 246),
             "web_pin": (245, 158, 11),
+            "wifi": (20, 184, 166),
             "poweroff": (239, 68, 68),
         }
         for button_id, rect in self.get_more_button_rects().items():
             if button_id == "back":
                 continue
             self.draw_menu_tile(button_id, rect, labels[button_id], self.pressed_button == button_id, colors[button_id])
+
+    def draw_reader(self):
+        self.screen.fill(BLACK)
+        self.draw_submenu_header(self.tr("reader.title"))
 
     def draw_play(self):
         self.screen.fill((18, 22, 28))
@@ -4914,6 +4987,8 @@ class DeviceAppMenu:
             self.draw_submenu_header(self.tr("qr.title"))
         elif self.state == "clock":
             self.draw_clock()
+        elif self.state == "reader":
+            self.draw_reader()
         elif self.state == "settings":
             self.draw_settings()
         elif self.state == "language":
