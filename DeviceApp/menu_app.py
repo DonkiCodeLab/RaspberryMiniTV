@@ -337,7 +337,16 @@ def play_intro():
     ]
     if alsa_device.lower() not in ("", "auto", "default"):
         command.append(f"--audio-device=alsa/{alsa_device}")
-    if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
+    if os.environ.get("WAYLAND_DISPLAY"):
+        command.extend(
+            [
+                "--vo=gpu-next",
+                "--gpu-context=wayland",
+                "--screen=1",
+                "--fs-screen=1",
+            ]
+        )
+    elif not os.environ.get("DISPLAY"):
         command.extend(["--vo=gpu", "--gpu-context=drm"])
     command.append(INTRO_VIDEO_PATH)
 
@@ -2196,7 +2205,7 @@ class DeviceAppMenu:
 
     def get_more_back_rect(self):
         size = 58
-        return pygame.Rect(24, (MAIN_HEADER_HEIGHT - size) // 2, size, size)
+        return pygame.Rect(24, ((MAIN_HEADER_HEIGHT - size) // 2) + 6, size, size)
 
     def get_poweroff_button_rects(self):
         button_rects = self.get_centered_menu_grid_rects((("poweroff",),), 210, self.height)
@@ -4691,7 +4700,7 @@ class DeviceAppMenu:
         if self.mini_logo_asset is not None:
             logo = fit_image_contain(self.mini_logo_asset, (logo_size, logo_size))
             if logo is not None:
-                self.screen.blit(logo, logo.get_rect(midleft=(logo_left, header_rect.centery)))
+                self.screen.blit(logo, logo.get_rect(midleft=(logo_left, header_rect.centery + 6)))
 
         title = self.main_title_font.render(self.tr("main.title"), True, BLACK)
         title_rect = title.get_rect(center=(self.width // 2, header_rect.centery))
