@@ -550,7 +550,7 @@ const UI_STRINGS = {
     movie_filter_categories: "Categorías",
     movie_filter_clear: "Limpiar filtros",
     movie_filter_no_results: "No hay películas que coincidan con los filtros.",
-    movie_filter_count: "Mostrando {shown} películas de {total}.",
+    movie_filter_count: "Mostrando {shown} películas de {total}",
     synopsis: "Sinopsis",
     release_unknown: "Fecha de estreno no disponible",
     duration_unknown: "Duración no disponible",
@@ -2157,15 +2157,15 @@ function EpisodeRow({ episode, available, onSelect, t }) {
 }
 
 function RatingStars({ rating }) {
-  const safeRating = Math.min(10, Math.max(0, Number(rating) || 0));
+  const safeRating = Math.min(5, Math.max(0, (Number(rating) || 0) / 2));
 
   return (
     <span
       className="movie-panel__stars"
       role="img"
-      aria-label={`${safeRating.toFixed(1)} / 10`}
+      aria-label={`${safeRating.toFixed(1)} / 5`}
     >
-      {Array.from({ length: 10 }, (_, index) => {
+      {Array.from({ length: 5 }, (_, index) => {
         const fillPercent = Math.min(100, Math.max(0, (safeRating - index) * 100));
 
         return (
@@ -5168,7 +5168,7 @@ function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpe
             {visibleBooks.map((book) => (
               <article
                 key={book.relativePath}
-                className={`books-library__card${selectedBook?.relativePath === book.relativePath ? " active" : ""}`}
+                className={`books-library__card${selectedPath === book.relativePath ? " active" : ""}`}
               >
                 <button className="books-library__cover-button" onClick={() => onOpen(book)} type="button">
                   <img
@@ -7729,9 +7729,21 @@ export default function App() {
                         </div>
                       ) : null}
                       <div
-                        className={`series-hero__controls-row${isGamesMode ? "" : " series-hero__controls-row--selector-only"}${isMoviesMode ? " series-hero__controls-row--movie-filter" : ""}`}
+                        className={`series-hero__controls-row${isGamesMode || (isMoviesMode && movieOptions.length) ? "" : " series-hero__controls-row--selector-only"}`}
                       >
-                        {isGamesMode && selectedGame ? (
+                        {isMoviesMode && movieOptions.length ? (
+                          <button
+                            className={`movie-filter__toggle${movieFilterOpen ? " is-open" : ""}${movieFiltersActive ? " has-filters" : ""}`}
+                            type="button"
+                            onClick={() => setMovieFilterOpen((current) => !current)}
+                            aria-label={t("movie_filter")}
+                            aria-expanded={movieFilterOpen}
+                            title={t("movie_filter")}
+                          >
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+                            {movieFiltersActive ? <span>{movieFilterGenres.length + (movieFilterQuery.trim() ? 1 : 0)}</span> : null}
+                          </button>
+                        ) : isGamesMode && selectedGame ? (
                           <button
                             className="series-icon-button series-icon-button--settings"
                             onClick={() => setSettingsOpen(true)}
@@ -7787,21 +7799,6 @@ export default function App() {
                               : setSelectedDirectoryPath(nextValue)
                           }
                         />
-                        {isMoviesMode && movieOptions.length ? (
-                          <>
-                            <button
-                              className={`movie-filter__toggle${movieFilterOpen ? " is-open" : ""}${movieFiltersActive ? " has-filters" : ""}`}
-                              type="button"
-                              onClick={() => setMovieFilterOpen((current) => !current)}
-                              aria-label={t("movie_filter")}
-                              aria-expanded={movieFilterOpen}
-                              title={t("movie_filter")}
-                            >
-                              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
-                              {movieFiltersActive ? <span>{movieFilterGenres.length + (movieFilterQuery.trim() ? 1 : 0)}</span> : null}
-                            </button>
-                          </>
-                        ) : null}
                       </div>
                     </div>
 
@@ -8144,7 +8141,7 @@ export default function App() {
                             {typeof selectedMovie.voteAverage === "number" &&
                             selectedMovie.voteAverage > 0 ? (
                               <div className="movie-panel__rating">
-                                <span>{selectedMovie.voteAverage.toFixed(1)} / 10</span>
+                                <span>{(selectedMovie.voteAverage / 2).toFixed(1)} / 5</span>
                                 <RatingStars rating={selectedMovie.voteAverage} />
                               </div>
                             ) : (
