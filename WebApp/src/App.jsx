@@ -43,6 +43,7 @@ import tvshowIconYellow from "./assets/icon_tvshow_yellow.png";
 import tvGreen from "./assets/tele_green_2_fixed.png";
 import uploadDropzoneWhite from "./assets/upload_drag&drop_zone_white.png";
 import uploadDropzoneYellow from "./assets/upload_drag&drop_zone_yellow.png";
+import raspberryIntroVideo from "../../DeviceApp/menu/video_intro.mp4";
 import {
   addSeries,
   authWebPin,
@@ -112,7 +113,8 @@ import {
 } from "./tmdbApi";
 
 const HERO_SLIDER_MAX = 0.96;
-const MAX_MOVIE_IMAGES = 5;
+const MAX_MOVIE_IMAGES = 15;
+const MAX_GAME_IMAGES = 5;
 const RASPBERRY_ALARM_STORAGE_KEY = "minitv-raspberry-alarm-v1";
 const RASPBERRY_LANGUAGE_STORAGE_KEY = "minitv-raspberry-language-v1";
 const RASPBERRY_CURRENT_PLAYBACK_STORAGE_KEY = "minitv-raspberry-current-playback-v1";
@@ -460,6 +462,7 @@ const UI_STRINGS = {
     access_protected: "Acceso protegido",
     app_title: "Gestor de MiniTV Raspberry",
     protected_access: "Acceso protegido",
+    manager_title: "Gestor de MiniTV Raspberry Pi",
     unlock_copy: "Introduce el PIN numérico de 4 dígitos configurado en la Raspberry.",
     validating: "Validando...",
     show_password: "Mostrar PIN",
@@ -777,6 +780,7 @@ const UI_STRINGS = {
     access_protected: "Accés protegit",
     app_title: "Gestor de MiniTV Raspberry",
     protected_access: "Accés protegit",
+    manager_title: "Gestor de MiniTV Raspberry Pi",
     unlock_copy: "Introdueix el PIN numèric de 4 dígits configurat a la Raspberry.",
     validating: "Validant...",
     show_password: "Mostra el PIN",
@@ -1094,6 +1098,7 @@ const UI_STRINGS = {
     access_protected: "Protected access",
     app_title: "Raspberry MiniTV Manager",
     protected_access: "Protected access",
+    manager_title: "MiniTV Raspberry Pi Manager",
     unlock_copy: "Enter the 4-digit numeric PIN configured on the Raspberry.",
     validating: "Validating...",
     show_password: "Show PIN",
@@ -7429,7 +7434,7 @@ export default function App() {
     ? Math.min(movieFrameIndex, movieImages.length - 1)
     : 0;
   const gameImages = selectedGame?.imageOptions?.length
-    ? selectedGame.imageOptions.slice(0, MAX_MOVIE_IMAGES)
+    ? selectedGame.imageOptions.slice(0, MAX_GAME_IMAGES)
     : [selectedGame?.coverImage].filter(Boolean);
   const safeGameImageIndex = gameImages.length
     ? Math.min(selectedGameImageIndex, gameImages.length - 1)
@@ -7467,57 +7472,89 @@ export default function App() {
     >
       <div className={`page-overlay${currentView === "season" ? " page-overlay--season" : ""}`}>
         {!unlocked ? (
-          <section className="empty-state">
-            <div className="empty-state__card unlock-card">
-              <header className="unlock-card__header">
-                <img className="unlock-card__logo" src={cartellLogo} alt="DonkiCodeLab" />
-                <h1>{t("app_title")}</h1>
-                <p className="unlock-card__eyebrow">{t("protected_access")}</p>
-              </header>
-              <p>{t("unlock_copy")}</p>
-              <form className="unlock-form" onSubmit={handleUnlock}>
-                <div className="unlock-form__input-wrap">
-                  <input
-                    className="unlock-form__input"
-                    inputMode="numeric"
-                    maxLength={4}
-                    pattern="[0-9]*"
-                    type={webPinVisible ? "text" : "password"}
-                    value={webPinInput}
-                    onChange={(event) =>
-                      setWebPinInput(event.target.value.replace(/\D/g, "").slice(0, 4))
-                    }
+          <div className="unlock-page">
+            <header className="series-hero unlock-hero">
+              <div className="series-hero__banner">
+                <HeaderArt image={cartellLogo} alt="DonkiCodeLab" />
+
+                <div className="series-hero__controls-layer">
+                  <div
+                    className="series-hero__controls-backdrop"
+                    aria-hidden="true"
+                    style={{
+                      WebkitMaskImage: `url(${cartellMask})`,
+                      maskImage: `url(${cartellMask})`,
+                    }}
                   />
-                  <button
-                    className="unlock-form__toggle"
-                    type="button"
-                    onClick={() => setWebPinVisible((current) => !current)}
-                    aria-label={webPinVisible ? t("hide_password") : t("show_password")}
-                    aria-pressed={webPinVisible}
-                    title={webPinVisible ? t("hide_password") : t("show_password")}
-                  >
-                    {webPinVisible ? (
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M3 3l18 18" />
-                        <path d="M10.58 10.58a2 2 0 0 0 2.84 2.84" />
-                        <path d="M9.88 5.09A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8-0.51 1.45-1.32 2.79-2.36 3.91" />
-                        <path d="M6.61 6.61C4.62 8 3.15 9.88 2 12c1.73 4.89 6 8 10 8 1.73 0 3.38-0.37 4.88-1.03" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M2 12s3.64-7 10-7 10 7 10 7-3.64 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
-                  </button>
+                  <div className="series-hero__controls-row series-hero__controls-row--selector-only">
+                    <div className="unlock-hero__title">{t("manager_title")}</div>
+                  </div>
                 </div>
-                <button disabled={pinSubmitting} type="submit">
-                  {pinSubmitting ? t("validating") : t("enter")}
-                </button>
-              </form>
-              {pinError ? <p className="unlock-form__error">{pinError}</p> : null}
-            </div>
-          </section>
+
+                <div className="unlock-hero__video-shell">
+                  <video
+                    className="unlock-hero__video"
+                    src={raspberryIntroVideo}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    aria-label={t("manager_title")}
+                  />
+                </div>
+              </div>
+            </header>
+
+            <section className="empty-state unlock-page__access">
+              <div className="empty-state__card unlock-card">
+                <header className="unlock-card__header">
+                  <p className="unlock-card__eyebrow">{t("protected_access")}</p>
+                </header>
+                <p>{t("unlock_copy")}</p>
+                <form className="unlock-form" onSubmit={handleUnlock}>
+                  <div className="unlock-form__input-wrap">
+                    <input
+                      className="unlock-form__input"
+                      inputMode="numeric"
+                      maxLength={4}
+                      pattern="[0-9]*"
+                      type={webPinVisible ? "text" : "password"}
+                      value={webPinInput}
+                      onChange={(event) =>
+                        setWebPinInput(event.target.value.replace(/\D/g, "").slice(0, 4))
+                      }
+                    />
+                    <button
+                      className="unlock-form__toggle"
+                      type="button"
+                      onClick={() => setWebPinVisible((current) => !current)}
+                      aria-label={webPinVisible ? t("hide_password") : t("show_password")}
+                      aria-pressed={webPinVisible}
+                      title={webPinVisible ? t("hide_password") : t("show_password")}
+                    >
+                      {webPinVisible ? (
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M3 3l18 18" />
+                          <path d="M10.58 10.58a2 2 0 0 0 2.84 2.84" />
+                          <path d="M9.88 5.09A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8-0.51 1.45-1.32 2.79-2.36 3.91" />
+                          <path d="M6.61 6.61C4.62 8 3.15 9.88 2 12c1.73 4.89 6 8 10 8 1.73 0 3.38-0.37 4.88-1.03" />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M2 12s3.64-7 10-7 10 7 10 7-3.64 7-10 7-10-7-10-7Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <button disabled={pinSubmitting} type="submit">
+                    {pinSubmitting ? t("validating") : t("enter")}
+                  </button>
+                </form>
+                {pinError ? <p className="unlock-form__error">{pinError}</p> : null}
+              </div>
+            </section>
+          </div>
         ) : (
           <>
             {loading || tmdbLoading ? (
