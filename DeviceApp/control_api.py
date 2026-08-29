@@ -2658,8 +2658,11 @@ def play():
     data = request.get_json(force=True, silent=True) or {}
     ep_id = (data.get("id") or "").upper().strip()
     directory = (data.get("directory") or "").strip()
+    output = str(data.get("output") or "minitv").strip().lower()
     if not ep_id:
         return jsonify({"error": "Missing id"}), 400
+    if output not in ("minitv", "external"):
+        return jsonify({"error": "Invalid output"}), 400
 
     matches = []
     for entry in iter_video_entries():
@@ -2705,6 +2708,7 @@ def play():
                 "id": ep_id,
                 "directory": match["directory_path"],
                 "file": match["relative_path"],
+                "output": output,
             }
         )
         current["id"] = ep_id
@@ -2718,6 +2722,7 @@ def play():
             "playing": ep_id,
             "directory": match["directory_path"],
             "file": match["relative_path"],
+            "output": output,
         }
     )
 

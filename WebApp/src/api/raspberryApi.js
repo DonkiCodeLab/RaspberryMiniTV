@@ -1161,7 +1161,7 @@ export function playGameFile(relativePath) {
   });
 }
 
-export function playEpisode({ id, directory }) {
+export function playEpisode({ id, directory, output = "minitv" }) {
   if (isMockModeEnabled()) {
     mockPlayback = id;
     mockPlaybackDirectory = directory || "";
@@ -1171,6 +1171,7 @@ export function playEpisode({ id, directory }) {
       playing: id,
       directory: mockPlaybackDirectory,
       file: mockPlaybackFile,
+      output,
       mock: true,
     });
   }
@@ -1180,6 +1181,7 @@ export function playEpisode({ id, directory }) {
     body: JSON.stringify({
       id,
       directory,
+      output,
     }),
   });
 }

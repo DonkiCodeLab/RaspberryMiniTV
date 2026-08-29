@@ -1345,6 +1345,7 @@ class DeviceAppMenu:
             "pressed": self.prepare_button_asset(SAVE_PIN_PRESSED_PATH, web_pin_layout["save"]),
         }
         self.loading_video_path = None
+        self.loading_video_output = "minitv"
         self.loading_video_start_seconds = 0.0
         self.loading_return_state = "play"
         self.loading_started_at = 0
@@ -2683,11 +2684,12 @@ class DeviceAppMenu:
             self.reset_external_touch_sequence()
             self.state = self.game_return_state
 
-    def play_video_path(self, full_path):
+    def play_video_path(self, full_path, output="minitv"):
         relative_path = os.path.relpath(full_path, VIDEOS_DIR).replace(os.sep, "/")
         log_debug(f"PLAY file={relative_path}")
         self.stop_video_playback(silent=True)
         self.loading_video_path = full_path
+        self.loading_video_output = output if output == "external" else "minitv"
         self.loading_video_start_seconds = 0.0
         self.loading_started_at = pygame.time.get_ticks()
         self.video_current_path = full_path
@@ -2701,10 +2703,12 @@ class DeviceAppMenu:
             if not full_path or not os.path.isfile(full_path):
                 log_debug(f"MENU command play ignored missing file={full_path}")
                 return
-            log_debug(f"MENU command play file={full_path}")
+            output = str(command.get("output") or "minitv").strip().lower()
+            output = output if output == "external" else "minitv"
+            log_debug(f"MENU command play file={full_path} output={output}")
             self.loading_return_state = "play"
             self.stop_game_playback(silent=True)
-            self.play_video_path(full_path)
+            self.play_video_path(full_path, output=output)
             return
         if action == "play_game":
             full_path = str(command.get("path") or "").strip()
@@ -2895,7 +2899,7 @@ class DeviceAppMenu:
             self.clear_video_preview()
             self.state = self.video_return_state
 
-    def build_mpv_command(self, filepath, start_seconds=0.0):
+    def build_mpv_command(self, filepath, start_seconds=0.0, output="minitv"):
         remove_path_if_exists(MPV_SOCKET_PATH)
         command = [
             "mpv",
@@ -2905,6 +2909,17 @@ class DeviceAppMenu:
         alsa_device = get_alsa_device()
         if alsa_device.lower() not in ("", "auto", "default"):
             command.append(f"--audio-device=alsa/{alsa_device}")
+        if output == "external":
+            external_connector = os.environ.get(
+                "MINITV_EXTERNAL_DRM_CONNECTOR", "HDMI-A-2"
+            ).strip() or "HDMI-A-2"
+            command.extend(
+                [
+                    "--vo=gpu",
+                    "--gpu-context=drm",
+                    f"--drm-connector={external_connector}",
+                ]
+            )
         if start_seconds > 0:
             command.append(f"--start={max(0.0, float(start_seconds)):.3f}")
         command.append(filepath)
@@ -3079,6 +3094,7 @@ class DeviceAppMenu:
             self.state = self.video_return_state
             return
         self.loading_video_path = self.video_preview_path
+        self.loading_video_output = "minitv"
         self.loading_video_start_seconds = self.video_preview_seconds
         self.loading_started_at = pygame.time.get_ticks()
         self.video_current_path = self.video_preview_path
@@ -3124,7 +3140,11 @@ class DeviceAppMenu:
         if pygame.time.get_ticks() - self.loading_started_at < LOADING_MIN_DURATION_MS:
             return
         self.video_return_state = self.loading_return_state
-        use_kodi = not DESKTOP_PREVIEW and self.kodi_is_available()
+        use_kodi = (
+            self.loading_video_output != "external"
+            and not DESKTOP_PREVIEW
+            and self.kodi_is_available()
+        )
         self.video_backend = "kodi" if use_kodi else "mpv"
         if use_kodi:
             command = self.build_kodi_command(self.loading_video_path)
@@ -3132,7 +3152,11 @@ class DeviceAppMenu:
             log_debug(f"VIDEO start via kodi file={self.loading_video_path}")
             append_debug_log(debug_log_path, f"Launching Kodi: {' '.join(command)}")
         else:
-            command = self.build_mpv_command(self.loading_video_path, self.loading_video_start_seconds)
+            command = self.build_mpv_command(
+                self.loading_video_path,
+                self.loading_video_start_seconds,
+                output=self.loading_video_output,
+            )
             debug_log_path = MPV_DEBUG_LOG_PATH
             log_debug(f"VIDEO start via mpv file={self.loading_video_path} start={self.loading_video_start_seconds:.3f}")
             append_debug_log(debug_log_path, f"Launching mpv: {' '.join(command)}")
@@ -3183,6 +3207,7 @@ class DeviceAppMenu:
             self.state = self.video_return_state
             return
         self.loading_video_path = None
+        self.loading_video_output = "minitv"
         self.loading_video_start_seconds = 0.0
         write_playback_state(self.video_current_path)
         self.reset_external_touch_sequence()

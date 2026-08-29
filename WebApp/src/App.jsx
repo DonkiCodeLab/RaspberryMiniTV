@@ -113,7 +113,7 @@ import {
 } from "./tmdbApi";
 
 const HERO_SLIDER_MAX = 0.96;
-const MAX_MOVIE_IMAGES = 15;
+const MAX_MOVIE_IMAGES = 7;
 const MAX_GAME_IMAGES = 5;
 const RASPBERRY_ALARM_STORAGE_KEY = "minitv-raspberry-alarm-v1";
 const RASPBERRY_LANGUAGE_STORAGE_KEY = "minitv-raspberry-language-v1";
@@ -276,6 +276,7 @@ const UI_STRINGS = {
     not_available: "No disponible",
     play_on_tv: "Reproducir en miniTV",
     play_in_browser: "Reproducir en navegador",
+    play_on_external_monitor: "Reproducir en Monitor Externo",
     browser_player: "Reproductor web",
     playing_now: "Reproduciendo...",
     synopsis_unavailable: "Sinopsis no disponible.",
@@ -594,6 +595,7 @@ const UI_STRINGS = {
     not_available: "No disponible",
     play_on_tv: "Reproduir a miniTV",
     play_in_browser: "Reproduir al navegador",
+    play_on_external_monitor: "Reproduir en Monitor Extern",
     browser_player: "Reproductor web",
     playing_now: "Reproduint...",
     synopsis_unavailable: "Sinopsi no disponible.",
@@ -912,6 +914,7 @@ const UI_STRINGS = {
     not_available: "Not available",
     play_on_tv: "Play on miniTV",
     play_in_browser: "Play in browser",
+    play_on_external_monitor: "Play on External Monitor",
     browser_player: "Web player",
     playing_now: "Playing...",
     synopsis_unavailable: "Synopsis unavailable.",
@@ -2299,6 +2302,7 @@ function EpisodeDetailsModal({
   onClose,
   onPlay,
   onPlayBrowser,
+  onPlayExternal,
   onDelete,
   t,
 }) {
@@ -2397,7 +2401,7 @@ function EpisodeDetailsModal({
                 type="button"
                 disabled={playing || !available}
               >
-                <img src={tvGreen} alt="" aria-hidden="true" />
+                <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                 <span>{available ? (playing ? t("playing_now") : t("play_on_tv")) : t("unavailable_episode")}</span>
               </button>
               <button
@@ -2409,17 +2413,15 @@ function EpisodeDetailsModal({
                 <span className="episode-dialog__browser-icon" aria-hidden="true">▶</span>
                 <span>{available ? t("play_in_browser") : t("unavailable_episode")}</span>
               </button>
-              {available && onDelete ? (
-                <button
-                  className="episode-dialog__delete"
-                  onClick={() => onDelete(episode)}
-                  type="button"
-                  aria-label={t("delete_episode")}
-                  title={t("delete_episode")}
-                >
-                  <img src={deleteIcon} alt="" aria-hidden="true" />
-                </button>
-              ) : null}
+              <button
+                className="episode-dialog__play episode-dialog__play--external"
+                onClick={onPlayExternal}
+                type="button"
+                disabled={playing || !available}
+              >
+                <span className="episode-dialog__browser-icon" aria-hidden="true">▶</span>
+                <span>{available ? t("play_on_external_monitor") : t("unavailable_episode")}</span>
+              </button>
             </div>
           ) : null}
 
@@ -2427,6 +2429,17 @@ function EpisodeDetailsModal({
             <strong>{`${t("synopsis")}:`}</strong>
             <p>{episode.synopsis || t("synopsis_unavailable")}</p>
           </div>
+
+          {available && onDelete ? (
+            <button
+              className="episode-dialog__delete episode-dialog__delete--below"
+              onClick={() => onDelete(episode)}
+              type="button"
+            >
+              <img src={deleteIcon} alt="" aria-hidden="true" />
+              <span>{t("delete_episode")}</span>
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -5297,6 +5310,7 @@ export default function App() {
   const [webPinVisible, setWebPinVisible] = useState(false);
   const [pinError, setPinError] = useState("");
   const [pinSubmitting, setPinSubmitting] = useState(false);
+  const [introVideoFinished, setIntroVideoFinished] = useState(false);
   const [unlocked, setUnlocked] = useState(mockMode || Boolean(getStoredWebPin()));
   const [videos, setVideos] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
@@ -6523,7 +6537,7 @@ export default function App() {
     setEpisodePlaying(false);
   }
 
-  async function handlePlayEpisode() {
+  async function handlePlayEpisode(output = "minitv") {
     if (!selectedEpisode || !selectedSeason || !selectedSeries?.directoryPath) return;
     if (!isEpisodeUploaded(selectedSeason, selectedEpisode, uploadedEpisodeIds)) return;
 
@@ -6542,6 +6556,7 @@ export default function App() {
       await playEpisode({
         id: raspberryEpisodeId,
         directory: selectedSeries.directoryPath,
+        output,
       });
       const playbackInfo = createEpisodePlaybackInfo({
         series: selectedSeries,
@@ -6649,7 +6664,7 @@ export default function App() {
     return null;
   }
 
-  async function handlePlayMovie() {
+  async function handlePlayMovie(output = "minitv") {
     if (!selectedMovie) return;
 
     const movieEntry =
@@ -6673,6 +6688,7 @@ export default function App() {
       await playEpisode({
         id: movieEntry.id,
         directory: movieEntry.directory || undefined,
+        output,
       });
       const playbackInfo = createMoviePlaybackInfo({
         movie: selectedMovie,
@@ -7491,16 +7507,26 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="unlock-hero__video-shell">
-                  <video
-                    className="unlock-hero__video"
-                    src={raspberryIntroVideo}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    aria-label={t("manager_title")}
-                  />
+                <div
+                  className={`unlock-hero__video-shell${introVideoFinished ? " unlock-hero__video-shell--finished" : ""}`}
+                >
+                  {introVideoFinished ? (
+                    <img
+                      className="unlock-hero__finished-tv"
+                      src={tvGreen}
+                      alt={t("mini_tv_title")}
+                    />
+                  ) : (
+                    <video
+                      className="unlock-hero__video"
+                      src={raspberryIntroVideo}
+                      autoPlay
+                      muted
+                      playsInline
+                      onEnded={() => setIntroVideoFinished(true)}
+                      aria-label={t("manager_title")}
+                    />
+                  )}
                 </div>
               </div>
             </header>
@@ -8122,11 +8148,11 @@ export default function App() {
                       </button>
                       <button
                         className="movie-panel__play"
-                        onClick={handlePlayMovie}
+                        onClick={() => handlePlayMovie("minitv")}
                         type="button"
                         disabled={moviePlaying}
                       >
-                        <img src={tvGreen} alt="" aria-hidden="true" />
+                        <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                         <span>{moviePlaying ? t("playing_now") : t("play_on_tv")}</span>
                       </button>
                       <button
@@ -8136,6 +8162,15 @@ export default function App() {
                       >
                         <span aria-hidden="true">▶</span>
                         <span>{t("play_in_browser")}</span>
+                      </button>
+                      <button
+                        className="movie-panel__play movie-panel__play--external"
+                        onClick={() => handlePlayMovie("external")}
+                        type="button"
+                        disabled={moviePlaying}
+                      >
+                        <span aria-hidden="true">▶</span>
+                        <span>{t("play_on_external_monitor")}</span>
                       </button>
 
                       <MovieImageCarousel
@@ -8328,8 +8363,9 @@ export default function App() {
               playing={episodePlaying}
               available={isEpisodeUploaded(selectedSeason, selectedEpisode, uploadedEpisodeIds)}
               onClose={handleCloseEpisodeDetails}
-              onPlay={handlePlayEpisode}
+              onPlay={() => handlePlayEpisode("minitv")}
               onPlayBrowser={handlePlayEpisodeInBrowser}
+              onPlayExternal={() => handlePlayEpisode("external")}
               onDelete={handleDeleteEpisode}
               t={t}
             />
