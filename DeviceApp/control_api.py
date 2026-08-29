@@ -10,6 +10,8 @@ import time
 import tempfile
 import urllib.parse
 import urllib.request
+import zipfile
+import datetime
 
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
@@ -37,6 +39,7 @@ MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 GAMES_DIR = os.path.join(MULTIMEDIA_DIR, "Games")
 BOOKS_DIR = os.path.join(MULTIMEDIA_DIR, "Books")
+BOOK_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "BookCovers")
 GAME_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "GameCovers")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "WebApp", "dist")
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
@@ -66,12 +69,48 @@ DEFAULT_ALARMS = [
     {"id": 2, "enabled": False, "time": "08:00", "sound": ""},
     {"id": 3, "enabled": False, "time": "08:30", "sound": ""},
 ]
+
+
+def normalize_birthdays(entries):
+    normalized = []
+    seen_ids = set()
+    for index, entry in enumerate(entries if isinstance(entries, list) else []):
+        if not isinstance(entry, dict):
+            continue
+        name = str(entry.get("name") or "").strip()[:80]
+        event_type = "saint" if entry.get("type") == "saint" else "birthday"
+        date = str(entry.get("date") or "").strip()
+        match = re.fullmatch(r"(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])", date)
+        if not name or not match:
+            continue
+        try:
+            datetime.datetime(2000, int(match.group(1)), int(match.group(2)))
+        except ValueError:
+            continue
+        birth_year = entry.get("birthYear")
+        try:
+            birth_year = int(birth_year) if birth_year not in (None, "") else None
+        except (TypeError, ValueError):
+            birth_year = None
+        if event_type != "birthday" or birth_year is None or birth_year < 1900 or birth_year > datetime.datetime.now().year:
+            birth_year = None
+        entry_id = re.sub(r"[^a-zA-Z0-9_-]", "", str(entry.get("id") or ""))[:64]
+        if not entry_id or entry_id in seen_ids:
+            entry_id = f"event-{int(time.time() * 1000)}-{index}"
+        seen_ids.add(entry_id)
+        normalized.append({"id": entry_id, "type": event_type, "name": name, "date": date, "birthYear": birth_year})
+    return normalized
+
+
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
     "alarms": DEFAULT_ALARMS,
     "weather_location": "",
     "weather_location_details": None,
+    "birthdays": [],
+    "tmdb_api_key": "",
+    "tmdb_bearer_token": "",
 }
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 
@@ -101,10 +140,11 @@ def load_settings():
                 {
                     key: value
                     for key, value in loaded.items()
-                    if key in {"language", "web_password", "weather_location"} and isinstance(value, str)
+                    if key in {"language", "web_password", "weather_location", "tmdb_api_key", "tmdb_bearer_token"} and isinstance(value, str)
                 }
             )
             settings["alarms"] = normalize_alarms(loaded.get("alarms"))
+            settings["birthdays"] = normalize_birthdays(loaded.get("birthdays"))
             details = loaded.get("weather_location_details")
             settings["weather_location_details"] = details if isinstance(details, dict) else None
     except Exception:
@@ -182,10 +222,11 @@ def save_settings(settings):
             {
                 key: value
                 for key, value in settings.items()
-                if key in {"language", "web_password", "weather_location"} and isinstance(value, str)
+                if key in {"language", "web_password", "weather_location", "tmdb_api_key", "tmdb_bearer_token"} and isinstance(value, str)
             }
         )
         safe_settings["alarms"] = normalize_alarms(settings.get("alarms"))
+        safe_settings["birthdays"] = normalize_birthdays(settings.get("birthdays"))
     safe_settings["language"] = normalize_language_code(safe_settings.get("language"))
     details = settings.get("weather_location_details") if isinstance(settings, dict) else None
     safe_settings["weather_location_details"] = details if isinstance(details, dict) else None
@@ -253,6 +294,7 @@ def empty_media_library():
         "series": {},
         "movies": {},
         "games": {},
+        "books": {},
     }
 
 
@@ -268,6 +310,7 @@ def load_media_library():
                     "series": loaded.get("series") if isinstance(loaded.get("series"), dict) else {},
                     "movies": loaded.get("movies") if isinstance(loaded.get("movies"), dict) else {},
                     "games": loaded.get("games") if isinstance(loaded.get("games"), dict) else {},
+                    "books": loaded.get("books") if isinstance(loaded.get("books"), dict) else {},
                 }
             )
     except Exception:
@@ -294,6 +337,7 @@ def save_media_library(library):
                 "series": library.get("series") if isinstance(library.get("series"), dict) else {},
                 "movies": library.get("movies") if isinstance(library.get("movies"), dict) else {},
                 "games": library.get("games") if isinstance(library.get("games"), dict) else {},
+                "books": library.get("books") if isinstance(library.get("books"), dict) else {},
             }
         )
 
@@ -323,6 +367,7 @@ def save_movie_library(items):
                 "heroImage": str(item.get("heroImage") or "").strip(),
                 "heroImageCrop": item.get("heroImageCrop") if isinstance(item.get("heroImageCrop"), dict) else None,
                 "imdbUrl": str(item.get("imdbUrl") or "").strip(),
+                "rottenTomatoesUrl": str(item.get("rottenTomatoesUrl") or "").strip(),
             }
 
     library["movies"] = safe_items
@@ -658,6 +703,8 @@ def upsert_media_profile(collection, key, updates):
         item["heroImageCrop"] = updates.get("heroImageCrop") if isinstance(updates.get("heroImageCrop"), dict) else None
     if "imdbUrl" in updates:
         item["imdbUrl"] = str(updates.get("imdbUrl") or "").strip()
+    if "rottenTomatoesUrl" in updates:
+        item["rottenTomatoesUrl"] = str(updates.get("rottenTomatoesUrl") or "").strip()
 
     collection_items[safe_key] = item
     save_media_library(library)
@@ -777,7 +824,7 @@ def is_public_frontend_request():
 
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
-    if request.path in {"/media/stream", "/books/content"} and not submitted_pin:
+    if request.path in {"/media/stream", "/books/content", "/books/cover"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -956,6 +1003,8 @@ def resolve_book_path(relative_path):
 
 def list_book_entries():
     ensure_media_directories()
+    library = load_media_library()
+    book_metadata = library.get("books") if isinstance(library.get("books"), dict) else {}
     items = []
     for root, _dirs, files in os.walk(BOOKS_DIR):
         for filename in sorted(files, key=str.lower):
@@ -964,15 +1013,71 @@ def list_book_entries():
             full_path = os.path.join(root, filename)
             relative = os.path.relpath(full_path, BOOKS_DIR).replace("\\", "/")
             collection = os.path.dirname(relative).replace("\\", "/")
+            relative_path = f"Books/{relative}"
+            metadata = book_metadata.get(relative_path) if isinstance(book_metadata.get(relative_path), dict) else {}
             items.append({
-                "name": os.path.splitext(filename)[0],
+                "name": str(metadata.get("title") or os.path.splitext(filename)[0]).strip(),
                 "file": filename,
                 "format": os.path.splitext(filename)[1].lower().lstrip("."),
                 "collection": "" if collection == "." else collection,
-                "relativePath": f"Books/{relative}",
+                "relativePath": relative_path,
                 "sizeBytes": os.path.getsize(full_path),
+                "author": str(metadata.get("author") or "").strip(),
+                "year": str(metadata.get("year") or "").strip(),
+                "isbn": str(metadata.get("isbn") or "").strip(),
+                "description": str(metadata.get("description") or "").strip(),
+                "coverUrl": str(metadata.get("coverUrl") or "").strip(),
+                "openLibraryKey": str(metadata.get("openLibraryKey") or "").strip(),
             })
     return items
+
+
+def extract_book_cover(book_path):
+    os.makedirs(BOOK_COVERS_DIR, exist_ok=True)
+    stat = os.stat(book_path)
+    cache_key = f"{os.path.relpath(book_path, BOOKS_DIR)}-{stat.st_mtime_ns}-{stat.st_size}"
+    cache_name = re.sub(r"[^a-zA-Z0-9_.-]+", "-", cache_key).strip("-") + ".jpg"
+    cache_path = os.path.join(BOOK_COVERS_DIR, cache_name)
+    if os.path.isfile(cache_path):
+        return cache_path
+
+    extension = os.path.splitext(book_path)[1].lower()
+    if extension == ".pdf":
+        converter = shutil.which("pdftoppm")
+        if converter:
+            output_root = os.path.join(BOOK_COVERS_DIR, cache_name[:-4])
+            try:
+                subprocess.run(
+                    [converter, "-f", "1", "-singlefile", "-jpeg", "-scale-to", "720", book_path, output_root],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=30,
+                )
+                generated = output_root + ".jpg"
+                if os.path.isfile(generated):
+                    return generated
+            except (OSError, subprocess.SubprocessError):
+                pass
+
+    if extension in {".cbz", ".epub"}:
+        try:
+            with zipfile.ZipFile(book_path) as archive:
+                images = [
+                    name for name in archive.namelist()
+                    if not name.endswith("/") and os.path.splitext(name)[1].lower() in {".jpg", ".jpeg", ".png", ".webp"}
+                ]
+                images.sort(key=lambda name: ("cover" not in name.lower(), name.lower()))
+                if images:
+                    data = archive.read(images[0])
+                    image_extension = os.path.splitext(images[0])[1].lower()
+                    extracted_path = os.path.join(BOOK_COVERS_DIR, cache_name[:-4] + image_extension)
+                    with open(extracted_path, "wb") as handle:
+                        handle.write(data)
+                    return extracted_path
+        except (OSError, zipfile.BadZipFile, KeyError):
+            pass
+    return None
 
 
 def list_game_entries():
@@ -1717,6 +1822,7 @@ def game_cover_file(filename):
 def upload_books():
     uploaded_files = request.files.getlist("files")
     requested_collection = str(request.form.get("collection") or "").strip()
+    requested_title = str(request.form.get("title") or "").strip()
     if not uploaded_files:
         return jsonify({"error": "Missing book files"}), 400
 
@@ -1734,7 +1840,10 @@ def upload_books():
         safe_parts = [slugify(part, "collection") for part in collection.split("/") if part and part not in {".", ".."}]
         target_dir = os.path.join(BOOKS_DIR, *safe_parts)
         os.makedirs(target_dir, exist_ok=True)
-        target_name = unique_media_filename(target_dir, filename)
+        desired_filename = filename
+        if requested_title and len(uploaded_files) == 1:
+            desired_filename = requested_title + os.path.splitext(filename)[1].lower()
+        target_name = unique_media_filename(target_dir, desired_filename)
         target_path = os.path.join(target_dir, target_name)
         uploaded.save(target_path)
         relative = os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
@@ -1752,11 +1861,73 @@ def delete_book():
     if not target_path or target_path == BOOKS_DIR or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
     os.remove(target_path)
+    library = load_media_library()
+    library.setdefault("books", {}).pop(relative_path, None)
+    save_media_library(library)
     parent = os.path.dirname(target_path)
     while parent != BOOKS_DIR and os.path.isdir(parent) and not os.listdir(parent):
         os.rmdir(parent)
         parent = os.path.dirname(parent)
     return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
+
+
+@app.route("/books/profile", methods=["POST"])
+def save_book_profile():
+    data = request.get_json(silent=True) or {}
+    relative_path = str(data.get("relativePath") or "").strip()
+    target_path = resolve_book_path(relative_path)
+    if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
+        return jsonify({"error": "Book not found"}), 404
+    item = {
+        "title": str(data.get("title") or os.path.splitext(os.path.basename(target_path))[0]).strip(),
+        "author": str(data.get("author") or "").strip(),
+        "year": str(data.get("year") or "").strip(),
+        "isbn": str(data.get("isbn") or "").strip(),
+        "description": str(data.get("description") or "").strip(),
+        "coverUrl": str(data.get("coverUrl") or "").strip(),
+        "openLibraryKey": str(data.get("openLibraryKey") or "").strip(),
+    }
+    library = load_media_library()
+    library.setdefault("books", {})[relative_path] = item
+    save_media_library(library)
+    return jsonify({"ok": True, "item": {**item, "relativePath": relative_path}})
+
+
+@app.route("/books/search", methods=["GET"])
+def search_open_library_books():
+    query = str(request.args.get("query") or "").strip()
+    language = normalize_language_code(request.args.get("language"))
+    if not query:
+        return jsonify({"items": []})
+    params = urllib.parse.urlencode({
+        "q": query,
+        "lang": language,
+        "limit": 8,
+        "fields": "key,title,author_name,first_publish_year,isbn,cover_i,language",
+    })
+    api_request = urllib.request.Request(
+        f"https://openlibrary.org/search.json?{params}",
+        headers={"User-Agent": "RaspberryMiniTV/1.0 (book metadata lookup)"},
+    )
+    try:
+        with urllib.request.urlopen(api_request, timeout=12) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as error:
+        return jsonify({"error": f"Open Library unavailable: {error}"}), 502
+    items = []
+    for document in (payload.get("docs") or [])[:8]:
+        cover_id = document.get("cover_i")
+        key = str(document.get("key") or "").strip()
+        items.append({
+            "openLibraryKey": key,
+            "title": str(document.get("title") or "").strip(),
+            "author": ", ".join(str(value) for value in (document.get("author_name") or [])[:3]),
+            "year": str(document.get("first_publish_year") or ""),
+            "isbn": str((document.get("isbn") or [""])[0]),
+            "coverUrl": f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg?default=false" if cover_id else "",
+            "openLibraryUrl": f"https://openlibrary.org{key}" if key.startswith("/") else "",
+        })
+    return jsonify({"items": items})
 
 
 @app.route("/books/content", methods=["GET"])
@@ -1766,6 +1937,18 @@ def stream_book():
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
     return send_file(target_path, conditional=True, as_attachment=False, download_name=os.path.basename(target_path))
+
+
+@app.route("/books/cover", methods=["GET"])
+def book_cover():
+    relative_path = str(request.args.get("relativePath") or "").strip()
+    target_path = resolve_book_path(relative_path)
+    if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
+        return jsonify({"error": "Book not found"}), 404
+    cover_path = extract_book_cover(target_path)
+    if not cover_path:
+        return jsonify({"error": "Book cover not found"}), 404
+    return send_file(cover_path, conditional=True)
 
 
 @app.route("/games/search", methods=["GET"])
@@ -2442,6 +2625,7 @@ def save_media_profile():
             "heroImage": data.get("heroImage"),
             "heroImageCrop": data.get("heroImageCrop"),
             "imdbUrl": data.get("imdbUrl"),
+            "rottenTomatoesUrl": data.get("rottenTomatoesUrl"),
         },
     )
     return jsonify({"ok": True, "item": item})
@@ -2721,6 +2905,46 @@ def update_weather_settings():
     settings["weather_location_details"] = details
     saved_settings = save_settings(settings)
     return jsonify({"ok": True, "location": saved_settings["weather_location"], "details": details})
+
+
+@app.route("/settings/tmdb", methods=["GET"])
+def get_tmdb_settings():
+    settings = load_settings()
+    return jsonify({
+        "ok": True,
+        "apiKey": settings.get("tmdb_api_key") or os.environ.get("TMDB_API_KEY", "") or os.environ.get("VITE_TMDB_API_KEY", ""),
+        "bearerToken": settings.get("tmdb_bearer_token") or os.environ.get("TMDB_BEARER_TOKEN", "") or os.environ.get("VITE_TMDB_BEARER_TOKEN", ""),
+    })
+
+
+@app.route("/settings/birthdays", methods=["GET"])
+def get_birthdays_settings():
+    return jsonify({"ok": True, "birthdays": normalize_birthdays(load_settings().get("birthdays"))})
+
+
+@app.route("/settings/birthdays", methods=["POST"])
+def update_birthdays_settings():
+    data = request.get_json(force=True, silent=True) or {}
+    settings = load_settings()
+    settings["birthdays"] = normalize_birthdays(data.get("birthdays"))
+    saved_settings = save_settings(settings)
+    return jsonify({"ok": True, "birthdays": saved_settings["birthdays"]})
+
+
+@app.route("/settings/tmdb", methods=["POST"])
+def update_tmdb_settings():
+    data = request.get_json(force=True, silent=True) or {}
+    api_key = str(data.get("apiKey") or "").strip()[:256]
+    bearer_token = str(data.get("bearerToken") or "").strip()[:2048]
+    settings = load_settings()
+    settings["tmdb_api_key"] = api_key
+    settings["tmdb_bearer_token"] = bearer_token
+    saved_settings = save_settings(settings)
+    return jsonify({
+        "ok": True,
+        "apiKey": saved_settings["tmdb_api_key"],
+        "bearerToken": saved_settings["tmdb_bearer_token"],
+    })
 
 
 @app.route("/alarm-sounds", methods=["GET"])

@@ -12,6 +12,11 @@ let mockPlaybackDirectory = "";
 let mockPlaybackFile = "";
 let mockLanguage = "es";
 let mockWeatherLocation = "Madrid";
+let mockTmdbSettings = {
+  apiKey: String(import.meta.env.VITE_TMDB_API_KEY || import.meta.env.EXPO_PUBLIC_TMDB_API_KEY || "").trim(),
+  bearerToken: String(import.meta.env.VITE_TMDB_BEARER_TOKEN || import.meta.env.EXPO_PUBLIC_TMDB_BEARER_TOKEN || "").trim(),
+};
+let mockBirthdays = [];
 let mockAlarmSounds = ["alarma_clasica.mp3", "despertador.mp3", "campana.mp3"];
 let mockAlarms = [
   { id: 1, enabled: false, time: "07:30", sound: mockAlarmSounds[0] },
@@ -415,6 +420,44 @@ export function updateRaspberryWeatherLocation(location) {
   return request("/settings/weather", {
     method: "POST",
     body: JSON.stringify({ location: safeLocation }),
+  });
+}
+
+export function getRaspberryTmdbSettings() {
+  if (isMockModeEnabled()) {
+    return Promise.resolve({ ok: true, ...mockTmdbSettings, mock: true });
+  }
+  return request("/settings/tmdb");
+}
+
+export function updateRaspberryTmdbSettings({ apiKey, bearerToken }) {
+  const nextSettings = {
+    apiKey: String(apiKey || "").trim().slice(0, 256),
+    bearerToken: String(bearerToken || "").trim().slice(0, 2048),
+  };
+  if (isMockModeEnabled()) {
+    mockTmdbSettings = nextSettings;
+    return Promise.resolve({ ok: true, ...mockTmdbSettings, mock: true });
+  }
+  return request("/settings/tmdb", {
+    method: "POST",
+    body: JSON.stringify(nextSettings),
+  });
+}
+
+export function getRaspberryBirthdays() {
+  if (isMockModeEnabled()) return Promise.resolve({ ok: true, birthdays: mockBirthdays, mock: true });
+  return request("/settings/birthdays");
+}
+
+export function updateRaspberryBirthdays(birthdays) {
+  if (isMockModeEnabled()) {
+    mockBirthdays = Array.isArray(birthdays) ? birthdays : [];
+    return Promise.resolve({ ok: true, birthdays: mockBirthdays, mock: true });
+  }
+  return request("/settings/birthdays", {
+    method: "POST",
+    body: JSON.stringify({ birthdays }),
   });
 }
 
@@ -1018,7 +1061,7 @@ export function saveMovieFileMetadata({ relativePath, name, tmdbId }) {
   });
 }
 
-export function saveMediaProfile({ collection, relativePath, name, tmdbId, file, heroImage, heroImageCrop, imdbUrl }) {
+export function saveMediaProfile({ collection, relativePath, name, tmdbId, file, heroImage, heroImageCrop, imdbUrl, rottenTomatoesUrl }) {
   const safeCollection = collection === "movies" ? "movies" : "series";
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
@@ -1038,6 +1081,7 @@ export function saveMediaProfile({ collection, relativePath, name, tmdbId, file,
         heroImage: String(heroImage || "").trim(),
         heroImageCrop: heroImageCrop || null,
         imdbUrl: String(imdbUrl || "").trim(),
+        rottenTomatoesUrl: String(rottenTomatoesUrl || "").trim(),
       },
     });
   }
@@ -1053,6 +1097,7 @@ export function saveMediaProfile({ collection, relativePath, name, tmdbId, file,
       heroImage,
       heroImageCrop,
       imdbUrl,
+      rottenTomatoesUrl,
     }),
   });
 }
@@ -1158,18 +1203,37 @@ export function getBookContentUrl(relativePath) {
   return `${getBaseUrl()}/books/content?${params.toString()}`;
 }
 
-export async function uploadBookFiles({ files, collection = "" } = {}) {
+export function getBookCoverUrl(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) return "";
+  const params = new URLSearchParams({ relativePath: safeRelativePath });
+  const storedPin = getStoredWebPin();
+  if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
+  return `${getBaseUrl()}/books/cover?${params.toString()}`;
+}
+
+export async function uploadBookFiles({ files, collection = "", title = "" } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) throw new Error("Missing book files");
   if (isMockModeEnabled()) return { ok: true, mock: true, items: [] };
   const form = new FormData();
   safeFiles.forEach((file) => form.append("files", file, file.webkitRelativePath || file.name));
   form.append("collection", collection);
+  form.append("title", title);
   return request("/books/upload", { method: "POST", body: form });
 }
 
 export function removeBookFile(relativePath) {
   return request(`/books?relativePath=${encodeURIComponent(relativePath)}`, { method: "DELETE" });
+}
+
+export function searchBookMetadata(query, language = "es") {
+  const params = new URLSearchParams({ query: String(query || "").trim(), language });
+  return request(`/books/search?${params.toString()}`);
+}
+
+export function saveBookMetadata(profile) {
+  return request("/books/profile", { method: "POST", body: JSON.stringify(profile || {}) });
 }
 
 export async function captureCameraImage() {

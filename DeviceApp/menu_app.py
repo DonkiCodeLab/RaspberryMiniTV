@@ -103,7 +103,7 @@ MENU_BUTTON_QR_NORMAL_PATH = os.path.join(MENU_DIR, "button_qr_normal.png")
 MENU_BUTTON_QR_PRESSED_PATH = os.path.join(MENU_DIR, "button_qr_pressed.png")
 MENU_BUTTON_CAMERA_PATH = os.path.join(MENU_DIR, "camera.png")
 MENU_BUTTON_BOOK_READER_PATH = os.path.join(MENU_DIR, "book_reader.png")
-MENU_BUTTON_SETTINGS_CUSTOM_PATH = os.path.join(MENU_DIR, "settgins.png")
+MENU_BUTTON_SETTINGS_CUSTOM_PATH = os.path.join(MENU_DIR, "settings.png")
 MENU_BUTTON_SETTINGS_NORMAL_PATH = os.path.join(MENU_DIR, "button_settings_normal.png")
 MENU_BUTTON_SETTINGS_PRESSED_PATH = os.path.join(MENU_DIR, "button_settings_pressed.png")
 MENU_BUTTON_WIFI_NORMAL_PATH = os.path.join(MENU_DIR, "button_wifi_normal.png")
@@ -253,6 +253,7 @@ DEFAULT_SETTINGS = {
     ],
     "weather_location": "",
     "weather_location_details": None,
+    "birthdays": [],
 }
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 LANGUAGE_BUTTON_MAP = {
@@ -1503,10 +1504,11 @@ class DeviceAppMenu:
                 {
                     key: value
                     for key, value in loaded.items()
-                    if key in {"language", "web_password", "weather_location"} and isinstance(value, str)
+                    if key in {"language", "web_password", "weather_location", "tmdb_api_key", "tmdb_bearer_token"} and isinstance(value, str)
                 }
             )
             settings["alarms"] = normalize_alarms(loaded.get("alarms"))
+            settings["birthdays"] = loaded.get("birthdays") if isinstance(loaded.get("birthdays"), list) else []
             details = loaded.get("weather_location_details")
             settings["weather_location_details"] = details if isinstance(details, dict) else None
         else:
@@ -4056,6 +4058,29 @@ class DeviceAppMenu:
         self.screen.blit(hours_surface, hours_rect)
         self.screen.blit(separator_surface, separator_rect)
         self.screen.blit(minutes_surface, minutes_rect)
+
+        today_key = now.strftime("%m-%d")
+        today_events = [event for event in self.config.get("birthdays", []) if event.get("date") == today_key]
+        event_lines = []
+        for event in today_events:
+            if event.get("type") == "saint":
+                event_lines.append(self.tr("clock.saint", name=event.get("name", "")))
+            else:
+                try:
+                    age = now.year - int(event.get("birthYear")) if event.get("birthYear") else None
+                except (TypeError, ValueError):
+                    age = None
+                event_lines.append(
+                    self.tr("clock.birthday_age", name=event.get("name", ""), age=age)
+                    if age is not None
+                    else self.tr("clock.birthday", name=event.get("name", ""))
+                )
+
+        event_y = MAIN_HEADER_HEIGHT + 68
+        for index, line in enumerate(event_lines[:2]):
+            line = self.truncate_text(line, self.weather_font, self.width - 60)
+            surface = self.weather_font.render(line, True, (255, 212, 41))
+            self.screen.blit(surface, surface.get_rect(center=(self.width // 2, event_y + index * 28)))
 
         alarms = normalize_alarms(self.config.get("alarms"))
         active_alarms = [alarm for alarm in alarms if alarm.get("enabled")]

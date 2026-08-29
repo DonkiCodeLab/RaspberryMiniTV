@@ -71,6 +71,10 @@ export function updateSeriesProfile(seriesKey, updates = {}, collectionType = "s
         updates?.imdbUrl !== undefined
           ? String(updates.imdbUrl || "").trim()
           : String(currentEntry.imdbUrl || "").trim(),
+      rottenTomatoesUrl:
+        updates?.rottenTomatoesUrl !== undefined
+          ? String(updates.rottenTomatoesUrl || "").trim()
+          : String(currentEntry.rottenTomatoesUrl || "").trim(),
     },
   }, collectionType);
 }

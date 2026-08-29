@@ -132,7 +132,18 @@ async function fetchSearchResultsWithOverviewFallback(path, query, language) {
   }
 }
 
-function readTmdbCredentials() {
+let runtimeTmdbCredentials = null;
+
+export function setTmdbCredentials({ apiKey = "", bearerToken = "" } = {}) {
+  runtimeTmdbCredentials = {
+    apiKey: String(apiKey || "").trim(),
+    bearerToken: String(bearerToken || "").trim(),
+  };
+}
+
+export function readTmdbCredentials() {
+  if (runtimeTmdbCredentials) return { ...runtimeTmdbCredentials };
+
   const apiKey = String(
     import.meta.env.VITE_TMDB_API_KEY || import.meta.env.EXPO_PUBLIC_TMDB_API_KEY || ""
   ).trim();
