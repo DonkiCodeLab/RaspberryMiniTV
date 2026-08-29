@@ -286,11 +286,11 @@ const UI_STRINGS = {
     visible_name: "Nombre visible",
     imdb_url: "URL de IMDb",
     imdb_url_placeholder: "https://www.imdb.com/title/tt.../",
-    imdb_link: "Enlace a la ficha de IMDb",
+    imdb_link: "Enlace a IMDb",
     imdb_no_link: "Sin enlace a URL",
     rotten_tomatoes_url: "URL de Rotten Tomatoes",
     rotten_tomatoes_url_placeholder: "https://www.rottentomatoes.com/m/...",
-    rotten_tomatoes_link: "Enlace a la ficha de Rotten Tomatoes",
+    rotten_tomatoes_link: "Enlace a Rotten Tomatoes",
     rotten_tomatoes_no_link: "Sin enlace a URL",
     image_header: "Imagen de cabecera",
     poster_preview: "Vista previa del cartel",
@@ -541,7 +541,7 @@ const UI_STRINGS = {
     movie_file_label: "FICHA DE LA PELÍCULA",
     release: "Estreno",
     duration: "Duración",
-    rating: "Valoración",
+    rating: "Valoración (TMDB)",
     genres: "Categorías",
     movie_filter: "Filtrar películas",
     movie_filter_title: "Buscar y filtrar",
@@ -858,7 +858,7 @@ const UI_STRINGS = {
     movie_file_label: "FITXA DE LA PEL·LÍCULA",
     release: "Estrena",
     duration: "Durada",
-    rating: "Valoració",
+    rating: "Valoració (TMDB)",
     genres: "Categories",
     movie_filter: "Filtrar pel·lícules",
     movie_filter_title: "Cercar i filtrar",
@@ -1175,7 +1175,7 @@ const UI_STRINGS = {
     movie_file_label: "MOVIE DETAILS",
     release: "Release",
     duration: "Duration",
-    rating: "Rating",
+    rating: "Rating (TMDB)",
     genres: "Categories",
     movie_filter: "Filter movies",
     movie_filter_title: "Search and filter",
@@ -2156,6 +2156,23 @@ function EpisodeRow({ episode, available, onSelect, t }) {
   );
 }
 
+const RATING_STAR_PATH = "M12 2.4l2.88 5.84 6.45.94-4.67 4.55 1.1 6.43L12 17.13l-5.76 3.03 1.1-6.43-4.67-4.55 6.45-.94L12 2.4z";
+
+function RatingStar({ fillPercent }) {
+  return (
+    <span className="movie-panel__star" aria-hidden="true">
+      <svg className="movie-panel__star-empty" viewBox="0 0 24 24">
+        <path d={RATING_STAR_PATH} />
+      </svg>
+      <span className="movie-panel__star-fill" style={{ width: `${fillPercent}%` }}>
+        <svg className="movie-panel__star-filled" viewBox="0 0 24 24">
+          <path d={RATING_STAR_PATH} />
+        </svg>
+      </span>
+    </span>
+  );
+}
+
 function RatingStars({ rating }) {
   const safeRating = Math.min(5, Math.max(0, (Number(rating) || 0) / 2));
 
@@ -2168,17 +2185,7 @@ function RatingStars({ rating }) {
       {Array.from({ length: 5 }, (_, index) => {
         const fillPercent = Math.min(100, Math.max(0, (safeRating - index) * 100));
 
-        return (
-          <span className="movie-panel__star" key={index} aria-hidden="true">
-            <span className="movie-panel__star-empty">★</span>
-            <span
-              className="movie-panel__star-filled"
-              style={{ "--star-fill": `${fillPercent}%` }}
-            >
-              ★
-            </span>
-          </span>
-        );
+        return <RatingStar fillPercent={fillPercent} key={index} />;
       })}
     </span>
   );
@@ -7740,7 +7747,9 @@ export default function App() {
                             aria-expanded={movieFilterOpen}
                             title={t("movie_filter")}
                           >
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d={movieFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} />
+                            </svg>
                             {movieFiltersActive ? <span>{movieFilterGenres.length + (movieFilterQuery.trim() ? 1 : 0)}</span> : null}
                           </button>
                         ) : isGamesMode && selectedGame ? (

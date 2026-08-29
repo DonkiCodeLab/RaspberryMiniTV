@@ -364,7 +364,15 @@ img {
   pointer-events: none;
   z-index: 3;
 }
-.movie-filter__panel { width: min(1360px, 100%); margin: 0 auto 1rem; padding: 1rem; border: 2px solid rgba(255,255,255,.25); border-radius: 20px; background: rgba(24,39,50,.98); box-shadow: 0 20px 45px rgba(9,15,21,.4); }
+.movie-filter__panel {
+  width: min(1128.8px, var(--series-visible-width));
+  margin: 0 auto 1rem max(0px, calc((100% - 1360px) / 2));
+  padding: 1rem;
+  border: 2px solid rgba(255,255,255,.25);
+  border-radius: 20px;
+  background: rgba(24,39,50,.98);
+  box-shadow: 0 20px 45px rgba(9,15,21,.4);
+}
 .movie-filter__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
 .movie-filter__heading strong { font-size: 1.08rem; }
 .movie-filter__heading button { padding: 0; background: transparent; color: #ffd429; cursor: pointer; font-weight: 800; }
@@ -1464,32 +1472,43 @@ img {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
-.movie-panel__star {
+.movie-panel__fact .movie-panel__star {
   position: relative;
   display: block;
   flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
   margin-top: 0;
-  font-size: inherit;
-  line-height: inherit;
 }
 
-.movie-panel__star-empty,
-.movie-panel__star-filled {
+.movie-panel__star svg {
   display: block;
+  width: 1em;
+  height: 1em;
   margin-top: 0;
 }
 
 .movie-panel__star-empty {
-  color: rgba(255, 255, 255, 0.2);
+  fill: rgba(255, 255, 255, 0.22);
+  stroke: rgba(255, 255, 255, 0.65);
+  stroke-width: 1;
 }
 
-.movie-panel__star-filled {
+.movie-panel__star .movie-panel__star-fill {
   position: absolute;
   inset: 0 auto 0 0;
-  width: var(--star-fill, 0%);
+  display: block;
+  height: 100%;
+  margin-top: 0;
   overflow: hidden;
-  color: #ffd429;
-  white-space: nowrap;
+}
+
+.movie-panel__star .movie-panel__star-filled {
+  width: 1em;
+  max-width: none;
+  fill: #ffd429;
+  stroke: #ffd429;
+  stroke-width: 1;
 }
 
 .movie-panel__fact--imdb a,
@@ -5017,6 +5036,12 @@ img {
 
   .page-overlay--season {
     padding-top: 0;
+  }
+
+  .movie-filter__panel {
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
   }
 
   .seasons-section {
