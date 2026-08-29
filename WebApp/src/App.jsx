@@ -550,6 +550,7 @@ const UI_STRINGS = {
     movie_filter_categories: "Categorías",
     movie_filter_clear: "Limpiar filtros",
     movie_filter_no_results: "No hay películas que coincidan con los filtros.",
+    movie_filter_count: "Mostrando {shown} películas de {total}.",
     synopsis: "Sinopsis",
     release_unknown: "Fecha de estreno no disponible",
     duration_unknown: "Duración no disponible",
@@ -866,6 +867,7 @@ const UI_STRINGS = {
     movie_filter_categories: "Categories",
     movie_filter_clear: "Netejar filtres",
     movie_filter_no_results: "No hi ha pel·lícules que coincideixin amb els filtres.",
+    movie_filter_count: "Mostrant {shown} pel·lícules de {total}.",
     synopsis: "Sinopsi",
     release_unknown: "Data d'estrena no disponible",
     duration_unknown: "Durada no disponible",
@@ -1182,6 +1184,7 @@ const UI_STRINGS = {
     movie_filter_categories: "Categories",
     movie_filter_clear: "Clear filters",
     movie_filter_no_results: "No movies match the selected filters.",
+    movie_filter_count: "Showing {shown} movies out of {total}.",
     synopsis: "Synopsis",
     release_unknown: "Release date unavailable",
     duration_unknown: "Duration unavailable",
@@ -2150,6 +2153,34 @@ function EpisodeRow({ episode, available, onSelect, t }) {
       <div className="episode-card__arrow">›</div>
       </button>
     </article>
+  );
+}
+
+function RatingStars({ rating }) {
+  const safeRating = Math.min(10, Math.max(0, Number(rating) || 0));
+
+  return (
+    <span
+      className="movie-panel__stars"
+      role="img"
+      aria-label={`${safeRating.toFixed(1)} / 10`}
+    >
+      {Array.from({ length: 10 }, (_, index) => {
+        const fillPercent = Math.min(100, Math.max(0, (safeRating - index) * 100));
+
+        return (
+          <span className="movie-panel__star" key={index} aria-hidden="true">
+            <span className="movie-panel__star-empty">★</span>
+            <span
+              className="movie-panel__star-filled"
+              style={{ "--star-fill": `${fillPercent}%` }}
+            >
+              ★
+            </span>
+          </span>
+        );
+      })}
+    </span>
   );
 }
 
@@ -3206,7 +3237,7 @@ function AddMediaModal({
             <div className="upload-progress" role="status" aria-live="polite">
               <div className="upload-progress__copy">
                 <strong>{progressCopy}</strong>
-                <span>{progressFileName}</span>
+                <span title={progressFileName}>{progressFileName}</span>
               </div>
               <div className="upload-progress__bar" aria-hidden="true">
                 <span style={{ width: `${progressValue}%` }} />
@@ -3436,7 +3467,7 @@ function GameUploadModal({
               <div className="upload-progress" role="status" aria-live="polite">
                 <div className="upload-progress__copy">
                   <strong>{t("upload_copying")}</strong>
-                  <span>{file.name}</span>
+                  <span title={file.name}>{file.name}</span>
                 </div>
                 <div className="upload-progress__bar" aria-hidden="true">
                   <span style={{ width: `${progressValue}%` }} />
@@ -7689,6 +7720,14 @@ export default function App() {
                           maskImage: `url(${cartellMask})`,
                         }}
                       />
+                      {isMoviesMode && movieOptions.length ? (
+                        <div className="movie-filter__count">
+                          {t("movie_filter_count", {
+                            shown: filteredMovieOptions.length,
+                            total: movieOptions.length,
+                          })}
+                        </div>
+                      ) : null}
                       <div
                         className={`series-hero__controls-row${isGamesMode ? "" : " series-hero__controls-row--selector-only"}${isMoviesMode ? " series-hero__controls-row--movie-filter" : ""}`}
                       >
@@ -7748,7 +7787,7 @@ export default function App() {
                               : setSelectedDirectoryPath(nextValue)
                           }
                         />
-                        {isMoviesMode ? (
+                        {isMoviesMode && movieOptions.length ? (
                           <>
                             <button
                               className={`movie-filter__toggle${movieFilterOpen ? " is-open" : ""}${movieFiltersActive ? " has-filters" : ""}`}
@@ -7761,30 +7800,6 @@ export default function App() {
                               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
                               {movieFiltersActive ? <span>{movieFilterGenres.length + (movieFilterQuery.trim() ? 1 : 0)}</span> : null}
                             </button>
-                            {movieFilterOpen ? (
-                              <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
-                                <div className="movie-filter__heading">
-                                  <strong>{t("movie_filter_title")}</strong>
-                                  {movieFiltersActive ? <button type="button" onClick={() => { setMovieFilterQuery(""); setMovieFilterGenres([]); }}>{t("movie_filter_clear")}</button> : null}
-                                </div>
-                                <label className="movie-filter__search">
-                                  <span>{t("movie_filter_search")}</span>
-                                  <input type="search" value={movieFilterQuery} onChange={(event) => setMovieFilterQuery(event.target.value)} placeholder={t("movie_filter_search_placeholder")} autoFocus />
-                                </label>
-                                <fieldset className="movie-filter__categories">
-                                  <legend>{t("movie_filter_categories")}</legend>
-                                  <div>
-                                    {availableMovieGenres.map((genre) => (
-                                      <label key={genre}>
-                                        <input type="checkbox" checked={movieFilterGenres.includes(genre)} onChange={() => setMovieFilterGenres((current) => current.includes(genre) ? current.filter((item) => item !== genre) : [...current, genre])} />
-                                        <span>{genre}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                </fieldset>
-                                {!filteredMovieOptions.length ? <p className="movie-filter__empty">{t("movie_filter_no_results")}</p> : null}
-                              </section>
-                            ) : null}
                           </>
                         ) : null}
                       </div>
@@ -7817,6 +7832,31 @@ export default function App() {
                     </button>
                   </div>
                 </header>
+
+                {isMoviesMode && movieOptions.length && movieFilterOpen ? (
+                  <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
+                    <div className="movie-filter__heading">
+                      <strong>{t("movie_filter_title")}</strong>
+                      {movieFiltersActive ? <button type="button" onClick={() => { setMovieFilterQuery(""); setMovieFilterGenres([]); }}>{t("movie_filter_clear")}</button> : null}
+                    </div>
+                    <label className="movie-filter__search">
+                      <span>{t("movie_filter_search")}</span>
+                      <input type="search" value={movieFilterQuery} onChange={(event) => setMovieFilterQuery(event.target.value)} placeholder={t("movie_filter_search_placeholder")} autoFocus />
+                    </label>
+                    <fieldset className="movie-filter__categories">
+                      <legend>{t("movie_filter_categories")}</legend>
+                      <div>
+                        {availableMovieGenres.map((genre) => (
+                          <label key={genre}>
+                            <input type="checkbox" checked={movieFilterGenres.includes(genre)} onChange={() => setMovieFilterGenres((current) => current.includes(genre) ? current.filter((item) => item !== genre) : [...current, genre])} />
+                            <span>{genre}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    {!filteredMovieOptions.length ? <p className="movie-filter__empty">{t("movie_filter_no_results")}</p> : null}
+                  </section>
+                ) : null}
 
                 {isBooksMode ? (
                   <BooksLibrary
@@ -8105,20 +8145,7 @@ export default function App() {
                             selectedMovie.voteAverage > 0 ? (
                               <div className="movie-panel__rating">
                                 <span>{selectedMovie.voteAverage.toFixed(1)} / 10</span>
-                                <span
-                                  className="movie-panel__stars"
-                                  role="img"
-                                  aria-label={`${selectedMovie.voteAverage.toFixed(1)} / 10`}
-                                  style={{
-                                    "--rating-percent": `${Math.min(
-                                      100,
-                                      Math.max(0, selectedMovie.voteAverage * 10)
-                                    )}%`,
-                                  }}
-                                >
-                                  <span className="movie-panel__stars-empty" aria-hidden="true">★★★★★</span>
-                                  <span className="movie-panel__stars-filled" aria-hidden="true">★★★★★</span>
-                                </span>
+                                <RatingStars rating={selectedMovie.voteAverage} />
                               </div>
                             ) : (
                               <span>{t("tmdb_rating_missing")}</span>

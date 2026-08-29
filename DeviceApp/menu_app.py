@@ -1363,6 +1363,8 @@ class DeviceAppMenu:
         self.game_log_handle = None
         self.game_return_state = "games"
         self.game_current_path = ""
+        self.book_proc = None
+        self.book_current_path = ""
         self.camera_proc = None
         self.camera_log_handle = None
         self.refresh_translated_state_texts()
@@ -2766,17 +2768,59 @@ class DeviceAppMenu:
 
     def open_book_path(self, full_path):
         extension = os.path.splitext(full_path)[1].lower()
-        preferred = [["ebook-viewer", full_path]] if extension == ".epub" else [["mupdf", full_path]]
-        commands = preferred + [["xdg-open", full_path]]
+        if DESKTOP_PREVIEW and sys.platform == "darwin":
+            commands = [["open", full_path]]
+        elif extension == ".epub":
+            commands = [["ebook-viewer", full_path], ["foliate", full_path], ["calibre", full_path]]
+        elif extension == ".cbr":
+            commands = [["mcomix", full_path], ["comic-reader", full_path]]
+        elif extension == ".cbz":
+            commands = [["mupdf", full_path], ["mupdf-gl", full_path], ["mcomix", full_path]]
+        else:
+            commands = [
+                ["mupdf", full_path],
+                ["mupdf-gl", full_path],
+                ["zathura", full_path],
+                ["evince", "--fullscreen", full_path],
+            ]
+        commands.append(["xdg-open", full_path])
         for command in commands:
             if shutil.which(command[0]):
                 try:
-                    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    self.suspend_display_for_external_app("book")
+                    book_env = os.environ.copy()
+                    for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
+                        book_env.pop(env_key, None)
+                    self.book_proc = subprocess.Popen(
+                        command,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        env=book_env,
+                    )
+                    self.book_current_path = full_path
                     self.browser_status = os.path.basename(full_path)
+                    self.state = "book"
+                    log_debug(f"BOOK reader started command={command[0]} file={full_path}")
                     return
                 except Exception as exc:
                     log_debug(f"BOOK reader failed command={command[0]} error={exc}")
+                    self.book_proc = None
+                    self.book_current_path = ""
+                    if self.display_suspended:
+                        self.resume_display_after_external_app("book")
         self.browser_status = "No book reader installed"
+
+    def update_book_state(self):
+        if self.state != "book" or not self.book_proc or self.book_proc.poll() is None:
+            return
+        return_code = self.book_proc.returncode
+        log_debug(f"BOOK reader exited returncode={return_code} file={self.book_current_path}")
+        self.book_proc = None
+        self.book_current_path = ""
+        if self.display_suspended:
+            self.resume_display_after_external_app("book")
+        self.refresh_browser_entries()
+        self.state = "browse"
 
     def handle_video_touch_down(self, pos):
         if self.video_backend == "kodi":
@@ -5038,6 +5082,8 @@ class DeviceAppMenu:
             self.draw_games()
         elif self.state == "game":
             return
+        elif self.state == "book":
+            return
         elif self.state == "network":
             self.draw_network()
         elif self.state == "wifi":
@@ -5057,6 +5103,7 @@ class DeviceAppMenu:
             self.update_video_state()
             self.update_game_state()
             self.update_camera_state()
+            self.update_book_state()
             self.poll_external_settings()
             self.poll_menu_command()
             self.update_clock_alarms()

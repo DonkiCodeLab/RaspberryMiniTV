@@ -40,7 +40,7 @@ Al arrancar `menu_app.py`:
 Comportamiento actual del touch:
 
 - menú principal, botón Cámara: abre la vista en directo de la Camera Module con autofoco continuo; un doble toque vuelve al menú.
-- menú principal, botón Book reader: abre una pantalla inicial preparada para el futuro lector de cómics.
+- menú principal, botón Book reader: muestra la biblioteca y, al seleccionar un libro, abre un visor a pantalla completa; al cerrar el visor vuelve a la biblioteca.
 - menú principal, botón Configuración: abre Idioma, Password y Red en la fila superior, con Apagar centrado debajo.
 - configuración, botón Red: muestra los estados de Ethernet y Wi-Fi, con un QR para cada IP disponible.
 - cada QR de red apunta al servicio web en `http://IP_DE_LA_RASPBERRY:5050/`.
@@ -154,6 +154,13 @@ Para esta nueva arquitectura, instala al menos:
 ```bash
 sudo apt update
 sudo apt install -y python3-flask python3-pygame python3-rpi.gpio python3-evdev qrencode network-manager wireless-tools wpasupplicant
+```
+
+Para abrir libros desde el menú instala también los visores. MuPDF cubre PDF y CBZ,
+Calibre aporta el lector EPUB y MComix permite abrir CBR:
+
+```bash
+sudo apt install -y mupdf calibre mcomix
 ```
 
 Si quieres comparar reproductores en la Raspberry Pi Zero 2:
