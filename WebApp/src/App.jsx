@@ -2401,7 +2401,7 @@ function EpisodeDetailsModal({
                 type="button"
                 disabled={playing || !available}
               >
-                <span className="playback-action__play-icon" aria-hidden="true">▶</span>
+                <span className="playback-action__play-icon playback-action__play-icon--light" aria-hidden="true">▶</span>
                 <span>{available ? (playing ? t("playing_now") : t("play_on_tv")) : t("unavailable_episode")}</span>
               </button>
               <button
@@ -2410,7 +2410,7 @@ function EpisodeDetailsModal({
                 type="button"
                 disabled={!available}
               >
-                <span className="episode-dialog__browser-icon" aria-hidden="true">▶</span>
+                <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                 <span>{available ? t("play_in_browser") : t("unavailable_episode")}</span>
               </button>
               <button
@@ -2419,7 +2419,7 @@ function EpisodeDetailsModal({
                 type="button"
                 disabled={playing || !available}
               >
-                <span className="episode-dialog__browser-icon" aria-hidden="true">▶</span>
+                <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                 <span>{available ? t("play_on_external_monitor") : t("unavailable_episode")}</span>
               </button>
             </div>
@@ -8152,7 +8152,7 @@ export default function App() {
                         type="button"
                         disabled={moviePlaying}
                       >
-                        <span className="playback-action__play-icon" aria-hidden="true">▶</span>
+                        <span className="playback-action__play-icon playback-action__play-icon--light" aria-hidden="true">▶</span>
                         <span>{moviePlaying ? t("playing_now") : t("play_on_tv")}</span>
                       </button>
                       <button
@@ -8160,7 +8160,7 @@ export default function App() {
                         onClick={handlePlayMovieInBrowser}
                         type="button"
                       >
-                        <span aria-hidden="true">▶</span>
+                        <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                         <span>{t("play_in_browser")}</span>
                       </button>
                       <button
@@ -8169,7 +8169,7 @@ export default function App() {
                         type="button"
                         disabled={moviePlaying}
                       >
-                        <span aria-hidden="true">▶</span>
+                        <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                         <span>{t("play_on_external_monitor")}</span>
                       </button>
 

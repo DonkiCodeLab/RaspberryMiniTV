@@ -1346,6 +1346,7 @@ class DeviceAppMenu:
         }
         self.loading_video_path = None
         self.loading_video_output = "minitv"
+        self.video_output = "minitv"
         self.loading_video_start_seconds = 0.0
         self.loading_return_state = "play"
         self.loading_started_at = 0
@@ -2909,7 +2910,18 @@ class DeviceAppMenu:
         alsa_device = get_alsa_device()
         if alsa_device.lower() not in ("", "auto", "default"):
             command.append(f"--audio-device=alsa/{alsa_device}")
-        if output == "external":
+        if os.environ.get("WAYLAND_DISPLAY"):
+            # MPV enumerates Weston's outputs in the opposite order to SDL/Pygame.
+            screen_index = 0 if output == "external" else 1
+            command.extend(
+                [
+                    "--vo=gpu-next",
+                    "--gpu-context=wayland",
+                    f"--screen={screen_index}",
+                    f"--fs-screen={screen_index}",
+                ]
+            )
+        elif output == "external":
             external_connector = os.environ.get(
                 "MINITV_EXTERNAL_DRM_CONNECTOR", "HDMI-A-2"
             ).strip() or "HDMI-A-2"
@@ -3140,8 +3152,10 @@ class DeviceAppMenu:
         if pygame.time.get_ticks() - self.loading_started_at < LOADING_MIN_DURATION_MS:
             return
         self.video_return_state = self.loading_return_state
+        using_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
         use_kodi = (
             self.loading_video_output != "external"
+            and not using_wayland
             and not DESKTOP_PREVIEW
             and self.kodi_is_available()
         )
@@ -3162,7 +3176,10 @@ class DeviceAppMenu:
             append_debug_log(debug_log_path, f"Launching mpv: {' '.join(command)}")
         self.close_video_log_handle()
         try:
-            self.suspend_display_for_video()
+            if not using_wayland:
+                self.suspend_display_for_video()
+            else:
+                self.suspend_audio_for_external_app("video")
             player_env = os.environ.copy()
             for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
                 player_env.pop(env_key, None)
@@ -3181,7 +3198,10 @@ class DeviceAppMenu:
             append_debug_log(debug_log_path, f"Failed to launch {self.video_backend}: {exc}")
             log_debug(f"VIDEO failed to launch {self.video_backend}: {exc}")
             self.close_video_log_handle()
-            self.resume_display_after_video()
+            if not using_wayland:
+                self.resume_display_after_video()
+            else:
+                self.resume_audio_after_external_app("video")
             self.video_proc = None
             self.loading_video_path = None
             self.loading_video_start_seconds = 0.0
@@ -3206,18 +3226,19 @@ class DeviceAppMenu:
             clear_playback_state()
             self.state = self.video_return_state
             return
+        self.video_output = self.loading_video_output
         self.loading_video_path = None
         self.loading_video_output = "minitv"
         self.loading_video_start_seconds = 0.0
         write_playback_state(self.video_current_path)
         self.reset_external_touch_sequence()
-        self.state = "video"
+        self.state = "external_video" if self.video_output == "external" else "video"
 
     def update_video_state(self):
         if self.state == "loading_video":
             self.maybe_start_pending_video()
             return
-        if self.state == "video" and self.video_proc and self.video_proc.poll() is not None:
+        if self.state in ("video", "external_video") and self.video_proc and self.video_proc.poll() is not None:
             return_code = self.video_proc.returncode
             debug_log_path = KODI_DEBUG_LOG_PATH if self.video_backend == "kodi" else MPV_DEBUG_LOG_PATH
             append_debug_log(debug_log_path, f"{self.video_backend} exited with return code {return_code}")
@@ -3844,6 +3865,13 @@ class DeviceAppMenu:
     def handle_touch_down(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
         self.touch_down_pos = normalized_pos
+        if self.state == "external_video":
+            self.pressed_button = (
+                "external-video-stop"
+                if self.get_external_video_stop_rect().collidepoint(normalized_pos)
+                else None
+            )
+            return
         if self.state == "reader":
             self.pressed_button = "top-back" if self.top_back_at_pos(normalized_pos) else None
             return
@@ -3923,6 +3951,16 @@ class DeviceAppMenu:
 
     def handle_touch_up(self, pos):
         normalized_pos = self.normalize_touch_pos(pos)
+        if self.state == "external_video":
+            should_stop = (
+                self.pressed_button == "external-video-stop"
+                and self.get_external_video_stop_rect().collidepoint(normalized_pos)
+            )
+            self.pressed_button = None
+            if should_stop:
+                self.play_ui_click_sound()
+                self.stop_video_playback()
+            return
         if self.state == "reader":
             active_button = self.pressed_button
             self.pressed_button = None
@@ -4164,6 +4202,21 @@ class DeviceAppMenu:
             surface = self.font.render(line, True, (210, 210, 210))
             rect = surface.get_rect(center=(self.width // 2, first_line_y + (index * line_gap)))
             self.screen.blit(surface, rect)
+
+    def get_external_video_stop_rect(self):
+        return pygame.Rect(70, self.height - 92, self.width - 140, 64)
+
+    def draw_external_video(self):
+        self.draw_clock()
+        rect = self.get_external_video_stop_rect()
+        pressed = self.pressed_button == "external-video-stop"
+        pygame.draw.rect(self.screen, (190, 48, 42) if pressed else (125, 42, 40), rect, border_radius=18)
+        pygame.draw.rect(self.screen, WHITE, rect, 2, border_radius=18)
+        label = self.play_label_font.render("Finalizar reproducción en monitor externo", True, WHITE)
+        if label.get_width() > rect.width - 30:
+            ratio = (rect.width - 30) / label.get_width()
+            label = pygame.transform.smoothscale(label, (rect.width - 30, max(1, int(label.get_height() * ratio))))
+        self.screen.blit(label, label.get_rect(center=rect.center))
 
     def draw_network(self):
         layout = self.get_network_layout()
@@ -5095,6 +5148,8 @@ class DeviceAppMenu:
             self.draw_loading_video()
         elif self.state == "video":
             return
+        elif self.state == "external_video":
+            self.draw_external_video()
         elif self.state == "camera":
             return
         elif self.state == "video_preview":

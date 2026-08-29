@@ -166,7 +166,7 @@ sudo apt install -y mupdf calibre mcomix
 Si quieres comparar reproductores en la Raspberry Pi Zero 2:
 
 ```bash
-sudo apt install -y mpv vlc
+sudo apt install -y mpv vlc weston
 chmod +x DeviceApp/test_players.sh
 ```
 

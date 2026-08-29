@@ -4,12 +4,12 @@ After=network.target minitv-api.service
 Wants=minitv-api.service
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
 User=root
 WorkingDirectory=__DEVICE_APP_DIR__
 ExecStart=/bin/bash __DEVICE_APP_DIR__/start_menu.sh
-ExecStop=/usr/bin/pkill -f __DEVICE_APP_DIR__/menu_app.py
+KillMode=control-group
+TimeoutStopSec=10
 Environment=PYTHONUNBUFFERED=1
 Environment=MINITV_REPO_DIR=__REPO_DIR__
 StandardOutput=journal

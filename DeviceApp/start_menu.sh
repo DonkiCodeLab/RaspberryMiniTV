@@ -27,6 +27,8 @@ export XDG_RUNTIME_DIR=/tmp/minitv-xdg-runtime
 mkdir -p "${XDG_RUNTIME_DIR}"
 chmod 700 "${XDG_RUNTIME_DIR}" >/dev/null 2>&1 || true
 
-pkill -f "python3 ${SCRIPT_DIR}/menu_app.py" >/dev/null 2>&1 || true
-
-nohup /usr/bin/python3 "${SCRIPT_DIR}/menu_app.py" >>"${LOG_FILE}" 2>&1 &
+if command -v weston >/dev/null 2>&1; then
+  exec /bin/bash "${SCRIPT_DIR}/start_display_session.sh"
+else
+  exec /usr/bin/python3 "${SCRIPT_DIR}/menu_app.py"
+fi
