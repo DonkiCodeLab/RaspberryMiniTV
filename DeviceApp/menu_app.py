@@ -2630,12 +2630,6 @@ class DeviceAppMenu:
             "--fullscreen",
             "--autofocus-mode", "continuous",
         ]
-        if os.environ.get("WAYLAND_DISPLAY"):
-            # Weston owns DRM while the dual-monitor session is running.  If
-            # rpicam auto-selects its DRM preview it cannot become DRM master,
-            # so no camera image is displayed.  Keep the preview inside the
-            # compositor, on the same (primary/MiniTV) output as the menu.
-            command.extend(["--preview-backend", "wayland-egl"])
         try:
             self.suspend_display_for_external_app("camera")
             camera_env = os.environ.copy()
