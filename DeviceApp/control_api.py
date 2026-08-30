@@ -12,6 +12,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 import datetime
+import hashlib
 
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
@@ -58,6 +59,7 @@ ALARM_SOUND_EXTENSIONS = {".mp3"}
 GAME_ROM_EXTENSIONS = {".gb", ".gbc", ".gba"}
 GAME_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 BOOK_EXTENSIONS = {".pdf", ".epub", ".cbz", ".cbr"}
+BOOK_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 GAME_PLATFORM_BY_EXTENSION = {
     ".gb": {"id": "gameboy", "name": "Game Boy", "screenScraperSystemId": 9},
     ".gbc": {"id": "gameboy_color", "name": "Game Boy Color", "screenScraperSystemId": 10},
@@ -846,6 +848,7 @@ def require_web_pin():
         request.path in {"/web/auth", "/ip", "/favicon.ico"}
         or request.path.startswith("/alarm-sounds")
         or request.path.startswith("/game-covers")
+        or request.path.startswith("/book-covers")
         or is_public_frontend_request()
     ):
         return None
@@ -1891,7 +1894,12 @@ def delete_book():
         return jsonify({"error": "Book not found"}), 404
     os.remove(target_path)
     library = load_media_library()
-    library.setdefault("books", {}).pop(relative_path, None)
+    previous = library.setdefault("books", {}).pop(relative_path, None)
+    previous_cover = str(previous.get("coverUrl") or "") if isinstance(previous, dict) else ""
+    if previous_cover.startswith("/book-covers/"):
+        cover_path = os.path.join(BOOK_COVERS_DIR, os.path.basename(urllib.parse.unquote(previous_cover.split("/book-covers/", 1)[1])))
+        if os.path.isfile(cover_path):
+            os.remove(cover_path)
     save_media_library(library)
     parent = os.path.dirname(target_path)
     while parent != BOOKS_DIR and os.path.isdir(parent) and not os.listdir(parent):
@@ -1902,24 +1910,42 @@ def delete_book():
 
 @app.route("/books/profile", methods=["POST"])
 def save_book_profile():
-    data = request.get_json(silent=True) or {}
+    data = request.form if request.form else (request.get_json(silent=True) or {})
     relative_path = str(data.get("relativePath") or "").strip()
     target_path = resolve_book_path(relative_path)
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
+    cover_url = str(data.get("coverUrl") or "").strip()
+    uploaded_cover = request.files.get("coverFile")
+    if uploaded_cover and uploaded_cover.filename:
+        extension = os.path.splitext(uploaded_cover.filename)[1].lower()
+        if extension not in BOOK_COVER_EXTENSIONS:
+            return jsonify({"error": "Unsupported cover image"}), 400
+        os.makedirs(BOOK_COVERS_DIR, exist_ok=True)
+        cover_name = f"manual-{hashlib.sha256(relative_path.encode('utf-8')).hexdigest()[:24]}{extension}"
+        uploaded_cover.save(os.path.join(BOOK_COVERS_DIR, cover_name))
+        cover_url = f"/book-covers/{urllib.parse.quote(cover_name)}"
     item = {
         "title": str(data.get("title") or os.path.splitext(os.path.basename(target_path))[0]).strip(),
         "author": str(data.get("author") or "").strip(),
         "year": str(data.get("year") or "").strip(),
         "isbn": str(data.get("isbn") or "").strip(),
         "description": str(data.get("description") or "").strip(),
-        "coverUrl": str(data.get("coverUrl") or "").strip(),
+        "coverUrl": cover_url,
         "openLibraryKey": str(data.get("openLibraryKey") or "").strip(),
     }
     library = load_media_library()
     library.setdefault("books", {})[relative_path] = item
     save_media_library(library)
     return jsonify({"ok": True, "item": {**item, "relativePath": relative_path}})
+
+
+@app.route("/book-covers/<path:filename>", methods=["GET"])
+def custom_book_cover(filename):
+    safe_filename = os.path.basename(urllib.parse.unquote(filename))
+    if safe_filename != urllib.parse.unquote(filename):
+        return jsonify({"error": "Invalid cover filename"}), 400
+    return send_from_directory(BOOK_COVERS_DIR, safe_filename, conditional=True)
 
 
 @app.route("/books/search", methods=["GET"])

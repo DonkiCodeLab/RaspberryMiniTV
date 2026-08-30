@@ -36,9 +36,9 @@ if [[ -f "${WEB_DIR}/package.json" ]]; then
 
   log "Preparando y compilando la web"
   cd "${WEB_DIR}"
-  if [[ ! -d node_modules ]]; then
-    npm ci
-  fi
+  # package-lock.json no forma parte del repositorio; sincronizar siempre las
+  # dependencias declaradas para que las actualizaciones puedan añadir paquetes.
+  npm install
   npm run build
   cd "${SCRIPT_DIR}"
 fi

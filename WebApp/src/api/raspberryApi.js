@@ -1235,7 +1235,12 @@ export function searchBookMetadata(query, language = "es") {
 }
 
 export function saveBookMetadata(profile) {
-  return request("/books/profile", { method: "POST", body: JSON.stringify(profile || {}) });
+  const form = new FormData();
+  Object.entries(profile || {}).forEach(([key, value]) => {
+    if (key !== "coverFile" && value !== undefined && value !== null) form.append(key, String(value));
+  });
+  if (profile?.coverFile instanceof File) form.append("coverFile", profile.coverFile);
+  return request("/books/profile", { method: "POST", body: form });
 }
 
 export async function captureCameraImage() {

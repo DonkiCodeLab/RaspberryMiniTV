@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
 import cloudsBackground from "./assets/cloud.gif";
@@ -44,6 +46,8 @@ import tvGreen from "./assets/tele_green_2_fixed.png";
 import uploadDropzoneWhite from "./assets/upload_drag&drop_zone_white.png";
 import uploadDropzoneYellow from "./assets/upload_drag&drop_zone_yellow.png";
 import raspberryIntroVideo from "../../DeviceApp/menu/video_intro.mp4";
+
+GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 import {
   addSeries,
   authWebPin,
@@ -5239,8 +5243,8 @@ function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpe
                 </div>
                 <div className="books-library__card-actions">
                   <button className="dialog-button dialog-button--accent" onClick={() => onOpen(book)} type="button">Abrir</button>
-                  <button className="dialog-button dialog-button--ghost" onClick={() => onEdit(book)} type="button">Ficha</button>
-                  <button className="dialog-button dialog-button--danger" onClick={() => onDelete(book)} type="button">Eliminar</button>
+                  <button className="dialog-button dialog-button--ghost" onClick={() => onEdit(book)} type="button">Customizar</button>
+                  <button className="books-library__delete" onClick={() => onDelete(book)} type="button" aria-label={`Eliminar ${book.name}`} title="Eliminar"><img src={deleteIcon} alt="" /></button>
                 </div>
               </article>
             ))}
@@ -5250,12 +5254,14 @@ function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpe
   );
 }
 
-function BookMetadataModal({ book, language, onClose, onSave }) {
+function BookMetadataModal({ book, language, onClose, onSave, onDelete }) {
   const [form, setForm] = useState({});
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState("");
 
   useEffect(() => {
     if (!book) return;
@@ -5263,7 +5269,15 @@ function BookMetadataModal({ book, language, onClose, onSave }) {
     setQuery(book.name || "");
     setResults([]);
     setError("");
+    setCoverFile(null);
   }, [book]);
+
+  useEffect(() => {
+    if (!coverFile) { setCoverPreview(""); return undefined; }
+    const preview = URL.createObjectURL(coverFile);
+    setCoverPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [coverFile]);
 
   if (!book) return null;
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
@@ -5283,7 +5297,7 @@ function BookMetadataModal({ book, language, onClose, onSave }) {
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div className="dialog-card book-metadata" onClick={(event) => event.stopPropagation()}>
-        <div className="dialog-card__header"><div><p>Open Library</p><h2>Ficha del libro</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
+        <div className="dialog-card__header"><div><p>Biblioteca</p><h2>Customizar libro</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
         <div className="book-metadata__body">
           <section className="book-metadata__lookup">
             <label className="dialog-field"><span>Buscar por título, autor o ISBN</span><div className="book-metadata__search"><input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleSearch(); } }} /><button className="dialog-button dialog-button--accent" onClick={handleSearch} disabled={busy === "search"} type="button">{busy === "search" ? "Buscando…" : "Buscar"}</button></div></label>
@@ -5292,28 +5306,61 @@ function BookMetadataModal({ book, language, onClose, onSave }) {
             <div className="book-metadata__results">{results.map((result) => <button key={`${result.openLibraryKey}-${result.isbn}`} onClick={() => setForm((current) => ({ ...current, ...result }))} type="button">{result.coverUrl ? <img src={result.coverUrl} alt="" /> : <span>📖</span>}<span><strong>{result.title}</strong><small>{result.author || "Autor desconocido"}{result.year ? ` · ${result.year}` : ""}</small></span></button>)}</div>
           </section>
           <section className="book-metadata__form">
-            {form.coverUrl ? <img className="book-metadata__preview" src={form.coverUrl} alt="Portada seleccionada" /> : null}
+            {coverPreview || form.coverUrl ? <img className="book-metadata__preview" src={coverPreview || form.coverUrl} alt="Portada seleccionada" /> : null}
             <label className="dialog-field"><span>Título</span><input value={form.title || ""} onChange={(event) => update("title", event.target.value)} /></label>
             <label className="dialog-field"><span>Autor</span><input value={form.author || ""} onChange={(event) => update("author", event.target.value)} /></label>
             <div className="book-metadata__row"><label className="dialog-field"><span>Año</span><input value={form.year || ""} onChange={(event) => update("year", event.target.value)} /></label><label className="dialog-field"><span>ISBN</span><input value={form.isbn || ""} onChange={(event) => update("isbn", event.target.value)} /></label></div>
             <label className="dialog-field"><span>URL de portada</span><input type="url" value={form.coverUrl || ""} onChange={(event) => update("coverUrl", event.target.value)} /></label>
+            <label className="dialog-field book-metadata__file"><span>Portada manual desde el equipo</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile ? coverFile.name : "La imagen elegida sustituirá la portada automática de Donkicode Lab."}</small></label>
             <label className="dialog-field"><span>Descripción</span><textarea value={form.description || ""} onChange={(event) => update("description", event.target.value)} rows="5" /></label>
           </section>
         </div>
-        <div className="book-metadata__footer"><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy === "save" || !String(form.title || "").trim()} onClick={async () => { try { setBusy("save"); setError(""); await onSave({ ...form, relativePath: book.relativePath }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la ficha."); } finally { setBusy(""); } }} type="button">{busy === "save" ? "Guardando…" : "Guardar ficha"}</button></div>
+        <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(book)} type="button">Borrar libro completo</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy === "save" || !String(form.title || "").trim()} onClick={async () => { try { setBusy("save"); setError(""); await onSave({ ...form, coverFile, relativePath: book.relativePath }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la ficha."); } finally { setBusy(""); } }} type="button">{busy === "save" ? "Guardando…" : "Guardar cambios"}</button></div>
       </div>
     </div>, document.body
   );
 }
 
 function BookReader({ book, onClose }) {
+  const canvasRef = useRef(null);
+  const renderTaskRef = useRef(null);
+  const [pdf, setPdf] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [zoom, setZoom] = useState(1);
+  const [readerError, setReaderError] = useState("");
+  const source = book ? getBookContentUrl(book.relativePath) : "";
+
+  useEffect(() => {
+    if (!book || book.format !== "pdf") { setPdf(null); return undefined; }
+    let cancelled = false;
+    setPageNumber(1); setZoom(1); setReaderError("");
+    const task = getDocument(source);
+    task.promise.then((document) => { if (!cancelled) setPdf(document); }).catch(() => { if (!cancelled) setReaderError("No se pudo cargar este PDF."); });
+    return () => { cancelled = true; task.destroy(); };
+  }, [source, book?.format]);
+
+  useEffect(() => {
+    if (!pdf || !canvasRef.current) return undefined;
+    let cancelled = false;
+    pdf.getPage(pageNumber).then((page) => {
+      if (cancelled || !canvasRef.current) return;
+      const viewport = page.getViewport({ scale: 1.45 * zoom });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+      canvas.width = viewport.width; canvas.height = viewport.height;
+      renderTaskRef.current?.cancel();
+      renderTaskRef.current = page.render({ canvasContext: context, viewport });
+      return renderTaskRef.current.promise;
+    }).catch((error) => { if (!cancelled && error?.name !== "RenderingCancelledException") setReaderError("No se pudo mostrar esta página."); });
+    return () => { cancelled = true; renderTaskRef.current?.cancel(); };
+  }, [pdf, pageNumber, zoom]);
+
   if (!book) return null;
-  const source = getBookContentUrl(book.relativePath);
   return createPortal(
     <div className="book-reader" role="dialog" aria-modal="true" aria-label={book.name}>
-      <header><strong>{book.name}</strong><button onClick={onClose} type="button" aria-label="Cerrar lector">×</button></header>
+      <header><strong>{book.name}</strong><div className="book-reader__controls"><button onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={!pdf || pageNumber <= 1} type="button" aria-label="Página anterior">‹</button><span>Página {pageNumber} de {pdf?.numPages || "…"}</span><button onClick={() => setPageNumber((page) => Math.min(pdf?.numPages || page, page + 1))} disabled={!pdf || pageNumber >= pdf.numPages} type="button" aria-label="Página siguiente">›</button><button onClick={() => setZoom((value) => Math.max(.6, value - .2))} type="button" aria-label="Reducir zoom">−</button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(3, value + .2))} type="button" aria-label="Aumentar zoom">+</button><button className="book-reader__close" onClick={onClose} type="button" aria-label="Cerrar lector">×</button></div></header>
       {book.format === "pdf" ? (
-        <iframe src={source} title={book.name} />
+        <div className="book-reader__page">{readerError ? <p className="book-reader__error">{readerError}</p> : null}<canvas ref={canvasRef} aria-label={`Página ${pageNumber}`} /></div>
       ) : (
         <div className="book-reader__fallback">
           <span>📚</span><h2>{book.name}</h2>
@@ -7434,6 +7481,18 @@ export default function App() {
   }, [movieFilterGenres, movieFilterQuery, movieOptions]);
   const selectorOptions = isGamesMode ? gameLibrary : isMoviesMode ? filteredMovieOptions : seriesOptions;
   const movieFiltersActive = Boolean(movieFilterQuery.trim() || movieFilterGenres.length);
+  const formatBookCollectionLabel = (collection) => {
+    if (!collection) return t("media_books");
+    const count = collection.books.length;
+    const language = normalizeRaspberryLanguage(raspberryLanguage);
+    const countLabel = language === "ca"
+      ? `${count} ${count === 1 ? "llibre" : "llibres"}`
+      : language === "en"
+        ? `${count} ${count === 1 ? "book" : "books"}`
+        : `${count} ${count === 1 ? "libro" : "libros"}`;
+    return `${collection.label} · ${countLabel}`;
+  };
+  const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
   const selectorValue = isBooksMode
     ? selectedBookCollection
     : isGamesMode
@@ -7442,7 +7501,7 @@ export default function App() {
     ? String(selectedMovie?.id || "")
     : selectedSeries?.directoryPath || "";
   const selectorLabel = isBooksMode
-    ? bookCollections.find((collection) => collection.key === selectedBookCollection)?.label || t("media_books")
+    ? formatBookCollectionLabel(activeBookCollection)
     : isGamesMode
     ? t("select_type")
     : isMoviesMode
@@ -7450,7 +7509,11 @@ export default function App() {
       : t("select_series");
   const isLibraryEmpty = !selectedItem && !isGamesMode && !isBooksMode;
   const heroSelectorOptions = isBooksMode
-    ? bookCollections.map((collection) => ({ key: collection.key, value: collection.key, label: collection.label }))
+    ? bookCollections.map((collection) => ({
+        key: collection.key,
+        value: collection.key,
+        label: formatBookCollectionLabel(collection),
+      }))
     : isGamesMode
     ? gameLibrary.map((game) => ({
         key: game.relativePath || game.file,
@@ -8365,6 +8428,7 @@ export default function App() {
               language={normalizeRaspberryLanguage(raspberryLanguage)}
               onClose={() => setBookMetadataTarget(null)}
               onSave={handleSaveBookMetadata}
+              onDelete={(book) => { setBookMetadataTarget(null); handleDeleteBook(book); }}
             />
             <DeleteConfirmModal
               confirmation={deleteConfirmation}
