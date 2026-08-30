@@ -2630,11 +2630,18 @@ class DeviceAppMenu:
             "--fullscreen",
             "--autofocus-mode", "continuous",
         ]
+        if os.environ.get("WAYLAND_DISPLAY"):
+            # Weston owns DRM while the dual-monitor session is running.  If
+            # rpicam auto-selects its DRM preview it cannot become DRM master,
+            # so no camera image is displayed.  Keep the preview inside the
+            # compositor, on the same (primary/MiniTV) output as the menu.
+            command.extend(["--preview-backend", "wayland-egl"])
         try:
             self.suspend_display_for_external_app("camera")
             camera_env = os.environ.copy()
             for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
                 camera_env.pop(env_key, None)
+            append_debug_log(CAMERA_DEBUG_LOG_PATH, f"Launching camera: {' '.join(command)}")
             self.camera_log_handle = open(CAMERA_DEBUG_LOG_PATH, "a", encoding="utf-8")
             self.camera_proc = subprocess.Popen(
                 command,
@@ -2782,22 +2789,24 @@ class DeviceAppMenu:
 
     def open_book_path(self, full_path):
         extension = os.path.splitext(full_path)[1].lower()
+        using_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
         if DESKTOP_PREVIEW and sys.platform == "darwin":
             commands = [["open", full_path]]
         elif extension == ".epub":
-            commands = [["ebook-viewer", full_path], ["foliate", full_path], ["calibre", full_path]]
+            commands = [["foliate", full_path], ["ebook-viewer", full_path], ["calibre", full_path]]
         elif extension == ".cbr":
             commands = [["mcomix", full_path], ["comic-reader", full_path]]
         elif extension == ".cbz":
-            commands = [["mupdf", full_path], ["mupdf-gl", full_path], ["mcomix", full_path]]
+            commands = [["mupdf-gl", full_path], ["mupdf", full_path], ["mcomix", full_path]]
         else:
             commands = [
-                ["mupdf", full_path],
-                ["mupdf-gl", full_path],
-                ["zathura", full_path],
                 ["evince", "--fullscreen", full_path],
+                ["zathura", "--mode=fullscreen", full_path],
+                ["mupdf-gl", full_path],
+                ["mupdf", full_path],
             ]
-        commands.append(["xdg-open", full_path])
+        if not using_wayland:
+            commands.append(["xdg-open", full_path])
         for command in commands:
             if shutil.which(command[0]):
                 try:
@@ -2805,12 +2814,26 @@ class DeviceAppMenu:
                     book_env = os.environ.copy()
                     for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
                         book_env.pop(env_key, None)
-                    self.book_proc = subprocess.Popen(
+                    if using_wayland:
+                        book_env.setdefault("GDK_BACKEND", "wayland")
+                        book_env.setdefault("QT_QPA_PLATFORM", "wayland")
+                    candidate_proc = subprocess.Popen(
                         command,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                         env=book_env,
                     )
+                    try:
+                        candidate_proc.wait(timeout=0.8)
+                    except subprocess.TimeoutExpired:
+                        pass
+                    if candidate_proc.poll() is not None:
+                        log_debug(
+                            f"BOOK reader exited during startup command={command[0]} "
+                            f"returncode={candidate_proc.returncode} file={full_path}"
+                        )
+                        continue
+                    self.book_proc = candidate_proc
                     self.book_current_path = full_path
                     self.browser_status = os.path.basename(full_path)
                     self.state = "book"
@@ -2822,6 +2845,8 @@ class DeviceAppMenu:
                     self.book_current_path = ""
                     if self.display_suspended:
                         self.resume_display_after_external_app("book")
+        if self.display_suspended:
+            self.resume_display_after_external_app("book")
         self.browser_status = "No book reader installed"
 
     def update_book_state(self):

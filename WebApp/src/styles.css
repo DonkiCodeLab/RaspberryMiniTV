@@ -3395,9 +3395,9 @@ img {
 
 .unlock-hero__video-shell--finished {
   overflow: visible;
-  border: 5px solid rgba(83, 180, 111, 0.95);
+  border: 5px solid rgba(255, 255, 255, 0.72);
   border-radius: 50%;
-  background: rgba(83, 180, 111, 0.36);
+  background: rgba(255, 255, 255, 0.36);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
@@ -5557,16 +5557,23 @@ img {
 @media (max-width: 720px) {
   .episode-dialog__delete { width: 100%; min-height: 58px; }
 }
-.books-library__toolbar { display:flex; gap:16px; margin-bottom:24px; }
-.books-library__toolbar input { flex:1; min-width:0; border:2px solid #d9dee3; border-radius:14px; padding:14px 18px; font:inherit; }
+.books-library__toolbar { display:flex; justify-content:flex-end; margin-bottom:24px; }
 .books-library__grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 220px)); justify-content:center; align-items:start; gap:22px; }
 .books-library__card { display:grid; grid-template-rows:auto auto auto; gap:12px; min-width:0; padding:12px; border:2px solid transparent; border-radius:22px; background:#fff; color:#17212b; box-shadow:0 12px 30px rgba(0,0,0,.12); }
 .books-library__card.active { border-color:#ffd429; box-shadow:0 14px 34px rgba(0,0,0,.18), 0 0 0 3px rgba(255,212,41,.2); }
-.books-library__cover-button { position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; padding:0; border-radius:14px; background:linear-gradient(145deg,#243743,#111b22); cursor:pointer; }
-.books-library__cover-image { width:100%; height:100%; object-fit:cover; }
-.books-library__cover-fallback { display:grid; position:absolute; inset:0; place-items:center; font-size:72px; }
-.books-library__cover-fallback[hidden] { display:none; }
-.books-library__cover-fallback img { width:42%; max-height:42%; object-fit:contain; }
+.books-library__cover-button { position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; padding:0; border:0; border-radius:14px; background:#17212b; cursor:pointer; box-shadow:inset 0 0 0 1px rgba(255,255,255,.15); }
+.books-library__generated-cover { position:absolute; inset:0; display:grid; overflow:hidden; background:linear-gradient(145deg,var(--book-cover-primary),var(--book-cover-secondary)); color:var(--book-cover-ink); text-align:left; }
+.books-library__generated-cover::before { content:""; position:absolute; inset:0 auto 0 0; width:10%; background:rgba(0,0,0,.2); box-shadow:4px 0 10px rgba(0,0,0,.18); }
+.books-library__generated-cover::after { content:""; position:absolute; inset:4% 5% 4% 13%; border:1px solid color-mix(in srgb,var(--book-cover-ink) 48%,transparent); border-radius:2px; pointer-events:none; }
+.books-library__generated-pattern { position:absolute; width:150%; aspect-ratio:1; right:-72%; bottom:-38%; border:22px double color-mix(in srgb,var(--book-cover-ink) 32%,transparent); border-radius:50%; transform:rotate(-18deg); }
+.books-library__generated-pattern::before,.books-library__generated-pattern::after { content:""; position:absolute; border:2px solid color-mix(in srgb,var(--book-cover-ink) 30%,transparent); border-radius:50%; }
+.books-library__generated-pattern::before { inset:13%; }
+.books-library__generated-pattern::after { inset:29%; background:color-mix(in srgb,var(--book-cover-ink) 10%,transparent); }
+.books-library__generated-copy { position:relative; z-index:1; display:flex; height:100%; box-sizing:border-box; flex-direction:column; align-items:flex-start; padding:13% 10% 11% 18%; text-shadow:0 1px 1px rgba(0,0,0,.14); }
+.books-library__generated-copy small { padding:4px 7px; border:1px solid currentColor; border-radius:999px; font-size:9px; font-weight:900; letter-spacing:.16em; text-transform:uppercase; }
+.books-library__generated-copy strong { display:-webkit-box; overflow:hidden; margin:auto 0; font-family:Georgia,"Times New Roman",serif; font-size:clamp(20px,2.1vw,29px); line-height:1.03; letter-spacing:-.025em; -webkit-box-orient:vertical; -webkit-line-clamp:5; }
+.books-library__generated-copy span { overflow:hidden; max-width:100%; padding-top:9px; border-top:1px solid currentColor; font-size:11px; font-weight:700; letter-spacing:.04em; text-overflow:ellipsis; white-space:nowrap; }
+.books-library__cover-image { position:absolute; z-index:2; inset:0; width:100%; height:100%; object-fit:cover; }
 .books-library__card-copy { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:9px; }
 .books-library__card-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .books-library__card-copy small { grid-column:2; color:#66717c; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

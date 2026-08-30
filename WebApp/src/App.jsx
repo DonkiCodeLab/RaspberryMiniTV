@@ -5166,25 +5166,62 @@ function RaspberryPage({
   );
 }
 
+const BOOK_COVER_PALETTES = [
+  ["#f2b705", "#9b3a20", "#fff4cc"],
+  ["#4d8f8b", "#173f4f", "#f0dfbd"],
+  ["#d96c75", "#682a4d", "#fff2df"],
+  ["#76964f", "#304b37", "#f8e8b6"],
+  ["#6e75b8", "#302e64", "#f5e9c9"],
+  ["#d17a3f", "#71372f", "#fff0cf"],
+];
+
+function getBookCoverPalette(book) {
+  const seed = `${book.name || ""}|${book.author || ""}|${book.relativePath || ""}`;
+  const hash = [...seed].reduce((total, character) => ((total * 31) + character.charCodeAt(0)) >>> 0, 0);
+  return BOOK_COVER_PALETTES[hash % BOOK_COVER_PALETTES.length];
+}
+
+function BookCover({ book }) {
+  const imageUrl = book.coverUrl || getBookCoverUrl(book.relativePath);
+  const [imageAvailable, setImageAvailable] = useState(true);
+  const [primary, secondary, ink] = getBookCoverPalette(book);
+
+  useEffect(() => setImageAvailable(true), [imageUrl]);
+
+  return (
+    <span
+      className="books-library__generated-cover"
+      style={{ "--book-cover-primary": primary, "--book-cover-secondary": secondary, "--book-cover-ink": ink }}
+      aria-label={`Portada de ${book.name}`}
+      role="img"
+    >
+      <span className="books-library__generated-pattern" aria-hidden="true" />
+      <span className="books-library__generated-copy" aria-hidden="true">
+        <small>{book.format || "book"}</small>
+        <strong>{book.name}</strong>
+        <span>{book.author || book.collection || "Biblioteca Mini TV"}</span>
+      </span>
+      {imageAvailable ? (
+        <img
+          className="books-library__cover-image"
+          src={imageUrl}
+          alt=""
+          onError={() => setImageAvailable(false)}
+        />
+      ) : null}
+    </span>
+  );
+}
+
 function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpen, onEdit, onDelete, onUpload }) {
-  const [query, setQuery] = useState("");
-  const normalizedQuery = query.trim().toLowerCase();
   const visibleBooks = books.filter((book) => {
     const collectionKey = book.collection || `__book__${book.relativePath}`;
-    return collectionKey === selectedCollection &&
-      `${book.name} ${book.file} ${book.collection}`.toLowerCase().includes(normalizedQuery);
+    return collectionKey === selectedCollection;
   });
   return (
     <section className="books-library seasons-section">
       <div className="books-library__toolbar">
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar por título, archivo o colección…"
-          aria-label="Buscar libros"
-        />
-        <button className="dialog-button dialog-button--accent" onClick={onUpload} type="button">Añadir libros</button>
+        <button className="dialog-button dialog-button--ghost" onClick={onUpload} type="button">Añadir libros</button>
       </div>
       {!visibleBooks.length ? (
         <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
@@ -5196,18 +5233,7 @@ function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpe
                 className={`books-library__card${selectedPath === book.relativePath ? " active" : ""}`}
               >
                 <button className="books-library__cover-button" onClick={() => onOpen(book)} type="button">
-                  <img
-                    className="books-library__cover-image"
-                    src={book.coverUrl || getBookCoverUrl(book.relativePath)}
-                    alt={`Portada de ${book.name}`}
-                    onError={(event) => {
-                      event.currentTarget.style.display = "none";
-                      event.currentTarget.nextElementSibling.hidden = false;
-                    }}
-                  />
-                  <span className="books-library__cover-fallback" hidden aria-hidden="true">
-                    <img src={bookIconYellow} alt="" />
-                  </span>
+                  <BookCover book={book} />
                 </button>
                 <div className="books-library__card-copy">
                   <span className="books-library__format">{book.format}</span>
