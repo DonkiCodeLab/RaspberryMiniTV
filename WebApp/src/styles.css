@@ -5593,6 +5593,8 @@ img {
 .book-metadata__row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .book-metadata__preview { width:110px; height:145px; object-fit:cover; border-radius:10px; justify-self:center; box-shadow:0 8px 22px rgba(0,0,0,.2); }
 .book-metadata__file small { color:#aebbc5; }
+.book-collection-modal { width:min(620px,94vw); }
+.book-collection-modal__body { display:grid; gap:18px; padding:24px; }
 .book-metadata textarea { resize:vertical; border:2px solid rgba(255,255,255,.28); border-radius:14px; padding:12px; background:#12212b; color:#fff; font:inherit; }
 .book-metadata__footer { display:flex; justify-content:flex-end; gap:10px; padding:0 22px 22px; }
 .book-metadata__delete { margin-right:auto; }

@@ -55,6 +55,7 @@ import {
   getAlarmSoundUrl,
   getHealth,
   getMediaStreamUrl,
+  getBookContent,
   getBookContentUrl,
   getBookCoverUrl,
   getRaspberryAlarms,
@@ -70,6 +71,7 @@ import {
   playGameFile,
   removeGameFile,
   removeBookFile,
+  removeBookCollection,
   removeMovieFile,
   removeSeries,
   removeSeriesEpisode,
@@ -77,6 +79,7 @@ import {
   searchGameMetadata,
   searchBookMetadata,
   saveBookMetadata,
+  saveBookCollectionMetadata,
   saveMediaProfile,
   setStoredWebPin,
   stopPlayback,
@@ -202,11 +205,12 @@ const UPLOAD_MEDIA_OPTIONS = [
   { key: "games", value: "games", labelKey: "upload_game" },
   { key: "books", value: "books", labelKey: "upload_books" },
 ];
-const GAME_ROM_EXTENSIONS = new Set(["gb", "gbc", "gba"]);
+const GAME_ROM_EXTENSIONS = new Set(["gb", "gbc", "gba", "chd"]);
 const GAME_PLATFORM_LABELS = {
   gb: "Game Boy",
   gbc: "Game Boy Color",
   gba: "Game Boy Advance",
+  chd: "Neo Geo CD",
 };
 const GAME_PLATFORM_ICONS = {
   gb: gameboyNormalIcon,
@@ -217,6 +221,7 @@ const GAME_METADATA_PLATFORM_OPTIONS = [
   { key: "gb", value: "gb", label: "Game Boy" },
   { key: "gbc", value: "gbc", label: "Game Boy Color" },
   { key: "gba", value: "gba", label: "Game Boy Advance" },
+  { key: "chd", value: "chd", label: "Neo Geo CD" },
 ];
 const RASPBERRY_LANGUAGE_OPTIONS = [
   {
@@ -426,7 +431,7 @@ const UI_STRINGS = {
       "Se abrirá un diálogo de coincidencia TMDB usando el nombre del directorio seleccionado o arrastrado a esta zona. Antes de confirmar podrás editar la búsqueda.",
     upload_movie_dropzone_copy:
       "Se abrirá un diálogo de coincidencia TMDB usando el nombre del fichero seleccionado o arrastrado a esta zona. Antes de confirmar podrás editar la búsqueda.",
-    upload_game_dropzone_copy: "Acepta ROMs .gb, .gbc y .gba. Después podrás añadir carátula local y descripción antes de subir.",
+    upload_game_dropzone_copy: "Acepta ROMs .gb, .gbc, .gba y juegos Neo Geo CD en .chd. Después podrás añadir carátula local y descripción antes de subir.",
     upload_books_dropzone_copy: "Adjunta uno o varios PDF, EPUB, CBZ o CBR, o arrastra una carpeta completa para crear una colección.",
     latest_detection: "Última detección",
     games: "Juegos",
@@ -460,7 +465,7 @@ const UI_STRINGS = {
     games_search_failed: "No se pudo buscar la ficha del juego.",
     games_api_not_configured: "ScreenScraper no está configurado en la Raspberry. Puedes subirlo con la carátula default.",
     upload_game_invalid_title: "Archivo de juego no compatible",
-    upload_game_invalid_copy: "Selecciona un único fichero .gb, .gbc o .gba.",
+    upload_game_invalid_copy: "Selecciona un único fichero .gb, .gbc, .gba o .chd.",
     upload_game_detected: "{name} detectado como {platform}. Añade la carátula y descripción antes de subir.",
     upload_game_done_summary: "{name} añadido a Games: {path}",
     upload_game_failed: "No se pudo subir el juego.",
@@ -745,7 +750,7 @@ const UI_STRINGS = {
       "S'obrirà un diàleg de coincidència TMDB fent servir el nom del directori seleccionat o arrossegat a aquesta zona. Abans de confirmar podràs editar la cerca.",
     upload_movie_dropzone_copy:
       "S'obrirà un diàleg de coincidència TMDB fent servir el nom del fitxer seleccionat o arrossegat a aquesta zona. Abans de confirmar podràs editar la cerca.",
-    upload_game_dropzone_copy: "Accepta ROMs .gb, .gbc i .gba. Després podràs afegir caràtula local i descripció abans de pujar.",
+    upload_game_dropzone_copy: "Accepta ROMs .gb, .gbc, .gba i jocs Neo Geo CD en .chd. Després podràs afegir caràtula local i descripció abans de pujar.",
     upload_books_dropzone_copy: "Adjunta PDF, EPUB, CBZ o CBR, o arrossega una carpeta completa per crear una col·lecció.",
     latest_detection: "Última detecció",
     games: "Jocs",
@@ -779,7 +784,7 @@ const UI_STRINGS = {
     games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
     games_api_not_configured: "ScreenScraper no està configurat a la Raspberry. Pots pujar-lo amb la caràtula default.",
     upload_game_invalid_title: "Fitxer de joc no compatible",
-    upload_game_invalid_copy: "Selecciona un únic fitxer .gb, .gbc o .gba.",
+    upload_game_invalid_copy: "Selecciona un únic fitxer .gb, .gbc, .gba o .chd.",
     upload_game_detected: "{name} detectat com {platform}. Afegeix la caràtula i descripció abans de pujar.",
     upload_game_done_summary: "{name} afegit a Games: {path}",
     upload_game_failed: "No s'ha pogut pujar el joc.",
@@ -1064,7 +1069,7 @@ const UI_STRINGS = {
       "A TMDB match dialog will open using the selected or dropped folder name. Before confirming, you will be able to edit the search.",
     upload_movie_dropzone_copy:
       "A TMDB match dialog will open using the selected or dropped file name. Before confirming, you will be able to edit the search.",
-    upload_game_dropzone_copy: "Accepts .gb, .gbc, and .gba ROMs. You can add a local cover and description before uploading.",
+    upload_game_dropzone_copy: "Accepts .gb, .gbc, .gba, and Neo Geo CD .chd games. You can add a local cover and description before uploading.",
     upload_books_dropzone_copy: "Attach PDF, EPUB, CBZ, or CBR files, or drag a whole folder to create a collection.",
     latest_detection: "Latest detection",
     games: "Games",
@@ -1098,7 +1103,7 @@ const UI_STRINGS = {
     games_search_failed: "Could not search the game profile.",
     games_api_not_configured: "ScreenScraper is not configured on the Raspberry. You can upload it with the default cover.",
     upload_game_invalid_title: "Unsupported game file",
-    upload_game_invalid_copy: "Select a single .gb, .gbc, or .gba file.",
+    upload_game_invalid_copy: "Select a single .gb, .gbc, .gba, or .chd file.",
     upload_game_detected: "{name} detected as {platform}. Add the cover and description before uploading.",
     upload_game_done_summary: "{name} added to Games: {path}",
     upload_game_failed: "Could not upload the game.",
@@ -5099,7 +5104,7 @@ function RaspberryPage({
                 className="raspberry-upload-dropzone__input"
                 type="file"
                 multiple
-                accept={uploadMediaType === "games" ? ".gb,.gbc,.gba" : uploadMediaType === "books" ? ".pdf,.epub,.cbz,.cbr" : undefined}
+                accept={uploadMediaType === "games" ? ".gb,.gbc,.gba,.chd" : uploadMediaType === "books" ? ".pdf,.epub,.cbz,.cbr" : undefined}
                 webkitdirectory={uploadMediaType === "series" ? "" : undefined}
                 directory={uploadMediaType === "series" ? "" : undefined}
                 onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
@@ -5321,6 +5326,35 @@ function BookMetadataModal({ book, language, onClose, onSave, onDelete }) {
   );
 }
 
+function BookCollectionModal({ collection, onClose, onSave, onDelete }) {
+  const [name, setName] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { setName(collection?.label || ""); setCoverFile(null); setError(""); }, [collection]);
+  useEffect(() => {
+    if (!coverFile) { setPreview(""); return undefined; }
+    const url = URL.createObjectURL(coverFile); setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [coverFile]);
+  if (!collection) return null;
+  return createPortal(
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="dialog-card book-collection-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="dialog-card__header"><div><p>Biblioteca</p><h2>Customizar colección</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
+        <div className="book-collection-modal__body">
+          {preview || collection.coverUrl ? <img className="book-metadata__preview" src={preview || collection.coverUrl} alt="Portada de la colección" /> : null}
+          <label className="dialog-field"><span>Nombre de la colección</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
+          <label className="dialog-field book-metadata__file"><span>Portada manual</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile?.name || "Esta portada se mostrará en la cabecera de la colección."}</small></label>
+          {error ? <p className="book-metadata__error">{error}</p> : null}
+        </div>
+        <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(collection)} type="button">Borrar colección completa</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy || !name.trim()} onClick={async () => { try { setBusy(true); await onSave({ collection: collection.key, name, coverFile, coverUrl: collection.coverUrl || "" }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la colección."); } finally { setBusy(false); } }} type="button">{busy ? "Guardando…" : "Guardar cambios"}</button></div>
+      </div>
+    </div>, document.body
+  );
+}
+
 function BookReader({ book, onClose }) {
   const canvasRef = useRef(null);
   const renderTaskRef = useRef(null);
@@ -5333,11 +5367,28 @@ function BookReader({ book, onClose }) {
   useEffect(() => {
     if (!book || book.format !== "pdf") { setPdf(null); return undefined; }
     let cancelled = false;
+    const controller = new AbortController();
+    let task = null;
     setPageNumber(1); setZoom(1); setReaderError("");
-    const task = getDocument(source);
-    task.promise.then((document) => { if (!cancelled) setPdf(document); }).catch(() => { if (!cancelled) setReaderError("No se pudo cargar este PDF."); });
-    return () => { cancelled = true; task.destroy(); };
-  }, [source, book?.format]);
+    setPdf(null);
+    getBookContent(book.relativePath, { signal: controller.signal })
+      .then((data) => {
+        if (cancelled) return null;
+        task = getDocument({ data });
+        return task.promise;
+      })
+      .then((document) => { if (!cancelled && document) setPdf(document); })
+      .catch((error) => {
+        if (cancelled || error?.name === "AbortError") return;
+        const detail = error?.status === 401
+          ? "La sesión ha caducado. Vuelve a introducir el PIN."
+          : error?.status === 404
+            ? "El archivo ya no existe en la biblioteca."
+            : error?.message || "No se pudo cargar este PDF.";
+        setReaderError(detail);
+      });
+    return () => { cancelled = true; controller.abort(); task?.destroy(); };
+  }, [book?.relativePath, book?.format]);
 
   useEffect(() => {
     if (!pdf || !canvasRef.current) return undefined;
@@ -5392,6 +5443,7 @@ export default function App() {
   const [selectedBookPath, setSelectedBookPath] = useState("");
   const [openBook, setOpenBook] = useState(null);
   const [bookMetadataTarget, setBookMetadataTarget] = useState(null);
+  const [bookCollectionTarget, setBookCollectionTarget] = useState(null);
   const [selectedGameImageIndex, setSelectedGameImageIndex] = useState(1);
   const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   const [currentView, setCurrentView] = useState("series");
@@ -5785,11 +5837,13 @@ export default function App() {
   const selectedBook = bookLibrary.find((book) => book.relativePath === selectedBookPath) || bookLibrary[0] || null;
   const bookCollections = useMemo(() => {
     const groups = new Map();
+    const profiles = videos?.bookCollections || {};
     bookLibrary.forEach((book) => {
       const key = book.collection || `__book__${book.relativePath}`;
       if (!groups.has(key)) groups.set(key, {
         key,
-        label: book.collection || book.name,
+        label: profiles[key]?.name || book.collection || book.name,
+        coverUrl: profiles[key]?.coverUrl || "",
         books: [],
       });
       groups.get(key).books.push(book);
@@ -5800,7 +5854,7 @@ export default function App() {
         numeric: true,
       })
     );
-  }, [bookLibrary, raspberryLanguage]);
+  }, [bookLibrary, raspberryLanguage, videos?.bookCollections]);
   const selectedBookCollection = selectedBook
     ? selectedBook.collection || `__book__${selectedBook.relativePath}`
     : "";
@@ -6030,7 +6084,7 @@ export default function App() {
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage =
-    activeMediaType === "games" ? selectedGame?.coverImage || cartellLogo : selectedItem?.heroImage || cartellLogo;
+    activeMediaType === "games" ? selectedGame?.coverImage || cartellLogo : activeMediaType === "books" ? (bookCollections.find((entry) => entry.key === selectedBookCollection)?.coverUrl || selectedBook?.coverUrl || getBookCoverUrl(selectedBook?.relativePath) || cartellLogo) : selectedItem?.heroImage || cartellLogo;
   const headerImageCrop =
     ["games", "books"].includes(activeMediaType)
       ? DEFAULT_HERO_CROP
@@ -7334,6 +7388,32 @@ export default function App() {
     setBookMetadataTarget(null);
   }
 
+  async function handleSaveBookCollection(profile) {
+    await saveBookCollectionMetadata(profile);
+    setVideos(await getVideos());
+    setBookCollectionTarget(null);
+  }
+
+  async function handleDeleteBookCollection(collection, confirmed = false) {
+    if (!collection) return;
+    if (!confirmed) {
+      setBookCollectionTarget(null);
+      setDeleteConfirmation({
+        media: "colección de libros",
+        name: collection.label,
+        onConfirm: () => handleDeleteBookCollection(collection, true),
+      });
+      return;
+    }
+    try {
+      await removeBookCollection(collection.key);
+      setSelectedBookPath("");
+      setVideos(await getVideos());
+    } catch (nextError) {
+      window.alert(nextError.message || "No se pudo eliminar la colección.");
+    }
+  }
+
   async function handleUploadFiles(files) {
     const safeFiles = Array.isArray(files) ? files.filter((file) => file && !isIgnoredUploadFile(file)) : [];
     if (!safeFiles.length) return;
@@ -7901,6 +7981,16 @@ export default function App() {
                             </svg>
                             {movieFiltersActive ? <span>{movieFilterGenres.length + (movieFilterQuery.trim() ? 1 : 0)}</span> : null}
                           </button>
+                        ) : isBooksMode && activeBookCollection ? (
+                          <button
+                            className="series-icon-button series-icon-button--settings"
+                            onClick={() => activeBookCollection.key.startsWith("__book__") ? setBookMetadataTarget(activeBookCollection.books[0]) : setBookCollectionTarget(activeBookCollection)}
+                            type="button"
+                            aria-label="Customizar libro o colección"
+                            title="Customizar libro o colección"
+                          >
+                            <img className="series-icon-button__image series-icon-button__image--settings" src={settingsIcon} alt="" aria-hidden="true" draggable="false" />
+                          </button>
                         ) : isGamesMode && selectedGame ? (
                           <button
                             className="series-icon-button series-icon-button--settings"
@@ -8429,6 +8519,12 @@ export default function App() {
               onClose={() => setBookMetadataTarget(null)}
               onSave={handleSaveBookMetadata}
               onDelete={(book) => { setBookMetadataTarget(null); handleDeleteBook(book); }}
+            />
+            <BookCollectionModal
+              collection={bookCollectionTarget}
+              onClose={() => setBookCollectionTarget(null)}
+              onSave={handleSaveBookCollection}
+              onDelete={handleDeleteBookCollection}
             />
             <DeleteConfirmModal
               confirmation={deleteConfirmation}

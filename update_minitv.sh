@@ -4,6 +4,8 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="${SCRIPT_DIR}/WebApp"
+NEOCD_CORE_DIR="/usr/lib/arm-linux-gnueabihf/libretro"
+NEOCD_CORE_PATH="${NEOCD_CORE_DIR}/neocd_libretro.so"
 
 log() {
   printf '\n==> %s\n' "$1"
@@ -25,6 +27,20 @@ if [[ -n "${LOCAL_CHANGES}" ]]; then
   log "Guardando temporalmente los cambios locales (${STASH_NAME})"
   git stash push --include-untracked -m "${STASH_NAME}"
 fi
+
+if [[ ! -f "${NEOCD_CORE_PATH}" ]]; then
+  command -v curl >/dev/null 2>&1 || fail "curl no está instalado y no se puede instalar el núcleo NeoCD."
+  command -v unzip >/dev/null 2>&1 || fail "unzip no está instalado y no se puede instalar el núcleo NeoCD."
+  NEOCD_TEMP_DIR="$(mktemp -d)"
+  log "Instalando el núcleo oficial NeoCD para RetroArch"
+  curl --fail --location --output "${NEOCD_TEMP_DIR}/neocd.zip" \
+    "https://buildbot.libretro.com/nightly/linux/armv7-neon-hf/latest/neocd_libretro.so.zip"
+  unzip -q "${NEOCD_TEMP_DIR}/neocd.zip" -d "${NEOCD_TEMP_DIR}"
+  sudo install -m 0644 "${NEOCD_TEMP_DIR}/neocd_libretro.so" "${NEOCD_CORE_PATH}"
+  rm -rf "${NEOCD_TEMP_DIR}"
+fi
+
+mkdir -p "${HOME}/.config/retroarch/system/neocd"
 
 log "Descargando la última versión de main"
 git fetch origin main

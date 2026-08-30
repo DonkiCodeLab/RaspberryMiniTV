@@ -56,7 +56,7 @@ UPLOAD_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-upload.log")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
-GAME_ROM_EXTENSIONS = {".gb", ".gbc", ".gba"}
+GAME_ROM_EXTENSIONS = {".gb", ".gbc", ".gba", ".chd"}
 GAME_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 BOOK_EXTENSIONS = {".pdf", ".epub", ".cbz", ".cbr"}
 BOOK_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -64,6 +64,7 @@ GAME_PLATFORM_BY_EXTENSION = {
     ".gb": {"id": "gameboy", "name": "Game Boy", "screenScraperSystemId": 9},
     ".gbc": {"id": "gameboy_color", "name": "Game Boy Color", "screenScraperSystemId": 10},
     ".gba": {"id": "gameboy_advance", "name": "Game Boy Advance", "screenScraperSystemId": 12},
+    ".chd": {"id": "neo_geo_cd", "name": "Neo Geo CD", "screenScraperSystemId": 70},
 }
 DEFAULT_GAME_COVER_FILENAME = "default-game-cover.svg"
 DEFAULT_ALARMS = [
@@ -297,6 +298,7 @@ def empty_media_library():
         "movies": {},
         "games": {},
         "books": {},
+        "bookCollections": {},
     }
 
 
@@ -313,6 +315,7 @@ def load_media_library():
                     "movies": loaded.get("movies") if isinstance(loaded.get("movies"), dict) else {},
                     "games": loaded.get("games") if isinstance(loaded.get("games"), dict) else {},
                     "books": loaded.get("books") if isinstance(loaded.get("books"), dict) else {},
+                    "bookCollections": loaded.get("bookCollections") if isinstance(loaded.get("bookCollections"), dict) else {},
                 }
             )
     except Exception:
@@ -340,6 +343,7 @@ def save_media_library(library):
                 "movies": library.get("movies") if isinstance(library.get("movies"), dict) else {},
                 "games": library.get("games") if isinstance(library.get("games"), dict) else {},
                 "books": library.get("books") if isinstance(library.get("books"), dict) else {},
+                "bookCollections": library.get("bookCollections") if isinstance(library.get("bookCollections"), dict) else {},
             }
         )
 
@@ -1620,6 +1624,7 @@ def list_video_directories():
     movie_directories, movie_root_files = build_media_buckets("movies")
     media_library = sync_scanned_media_library(tvshow_directories, movie_directories, movie_root_files)
 
+    book_collections = load_media_library().get("bookCollections", {})
     return {
         "ok": True,
         "root": VIDEOS_DIR,
@@ -1631,6 +1636,7 @@ def list_video_directories():
         "mediaLibrary": media_library,
         "games": list_game_entries(),
         "books": list_book_entries(),
+        "bookCollections": book_collections,
         "directories": tvshow_directories,
         "rootFiles": tvshow_root_files,
         "movieDirectories": movie_directories,
@@ -1948,6 +1954,51 @@ def custom_book_cover(filename):
     return send_from_directory(BOOK_COVERS_DIR, safe_filename, conditional=True)
 
 
+@app.route("/books/collection/profile", methods=["POST"])
+def save_book_collection_profile():
+    data = request.form
+    collection = str(data.get("collection") or "").strip().strip("/")
+    target_path = resolve_book_path(collection)
+    if not collection or not target_path or not os.path.isdir(target_path):
+        return jsonify({"error": "Book collection not found"}), 404
+    library = load_media_library()
+    previous = library.setdefault("bookCollections", {}).get(collection, {})
+    cover_url = str(data.get("coverUrl") or previous.get("coverUrl") or "").strip()
+    uploaded_cover = request.files.get("coverFile")
+    if uploaded_cover and uploaded_cover.filename:
+        extension = os.path.splitext(uploaded_cover.filename)[1].lower()
+        if extension not in BOOK_COVER_EXTENSIONS:
+            return jsonify({"error": "Unsupported cover image"}), 400
+        os.makedirs(BOOK_COVERS_DIR, exist_ok=True)
+        cover_name = f"collection-{hashlib.sha256(collection.encode('utf-8')).hexdigest()[:24]}{extension}"
+        uploaded_cover.save(os.path.join(BOOK_COVERS_DIR, cover_name))
+        cover_url = f"/book-covers/{urllib.parse.quote(cover_name)}"
+    item = {"name": str(data.get("name") or collection).strip(), "coverUrl": cover_url}
+    library["bookCollections"][collection] = item
+    save_media_library(library)
+    return jsonify({"ok": True, "item": {**item, "collection": collection}})
+
+
+@app.route("/books/collection", methods=["DELETE"])
+def delete_book_collection():
+    collection = str(request.args.get("collection") or "").strip().strip("/")
+    target_path = resolve_book_path(collection)
+    if not collection or not target_path or not os.path.isdir(target_path):
+        return jsonify({"error": "Book collection not found"}), 404
+    library = load_media_library()
+    prefix = f"Books/{collection}/"
+    library["books"] = {key: value for key, value in library.get("books", {}).items() if not key.startswith(prefix)}
+    metadata = library.setdefault("bookCollections", {}).pop(collection, None)
+    cover_url = str(metadata.get("coverUrl") or "") if isinstance(metadata, dict) else ""
+    if cover_url.startswith("/book-covers/"):
+        cover_path = os.path.join(BOOK_COVERS_DIR, os.path.basename(urllib.parse.unquote(cover_url.split("/book-covers/", 1)[1])))
+        if os.path.isfile(cover_path):
+            os.remove(cover_path)
+    shutil.rmtree(target_path)
+    save_media_library(library)
+    return jsonify({"ok": True, "collection": collection, "removed": True})
+
+
 @app.route("/books/search", methods=["GET"])
 def search_open_library_books():
     query = str(request.args.get("query") or "").strip()
@@ -1991,7 +2042,13 @@ def stream_book():
     target_path = resolve_book_path(relative_path)
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
-    return send_file(target_path, conditional=True, as_attachment=False, download_name=os.path.basename(target_path))
+    return send_file(
+        target_path,
+        mimetype="application/pdf" if os.path.splitext(target_path)[1].lower() == ".pdf" else None,
+        conditional=True,
+        as_attachment=False,
+        download_name=os.path.basename(target_path),
+    )
 
 
 @app.route("/books/cover", methods=["GET"])

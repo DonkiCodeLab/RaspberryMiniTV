@@ -893,7 +893,7 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
   if (isMockModeEnabled()) {
     const current = loadMockGamesLibrary();
     const extension = String(file.name || "").split(".").pop()?.toLowerCase() || "";
-    const platformName = extension === "gba" ? "Game Boy Advance" : extension === "gbc" ? "Game Boy Color" : "Game Boy";
+    const platformName = extension === "chd" ? "Neo Geo CD" : extension === "gba" ? "Game Boy Advance" : extension === "gbc" ? "Game Boy Color" : "Game Boy";
     const item = {
       name: gameName,
       description,
@@ -1205,6 +1205,36 @@ export function getBookContentUrl(relativePath) {
   return `${getBaseUrl()}/books/content?${params.toString()}`;
 }
 
+export async function getBookContent(relativePath, { signal } = {}) {
+  const url = getBookContentUrl(relativePath);
+  if (!url) throw new Error("Missing book path");
+
+  const storedPin = getStoredWebPin();
+  const response = await fetch(url, {
+    headers: storedPin ? { "X-Web-Pin": storedPin } : {},
+    signal,
+  });
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`;
+    try {
+      const payload = await response.json();
+      if (payload?.error) message = payload.error;
+    } catch (_error) {
+      // Keep the HTTP status when the server did not return JSON.
+    }
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
+  }
+
+  const data = new Uint8Array(await response.arrayBuffer());
+  const pdfHeader = String.fromCharCode(...data.subarray(0, 1024));
+  if (!data.length || !pdfHeader.includes("%PDF-")) {
+    throw new Error("El servidor no devolvió un archivo PDF válido.");
+  }
+  return data;
+}
+
 export function getBookCoverUrl(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) return "";
@@ -1241,6 +1271,19 @@ export function saveBookMetadata(profile) {
   });
   if (profile?.coverFile instanceof File) form.append("coverFile", profile.coverFile);
   return request("/books/profile", { method: "POST", body: form });
+}
+
+export function saveBookCollectionMetadata(profile) {
+  const form = new FormData();
+  form.append("collection", String(profile?.collection || ""));
+  form.append("name", String(profile?.name || ""));
+  form.append("coverUrl", String(profile?.coverUrl || ""));
+  if (profile?.coverFile instanceof File) form.append("coverFile", profile.coverFile);
+  return request("/books/collection/profile", { method: "POST", body: form });
+}
+
+export function removeBookCollection(collection) {
+  return request(`/books/collection?collection=${encodeURIComponent(collection)}`, { method: "DELETE" });
 }
 
 export async function captureCameraImage() {

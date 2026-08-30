@@ -227,6 +227,10 @@ KODI_ADDON_ID = "service.minitv.player"
 INTRO_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-intro.log")
 RETROARCH_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.cfg")
 RETROARCH_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.log")
+RETROARCH_SYSTEM_DIR = os.environ.get(
+    "MINITV_RETROARCH_SYSTEM_DIR",
+    os.path.join(os.path.expanduser("~"), ".config", "retroarch", "system"),
+)
 PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "minitv-playback.json")
 MENU_COMMAND_PATH = os.path.join(tempfile.gettempdir(), "minitv-menu-command.json")
 GAME_PLATFORM_BY_EXTENSION = {
@@ -241,6 +245,10 @@ GAME_PLATFORM_BY_EXTENSION = {
     ".gba": {
         "name": "Game Boy Advance",
         "core": "mgba_libretro.so",
+    },
+    ".chd": {
+        "name": "Neo Geo CD",
+        "core": "neocd_libretro.so",
     },
 }
 DEFAULT_SETTINGS = {
@@ -2509,6 +2517,7 @@ class DeviceAppMenu:
             f'audio_latency = "{audio_latency}"',
             'video_threaded = "true"',
             'pause_nonactive = "false"',
+            f'system_directory = "{RETROARCH_SYSTEM_DIR}"',
         ]
         alsa_device = get_alsa_device()
         if alsa_device.lower() not in ("", "auto", "default"):
