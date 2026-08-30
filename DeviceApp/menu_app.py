@@ -2627,14 +2627,23 @@ class DeviceAppMenu:
         command = [
             camera_command,
             "--timeout", "0",
-            "--fullscreen",
             "--autofocus-mode", "continuous",
         ]
+        using_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
+        if using_wayland:
+            command.extend([
+                "--qt-preview",
+                "--preview", f"0,0,{self.width},{self.height}",
+            ])
+        else:
+            command.append("--fullscreen")
         try:
             self.suspend_display_for_external_app("camera")
             camera_env = os.environ.copy()
             for env_key in ("SDL_VIDEODRIVER", "SDL_FBDEV", "SDL_MOUSE_TOUCH_EVENTS"):
                 camera_env.pop(env_key, None)
+            if using_wayland:
+                camera_env["QT_QPA_PLATFORM"] = "wayland"
             append_debug_log(CAMERA_DEBUG_LOG_PATH, f"Launching camera: {' '.join(command)}")
             self.camera_log_handle = open(CAMERA_DEBUG_LOG_PATH, "a", encoding="utf-8")
             self.camera_proc = subprocess.Popen(
