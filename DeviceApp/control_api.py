@@ -1050,9 +1050,9 @@ def extract_book_cover(book_path):
 
     extension = os.path.splitext(book_path)[1].lower()
     if extension == ".pdf":
+        output_root = os.path.join(BOOK_COVERS_DIR, cache_name[:-4])
         converter = shutil.which("pdftoppm")
         if converter:
-            output_root = os.path.join(BOOK_COVERS_DIR, cache_name[:-4])
             try:
                 subprocess.run(
                     [converter, "-f", "1", "-singlefile", "-jpeg", "-scale-to", "720", book_path, output_root],
@@ -1066,6 +1066,28 @@ def extract_book_cover(book_path):
                     return generated
             except (OSError, subprocess.SubprocessError):
                 pass
+
+        # Raspberry Pi OS normally includes MuPDF's `mutool` even when
+        # poppler-utils is absent. It can still rasterize page one, so PDFs
+        # always get their real first-page artwork instead of a generic cover.
+        mutool = shutil.which("mutool")
+        if mutool:
+            generated = output_root + ".png"
+            try:
+                subprocess.run(
+                    [mutool, "draw", "-q", "-F", "png", "-o", generated, "-w", "720", book_path, "1"],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=30,
+                )
+                if os.path.isfile(generated):
+                    return generated
+            except (OSError, subprocess.SubprocessError):
+                try:
+                    os.remove(generated)
+                except OSError:
+                    pass
 
     if extension in {".cbz", ".epub"}:
         try:
