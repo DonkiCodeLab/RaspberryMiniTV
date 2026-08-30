@@ -5213,16 +5213,13 @@ function BookCover({ book }) {
   );
 }
 
-function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpen, onEdit, onDelete, onUpload }) {
+function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpen, onEdit, onDelete }) {
   const visibleBooks = books.filter((book) => {
     const collectionKey = book.collection || `__book__${book.relativePath}`;
     return collectionKey === selectedCollection;
   });
   return (
     <section className="books-library seasons-section">
-      <div className="books-library__toolbar">
-        <button className="dialog-button dialog-button--ghost" onClick={onUpload} type="button">Añadir libros</button>
-      </div>
       {!visibleBooks.length ? (
         <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
       ) : (
@@ -7962,7 +7959,6 @@ export default function App() {
                     onOpen={setOpenBook}
                     onEdit={setBookMetadataTarget}
                     onDelete={handleDeleteBook}
-                    onUpload={() => handleOpenUploadsForMedia("books")}
                   />
                 ) : isGamesMode ? (
                   selectedGame ? (

@@ -805,6 +805,13 @@ def web_dist_available():
     return os.path.isdir(WEB_DIST_DIR) and os.path.isfile(os.path.join(WEB_DIST_DIR, "index.html"))
 
 
+def send_web_index():
+    response = send_from_directory(WEB_DIST_DIR, "index.html", max_age=0)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
 def is_public_frontend_request():
     if request.method != "GET":
         return False
@@ -1774,7 +1781,7 @@ def volume_down_locked():
 def web_index():
     if not web_dist_available():
         return jsonify({"error": "Web dist not found", "path": WEB_DIST_DIR}), 404
-    return send_from_directory(WEB_DIST_DIR, "index.html")
+    return send_web_index()
 
 
 @app.route("/<path:asset_path>", methods=["GET"])
@@ -1792,7 +1799,7 @@ def web_assets(asset_path):
         filename = os.path.basename(full_path)
         return send_from_directory(directory, filename)
 
-    return send_from_directory(WEB_DIST_DIR, "index.html")
+    return send_web_index()
 
 
 @app.route("/episodes", methods=["GET"])
