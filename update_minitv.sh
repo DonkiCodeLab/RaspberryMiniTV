@@ -19,6 +19,15 @@ fail() {
 command -v git >/dev/null 2>&1 || fail "git no está instalado."
 [[ -d "${SCRIPT_DIR}/.git" ]] || fail "El script debe estar dentro del repositorio RaspberryMiniTV."
 
+# MuPDF distributed by Raspberry Pi OS uses an X11/OpenGL window and exits
+# immediately in MiniTV's dedicated Wayland session. Evince has a native GTK
+# Wayland backend and can display PDFs without leaving a black screen.
+if ! command -v evince >/dev/null 2>&1; then
+  log "Instalando el visor PDF compatible con Wayland"
+  sudo apt-get update
+  sudo apt-get install -y evince
+fi
+
 cd "${SCRIPT_DIR}"
 
 LOCAL_CHANGES="$(git status --porcelain)"

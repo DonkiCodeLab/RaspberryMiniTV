@@ -57,7 +57,6 @@ import {
   getMediaStreamUrl,
   getBookContent,
   getBookContentUrl,
-  getBookCoverUrl,
   getRaspberryAlarms,
   getRaspberryBirthdays,
   getRaspberryLanguage,
@@ -5175,41 +5174,18 @@ function RaspberryPage({
   );
 }
 
-const BOOK_COVER_PALETTES = [
-  ["#f2b705", "#9b3a20", "#fff4cc"],
-  ["#4d8f8b", "#173f4f", "#f0dfbd"],
-  ["#d96c75", "#682a4d", "#fff2df"],
-  ["#76964f", "#304b37", "#f8e8b6"],
-  ["#6e75b8", "#302e64", "#f5e9c9"],
-  ["#d17a3f", "#71372f", "#fff0cf"],
-];
-
-function getBookCoverPalette(book) {
-  const seed = `${book.name || ""}|${book.author || ""}|${book.relativePath || ""}`;
-  const hash = [...seed].reduce((total, character) => ((total * 31) + character.charCodeAt(0)) >>> 0, 0);
-  return BOOK_COVER_PALETTES[hash % BOOK_COVER_PALETTES.length];
-}
-
 function BookCover({ book }) {
-  const imageUrl = book.coverUrl || getBookCoverUrl(book.relativePath);
+  const imageUrl = book.coverUrl || cartellLogo;
   const [imageAvailable, setImageAvailable] = useState(true);
-  const [primary, secondary, ink] = getBookCoverPalette(book);
 
   useEffect(() => setImageAvailable(true), [imageUrl]);
 
   return (
     <span
       className="books-library__generated-cover"
-      style={{ "--book-cover-primary": primary, "--book-cover-secondary": secondary, "--book-cover-ink": ink }}
       aria-label={`Portada de ${book.name}`}
       role="img"
     >
-      <span className="books-library__generated-pattern" aria-hidden="true" />
-      <span className="books-library__generated-copy" aria-hidden="true">
-        <small>{book.format || "book"}</small>
-        <strong>{book.name}</strong>
-        <span>{book.author || book.collection || "Biblioteca Mini TV"}</span>
-      </span>
       {imageAvailable ? (
         <img
           className="books-library__cover-image"
@@ -5217,12 +5193,12 @@ function BookCover({ book }) {
           alt=""
           onError={() => setImageAvailable(false)}
         />
-      ) : null}
+      ) : <img className="books-library__cover-image" src={cartellLogo} alt="" />}
     </span>
   );
 }
 
-function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpen, onEdit, onDelete }) {
+function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onSelect, onOpen, onEdit, onDelete }) {
   const visibleBooks = books.filter((book) => {
     const collectionKey = book.collection || `__book__${book.relativePath}`;
     return collectionKey === selectedCollection;
@@ -5232,7 +5208,9 @@ function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpe
       {!visibleBooks.length ? (
         <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
       ) : (
-        <div className="books-library__grid">
+        <>
+          <div className="seasons-section__label">{countLabel}</div>
+          <div className="books-library__grid">
             {visibleBooks.map((book) => (
               <article
                 key={book.relativePath}
@@ -5253,7 +5231,8 @@ function BooksLibrary({ books, selectedCollection, selectedPath, onSelect, onOpe
                 </div>
               </article>
             ))}
-        </div>
+          </div>
+        </>
       )}
     </section>
   );
@@ -6084,7 +6063,7 @@ export default function App() {
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage =
-    activeMediaType === "games" ? selectedGame?.coverImage || cartellLogo : activeMediaType === "books" ? (bookCollections.find((entry) => entry.key === selectedBookCollection)?.coverUrl || selectedBook?.coverUrl || getBookCoverUrl(selectedBook?.relativePath) || cartellLogo) : selectedItem?.heroImage || cartellLogo;
+    activeMediaType === "games" ? selectedGame?.coverImage || cartellLogo : activeMediaType === "books" ? (bookCollections.find((entry) => entry.key === selectedBookCollection)?.coverUrl || selectedBook?.coverUrl || cartellLogo) : selectedItem?.heroImage || cartellLogo;
   const headerImageCrop =
     ["games", "books"].includes(activeMediaType)
       ? DEFAULT_HERO_CROP
@@ -7563,6 +7542,10 @@ export default function App() {
   const movieFiltersActive = Boolean(movieFilterQuery.trim() || movieFilterGenres.length);
   const formatBookCollectionLabel = (collection) => {
     if (!collection) return t("media_books");
+    return collection.label;
+  };
+  const formatBookCount = (collection) => {
+    if (!collection) return "";
     const count = collection.books.length;
     const language = normalizeRaspberryLanguage(raspberryLanguage);
     const countLabel = language === "ca"
@@ -7570,7 +7553,7 @@ export default function App() {
       : language === "en"
         ? `${count} ${count === 1 ? "book" : "books"}`
         : `${count} ${count === 1 ? "libro" : "libros"}`;
-    return `${collection.label} · ${countLabel}`;
+    return countLabel;
   };
   const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
   const selectorValue = isBooksMode
@@ -7965,7 +7948,7 @@ export default function App() {
                         </div>
                       ) : null}
                       <div
-                        className={`series-hero__controls-row${isGamesMode || (isMoviesMode && movieOptions.length) ? "" : " series-hero__controls-row--selector-only"}`}
+                        className={`series-hero__controls-row${isGamesMode || (isBooksMode && activeBookCollection) || (isMoviesMode && movieOptions.length) ? "" : " series-hero__controls-row--selector-only"}`}
                       >
                         {isMoviesMode && movieOptions.length ? (
                           <button
@@ -8108,6 +8091,7 @@ export default function App() {
                     books={bookLibrary}
                     selectedCollection={selectedBookCollection}
                     selectedPath={selectedBookPath}
+                    countLabel={formatBookCount(activeBookCollection)}
                     onSelect={setSelectedBookPath}
                     onOpen={setOpenBook}
                     onEdit={setBookMetadataTarget}

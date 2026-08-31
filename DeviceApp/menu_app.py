@@ -227,6 +227,7 @@ KODI_ADDON_ID = "service.minitv.player"
 INTRO_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-intro.log")
 RETROARCH_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.cfg")
 RETROARCH_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-retroarch.log")
+BOOK_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-book.log")
 RETROARCH_SYSTEM_DIR = os.environ.get(
     "MINITV_RETROARCH_SYSTEM_DIR",
     os.path.join(os.path.expanduser("~"), ".config", "retroarch", "system"),
@@ -2819,6 +2820,10 @@ class DeviceAppMenu:
             ]
         if not using_wayland:
             commands.append(["xdg-open", full_path])
+        append_debug_log(
+            BOOK_DEBUG_LOG_PATH,
+            f"Opening {full_path} (wayland={using_wayland}, socket={os.environ.get('WAYLAND_DISPLAY', '')})",
+        )
         for command in commands:
             if shutil.which(command[0]):
                 try:
@@ -2829,17 +2834,23 @@ class DeviceAppMenu:
                     if using_wayland:
                         book_env.setdefault("GDK_BACKEND", "wayland")
                         book_env.setdefault("QT_QPA_PLATFORM", "wayland")
-                    candidate_proc = subprocess.Popen(
-                        command,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                        env=book_env,
-                    )
+                    append_debug_log(BOOK_DEBUG_LOG_PATH, f"Launching: {' '.join(command)}")
+                    with open(BOOK_DEBUG_LOG_PATH, "a", encoding="utf-8") as book_log:
+                        candidate_proc = subprocess.Popen(
+                            command,
+                            stdout=book_log,
+                            stderr=book_log,
+                            env=book_env,
+                        )
                     try:
                         candidate_proc.wait(timeout=0.8)
                     except subprocess.TimeoutExpired:
                         pass
                     if candidate_proc.poll() is not None:
+                        append_debug_log(
+                            BOOK_DEBUG_LOG_PATH,
+                            f"Reader {command[0]} exited during startup with code {candidate_proc.returncode}",
+                        )
                         log_debug(
                             f"BOOK reader exited during startup command={command[0]} "
                             f"returncode={candidate_proc.returncode} file={full_path}"
@@ -2852,6 +2863,7 @@ class DeviceAppMenu:
                     log_debug(f"BOOK reader started command={command[0]} file={full_path}")
                     return
                 except Exception as exc:
+                    append_debug_log(BOOK_DEBUG_LOG_PATH, f"Reader {command[0]} failed: {exc}")
                     log_debug(f"BOOK reader failed command={command[0]} error={exc}")
                     self.book_proc = None
                     self.book_current_path = ""
@@ -2859,6 +2871,7 @@ class DeviceAppMenu:
                         self.resume_display_after_external_app("book")
         if self.display_suspended:
             self.resume_display_after_external_app("book")
+        append_debug_log(BOOK_DEBUG_LOG_PATH, "No compatible book reader could be started")
         self.browser_status = "No book reader installed"
 
     def update_book_state(self):

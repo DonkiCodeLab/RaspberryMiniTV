@@ -156,12 +156,16 @@ sudo apt update
 sudo apt install -y python3-flask python3-pygame python3-rpi.gpio python3-evdev qrencode network-manager wireless-tools wpasupplicant
 ```
 
-Para abrir libros desde el menú instala también los visores. MuPDF cubre PDF y CBZ,
+Para abrir libros desde el menú instala también los visores. Evince se usa para PDF
+porque funciona de forma nativa en la sesión Wayland de MiniTV; MuPDF cubre CBZ,
 Calibre aporta el lector EPUB y MComix permite abrir CBR:
 
 ```bash
-sudo apt install -y mupdf calibre mcomix
+sudo apt install -y evince mupdf calibre mcomix
 ```
+
+Si un lector no consigue arrancar, el detalle queda registrado en
+`/tmp/minitv-book.log`.
 
 Si quieres comparar reproductores en la Raspberry Pi Zero 2:
 
