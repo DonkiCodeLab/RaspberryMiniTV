@@ -57,6 +57,7 @@ import {
   getMediaStreamUrl,
   getBookContent,
   getBookContentUrl,
+  getBookCoverUrl,
   getRaspberryAlarms,
   getRaspberryBirthdays,
   getRaspberryLanguage,
@@ -555,14 +556,14 @@ const UI_STRINGS = {
     duration: "Duración",
     rating: "Valoración (TMDB)",
     genres: "Categorías",
-    movie_filter: "Filtrar películas",
+    movie_filter: "Filtrar por nombre",
     movie_filter_title: "Buscar y filtrar",
-    movie_filter_search: "Buscar por título",
-    movie_filter_search_placeholder: "Escribe el título de una película",
+    movie_filter_search: "Buscar por nombre",
+    movie_filter_search_placeholder: "Escribe un nombre",
     movie_filter_categories: "Categorías",
     movie_filter_clear: "Limpiar filtros",
-    movie_filter_no_results: "No hay películas que coincidan con los filtros.",
-    movie_filter_count: "Mostrando {shown} películas de {total}",
+    movie_filter_no_results: "No hay elementos que coincidan con los filtros.",
+    movie_filter_count: "Mostrando {shown} de {total}",
     synopsis: "Sinopsis",
     release_unknown: "Fecha de estreno no disponible",
     duration_unknown: "Duración no disponible",
@@ -874,14 +875,14 @@ const UI_STRINGS = {
     duration: "Durada",
     rating: "Valoració (TMDB)",
     genres: "Categories",
-    movie_filter: "Filtrar pel·lícules",
+    movie_filter: "Filtrar per nom",
     movie_filter_title: "Cercar i filtrar",
-    movie_filter_search: "Cercar per títol",
-    movie_filter_search_placeholder: "Escriu el títol d'una pel·lícula",
+    movie_filter_search: "Cercar per nom",
+    movie_filter_search_placeholder: "Escriu un nom",
     movie_filter_categories: "Categories",
     movie_filter_clear: "Netejar filtres",
-    movie_filter_no_results: "No hi ha pel·lícules que coincideixin amb els filtres.",
-    movie_filter_count: "Mostrant {shown} pel·lícules de {total}.",
+    movie_filter_no_results: "No hi ha elements que coincideixin amb els filtres.",
+    movie_filter_count: "Mostrant {shown} de {total}.",
     synopsis: "Sinopsi",
     release_unknown: "Data d'estrena no disponible",
     duration_unknown: "Durada no disponible",
@@ -1193,14 +1194,14 @@ const UI_STRINGS = {
     duration: "Duration",
     rating: "Rating (TMDB)",
     genres: "Categories",
-    movie_filter: "Filter movies",
+    movie_filter: "Filter by name",
     movie_filter_title: "Search and filter",
-    movie_filter_search: "Search by title",
-    movie_filter_search_placeholder: "Type a movie title",
+    movie_filter_search: "Search by name",
+    movie_filter_search_placeholder: "Type a name",
     movie_filter_categories: "Categories",
     movie_filter_clear: "Clear filters",
-    movie_filter_no_results: "No movies match the selected filters.",
-    movie_filter_count: "Showing {shown} movies out of {total}.",
+    movie_filter_no_results: "No items match the selected filters.",
+    movie_filter_count: "Showing {shown} out of {total}.",
     synopsis: "Synopsis",
     release_unknown: "Release date unavailable",
     duration_unknown: "Duration unavailable",
@@ -5175,7 +5176,7 @@ function RaspberryPage({
 }
 
 function BookCover({ book }) {
-  const imageUrl = book.coverUrl || cartellLogo;
+  const imageUrl = book.coverUrl || getBookCoverUrl(book.relativePath);
   const [imageAvailable, setImageAvailable] = useState(true);
 
   useEffect(() => setImageAvailable(true), [imageUrl]);
@@ -5496,9 +5497,13 @@ export default function App() {
   const [episodePlaying, setEpisodePlaying] = useState(false);
   const [movieFrameIndex, setMovieFrameIndex] = useState(1);
   const [moviePlaying, setMoviePlaying] = useState(false);
-  const [movieFilterOpen, setMovieFilterOpen] = useState(false);
-  const [movieFilterQuery, setMovieFilterQuery] = useState("");
-  const [movieFilterGenres, setMovieFilterGenres] = useState([]);
+  const [mediaFilterOpen, setMediaFilterOpen] = useState(false);
+  const [mediaFilterQueries, setMediaFilterQueries] = useState({
+    series: "",
+    movies: "",
+    games: "",
+    books: "",
+  });
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const seasonHeroShellRef = useRef(null);
   const alarmPreviewAudioRef = useRef(null);
@@ -6059,11 +6064,17 @@ export default function App() {
       : activeMediaType === "movies"
         ? selectedMovie
         : selectedSeries;
-  const hasSettingsButton = !["games", "books"].includes(activeMediaType) && Boolean(selectedItem);
+  const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
+  const hasSettingsButton = activeMediaType === "books" ? Boolean(activeBookCollection) : Boolean(selectedItem);
 
   const seasons = selectedSeries?.seasons || [];
-  const headerImage =
-    activeMediaType === "games" ? selectedGame?.coverImage || cartellLogo : activeMediaType === "books" ? (bookCollections.find((entry) => entry.key === selectedBookCollection)?.coverUrl || selectedBook?.coverUrl || cartellLogo) : selectedItem?.heroImage || cartellLogo;
+  const headerImage = activeMediaType === "games"
+    ? selectedGame?.coverImage || cartellLogo
+    : activeMediaType === "books"
+      ? activeBookCollection?.coverUrl || (activeBookCollection?.key.startsWith("__book__")
+        ? selectedBook?.coverUrl || getBookCoverUrl(selectedBook?.relativePath) || cartellLogo
+        : cartellLogo)
+      : selectedItem?.heroImage || cartellLogo;
   const headerImageCrop =
     ["games", "books"].includes(activeMediaType)
       ? DEFAULT_HERO_CROP
@@ -6318,12 +6329,26 @@ export default function App() {
 
   function handleMediaTypeChange(nextType) {
     setActiveMediaType(nextType);
+    setMediaFilterOpen(false);
     setCurrentView("series");
     setSeasonEpisodes(null);
     setSelectedEpisode(null);
     setEpisodeDialogOpen(false);
     setSettingsOpen(false);
     setAddSeriesOpen(false);
+  }
+
+  function handleOpenCustomization() {
+    if (activeMediaType === "books") {
+      if (!activeBookCollection) return;
+      if (activeBookCollection.key.startsWith("__book__")) {
+        setBookMetadataTarget(activeBookCollection.books[0]);
+      } else {
+        setBookCollectionTarget(activeBookCollection);
+      }
+      return;
+    }
+    if (selectedItem) setSettingsOpen(true);
   }
 
   function handleOpenRaspberryPage() {
@@ -7523,23 +7548,27 @@ export default function App() {
   const isMoviesMode = activeMediaType === "movies";
   const isGamesMode = activeMediaType === "games";
   const isBooksMode = activeMediaType === "books";
-  const availableMovieGenres = useMemo(
-    () =>
-      [...new Set(movieOptions.flatMap((movie) => movie.genres || []).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b, raspberryLanguage)
-      ),
-    [movieOptions, raspberryLanguage]
-  );
+  const activeFilterQuery = mediaFilterQueries[activeMediaType] || "";
+  const normalizedFilterQuery = normalizeMediaLabel(activeFilterQuery);
   const filteredMovieOptions = useMemo(() => {
-    const normalizedQuery = normalizeMediaLabel(movieFilterQuery);
-    return movieOptions.filter((movie) => {
-      const matchesTitle = !normalizedQuery || normalizeMediaLabel(movie.name).includes(normalizedQuery);
-      const matchesGenres = !movieFilterGenres.length || movieFilterGenres.some((genre) => (movie.genres || []).includes(genre));
-      return matchesTitle && matchesGenres;
-    });
-  }, [movieFilterGenres, movieFilterQuery, movieOptions]);
-  const selectorOptions = isGamesMode ? gameLibrary : isMoviesMode ? filteredMovieOptions : seriesOptions;
-  const movieFiltersActive = Boolean(movieFilterQuery.trim() || movieFilterGenres.length);
+    return movieOptions.filter((movie) =>
+      !normalizedFilterQuery || normalizeMediaLabel(movie.name).includes(normalizedFilterQuery)
+    );
+  }, [movieOptions, normalizedFilterQuery]);
+  const filteredSeriesOptions = useMemo(
+    () => seriesOptions.filter((series) => !normalizedFilterQuery || normalizeMediaLabel(series.name).includes(normalizedFilterQuery)),
+    [normalizedFilterQuery, seriesOptions]
+  );
+  const filteredGameOptions = useMemo(
+    () => gameLibrary.filter((game) => !normalizedFilterQuery || normalizeMediaLabel(game.name || game.file).includes(normalizedFilterQuery)),
+    [gameLibrary, normalizedFilterQuery]
+  );
+  const filteredBookCollections = useMemo(
+    () => bookCollections.filter((collection) => !normalizedFilterQuery || normalizeMediaLabel(collection.label).includes(normalizedFilterQuery)),
+    [bookCollections, normalizedFilterQuery]
+  );
+  const selectorOptions = isGamesMode ? filteredGameOptions : isMoviesMode ? filteredMovieOptions : filteredSeriesOptions;
+  const mediaFiltersActive = Boolean(activeFilterQuery.trim());
   const formatBookCollectionLabel = (collection) => {
     if (!collection) return t("media_books");
     return collection.label;
@@ -7555,7 +7584,6 @@ export default function App() {
         : `${count} ${count === 1 ? "libro" : "libros"}`;
     return countLabel;
   };
-  const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
   const selectorValue = isBooksMode
     ? selectedBookCollection
     : isGamesMode
@@ -7572,13 +7600,13 @@ export default function App() {
       : t("select_series");
   const isLibraryEmpty = !selectedItem && !isGamesMode && !isBooksMode;
   const heroSelectorOptions = isBooksMode
-    ? bookCollections.map((collection) => ({
+    ? filteredBookCollections.map((collection) => ({
         key: collection.key,
         value: collection.key,
         label: formatBookCollectionLabel(collection),
       }))
     : isGamesMode
-    ? gameLibrary.map((game) => ({
+    ? filteredGameOptions.map((game) => ({
         key: game.relativePath || game.file,
         value: game.relativePath || "",
         label: game.name || game.file,
@@ -7588,6 +7616,16 @@ export default function App() {
         value: isMoviesMode ? String(item.id) : item.directoryPath,
         label: item.name,
       }));
+  const filterTotal = isBooksMode
+    ? bookCollections.length
+    : isGamesMode
+      ? gameLibrary.length
+      : isMoviesMode
+        ? movieOptions.length
+        : seriesOptions.length;
+  const filterVisible = isBooksMode
+    ? filteredBookCollections.length
+    : selectorOptions.length;
   const emptyTitle = isMoviesMode ? t("no_movies_available") : t("no_seasons_available");
   const emptyDescription = isMoviesMode
     ? t("add_movie_prompt")
@@ -7939,56 +7977,30 @@ export default function App() {
                           maskImage: `url(${cartellMask})`,
                         }}
                       />
-                      {isMoviesMode && movieOptions.length ? (
+                      {filterTotal ? (
                         <div className="movie-filter__count">
                           {t("movie_filter_count", {
-                            shown: filteredMovieOptions.length,
-                            total: movieOptions.length,
+                            shown: filterVisible,
+                            total: filterTotal,
                           })}
                         </div>
                       ) : null}
                       <div
-                        className={`series-hero__controls-row${isGamesMode || (isBooksMode && activeBookCollection) || (isMoviesMode && movieOptions.length) ? "" : " series-hero__controls-row--selector-only"}`}
+                        className={`series-hero__controls-row${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
-                        {isMoviesMode && movieOptions.length ? (
+                        {filterTotal ? (
                           <button
-                            className={`movie-filter__toggle${movieFilterOpen ? " is-open" : ""}${movieFiltersActive ? " has-filters" : ""}`}
+                            className={`movie-filter__toggle${mediaFilterOpen ? " is-open" : ""}${mediaFiltersActive ? " has-filters" : ""}`}
                             type="button"
-                            onClick={() => setMovieFilterOpen((current) => !current)}
+                            onClick={() => setMediaFilterOpen((current) => !current)}
                             aria-label={t("movie_filter")}
-                            aria-expanded={movieFilterOpen}
+                            aria-expanded={mediaFilterOpen}
                             title={t("movie_filter")}
                           >
                             <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d={movieFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} />
+                              <path d={mediaFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} />
                             </svg>
-                            {movieFiltersActive ? <span>{movieFilterGenres.length + (movieFilterQuery.trim() ? 1 : 0)}</span> : null}
-                          </button>
-                        ) : isBooksMode && activeBookCollection ? (
-                          <button
-                            className="series-icon-button series-icon-button--settings"
-                            onClick={() => activeBookCollection.key.startsWith("__book__") ? setBookMetadataTarget(activeBookCollection.books[0]) : setBookCollectionTarget(activeBookCollection)}
-                            type="button"
-                            aria-label="Customizar libro o colección"
-                            title="Customizar libro o colección"
-                          >
-                            <img className="series-icon-button__image series-icon-button__image--settings" src={settingsIcon} alt="" aria-hidden="true" draggable="false" />
-                          </button>
-                        ) : isGamesMode && selectedGame ? (
-                          <button
-                            className="series-icon-button series-icon-button--settings"
-                            onClick={() => setSettingsOpen(true)}
-                            type="button"
-                            aria-label={t("games_edit_title")}
-                            title={t("games_edit_title")}
-                          >
-                            <img
-                              className="series-icon-button__image series-icon-button__image--settings"
-                              src={settingsIcon}
-                              alt=""
-                              aria-hidden="true"
-                              draggable="false"
-                            />
+                            {mediaFiltersActive ? <span>1</span> : null}
                           </button>
                         ) : isGamesMode ? (
                           <button
@@ -8036,10 +8048,10 @@ export default function App() {
                     {hasSettingsButton ? (
                       <button
                         className="series-icon-button series-icon-button--hero series-icon-button--hero-settings"
-                        onClick={() => setSettingsOpen(true)}
+                        onClick={handleOpenCustomization}
                         type="button"
-                        aria-label={`Personalizar ${isMoviesMode ? "pelicula" : "serie"}`}
-                        title={`Personalizar ${isMoviesMode ? "pelicula" : "serie"}`}
+                        aria-label={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.key.startsWith("__book__") ? "libro" : "colección"}`}
+                        title={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.key.startsWith("__book__") ? "libro" : "colección"}`}
                       >
                         <img
                           className="series-icon-button__image series-icon-button__image--settings"
@@ -8061,28 +8073,17 @@ export default function App() {
                   </div>
                 </header>
 
-                {isMoviesMode && movieOptions.length && movieFilterOpen ? (
+                {filterTotal && mediaFilterOpen ? (
                   <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
-                      {movieFiltersActive ? <button type="button" onClick={() => { setMovieFilterQuery(""); setMovieFilterGenres([]); }}>{t("movie_filter_clear")}</button> : null}
+                      {mediaFiltersActive ? <button type="button" onClick={() => setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: "" }))}>{t("movie_filter_clear")}</button> : null}
                     </div>
                     <label className="movie-filter__search">
                       <span>{t("movie_filter_search")}</span>
-                      <input type="search" value={movieFilterQuery} onChange={(event) => setMovieFilterQuery(event.target.value)} placeholder={t("movie_filter_search_placeholder")} autoFocus />
+                      <input type="search" value={activeFilterQuery} onChange={(event) => setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: event.target.value }))} placeholder={t("movie_filter_search_placeholder")} autoFocus />
                     </label>
-                    <fieldset className="movie-filter__categories">
-                      <legend>{t("movie_filter_categories")}</legend>
-                      <div>
-                        {availableMovieGenres.map((genre) => (
-                          <label key={genre}>
-                            <input type="checkbox" checked={movieFilterGenres.includes(genre)} onChange={() => setMovieFilterGenres((current) => current.includes(genre) ? current.filter((item) => item !== genre) : [...current, genre])} />
-                            <span>{genre}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </fieldset>
-                    {!filteredMovieOptions.length ? <p className="movie-filter__empty">{t("movie_filter_no_results")}</p> : null}
+                    {!filterVisible ? <p className="movie-filter__empty">{t("movie_filter_no_results")}</p> : null}
                   </section>
                 ) : null}
 
