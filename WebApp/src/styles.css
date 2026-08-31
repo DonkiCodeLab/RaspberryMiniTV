@@ -4273,6 +4273,10 @@ img {
   transition: width 160ms ease;
 }
 
+.book-upload-progress-dialog { width: min(520px, calc(100vw - 2rem)); }
+.book-upload-progress { width: 100%; margin-top: 1rem; }
+.book-upload-progress-dialog .dialog-card__actions { margin-top: 1.2rem; }
+
 .dialog-card__actions {
   display: flex;
   justify-content: center;

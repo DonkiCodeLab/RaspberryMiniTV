@@ -535,6 +535,10 @@ const UI_STRINGS = {
     upload_chapter_copying: "Cargando {current} de {total} capítulos",
     upload_saving: "Guardando en la Raspberry...",
     upload_all_done: "Todo subido correctamente.",
+    book_upload_loading: "Cargando libros…",
+    book_upload_complete: "Carga completada",
+    book_upload_error: "Error al cargar",
+    book_upload_failed: "No se pudieron cargar los libros.",
     upload_cancel_confirm: "Eips, se está subiendo contenido a la Raspberry. ¿Seguro que quieres cancelar la subida?",
     upload_close_confirm: "Eips, se está subiendo contenido a la Raspberry. Si cierras esta ventana se cancelará la subida. ¿Seguro?",
     upload_canceled: "Subida cancelada.",
@@ -854,6 +858,10 @@ const UI_STRINGS = {
     upload_chapter_copying: "Carregant {current} de {total} capítols",
     upload_saving: "Desant a la Raspberry...",
     upload_all_done: "Tot s'ha pujat correctament.",
+    book_upload_loading: "Carregant llibres…",
+    book_upload_complete: "Càrrega completada",
+    book_upload_error: "Error en carregar",
+    book_upload_failed: "No s'han pogut carregar els llibres.",
     upload_cancel_confirm: "Eips, s'està pujant contingut a la Raspberry. Segur que vols cancel·lar la pujada?",
     upload_close_confirm: "Eips, s'està pujant contingut a la Raspberry. Si tanques aquesta finestra es cancel·larà la pujada. Segur?",
     upload_canceled: "Pujada cancel·lada.",
@@ -1173,6 +1181,10 @@ const UI_STRINGS = {
     upload_chapter_copying: "Loading {current} of {total} episodes",
     upload_saving: "Saving on the Raspberry...",
     upload_all_done: "Everything uploaded successfully.",
+    book_upload_loading: "Uploading books…",
+    book_upload_complete: "Upload complete",
+    book_upload_error: "Upload error",
+    book_upload_failed: "The books could not be uploaded.",
     upload_cancel_confirm: "Heads up, content is uploading to the Raspberry. Are you sure you want to cancel the upload?",
     upload_close_confirm: "Heads up, content is uploading to the Raspberry. Closing this window will cancel the upload. Are you sure?",
     upload_canceled: "Upload canceled.",
@@ -3519,6 +3531,52 @@ function GameUploadModal({
   );
 }
 
+function BookUploadProgressModal({ upload, onCancel, onClose, t }) {
+  if (!upload) return null;
+  const progressValue = clamp(Number(upload.progress?.percent) || 0, 0, 100);
+  const isUploading = upload.phase === "uploading";
+  const isDone = upload.phase === "done";
+  const progressTitle = upload.progress?.status === "saving"
+    ? t("upload_saving")
+    : isDone
+      ? t("upload_all_done")
+      : t("upload_copying");
+
+  return createPortal(
+    <div className="modal-backdrop">
+      <div className="dialog-card book-upload-progress-dialog" role="dialog" aria-modal="true" aria-labelledby="book-upload-progress-title">
+        <div className="dialog-card__header">
+          <div>
+            <p>{t("media_books")}</p>
+            <h2 id="book-upload-progress-title">{isDone ? t("book_upload_complete") : upload.phase === "error" ? t("book_upload_error") : t("book_upload_loading")}</h2>
+          </div>
+          {!isUploading ? <button className="dialog-card__close" onClick={onClose} type="button">×</button> : null}
+        </div>
+        {upload.phase === "error" ? (
+          <p className="dialog-error">{upload.error || t("book_upload_failed")}</p>
+        ) : (
+          <div className="upload-progress book-upload-progress" role="status" aria-live="polite">
+            <div className="upload-progress__copy">
+              <strong>{progressTitle}</strong>
+              <span>{upload.label}</span>
+            </div>
+            <div className="upload-progress__bar" aria-hidden="true">
+              <span style={{ width: `${isDone ? 100 : progressValue}%` }} />
+            </div>
+            <p>{isDone ? upload.summary : `${progressValue}%`}</p>
+          </div>
+        )}
+        <div className="dialog-card__actions">
+          <button className={`dialog-button ${isDone ? "dialog-button--accent" : "dialog-button--ghost"}`} onClick={isUploading ? onCancel : onClose} type="button">
+            {isUploading ? t("cancel") : t("close")}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
   const [query, setQuery] = useState("");
   const [platformExtension, setPlatformExtension] = useState("gba");
@@ -5486,6 +5544,7 @@ export default function App() {
   const [uploadDirectoryName, setUploadDirectoryName] = useState("");
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
+  const [bookUploadDialog, setBookUploadDialog] = useState(null);
   const [uploadValidationError, setUploadValidationError] = useState(null);
   const [seriesDuplicatePrompt, setSeriesDuplicatePrompt] = useState(null);
   const [gameLookupOpen, setGameLookupOpen] = useState(false);
@@ -5557,6 +5616,21 @@ export default function App() {
     clearUploadAbortController();
     setUploadProgress(null);
     setUploadSummary(t("upload_canceled"));
+  }
+
+  function handleCancelBookUpload() {
+    if (!window.confirm(t("upload_cancel_confirm"))) return;
+    uploadAbortControllerRef.current?.abort();
+    clearUploadAbortController();
+    setUploadProgress(null);
+    setBookUploadDialog(null);
+    setUploadSummary(t("upload_canceled"));
+  }
+
+  function handleCloseBookUpload() {
+    const uploadedBook = bookUploadDialog?.phase === "done" ? bookUploadDialog.book : null;
+    setBookUploadDialog(null);
+    if (uploadedBook) setBookMetadataTarget(uploadedBook);
   }
 
   function handleCloseUploadDialog() {
@@ -7465,25 +7539,62 @@ export default function App() {
       if (requestedTitle === null) return;
       const safeTitle = requestedTitle.trim() || suggestedTitle;
       const collection = isCollectionUpload ? safeTitle : "";
+      const uploadLabel = isCollectionUpload
+        ? `${safeTitle} · ${bookFiles.length} libro(s)`
+        : bookFiles[0].name;
       try {
         setUploadSummary(`Subiendo ${bookFiles.length} libro(s)…`);
+        setUploadProgress({ percent: 0, fileName: uploadLabel, status: "uploading" });
+        setBookUploadDialog({
+          phase: "uploading",
+          label: uploadLabel,
+          progress: { percent: 0, fileName: uploadLabel, status: "uploading" },
+        });
+        const signal = createUploadSignal();
         const uploadResponse = await uploadBookFiles({
           files: bookFiles,
           collection,
           title: isCollectionUpload ? "" : safeTitle,
+          signal,
+          onProgress: (progress) => {
+            setUploadProgress(progress);
+            setBookUploadDialog((current) => current ? { ...current, progress } : current);
+          },
         });
+        clearUploadAbortController();
         const nextVideos = await getVideos();
         setVideos(nextVideos);
+        let uploadedBook = null;
         if (!isCollectionUpload) {
           const uploadedPath = uploadResponse?.items?.[0]?.relativePath;
-          const uploadedBook = (nextVideos?.books || []).find((book) => book.relativePath === uploadedPath);
-          if (uploadedBook) setBookMetadataTarget(uploadedBook);
+          uploadedBook = (nextVideos?.books || []).find((book) => book.relativePath === uploadedPath) || null;
         }
-        setUploadSummary(`${bookFiles.length} libro(s) añadidos${collection ? ` a ${collection}` : ""}.`);
+        const completedSummary = `${bookFiles.length} libro(s) añadidos${collection ? ` a ${collection}` : ""}.`;
+        setUploadSummary(completedSummary);
+        setUploadProgress(null);
+        setBookUploadDialog({
+          phase: "done",
+          label: uploadLabel,
+          summary: completedSummary,
+          book: uploadedBook,
+          progress: { percent: 100, fileName: uploadLabel, status: "done" },
+        });
         setCurrentView("series");
         setActiveMediaType("books");
       } catch (nextError) {
-        setUploadValidationError({ title: "No se pudieron subir los libros", message: nextError.message });
+        clearUploadAbortController();
+        setUploadProgress(null);
+        if (nextError?.name === "AbortError") {
+          setBookUploadDialog(null);
+          setUploadSummary(t("upload_canceled"));
+        } else {
+          setBookUploadDialog({
+            phase: "error",
+            label: uploadLabel,
+            error: nextError.message || t("book_upload_failed"),
+            progress: { percent: 0, fileName: uploadLabel, status: "error" },
+          });
+        }
       }
       return;
     }
@@ -8511,6 +8622,12 @@ export default function App() {
               onClose={handleCloseGameUploadDialog}
               onCancelUpload={handleCancelActiveUpload}
               onUpload={handleUploadGameSelection}
+              t={t}
+            />
+            <BookUploadProgressModal
+              upload={bookUploadDialog}
+              onCancel={handleCancelBookUpload}
+              onClose={handleCloseBookUpload}
               t={t}
             />
             <UploadValidationModal

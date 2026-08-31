@@ -1244,15 +1244,55 @@ export function getBookCoverUrl(relativePath) {
   return `${getBaseUrl()}/books/cover?${params.toString()}`;
 }
 
-export async function uploadBookFiles({ files, collection = "", title = "" } = {}) {
+export async function uploadBookFiles({ files, collection = "", title = "", onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) throw new Error("Missing book files");
-  if (isMockModeEnabled()) return { ok: true, mock: true, items: [] };
+  if (isMockModeEnabled()) {
+    if (typeof onProgress === "function") {
+      onProgress({ percent: 100, fileName: safeFiles.at(-1)?.name || "", status: "done" });
+    }
+    return { ok: true, mock: true, items: [] };
+  }
   const form = new FormData();
   safeFiles.forEach((file) => form.append("files", file, file.webkitRelativePath || file.name));
   form.append("collection", collection);
   form.append("title", title);
-  return request("/books/upload", { method: "POST", body: form });
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${getBaseUrl()}/books/upload`);
+    const detachAbort = attachUploadAbort(xhr, signal, reject);
+    const storedPin = getStoredWebPin();
+    if (storedPin) xhr.setRequestHeader("X-Web-Pin", storedPin);
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || typeof onProgress !== "function") return;
+      onProgress({
+        percent: Math.round((event.loaded / event.total) * 100),
+        fileName: safeFiles.length === 1 ? safeFiles[0].name : `${safeFiles.length} libros`,
+        status: event.loaded >= event.total ? "saving" : "uploading",
+      });
+    };
+    xhr.onload = () => {
+      detachAbort();
+      const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (typeof onProgress === "function") {
+          onProgress({ percent: 100, fileName: safeFiles.length === 1 ? safeFiles[0].name : `${safeFiles.length} libros`, status: "done" });
+        }
+        resolve(payload);
+        return;
+      }
+      const error = new Error(payload?.error || `HTTP ${xhr.status}`);
+      error.status = xhr.status;
+      reject(error);
+    };
+    xhr.onerror = () => {
+      detachAbort();
+      reject(new Error("Upload failed"));
+    };
+    xhr.onabort = () => detachAbort();
+    xhr.send(form);
+  });
 }
 
 export function removeBookFile(relativePath) {
