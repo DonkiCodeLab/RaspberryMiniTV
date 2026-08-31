@@ -5942,8 +5942,8 @@ export default function App() {
                 name: profile.name || tmdbMovie?.name || movie.name,
                 heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
                 heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
-                imdbUrl: String(profile.imdbUrl || "").trim(),
-                rottenTomatoesUrl: String(profile.rottenTomatoesUrl || "").trim(),
+                imdbUrl: String(profile.imdbUrl || tmdbMovie?.imdbUrl || "").trim(),
+                rottenTomatoesUrl: String(profile.rottenTomatoesUrl || tmdbMovie?.rottenTomatoesUrl || "").trim(),
               },
             ];
           })
@@ -6004,8 +6004,8 @@ export default function App() {
         originalName: tmdbMovie?.originalName || "",
         heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
-        imdbUrl: normalizeImdbUrl(profile.imdbUrl),
-        rottenTomatoesUrl: normalizeRottenTomatoesUrl(profile.rottenTomatoesUrl),
+        imdbUrl: normalizeImdbUrl(profile.imdbUrl || tmdbMovie?.imdbUrl),
+        rottenTomatoesUrl: normalizeRottenTomatoesUrl(profile.rottenTomatoesUrl || tmdbMovie?.rottenTomatoesUrl),
         imageOptions: tmdbMovie?.imageOptions || [],
         overview: tmdbMovie?.overview || "",
         releaseDate: tmdbMovie?.releaseDate || "",
@@ -6852,6 +6852,7 @@ export default function App() {
 
   async function handleAddMediaItem(selectedSeriesResult, targetMediaType = activeMediaType) {
     if (targetMediaType === "movies") {
+      const movieDetails = await getMovieById(selectedSeriesResult.id, tmdbLanguage);
       const uploadFile = uploadLookupOpen ? uploadSelectedFiles[0] : null;
       let uploadedMovie = null;
 
@@ -6872,10 +6873,32 @@ export default function App() {
 
       const nextLibrary = upsertMediaLibraryItem("movies", {
         id: selectedSeriesResult.id,
-        name: selectedSeriesResult.name,
+        name: movieDetails?.name || selectedSeriesResult.name,
         fileRelativePath: uploadedMovie?.item?.relativePath || "",
         fileName: uploadedMovie?.item?.file || uploadFile?.name || "",
       });
+      const movieProfile = {
+        name: movieDetails?.name || selectedSeriesResult.name,
+        heroImage: movieDetails?.heroImage || selectedSeriesResult.heroImage || "",
+        heroImageCrop: DEFAULT_HERO_CROP,
+        imdbUrl: movieDetails?.imdbUrl || "",
+        rottenTomatoesUrl: movieDetails?.rottenTomatoesUrl || "",
+      };
+      const nextProfiles = updateSeriesProfile(String(selectedSeriesResult.id), movieProfile, "movies");
+      setMovieProfiles(nextProfiles);
+      if (uploadedMovie?.item?.relativePath) {
+        await saveMediaProfile({
+          collection: "movies",
+          relativePath: uploadedMovie.item.relativePath,
+          name: movieProfile.name,
+          tmdbId: selectedSeriesResult.id,
+          file: uploadedMovie.item.file || uploadFile?.name || "",
+          heroImage: movieProfile.heroImage,
+          heroImageCrop: movieProfile.heroImageCrop,
+          imdbUrl: movieProfile.imdbUrl,
+          rottenTomatoesUrl: movieProfile.rottenTomatoesUrl,
+        });
+      }
       if (uploadFile) {
         const nextVideos = await getVideos();
         setVideos(nextVideos);
