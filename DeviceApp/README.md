@@ -167,6 +167,9 @@ sudo apt install -y evince mupdf calibre mcomix
 Si un lector no consigue arrancar, el detalle queda registrado en
 `/tmp/minitv-book.log`.
 
+Los PDF se abren con la barra superior de Evince visible para poder cerrar el
+lector mediante el botón táctil `×` y regresar automáticamente al menú.
+
 Si quieres comparar reproductores en la Raspberry Pi Zero 2:
 
 ```bash

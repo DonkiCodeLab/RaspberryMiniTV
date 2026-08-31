@@ -2813,7 +2813,9 @@ class DeviceAppMenu:
             commands = [["mupdf-gl", full_path], ["mupdf", full_path], ["mcomix", full_path]]
         else:
             commands = [
-                ["evince", "--fullscreen", full_path],
+                # Keep Evince's native header bar visible so the reader always
+                # has a touch-friendly close button in MiniTV's Wayland session.
+                ["evince", full_path],
                 ["zathura", "--mode=fullscreen", full_path],
                 ["mupdf-gl", full_path],
                 ["mupdf", full_path],
