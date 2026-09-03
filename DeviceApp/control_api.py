@@ -14,6 +14,7 @@ import zipfile
 import datetime
 import hashlib
 
+from werkzeug.exceptions import HTTPException
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1858,36 +1859,63 @@ def game_cover_file(filename):
 
 @app.route("/books/upload", methods=["POST"])
 def upload_books():
-    uploaded_files = request.files.getlist("files")
-    requested_collection = str(request.form.get("collection") or "").strip()
-    requested_title = str(request.form.get("title") or "").strip()
-    if not uploaded_files:
-        return jsonify({"error": "Missing book files"}), 400
-
-    ensure_media_directories()
     saved = []
     rejected = []
-    for uploaded in uploaded_files:
-        original_path = str(uploaded.filename or "").replace("\\", "/").strip("/")
-        filename = os.path.basename(original_path)
-        if not filename or not is_book_file(filename):
-            rejected.append(original_path or filename)
-            continue
-        file_parent = os.path.dirname(original_path)
-        collection = requested_collection or (file_parent if file_parent not in {"", "."} else "")
-        safe_parts = [slugify(part, "collection") for part in collection.split("/") if part and part not in {".", ".."}]
-        target_dir = os.path.join(BOOKS_DIR, *safe_parts)
-        os.makedirs(target_dir, exist_ok=True)
-        desired_filename = filename
-        if requested_title and len(uploaded_files) == 1:
-            desired_filename = requested_title + os.path.splitext(filename)[1].lower()
-        target_name = unique_media_filename(target_dir, desired_filename)
-        target_path = os.path.join(target_dir, target_name)
-        uploaded.save(target_path)
-        relative = os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
-        saved.append({"name": os.path.splitext(target_name)[0], "file": target_name, "relativePath": f"Books/{relative}"})
+    original_path = ""
+    partial_path = None
+    log_upload_event(f"books request bytes={request.content_length}")
+    try:
+        uploaded_files = request.files.getlist("files")
+        requested_collection = str(request.form.get("collection") or "").strip()
+        requested_title = str(request.form.get("title") or "").strip()
+        if not uploaded_files:
+            return jsonify({"error": "Missing book files"}), 400
+
+        ensure_media_directories()
+        for uploaded in uploaded_files:
+            original_path = str(uploaded.filename or "").replace("\\", "/").strip("/")
+            filename = os.path.basename(original_path)
+            if not filename or not is_book_file(filename):
+                rejected.append(original_path or filename)
+                continue
+            file_parent = os.path.dirname(original_path)
+            collection = requested_collection or (file_parent if file_parent not in {"", "."} else "")
+            safe_parts = [slugify(part, "collection") for part in collection.split("/") if part and part not in {".", ".."}]
+            target_dir = os.path.join(BOOKS_DIR, *safe_parts)
+            os.makedirs(target_dir, exist_ok=True)
+            desired_filename = filename
+            if requested_title and len(uploaded_files) == 1:
+                desired_filename = os.path.basename(requested_title.replace("\\", "/")) + os.path.splitext(filename)[1].lower()
+            target_name = unique_media_filename(target_dir, desired_filename)
+            target_path = os.path.join(target_dir, target_name)
+            log_upload_event(f"book saving source={original_path!r} target={target_path!r}")
+            with tempfile.NamedTemporaryFile(dir=target_dir, prefix=".upload-", suffix=".part", delete=False) as temporary:
+                partial_path = temporary.name
+                uploaded.save(temporary)
+            if os.path.getsize(partial_path) == 0:
+                raise ValueError("El archivo recibido está vacío")
+            os.replace(partial_path, target_path)
+            partial_path = None
+            relative = os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
+            saved.append({"name": os.path.splitext(target_name)[0], "file": target_name, "relativePath": f"Books/{relative}"})
+            log_upload_event(f"book saved relative={relative!r} bytes={os.path.getsize(target_path)}")
+    except Exception as exc:
+        if partial_path and os.path.isfile(partial_path):
+            try:
+                os.remove(partial_path)
+            except OSError:
+                pass
+        status = exc.code if isinstance(exc, HTTPException) else 500
+        if isinstance(exc, OSError) and exc.errno == 28:
+            status = 507
+            reason = "No queda espacio disponible para guardar el cómic"
+        else:
+            reason = str(exc)
+        log_upload_event(f"books failed file={original_path!r} saved={len(saved)} error={exc!r}")
+        return jsonify({"error": reason, "file": original_path, "items": saved, "rejected": rejected}), status
 
     if not saved:
+        log_upload_event(f"books rejected files={rejected!r}")
         return jsonify({"error": "No supported books", "supported": sorted(BOOK_EXTENSIONS), "rejected": rejected}), 400
     return jsonify({"ok": True, "items": saved, "rejected": rejected})
 

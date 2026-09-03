@@ -1,3 +1,4 @@
+import { MEDIA_MARKS_KEY, mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason, loadMediaMarks } from "./mediaMarks.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
@@ -275,6 +276,14 @@ const UI_STRINGS = {
     language_english: "English",
     back: "Volver",
     episode_label: "Capítulo",
+    mark_watched: "Visto",
+    mark_unwatched: "No visto",
+    mark_favorite: "Favorito",
+    mark_not_favorite: "No favorito",
+    mark_all_watched: "Marcar todos como vistos",
+    mark_all_unwatched: "Marcar todos como no vistos",
+    mark_season_confirm: "¿Marcar todos los capítulos de «{season}» como {state}?",
+    mark_save_error: "No se han podido guardar las marcas en este navegador.",
     episodes: "capítulos",
     prev_image: "Imagen anterior",
     next_image: "Imagen siguiente",
@@ -566,6 +575,9 @@ const UI_STRINGS = {
     movie_filter_search_placeholder: "Escribe un nombre",
     movie_filter_categories: "Categorías",
     movie_filter_clear: "Limpiar filtros",
+    media_filter_favorites: "Mostrar solo favoritos",
+    movie_filter_genres_hint: "Muestra películas de cualquiera de las categorías seleccionadas.",
+    movie_filter_genres_empty: "No hay categorías disponibles.",
     movie_filter_no_results: "No hay elementos que coincidan con los filtros.",
     movie_filter_count: "Mostrando {shown} de {total}",
     synopsis: "Sinopsis",
@@ -598,6 +610,14 @@ const UI_STRINGS = {
     language_english: "English",
     back: "Tornar",
     episode_label: "Capítol",
+    mark_watched: "Vist",
+    mark_unwatched: "No vist",
+    mark_favorite: "Favorit",
+    mark_not_favorite: "No favorit",
+    mark_all_watched: "Marcar tots com a vistos",
+    mark_all_unwatched: "Marcar tots com a no vistos",
+    mark_season_confirm: "Vols marcar tots els capítols de «{season}» com a {state}?",
+    mark_save_error: "No s’han pogut desar les marques en aquest navegador.",
     episodes: "capítols",
     prev_image: "Imatge anterior",
     next_image: "Imatge següent",
@@ -889,6 +909,9 @@ const UI_STRINGS = {
     movie_filter_search_placeholder: "Escriu un nom",
     movie_filter_categories: "Categories",
     movie_filter_clear: "Netejar filtres",
+    media_filter_favorites: "Mostrar només favorits",
+    movie_filter_genres_hint: "Mostra pel·lícules de qualsevol de les categories seleccionades.",
+    movie_filter_genres_empty: "No hi ha categories disponibles.",
     movie_filter_no_results: "No hi ha elements que coincideixin amb els filtres.",
     movie_filter_count: "Mostrant {shown} de {total}.",
     synopsis: "Sinopsi",
@@ -921,6 +944,14 @@ const UI_STRINGS = {
     language_english: "English",
     back: "Back",
     episode_label: "Episode",
+    mark_watched: "Watched",
+    mark_unwatched: "Unwatched",
+    mark_favorite: "Favorite",
+    mark_not_favorite: "Not favorite",
+    mark_all_watched: "Mark all as watched",
+    mark_all_unwatched: "Mark all as unwatched",
+    mark_season_confirm: "Mark all episodes of “{season}” as {state}?",
+    mark_save_error: "Could not save your marks in this browser.",
     episodes: "episodes",
     prev_image: "Previous image",
     next_image: "Next image",
@@ -1212,6 +1243,9 @@ const UI_STRINGS = {
     movie_filter_search_placeholder: "Type a name",
     movie_filter_categories: "Categories",
     movie_filter_clear: "Clear filters",
+    media_filter_favorites: "Show favorites only",
+    movie_filter_genres_hint: "Shows movies in any of the selected categories.",
+    movie_filter_genres_empty: "No categories available.",
     movie_filter_no_results: "No items match the selected filters.",
     movie_filter_count: "Showing {shown} out of {total}.",
     synopsis: "Synopsis",
@@ -2159,7 +2193,20 @@ function resolveNextEpisodeTarget({ currentPlayback, raspberryHealth, seriesOpti
     : null;
 }
 
-function EpisodeRow({ episode, available, onSelect, t }) {
+function MediaMarkIcon({ favorite = false, active = false }) {
+  return <svg viewBox="0 0 24 24" fill={favorite && active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {favorite ? <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" /> : <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{!active && <path d="m3 3 18 18" />}</>}
+  </svg>;
+}
+
+function MediaMarkButtons({ watched, favorite, onWatched, onFavorite, t }) {
+  return <div className="media-marks">
+    {onWatched && <button type="button" className={`media-mark${watched ? " is-watched" : ""}`} aria-pressed={Boolean(watched)} onClick={() => onWatched(!watched)}><MediaMarkIcon active={watched} /><span>{t(watched ? "mark_watched" : "mark_unwatched")}</span></button>}
+    {onFavorite && <button type="button" className={`media-mark${favorite ? " is-favorite" : ""}`} aria-pressed={Boolean(favorite)} onClick={() => onFavorite(!favorite)}><MediaMarkIcon favorite active={favorite} /><span>{t(favorite ? "mark_favorite" : "mark_not_favorite")}</span></button>}
+  </div>;
+}
+
+function EpisodeRow({ episode, available, watched, onSelect, t }) {
   return (
     <article className={`episode-card${available ? "" : " is-disabled"}`}>
       <button
@@ -2179,6 +2226,7 @@ function EpisodeRow({ episode, available, onSelect, t }) {
         <p>{episode.airDate || t("not_available")}</p>
       </div>
 
+      <span className={`episode-mark${watched ? " is-watched" : ""}`} title={t(watched ? "mark_watched" : "mark_unwatched")} role="img" aria-label={t(watched ? "mark_watched" : "mark_unwatched")}><MediaMarkIcon active={watched} /></span>
       <div className="episode-card__arrow">›</div>
       </button>
     </article>
@@ -2320,6 +2368,8 @@ function EpisodeDetailsModal({
   playing,
   available,
   showPlayButton = true,
+  watched,
+  onWatched,
   onClose,
   onPlay,
   onPlayBrowser,
@@ -2383,6 +2433,7 @@ function EpisodeDetailsModal({
         </header>
 
         <div className="episode-dialog__body">
+          <MediaMarkButtons watched={watched} onWatched={onWatched} t={t} />
           <div className="episode-dialog__overview">
             {episode.image ? (
               <div className="episode-dialog__media">
@@ -2590,7 +2641,10 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
   const mediaLabel = mediaType === "movies" ? t("media_movies_singular") : t("media_series_singular");
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div
+      className="modal-backdrop"
+      onClick={mediaType === "movies" ? undefined : onClose}
+    >
         <div className="dialog-card dialog-card--settings" onClick={(event) => event.stopPropagation()}>
           <div className="dialog-card__header">
             <div>
@@ -3531,6 +3585,15 @@ function GameUploadModal({
   );
 }
 
+const BOOK_UPLOAD_REPORT_KEY = "minitv-book-upload-report-v1";
+function loadBookUploadReport() {
+  try {
+    const report = JSON.parse(window.localStorage.getItem(BOOK_UPLOAD_REPORT_KEY) || "null");
+    if (!report || !Array.isArray(report.files)) return null;
+    return report.status === "uploading" ? { ...report, status: "interrupted", note: "La página se cerró antes de recibir el resultado. Comprueba los archivos en la biblioteca antes de repetir la subida." } : report;
+  } catch { return null; }
+}
+
 function BookUploadProgressModal({ upload, onCancel, onClose, t }) {
   if (!upload) return null;
   const progressValue = clamp(Number(upload.progress?.percent) || 0, 0, 100);
@@ -3563,9 +3626,23 @@ function BookUploadProgressModal({ upload, onCancel, onClose, t }) {
             <div className="upload-progress__bar" aria-hidden="true">
               <span style={{ width: `${isDone ? 100 : progressValue}%` }} />
             </div>
-            <p>{isDone ? upload.summary : `${progressValue}%`}</p>
+            <p>{isDone ? upload.summary : `${progressValue}% · ${upload.progress?.current || 0}/${upload.progress?.total || 0} · ${upload.progress?.fileName || upload.label}`}</p>
           </div>
         )}
+        {upload.report ? <div className="book-upload-report">
+          <p>{new Date(upload.report.startedAt).toLocaleString()} · {upload.report.files.filter((file) => file.status === "saved").length}/{upload.report.files.length} archivos guardados</p>
+          {upload.report.note ? <p>{upload.report.note}</p> : null}
+          {upload.report.storageError ? <p role="alert">{upload.report.storageError}</p> : null}
+          <details open={upload.phase === "error"}>
+            <summary>Detalles de la subida</summary>
+            <ul>{upload.report.files.map((file, index) => <li key={index}><strong>{({ saved: "Guardado", pending: "Pendiente", uploading: "Sin confirmación", error: "Error", canceled: "Cancelado", rejected: "Formato no compatible" })[file.status] || file.status}</strong> · {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB{file.error ? ` — ${file.error}` : ""}{file.httpStatus ? ` (HTTP ${file.httpStatus})` : ""}</li>)}</ul>
+          </details>
+          <button className="dialog-button dialog-button--ghost" type="button" onClick={() => {
+            const url = URL.createObjectURL(new Blob([JSON.stringify(upload.report, null, 2)], { type: "application/json" }));
+            const link = document.createElement("a"); link.href = url; link.download = "informe-subida-comics.json"; link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }}>Descargar informe</button>
+        </div> : null}
         <div className="dialog-card__actions">
           <button className={`dialog-button ${isDone ? "dialog-button--accent" : "dialog-button--ghost"}`} onClick={isUploading ? onCancel : onClose} type="button">
             {isUploading ? t("cancel") : t("close")}
@@ -5257,7 +5334,7 @@ function BookCover({ book }) {
   );
 }
 
-function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onSelect, onOpen, onEdit, onDelete }) {
+function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onSelect, onOpen, onEdit, onDelete, renderMarks }) {
   const visibleBooks = books.filter((book) => {
     const collectionKey = book.collection || `__book__${book.relativePath}`;
     return collectionKey === selectedCollection;
@@ -5283,6 +5360,7 @@ function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onS
                   <strong>{book.name}</strong>
                   {book.author ? <small>{book.author}{book.year ? ` · ${book.year}` : ""}</small> : null}
                 </div>
+                {renderMarks(book)}
                 <div className="books-library__card-actions">
                   <button className="dialog-button dialog-button--accent" onClick={() => onOpen(book)} type="button">Abrir</button>
                   <button className="dialog-button dialog-button--ghost" onClick={() => onEdit(book)} type="button">Customizar</button>
@@ -5463,6 +5541,7 @@ function BookReader({ book, onClose }) {
 }
 
 export default function App() {
+  const [mediaMarks, setMediaMarks] = useState(loadMediaMarks);
   const mockMode = isMockMode();
   const [activeMediaType, setActiveMediaType] = useState("series");
   const [webPinInput, setWebPinInput] = useState("");
@@ -5545,6 +5624,7 @@ export default function App() {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
   const [bookUploadDialog, setBookUploadDialog] = useState(null);
+  const [bookUploadReport, setBookUploadReport] = useState(loadBookUploadReport);
   const [uploadValidationError, setUploadValidationError] = useState(null);
   const [seriesDuplicatePrompt, setSeriesDuplicatePrompt] = useState(null);
   const [gameLookupOpen, setGameLookupOpen] = useState(false);
@@ -5557,6 +5637,8 @@ export default function App() {
   const [movieFrameIndex, setMovieFrameIndex] = useState(1);
   const [moviePlaying, setMoviePlaying] = useState(false);
   const [mediaFilterOpen, setMediaFilterOpen] = useState(false);
+  const [mediaFavoritesOnly, setMediaFavoritesOnly] = useState({});
+  const [movieGenreFilters, setMovieGenreFilters] = useState({});
   const [mediaFilterQueries, setMediaFilterQueries] = useState({
     series: "",
     movies: "",
@@ -5569,6 +5651,33 @@ export default function App() {
   const uploadAbortControllerRef = useRef(null);
   const seriesDuplicateResolverRef = useRef(null);
   const t = (key, variables) => translate(raspberryLanguage, key, variables);
+
+  function saveMarks(next) {
+    try {
+      window.localStorage.setItem(MEDIA_MARKS_KEY, JSON.stringify(next));
+      setMediaMarks(next);
+    } catch {
+      window.alert(t("mark_save_error"));
+    }
+  }
+
+  function renderMarks(type, id, allowWatched = true, allowFavorite = true) {
+    const key = mediaMarkKey(type, id);
+    const marks = mediaMarks[key] || {};
+    const update = (field, value) => saveMarks({ ...mediaMarks, [key]: { ...marks, [field]: value } });
+    return <MediaMarkButtons watched={marks.watched} favorite={marks.favorite} onWatched={allowWatched ? (value) => update("watched", value) : undefined} onFavorite={allowFavorite ? (value) => update("favorite", value) : undefined} t={t} />;
+  }
+
+  function selectedSeasonMarkKey() {
+    return seasonMarkKey(selectedSeries?.id || selectedSeries?.directoryPath, selectedSeason?.seasonNumber ?? selectedSeason?.id);
+  }
+
+  function handleMarkSeason(watched) {
+    if (!selectedSeason) return;
+    if (!window.confirm(t("mark_season_confirm", { season: `${selectedSeries.name} · ${selectedSeason.title}`, state: t(watched ? "mark_watched" : "mark_unwatched").toLowerCase() }))) return;
+    saveMarks(markSeason(mediaMarks, selectedSeasonMarkKey(), watched));
+  }
+
   const tmdbLanguage = getTmdbLanguage(raspberryLanguage);
 
   function createUploadSignal() {
@@ -5625,6 +5734,13 @@ export default function App() {
     setUploadProgress(null);
     setBookUploadDialog(null);
     setUploadSummary(t("upload_canceled"));
+  }
+
+  function recordBookUploadReport(report) {
+    try { window.localStorage.setItem(BOOK_UPLOAD_REPORT_KEY, JSON.stringify(report)); }
+    catch { report = { ...report, storageError: "No se pudo conservar el informe en este navegador. Descárgalo antes de cerrar la página." }; }
+    setBookUploadReport(report);
+    return report;
   }
 
   function handleCloseBookUpload() {
@@ -7523,7 +7639,9 @@ export default function App() {
       const supported = new Set(["pdf", "epub", "cbz", "cbr"]);
       const bookFiles = safeFiles.filter((file) => supported.has(getFileExtension(file.name)));
       if (!bookFiles.length || bookFiles.length !== safeFiles.length) {
-        setUploadValidationError({ title: "Formato no compatible", message: "Usa archivos PDF, EPUB, CBZ o CBR." });
+        const report = recordBookUploadReport({ startedAt: new Date().toISOString(), status: "error", error: "La carpeta contiene archivos incompatibles. Usa PDF, EPUB, CBZ o CBR.", files: safeFiles.map((file) => ({ name: file.webkitRelativePath || file.name, size: file.size, status: supported.has(getFileExtension(file.name)) ? "pending" : "rejected" })) });
+        setBookUploadDialog({ phase: "error", error: report.error, report });
+        setUploadSummary(report.error);
         return;
       }
       const firstPath = String(bookFiles[0].webkitRelativePath || "").replace(/\\/g, "/");
@@ -7553,6 +7671,10 @@ export default function App() {
         const signal = createUploadSignal();
         const uploadResponse = await uploadBookFiles({
           files: bookFiles,
+          onReport: (report) => {
+            const savedReport = recordBookUploadReport(report);
+            setBookUploadDialog((current) => current ? { ...current, report: savedReport } : current);
+          },
           collection,
           title: isCollectionUpload ? "" : safeTitle,
           signal,
@@ -7562,20 +7684,29 @@ export default function App() {
           },
         });
         clearUploadAbortController();
-        const nextVideos = await getVideos();
-        setVideos(nextVideos);
+        let nextVideos = null;
+        let refreshWarning = "";
+        try {
+          nextVideos = await getVideos();
+          setVideos(nextVideos);
+        } catch (refreshError) {
+          refreshWarning = ` Los archivos se han guardado, pero no se pudo actualizar la biblioteca: ${refreshError.message}.`;
+          uploadResponse.report.note = refreshWarning;
+          recordBookUploadReport(uploadResponse.report);
+        }
         let uploadedBook = null;
         if (!isCollectionUpload) {
           const uploadedPath = uploadResponse?.items?.[0]?.relativePath;
           uploadedBook = (nextVideos?.books || []).find((book) => book.relativePath === uploadedPath) || null;
         }
-        const completedSummary = `${bookFiles.length} libro(s) añadidos${collection ? ` a ${collection}` : ""}.`;
+        const completedSummary = `${uploadResponse.items.length} libro(s) añadidos${collection ? ` a ${collection}` : ""}.${refreshWarning}`;
         setUploadSummary(completedSummary);
         setUploadProgress(null);
         setBookUploadDialog({
           phase: "done",
           label: uploadLabel,
           summary: completedSummary,
+          report: uploadResponse.report,
           book: uploadedBook,
           progress: { percent: 100, fileName: uploadLabel, status: "done" },
         });
@@ -7584,17 +7715,12 @@ export default function App() {
       } catch (nextError) {
         clearUploadAbortController();
         setUploadProgress(null);
-        if (nextError?.name === "AbortError") {
-          setBookUploadDialog(null);
-          setUploadSummary(t("upload_canceled"));
-        } else {
-          setBookUploadDialog({
-            phase: "error",
-            label: uploadLabel,
-            error: nextError.message || t("book_upload_failed"),
-            progress: { percent: 0, fileName: uploadLabel, status: "error" },
-          });
-        }
+        const message = nextError?.name === "AbortError" ? t("upload_canceled") : nextError.report?.error || nextError.message || t("book_upload_failed");
+        setUploadSummary(message);
+        setBookUploadDialog({ phase: "error", label: uploadLabel, error: message, report: nextError.report });
+        // A failed batch can still contain confirmed files. Refresh without hiding the original error.
+        try { setVideos(await getVideos()); } catch { /* The report remains available. */ }
+
       }
       return;
     }
@@ -7684,25 +7810,47 @@ export default function App() {
   const isBooksMode = activeMediaType === "books";
   const activeFilterQuery = mediaFilterQueries[activeMediaType] || "";
   const normalizedFilterQuery = normalizeMediaLabel(activeFilterQuery);
-  const filteredMovieOptions = useMemo(() => {
-    return movieOptions.filter((movie) =>
-      !normalizedFilterQuery || normalizeMediaLabel(movie.name).includes(normalizedFilterQuery)
-    );
-  }, [movieOptions, normalizedFilterQuery]);
-  const filteredSeriesOptions = useMemo(
-    () => seriesOptions.filter((series) => !normalizedFilterQuery || normalizeMediaLabel(series.name).includes(normalizedFilterQuery)),
-    [normalizedFilterQuery, seriesOptions]
+  const favoritesOnly = Boolean(mediaFavoritesOnly[activeMediaType]);
+  const matchesName = (name) => !normalizedFilterQuery || normalizeMediaLabel(name).includes(normalizedFilterQuery);
+  const matchesFavorite = (type, id) => !favoritesOnly || Boolean(mediaMarks[mediaMarkKey(type, id)]?.favorite);
+  const selectedMovieGenres = movieGenreFilters[raspberryLanguage] || [];
+  const movieGenreOptions = [...new Set(movieOptions.flatMap((movie) => movie.genres || []))]
+    .sort((a, b) => a.localeCompare(b, normalizeRaspberryLanguage(raspberryLanguage)));
+  const filteredMovieOptions = movieOptions.filter((movie) =>
+    matchesName(movie.name) && matchesFavorite("movie", movie.id) &&
+    (!selectedMovieGenres.length || (movie.genres || []).some((genre) => selectedMovieGenres.includes(genre)))
   );
-  const filteredGameOptions = useMemo(
-    () => gameLibrary.filter((game) => !normalizedFilterQuery || normalizeMediaLabel(game.name || game.file).includes(normalizedFilterQuery)),
-    [gameLibrary, normalizedFilterQuery]
-  );
-  const filteredBookCollections = useMemo(
-    () => bookCollections.filter((collection) => !normalizedFilterQuery || normalizeMediaLabel(collection.label).includes(normalizedFilterQuery)),
-    [bookCollections, normalizedFilterQuery]
-  );
+  const filteredSeriesOptions = seriesOptions.filter((series) => matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath));
+  const filteredGameOptions = gameLibrary.filter((game) => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath));
+  const filteredBookCollections = bookCollections.map((collection) => ({
+    ...collection,
+    books: collection.books.filter((book) =>
+      (matchesName(collection.label) || matchesName(book.name)) && matchesFavorite("book", book.relativePath)
+    ),
+  })).filter((collection) => collection.books.length);
+  const filteredBooks = filteredBookCollections.flatMap((collection) => collection.books);
   const selectorOptions = isGamesMode ? filteredGameOptions : isMoviesMode ? filteredMovieOptions : filteredSeriesOptions;
-  const mediaFiltersActive = Boolean(activeFilterQuery.trim());
+  const activeFilterCount = Number(Boolean(activeFilterQuery.trim())) + Number(favoritesOnly) + (isMoviesMode ? selectedMovieGenres.length : 0);
+  const mediaFiltersActive = activeFilterCount > 0;
+
+  useEffect(() => {
+    if (!mediaFiltersActive) return;
+    if (isBooksMode) {
+      if (filteredBooks.length && !filteredBooks.some((book) => book.relativePath === selectedBookPath)) {
+        setSelectedBookPath(filteredBooks[0].relativePath);
+      }
+    } else if (isGamesMode) {
+      if (filteredGameOptions.length && !filteredGameOptions.some((game) => game.relativePath === selectedGame?.relativePath)) {
+        setSelectedGamePath(filteredGameOptions[0].relativePath);
+      }
+    } else if (isMoviesMode) {
+      if (filteredMovieOptions.length && !filteredMovieOptions.some((movie) => movie.id === selectedMovie?.id)) {
+        setSelectedMovieId(filteredMovieOptions[0].id);
+      }
+    } else if (filteredSeriesOptions.length && !filteredSeriesOptions.some((series) => series.directoryPath === selectedSeries?.directoryPath)) {
+      setSelectedDirectoryPath(filteredSeriesOptions[0].directoryPath);
+    }
+  }, [mediaFiltersActive, isBooksMode, isGamesMode, isMoviesMode, filteredBooks, filteredGameOptions, filteredMovieOptions, filteredSeriesOptions, selectedBookPath, selectedGame?.relativePath, selectedMovie?.id, selectedSeries?.directoryPath]);
   const formatBookCollectionLabel = (collection) => {
     if (!collection) return t("media_books");
     return collection.label;
@@ -7808,6 +7956,13 @@ export default function App() {
       }}
     >
       <div className={`page-overlay${currentView === "season" ? " page-overlay--season" : ""}`}>
+        {unlocked && bookUploadReport && !bookUploadDialog ? <button className="book-upload-report-open dialog-button dialog-button--ghost" type="button" onClick={() => setBookUploadDialog({
+          phase: bookUploadReport.status === "done" ? "done" : "error",
+          summary: "Informe de la última subida de libros y cómics",
+          error: bookUploadReport.error || bookUploadReport.note || "Subida sin completar",
+          report: bookUploadReport,
+        })}>Ver última subida de cómics/libros</button> : null}
+
         {!unlocked ? (
           <div className="unlock-page">
             <header className="series-hero unlock-hero">
@@ -8041,6 +8196,11 @@ export default function App() {
                   </header>
                 </div>
 
+                <div className="media-marks media-marks--season">
+                  <button type="button" className="media-mark" onClick={() => handleMarkSeason(true)}><MediaMarkIcon active /><span>{t("mark_all_watched")}</span></button>
+                  <button type="button" className="media-mark" onClick={() => handleMarkSeason(false)}><MediaMarkIcon /><span>{t("mark_all_unwatched")}</span></button>
+                </div>
+
                 {seasonEpisodesLoading ? (
                   <section className="empty-state">
                     <div className="empty-state__card">
@@ -8054,6 +8214,7 @@ export default function App() {
                         <EpisodeRow
                           key={episode.id}
                           episode={episode}
+                          watched={episodeWatched(mediaMarks, selectedSeasonMarkKey(), episode.episodeNumber)}
                           available={isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)}
                           onSelect={handleOpenEpisodeDetails}
                           t={t}
@@ -8134,7 +8295,7 @@ export default function App() {
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                               <path d={mediaFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} />
                             </svg>
-                            {mediaFiltersActive ? <span>1</span> : null}
+                            {mediaFiltersActive ? <span>{activeFilterCount}</span> : null}
                           </button>
                         ) : isGamesMode ? (
                           <button
@@ -8168,7 +8329,7 @@ export default function App() {
                           disabled={!heroSelectorOptions.length}
                           onChange={(nextValue) =>
                             isBooksMode
-                              ? setSelectedBookPath(bookCollections.find((collection) => collection.key === nextValue)?.books[0]?.relativePath || "")
+                              ? setSelectedBookPath(filteredBookCollections.find((collection) => collection.key === nextValue)?.books[0]?.relativePath || "")
                               : isGamesMode
                               ? setSelectedGamePath(nextValue)
                               : isMoviesMode
@@ -8211,22 +8372,52 @@ export default function App() {
                   <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
-                      {mediaFiltersActive ? <button type="button" onClick={() => setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: "" }))}>{t("movie_filter_clear")}</button> : null}
+                      {mediaFiltersActive ? <button type="button" onClick={() => { setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: "" })); setMediaFavoritesOnly((current) => ({ ...current, [activeMediaType]: false })); if (isMoviesMode) setMovieGenreFilters((current) => ({ ...current, [raspberryLanguage]: [] })); }}>{t("movie_filter_clear")}</button> : null}
                     </div>
                     <label className="movie-filter__search">
                       <span>{t("movie_filter_search")}</span>
                       <input type="search" value={activeFilterQuery} onChange={(event) => setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: event.target.value }))} placeholder={t("movie_filter_search_placeholder")} autoFocus />
                     </label>
+                    <label className="movie-filter__favorites">
+                      <input type="checkbox" checked={favoritesOnly} onChange={(event) => setMediaFavoritesOnly((current) => ({ ...current, [activeMediaType]: event.target.checked }))} />
+                      <MediaMarkIcon favorite active={favoritesOnly} />
+                      <span>{t("media_filter_favorites")}</span>
+                    </label>
+                    {isMoviesMode ? (
+                      <fieldset className="movie-filter__genres">
+                        <legend>{t("genres")}</legend>
+                        <p>{t("movie_filter_genres_hint")}</p>
+                        <div className="movie-filter__genre-options">
+                          {movieGenreOptions.map((genre) => (
+                            <label key={genre} className={`movie-filter__genre${selectedMovieGenres.includes(genre) ? " is-selected" : ""}`}>
+                              <input type="checkbox" checked={selectedMovieGenres.includes(genre)} onChange={(event) => {
+                                const checked = event.target.checked;
+                                setMovieGenreFilters((current) => {
+                                  const selected = current[raspberryLanguage] || [];
+                                  return { ...current, [raspberryLanguage]: checked ? [...selected, genre] : selected.filter((value) => value !== genre) };
+                                });
+                              }} />
+                              <span>{genre}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {!movieGenreOptions.length ? <p>{t("movie_filter_genres_empty")}</p> : null}
+                      </fieldset>
+                    ) : null}
                     {!filterVisible ? <p className="movie-filter__empty">{t("movie_filter_no_results")}</p> : null}
                   </section>
                 ) : null}
 
-                {isBooksMode ? (
+                {filterVisible > 0 && isSeriesMode && selectedSeries ? renderMarks("series", selectedSeries.id || selectedSeries.directoryPath, false) : null}
+                {mediaFiltersActive && !filterVisible ? (
+                  <section className="empty-state"><div className="empty-state__card"><p>{t("movie_filter_no_results")}</p></div></section>
+                ) : isBooksMode ? (
                   <BooksLibrary
-                    books={bookLibrary}
+                    renderMarks={(book) => renderMarks("book", book.relativePath)}
+                    books={filteredBooks}
                     selectedCollection={selectedBookCollection}
                     selectedPath={selectedBookPath}
-                    countLabel={formatBookCount(activeBookCollection)}
+                    countLabel={formatBookCount(filteredBookCollections.find((collection) => collection.key === selectedBookCollection))}
                     onSelect={setSelectedBookPath}
                     onOpen={setOpenBook}
                     onEdit={setBookMetadataTarget}
@@ -8314,6 +8505,7 @@ export default function App() {
 
                           <div className="game-panel__content">
                             <h2>{selectedGame.name || selectedGame.file}</h2>
+                            {renderMarks("game", selectedGame.relativePath, false)}
                             <div className="movie-panel__facts game-panel__facts">
                               <div className="movie-panel__fact">
                                 <strong>{t("game_platform_label")}</strong>
@@ -8490,6 +8682,7 @@ export default function App() {
                       <div className="movie-panel__content">
                         <div className="movie-panel__header">
                           <h2>{selectedMovie.name}</h2>
+                          {renderMarks("movie", selectedMovie.id)}
                           {selectedMovie.originalName &&
                           selectedMovie.originalName !== selectedMovie.name ? (
                             <p>{selectedMovie.originalName}</p>
@@ -8663,6 +8856,8 @@ export default function App() {
               tmdbLanguage={tmdbLanguage}
             />
             <EpisodeDetailsModal
+              watched={episodeWatched(mediaMarks, selectedSeasonMarkKey(), selectedEpisode?.episodeNumber)}
+              onWatched={(value) => saveMarks(markEpisode(mediaMarks, selectedSeasonMarkKey(), selectedEpisode.episodeNumber, value))}
               visible={episodeDialogOpen}
               episode={selectedEpisode}
               season={selectedSeason}

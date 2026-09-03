@@ -1,3 +1,4 @@
+import { uploadBookBatch } from "./bookUploadBatch.js";
 const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").trim();
 const WEB_PIN_STORAGE_KEY = "minitv-web-pin";
 const MOCK_SERIES_LIBRARY_STORAGE_KEY = "minitv-web-mock-series-library-v1";
@@ -1244,7 +1245,15 @@ export function getBookCoverUrl(relativePath) {
   return `${getBaseUrl()}/books/cover?${params.toString()}`;
 }
 
-export async function uploadBookFiles({ files, collection = "", title = "", onProgress, signal } = {}) {
+export async function uploadBookFiles({ files, collection = "", title = "", onProgress, onReport, signal } = {}) {
+  const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
+  if (!safeFiles.length) throw new Error("Missing book files");
+  return uploadBookBatch({ files: safeFiles, onProgress, onReport, signal,
+    uploadOne: (file, progress) => uploadBookRequest({ files: [file], collection, title: safeFiles.length === 1 ? title : "", onProgress: progress, signal }),
+  });
+}
+
+async function uploadBookRequest({ files, collection = "", title = "", onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) throw new Error("Missing book files");
   if (isMockModeEnabled()) {
@@ -1258,6 +1267,7 @@ export async function uploadBookFiles({ files, collection = "", title = "", onPr
   form.append("collection", collection);
   form.append("title", title);
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) { reject(createAbortError()); return; }
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${getBaseUrl()}/books/upload`);
     const detachAbort = attachUploadAbort(xhr, signal, reject);
@@ -1282,13 +1292,13 @@ export async function uploadBookFiles({ files, collection = "", title = "", onPr
         resolve(payload);
         return;
       }
-      const error = new Error(payload?.error || `HTTP ${xhr.status}`);
+      const error = new Error(payload?.error || (xhr.status === 413 ? "El servidor ha rechazado el tamaño del archivo (HTTP 413)." : `Error del servidor (HTTP ${xhr.status}).`));
       error.status = xhr.status;
       reject(error);
     };
     xhr.onerror = () => {
       detachAbort();
-      reject(new Error("Upload failed"));
+      reject(new Error("Se ha perdido la conexión con la Mini TV durante la subida. Comprueba la red y que la Mini TV siga encendida."));
     };
     xhr.onabort = () => detachAbort();
     xhr.send(form);

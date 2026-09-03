@@ -351,8 +351,8 @@ def play_intro():
             [
                 "--vo=gpu-next",
                 "--gpu-context=wayland",
-                "--screen=1",
-                "--fs-screen=1",
+                "--screen=0",
+                "--fs-screen=0",
             ]
         )
     elif not os.environ.get("DISPLAY"):
@@ -2972,8 +2972,8 @@ class DeviceAppMenu:
         if alsa_device.lower() not in ("", "auto", "default"):
             command.append(f"--audio-device=alsa/{alsa_device}")
         if os.environ.get("WAYLAND_DISPLAY"):
-            # MPV enumerates Weston's outputs in the opposite order to SDL/Pygame.
-            screen_index = 0 if output == "external" else 1
+            # Weston exposes the MiniTV first and the external monitor second.
+            screen_index = 1 if output == "external" else 0
             command.extend(
                 [
                     "--vo=gpu-next",
