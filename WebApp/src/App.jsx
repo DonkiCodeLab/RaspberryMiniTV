@@ -49,18 +49,26 @@ import tvGreen from "./assets/tele_green_2_fixed.png";
 import uploadDropzoneWhite from "./assets/upload_drag&drop_zone_white.png";
 import uploadDropzoneYellow from "./assets/upload_drag&drop_zone_yellow.png";
 import raspberryIntroVideo from "../../DeviceApp/menu/video_intro.mp4";
+import donkicodeLogo from "../../DeviceApp/menu/miniLogo_donkicodeLab.png";
 
 GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+const WEB_EMULATOR_SYSTEMS = new Set([
+  "gb", "gbc", "gba", "nes", "snes", "mastersystem", "megadrive", "gamegear",
+  "segacd", "pcengine", "pcenginecd", "neogeo", "ngp", "ngpc", "wonderswan",
+  "wonderswancolor", "atari2600", "atari7800", "atarilynx", "psx", "arcade", "n64",
+]);
 import {
   addSeries,
   authWebPin,
   captureCameraImage,
   getAlarmSoundUrl,
   getHealth,
+  getBrowserGameUrl,
   getMediaStreamUrl,
   getBookContent,
   getBookContentUrl,
   getBookCoverUrl,
+  openBookOnRaspberry,
   getRaspberryAlarms,
   getRaspberryBirthdays,
   getRaspberryLanguage,
@@ -271,6 +279,12 @@ const UI_STRINGS = {
     media_movies_singular: "película",
     media_games_singular: "juego",
     media_books_singular: "libro",
+    book_open_title: "¿Dónde quieres abrirlo?",
+    book_open_copy: "Elige dónde leer «{name}».",
+    book_open_browser: "Abrir en el navegador",
+    book_open_raspberry: "Abrir en Raspberry",
+    book_open_raspberry_busy: "Abriendo en Raspberry…",
+    book_open_raspberry_failed: "No se pudo abrir el libro en la Raspberry.",
     raspberry_dashboard: "Dashboard",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
@@ -465,6 +479,9 @@ const UI_STRINGS = {
     game_platform_label: "Tipo de juego",
     file_label: "Archivo",
     play_game_on_raspberry: "Jugar en la Raspberry",
+    play_game_in_browser: "Jugar desde el navegador",
+    browser_game_player: "Juego en el navegador",
+    browser_game_unsupported: "Esta consola todavía no es compatible con el navegador",
     playing_game: "Abriendo juego...",
     games_upload_title: "Datos del juego",
     games_edit_title: "Editar juego",
@@ -624,6 +641,12 @@ const UI_STRINGS = {
     media_movies_singular: "pel·lícula",
     media_games_singular: "joc",
     media_books_singular: "llibre",
+    book_open_title: "On el vols obrir?",
+    book_open_copy: "Tria on llegir «{name}».",
+    book_open_browser: "Obrir al navegador",
+    book_open_raspberry: "Obrir a la Raspberry",
+    book_open_raspberry_busy: "Obrint a la Raspberry…",
+    book_open_raspberry_failed: "No s'ha pogut obrir el llibre a la Raspberry.",
     raspberry_dashboard: "Dashboard",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
@@ -818,6 +841,9 @@ const UI_STRINGS = {
     game_platform_label: "Tipus de joc",
     file_label: "Fitxer",
     play_game_on_raspberry: "Jugar a la Raspberry",
+    play_game_in_browser: "Jugar des del navegador",
+    browser_game_player: "Joc al navegador",
+    browser_game_unsupported: "Aquesta consola encara no és compatible amb el navegador",
     playing_game: "Obrint joc...",
     games_upload_title: "Dades del joc",
     games_edit_title: "Editar joc",
@@ -977,6 +1003,12 @@ const UI_STRINGS = {
     media_movies_singular: "movie",
     media_games_singular: "game",
     media_books_singular: "book",
+    book_open_title: "Where do you want to open it?",
+    book_open_copy: "Choose where to read “{name}”.",
+    book_open_browser: "Open in browser",
+    book_open_raspberry: "Open on Raspberry",
+    book_open_raspberry_busy: "Opening on Raspberry…",
+    book_open_raspberry_failed: "The book could not be opened on the Raspberry.",
     raspberry_dashboard: "Dashboard",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
@@ -1171,6 +1203,9 @@ const UI_STRINGS = {
     game_platform_label: "Game type",
     file_label: "File",
     play_game_on_raspberry: "Play on Raspberry",
+    play_game_in_browser: "Play in browser",
+    browser_game_player: "Browser game",
+    browser_game_unsupported: "This console is not supported in the browser yet",
     playing_game: "Opening game...",
     games_upload_title: "Game details",
     games_edit_title: "Edit game",
@@ -2614,6 +2649,37 @@ function BrowserPlayerModal({ playback, onClose, t }) {
           <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
         </header>
         <video src={playback.url} controls autoPlay playsInline />
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function BrowserGameModal({ game, onClose, t }) {
+  useEffect(() => {
+    if (!game) return () => {};
+    const handleKeyDown = (event) => event.key === "Escape" && onClose();
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [game, onClose]);
+
+  if (!game) return null;
+  return createPortal(
+    <div className="browser-player browser-game" role="dialog" aria-modal="true" aria-label={t("browser_game_player")}>
+      <div className="browser-player__panel browser-game__panel">
+        <header>
+          <div>
+            <span>{t("browser_game_player")}</span>
+            <h2>{game.title}</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
+        </header>
+        <iframe
+          src={game.url}
+          title={`${t("browser_game_player")}: ${game.title}`}
+          allow="autoplay; fullscreen; gamepad"
+          allowFullScreen
+        />
       </div>
     </div>,
     document.body
@@ -5616,6 +5682,29 @@ function BookCollectionModal({ collection, onClose, onSave, onDelete }) {
   );
 }
 
+function BookOpenModal({ book, busy, onClose, onOpenBrowser, onOpenRaspberry, t }) {
+  if (!book) return null;
+  return createPortal(
+    <div className="modal-backdrop" onClick={busy ? undefined : onClose}>
+      <div className="dialog-card book-open-modal" role="dialog" aria-modal="true" aria-labelledby="book-open-title" onClick={(event) => event.stopPropagation()}>
+        <div className="dialog-card__header">
+          <div><p>{t("media_books")}</p><h2 id="book-open-title">{t("book_open_title")}</h2></div>
+          <button className="dialog-card__close" onClick={onClose} disabled={busy} type="button" aria-label={t("close")}>×</button>
+        </div>
+        <div className="book-open-modal__body">
+          <BookCover book={book} />
+          <p>{t("book_open_copy", { name: book.name })}</p>
+          <div className="book-open-modal__actions">
+            <button className="dialog-button dialog-button--ghost" onClick={onOpenBrowser} disabled={busy} type="button">{t("book_open_browser")}</button>
+            <button className="dialog-button dialog-button--accent" onClick={onOpenRaspberry} disabled={busy} type="button">{busy ? t("book_open_raspberry_busy") : t("book_open_raspberry")}</button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function BookReader({ book, onClose }) {
   const canvasRef = useRef(null);
   const renderTaskRef = useRef(null);
@@ -5623,7 +5712,9 @@ function BookReader({ book, onClose }) {
   const [pageNumber, setPageNumber] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [readerError, setReaderError] = useState("");
+  const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
   const source = book ? getBookContentUrl(book.relativePath) : "";
+  const changeZoom = (delta) => setZoom((value) => Math.min(3, Math.max(.6, Number((value + delta).toFixed(1)))));
 
   useEffect(() => {
     if (!book || book.format !== "pdf") { setPdf(null); return undefined; }
@@ -5670,7 +5761,26 @@ function BookReader({ book, onClose }) {
   if (!book) return null;
   return createPortal(
     <div className="book-reader" role="dialog" aria-modal="true" aria-label={book.name}>
-      <header><strong>{book.name}</strong><div className="book-reader__controls"><button onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={!pdf || pageNumber <= 1} type="button" aria-label="Página anterior">‹</button><span>Página {pageNumber} de {pdf?.numPages || "…"}</span><button onClick={() => setPageNumber((page) => Math.min(pdf?.numPages || page, page + 1))} disabled={!pdf || pageNumber >= pdf.numPages} type="button" aria-label="Página siguiente">›</button><button onClick={() => setZoom((value) => Math.max(.6, value - .2))} type="button" aria-label="Reducir zoom">−</button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(3, value + .2))} type="button" aria-label="Aumentar zoom">+</button><button className="book-reader__close" onClick={onClose} type="button" aria-label="Cerrar lector">×</button></div></header>
+      <header className="book-reader__header">
+        <div className="book-reader__file">
+          <img src={donkicodeLogo} alt="" />
+          <strong><span>Fichero:</span> {book.name}</strong>
+        </div>
+        <div className="book-reader__pagination" aria-label="Navegación de páginas">
+          <button onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={!pdf || pageNumber <= 1} type="button" aria-label="Página anterior">‹</button>
+          <span>Página {pageNumber} de {pdf?.numPages ?? "—"}</span>
+          <button onClick={() => setPageNumber((page) => Math.min(pdf?.numPages || page, page + 1))} disabled={!pdf || pageNumber >= pdf.numPages} type="button" aria-label="Página siguiente">›</button>
+        </div>
+        <div className="book-reader__controls">
+          <div className="book-reader__zoom" aria-label="Control de zoom">
+            <button onClick={() => changeZoom(-.1)} disabled={zoom <= .6} type="button" aria-label="Reducir zoom un 10 %">−</button>
+            <input type="range" min="0.6" max="3" step="0.1" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} aria-label="Zoom" />
+            <output>{Math.round(zoom * 100)}%</output>
+            <button onClick={() => changeZoom(.1)} disabled={zoom >= 3} type="button" aria-label="Aumentar zoom un 10 %">+</button>
+          </div>
+          <button className="book-reader__close" onClick={() => setCloseConfirmationOpen(true)} type="button" aria-label="Cerrar lector">×</button>
+        </div>
+      </header>
       {book.format === "pdf" ? (
         <div className="book-reader__page">{readerError ? <p className="book-reader__error">{readerError}</p> : null}<canvas ref={canvasRef} aria-label={`Página ${pageNumber}`} /></div>
       ) : (
@@ -5680,6 +5790,18 @@ function BookReader({ book, onClose }) {
           <a className="dialog-button dialog-button--accent" href={source} target="_blank" rel="noreferrer">Abrir {book.format.toUpperCase()}</a>
         </div>
       )}
+      {closeConfirmationOpen ? (
+        <div className="book-reader__confirm-backdrop" onClick={() => setCloseConfirmationOpen(false)}>
+          <div className="book-reader__confirm" role="alertdialog" aria-modal="true" aria-labelledby="book-reader-close-title" onClick={(event) => event.stopPropagation()}>
+            <h2 id="book-reader-close-title">¿Realmente quieres abandonar la visualización?</h2>
+            <p>Se cerrará el fichero <strong>{book.name}</strong>.</p>
+            <div>
+              <button className="dialog-button dialog-button--ghost" onClick={() => setCloseConfirmationOpen(false)} type="button">Seguir leyendo</button>
+              <button className="dialog-button dialog-button--danger" onClick={onClose} type="button">Abandonar</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>,
     document.body
   );
@@ -5744,6 +5866,8 @@ export default function App() {
   const [selectedSystemId, setSelectedSystemId] = useState("gb");
   const [selectedBookPath, setSelectedBookPath] = useState("");
   const [openBook, setOpenBook] = useState(null);
+  const [bookOpenTarget, setBookOpenTarget] = useState(null);
+  const [bookOpenBusy, setBookOpenBusy] = useState(false);
   const [bookMetadataTarget, setBookMetadataTarget] = useState(null);
   const [bookCollectionTarget, setBookCollectionTarget] = useState(null);
   const [selectedGameImageIndex, setSelectedGameImageIndex] = useState(1);
@@ -5763,6 +5887,7 @@ export default function App() {
   const [addSeriesOpen, setAddSeriesOpen] = useState(false);
   const [miniTvOpen, setMiniTvOpen] = useState(false);
   const [browserPlayback, setBrowserPlayback] = useState(null);
+  const [browserGame, setBrowserGame] = useState(null);
   const [raspberryHealth, setRaspberryHealth] = useState({
     ok: false,
     running: false,
@@ -6992,6 +7117,15 @@ export default function App() {
     }
   }
 
+  function handlePlayGameInBrowser() {
+    if (!selectedGame?.relativePath) return;
+    const systemId = systemForGame(selectedGame)?.id || selectedSystemId;
+    setBrowserGame({
+      title: selectedGame.name || selectedGame.file,
+      url: getBrowserGameUrl(selectedGame.relativePath, systemId),
+    });
+  }
+
   function handleOpenSeason(seasonId) {
     setSelectedSeasonId(seasonId);
     setSeasonEpisodes(null);
@@ -7822,6 +7956,19 @@ export default function App() {
       setVideos(await getVideos());
     } catch (nextError) {
       window.alert(nextError.message || "No se pudo eliminar el libro.");
+    }
+  }
+
+  async function handleOpenBookOnRaspberry() {
+    if (!bookOpenTarget) return;
+    try {
+      setBookOpenBusy(true);
+      await openBookOnRaspberry(bookOpenTarget.relativePath);
+      setBookOpenTarget(null);
+    } catch (nextError) {
+      window.alert(nextError.message || t("book_open_raspberry_failed"));
+    } finally {
+      setBookOpenBusy(false);
     }
   }
 
@@ -8733,7 +8880,7 @@ export default function App() {
                     selectedPath={selectedBookPath}
                     countLabel={formatBookCount(filteredBookCollections.find((collection) => collection.key === selectedBookCollection))}
                     onSelect={setSelectedBookPath}
-                    onOpen={setOpenBook}
+                    onOpen={setBookOpenTarget}
                     onEdit={setBookMetadataTarget}
                     onDelete={handleDeleteBook}
                   />
@@ -8752,15 +8899,27 @@ export default function App() {
                           <img src={deleteIcon} alt="" aria-hidden="true" />
                         </button>
 
-                        <button
-                          className="movie-panel__play game-panel__play"
-                          onClick={handlePlayGame}
-                          type="button"
-                          disabled={raspberryControlsBusy}
-                        >
-                          <img src={tvGreen} alt="" aria-hidden="true" />
-                          <span>{raspberryControlsBusy ? t("playing_game") : t("play_game_on_raspberry")}</span>
-                        </button>
+                        <div className="game-panel__play-actions">
+                          <button
+                            className="movie-panel__play game-panel__play"
+                            onClick={handlePlayGame}
+                            type="button"
+                            disabled={raspberryControlsBusy}
+                          >
+                            <img src={tvGreen} alt="" aria-hidden="true" />
+                            <span>{raspberryControlsBusy ? t("playing_game") : t("play_game_on_raspberry")}</span>
+                          </button>
+                          <button
+                            className="movie-panel__play movie-panel__play--browser game-panel__play"
+                            onClick={handlePlayGameInBrowser}
+                            type="button"
+                            disabled={!WEB_EMULATOR_SYSTEMS.has(systemForGame(selectedGame)?.id || selectedSystemId)}
+                            title={!WEB_EMULATOR_SYSTEMS.has(systemForGame(selectedGame)?.id || selectedSystemId) ? t("browser_game_unsupported") : undefined}
+                          >
+                            <span className="game-panel__browser-icon" aria-hidden="true">▶</span>
+                            <span>{t("play_game_in_browser")}</span>
+                          </button>
+                        </div>
 
                         <div className="game-panel__layout">
                           <div className="game-panel__gallery">
@@ -9179,6 +9338,14 @@ export default function App() {
               t={t}
             />
             <BookReader book={openBook} onClose={() => setOpenBook(null)} />
+            <BookOpenModal
+              book={bookOpenTarget}
+              busy={bookOpenBusy}
+              onClose={() => setBookOpenTarget(null)}
+              onOpenBrowser={() => { setOpenBook(bookOpenTarget); setBookOpenTarget(null); }}
+              onOpenRaspberry={handleOpenBookOnRaspberry}
+              t={t}
+            />
             <BookMetadataModal
               book={bookMetadataTarget}
               language={normalizeRaspberryLanguage(raspberryLanguage)}
@@ -9224,6 +9391,11 @@ export default function App() {
             <BrowserPlayerModal
               playback={browserPlayback}
               onClose={() => setBrowserPlayback(null)}
+              t={t}
+            />
+            <BrowserGameModal
+              game={browserGame}
+              onClose={() => setBrowserGame(null)}
               t={t}
             />
           </>

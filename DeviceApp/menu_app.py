@@ -2746,6 +2746,25 @@ class DeviceAppMenu:
             self.game_return_state = "games"
             self.play_game_entry(entry)
             return
+        if action == "open_book":
+            full_path = str(command.get("path") or "").strip()
+            books_root = os.path.abspath(BOOKS_DIR)
+            safe_path = os.path.abspath(full_path) if full_path else ""
+            if (
+                not safe_path
+                or not safe_path.startswith(books_root + os.sep)
+                or not os.path.isfile(safe_path)
+                or os.path.splitext(safe_path)[1].lower() not in BOOK_EXTENSIONS
+            ):
+                log_debug(f"MENU command open_book ignored invalid file={full_path}")
+                return
+            log_debug(f"MENU command open_book file={safe_path}")
+            self.stop_video_playback(silent=True)
+            self.stop_game_playback(silent=True)
+            self.browser_mode = "books"
+            self.browser_path = os.path.dirname(safe_path)
+            self.open_book_path(safe_path)
+            return
         if action == "stop":
             log_debug("MENU command stop")
             self.stop_video_playback(silent=True)

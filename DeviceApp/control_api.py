@@ -14,9 +14,10 @@ import urllib.request
 import zipfile
 import datetime
 import hashlib
+import html
 
 from werkzeug.exceptions import HTTPException
-from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -46,6 +47,8 @@ PICTURES_DIR = os.path.join(MULTIMEDIA_DIR, "Pictures")
 BOOK_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "BookCovers")
 GAME_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "GameCovers")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "WebApp", "dist")
+EMULATORJS_DIR = os.path.join(REPO_DIR, "WebApp", "node_modules", "@emulatorjs", "emulatorjs", "data")
+EMULATORJS_PACKAGES_DIR = os.path.join(REPO_DIR, "WebApp", "node_modules", "@emulatorjs")
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
 LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
 EP_RE = re.compile(r"(S(\d{2})E(\d{2,}))", re.IGNORECASE)
@@ -832,7 +835,7 @@ def is_public_frontend_request():
 
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
-    if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content"} and not submitted_pin:
+    if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -846,6 +849,7 @@ def require_web_pin():
     if (
         request.path in {"/web/auth", "/ip", "/favicon.ico"}
         or request.path.startswith("/alarm-sounds")
+        or request.path.startswith("/emulatorjs/")
         or request.path.startswith("/game-covers")
         or request.path.startswith("/book-covers")
         or is_public_frontend_request()
@@ -2146,6 +2150,17 @@ def stream_book():
     )
 
 
+@app.route("/books/open", methods=["POST"])
+def open_book():
+    data = request.get_json(force=True, silent=True) or {}
+    relative_path = str(data.get("relativePath") or "").strip()
+    target_path = resolve_book_path(relative_path)
+    if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
+        return jsonify({"error": "Book not found"}), 404
+    write_menu_command({"action": "open_book", "path": target_path})
+    return jsonify({"ok": True, "relativePath": relative_path})
+
+
 @app.route("/books/cover", methods=["GET"])
 def book_cover():
     relative_path = str(request.args.get("relativePath") or "").strip()
@@ -2794,6 +2809,81 @@ def delete_game():
         remove_local_game_image_url(image_url)
 
     return jsonify({"ok": True, "relativePath": relative_path, "removed": removed, "libraryCounts": get_library_counts()})
+
+
+WEB_EMULATOR_CORES = {
+    "gb": "gb", "gbc": "gb", "gba": "gba", "nes": "nes", "snes": "snes",
+    "mastersystem": "segaMS", "megadrive": "segaMD", "gamegear": "segaGG",
+    "segacd": "segaCD", "pcengine": "pce", "pcenginecd": "pce",
+    "neogeo": "arcade", "ngp": "ngp", "ngpc": "ngp", "wonderswan": "ws",
+    "wonderswancolor": "ws", "atari2600": "atari2600", "atari7800": "atari7800",
+    "atarilynx": "lynx", "psx": "psx", "arcade": "arcade", "n64": "n64",
+}
+
+
+@app.route("/emulatorjs/<path:filename>", methods=["GET"])
+def emulatorjs_asset(filename):
+    safe_name = os.path.normpath(str(filename or "").lstrip("/"))
+    if safe_name.startswith(".."):
+        return jsonify({"error": "Invalid emulator asset"}), 400
+
+    if safe_name.startswith("cores/"):
+        core_filename = os.path.basename(safe_name)
+        if core_filename != safe_name.split("/", 1)[1]:
+            return jsonify({"error": "Invalid emulator core"}), 400
+        if os.path.isdir(EMULATORJS_PACKAGES_DIR):
+            for package_name in os.listdir(EMULATORJS_PACKAGES_DIR):
+                if not package_name.startswith("core-"):
+                    continue
+                candidate = os.path.join(EMULATORJS_PACKAGES_DIR, package_name, core_filename)
+                if os.path.isfile(candidate):
+                    return send_file(candidate, conditional=True)
+        return jsonify({"error": "Emulator core not installed"}), 404
+
+    return send_from_directory(EMULATORJS_DIR, safe_name, conditional=True)
+
+
+@app.route("/games/content", methods=["GET"])
+def browser_game_content():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    game_path = resolve_game_path(relative_path)
+    if not game_path or not os.path.isfile(game_path) or not is_game_rom_file(game_path):
+        return jsonify({"error": "Game not found"}), 404
+    return send_file(game_path, conditional=True, as_attachment=False)
+
+
+@app.route("/games/browser", methods=["GET"])
+def browser_game_player():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    system_id = str(request.args.get("system") or "").strip().lower()
+    game_path = resolve_game_path(relative_path)
+    core = WEB_EMULATOR_CORES.get(system_id)
+    if not game_path or not os.path.isfile(game_path) or not is_game_rom_file(game_path):
+        return jsonify({"error": "Game not found"}), 404
+    if not core:
+        return jsonify({"error": "This system is not supported in the browser"}), 400
+    if not os.path.isfile(os.path.join(EMULATORJS_DIR, "loader.js")):
+        return jsonify({"error": "EmulatorJS is not installed. Run npm install in WebApp."}), 503
+
+    pin = str(request.args.get("pin") or "")
+    content_url = "/games/content?" + urllib.parse.urlencode({"relativePath": relative_path, "pin": pin})
+    config = {
+        "name": os.path.splitext(os.path.basename(game_path))[0],
+        "url": content_url,
+        "core": core,
+    }
+    config_json = json.dumps(config).replace("</", "<\\/")
+    page = f"""<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{html.escape(os.path.basename(game_path))}</title>
+<style>html,body,#game{{width:100%;height:100%;margin:0;background:#050505;overflow:hidden}}#game{{position:absolute;inset:0}}</style>
+</head><body><div id="game"></div><script>
+const game={config_json};
+window.EJS_player="#game"; window.EJS_gameName=game.name; window.EJS_gameUrl=game.url;
+window.EJS_core=game.core; window.EJS_pathtodata="/emulatorjs/"; window.EJS_startOnLoaded=true;
+window.EJS_disableDatabases=false; window.EJS_threads=false; window.EJS_language="es-ES";
+</script><script src="/emulatorjs/loader.js"></script></body></html>"""
+    return Response(page, mimetype="text/html", headers={"Cache-Control": "no-store"})
 
 
 @app.route("/games/play", methods=["POST"])

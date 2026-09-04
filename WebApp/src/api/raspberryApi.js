@@ -1170,6 +1170,16 @@ export function playGameFile(relativePath) {
   });
 }
 
+export function getBrowserGameUrl(relativePath, systemId) {
+  const params = new URLSearchParams({
+    relativePath: String(relativePath || "").trim(),
+    system: String(systemId || "").trim(),
+  });
+  const storedPin = getStoredWebPin();
+  if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
+  return `${getBaseUrl()}/games/browser?${params.toString()}`;
+}
+
 export function playEpisode({ id, directory, output = "minitv" }) {
   if (isMockModeEnabled()) {
     mockPlayback = id;
@@ -1284,6 +1294,16 @@ export async function getBookContent(relativePath, { signal } = {}) {
     throw new Error("El servidor no devolvió un archivo PDF válido.");
   }
   return data;
+}
+
+export function openBookOnRaspberry(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) return Promise.reject(new Error("Missing book path"));
+  if (isMockModeEnabled()) return Promise.resolve({ ok: true, mock: true });
+  return request("/books/open", {
+    method: "POST",
+    body: JSON.stringify({ relativePath: safeRelativePath }),
+  });
 }
 
 export function getBookCoverUrl(relativePath) {
