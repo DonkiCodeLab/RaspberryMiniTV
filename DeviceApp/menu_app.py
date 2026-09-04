@@ -1,3 +1,4 @@
+from game_platforms import EXTENSIONS, stored_platform
 import json
 import os
 import random
@@ -234,24 +235,6 @@ RETROARCH_SYSTEM_DIR = os.environ.get(
 )
 PLAYBACK_STATE_PATH = os.path.join(tempfile.gettempdir(), "minitv-playback.json")
 MENU_COMMAND_PATH = os.path.join(tempfile.gettempdir(), "minitv-menu-command.json")
-GAME_PLATFORM_BY_EXTENSION = {
-    ".gb": {
-        "name": "Game Boy",
-        "core": "gambatte_libretro.so",
-    },
-    ".gbc": {
-        "name": "Game Boy Color",
-        "core": "gambatte_libretro.so",
-    },
-    ".gba": {
-        "name": "Game Boy Advance",
-        "core": "mgba_libretro.so",
-    },
-    ".chd": {
-        "name": "Neo Geo CD",
-        "core": "neocd_libretro.so",
-    },
-}
 DEFAULT_SETTINGS = {
     "language": "en",
     "web_password": "1234",
@@ -575,7 +558,7 @@ def is_video_file(filename):
 
 
 def is_game_rom_file(filename):
-    return os.path.splitext(str(filename or ""))[1].lower() in GAME_PLATFORM_BY_EXTENSION
+    return os.path.splitext(str(filename or ""))[1].lower() in EXTENSIONS
 
 
 def find_libretro_core(core_filename):
@@ -589,11 +572,17 @@ def find_libretro_core(core_filename):
         "/usr/lib/arm-linux-gnueabi/libretro",
         "/usr/lib/x86_64-linux-gnu/libretro",
         "/usr/lib/libretro",
+        "/opt/retropie/libretro",
+        os.path.expanduser("~/.config/retroarch/cores"),
     ]
     for core_dir in core_dirs:
         candidate = os.path.join(core_dir, core_filename)
         if os.path.isfile(candidate):
             return candidate
+        for subdir in os.listdir(core_dir) if os.path.isdir(core_dir) else []:
+            nested = os.path.join(core_dir, subdir, core_filename)
+            if os.path.isfile(nested):
+                return nested
     return ""
 
 
@@ -2425,7 +2414,7 @@ class DeviceAppMenu:
                 full_path = os.path.join(GAMES_DIR, name)
                 if os.path.isfile(full_path) and is_game_rom_file(name):
                     extension = os.path.splitext(name)[1].lower()
-                    platform = GAME_PLATFORM_BY_EXTENSION.get(extension, {})
+                    platform = stored_platform(full_path, MULTIMEDIA_DIR)
                     entries.append(
                         {
                             "label": name,
@@ -2746,7 +2735,7 @@ class DeviceAppMenu:
                 log_debug(f"MENU command play_game ignored missing file={full_path}")
                 return
             extension = os.path.splitext(full_path)[1].lower()
-            platform = GAME_PLATFORM_BY_EXTENSION.get(extension, {})
+            platform = stored_platform(full_path, MULTIMEDIA_DIR)
             entry = {
                 "label": os.path.basename(full_path),
                 "path": full_path,

@@ -1,3 +1,4 @@
+from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 import json
 import io
 import os
@@ -41,6 +42,7 @@ MOVIES_DIR = os.path.join(VIDEOS_DIR, "Movies")
 TVSHOWS_DIR = os.path.join(VIDEOS_DIR, "TVShows")
 GAMES_DIR = os.path.join(MULTIMEDIA_DIR, "Games")
 BOOKS_DIR = os.path.join(MULTIMEDIA_DIR, "Books")
+PICTURES_DIR = os.path.join(MULTIMEDIA_DIR, "Pictures")
 BOOK_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "BookCovers")
 GAME_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "GameCovers")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "WebApp", "dist")
@@ -57,16 +59,11 @@ UPLOAD_DEBUG_LOG_PATH = os.path.join(tempfile.gettempdir(), "minitv-upload.log")
 USER_SETTINGS_PATH = os.path.join(BASE_DIR, "user_settings.json")
 ALARM_SOUNDS_DIR = os.path.join(BASE_DIR, "alarm_sounds")
 ALARM_SOUND_EXTENSIONS = {".mp3"}
-GAME_ROM_EXTENSIONS = {".gb", ".gbc", ".gba", ".chd"}
+GAME_ROM_EXTENSIONS = EXTENSIONS
 GAME_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 BOOK_EXTENSIONS = {".pdf", ".epub", ".cbz", ".cbr"}
 BOOK_COVER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-GAME_PLATFORM_BY_EXTENSION = {
-    ".gb": {"id": "gameboy", "name": "Game Boy", "screenScraperSystemId": 9},
-    ".gbc": {"id": "gameboy_color", "name": "Game Boy Color", "screenScraperSystemId": 10},
-    ".gba": {"id": "gameboy_advance", "name": "Game Boy Advance", "screenScraperSystemId": 12},
-    ".chd": {"id": "neo_geo_cd", "name": "Neo Geo CD", "screenScraperSystemId": 70},
-}
+PICTURE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".avif", ".heic", ".heif"}
 DEFAULT_GAME_COVER_FILENAME = "default-game-cover.svg"
 DEFAULT_ALARMS = [
     {"id": 1, "enabled": False, "time": "07:30", "sound": ""},
@@ -504,14 +501,11 @@ def remove_series_metadata(relative_path):
 
 
 def normalize_game_platform(filename_or_extension):
-    extension = os.path.splitext(str(filename_or_extension or "").strip())[1].lower()
-    if not extension and str(filename_or_extension or "").startswith("."):
-        extension = str(filename_or_extension).lower()
-    return GAME_PLATFORM_BY_EXTENSION.get(extension)
+    return resolve_platform(filename_or_extension)
 
 
 def is_game_rom_file(filename):
-    return normalize_game_platform(filename) is not None
+    return os.path.splitext(filename)[1].lower() in EXTENSIONS
 
 
 def game_relative_path(filename):
@@ -644,7 +638,7 @@ def upsert_game_metadata(relative_path, updates):
     game_items = library.setdefault("games", {})
     current_item = game_items.get(safe_relative_path) if isinstance(game_items.get(safe_relative_path), dict) else {}
     filename = os.path.basename(safe_relative_path)
-    platform = normalize_game_platform(filename) or {}
+    platform = resolve_platform(filename, updates.get("platform") or current_item.get("platform")) or {}
     item = {
         **current_item,
         "relativePath": safe_relative_path,
@@ -838,7 +832,7 @@ def is_public_frontend_request():
 
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
-    if request.path in {"/media/stream", "/books/content", "/books/cover"} and not submitted_pin:
+    if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -895,6 +889,7 @@ def ensure_media_directories():
     os.makedirs(TVSHOWS_DIR, exist_ok=True)
     os.makedirs(GAMES_DIR, exist_ok=True)
     os.makedirs(BOOKS_DIR, exist_ok=True)
+    os.makedirs(PICTURES_DIR, exist_ok=True)
     os.makedirs(GAME_COVERS_DIR, exist_ok=True)
     ensure_default_game_cover()
 
@@ -952,6 +947,7 @@ def get_library_counts():
     movies_bytes = get_directory_size(MOVIES_DIR)
     games_bytes = get_directory_size(GAMES_DIR)
     books_bytes = get_directory_size(BOOKS_DIR)
+    pictures_bytes = get_directory_size(PICTURES_DIR)
 
     def usage_item(count, used_bytes):
         return {
@@ -977,6 +973,7 @@ def get_library_counts():
             games_bytes,
         ),
         "books": usage_item(len(list_book_entries()), books_bytes),
+        "pictures": usage_item(len(list_picture_entries()), pictures_bytes),
     }
 
 
@@ -1633,16 +1630,42 @@ def list_video_directories():
         "tvShowsRoot": TVSHOWS_DIR,
         "gamesRoot": GAMES_DIR,
         "booksRoot": BOOKS_DIR,
+        "picturesRoot": PICTURES_DIR,
         "libraryCounts": get_library_counts(),
         "mediaLibrary": media_library,
         "games": list_game_entries(),
         "books": list_book_entries(),
+        "pictures": list_picture_entries(),
         "bookCollections": book_collections,
         "directories": tvshow_directories,
         "rootFiles": tvshow_root_files,
         "movieDirectories": movie_directories,
         "movieRootFiles": movie_root_files,
     }
+
+
+def is_picture_file(filename):
+    return os.path.splitext(str(filename or ""))[1].lower() in PICTURE_EXTENSIONS
+
+
+def list_picture_entries():
+    ensure_media_directories()
+    pictures = []
+    for root, directories, files in os.walk(PICTURES_DIR):
+        directories.sort()
+        for filename in sorted(files):
+            if not is_picture_file(filename):
+                continue
+            full_path = os.path.join(root, filename)
+            relative_path = os.path.relpath(full_path, PICTURES_DIR).replace("\\", "/")
+            pictures.append({
+                "name": filename,
+                "relativePath": relative_path,
+                "directory": os.path.dirname(relative_path).replace("\\", "/"),
+                "size": os.path.getsize(full_path),
+                "modifiedAt": int(os.path.getmtime(full_path)),
+            })
+    return pictures
 
 
 def show_qr_if_needed():
@@ -1843,6 +1866,50 @@ def episodes():
 @app.route("/videos", methods=["GET"])
 def videos():
     return jsonify(list_video_directories())
+
+
+@app.route("/pictures/upload", methods=["POST"])
+def upload_pictures():
+    ensure_media_directories()
+    uploaded_files = request.files.getlist("files")
+    if not uploaded_files:
+        return jsonify({"error": "Missing pictures"}), 400
+
+    saved = []
+    rejected = []
+    for uploaded in uploaded_files:
+        source_path = str(uploaded.filename or "").replace("\\", "/").strip("/")
+        path_parts = [part for part in source_path.split("/") if part not in {"", ".", ".."}]
+        if not path_parts or not is_picture_file(path_parts[-1]):
+            rejected.append(source_path or "unnamed")
+            continue
+        # Keep a selected folder's relative hierarchy, without trusting absolute/traversal paths.
+        relative_path = os.path.join(*path_parts)
+        target_path = os.path.abspath(os.path.join(PICTURES_DIR, relative_path))
+        pictures_root = os.path.abspath(PICTURES_DIR)
+        if os.path.commonpath([target_path, pictures_root]) != pictures_root:
+            rejected.append(source_path)
+            continue
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        uploaded.save(target_path)
+        saved.append(os.path.relpath(target_path, PICTURES_DIR).replace("\\", "/"))
+
+    if not saved:
+        return jsonify({"error": "No supported pictures", "supported": sorted(PICTURE_EXTENSIONS), "rejected": rejected}), 400
+    return jsonify({"ok": True, "saved": saved, "rejected": rejected, "pictures": list_picture_entries()})
+
+
+@app.route("/pictures/content", methods=["GET"])
+def picture_content():
+    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
+    normalized_path = os.path.normpath(relative_path)
+    if not normalized_path or normalized_path.startswith("..") or os.path.isabs(normalized_path):
+        return jsonify({"error": "Invalid picture path"}), 400
+    target_path = os.path.abspath(os.path.join(PICTURES_DIR, normalized_path))
+    pictures_root = os.path.abspath(PICTURES_DIR)
+    if os.path.commonpath([target_path, pictures_root]) != pictures_root or not os.path.isfile(target_path) or not is_picture_file(target_path):
+        return jsonify({"error": "Picture not found"}), 404
+    return send_file(target_path, conditional=True)
 
 
 @app.route("/game-covers/<path:filename>", methods=["GET"])
@@ -2091,11 +2158,49 @@ def book_cover():
     return send_file(cover_path, conditional=True)
 
 
+@app.route("/games/systems/<system_id>/artwork", methods=["GET", "POST"])
+def game_system_artwork(system_id):
+    if system_id not in SYSTEMS:
+        return jsonify({"error": "Unknown console"}), 404
+    ensure_media_directories()
+    record = os.path.join(GAME_COVERS_DIR, "system-" + system_id + ".json")
+    previous = ""
+    try:
+        with open(record, encoding="utf-8") as handle:
+            previous = json.load(handle).get("filename", "")
+    except (OSError, ValueError):
+        pass
+    if request.method == "POST":
+        filename = ""
+        if request.form.get("reset") != "1":
+            upload = request.files.get("image")
+            if not upload:
+                return jsonify({"error": "Missing image"}), 400
+            data = upload.stream.read(8 * 1024 * 1024 + 1)
+            if len(data) > 8 * 1024 * 1024:
+                return jsonify({"error": "Maximum image size: 8 MB"}), 400
+            ext = ".png" if data.startswith(b"\x89PNG\r\n\x1a\n") else ".jpg" if data.startswith(b"\xff\xd8\xff") else ".webp" if data[:4] == b"RIFF" and data[8:12] == b"WEBP" else None
+            if not ext:
+                return jsonify({"error": "Use PNG, JPEG or WebP"}), 400
+            filename = "system-" + system_id + "-" + str(time.time_ns()) + ext
+            with open(os.path.join(GAME_COVERS_DIR, filename), "wb") as handle:
+                handle.write(data)
+        with open(record, "w", encoding="utf-8") as handle:
+            json.dump({"filename": filename}, handle)
+        if previous and os.path.basename(previous) == previous and previous.startswith("system-" + system_id + "-"):
+            try:
+                os.remove(os.path.join(GAME_COVERS_DIR, previous))
+            except OSError:
+                pass
+        previous = filename
+    return jsonify({"image": game_cover_url(previous) if previous else ""})
+
+
 @app.route("/games/search", methods=["GET"])
 def search_games():
     query = str(request.args.get("query") or "").strip()
     extension = str(request.args.get("extension") or "").strip().lower()
-    platform = normalize_game_platform(extension if extension.startswith(".") else f".{extension}")
+    platform = resolve_platform(extension if extension.startswith(".") else f".{extension}", request.args.get("platform"))
     if not query:
         return jsonify({"ok": True, "configured": bool(screen_scraper_credentials()), "results": []})
     if not platform:
@@ -2546,11 +2651,20 @@ def upload_game():
     if not is_game_rom_file(uploaded_file.filename):
         return jsonify({"error": "Unsupported game file"}), 400
 
+    extension = os.path.splitext(uploaded_file.filename)[1].lower().lstrip(".")
+    if not request.form.get("platform") and sum(extension in item["extensions"] for item in GAME_SYSTEMS) > 1:
+        return jsonify({"error": "Select a console for this file format"}), 400
+    platform = resolve_platform(os.path.basename(uploaded_file.filename), request.form.get("platform"))
+    if not platform:
+        return jsonify({"error": "Select a compatible console for this ROM"}), 400
+
     ensure_media_directories()
     original_filename = os.path.basename(uploaded_file.filename)
     original_extension = os.path.splitext(original_filename)[1].lower()
-    desired_base = name or os.path.splitext(original_filename)[0]
-    target_filename = unique_media_filename(GAMES_DIR, f"{desired_base}{original_extension}")
+    desired_base = os.path.splitext(original_filename)[0] if original_extension == ".zip" else name or os.path.splitext(original_filename)[0]
+    if original_extension == ".zip" and os.path.exists(os.path.join(GAMES_DIR, original_filename)):
+        return jsonify({"error": "This arcade ROM set already exists"}), 409
+    target_filename = original_filename if original_extension == ".zip" else unique_media_filename(GAMES_DIR, f"{desired_base}{original_extension}")
     target_path = os.path.join(GAMES_DIR, target_filename)
     uploaded_file.save(target_path)
 
@@ -2569,6 +2683,7 @@ def upload_game():
         relative_path,
         {
             "name": name or os.path.splitext(original_filename)[0],
+            "platform": platform["id"],
             "description": description,
             "coverImage": cover_image,
             "imageOptions": image_options,
@@ -2878,7 +2993,13 @@ def stream_media():
         return jsonify({"error": "Video not found"}), 404
 
     # conditional=True enables HTTP range requests, which browsers need for seeking.
-    return send_file(target_path, conditional=True)
+    download = str(request.args.get("download") or "").strip().lower() in {"1", "true", "yes"}
+    return send_file(
+        target_path,
+        conditional=True,
+        as_attachment=download,
+        download_name=os.path.basename(target_path),
+    )
 
 
 @app.route("/camera/capture", methods=["GET"])

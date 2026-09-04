@@ -1,0 +1,737 @@
+[
+  {
+    "id": "gb",
+    "name": "Game Boy",
+    "suggestedEmulator": "gambatte",
+    "appPlatformId": "gameboy",
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/gb/background.webp",
+      "overlay": "/game-systems/iconic/gb/overlay.webp",
+      "console": "/game-systems/iconic/gb/console.webp",
+      "logo": "/game-systems/iconic/gb/logo.webp",
+      "metadata": "/game-systems/iconic/gb/metadata.xml"
+    },
+    "appExtensionKey": "gb",
+    "metadata": {
+      "systemName": "Game Boy",
+      "systemManufacturer": "Nintendo",
+      "systemReleaseYear": "1989",
+      "systemHardwareType": "Portable",
+      "systemColor": "3E518A"
+    },
+    "extensions": [
+      "gb"
+    ],
+    "screenScraperSystemId": 9,
+    "core": "gambatte_libretro.so"
+  },
+  {
+    "id": "gbc",
+    "name": "Game Boy Color",
+    "suggestedEmulator": "gambatte",
+    "appPlatformId": "gameboy_color",
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/gbc/background.webp",
+      "overlay": "/game-systems/iconic/gbc/overlay.webp",
+      "console": "/game-systems/iconic/gbc/console.webp",
+      "logo": "/game-systems/iconic/gbc/logo.webp",
+      "metadata": "/game-systems/iconic/gbc/metadata.xml"
+    },
+    "appExtensionKey": "gbc",
+    "metadata": {
+      "systemName": "Game Boy Color",
+      "systemManufacturer": "Nintendo",
+      "systemReleaseYear": "1998",
+      "systemHardwareType": "Portable",
+      "systemColor": "F3B92A"
+    },
+    "extensions": [
+      "gbc"
+    ],
+    "screenScraperSystemId": 10,
+    "core": "gambatte_libretro.so"
+  },
+  {
+    "id": "gba",
+    "name": "Game Boy Advance",
+    "suggestedEmulator": "mgba",
+    "appPlatformId": "gameboy_advance",
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/gba/background.webp",
+      "overlay": "/game-systems/iconic/gba/overlay.webp",
+      "console": "/game-systems/iconic/gba/console.webp",
+      "logo": "/game-systems/iconic/gba/logo.webp",
+      "metadata": "/game-systems/iconic/gba/metadata.xml"
+    },
+    "appExtensionKey": "gba",
+    "metadata": {
+      "systemName": "Game Boy Advance",
+      "systemManufacturer": "Nintendo",
+      "systemReleaseYear": "2001",
+      "systemHardwareType": "Portable",
+      "systemColor": "4C74D6"
+    },
+    "extensions": [
+      "gba"
+    ],
+    "screenScraperSystemId": 12,
+    "core": "mgba_libretro.so"
+  },
+  {
+    "id": "nes",
+    "name": "NES",
+    "suggestedEmulator": "fceumm",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/nes/background.webp",
+      "overlay": "/game-systems/iconic/nes/overlay.webp",
+      "console": "/game-systems/iconic/nes/console.webp",
+      "logo": "/game-systems/iconic/nes/logo.webp",
+      "metadata": "/game-systems/iconic/nes/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Nintendo",
+      "systemManufacturer": "Nintendo",
+      "systemReleaseYear": "1985",
+      "systemHardwareType": "Console",
+      "systemColor": "B93041"
+    },
+    "extensions": [
+      "nes"
+    ],
+    "screenScraperSystemId": 3,
+    "core": "fceumm_libretro.so"
+  },
+  {
+    "id": "snes",
+    "name": "Super Nintendo",
+    "suggestedEmulator": "snes9x",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/snes/background.webp",
+      "overlay": "/game-systems/iconic/snes/overlay.webp",
+      "console": "/game-systems/iconic/snes/console.webp",
+      "logo": "/game-systems/iconic/snes/logo.webp",
+      "metadata": "/game-systems/iconic/snes/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Super Nintendo",
+      "systemManufacturer": "Nintendo",
+      "systemReleaseYear": "1992",
+      "systemHardwareType": "Console",
+      "systemColor": "3F549D"
+    },
+    "extensions": [
+      "sfc",
+      "smc"
+    ],
+    "screenScraperSystemId": 4,
+    "core": "snes9x_libretro.so"
+  },
+  {
+    "id": "mastersystem",
+    "name": "Master System",
+    "suggestedEmulator": "genesis_plus_gx",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/mastersystem/background.webp",
+      "overlay": "/game-systems/iconic/mastersystem/overlay.webp",
+      "console": "/game-systems/iconic/mastersystem/console.webp",
+      "logo": "/game-systems/iconic/mastersystem/logo.webp",
+      "metadata": "/game-systems/iconic/mastersystem/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Master System",
+      "systemManufacturer": "Sega",
+      "systemReleaseYear": "1986",
+      "systemHardwareType": "Console",
+      "systemColor": "C03F3B"
+    },
+    "extensions": [
+      "sms"
+    ],
+    "screenScraperSystemId": 2,
+    "core": "genesis_plus_gx_libretro.so"
+  },
+  {
+    "id": "megadrive",
+    "name": "Mega Drive",
+    "suggestedEmulator": "genesis_plus_gx",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/megadrive/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/megadrive/console.webp",
+      "logo": "/game-systems/iconic/megadrive/logo.webp",
+      "metadata": "/game-systems/iconic/megadrive/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Mega Drive",
+      "systemManufacturer": "Sega",
+      "systemReleaseYear": "1990",
+      "systemHardwareType": "Console",
+      "systemColor": "0C7BCB"
+    },
+    "extensions": [
+      "md",
+      "gen",
+      "bin"
+    ],
+    "screenScraperSystemId": 1,
+    "core": "genesis_plus_gx_libretro.so"
+  },
+  {
+    "id": "gamegear",
+    "name": "Game Gear",
+    "suggestedEmulator": "genesis_plus_gx",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/gamegear/background.webp",
+      "overlay": "/game-systems/iconic/gamegear/overlay.webp",
+      "console": "/game-systems/iconic/gamegear/console.webp",
+      "logo": "/game-systems/iconic/gamegear/logo.webp",
+      "metadata": "/game-systems/iconic/gamegear/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Game Gear",
+      "systemManufacturer": "Sega",
+      "systemReleaseYear": "1990",
+      "systemHardwareType": "Portable",
+      "systemColor": "356FAF"
+    },
+    "extensions": [
+      "gg"
+    ],
+    "screenScraperSystemId": 21,
+    "core": "genesis_plus_gx_libretro.so"
+  },
+  {
+    "id": "segacd",
+    "name": "Mega CD",
+    "suggestedEmulator": "genesis_plus_gx",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/segacd/background.webp",
+      "overlay": "/game-systems/iconic/segacd/overlay.webp",
+      "console": "/game-systems/iconic/segacd/console.webp",
+      "logo": "/game-systems/iconic/segacd/logo.webp",
+      "metadata": "/game-systems/iconic/segacd/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Sega CD",
+      "systemManufacturer": "Sega",
+      "systemReleaseYear": "1992",
+      "systemHardwareType": "Peripheral",
+      "systemColor": "0C7BCB"
+    },
+    "extensions": [
+      "chd"
+    ],
+    "screenScraperSystemId": 20,
+    "core": "genesis_plus_gx_libretro.so"
+  },
+  {
+    "id": "pcengine",
+    "name": "PC Engine",
+    "suggestedEmulator": "mednafen_pce_fast",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/pcengine/background.webp",
+      "overlay": "/game-systems/iconic/pcengine/overlay.webp",
+      "console": "/game-systems/iconic/pcengine/console.webp",
+      "logo": "/game-systems/iconic/pcengine/logo.webp",
+      "metadata": "/game-systems/iconic/pcengine/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "PC Engine",
+      "systemManufacturer": "NEC",
+      "systemReleaseYear": "1987",
+      "systemHardwareType": "Console",
+      "systemColor": "BB3F41"
+    },
+    "extensions": [
+      "pce"
+    ],
+    "screenScraperSystemId": 31,
+    "core": "mednafen_pce_fast_libretro.so"
+  },
+  {
+    "id": "pcenginecd",
+    "name": "PC Engine CD",
+    "suggestedEmulator": "mednafen_pce_fast",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/pcenginecd/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/pcenginecd/console.webp",
+      "logo": "/game-systems/iconic/pcenginecd/logo.webp",
+      "metadata": "/game-systems/iconic/pcenginecd/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "PC Engine CD-ROM²",
+      "systemManufacturer": "NEC",
+      "systemReleaseYear": "1988",
+      "systemHardwareType": "Console",
+      "systemColor": "5E8FC8"
+    },
+    "extensions": [
+      "chd"
+    ],
+    "screenScraperSystemId": 114,
+    "core": "mednafen_pce_fast_libretro.so"
+  },
+  {
+    "id": "neogeo",
+    "name": "Neo Geo",
+    "suggestedEmulator": "fbneo",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/neogeo/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/neogeo/console.webp",
+      "logo": "/game-systems/iconic/neogeo/logo.webp",
+      "metadata": "/game-systems/iconic/neogeo/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Neo Geo",
+      "systemManufacturer": "SNK",
+      "systemReleaseYear": "1990",
+      "systemHardwareType": "Console",
+      "systemColor": "7A838B"
+    },
+    "extensions": [
+      "zip"
+    ],
+    "screenScraperSystemId": 142,
+    "core": "fbneo_libretro.so"
+  },
+  {
+    "id": "neogeocd",
+    "name": "Neo Geo CD",
+    "suggestedEmulator": "neocd",
+    "appPlatformId": "neo_geo_cd",
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/neogeocd/background.webp",
+      "overlay": "/game-systems/iconic/neogeocd/overlay.webp",
+      "console": "/game-systems/iconic/neogeocd/console.webp",
+      "logo": "/game-systems/iconic/neogeocd/logo.webp",
+      "metadata": "/game-systems/iconic/neogeocd/metadata.xml"
+    },
+    "appExtensionKey": "chd",
+    "metadata": {
+      "systemName": "Neo Geo CD",
+      "systemManufacturer": "SNK",
+      "systemReleaseYear": "1994",
+      "systemHardwareType": "Console",
+      "systemColor": "AD90E2"
+    },
+    "extensions": [
+      "chd"
+    ],
+    "screenScraperSystemId": 70,
+    "core": "neocd_libretro.so"
+  },
+  {
+    "id": "ngp",
+    "name": "Neo Geo Pocket",
+    "suggestedEmulator": "mednafen_ngp",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/ngp/background.webp",
+      "overlay": "/game-systems/iconic/ngp/overlay.webp",
+      "console": "/game-systems/iconic/ngp/console.webp",
+      "logo": "/game-systems/iconic/ngp/logo.webp",
+      "metadata": "/game-systems/iconic/ngp/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Neo Geo Pocket",
+      "systemManufacturer": "SNK",
+      "systemReleaseYear": "1998",
+      "systemHardwareType": "Portable",
+      "systemColor": "ECA045"
+    },
+    "extensions": [
+      "ngp"
+    ],
+    "screenScraperSystemId": 25,
+    "core": "mednafen_ngp_libretro.so"
+  },
+  {
+    "id": "ngpc",
+    "name": "Neo Geo Pocket Color",
+    "suggestedEmulator": "mednafen_ngp",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/ngpc/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/ngpc/console.webp",
+      "logo": "/game-systems/iconic/ngpc/logo.webp",
+      "metadata": "/game-systems/iconic/ngpc/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Neo Geo Pocket Color",
+      "systemManufacturer": "SNK",
+      "systemReleaseYear": "1999",
+      "systemHardwareType": "Portable",
+      "systemColor": "ECA045"
+    },
+    "extensions": [
+      "ngc"
+    ],
+    "screenScraperSystemId": 82,
+    "core": "mednafen_ngp_libretro.so"
+  },
+  {
+    "id": "wonderswan",
+    "name": "WonderSwan",
+    "suggestedEmulator": "mednafen_wswan",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/wonderswan/background.webp",
+      "overlay": "/game-systems/iconic/wonderswan/overlay.webp",
+      "console": "/game-systems/iconic/wonderswan/console.webp",
+      "logo": "/game-systems/iconic/wonderswan/logo.webp",
+      "metadata": "/game-systems/iconic/wonderswan/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "WonderSwan",
+      "systemManufacturer": "Bandai",
+      "systemReleaseYear": "1999",
+      "systemHardwareType": "Portable",
+      "systemColor": "76CDBE"
+    },
+    "extensions": [
+      "ws"
+    ],
+    "screenScraperSystemId": 45,
+    "core": "mednafen_wswan_libretro.so"
+  },
+  {
+    "id": "wonderswancolor",
+    "name": "WonderSwan Color",
+    "suggestedEmulator": "mednafen_wswan",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/wonderswancolor/background.webp",
+      "overlay": "/game-systems/iconic/wonderswancolor/overlay.webp",
+      "console": "/game-systems/iconic/wonderswancolor/console.webp",
+      "logo": "/game-systems/iconic/wonderswancolor/logo.webp",
+      "metadata": "/game-systems/iconic/wonderswancolor/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "WonderSwan Color",
+      "systemManufacturer": "Bandai",
+      "systemReleaseYear": "2000",
+      "systemHardwareType": "Portable",
+      "systemColor": "3FB0E6"
+    },
+    "extensions": [
+      "wsc"
+    ],
+    "screenScraperSystemId": 46,
+    "core": "mednafen_wswan_libretro.so"
+  },
+  {
+    "id": "atari2600",
+    "name": "Atari 2600",
+    "suggestedEmulator": "stella",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/atari2600/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/atari2600/console.webp",
+      "logo": "/game-systems/iconic/atari2600/logo.webp",
+      "metadata": "/game-systems/iconic/atari2600/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Atari 2600",
+      "systemManufacturer": "Atari",
+      "systemReleaseYear": "1977",
+      "systemHardwareType": "Console",
+      "systemColor": "b92e35"
+    },
+    "extensions": [
+      "a26",
+      "bin"
+    ],
+    "screenScraperSystemId": 26,
+    "core": "stella_libretro.so"
+  },
+  {
+    "id": "atari7800",
+    "name": "Atari 7800",
+    "suggestedEmulator": "prosystem",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/atari7800/background.webp",
+      "overlay": "/game-systems/iconic/atari7800/overlay.webp",
+      "console": "/game-systems/iconic/atari7800/console.webp",
+      "logo": "/game-systems/iconic/atari7800/logo.webp",
+      "metadata": "/game-systems/iconic/atari7800/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Atari 7800",
+      "systemManufacturer": "Atari",
+      "systemReleaseYear": "1986",
+      "systemHardwareType": "Console",
+      "systemColor": "2D7AC6"
+    },
+    "extensions": [
+      "a78"
+    ],
+    "screenScraperSystemId": 41,
+    "core": "prosystem_libretro.so"
+  },
+  {
+    "id": "atarilynx",
+    "name": "Atari Lynx",
+    "suggestedEmulator": "handy",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/atarilynx/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/atarilynx/console.webp",
+      "logo": "/game-systems/iconic/atarilynx/logo.webp",
+      "metadata": "/game-systems/iconic/atarilynx/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Atari Lynx",
+      "systemManufacturer": "Atari",
+      "systemReleaseYear": "1989",
+      "systemHardwareType": "Portable",
+      "systemColor": "E19735"
+    },
+    "extensions": [
+      "lnx"
+    ],
+    "screenScraperSystemId": 28,
+    "core": "handy_libretro.so"
+  },
+  {
+    "id": "psx",
+    "name": "PlayStation",
+    "suggestedEmulator": "pcsx_rearmed",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "recommended",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/psx/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/psx/console.webp",
+      "logo": "/game-systems/iconic/psx/logo.webp",
+      "metadata": "/game-systems/iconic/psx/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "PlayStation",
+      "systemManufacturer": "Sony",
+      "systemReleaseYear": "1994",
+      "systemHardwareType": "Console",
+      "systemColor": "858B90"
+    },
+    "extensions": [
+      "chd",
+      "pbp"
+    ],
+    "screenScraperSystemId": 57,
+    "core": "pcsx_rearmed_libretro.so"
+  },
+  {
+    "id": "arcade",
+    "name": "Arcade 2D",
+    "suggestedEmulator": "fbneo",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "per-game",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/arcade/background.webp",
+      "overlay": "/game-systems/iconic/arcade/overlay.webp",
+      "console": "/game-systems/iconic/arcade/console.webp",
+      "logo": "/game-systems/iconic/arcade/logo.webp",
+      "metadata": "/game-systems/iconic/arcade/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Arcade",
+      "systemManufacturer": "Various",
+      "systemReleaseYear": "Various",
+      "systemHardwareType": "Collection",
+      "systemColor": "5B60B7"
+    },
+    "extensions": [
+      "zip"
+    ],
+    "screenScraperSystemId": 75,
+    "core": "fbneo_libretro.so"
+  },
+  {
+    "id": "n64",
+    "name": "Nintendo 64",
+    "suggestedEmulator": "mupen64plus",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "per-game",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/n64/background.webp",
+      "overlay": "/game-systems/iconic/n64/overlay.webp",
+      "console": "/game-systems/iconic/n64/console.webp",
+      "logo": "/game-systems/iconic/n64/logo.webp",
+      "metadata": "/game-systems/iconic/n64/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Nintendo 64",
+      "systemManufacturer": "Nintendo",
+      "systemReleaseYear": "1996",
+      "systemHardwareType": "Console",
+      "systemColor": "19B65F"
+    },
+    "extensions": [
+      "z64",
+      "n64",
+      "v64"
+    ],
+    "screenScraperSystemId": 14,
+    "core": "mupen64plus_next_libretro.so"
+  },
+  {
+    "id": "dreamcast",
+    "name": "Dreamcast",
+    "suggestedEmulator": "redream / flycast",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "per-game",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/dreamcast/background.webp",
+      "overlay": "/game-systems/iconic/dreamcast/overlay.webp",
+      "console": "/game-systems/iconic/dreamcast/console.webp",
+      "logo": "/game-systems/iconic/dreamcast/logo.webp",
+      "metadata": "/game-systems/iconic/dreamcast/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "Dreamcast",
+      "systemManufacturer": "Sega",
+      "systemReleaseYear": "1998",
+      "systemHardwareType": "Console",
+      "systemColor": "4C7ED6"
+    },
+    "extensions": [
+      "chd",
+      "cdi"
+    ],
+    "screenScraperSystemId": 23,
+    "core": "flycast_libretro.so"
+  },
+  {
+    "id": "psp",
+    "name": "PSP",
+    "suggestedEmulator": "ppsspp",
+    "appPlatformId": null,
+    "appIntegrated": true,
+    "pi4Tier": "per-game",
+    "hardwareTested": false,
+    "assets": {
+      "background": "/game-systems/iconic/psp/background.webp",
+      "overlay": null,
+      "console": "/game-systems/iconic/psp/console.webp",
+      "logo": "/game-systems/iconic/psp/logo.webp",
+      "metadata": "/game-systems/iconic/psp/metadata.xml"
+    },
+    "appExtensionKey": null,
+    "metadata": {
+      "systemName": "PlayStation Portable",
+      "systemManufacturer": "Sony",
+      "systemReleaseYear": "2004",
+      "systemHardwareType": "Portable",
+      "systemColor": "366DA7"
+    },
+    "extensions": [
+      "iso",
+      "cso",
+      "pbp"
+    ],
+    "screenScraperSystemId": 61,
+    "core": "ppsspp_libretro.so"
+  }
+]

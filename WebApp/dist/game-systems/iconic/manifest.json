@@ -1,0 +1,1349 @@
+{
+  "source": "https://github.com/Siddy212/iconic-es-de",
+  "revision": "0a549ffbe5a392bd818ee4c11a7175b2372591e4",
+  "artStyle": "classic",
+  "retrievedAt": "2026-09-03",
+  "licenseNote": "README specifies CC-BY-NC-SA-2.0; LICENSE specifies CC0. Preserve both. Third-party art rights are not resolved by this manifest.",
+  "systems": [
+    {
+      "id": "gb",
+      "name": "Game Boy",
+      "suggestedEmulator": "gambatte",
+      "appPlatformId": "gameboy",
+      "appIntegrated": true,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/gb/background.webp",
+        "overlay": "/game-systems/iconic/gb/overlay.webp",
+        "console": "/game-systems/iconic/gb/console.webp",
+        "logo": "/game-systems/iconic/gb/logo.webp",
+        "metadata": "/game-systems/iconic/gb/metadata.xml"
+      },
+      "appExtensionKey": "gb",
+      "metadata": {
+        "systemName": "Game Boy",
+        "systemManufacturer": "Nintendo",
+        "systemReleaseYear": "1989",
+        "systemHardwareType": "Portable",
+        "systemColor": "3E518A"
+      }
+    },
+    {
+      "id": "gbc",
+      "name": "Game Boy Color",
+      "suggestedEmulator": "gambatte",
+      "appPlatformId": "gameboy_color",
+      "appIntegrated": true,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/gbc/background.webp",
+        "overlay": "/game-systems/iconic/gbc/overlay.webp",
+        "console": "/game-systems/iconic/gbc/console.webp",
+        "logo": "/game-systems/iconic/gbc/logo.webp",
+        "metadata": "/game-systems/iconic/gbc/metadata.xml"
+      },
+      "appExtensionKey": "gbc",
+      "metadata": {
+        "systemName": "Game Boy Color",
+        "systemManufacturer": "Nintendo",
+        "systemReleaseYear": "1998",
+        "systemHardwareType": "Portable",
+        "systemColor": "F3B92A"
+      }
+    },
+    {
+      "id": "gba",
+      "name": "Game Boy Advance",
+      "suggestedEmulator": "mgba",
+      "appPlatformId": "gameboy_advance",
+      "appIntegrated": true,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/gba/background.webp",
+        "overlay": "/game-systems/iconic/gba/overlay.webp",
+        "console": "/game-systems/iconic/gba/console.webp",
+        "logo": "/game-systems/iconic/gba/logo.webp",
+        "metadata": "/game-systems/iconic/gba/metadata.xml"
+      },
+      "appExtensionKey": "gba",
+      "metadata": {
+        "systemName": "Game Boy Advance",
+        "systemManufacturer": "Nintendo",
+        "systemReleaseYear": "2001",
+        "systemHardwareType": "Portable",
+        "systemColor": "4C74D6"
+      }
+    },
+    {
+      "id": "nes",
+      "name": "NES",
+      "suggestedEmulator": "fceumm",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/nes/background.webp",
+        "overlay": "/game-systems/iconic/nes/overlay.webp",
+        "console": "/game-systems/iconic/nes/console.webp",
+        "logo": "/game-systems/iconic/nes/logo.webp",
+        "metadata": "/game-systems/iconic/nes/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Nintendo",
+        "systemManufacturer": "Nintendo",
+        "systemReleaseYear": "1985",
+        "systemHardwareType": "Console",
+        "systemColor": "B93041"
+      }
+    },
+    {
+      "id": "snes",
+      "name": "Super Nintendo",
+      "suggestedEmulator": "snes9x",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/snes/background.webp",
+        "overlay": "/game-systems/iconic/snes/overlay.webp",
+        "console": "/game-systems/iconic/snes/console.webp",
+        "logo": "/game-systems/iconic/snes/logo.webp",
+        "metadata": "/game-systems/iconic/snes/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Super Nintendo",
+        "systemManufacturer": "Nintendo",
+        "systemReleaseYear": "1992",
+        "systemHardwareType": "Console",
+        "systemColor": "3F549D"
+      }
+    },
+    {
+      "id": "mastersystem",
+      "name": "Master System",
+      "suggestedEmulator": "genesis_plus_gx",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/mastersystem/background.webp",
+        "overlay": "/game-systems/iconic/mastersystem/overlay.webp",
+        "console": "/game-systems/iconic/mastersystem/console.webp",
+        "logo": "/game-systems/iconic/mastersystem/logo.webp",
+        "metadata": "/game-systems/iconic/mastersystem/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Master System",
+        "systemManufacturer": "Sega",
+        "systemReleaseYear": "1986",
+        "systemHardwareType": "Console",
+        "systemColor": "C03F3B"
+      }
+    },
+    {
+      "id": "megadrive",
+      "name": "Mega Drive",
+      "suggestedEmulator": "genesis_plus_gx",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/megadrive/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/megadrive/console.webp",
+        "logo": "/game-systems/iconic/megadrive/logo.webp",
+        "metadata": "/game-systems/iconic/megadrive/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Mega Drive",
+        "systemManufacturer": "Sega",
+        "systemReleaseYear": "1990",
+        "systemHardwareType": "Console",
+        "systemColor": "0C7BCB"
+      }
+    },
+    {
+      "id": "gamegear",
+      "name": "Game Gear",
+      "suggestedEmulator": "genesis_plus_gx",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/gamegear/background.webp",
+        "overlay": "/game-systems/iconic/gamegear/overlay.webp",
+        "console": "/game-systems/iconic/gamegear/console.webp",
+        "logo": "/game-systems/iconic/gamegear/logo.webp",
+        "metadata": "/game-systems/iconic/gamegear/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Game Gear",
+        "systemManufacturer": "Sega",
+        "systemReleaseYear": "1990",
+        "systemHardwareType": "Portable",
+        "systemColor": "356FAF"
+      }
+    },
+    {
+      "id": "segacd",
+      "name": "Mega CD",
+      "suggestedEmulator": "genesis_plus_gx",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/segacd/background.webp",
+        "overlay": "/game-systems/iconic/segacd/overlay.webp",
+        "console": "/game-systems/iconic/segacd/console.webp",
+        "logo": "/game-systems/iconic/segacd/logo.webp",
+        "metadata": "/game-systems/iconic/segacd/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Sega CD",
+        "systemManufacturer": "Sega",
+        "systemReleaseYear": "1992",
+        "systemHardwareType": "Peripheral",
+        "systemColor": "0C7BCB"
+      }
+    },
+    {
+      "id": "pcengine",
+      "name": "PC Engine",
+      "suggestedEmulator": "mednafen_pce_fast",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/pcengine/background.webp",
+        "overlay": "/game-systems/iconic/pcengine/overlay.webp",
+        "console": "/game-systems/iconic/pcengine/console.webp",
+        "logo": "/game-systems/iconic/pcengine/logo.webp",
+        "metadata": "/game-systems/iconic/pcengine/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "PC Engine",
+        "systemManufacturer": "NEC",
+        "systemReleaseYear": "1987",
+        "systemHardwareType": "Console",
+        "systemColor": "BB3F41"
+      }
+    },
+    {
+      "id": "pcenginecd",
+      "name": "PC Engine CD",
+      "suggestedEmulator": "mednafen_pce_fast",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/pcenginecd/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/pcenginecd/console.webp",
+        "logo": "/game-systems/iconic/pcenginecd/logo.webp",
+        "metadata": "/game-systems/iconic/pcenginecd/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "PC Engine CD-ROM²",
+        "systemManufacturer": "NEC",
+        "systemReleaseYear": "1988",
+        "systemHardwareType": "Console",
+        "systemColor": "5E8FC8"
+      }
+    },
+    {
+      "id": "neogeo",
+      "name": "Neo Geo",
+      "suggestedEmulator": "fbneo",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/neogeo/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/neogeo/console.webp",
+        "logo": "/game-systems/iconic/neogeo/logo.webp",
+        "metadata": "/game-systems/iconic/neogeo/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Neo Geo",
+        "systemManufacturer": "SNK",
+        "systemReleaseYear": "1990",
+        "systemHardwareType": "Console",
+        "systemColor": "7A838B"
+      }
+    },
+    {
+      "id": "neogeocd",
+      "name": "Neo Geo CD",
+      "suggestedEmulator": "neocd",
+      "appPlatformId": "neo_geo_cd",
+      "appIntegrated": true,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/neogeocd/background.webp",
+        "overlay": "/game-systems/iconic/neogeocd/overlay.webp",
+        "console": "/game-systems/iconic/neogeocd/console.webp",
+        "logo": "/game-systems/iconic/neogeocd/logo.webp",
+        "metadata": "/game-systems/iconic/neogeocd/metadata.xml"
+      },
+      "appExtensionKey": "chd",
+      "metadata": {
+        "systemName": "Neo Geo CD",
+        "systemManufacturer": "SNK",
+        "systemReleaseYear": "1994",
+        "systemHardwareType": "Console",
+        "systemColor": "AD90E2"
+      }
+    },
+    {
+      "id": "ngp",
+      "name": "Neo Geo Pocket",
+      "suggestedEmulator": "mednafen_ngp",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/ngp/background.webp",
+        "overlay": "/game-systems/iconic/ngp/overlay.webp",
+        "console": "/game-systems/iconic/ngp/console.webp",
+        "logo": "/game-systems/iconic/ngp/logo.webp",
+        "metadata": "/game-systems/iconic/ngp/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Neo Geo Pocket",
+        "systemManufacturer": "SNK",
+        "systemReleaseYear": "1998",
+        "systemHardwareType": "Portable",
+        "systemColor": "ECA045"
+      }
+    },
+    {
+      "id": "ngpc",
+      "name": "Neo Geo Pocket Color",
+      "suggestedEmulator": "mednafen_ngp",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/ngpc/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/ngpc/console.webp",
+        "logo": "/game-systems/iconic/ngpc/logo.webp",
+        "metadata": "/game-systems/iconic/ngpc/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Neo Geo Pocket Color",
+        "systemManufacturer": "SNK",
+        "systemReleaseYear": "1999",
+        "systemHardwareType": "Portable",
+        "systemColor": "ECA045"
+      }
+    },
+    {
+      "id": "wonderswan",
+      "name": "WonderSwan",
+      "suggestedEmulator": "mednafen_wswan",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/wonderswan/background.webp",
+        "overlay": "/game-systems/iconic/wonderswan/overlay.webp",
+        "console": "/game-systems/iconic/wonderswan/console.webp",
+        "logo": "/game-systems/iconic/wonderswan/logo.webp",
+        "metadata": "/game-systems/iconic/wonderswan/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "WonderSwan",
+        "systemManufacturer": "Bandai",
+        "systemReleaseYear": "1999",
+        "systemHardwareType": "Portable",
+        "systemColor": "76CDBE"
+      }
+    },
+    {
+      "id": "wonderswancolor",
+      "name": "WonderSwan Color",
+      "suggestedEmulator": "mednafen_wswan",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/wonderswancolor/background.webp",
+        "overlay": "/game-systems/iconic/wonderswancolor/overlay.webp",
+        "console": "/game-systems/iconic/wonderswancolor/console.webp",
+        "logo": "/game-systems/iconic/wonderswancolor/logo.webp",
+        "metadata": "/game-systems/iconic/wonderswancolor/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "WonderSwan Color",
+        "systemManufacturer": "Bandai",
+        "systemReleaseYear": "2000",
+        "systemHardwareType": "Portable",
+        "systemColor": "3FB0E6"
+      }
+    },
+    {
+      "id": "atari2600",
+      "name": "Atari 2600",
+      "suggestedEmulator": "stella",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/atari2600/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/atari2600/console.webp",
+        "logo": "/game-systems/iconic/atari2600/logo.webp",
+        "metadata": "/game-systems/iconic/atari2600/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Atari 2600",
+        "systemManufacturer": "Atari",
+        "systemReleaseYear": "1977",
+        "systemHardwareType": "Console",
+        "systemColor": "b92e35"
+      }
+    },
+    {
+      "id": "atari7800",
+      "name": "Atari 7800",
+      "suggestedEmulator": "prosystem",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/atari7800/background.webp",
+        "overlay": "/game-systems/iconic/atari7800/overlay.webp",
+        "console": "/game-systems/iconic/atari7800/console.webp",
+        "logo": "/game-systems/iconic/atari7800/logo.webp",
+        "metadata": "/game-systems/iconic/atari7800/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Atari 7800",
+        "systemManufacturer": "Atari",
+        "systemReleaseYear": "1986",
+        "systemHardwareType": "Console",
+        "systemColor": "2D7AC6"
+      }
+    },
+    {
+      "id": "atarilynx",
+      "name": "Atari Lynx",
+      "suggestedEmulator": "handy",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/atarilynx/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/atarilynx/console.webp",
+        "logo": "/game-systems/iconic/atarilynx/logo.webp",
+        "metadata": "/game-systems/iconic/atarilynx/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Atari Lynx",
+        "systemManufacturer": "Atari",
+        "systemReleaseYear": "1989",
+        "systemHardwareType": "Portable",
+        "systemColor": "E19735"
+      }
+    },
+    {
+      "id": "psx",
+      "name": "PlayStation",
+      "suggestedEmulator": "pcsx_rearmed",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "recommended",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/psx/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/psx/console.webp",
+        "logo": "/game-systems/iconic/psx/logo.webp",
+        "metadata": "/game-systems/iconic/psx/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "PlayStation",
+        "systemManufacturer": "Sony",
+        "systemReleaseYear": "1994",
+        "systemHardwareType": "Console",
+        "systemColor": "858B90"
+      }
+    },
+    {
+      "id": "arcade",
+      "name": "Arcade 2D",
+      "suggestedEmulator": "fbneo",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "per-game",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/arcade/background.webp",
+        "overlay": "/game-systems/iconic/arcade/overlay.webp",
+        "console": "/game-systems/iconic/arcade/console.webp",
+        "logo": "/game-systems/iconic/arcade/logo.webp",
+        "metadata": "/game-systems/iconic/arcade/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Arcade",
+        "systemManufacturer": "Various",
+        "systemReleaseYear": "Various",
+        "systemHardwareType": "Collection",
+        "systemColor": "5B60B7"
+      }
+    },
+    {
+      "id": "n64",
+      "name": "Nintendo 64",
+      "suggestedEmulator": "mupen64plus",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "per-game",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/n64/background.webp",
+        "overlay": "/game-systems/iconic/n64/overlay.webp",
+        "console": "/game-systems/iconic/n64/console.webp",
+        "logo": "/game-systems/iconic/n64/logo.webp",
+        "metadata": "/game-systems/iconic/n64/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Nintendo 64",
+        "systemManufacturer": "Nintendo",
+        "systemReleaseYear": "1996",
+        "systemHardwareType": "Console",
+        "systemColor": "19B65F"
+      }
+    },
+    {
+      "id": "dreamcast",
+      "name": "Dreamcast",
+      "suggestedEmulator": "redream / flycast",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "per-game",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/dreamcast/background.webp",
+        "overlay": "/game-systems/iconic/dreamcast/overlay.webp",
+        "console": "/game-systems/iconic/dreamcast/console.webp",
+        "logo": "/game-systems/iconic/dreamcast/logo.webp",
+        "metadata": "/game-systems/iconic/dreamcast/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "Dreamcast",
+        "systemManufacturer": "Sega",
+        "systemReleaseYear": "1998",
+        "systemHardwareType": "Console",
+        "systemColor": "4C7ED6"
+      }
+    },
+    {
+      "id": "psp",
+      "name": "PSP",
+      "suggestedEmulator": "ppsspp",
+      "appPlatformId": null,
+      "appIntegrated": false,
+      "pi4Tier": "per-game",
+      "hardwareTested": false,
+      "assets": {
+        "background": "/game-systems/iconic/psp/background.webp",
+        "overlay": null,
+        "console": "/game-systems/iconic/psp/console.webp",
+        "logo": "/game-systems/iconic/psp/logo.webp",
+        "metadata": "/game-systems/iconic/psp/metadata.xml"
+      },
+      "appExtensionKey": null,
+      "metadata": {
+        "systemName": "PlayStation Portable",
+        "systemManufacturer": "Sony",
+        "systemReleaseYear": "2004",
+        "systemHardwareType": "Portable",
+        "systemColor": "366DA7"
+      }
+    }
+  ],
+  "files": [
+    {
+      "source": "_inc/systems/classic-backgrounds/gb.webp",
+      "target": "gb/background.webp",
+      "gitBlobSha": "72e25e58b2ef0b1b67dbd34c74ecc84d6f6c73e5",
+      "sizeBytes": 222382
+    },
+    {
+      "source": "_inc/systems/classic-overlay/gb.webp",
+      "target": "gb/overlay.webp",
+      "gitBlobSha": "64e4786ce55d3628ec6218e4e51729ceb9dde98e",
+      "sizeBytes": 37416
+    },
+    {
+      "source": "_inc/systems/system/gb.webp",
+      "target": "gb/console.webp",
+      "gitBlobSha": "d3d5f8c1e103a0a2ac4e16b136b6d54d6b02bb82",
+      "sizeBytes": 247342
+    },
+    {
+      "source": "_inc/systems/carousel-icons/gb.webp",
+      "target": "gb/logo.webp",
+      "gitBlobSha": "20c94ad0d4307931b6e5c34f983e7b1298ecab45",
+      "sizeBytes": 17374
+    },
+    {
+      "source": "_inc/systems/metadata-global/gb.xml",
+      "target": "gb/metadata.xml",
+      "gitBlobSha": "8b6f65ddc049f6d4c0255af394bb8ddaa7cba49c",
+      "sizeBytes": 1948
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/gbc.webp",
+      "target": "gbc/background.webp",
+      "gitBlobSha": "55dd0989591c7e220427b51579645069dd5db8e5",
+      "sizeBytes": 288346
+    },
+    {
+      "source": "_inc/systems/classic-overlay/gbc.webp",
+      "target": "gbc/overlay.webp",
+      "gitBlobSha": "c6d15cc187c7f887307d05d12501d8adf4ab7984",
+      "sizeBytes": 20394
+    },
+    {
+      "source": "_inc/systems/system/gbc.webp",
+      "target": "gbc/console.webp",
+      "gitBlobSha": "1579f357784cc71ae9605baba8cdcb5b4b86c0b7",
+      "sizeBytes": 354136
+    },
+    {
+      "source": "_inc/systems/carousel-icons/gbc.webp",
+      "target": "gbc/logo.webp",
+      "gitBlobSha": "948da2483abdc53a5e49df03eb36622949fe276b",
+      "sizeBytes": 20662
+    },
+    {
+      "source": "_inc/systems/metadata-global/gbc.xml",
+      "target": "gbc/metadata.xml",
+      "gitBlobSha": "17351d4be1275c497202f4772568a05a5cab55c3",
+      "sizeBytes": 1890
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/gba.webp",
+      "target": "gba/background.webp",
+      "gitBlobSha": "764ecc59ba9271f8485c4b1f6a5aceb2db2af476",
+      "sizeBytes": 191400
+    },
+    {
+      "source": "_inc/systems/classic-overlay/gba.webp",
+      "target": "gba/overlay.webp",
+      "gitBlobSha": "5bacc73dcd9854595647a856eb41fcd736f01b33",
+      "sizeBytes": 29038
+    },
+    {
+      "source": "_inc/systems/system/gba.webp",
+      "target": "gba/console.webp",
+      "gitBlobSha": "074d14bb94b5fcf8fda67ad52d633c0290f7167b",
+      "sizeBytes": 43490
+    },
+    {
+      "source": "_inc/systems/carousel-icons/gba.webp",
+      "target": "gba/logo.webp",
+      "gitBlobSha": "55d95dd534d50298622ad72c665e6f733676d972",
+      "sizeBytes": 16154
+    },
+    {
+      "source": "_inc/systems/metadata-global/gba.xml",
+      "target": "gba/metadata.xml",
+      "gitBlobSha": "9aaf4bd7e607883a8999b343a5fe23f2ceabf3a5",
+      "sizeBytes": 1585
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/nes.webp",
+      "target": "nes/background.webp",
+      "gitBlobSha": "fbeb529eeada79e3869c7633f52fa7ae9c86f79a",
+      "sizeBytes": 265410
+    },
+    {
+      "source": "_inc/systems/classic-overlay/nes.webp",
+      "target": "nes/overlay.webp",
+      "gitBlobSha": "26fd99417a196df545905f283a13503d0b56590e",
+      "sizeBytes": 22090
+    },
+    {
+      "source": "_inc/systems/system/nes.webp",
+      "target": "nes/console.webp",
+      "gitBlobSha": "061a857a2e3c8218a4a2fa0752d8a3824592a2f6",
+      "sizeBytes": 213744
+    },
+    {
+      "source": "_inc/systems/carousel-icons/nes.webp",
+      "target": "nes/logo.webp",
+      "gitBlobSha": "83d123da5455fcfaab021f2f78e65c59fe6e6d2b",
+      "sizeBytes": 12698
+    },
+    {
+      "source": "_inc/systems/metadata-global/nes.xml",
+      "target": "nes/metadata.xml",
+      "gitBlobSha": "fee8e3d3df56f05d5cd84d380e51de7fc62a9eb2",
+      "sizeBytes": 1332
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/snes.webp",
+      "target": "snes/background.webp",
+      "gitBlobSha": "a53d47e7fce50c702734123f230c7e2a67973703",
+      "sizeBytes": 101176
+    },
+    {
+      "source": "_inc/systems/classic-overlay/snes.webp",
+      "target": "snes/overlay.webp",
+      "gitBlobSha": "ebd4528dafe0e938c3156dac2e5e4e653d7a5837",
+      "sizeBytes": 45968
+    },
+    {
+      "source": "_inc/systems/system/snes.webp",
+      "target": "snes/console.webp",
+      "gitBlobSha": "16942100ef983dde0922885b5091386c544ed4c0",
+      "sizeBytes": 249478
+    },
+    {
+      "source": "_inc/systems/carousel-icons/snes.webp",
+      "target": "snes/logo.webp",
+      "gitBlobSha": "8958ecb84b78e567c45447128b5e0fa7d300c014",
+      "sizeBytes": 22944
+    },
+    {
+      "source": "_inc/systems/metadata-global/snes.xml",
+      "target": "snes/metadata.xml",
+      "gitBlobSha": "529690d4e5047321df634f493ea9f0e27a44ea85",
+      "sizeBytes": 1457
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/mastersystem.webp",
+      "target": "mastersystem/background.webp",
+      "gitBlobSha": "65985060b01ab78834c0ef26ad584102169d6bd8",
+      "sizeBytes": 154634
+    },
+    {
+      "source": "_inc/systems/classic-overlay/mastersystem.webp",
+      "target": "mastersystem/overlay.webp",
+      "gitBlobSha": "9e0be75ca9804d28d15a17986c6e601a939c7b88",
+      "sizeBytes": 37774
+    },
+    {
+      "source": "_inc/systems/system/mastersystem.webp",
+      "target": "mastersystem/console.webp",
+      "gitBlobSha": "34329c7f64ebf2fe7e7814fe1893a7470972bed2",
+      "sizeBytes": 105578
+    },
+    {
+      "source": "_inc/systems/carousel-icons/mastersystem.webp",
+      "target": "mastersystem/logo.webp",
+      "gitBlobSha": "87f5bf542d46b7ed83e1c9f873efa650d68e436a",
+      "sizeBytes": 23476
+    },
+    {
+      "source": "_inc/systems/metadata-global/mastersystem.xml",
+      "target": "mastersystem/metadata.xml",
+      "gitBlobSha": "8d376b8e8b7a644704d81e9dcffa1e62196c869e",
+      "sizeBytes": 1920
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/megadrive.webp",
+      "target": "megadrive/background.webp",
+      "gitBlobSha": "29493ed2ff731b461f8ce487b07702f20c2f1822",
+      "sizeBytes": 111782
+    },
+    {
+      "source": "_inc/systems/system/megadrive.webp",
+      "target": "megadrive/console.webp",
+      "gitBlobSha": "74e2048743a028a070338f6ac990983c95a0f5b5",
+      "sizeBytes": 162842
+    },
+    {
+      "source": "_inc/systems/carousel-icons/megadrive.webp",
+      "target": "megadrive/logo.webp",
+      "gitBlobSha": "146cbcf463a4343d0eb92e75ee31ad5a7e89b7b8",
+      "sizeBytes": 21998
+    },
+    {
+      "source": "_inc/systems/metadata-global/megadrive.xml",
+      "target": "megadrive/metadata.xml",
+      "gitBlobSha": "e5d734d5690a68684ce60037240df3e5c5b42a8b",
+      "sizeBytes": 765
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/gamegear.webp",
+      "target": "gamegear/background.webp",
+      "gitBlobSha": "709cf52e7c257c6f889ad8607c64e2e03c917255",
+      "sizeBytes": 131158
+    },
+    {
+      "source": "_inc/systems/classic-overlay/gamegear.webp",
+      "target": "gamegear/overlay.webp",
+      "gitBlobSha": "3fb8e7c77c75d6992cc1f7635a4703ea980dd577",
+      "sizeBytes": 25592
+    },
+    {
+      "source": "_inc/systems/system/gamegear.webp",
+      "target": "gamegear/console.webp",
+      "gitBlobSha": "03a1c6db5e123c8b6dc4f8e41051dc633d408c77",
+      "sizeBytes": 225658
+    },
+    {
+      "source": "_inc/systems/carousel-icons/gamegear.webp",
+      "target": "gamegear/logo.webp",
+      "gitBlobSha": "d18d926ca62d67492a29d03f0502644d471169a8",
+      "sizeBytes": 15100
+    },
+    {
+      "source": "_inc/systems/metadata-global/gamegear.xml",
+      "target": "gamegear/metadata.xml",
+      "gitBlobSha": "98a0eb7609d2e77305a6db32e3ee6fe224774a1d",
+      "sizeBytes": 1799
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/segacd.webp",
+      "target": "segacd/background.webp",
+      "gitBlobSha": "4a828dc20931c33515f38f4e306d9d7fc1f8dade",
+      "sizeBytes": 189644
+    },
+    {
+      "source": "_inc/systems/classic-overlay/segacd.webp",
+      "target": "segacd/overlay.webp",
+      "gitBlobSha": "969497f3d85d4047004913411a98e0fbf6e3e4de",
+      "sizeBytes": 27124
+    },
+    {
+      "source": "_inc/systems/system/segacd.webp",
+      "target": "segacd/console.webp",
+      "gitBlobSha": "74e2048743a028a070338f6ac990983c95a0f5b5",
+      "sizeBytes": 162842
+    },
+    {
+      "source": "_inc/systems/carousel-icons/segacd.webp",
+      "target": "segacd/logo.webp",
+      "gitBlobSha": "8290c2cf168283398ac680448a08725ab81e88c9",
+      "sizeBytes": 8906
+    },
+    {
+      "source": "_inc/systems/metadata-global/segacd.xml",
+      "target": "segacd/metadata.xml",
+      "gitBlobSha": "e6ace892a9d71c5f4b1925bcba3ddab848446ab6",
+      "sizeBytes": 1950
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/pcengine.webp",
+      "target": "pcengine/background.webp",
+      "gitBlobSha": "882b5d17753e06e4635c11cb3ca1e29e481d95f5",
+      "sizeBytes": 113716
+    },
+    {
+      "source": "_inc/systems/classic-overlay/pcengine.webp",
+      "target": "pcengine/overlay.webp",
+      "gitBlobSha": "b79e3ee4059876944ad50cbfadafa96f6808f111",
+      "sizeBytes": 22946
+    },
+    {
+      "source": "_inc/systems/system/pcengine.webp",
+      "target": "pcengine/console.webp",
+      "gitBlobSha": "e6d3036c506a3741c42b286a00a091ce6a5bffbb",
+      "sizeBytes": 176346
+    },
+    {
+      "source": "_inc/systems/carousel-icons/pcengine.webp",
+      "target": "pcengine/logo.webp",
+      "gitBlobSha": "cf1b770ef0dea9eacad8c3ea8b8c69cfabfde2a0",
+      "sizeBytes": 17654
+    },
+    {
+      "source": "_inc/systems/metadata-global/pcengine.xml",
+      "target": "pcengine/metadata.xml",
+      "gitBlobSha": "687e0f69bb0d7836c028fe804a5d021bf0210105",
+      "sizeBytes": 1845
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/pcenginecd.webp",
+      "target": "pcenginecd/background.webp",
+      "gitBlobSha": "a2ce96161f09c774376f9f77ce8ba49659731d2c",
+      "sizeBytes": 83532
+    },
+    {
+      "source": "_inc/systems/system/pcenginecd.webp",
+      "target": "pcenginecd/console.webp",
+      "gitBlobSha": "e6d3036c506a3741c42b286a00a091ce6a5bffbb",
+      "sizeBytes": 176346
+    },
+    {
+      "source": "_inc/systems/carousel-icons/pcenginecd.webp",
+      "target": "pcenginecd/logo.webp",
+      "gitBlobSha": "14540b4967524d08010bfb91441c6a519b6c9d8f",
+      "sizeBytes": 21798
+    },
+    {
+      "source": "_inc/systems/metadata-global/pcenginecd.xml",
+      "target": "pcenginecd/metadata.xml",
+      "gitBlobSha": "b9746dcc49dcd734b5873a238d6b9cd16ec94841",
+      "sizeBytes": 1677
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/neogeo.webp",
+      "target": "neogeo/background.webp",
+      "gitBlobSha": "19197b1a98c289f446cc3dc7cc27744c13cce14f",
+      "sizeBytes": 273412
+    },
+    {
+      "source": "_inc/systems/system/neogeo.webp",
+      "target": "neogeo/console.webp",
+      "gitBlobSha": "00a5873e151ac6934a26701c71e8a0e221cfe116",
+      "sizeBytes": 317762
+    },
+    {
+      "source": "_inc/systems/carousel-icons/neogeo.webp",
+      "target": "neogeo/logo.webp",
+      "gitBlobSha": "6e73617223da1972eab97da4d80595fb01488bee",
+      "sizeBytes": 25582
+    },
+    {
+      "source": "_inc/systems/metadata-global/neogeo.xml",
+      "target": "neogeo/metadata.xml",
+      "gitBlobSha": "3f27f3cd4d79bd6d1301277e9ef7be4bee5e533e",
+      "sizeBytes": 1531
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/neogeocd.webp",
+      "target": "neogeocd/background.webp",
+      "gitBlobSha": "79cf34ca9251afe75d34be562e077658f5a6b410",
+      "sizeBytes": 142886
+    },
+    {
+      "source": "_inc/systems/classic-overlay/neogeocd.webp",
+      "target": "neogeocd/overlay.webp",
+      "gitBlobSha": "7416e9771af35587ec5d197a044117c012dab438",
+      "sizeBytes": 42582
+    },
+    {
+      "source": "_inc/systems/system/neogeocd.webp",
+      "target": "neogeocd/console.webp",
+      "gitBlobSha": "be28f325fd5770bbc5d31a51ae854204c29eb3e1",
+      "sizeBytes": 210024
+    },
+    {
+      "source": "_inc/systems/carousel-icons/neogeocd.webp",
+      "target": "neogeocd/logo.webp",
+      "gitBlobSha": "db8b17d3e9ed4b8da989dc1f54b468a150cf46fb",
+      "sizeBytes": 18426
+    },
+    {
+      "source": "_inc/systems/metadata-global/neogeocd.xml",
+      "target": "neogeocd/metadata.xml",
+      "gitBlobSha": "80c5ee9aef03000a8e83e15cb7b29599dd99c3ed",
+      "sizeBytes": 1529
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/ngp.webp",
+      "target": "ngp/background.webp",
+      "gitBlobSha": "e69c1a7dbbc7bc7637ddf06355d4a08f50c8b699",
+      "sizeBytes": 121952
+    },
+    {
+      "source": "_inc/systems/classic-overlay/ngp.webp",
+      "target": "ngp/overlay.webp",
+      "gitBlobSha": "9f9793c177172f4e7e4270e2939655deef925767",
+      "sizeBytes": 47102
+    },
+    {
+      "source": "_inc/systems/system/ngp.webp",
+      "target": "ngp/console.webp",
+      "gitBlobSha": "1b340b123c456f9746d1a0f1490d43fbd7d947d9",
+      "sizeBytes": 271288
+    },
+    {
+      "source": "_inc/systems/carousel-icons/ngp.webp",
+      "target": "ngp/logo.webp",
+      "gitBlobSha": "a299a95fb9693701352c675db797c9bf0d234ebc",
+      "sizeBytes": 15436
+    },
+    {
+      "source": "_inc/systems/metadata-global/ngp.xml",
+      "target": "ngp/metadata.xml",
+      "gitBlobSha": "2198399598cd72a49fbe7f786e08624e21013447",
+      "sizeBytes": 1540
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/ngpc.webp",
+      "target": "ngpc/background.webp",
+      "gitBlobSha": "8d1e4e0ad8d2ac3d9b4531308485a091a06e0e4c",
+      "sizeBytes": 170814
+    },
+    {
+      "source": "_inc/systems/system/ngpc.webp",
+      "target": "ngpc/console.webp",
+      "gitBlobSha": "1eff8b4dc345061948868776cc5b7692c1bdf69c",
+      "sizeBytes": 282074
+    },
+    {
+      "source": "_inc/systems/carousel-icons/ngpc.webp",
+      "target": "ngpc/logo.webp",
+      "gitBlobSha": "182764349bd8c20fcbbdf7e68893e806601f73fb",
+      "sizeBytes": 19266
+    },
+    {
+      "source": "_inc/systems/metadata-global/ngpc.xml",
+      "target": "ngpc/metadata.xml",
+      "gitBlobSha": "a9e43763b023dc21eb7fde49962b32cf4ed77713",
+      "sizeBytes": 1660
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/wonderswan.webp",
+      "target": "wonderswan/background.webp",
+      "gitBlobSha": "140da4f7ae40d27710cf64bbdfe0e4b3ee71924b",
+      "sizeBytes": 78440
+    },
+    {
+      "source": "_inc/systems/classic-overlay/wonderswan.webp",
+      "target": "wonderswan/overlay.webp",
+      "gitBlobSha": "6e02e30517cca914cb89c93da871af8cf5879e52",
+      "sizeBytes": 66890
+    },
+    {
+      "source": "_inc/systems/system/wonderswan.webp",
+      "target": "wonderswan/console.webp",
+      "gitBlobSha": "10226c49e553b27c72bbcb7d2694804f13ac82e9",
+      "sizeBytes": 500372
+    },
+    {
+      "source": "_inc/systems/carousel-icons/wonderswan.webp",
+      "target": "wonderswan/logo.webp",
+      "gitBlobSha": "97bb2c49d2dbe15f99e6d86dc2c7f997db52a6ad",
+      "sizeBytes": 14352
+    },
+    {
+      "source": "_inc/systems/metadata-global/wonderswan.xml",
+      "target": "wonderswan/metadata.xml",
+      "gitBlobSha": "8b17febc41befcdcdb537ca2006faf50d42290f2",
+      "sizeBytes": 1293
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/wonderswancolor.webp",
+      "target": "wonderswancolor/background.webp",
+      "gitBlobSha": "09f4d8af2c9263999f9fe84cfd21738069477bad",
+      "sizeBytes": 108774
+    },
+    {
+      "source": "_inc/systems/classic-overlay/wonderswancolor.webp",
+      "target": "wonderswancolor/overlay.webp",
+      "gitBlobSha": "c4e7bcf3dfa40a8f55a1d9440fcf6307b3488c79",
+      "sizeBytes": 42502
+    },
+    {
+      "source": "_inc/systems/system/wonderswancolor.webp",
+      "target": "wonderswancolor/console.webp",
+      "gitBlobSha": "69db940c94ea4f4d057de71ce3e09fe9ad55bbec",
+      "sizeBytes": 530830
+    },
+    {
+      "source": "_inc/systems/carousel-icons/wonderswancolor.webp",
+      "target": "wonderswancolor/logo.webp",
+      "gitBlobSha": "db06c6bc5e068484e79f9b56fc48fd25aef25d15",
+      "sizeBytes": 21804
+    },
+    {
+      "source": "_inc/systems/metadata-global/wonderswancolor.xml",
+      "target": "wonderswancolor/metadata.xml",
+      "gitBlobSha": "dec29536e8b1acbb0ff93edc0a25f69e0956f148",
+      "sizeBytes": 1302
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/atari2600.webp",
+      "target": "atari2600/background.webp",
+      "gitBlobSha": "ea14241bc67bb5dbd2ea1ad466f28ca501b5d3ca",
+      "sizeBytes": 141114
+    },
+    {
+      "source": "_inc/systems/system/atari2600.webp",
+      "target": "atari2600/console.webp",
+      "gitBlobSha": "2a107dece4d171fde955944f64bc9cd3ec4b4270",
+      "sizeBytes": 284144
+    },
+    {
+      "source": "_inc/systems/carousel-icons/atari2600.webp",
+      "target": "atari2600/logo.webp",
+      "gitBlobSha": "86c14e5c40052de1a5655cc7950e2ae109980e65",
+      "sizeBytes": 18418
+    },
+    {
+      "source": "_inc/systems/metadata-global/atari2600.xml",
+      "target": "atari2600/metadata.xml",
+      "gitBlobSha": "6b6e468a4238a42ce658b10190f1d27888b78834",
+      "sizeBytes": 1270
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/atari7800.webp",
+      "target": "atari7800/background.webp",
+      "gitBlobSha": "9e80c5665e831f38ddc3b877128e4bcc7ea63093",
+      "sizeBytes": 63314
+    },
+    {
+      "source": "_inc/systems/classic-overlay/atari7800.webp",
+      "target": "atari7800/overlay.webp",
+      "gitBlobSha": "7c8ca9945b305d0bb7aec4543052c6e569d41beb",
+      "sizeBytes": 36688
+    },
+    {
+      "source": "_inc/systems/system/atari7800.webp",
+      "target": "atari7800/console.webp",
+      "gitBlobSha": "3ff2fb34cbce8586daf022b08a3f55a06ccd332a",
+      "sizeBytes": 221952
+    },
+    {
+      "source": "_inc/systems/carousel-icons/atari7800.webp",
+      "target": "atari7800/logo.webp",
+      "gitBlobSha": "3eb0578adf91f7697b7b135e0c42e980a7e14314",
+      "sizeBytes": 18644
+    },
+    {
+      "source": "_inc/systems/metadata-global/atari7800.xml",
+      "target": "atari7800/metadata.xml",
+      "gitBlobSha": "fec541c51749367d60b556c1f2149109e402036b",
+      "sizeBytes": 1246
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/atarilynx.webp",
+      "target": "atarilynx/background.webp",
+      "gitBlobSha": "68d4be375552614b72d9bb0fa6529850e1df2435",
+      "sizeBytes": 279960
+    },
+    {
+      "source": "_inc/systems/system/atarilynx.webp",
+      "target": "atarilynx/console.webp",
+      "gitBlobSha": "fb7bd9b4c116dffcff4d938554975aeba20f4811",
+      "sizeBytes": 210588
+    },
+    {
+      "source": "_inc/systems/carousel-icons/atarilynx.webp",
+      "target": "atarilynx/logo.webp",
+      "gitBlobSha": "f570b980f28896524f1f461e402739043a22c516",
+      "sizeBytes": 8560
+    },
+    {
+      "source": "_inc/systems/metadata-global/atarilynx.xml",
+      "target": "atarilynx/metadata.xml",
+      "gitBlobSha": "cf5bd734b2e3bd8a512f90d2e96f987d705f9a69",
+      "sizeBytes": 1306
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/psx.webp",
+      "target": "psx/background.webp",
+      "gitBlobSha": "de403c2318eb6489dda65692b617691bda9bcaff",
+      "sizeBytes": 119040
+    },
+    {
+      "source": "_inc/systems/system/psx.webp",
+      "target": "psx/console.webp",
+      "gitBlobSha": "a62c845eaf48c558abbe7fdd18a7320f9964126c",
+      "sizeBytes": 244234
+    },
+    {
+      "source": "_inc/systems/carousel-icons/psx.webp",
+      "target": "psx/logo.webp",
+      "gitBlobSha": "02716eba0a9a179a5edd9ff2dcbc508c7ae442c3",
+      "sizeBytes": 15824
+    },
+    {
+      "source": "_inc/systems/metadata-global/psx.xml",
+      "target": "psx/metadata.xml",
+      "gitBlobSha": "0a463fefc7a9453c1d3fb52c7070f3a548ee8541",
+      "sizeBytes": 1827
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/arcade.webp",
+      "target": "arcade/background.webp",
+      "gitBlobSha": "07642fcff45ab1d729265dbdcd80f1034951b645",
+      "sizeBytes": 117554
+    },
+    {
+      "source": "_inc/systems/classic-overlay/arcade.webp",
+      "target": "arcade/overlay.webp",
+      "gitBlobSha": "dc778e053f3b2d5ddefa65b9983dcfac48f0fd52",
+      "sizeBytes": 32060
+    },
+    {
+      "source": "_inc/systems/system/arcade.webp",
+      "target": "arcade/console.webp",
+      "gitBlobSha": "15c0c6c4cc4c7bd597243594b205c5bdcf9e53b7",
+      "sizeBytes": 444512
+    },
+    {
+      "source": "_inc/systems/carousel-icons/arcade.webp",
+      "target": "arcade/logo.webp",
+      "gitBlobSha": "61f1d4e39ae7f744c63c58feadb521ceafe66b02",
+      "sizeBytes": 33028
+    },
+    {
+      "source": "_inc/systems/metadata-global/arcade.xml",
+      "target": "arcade/metadata.xml",
+      "gitBlobSha": "46bcd880e1471a899f606ed2bbb8b5bb777dfd5f",
+      "sizeBytes": 1481
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/n64.webp",
+      "target": "n64/background.webp",
+      "gitBlobSha": "4d86ed7f86b46cf71ef711350ae63e10acbe4919",
+      "sizeBytes": 56160
+    },
+    {
+      "source": "_inc/systems/classic-overlay/n64.webp",
+      "target": "n64/overlay.webp",
+      "gitBlobSha": "2aaf7914acdafeddf9e48546e944e030b285ac0f",
+      "sizeBytes": 51560
+    },
+    {
+      "source": "_inc/systems/system/n64.webp",
+      "target": "n64/console.webp",
+      "gitBlobSha": "54cf6eaf1b64f31d82b2f5e331296b07cbceb49b",
+      "sizeBytes": 272412
+    },
+    {
+      "source": "_inc/systems/carousel-icons/n64.webp",
+      "target": "n64/logo.webp",
+      "gitBlobSha": "62eef9f65532e36ac172776221466bd028e5fd4d",
+      "sizeBytes": 15162
+    },
+    {
+      "source": "_inc/systems/metadata-global/n64.xml",
+      "target": "n64/metadata.xml",
+      "gitBlobSha": "4fc8236dc26a462dade3239c7d2ce1f53d4b5cb6",
+      "sizeBytes": 1404
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/dreamcast.webp",
+      "target": "dreamcast/background.webp",
+      "gitBlobSha": "7c8ae1697a418dc0da180ce8a8ab44d40baa5880",
+      "sizeBytes": 244316
+    },
+    {
+      "source": "_inc/systems/classic-overlay/dreamcast.webp",
+      "target": "dreamcast/overlay.webp",
+      "gitBlobSha": "1f61f63b63c7123799aa04dbcfb560d57ae35c4d",
+      "sizeBytes": 21106
+    },
+    {
+      "source": "_inc/systems/system/dreamcast.webp",
+      "target": "dreamcast/console.webp",
+      "gitBlobSha": "8bc79286782887b1fe315cb6632230c55b3be341",
+      "sizeBytes": 228338
+    },
+    {
+      "source": "_inc/systems/carousel-icons/dreamcast.webp",
+      "target": "dreamcast/logo.webp",
+      "gitBlobSha": "a37cbd947f28bf817c8ca3d6015f0b77f26a18fa",
+      "sizeBytes": 16330
+    },
+    {
+      "source": "_inc/systems/metadata-global/dreamcast.xml",
+      "target": "dreamcast/metadata.xml",
+      "gitBlobSha": "541006fbef6b749975e9945547755dc9e9f39a74",
+      "sizeBytes": 1978
+    },
+    {
+      "source": "_inc/systems/classic-backgrounds/psp.webp",
+      "target": "psp/background.webp",
+      "gitBlobSha": "415108b676e20beecbf1475bb90d19f0c943aef1",
+      "sizeBytes": 211428
+    },
+    {
+      "source": "_inc/systems/system/psp.webp",
+      "target": "psp/console.webp",
+      "gitBlobSha": "6675d6acd39023b58921dd104880c5f6c847197c",
+      "sizeBytes": 68850
+    },
+    {
+      "source": "_inc/systems/carousel-icons/psp.webp",
+      "target": "psp/logo.webp",
+      "gitBlobSha": "946bd928e266f5323315971077c307f2f6863840",
+      "sizeBytes": 12140
+    },
+    {
+      "source": "_inc/systems/metadata-global/psp.xml",
+      "target": "psp/metadata.xml",
+      "gitBlobSha": "8415d38760a7fcc334ce99093ddc9c987538cf4c",
+      "sizeBytes": 2053
+    },
+    {
+      "source": "README.md",
+      "target": "upstream/README.md",
+      "gitBlobSha": "19d39ef3225a22d6a0316ca5897a0cde3eac721f",
+      "sizeBytes": 11020
+    },
+    {
+      "source": "LICENSE",
+      "target": "upstream/LICENSE",
+      "gitBlobSha": "0e259d42c996742e9e3cba14c677129b2c1b6311",
+      "sizeBytes": 7048
+    },
+    {
+      "source": "theme.xml",
+      "target": "upstream/theme.xml",
+      "gitBlobSha": "0a37a30ce20870d7131e3bb2bdb9297e8f2fee04",
+      "sizeBytes": 10045
+    },
+    {
+      "source": "theme-detailed.xml",
+      "target": "upstream/theme-detailed.xml",
+      "gitBlobSha": "899efdf3e9e3305eda130eab02bea6492bf17f78",
+      "sizeBytes": 18040
+    },
+    {
+      "source": "aspect-ratio-16-9-detailed.xml",
+      "target": "upstream/aspect-ratio-16-9-detailed.xml",
+      "gitBlobSha": "9433f730abd0e84419963810657a2ce7ef248438",
+      "sizeBytes": 22544
+    },
+    {
+      "source": "gameselector.xml",
+      "target": "upstream/gameselector.xml",
+      "gitBlobSha": "8bffa6362323dd7e841f47db590be4c61c87d7cc",
+      "sizeBytes": 803
+    }
+  ]
+}

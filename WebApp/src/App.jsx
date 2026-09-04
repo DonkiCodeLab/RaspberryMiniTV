@@ -1,3 +1,5 @@
+import GameConsoleCarousel from "./GameConsoleCarousel";
+import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
 import { MEDIA_MARKS_KEY, mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason, loadMediaMarks } from "./mediaMarks.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -32,13 +34,13 @@ import languageEsSelected from "./assets/language_es_selected.png";
 import movieIconBlack from "./assets/icon_movie_black.png";
 import movieIconWhite from "./assets/icon_movie_white.png";
 import movieIconYellow from "./assets/icon_movie_yellow.png";
+import picturesIcon from "./assets/icon_pictures.svg";
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import screenOffIcon from "./assets/screen_off.png";
 import uploadsIconBlack from "./assets/icon_uploads_black.png";
 import uploadsIconYellow from "./assets/icon_uploads_yellow.png";
 import saveIcon from "./assets/save.png";
-import sdacrdIcon from "./assets/sdacrd.png";
 import settingsIcon from "./assets/settings_icon.png";
 import tvshowIconBlack from "./assets/icon_tvshow_black.png";
 import tvshowIconWhite from "./assets/icon_tvshow_white.png";
@@ -93,6 +95,8 @@ import {
   uploadGameFile,
   uploadBookFiles,
   uploadMovieFile,
+  uploadPictureFiles,
+  getPictureContentUrl,
   uploadSeriesFiles,
   volumeDown,
   volumeUp,
@@ -151,6 +155,12 @@ const MEDIA_TYPES = [
     activeIcon: bookIconBlack,
     inactiveIcon: bookIconYellow,
   },
+  {
+    id: "pictures",
+    labelKey: "media_pictures",
+    activeIcon: picturesIcon,
+    inactiveIcon: picturesIcon,
+  },
 ];
 
 const formatMovieRuntime = (runtime, t) => {
@@ -205,8 +215,9 @@ const UPLOAD_MEDIA_OPTIONS = [
   { key: "movies", value: "movies", labelKey: "upload_movie" },
   { key: "games", value: "games", labelKey: "upload_game" },
   { key: "books", value: "books", labelKey: "upload_books" },
+  { key: "pictures", value: "pictures", labelKey: "upload_pictures" },
 ];
-const GAME_ROM_EXTENSIONS = new Set(["gb", "gbc", "gba", "chd"]);
+const GAME_ROM_EXTENSIONS = new Set(GAME_EXTENSIONS);
 const GAME_PLATFORM_LABELS = {
   gb: "Game Boy",
   gbc: "Game Boy Color",
@@ -218,12 +229,7 @@ const GAME_PLATFORM_ICONS = {
   gbc: gameboyColorIcon,
   gba: gameboyAdvanceIcon,
 };
-const GAME_METADATA_PLATFORM_OPTIONS = [
-  { key: "gb", value: "gb", label: "Game Boy" },
-  { key: "gbc", value: "gbc", label: "Game Boy Color" },
-  { key: "gba", value: "gba", label: "Game Boy Advance" },
-  { key: "chd", value: "chd", label: "Neo Geo CD" },
-];
+const GAME_METADATA_PLATFORM_OPTIONS = GAME_SYSTEMS.map(s => ({key: s.id, value: s.id, label: s.name}));
 const RASPBERRY_LANGUAGE_OPTIONS = [
   {
     id: "es",
@@ -260,6 +266,7 @@ const UI_STRINGS = {
     media_movies: "Películas",
     media_games: "Juegos",
     media_books: "Libros",
+    media_pictures: "Fotos",
     media_series_singular: "serie",
     media_movies_singular: "película",
     media_games_singular: "juego",
@@ -271,6 +278,8 @@ const UI_STRINGS = {
     upload_movie: "Película",
     upload_game: "Juego",
     upload_books: "Libros",
+    upload_pictures: "Fotos",
+    upload_pictures_dropzone_copy: "Sube una foto o una carpeta completa. Se admiten JPEG, PNG, WebP, GIF, BMP, AVIF y HEIC.",
     language_spanish: "Castellano",
     language_catalan: "Català",
     language_english: "English",
@@ -345,16 +354,21 @@ const UI_STRINGS = {
     add_button: "Añadir",
     raspberry_tv_alt: "MiniTV",
     raspberry_sections: "Secciones de Raspberry",
+    dashboard_general_title: "Información general",
+    dashboard_clock_title: "Configuración del reloj",
+    dashboard_auxiliary_title: "Servicios auxiliares",
     stats_series_installed: "Series instaladas",
     stats_movies_installed: "Películas instaladas",
     stats_games_installed: "Juegos instalados",
+    stats_books_installed: "Libros instalados",
+    stats_pictures_installed: "Fotos instaladas",
     section_storage_used: "{gb} GB · {percent} utilizado de multimedia",
     used_percent: "{percent} utilizado",
     language_title: "Idioma",
     language_microtv: "Selecciona el idioma de la mini tele.",
     language_updating: "Actualizando idioma...",
     language_update_failed: "No se pudo actualizar el idioma de la Raspberry.",
-    microsd_capacity: "Capacidad de la MicroSD",
+    microsd_capacity: "Capacidad de la SSD",
     multimedia_occupied: "Ocupado por MultimediaContent",
     occupied: "ocupado",
     alarms_title: "Alarmas de la televisión",
@@ -440,7 +454,7 @@ const UI_STRINGS = {
       "Se abrirá un diálogo de coincidencia TMDB usando el nombre del directorio seleccionado o arrastrado a esta zona. Antes de confirmar podrás editar la búsqueda.",
     upload_movie_dropzone_copy:
       "Se abrirá un diálogo de coincidencia TMDB usando el nombre del fichero seleccionado o arrastrado a esta zona. Antes de confirmar podrás editar la búsqueda.",
-    upload_game_dropzone_copy: "Acepta ROMs .gb, .gbc, .gba y juegos Neo Geo CD en .chd. Después podrás añadir carátula local y descripción antes de subir.",
+    upload_game_dropzone_copy: "Sube una ROM y elige su consola. Puedes añadir carátula, imágenes y descripción. Para juegos de disco usa un archivo autocontenido CHD, ISO, CSO o PBP compatible.",
     upload_books_dropzone_copy: "Adjunta uno o varios PDF, EPUB, CBZ o CBR, o arrastra una carpeta completa para crear una colección.",
     latest_detection: "Última detección",
     games: "Juegos",
@@ -474,7 +488,7 @@ const UI_STRINGS = {
     games_search_failed: "No se pudo buscar la ficha del juego.",
     games_api_not_configured: "ScreenScraper no está configurado en la Raspberry. Puedes subirlo con la carátula default.",
     upload_game_invalid_title: "Archivo de juego no compatible",
-    upload_game_invalid_copy: "Selecciona un único fichero .gb, .gbc, .gba o .chd.",
+    upload_game_invalid_copy: "Selecciona un único archivo de juego compatible.",
     upload_game_detected: "{name} detectado como {platform}. Añade la carátula y descripción antes de subir.",
     upload_game_done_summary: "{name} añadido a Games: {path}",
     upload_game_failed: "No se pudo subir el juego.",
@@ -557,6 +571,17 @@ const UI_STRINGS = {
     unavailable_episode: "Capítulo no cargado",
     games_in_construction: "Juegos en construcción",
     select_movie: "Seleccionar película",
+    movie_library: "Todas las películas",
+    movie_details: "Ver detalles",
+    movie_download: "Descargar",
+    episode_download: "Descargar capítulo",
+    movie_view_grid: "Vista mosaico",
+    movie_view_list: "Vista listado",
+    movie_sort_name: "Nombre",
+    movie_sort_year: "Año",
+    movie_sort_rating: "Puntuación",
+    movie_sort_label: "Ordenar por",
+    series_library: "Todas las series",
     select_series: "Seleccionar serie",
     no_movies_available: "Sin películas disponibles",
     no_seasons_available: "Sin series disponibles",
@@ -594,6 +619,7 @@ const UI_STRINGS = {
     media_movies: "Pel·lícules",
     media_games: "Jocs",
     media_books: "Llibres",
+    media_pictures: "Fotos",
     media_series_singular: "sèrie",
     media_movies_singular: "pel·lícula",
     media_games_singular: "joc",
@@ -605,6 +631,8 @@ const UI_STRINGS = {
     upload_movie: "Pel·lícula",
     upload_game: "Joc",
     upload_books: "Llibres",
+    upload_pictures: "Fotos",
+    upload_pictures_dropzone_copy: "Puja una foto o una carpeta completa. S'admeten JPEG, PNG, WebP, GIF, BMP, AVIF i HEIC.",
     language_spanish: "Castellà",
     language_catalan: "Català",
     language_english: "English",
@@ -679,16 +707,21 @@ const UI_STRINGS = {
     add_button: "Afegir",
     raspberry_tv_alt: "MiniTV",
     raspberry_sections: "Seccions de Raspberry",
+    dashboard_general_title: "Informació general",
+    dashboard_clock_title: "Configuració del rellotge",
+    dashboard_auxiliary_title: "Serveis auxiliars",
     stats_series_installed: "Sèries instal·lades",
     stats_movies_installed: "Pel·lícules instal·lades",
     stats_games_installed: "Jocs instal·lats",
+    stats_books_installed: "Llibres instal·lats",
+    stats_pictures_installed: "Fotos instal·lades",
     section_storage_used: "{gb} GB · {percent} utilitzat de multimedia",
     used_percent: "{percent} utilitzat",
     language_title: "Idioma",
     language_microtv: "Selecciona l'idioma de la mini tele.",
     language_updating: "S'està actualitzant l'idioma...",
     language_update_failed: "No s'ha pogut actualitzar l'idioma de la Raspberry.",
-    microsd_capacity: "Capacitat de la MicroSD",
+    microsd_capacity: "Capacitat de l'SSD",
     multimedia_occupied: "Ocupat per MultimediaContent",
     occupied: "ocupat",
     alarms_title: "Alarmes de la televisió",
@@ -774,7 +807,7 @@ const UI_STRINGS = {
       "S'obrirà un diàleg de coincidència TMDB fent servir el nom del directori seleccionat o arrossegat a aquesta zona. Abans de confirmar podràs editar la cerca.",
     upload_movie_dropzone_copy:
       "S'obrirà un diàleg de coincidència TMDB fent servir el nom del fitxer seleccionat o arrossegat a aquesta zona. Abans de confirmar podràs editar la cerca.",
-    upload_game_dropzone_copy: "Accepta ROMs .gb, .gbc, .gba i jocs Neo Geo CD en .chd. Després podràs afegir caràtula local i descripció abans de pujar.",
+    upload_game_dropzone_copy: "Puja una ROM i tria la consola. Pots afegir caràtula, imatges i descripció.",
     upload_books_dropzone_copy: "Adjunta PDF, EPUB, CBZ o CBR, o arrossega una carpeta completa per crear una col·lecció.",
     latest_detection: "Última detecció",
     games: "Jocs",
@@ -808,7 +841,7 @@ const UI_STRINGS = {
     games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
     games_api_not_configured: "ScreenScraper no està configurat a la Raspberry. Pots pujar-lo amb la caràtula default.",
     upload_game_invalid_title: "Fitxer de joc no compatible",
-    upload_game_invalid_copy: "Selecciona un únic fitxer .gb, .gbc, .gba o .chd.",
+    upload_game_invalid_copy: "Selecciona un únic fitxer de joc compatible.",
     upload_game_detected: "{name} detectat com {platform}. Afegeix la caràtula i descripció abans de pujar.",
     upload_game_done_summary: "{name} afegit a Games: {path}",
     upload_game_failed: "No s'ha pogut pujar el joc.",
@@ -891,6 +924,17 @@ const UI_STRINGS = {
     unavailable_episode: "Capítol no carregat",
     games_in_construction: "Jocs en construcció",
     select_movie: "Seleccionar pel·lícula",
+    movie_library: "Totes les pel·lícules",
+    movie_details: "Veure detalls",
+    movie_download: "Descarregar",
+    episode_download: "Descarregar capítol",
+    movie_view_grid: "Vista mosaic",
+    movie_view_list: "Vista llista",
+    movie_sort_name: "Nom",
+    movie_sort_year: "Any",
+    movie_sort_rating: "Puntuació",
+    movie_sort_label: "Ordenar per",
+    series_library: "Totes les sèries",
     select_series: "Seleccionar sèrie",
     no_movies_available: "No hi ha pel·lícules disponibles",
     no_seasons_available: "No hi ha temporades disponibles",
@@ -928,6 +972,7 @@ const UI_STRINGS = {
     media_movies: "Movies",
     media_games: "Games",
     media_books: "Books",
+    media_pictures: "Pictures",
     media_series_singular: "series",
     media_movies_singular: "movie",
     media_games_singular: "game",
@@ -939,6 +984,8 @@ const UI_STRINGS = {
     upload_movie: "Movie",
     upload_game: "Game",
     upload_books: "Books",
+    upload_pictures: "Pictures",
+    upload_pictures_dropzone_copy: "Upload one picture or a complete folder. JPEG, PNG, WebP, GIF, BMP, AVIF and HEIC are supported.",
     language_spanish: "Spanish",
     language_catalan: "Catalan",
     language_english: "English",
@@ -1013,16 +1060,21 @@ const UI_STRINGS = {
     add_button: "Add",
     raspberry_tv_alt: "MiniTV",
     raspberry_sections: "Raspberry sections",
+    dashboard_general_title: "General information",
+    dashboard_clock_title: "Clock settings",
+    dashboard_auxiliary_title: "Auxiliary services",
     stats_series_installed: "Installed series",
     stats_movies_installed: "Installed movies",
     stats_games_installed: "Installed games",
+    stats_books_installed: "Installed books",
+    stats_pictures_installed: "Installed photos",
     section_storage_used: "{gb} GB · {percent} used of multimedia",
     used_percent: "{percent} used",
     language_title: "Language",
     language_microtv: "Choose the mini TV language.",
     language_updating: "Updating language...",
     language_update_failed: "Could not update the Raspberry language.",
-    microsd_capacity: "MicroSD capacity",
+    microsd_capacity: "SSD capacity",
     multimedia_occupied: "Used by MultimediaContent",
     occupied: "used",
     alarms_title: "TV alarms",
@@ -1108,7 +1160,7 @@ const UI_STRINGS = {
       "A TMDB match dialog will open using the selected or dropped folder name. Before confirming, you will be able to edit the search.",
     upload_movie_dropzone_copy:
       "A TMDB match dialog will open using the selected or dropped file name. Before confirming, you will be able to edit the search.",
-    upload_game_dropzone_copy: "Accepts .gb, .gbc, .gba, and Neo Geo CD .chd games. You can add a local cover and description before uploading.",
+    upload_game_dropzone_copy: "Upload a ROM and choose its console. Add cover art, images and a description. Disc games need a compatible self-contained CHD, ISO, CSO or PBP file.",
     upload_books_dropzone_copy: "Attach PDF, EPUB, CBZ, or CBR files, or drag a whole folder to create a collection.",
     latest_detection: "Latest detection",
     games: "Games",
@@ -1142,7 +1194,7 @@ const UI_STRINGS = {
     games_search_failed: "Could not search the game profile.",
     games_api_not_configured: "ScreenScraper is not configured on the Raspberry. You can upload it with the default cover.",
     upload_game_invalid_title: "Unsupported game file",
-    upload_game_invalid_copy: "Select a single .gb, .gbc, .gba, or .chd file.",
+    upload_game_invalid_copy: "Select a single supported game file.",
     upload_game_detected: "{name} detected as {platform}. Add the cover and description before uploading.",
     upload_game_done_summary: "{name} added to Games: {path}",
     upload_game_failed: "Could not upload the game.",
@@ -1225,6 +1277,17 @@ const UI_STRINGS = {
     unavailable_episode: "Episode not uploaded",
     games_in_construction: "Games under construction",
     select_movie: "Select movie",
+    movie_library: "All movies",
+    movie_details: "View details",
+    movie_download: "Download",
+    episode_download: "Download episode",
+    movie_view_grid: "Grid view",
+    movie_view_list: "List view",
+    movie_sort_name: "Name",
+    movie_sort_year: "Year",
+    movie_sort_rating: "Rating",
+    movie_sort_label: "Sort by",
+    series_library: "All series",
     select_series: "Select series",
     no_movies_available: "No movies available",
     no_seasons_available: "No seasons available",
@@ -1710,6 +1773,7 @@ function normalizeLibraryCounts(counts) {
     movies: normalizeLibraryUsageItem(counts?.movies),
     games: normalizeLibraryUsageItem(counts?.games),
     books: normalizeLibraryUsageItem(counts?.books),
+    pictures: normalizeLibraryUsageItem(counts?.pictures),
   };
 }
 
@@ -2374,6 +2438,8 @@ function EpisodeDetailsModal({
   onPlay,
   onPlayBrowser,
   onPlayExternal,
+  downloadUrl,
+  downloadName,
   onDelete,
   t,
 }) {
@@ -2494,6 +2560,16 @@ function EpisodeDetailsModal({
                 <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                 <span>{available ? t("play_on_external_monitor") : t("unavailable_episode")}</span>
               </button>
+              {available && downloadUrl ? (
+                <a
+                  className="episode-dialog__play episode-dialog__play--download"
+                  href={downloadUrl}
+                  download={downloadName}
+                >
+                  <span className="playback-action__download-icon" aria-hidden="true">↓</span>
+                  <span>{t("episode_download")}</span>
+                </a>
+              ) : null}
             </div>
           ) : null}
 
@@ -3361,6 +3437,7 @@ function AddMediaModal({
 }
 
 function GameUploadModal({
+  initialSystemId,
   visible,
   file,
   initialQuery,
@@ -3379,7 +3456,13 @@ function GameUploadModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const extension = getFileExtension(file?.name);
-  const platformLabel = GAME_PLATFORM_LABELS[extension] || t("media_games_singular");
+  const [platform, setPlatform] = useState("");
+  const allowedSystems = compatibleSystems(file?.name);
+  useEffect(() => {
+    const matches = compatibleSystems(file?.name);
+    setPlatform(matches.some(s => s.id === initialSystemId) ? initialSystemId : matches.length === 1 ? matches[0].id : "");
+  }, [file, initialSystemId]);
+  const platformLabel = GAME_SYSTEMS.find(s => s.id === platform)?.name || t("game_platform_label");
 
   useEffect(() => {
     if (!visible) {
@@ -3426,6 +3509,7 @@ function GameUploadModal({
   if (!visible || !file) return null;
 
   async function handleSubmit() {
+    if (!platform) { setError(t("game_platform_label")); return; }
     const safeGameName = gameName.trim() || stripFileExtension(file.name);
     setSubmitting(true);
     setError("");
@@ -3433,6 +3517,7 @@ function GameUploadModal({
       await onUpload({
         game: {
           id: "manual",
+          platform,
           name: safeGameName,
           description: description.trim(),
           source: coverFile || imageFiles.length ? "local" : "manual",
@@ -3489,6 +3574,12 @@ function GameUploadModal({
         >
           <div className="game-upload-layout">
             <div className="game-upload-fields">
+              <label className="dialog-field"><span>{t("game_platform_label")}</span>
+                <select value={platform} required disabled={submitting} onChange={event => setPlatform(event.target.value)}>
+                  <option value="" disabled>— {t("game_platform_label")} —</option>
+                  {allowedSystems.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </label>
               <label className="dialog-field">
                 <span>{t("games_name_field")}</span>
                 <input
@@ -3714,7 +3805,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
     setSelectedCoverKey("");
 
     try {
-      const payload = await searchGameMetadata({ query: trimmedQuery, extension: platformExtension });
+      const payload = await searchGameMetadata({ query: trimmedQuery, extension: GAME_SYSTEMS.find(s => s.id === platformExtension)?.extensions[0], platform: platformExtension });
       const nextResults = Array.isArray(payload?.results) ? payload.results : [];
       setResults(nextResults);
       if (nextResults.length) {
@@ -4668,6 +4759,12 @@ function RaspberryPage({
   gameCount,
   gameUsedGb,
   gamePercent,
+  bookCount,
+  bookUsedGb,
+  bookPercent,
+  pictureCount,
+  pictureUsedGb,
+  picturePercent,
   usedStorageGb,
   totalStorageGb,
   multimediaUsedGb,
@@ -4747,19 +4844,21 @@ function RaspberryPage({
         ? "upload_movie_dropzone_copy"
         : uploadMediaType === "books"
           ? "upload_books_dropzone_copy"
+          : uploadMediaType === "pictures"
+            ? "upload_pictures_dropzone_copy"
           : "upload_game_dropzone_copy";
   const uploadTypeIconNormal =
     uploadMediaType === "series"
       ? tvshowIconWhite
       : uploadMediaType === "movies"
         ? movieIconWhite
-        : uploadMediaType === "books" ? bookIconWhite : gameIconWhite;
+        : uploadMediaType === "books" ? bookIconWhite : uploadMediaType === "pictures" ? picturesIcon : gameIconWhite;
   const uploadTypeIconHover =
     uploadMediaType === "series"
       ? tvshowIconYellow
       : uploadMediaType === "movies"
         ? movieIconYellow
-        : uploadMediaType === "books" ? bookIconYellow : gameIconYellow;
+        : uploadMediaType === "books" ? bookIconYellow : uploadMediaType === "pictures" ? picturesIcon : gameIconYellow;
   const playbackActive = Boolean(raspberryHealth.running);
   const playbackPaused = Boolean(currentPlaybackInfo?.paused);
   const controlsDisabled = !playbackActive || controlsBusy;
@@ -4806,7 +4905,11 @@ function RaspberryPage({
 
       {raspberryTab === "dashboard" ? (
         <div className="raspberry-page__content">
-          <div className="raspberry-dashboard-grid">
+          <section className="raspberry-dashboard-section" aria-labelledby="dashboard-general-title">
+            <h2 className="raspberry-dashboard-section__title" id="dashboard-general-title">
+              {t("dashboard_general_title")}
+            </h2>
+            <div className="raspberry-dashboard-grid">
             <article className="raspberry-language-card">
               <div className="raspberry-language-card__header">
                 <img className="raspberry-language-card__icon" src={languagesIcon} alt="" aria-hidden="true" />
@@ -4843,40 +4946,6 @@ function RaspberryPage({
                 </p>
               ) : null}
             </article>
-            <article className="raspberry-tmdb-card">
-              <div className="raspberry-tmdb-card__header">
-                <p>{t("tmdb_settings_title")}</p>
-                <span>{t("tmdb_settings_copy")}</span>
-              </div>
-              <form className="raspberry-tmdb-card__form" onSubmit={onTmdbSettingsSave}>
-                <label>
-                  <span>{t("tmdb_api_key")}</span>
-                  <input
-                    type="text"
-                    value={tmdbSettings.apiKey}
-                    maxLength={256}
-                    autoComplete="off"
-                    onChange={(event) => onTmdbSettingsChange("apiKey", event.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>{t("tmdb_bearer_token")}</span>
-                  <input
-                    type="text"
-                    value={tmdbSettings.bearerToken}
-                    maxLength={2048}
-                    autoComplete="off"
-                    onChange={(event) => onTmdbSettingsChange("bearerToken", event.target.value)}
-                  />
-                </label>
-                <button type="submit" disabled={tmdbSettingsSaving}>
-                  {t("tmdb_settings_save")}
-                </button>
-              </form>
-              {tmdbSettingsStatus ? (
-                <span className="raspberry-tmdb-card__status">{tmdbSettingsStatus}</span>
-              ) : null}
-            </article>
             <RaspberryStatCard
               label={t("stats_series_installed")}
               value={seriesCount}
@@ -4901,6 +4970,22 @@ function RaspberryPage({
               icon={gameIconYellow}
               t={t}
             />
+            <RaspberryStatCard
+              label={t("stats_books_installed")}
+              value={bookCount}
+              usedGb={bookUsedGb}
+              percent={bookPercent}
+              icon={bookIconYellow}
+              t={t}
+            />
+            <RaspberryStatCard
+              label={t("stats_pictures_installed")}
+              value={pictureCount}
+              usedGb={pictureUsedGb}
+              percent={picturePercent}
+              icon={picturesIcon}
+              t={t}
+            />
             <article className="raspberry-storage-card">
               <div className="raspberry-storage-card__copy">
                 <p>{t("microsd_capacity")}</p>
@@ -4909,7 +4994,7 @@ function RaspberryPage({
               <div className="raspberry-storage-card__ring" style={{ "--storage-fill": `${multimediaPercent}%` }}>
                 <div className="raspberry-storage-card__ring-inner">
                   <strong>{formatPercent(multimediaPercent)}</strong>
-                  <img className="raspberry-storage-card__sdcard" src={sdacrdIcon} alt="" aria-hidden="true" />
+                  <span className="raspberry-storage-card__device" aria-hidden="true">SSD</span>
                   <span>{t("occupied")}</span>
                 </div>
               </div>
@@ -4918,9 +5003,14 @@ function RaspberryPage({
                 <strong>{formatStorageGb(multimediaUsedGb)} GB</strong>
               </div>
             </article>
-          </div>
+            </div>
+          </section>
 
-          <article className="raspberry-alarm-card">
+          <section className="raspberry-dashboard-section" aria-labelledby="dashboard-clock-title">
+            <h2 className="raspberry-dashboard-section__title" id="dashboard-clock-title">
+              {t("dashboard_clock_title")}
+            </h2>
+            <article className="raspberry-alarm-card">
             <div className="raspberry-alarm-card__header">
               <img className="raspberry-alarm-card__icon" src={alarmIcon} alt="" aria-hidden="true" />
               <div className="raspberry-alarm-card__header-copy">
@@ -5048,6 +5138,47 @@ function RaspberryPage({
               </div>
             ) : null}
           </article>
+          </section>
+
+          <section className="raspberry-dashboard-section" aria-labelledby="dashboard-auxiliary-title">
+            <h2 className="raspberry-dashboard-section__title" id="dashboard-auxiliary-title">
+              {t("dashboard_auxiliary_title")}
+            </h2>
+            <article className="raspberry-tmdb-card">
+              <div className="raspberry-tmdb-card__header">
+                <p>{t("tmdb_settings_title")}</p>
+                <span>{t("tmdb_settings_copy")}</span>
+              </div>
+              <form className="raspberry-tmdb-card__form" onSubmit={onTmdbSettingsSave}>
+                <label>
+                  <span>{t("tmdb_api_key")}</span>
+                  <input
+                    type="text"
+                    value={tmdbSettings.apiKey}
+                    maxLength={256}
+                    autoComplete="off"
+                    onChange={(event) => onTmdbSettingsChange("apiKey", event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>{t("tmdb_bearer_token")}</span>
+                  <input
+                    type="text"
+                    value={tmdbSettings.bearerToken}
+                    maxLength={2048}
+                    autoComplete="off"
+                    onChange={(event) => onTmdbSettingsChange("bearerToken", event.target.value)}
+                  />
+                </label>
+                <button type="submit" disabled={tmdbSettingsSaving}>
+                  {t("tmdb_settings_save")}
+                </button>
+              </form>
+              {tmdbSettingsStatus ? (
+                <span className="raspberry-tmdb-card__status">{tmdbSettingsStatus}</span>
+              ) : null}
+            </article>
+          </section>
         </div>
       ) : null}
 
@@ -5239,7 +5370,7 @@ function RaspberryPage({
                 className="raspberry-upload-dropzone__input"
                 type="file"
                 multiple
-                accept={uploadMediaType === "games" ? ".gb,.gbc,.gba,.chd" : uploadMediaType === "books" ? ".pdf,.epub,.cbz,.cbr" : undefined}
+                accept={uploadMediaType === "games" ? GAME_EXTENSIONS.map(ext => `.${ext}`).join(",") : uploadMediaType === "books" ? ".pdf,.epub,.cbz,.cbr" : uploadMediaType === "pictures" ? "image/jpeg,image/png,image/webp,image/gif,image/bmp,image/avif,image/heic,image/heif" : undefined}
                 webkitdirectory={uploadMediaType === "series" ? "" : undefined}
                 directory={uploadMediaType === "series" ? "" : undefined}
                 onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
@@ -5280,6 +5411,20 @@ function RaspberryPage({
               </label>
             ) : null}
 
+            {uploadMediaType === "pictures" ? (
+              <label className="dialog-button dialog-button--ghost books-directory-picker">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/avif,image/heic,image/heif"
+                  webkitdirectory=""
+                  directory=""
+                  onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
+                />
+                {t("upload_pictures")} · carpeta
+              </label>
+            ) : null}
+
             {uploadSummary ? (
               <div className="raspberry-upload-summary">
                 <strong>{t("latest_detection")}</strong>
@@ -5287,7 +5432,7 @@ function RaspberryPage({
               </div>
             ) : null}
 
-            {!['games', 'books'].includes(uploadMediaType) ? (
+            {!['games', 'books', 'pictures'].includes(uploadMediaType) ? (
               <div className="raspberry-upload-summary raspberry-upload-summary--tmdb">
                 <div>
                   <strong>{t("tmdb_browser_title")}</strong>
@@ -5540,6 +5685,45 @@ function BookReader({ book, onClose }) {
   );
 }
 
+function PicturesLibrary({ pictures, onUpload, t }) {
+  const [openPicture, setOpenPicture] = useState(null);
+  return (
+    <section className="pictures-library seasons-section" aria-label={t("media_pictures")}>
+      <div className="pictures-library__header">
+        <div>
+          <h1>{t("media_pictures")}</h1>
+          <p>{pictures.length} {pictures.length === 1 ? "foto" : "fotos"}</p>
+        </div>
+        <button className="dialog-button dialog-button--accent" type="button" onClick={onUpload}>+ {t("upload_pictures")}</button>
+      </div>
+      {pictures.length ? (
+        <div className="pictures-grid">
+          {pictures.map((picture) => (
+            <button className="picture-tile" type="button" key={picture.relativePath} onClick={() => setOpenPicture(picture)}>
+              <img src={getPictureContentUrl(picture.relativePath)} alt={picture.name} loading="lazy" />
+              <span>{picture.name}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="pictures-empty">
+          <img src={picturesIcon} alt="" aria-hidden="true" />
+          <h2>Todavía no hay fotos</h2>
+          <p>Sube una imagen o selecciona una carpeta para crear tu mosaico.</p>
+          <button className="dialog-button dialog-button--accent" type="button" onClick={onUpload}>+ {t("upload_pictures")}</button>
+        </div>
+      )}
+      {openPicture ? createPortal(
+        <div className="modal-backdrop picture-lightbox" onClick={() => setOpenPicture(null)}>
+          <button className="dialog-card__close" type="button" onClick={() => setOpenPicture(null)} aria-label={t("close")}>×</button>
+          <img src={getPictureContentUrl(openPicture.relativePath)} alt={openPicture.name} onClick={(event) => event.stopPropagation()} />
+          <span>{openPicture.name}</span>
+        </div>, document.body
+      ) : null}
+    </section>
+  );
+}
+
 export default function App() {
   const [mediaMarks, setMediaMarks] = useState(loadMediaMarks);
   const mockMode = isMockMode();
@@ -5557,6 +5741,7 @@ export default function App() {
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
   const [selectedMovieId, setSelectedMovieId] = useState(null);
   const [selectedGamePath, setSelectedGamePath] = useState("");
+  const [selectedSystemId, setSelectedSystemId] = useState("gb");
   const [selectedBookPath, setSelectedBookPath] = useState("");
   const [openBook, setOpenBook] = useState(null);
   const [bookMetadataTarget, setBookMetadataTarget] = useState(null);
@@ -5636,6 +5821,10 @@ export default function App() {
   const [episodePlaying, setEpisodePlaying] = useState(false);
   const [movieFrameIndex, setMovieFrameIndex] = useState(1);
   const [moviePlaying, setMoviePlaying] = useState(false);
+  const [movieLibraryView, setMovieLibraryView] = useState("grid");
+  const [movieLibrarySort, setMovieLibrarySort] = useState("name");
+  const [seriesLibraryView, setSeriesLibraryView] = useState("grid");
+  const [seriesLibrarySort, setSeriesLibrarySort] = useState("name");
   const [mediaFilterOpen, setMediaFilterOpen] = useState(false);
   const [mediaFavoritesOnly, setMediaFavoritesOnly] = useState({});
   const [movieGenreFilters, setMovieGenreFilters] = useState({});
@@ -5644,6 +5833,7 @@ export default function App() {
     movies: "",
     games: "",
     books: "",
+    pictures: "",
   });
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const seasonHeroShellRef = useRef(null);
@@ -6004,9 +6194,11 @@ export default function App() {
     );
   const gameLibrary = Array.isArray(videos?.games) ? [...videos.games].sort(compareMediaNames) : [];
   const bookLibrary = Array.isArray(videos?.books) ? [...videos.books].sort(compareMediaNames) : [];
+  const pictureLibrary = Array.isArray(videos?.pictures) ? [...videos.pictures].sort((left, right) => (Number(right.modifiedAt) || 0) - (Number(left.modifiedAt) || 0) || compareMediaNames(left, right)) : [];
+  const consoleGames = gameLibrary.filter(game => systemForGame(game)?.id === selectedSystemId);
   const selectedGame =
-    gameLibrary.find((game) => game.relativePath === selectedGamePath) ||
-    gameLibrary[0] ||
+    consoleGames.find((game) => game.relativePath === selectedGamePath) ||
+    consoleGames[0] ||
     null;
   const selectedBook = bookLibrary.find((book) => book.relativePath === selectedBookPath) || bookLibrary[0] || null;
   const bookCollections = useMemo(() => {
@@ -6172,6 +6364,8 @@ export default function App() {
         heroImage: profile.heroImage || tmdbSeries?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
         imageOptions: tmdbSeries?.imageOptions || [],
+        firstAirDate: tmdbSeries?.firstAirDate || "",
+        voteAverage: tmdbSeries?.voteAverage || 0,
         seasons: tmdbSeries?.seasons || [],
         seasonCount: tmdbSeries?.seasonCount || 0,
         episodeCount: tmdbSeries?.totalEpisodeCount || 0,
@@ -6206,10 +6400,9 @@ export default function App() {
     }).sort(compareMediaNames);
   }, [movieLibrary, movieProfiles, tmdbMovieMap, raspberryLanguage]);
 
-  const selectedSeries =
-    seriesOptions.find((series) => series.directoryPath === selectedDirectoryPath) ||
-    seriesOptions[0] ||
-    null;
+  const selectedSeries = selectedDirectoryPath
+    ? seriesOptions.find((series) => series.directoryPath === selectedDirectoryPath) || null
+    : null;
   const selectedDirectory =
     directories.find((directory) => directory.relativePath === selectedSeries?.directoryPath) ||
     null;
@@ -6218,9 +6411,9 @@ export default function App() {
     [selectedDirectory]
   );
   const selectedMovie =
-    movieOptions.find((movie) => Number(movie.id) === Number(selectedMovieId)) ||
-    movieOptions[0] ||
-    null;
+    selectedMovieId == null
+      ? null
+      : movieOptions.find((movie) => Number(movie.id) === Number(selectedMovieId)) || null;
 
   useEffect(() => {
     if (!raspberryHealth.running) return;
@@ -6264,7 +6457,9 @@ export default function App() {
       ? activeBookCollection?.coverUrl || (activeBookCollection?.key.startsWith("__book__")
         ? selectedBook?.coverUrl || getBookCoverUrl(selectedBook?.relativePath) || cartellLogo
         : cartellLogo)
-      : selectedItem?.heroImage || cartellLogo;
+      : activeMediaType === "movies" && !selectedMovie
+        ? cartellLogo
+        : selectedItem?.heroImage || cartellLogo;
   const headerImageCrop =
     ["games", "books"].includes(activeMediaType)
       ? DEFAULT_HERO_CROP
@@ -6335,18 +6530,6 @@ export default function App() {
       cancelled = true;
     };
   }, [raspberryCurrentPlayback, seriesOptions, tmdbLanguage]);
-
-  useEffect(() => {
-    if (!selectedSeries && seriesOptions[0]) {
-      setSelectedDirectoryPath(seriesOptions[0].directoryPath);
-    }
-  }, [selectedSeries, seriesOptions]);
-
-  useEffect(() => {
-    if (!selectedMovie && movieOptions[0]) {
-      setSelectedMovieId(movieOptions[0].id);
-    }
-  }, [selectedMovie, movieOptions]);
 
   useEffect(() => {
     setMovieFrameIndex(1);
@@ -6519,6 +6702,8 @@ export default function App() {
 
   function handleMediaTypeChange(nextType) {
     setActiveMediaType(nextType);
+    if (nextType === "movies") setSelectedMovieId(null);
+    if (nextType === "series") setSelectedDirectoryPath("");
     setMediaFilterOpen(false);
     setCurrentView("series");
     setSeasonEpisodes(null);
@@ -6557,7 +6742,7 @@ export default function App() {
   }
 
   function handleOpenUploadsForMedia(mediaType) {
-    const safeMediaType = ["games", "movies", "books"].includes(mediaType) ? mediaType : "series";
+    const safeMediaType = ["games", "movies", "books", "pictures"].includes(mediaType) ? mediaType : "series";
     setUploadMediaType(safeMediaType);
     setRaspberryReturnView(currentView === "season" ? "season" : "series");
     setRaspberryTab("uploads");
@@ -6684,6 +6869,13 @@ export default function App() {
       (video) => String(video?.id || "").toUpperCase() === episodeId
     );
     return match?.relativePath || "";
+  }
+
+  function getEpisodeDownloadUrl(season, episode) {
+    const relativePath = resolveUploadedEpisodePath(season, episode);
+    if (!relativePath) return "";
+    const streamUrl = getMediaStreamUrl(relativePath);
+    return `${streamUrl}${streamUrl.includes("?") ? "&" : "?"}download=1`;
   }
 
   async function handleDeleteSeason(season, confirmed = false) {
@@ -7040,6 +7232,38 @@ export default function App() {
     });
   }
 
+  function getMovieDownloadUrl(movie) {
+    const movieEntry = resolvePlayableMovieEntry(movie);
+    const relativePath = movieEntry?.relativePath || movie?.fileRelativePath || "";
+    if (!relativePath) return "";
+    const streamUrl = getMediaStreamUrl(relativePath);
+    return `${streamUrl}${streamUrl.includes("?") ? "&" : "?"}download=1`;
+  }
+
+  function handleOpenMovieDetails(movieId) {
+    setSelectedMovieId(Number(movieId));
+    setMediaFilterOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleBackToMovieLibrary() {
+    setSelectedMovieId(null);
+    setSettingsOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleOpenSeriesDetails(directoryPath) {
+    setSelectedDirectoryPath(directoryPath);
+    setMediaFilterOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleBackToSeriesLibrary() {
+    setSelectedDirectoryPath("");
+    setSettingsOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   async function handleAddMediaItem(selectedSeriesResult, targetMediaType = activeMediaType) {
     if (targetMediaType === "movies") {
       const movieDetails = await getMovieById(selectedSeriesResult.id, tmdbLanguage);
@@ -7247,6 +7471,8 @@ export default function App() {
         path: response?.item?.relativePath || gameUploadFile.name,
       })
     );
+    setSelectedSystemId(game.platform);
+    setSelectedGamePath(response?.item?.relativePath || "");
     setGameLookupOpen(false);
     setGameUploadFile(null);
     setGameUploadQuery("");
@@ -7635,6 +7861,31 @@ export default function App() {
     const safeFiles = Array.isArray(files) ? files.filter((file) => file && !isIgnoredUploadFile(file)) : [];
     if (!safeFiles.length) return;
 
+    if (uploadMediaType === "pictures") {
+      const extensions = new Set(["jpg", "jpeg", "png", "webp", "gif", "bmp", "avif", "heic", "heif"]);
+      const pictureFiles = safeFiles.filter((file) => extensions.has(getFileExtension(file.name)));
+      if (!pictureFiles.length || pictureFiles.length !== safeFiles.length) {
+        setUploadValidationError({ title: "Archivos incompatibles", message: "Selecciona solamente imágenes JPEG, PNG, WebP, GIF, BMP, AVIF o HEIC." });
+        return;
+      }
+      try {
+        setUploadSummary(`Subiendo ${pictureFiles.length} foto(s)…`);
+        const signal = createUploadSignal();
+        const response = await uploadPictureFiles({ files: pictureFiles, signal, onProgress: setUploadProgress });
+        clearUploadAbortController();
+        setUploadProgress(null);
+        setUploadSummary(`${response.saved?.length || pictureFiles.length} foto(s) añadidas al mosaico.`);
+        setVideos(await getVideos());
+        setActiveMediaType("pictures");
+        setCurrentView("series");
+      } catch (nextError) {
+        clearUploadAbortController();
+        setUploadProgress(null);
+        setUploadSummary(nextError?.name === "AbortError" ? t("upload_canceled") : nextError.message || "No se pudieron subir las fotos.");
+      }
+      return;
+    }
+
     if (uploadMediaType === "books") {
       const supported = new Set(["pdf", "epub", "cbz", "cbr"]);
       const bookFiles = safeFiles.filter((file) => supported.has(getFileExtension(file.name)));
@@ -7808,6 +8059,7 @@ export default function App() {
   const isMoviesMode = activeMediaType === "movies";
   const isGamesMode = activeMediaType === "games";
   const isBooksMode = activeMediaType === "books";
+  const isPicturesMode = activeMediaType === "pictures";
   const activeFilterQuery = mediaFilterQueries[activeMediaType] || "";
   const normalizedFilterQuery = normalizeMediaLabel(activeFilterQuery);
   const favoritesOnly = Boolean(mediaFavoritesOnly[activeMediaType]);
@@ -7819,9 +8071,21 @@ export default function App() {
   const filteredMovieOptions = movieOptions.filter((movie) =>
     matchesName(movie.name) && matchesFavorite("movie", movie.id) &&
     (!selectedMovieGenres.length || (movie.genres || []).some((genre) => selectedMovieGenres.includes(genre)))
-  );
-  const filteredSeriesOptions = seriesOptions.filter((series) => matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath));
-  const filteredGameOptions = gameLibrary.filter((game) => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath));
+  ).sort((left, right) => {
+    if (movieLibrarySort === "year") {
+      return (Number(right.releaseDate?.slice(0, 4)) || 0) - (Number(left.releaseDate?.slice(0, 4)) || 0) || compareMediaNames(left, right);
+    }
+    if (movieLibrarySort === "rating") {
+      return (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right);
+    }
+    return compareMediaNames(left, right);
+  });
+  const filteredSeriesOptions = seriesOptions
+    .filter((series) => matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath))
+    .sort((left, right) => seriesLibrarySort === "rating"
+      ? (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right)
+      : compareMediaNames(left, right));
+  const filteredGameOptions = consoleGames.filter((game) => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath));
   const filteredBookCollections = bookCollections.map((collection) => ({
     ...collection,
     books: collection.books.filter((book) =>
@@ -7843,14 +8107,14 @@ export default function App() {
       if (filteredGameOptions.length && !filteredGameOptions.some((game) => game.relativePath === selectedGame?.relativePath)) {
         setSelectedGamePath(filteredGameOptions[0].relativePath);
       }
-    } else if (isMoviesMode) {
+    } else if (isMoviesMode && selectedMovieId != null) {
       if (filteredMovieOptions.length && !filteredMovieOptions.some((movie) => movie.id === selectedMovie?.id)) {
         setSelectedMovieId(filteredMovieOptions[0].id);
       }
-    } else if (filteredSeriesOptions.length && !filteredSeriesOptions.some((series) => series.directoryPath === selectedSeries?.directoryPath)) {
+    } else if (selectedDirectoryPath && filteredSeriesOptions.length && !filteredSeriesOptions.some((series) => series.directoryPath === selectedSeries?.directoryPath)) {
       setSelectedDirectoryPath(filteredSeriesOptions[0].directoryPath);
     }
-  }, [mediaFiltersActive, isBooksMode, isGamesMode, isMoviesMode, filteredBooks, filteredGameOptions, filteredMovieOptions, filteredSeriesOptions, selectedBookPath, selectedGame?.relativePath, selectedMovie?.id, selectedSeries?.directoryPath]);
+  }, [mediaFiltersActive, isBooksMode, isGamesMode, isMoviesMode, filteredBooks, filteredGameOptions, filteredMovieOptions, filteredSeriesOptions, selectedBookPath, selectedGame?.relativePath, selectedMovie?.id, selectedMovieId, selectedSeries?.directoryPath]);
   const formatBookCollectionLabel = (collection) => {
     if (!collection) return t("media_books");
     return collection.label;
@@ -7880,7 +8144,11 @@ export default function App() {
     : isMoviesMode
       ? t("select_movie")
       : t("select_series");
-  const isLibraryEmpty = !selectedItem && !isGamesMode && !isBooksMode;
+  const isLibraryEmpty = isMoviesMode
+    ? movieOptions.length === 0
+    : isSeriesMode
+      ? seriesOptions.length === 0
+      : !selectedItem && !isGamesMode && !isBooksMode;
   const heroSelectorOptions = isBooksMode
     ? filteredBookCollections.map((collection) => ({
         key: collection.key,
@@ -7925,12 +8193,14 @@ export default function App() {
     ? Math.min(selectedGameImageIndex, gameImages.length - 1)
     : 0;
   const selectedGamePlatformExtension = getFileExtension(selectedGame?.file || selectedGame?.relativePath);
-  const selectedGamePlatformIcon = GAME_PLATFORM_ICONS[selectedGamePlatformExtension] || null;
+  const selectedGamePlatformIcon = systemForGame(selectedGame)?.assets.console || GAME_PLATFORM_ICONS[selectedGamePlatformExtension] || null;
   const selectedGamePlatformLabel = selectedGame?.platformName || GAME_PLATFORM_LABELS[selectedGamePlatformExtension] || t("media_games_singular");
   const raspberryLibraryCounts = normalizeLibraryCounts(videos?.libraryCounts || raspberryHealth?.libraryCounts);
   const installedSeriesCount = raspberryLibraryCounts.series.count;
   const installedMovieCount = raspberryLibraryCounts.movies.count;
   const installedGameCount = raspberryLibraryCounts.games.count;
+  const installedBookCount = raspberryLibraryCounts.books.count;
+  const installedPictureCount = raspberryLibraryCounts.pictures.count;
   const usedStorageGb = Number(raspberryHealth?.storage?.usedGb) || 0;
   const totalStorageGb = Number(raspberryHealth?.storage?.totalGb) || 0;
   const multimediaUsedGb = Number(raspberryHealth?.storage?.multimediaUsedGb) || 0;
@@ -8092,6 +8362,12 @@ export default function App() {
                 gameCount={installedGameCount}
                 gameUsedGb={raspberryLibraryCounts.games.usedGb}
                 gamePercent={raspberryLibraryCounts.games.percentUsed}
+                bookCount={installedBookCount}
+                bookUsedGb={raspberryLibraryCounts.books.usedGb}
+                bookPercent={raspberryLibraryCounts.books.percentUsed}
+                pictureCount={installedPictureCount}
+                pictureUsedGb={raspberryLibraryCounts.pictures.usedGb}
+                picturePercent={raspberryLibraryCounts.pictures.percentUsed}
                 usedStorageGb={usedStorageGb}
                 totalStorageGb={totalStorageGb}
                 multimediaUsedGb={multimediaUsedGb}
@@ -8255,13 +8531,49 @@ export default function App() {
                   </div>
                 </section>
 
-                <header className="series-hero">
+                {isPicturesMode ? null : isGamesMode ? <GameConsoleCarousel
+                  systemId={selectedSystemId} onSystemChange={setSelectedSystemId}
+                  games={gameLibrary} visibleGames={filteredGameOptions}
+                  onFilter={() => setMediaFilterOpen(current => !current)} filterLabel={t("movie_filter_title")}
+                  selectedPath={selectedGame?.relativePath || ""}
+                  onGameChange={setSelectedGamePath} language={raspberryLanguage}
+                  onUpload={() => handleOpenUploadsForMedia("games")}
+                  onDevice={handleOpenRaspberryPage}
+                /> : <header className="series-hero">
                   <div className="series-hero__banner">
                     <HeaderArt
                       image={headerImage}
                       crop={headerImageCrop}
                       alt={selectedItem?.name || "Cartell principal"}
                     />
+
+                    {isMoviesMode || isSeriesMode ? (
+                      <div className="movie-library__hero-tools">
+                        {(isMoviesMode ? selectedMovie : selectedSeries) ? (
+                          <button type="button" className="movie-library__back" onClick={isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
+                            <span aria-hidden="true">←</span> {t(isMoviesMode ? "movie_library" : "series_library")}
+                          </button>
+                        ) : (
+                          <>
+                            <label className="movie-library__sort">
+                              <span>{t("movie_sort_label")}</span>
+                              <select
+                                value={isMoviesMode ? movieLibrarySort : seriesLibrarySort}
+                                onChange={(event) => isMoviesMode ? setMovieLibrarySort(event.target.value) : setSeriesLibrarySort(event.target.value)}
+                              >
+                                <option value="name">{t("movie_sort_name")}</option>
+                                {isMoviesMode ? <option value="year">{t("movie_sort_year")}</option> : null}
+                                <option value="rating">{t("movie_sort_rating")}</option>
+                              </select>
+                            </label>
+                            <div className="movie-library__view-switch" role="group" aria-label={t(isMoviesMode ? "movie_library" : "series_library")}>
+                              <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "grid" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("grid") : setSeriesLibraryView("grid")} aria-label={t("movie_view_grid")} title={t("movie_view_grid")}>▦</button>
+                              <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "list" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("list") : setSeriesLibraryView("list")} aria-label={t("movie_view_list")} title={t("movie_view_list")}>☰</button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : null}
 
                     <div className="series-hero__controls-layer">
                       <div
@@ -8333,8 +8645,8 @@ export default function App() {
                               : isGamesMode
                               ? setSelectedGamePath(nextValue)
                               : isMoviesMode
-                              ? setSelectedMovieId(Number(nextValue) || null)
-                              : setSelectedDirectoryPath(nextValue)
+                              ? handleOpenMovieDetails(nextValue)
+                              : handleOpenSeriesDetails(nextValue)
                           }
                         />
                       </div>
@@ -8366,7 +8678,7 @@ export default function App() {
                       <img className="series-hero__tv" src={tvGreen} alt={t("mini_tv_title")} />
                     </button>
                   </div>
-                </header>
+                </header>}
 
                 {filterTotal && mediaFilterOpen ? (
                   <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
@@ -8409,7 +8721,9 @@ export default function App() {
                 ) : null}
 
                 {filterVisible > 0 && isSeriesMode && selectedSeries ? renderMarks("series", selectedSeries.id || selectedSeries.directoryPath, false) : null}
-                {mediaFiltersActive && !filterVisible ? (
+                {isPicturesMode ? (
+                  <PicturesLibrary pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
+                ) : mediaFiltersActive && !filterVisible ? (
                   <section className="empty-state"><div className="empty-state__card"><p>{t("movie_filter_no_results")}</p></div></section>
                 ) : isBooksMode ? (
                   <BooksLibrary
@@ -8424,7 +8738,7 @@ export default function App() {
                     onDelete={handleDeleteBook}
                   />
                 ) : isGamesMode ? (
-                  selectedGame ? (
+                  selectedGame && filteredGameOptions.some(game => game.relativePath === selectedGame.relativePath) ? (
                     <section className="game-panel seasons-section">
                       <div className="seasons-section__label">{t("game_file_label")}</div>
                       <div className="game-panel__card">
@@ -8504,6 +8818,7 @@ export default function App() {
                           </div>
 
                           <div className="game-panel__content">
+                            <button className="dialog-button" type="button" onClick={handleOpenCustomization}>{t("games_cover_file_field")} / {t("games_description_field")}</button>
                             <h2>{selectedGame.name || selectedGame.file}</h2>
                             {renderMarks("game", selectedGame.relativePath, false)}
                             <div className="movie-panel__facts game-panel__facts">
@@ -8535,33 +8850,7 @@ export default function App() {
                         </div>
                       </div>
                     </section>
-                  ) : (
-                    <section className="empty-state">
-                      <div className="empty-state__card empty-state__card--library">
-                        <h2>{t("games_empty_title")}</h2>
-                        <img
-                          className="empty-state__image"
-                          src={emptyStateIcon}
-                          alt=""
-                          aria-hidden="true"
-                        />
-                        <p>{t("games_empty_copy")}</p>
-                        <button
-                          className="empty-state__action empty-state__action--uploads"
-                          onClick={() => handleOpenUploadsForMedia("games")}
-                          type="button"
-                        >
-                          <img
-                            className="empty-state__action-icon"
-                            src={uploadsIconBlack}
-                            alt=""
-                            aria-hidden="true"
-                          />
-                          {t("go_to_uploads")}
-                        </button>
-                      </div>
-                    </section>
-                  )
+                  ) : null
                 ) : isLibraryEmpty ? (
                   <section className="empty-state">
                     <div className="empty-state__card empty-state__card--library">
@@ -8592,6 +8881,31 @@ export default function App() {
                       </button>
                     </div>
                   </section>
+                ) : isSeriesMode && !selectedSeries ? (
+                  <section className="movie-library seasons-section">
+                    <div className="seasons-section__label">{t("series_library")}</div>
+                    <div className={`movie-library__items movie-library__items--${seriesLibraryView}`}>
+                      {filteredSeriesOptions.map((series) => {
+                        const poster = series.imageOptions?.[1] || series.heroImage || cartellLogo;
+                        const year = series.firstAirDate?.slice(0, 4) || t("not_available");
+                        const rating = Number(series.voteAverage) > 0 ? `${(series.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
+                        return (
+                          <article className="movie-library__card" key={series.directoryPath}>
+                            <button className="movie-library__poster" type="button" onClick={() => handleOpenSeriesDetails(series.directoryPath)} aria-label={`${t("movie_details")}: ${series.name}`}>
+                              <img src={poster} alt={`Portada de ${series.name}`} />
+                            </button>
+                            <div className="movie-library__info">
+                              <h2>{series.name}</h2>
+                              <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
+                              <div className="movie-library__actions movie-library__actions--single">
+                                <button type="button" onClick={() => handleOpenSeriesDetails(series.directoryPath)}>{t("movie_details")}</button>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
                 ) : isSeriesMode && !seasons.length ? (
                   <section className="empty-state">
                     <div className="empty-state__card">
@@ -8617,6 +8931,33 @@ export default function App() {
                           t={t}
                         />
                       ))}
+                    </div>
+                  </section>
+                ) : isMoviesMode && !selectedMovie ? (
+                  <section className="movie-library seasons-section">
+                    <div className="seasons-section__label">{t("movie_library")}</div>
+                    <div className={`movie-library__items movie-library__items--${movieLibraryView}`}>
+                      {filteredMovieOptions.map((movie) => {
+                        const downloadUrl = getMovieDownloadUrl(movie);
+                        const poster = movie.imageOptions?.[1] || movie.heroImage || cartellLogo;
+                        const year = movie.releaseDate?.slice(0, 4) || t("not_available");
+                        const rating = Number(movie.voteAverage) > 0 ? `${(movie.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
+                        return (
+                          <article className="movie-library__card" key={movie.id}>
+                            <button className="movie-library__poster" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={`${t("movie_details")}: ${movie.name}`}>
+                              <img src={poster} alt={`Portada de ${movie.name}`} />
+                            </button>
+                            <div className="movie-library__info">
+                              <h2>{movie.name}</h2>
+                              <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
+                              <div className="movie-library__actions">
+                                <button type="button" onClick={() => handleOpenMovieDetails(movie.id)}>{t("movie_details")}</button>
+                                {downloadUrl ? <a href={downloadUrl} download={movie.fileName || movie.name}>{t("movie_download")}</a> : <button type="button" disabled>{t("movie_download")}</button>}
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
                     </div>
                   </section>
                 ) : (
@@ -8658,6 +8999,12 @@ export default function App() {
                         <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                         <span>{t("play_on_external_monitor")}</span>
                       </button>
+                      {getMovieDownloadUrl(selectedMovie) ? (
+                        <a className="movie-panel__play movie-panel__download" href={getMovieDownloadUrl(selectedMovie)} download={selectedMovie.fileName || selectedMovie.name}>
+                          <span aria-hidden="true">↓</span>
+                          <span>{t("movie_download")}</span>
+                        </a>
+                      ) : null}
 
                       <MovieImageCarousel
                         title={selectedMovie.name}
@@ -8808,6 +9155,7 @@ export default function App() {
               t={t}
             />
             <GameUploadModal
+              initialSystemId={selectedSystemId}
               visible={gameLookupOpen}
               file={gameUploadFile}
               initialQuery={gameUploadQuery}
@@ -8868,6 +9216,8 @@ export default function App() {
               onPlay={() => handlePlayEpisode("minitv")}
               onPlayBrowser={handlePlayEpisodeInBrowser}
               onPlayExternal={() => handlePlayEpisode("external")}
+              downloadUrl={getEpisodeDownloadUrl(selectedSeason, selectedEpisode)}
+              downloadName={resolveUploadedEpisodePath(selectedSeason, selectedEpisode).split("/").pop() || undefined}
               onDelete={handleDeleteEpisode}
               t={t}
             />

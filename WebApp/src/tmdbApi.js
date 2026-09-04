@@ -415,6 +415,8 @@ export async function getTvSeriesById(seriesId, language) {
   return {
     id: Number(show?.id) || Number(seriesId),
     name: show?.name || "Unknown show",
+    firstAirDate: show?.first_air_date || "",
+    voteAverage: Number(show?.vote_average) || 0,
     heroImage,
     imageOptions,
     seasonCount: seasons.length,

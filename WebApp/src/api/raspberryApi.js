@@ -1,3 +1,4 @@
+import { GAME_SYSTEMS } from "../gameSystems";
 import { uploadBookBatch } from "./bookUploadBatch.js";
 const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").trim();
 const WEB_PIN_STORAGE_KEY = "minitv-web-pin";
@@ -847,7 +848,7 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
   );
 }
 
-export function searchGameMetadata({ query, extension } = {}) {
+export function searchGameMetadata({ query, extension, platform } = {}) {
   const safeQuery = String(query || "").trim();
   const safeExtension = String(extension || "").trim().toLowerCase();
   if (!safeQuery || !safeExtension) {
@@ -872,10 +873,10 @@ export function searchGameMetadata({ query, extension } = {}) {
     });
   }
 
-  return request(`/games/search?query=${encodeURIComponent(safeQuery)}&extension=${encodeURIComponent(safeExtension)}`);
+  return request(`/games/search?query=${encodeURIComponent(safeQuery)}&extension=${encodeURIComponent(safeExtension)}&platform=${encodeURIComponent(platform || "")}`);
 }
 
-export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
+export async function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
   if (!file) {
     return Promise.reject(new Error("Missing file"));
   }
@@ -894,15 +895,21 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
   if (isMockModeEnabled()) {
     const current = loadMockGamesLibrary();
     const extension = String(file.name || "").split(".").pop()?.toLowerCase() || "";
-    const platformName = extension === "chd" ? "Neo Geo CD" : extension === "gba" ? "Game Boy Advance" : extension === "gbc" ? "Game Boy Color" : "Game Boy";
+    const platformName = GAME_SYSTEMS.find(s => s.id === game?.platform)?.name || "Game Boy";
+    const readImage = imageFile => new Promise((resolve, reject) => {
+      const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(imageFile);
+    });
+    const savedCover = coverFile ? await readImage(coverFile) : coverUrl;
+    const savedImages = await Promise.all(imageFiles.map(readImage));
     const item = {
       name: gameName,
       description,
       file: file.name,
       relativePath: `Games/${file.name}`,
       platformName,
-      coverImage: cover?.previewUrl || "",
-      imageOptions: [cover?.previewUrl, ...imagePreviewUrls].filter(Boolean),
+      platform: game?.platform,
+      coverImage: savedCover || "",
+      imageOptions: [savedCover, ...savedImages].filter(Boolean),
       source,
     };
     saveMockGamesLibrary([...current, item]);
@@ -916,6 +923,7 @@ export function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("name", gameName);
+    formData.append("platform", game?.platform || "");
     formData.append("description", description);
     if (coverFile) {
       formData.append("coverFile", coverFile);
@@ -1197,6 +1205,48 @@ export function getMediaStreamUrl(relativePath) {
   return `${getBaseUrl()}/media/stream?${params.toString()}`;
 }
 
+export function getPictureContentUrl(relativePath) {
+  const safeRelativePath = String(relativePath || "").trim();
+  if (!safeRelativePath) return "";
+  const params = new URLSearchParams({ relativePath: safeRelativePath });
+  const storedPin = getStoredWebPin();
+  if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
+  return `${getBaseUrl()}/pictures/content?${params.toString()}`;
+}
+
+export function uploadPictureFiles({ files, onProgress, signal } = {}) {
+  const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
+  if (!safeFiles.length) return Promise.reject(new Error("Missing pictures"));
+  if (isMockModeEnabled()) {
+    return Promise.resolve({ ok: true, mock: true, saved: safeFiles.map((file) => file.webkitRelativePath || file.name) });
+  }
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    safeFiles.forEach((file) => formData.append("files", file, file.webkitRelativePath || file.name));
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${getBaseUrl()}/pictures/upload`);
+    const detachAbort = attachUploadAbort(xhr, signal, reject);
+    const storedPin = getStoredWebPin();
+    if (storedPin) xhr.setRequestHeader("X-Web-Pin", storedPin);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && typeof onProgress === "function") {
+        onProgress({ percent: Math.round((event.loaded / event.total) * 100), current: safeFiles.length, total: safeFiles.length, status: event.loaded >= event.total ? "saving" : "uploading" });
+      }
+    };
+    xhr.onload = () => {
+      detachAbort();
+      const payload = xhr.responseText ? tryParseJson(xhr.responseText) : null;
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(payload);
+      const error = new Error(payload?.error || `HTTP ${xhr.status}`);
+      error.status = xhr.status;
+      reject(error);
+    };
+    xhr.onerror = () => { detachAbort(); reject(new Error("Upload failed")); };
+    xhr.onabort = () => detachAbort();
+    xhr.send(formData);
+  });
+}
+
 export function getBookContentUrl(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) return "";
@@ -1404,4 +1454,30 @@ export function powerOffRaspberry() {
     method: "POST",
     body: JSON.stringify({}),
   });
+}
+
+export async function gameSystemArtwork(systemId, file, reset = false) {
+  const key = `minitv-system-art-${systemId}`;
+  if (isMockModeEnabled()) {
+    if (reset) localStorage.removeItem(key);
+    if (file) {
+      const data = await new Promise((resolve, reject) => {
+        const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file);
+      });
+      localStorage.setItem(key, data);
+    }
+    return { image: localStorage.getItem(key) || '' };
+  }
+  const body = new FormData();
+  if (file) body.append('image', file);
+  if (reset) body.append('reset', '1');
+  const response = await fetch(`${getBaseUrl()}/games/systems/${encodeURIComponent(systemId)}/artwork`, {
+    method: file || reset ? 'POST' : 'GET',
+    headers: { 'X-Web-Pin': getStoredWebPin() },
+    ...(file || reset ? { body } : {}),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'Could not save image');
+  if (result.image?.startsWith('/')) result.image = `${getBaseUrl()}${result.image}`;
+  return result;
 }
