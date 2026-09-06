@@ -290,6 +290,7 @@ const UI_STRINGS = {
     raspberry_uploads: "Uploads",
     upload_series: "Serie",
     upload_movie: "Película",
+    upload_movie_title_field: "Título de la película",
     upload_game: "Juego",
     upload_books: "Libros",
     upload_pictures: "Fotos",
@@ -652,6 +653,7 @@ const UI_STRINGS = {
     raspberry_uploads: "Uploads",
     upload_series: "Sèrie",
     upload_movie: "Pel·lícula",
+    upload_movie_title_field: "Títol de la pel·lícula",
     upload_game: "Joc",
     upload_books: "Llibres",
     upload_pictures: "Fotos",
@@ -1014,6 +1016,7 @@ const UI_STRINGS = {
     raspberry_uploads: "Uploads",
     upload_series: "Series",
     upload_movie: "Movie",
+    upload_movie_title_field: "Movie title",
     upload_game: "Game",
     upload_books: "Books",
     upload_pictures: "Pictures",
@@ -2305,7 +2308,7 @@ function MediaMarkButtons({ watched, favorite, onWatched, onFavorite, t }) {
   </div>;
 }
 
-function EpisodeRow({ episode, available, watched, onSelect, t }) {
+function EpisodeRow({ episode, available, onSelect, t }) {
   return (
     <article className={`episode-card${available ? "" : " is-disabled"}`}>
       <button
@@ -2325,7 +2328,6 @@ function EpisodeRow({ episode, available, watched, onSelect, t }) {
         <p>{episode.airDate || t("not_available")}</p>
       </div>
 
-      <span className={`episode-mark${watched ? " is-watched" : ""}`} title={t(watched ? "mark_watched" : "mark_unwatched")} role="img" aria-label={t(watched ? "mark_watched" : "mark_unwatched")}><MediaMarkIcon active={watched} /></span>
       <div className="episode-card__arrow">›</div>
       </button>
     </article>
@@ -3229,6 +3231,7 @@ function AddMediaModal({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [uploadTitle, setUploadTitle] = useState("");
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -3238,6 +3241,7 @@ function AddMediaModal({
       setQuery("");
       setResults([]);
       setSelectedId(null);
+      setUploadTitle("");
       setSearching(false);
       setSubmitting(false);
       setError("");
@@ -3258,6 +3262,7 @@ function AddMediaModal({
     setSearching(true);
     setError("");
     setSelectedId(null);
+    setUploadTitle("");
 
     try {
       const nextResults =
@@ -3294,11 +3299,16 @@ function AddMediaModal({
     const selectedItem = results.find((entry) => entry.id === selectedId);
     if (!selectedItem) return;
 
+    const itemToAdd =
+      mediaType === "movies" && uploadFileName
+        ? { ...selectedItem, name: uploadTitle.trim() || selectedItem.name }
+        : selectedItem;
+
     setSubmitting(true);
     setError("");
 
     try {
-      await onAdd(selectedItem);
+      await onAdd(itemToAdd);
     } catch (nextError) {
       setError(
         nextError.name === "AbortError"
@@ -3315,6 +3325,7 @@ function AddMediaModal({
     setQuery("");
     setResults([]);
     setSelectedId(null);
+    setUploadTitle("");
     setError("");
   }
 
@@ -3440,7 +3451,12 @@ function AddMediaModal({
                   <button
                     key={result.id}
                     className={`add-series-result${isSelected ? " active" : ""}`}
-                    onClick={() => setSelectedId(result.id)}
+                    onClick={() => {
+                      setSelectedId(result.id);
+                      if (mediaType === "movies" && uploadFileName) {
+                        setUploadTitle(result.name || "");
+                      }
+                    }}
                     type="button"
                   >
                     <div className="add-series-result__poster">
@@ -3464,6 +3480,19 @@ function AddMediaModal({
             </div>
           )}
         </div>
+
+        {mediaType === "movies" && uploadFileName && selectedId ? (
+          <label className="dialog-field add-series-upload-title">
+            <span>{t("upload_movie_title_field")}</span>
+            <input
+              type="text"
+              value={uploadTitle}
+              onChange={(event) => setUploadTitle(event.target.value)}
+              placeholder={results.find((entry) => entry.id === selectedId)?.name || ""}
+              disabled={submitting}
+            />
+          </label>
+        ) : null}
 
         {error ? <p className="dialog-error">{error}</p> : null}
 
@@ -7402,6 +7431,7 @@ export default function App() {
     if (targetMediaType === "movies") {
       const movieDetails = await getMovieById(selectedSeriesResult.id, tmdbLanguage);
       const uploadFile = uploadLookupOpen ? uploadSelectedFiles[0] : null;
+      const movieTitle = String(selectedSeriesResult.name || movieDetails?.name || "").trim();
       let uploadedMovie = null;
 
       if (uploadFile) {
@@ -7421,12 +7451,12 @@ export default function App() {
 
       const nextLibrary = upsertMediaLibraryItem("movies", {
         id: selectedSeriesResult.id,
-        name: movieDetails?.name || selectedSeriesResult.name,
+        name: movieTitle,
         fileRelativePath: uploadedMovie?.item?.relativePath || "",
         fileName: uploadedMovie?.item?.file || uploadFile?.name || "",
       });
       const movieProfile = {
-        name: movieDetails?.name || selectedSeriesResult.name,
+        name: movieTitle,
         heroImage: movieDetails?.heroImage || selectedSeriesResult.heroImage || "",
         heroImageCrop: DEFAULT_HERO_CROP,
         imdbUrl: movieDetails?.imdbUrl || "",
@@ -7469,7 +7499,7 @@ export default function App() {
         }
         setUploadSummary(
           t("upload_done_summary", {
-            name: selectedSeriesResult.name,
+            name: movieTitle,
             path: uploadedPath || uploadFile.name,
           })
         );
@@ -8637,7 +8667,6 @@ export default function App() {
                         <EpisodeRow
                           key={episode.id}
                           episode={episode}
-                          watched={episodeWatched(mediaMarks, selectedSeasonMarkKey(), episode.episodeNumber)}
                           available={isEpisodeUploaded(selectedSeason, episode, uploadedEpisodeIds)}
                           onSelect={handleOpenEpisodeDetails}
                           t={t}

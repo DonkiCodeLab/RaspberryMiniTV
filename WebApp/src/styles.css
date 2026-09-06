@@ -5855,9 +5855,6 @@ img {
 .media-mark.is-watched { background: #163e36; color: #9af0cf; border-color: #64d4ad; }
 .books-library__card > .media-marks { padding: 0 14px; }
 .media-marks--season { margin: 18px 0; }
-.episode-mark { display: inline-flex; color: #94a3b8; margin-right: 10px; }
-.episode-mark svg { width: 22px; height: 22px; }
-.episode-mark.is-watched { color: #64d4ad; }
 .movie-filter__favorites { display: flex; align-items: center; gap: .6rem; margin-top: .85rem; color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; }
 .movie-filter__favorites input { width: 20px; height: 20px; margin: 0; accent-color: #ffd429; cursor: pointer; }
 .movie-filter__favorites input:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
