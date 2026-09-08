@@ -36,6 +36,13 @@ class TmdbCache:
         self.io_locks = [threading.RLock() for _ in range(64)]
         self.network_slots = threading.BoundedSemaphore(3)
         self.jobs_lock = threading.RLock()
+        self.state_lock = threading.RLock()
+        self.generations = {}
+        self.worker_context = threading.local()
+        try:
+            self.index = json.loads((self.root / "index.json").read_text())
+        except (OSError, ValueError):
+            self.index = {}
         self.worker = None
         try:
             self.jobs = json.loads((self.root / "jobs.json").read_text())
@@ -83,10 +90,20 @@ class TmdbCache:
             params = {}
         cache_key = hashlib.sha256((path + "?" + urllib.parse.urlencode(sorted(params.items()))).encode()).hexdigest()
         target = self.root / "metadata" / (cache_key + ".json")
+        owner = "/".join(path.strip("/").split("/")[:2]) if DETAIL_RE.fullmatch(path) else None
+        with self.state_lock:
+            generation = self.generations.get(owner, 0)
+            self._check_worker()
         with self.io_locks[hash(str(target)) % len(self.io_locks)]:
             try:
                 if not refresh:
-                    return json.loads(target.read_text())
+                    data = json.loads(target.read_text())
+                    with self.state_lock:
+                        self._check_worker()
+                        if generation != self.generations.get(owner, 0):
+                            raise RuntimeError("Descarga cancelada por borrado del catálogo")
+                        self._index_metadata(target.name, owner, data)
+                    return data
             except (OSError, ValueError):
                 pass
             credentials = self.credentials()
@@ -102,21 +119,44 @@ class TmdbCache:
             data = json.loads(raw)
             if not isinstance(data, dict) or data.get("success") is False:
                 raise RuntimeError("Respuesta TMDB inválida")
-            atomic_write(target, raw)
+            with self.state_lock:
+                self._check_worker()
+                if generation != self.generations.get(owner, 0):
+                    raise RuntimeError("Descarga cancelada por borrado del catálogo")
+                self._index_metadata(target.name, owner, data)
+                atomic_write(target, raw)
             return data
 
     def image(self, path):
         if not IMAGE_RE.fullmatch(path):
             raise ValueError("Ruta de imagen no permitida")
         target = self.root / "images" / path.lstrip("/")
+        with self.state_lock:
+            generation = self.generations.get("image:" + path, 0)
+            self._check_worker()
         with self.io_locks[hash(str(target)) % len(self.io_locks)]:
             if target.is_file() and target.stat().st_size:
                 return target
             raw, content_type = self._download("https://image.tmdb.org/t/p/original" + path, {}, 64 * 1024 * 1024)
             if not content_type.startswith("image/"):
                 raise ValueError("TMDB no devolvió una imagen")
-            atomic_write(target, raw)
+            with self.state_lock:
+                self._check_worker()
+                if generation != self.generations.get("image:" + path, 0):
+                    raise RuntimeError("Imagen cancelada por borrado del catálogo")
+                atomic_write(target, raw)
         return target
+
+    def _check_worker(self):
+        context = getattr(self.worker_context, "job", None)
+        if context and self.generations.get(context[0], 0) != context[1]:
+            raise RuntimeError("Descarga cancelada por borrado del catálogo")
+
+    def _index_metadata(self, filename, owner, data):
+        entry = {"owner": owner, "images": sorted(self._images_in(data) | set(self.index.get(filename, {}).get("images", [])))}
+        if self.index.get(filename) != entry:
+            self.index[filename] = entry
+            atomic_write(self.root / "index.json", json.dumps(self.index).encode())
 
     def _images_in(self, data):
         paths = set()
@@ -137,6 +177,7 @@ class TmdbCache:
         errors = []
         collected = {}
         def collect(path, params=None):
+            self._check_worker()
             try:
                 key = (path, json.dumps(params, sort_keys=True))
                 if key in collected:
@@ -167,6 +208,7 @@ class TmdbCache:
                             collect(season_path + f"/episode/{episode_number}/images")
                     collect(season_path + "/images")
         for path in sorted(images):
+            self._check_worker()
             try:
                 self.image(path)
             except Exception as exc:
@@ -216,23 +258,118 @@ class TmdbCache:
                     return
                 key, job = entry
                 job["state"] = "running"
+                generation = self.generations.get(key, 0)
                 try:
                     self._save_jobs()
                 except OSError as exc:
                     job.update(state="failed", error=f"No se pudo guardar la cola: {exc}")
                     continue
             try:
+                self.worker_context.job = (key, generation)
                 self.warm(job["kind"], job["id"], job["images"], job.get("refresh", False))
                 state, error = "complete", ""
             except Exception as exc:
                 state, error = "failed", str(exc)
+            finally:
+                self.worker_context.job = None
             with self.jobs_lock:
-                if self.jobs[key] is job:
+                if self.jobs.get(key) is job:
                     job.update(state=state, error=error)
                 try:
                     self._save_jobs()
                 except OSError as exc:
                     job.update(state="failed", error=f"No se pudo guardar el progreso: {exc}")
+
+    @staticmethod
+    def profile_image(value):
+        match = re.search(r"(?:https://image\.tmdb\.org/t/p/[^/]+|/tmdb/images)(/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg))(?:\?.*)?$", value or "")
+        return match[1] if match else None
+
+    def _legacy_metadata(self, owner):
+        """Discover the original hash-only cache without contacting TMDB."""
+        base = "/" + owner
+        paths = [base, base + "/images"]
+        seen = set()
+        for path in paths:
+            if path in seen:
+                continue
+            seen.add(path)
+            variants = [{}] if path.endswith("/images") else [{}, *({"language": lang} for lang in LANGUAGES)]
+            if owner.startswith("movie/") and path == base:
+                variants += [{**params, "append_to_response": "external_ids"} for params in list(variants)]
+            for params in variants:
+                digest = hashlib.sha256((path + "?" + urllib.parse.urlencode(sorted(params.items()))).encode()).hexdigest()
+                target = self.root / "metadata" / (digest + ".json")
+                if not target.is_file():
+                    continue
+                data = json.loads(target.read_text())
+                self._index_metadata(target.name, owner, data)
+                if owner.startswith("tv/"):
+                    for season in data.get("seasons", []):
+                        number = season.get("season_number")
+                        if isinstance(number, int) and number >= 0:
+                            paths.extend([base + f"/season/{number}", base + f"/season/{number}/images"])
+                    if re.fullmatch(re.escape(base) + r"/season/\d+", path):
+                        for episode in data.get("episodes", []):
+                            number = episode.get("episode_number")
+                            if isinstance(number, int) and number > 0:
+                                paths.append(path + f"/episode/{number}/images")
+
+    def remove_unused(self, removed, library):
+        """Remove only deleted titles' resources, retaining shared references."""
+        with self.state_lock, self.jobs_lock:
+            active = set()
+            protected_images = set()
+            for collection, kind in (("movies", "movie"), ("series", "tv")):
+                for item in library.get(collection, {}).values():
+                    if item.get("tmdbId"):
+                        active.add(f"{kind}/{int(item['tmdbId'])}")
+                    image = self.profile_image(item.get("heroImage"))
+                    if image:
+                        protected_images.add(image)
+            owners = {f"{kind}/{int(item['tmdbId'])}" for kind, item in removed if item.get("tmdbId")}
+            unused = owners - active
+            candidates = {self.profile_image(item.get("heroImage")) for _, item in removed}
+            candidates.discard(None)
+            # Upgrade ownership information for caches created before index.json existed.
+            for owner in unused | active | set(self.jobs):
+                self._legacy_metadata(owner)
+            for owner in unused:
+                self.generations[owner] = self.generations.get(owner, 0) + 1
+                job = self.jobs.pop(owner, {})
+                candidates.update(job.get("images", []))
+            self._save_jobs()
+            deleted_metadata = []
+            for filename, entry in self.index.items():
+                if entry.get("owner") in unused:
+                    candidates.update(entry.get("images", []))
+                    deleted_metadata.append(filename)
+                elif entry.get("owner") is not None:
+                    protected_images.update(entry.get("images", []))
+            # Unknown legacy files are retained conservatively, including their images.
+            for target in (self.root / "metadata").glob("*.json"):
+                if target.name not in self.index:
+                    data = json.loads(target.read_text())
+                    if isinstance(data.get("results"), list):
+                        self._index_metadata(target.name, None, data)
+                    else:
+                        protected_images.update(self._images_in(data))
+            for job in self.jobs.values():
+                protected_images.update(job.get("images", []))
+            for filename in deleted_metadata:
+                if re.fullmatch(r"[a-f0-9]{64}\.json", filename):
+                    (self.root / "metadata" / filename).unlink(missing_ok=True)
+                del self.index[filename]
+            count = 0
+            for path in candidates - protected_images:
+                if IMAGE_RE.fullmatch(path):
+                    self.generations["image:" + path] = self.generations.get("image:" + path, 0) + 1
+                    target = self.root / "images" / path.lstrip("/")
+                    if target.is_file():
+                        target.unlink()
+                        count += 1
+            atomic_write(self.root / "index.json", json.dumps(self.index).encode())
+            return {"metadata": len(deleted_metadata), "images": count}
 
     def status(self):
         with self.jobs_lock:

@@ -331,3 +331,24 @@ entorno habituales. Nunca se guardan en los JSON de la caché. Copiar toda la ca
 Los endpoints de imágenes siguen la [documentación de TMDB](https://developer.themoviedb.org/docs/image-basics).
 
 Pruebas: `python3 -m unittest discover -s DeviceApp/tests` (requiere Flask).
+
+
+### Limpieza al eliminar películas y series
+
+Al borrar una película o una serie completa desde la web, se eliminan también sus
+JSON e imágenes exclusivas de TMDB y su trabajo en la cola. Si hay otra copia del
+mismo título, se conserva la caché hasta eliminar la última. Las imágenes referenciadas
+por otras fichas o por portadas personalizadas del catálogo también se conservan.
+Borrar una carpeta de películas elimina las entradas de sus archivos descendientes.
+Eliminar solo una temporada o episodio mantiene la caché de la serie.
+
+`TmdbCache/index.json` relaciona cada archivo de metadatos con `movie/<id>` o `tv/<id>`
+y con las imágenes que ha referenciado. Las cachés anteriores se identifican usando
+sus rutas y parámetros originales, sin volver a descargarlas. Los archivos antiguos
+que no se pueden identificar se conservan por precaución. Los resultados de búsqueda
+no impiden eliminar las imágenes exclusivas de un título.
+
+Las descargas activas se cancelan mediante una generación por título: sus respuestas
+pendientes no pueden volver a guardar datos después de la limpieza. Si falla la
+limpieza en disco, se conserva la entrada del catálogo para que se pueda reintentar
+el borrado, incluso si el vídeo ya se eliminó.

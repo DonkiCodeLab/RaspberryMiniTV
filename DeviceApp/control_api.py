@@ -484,25 +484,24 @@ def refresh_series_metadata_from_disk(relative_path):
 
 
 def remove_movie_metadata(relative_path):
-    safe_relative_path = str(relative_path or "").strip()
-    if not safe_relative_path:
-        return
-
-    items = load_movie_library()
-    if safe_relative_path in items:
-        del items[safe_relative_path]
-        save_movie_library(items)
+    return remove_catalog_metadata("movies", "movie", relative_path)
 
 
 def remove_series_metadata(relative_path):
-    safe_relative_path = str(relative_path or "").strip()
-    if not safe_relative_path:
-        return
+    return remove_catalog_metadata("series", "tv", relative_path)
 
+
+def remove_catalog_metadata(collection, kind, relative_path):
+    safe_path = str(relative_path or "").strip().rstrip("/")
+    if not safe_path:
+        return
     library = load_media_library()
-    series_items = library.setdefault("series", {})
-    if safe_relative_path in series_items:
-        del series_items[safe_relative_path]
+    items = library.setdefault(collection, {})
+    paths = [path for path in items if path == safe_path or path.startswith(safe_path + "/")]
+    removed = [(kind, items.pop(path)) for path in paths]
+    if removed:
+        # Retain metadata on a cleanup failure so a repeated DELETE can retry safely.
+        tmdb_artwork.remove_unused(removed, library)
         save_media_library(library)
 
 
