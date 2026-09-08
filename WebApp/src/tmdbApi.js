@@ -1,3 +1,4 @@
+import { getCachedTmdbJson, isMockMode, localTmdbImageUrl } from "./api/raspberryApi";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 const TMDB_ENGLISH_FALLBACK_LANGUAGE = "en-US";
@@ -234,6 +235,7 @@ function createTmdbRequest(path, { language, query = {} } = {}) {
 }
 
 async function fetchTmdbJson(path, { language, query } = {}) {
+  if (!isMockMode()) return getCachedTmdbJson(path, { language, query });
   const { url, headers } = createTmdbRequest(path, { language, query });
   const response = await fetch(url, { method: "GET", headers });
 
@@ -247,7 +249,7 @@ async function fetchTmdbJson(path, { language, query } = {}) {
 
 export function buildTmdbImageUrl(path, size = "w500") {
   if (!path) return null;
-  return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
+  return localTmdbImageUrl(`${TMDB_IMAGE_BASE_URL}/${size}${path}`);
 }
 
 function getKnownSeriesMatch(...values) {

@@ -5939,3 +5939,14 @@ img {
   bottom: calc((var(--series-controls-band-height) - var(--series-controls-item-size)) / 2);
 }
 .console-library.seasons-section { margin-top: 1.5rem; }
+
+.tmdb-cache-panel {
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  margin-top: 20px;
+  padding-top: 16px;
+  overflow-wrap: anywhere;
+}
+.tmdb-cache-panel p { line-height: 1.5; }
+.tmdb-cache-panel progress { width: 100%; accent-color: #ffd90f; }
+.tmdb-cache-panel details { margin-top: 12px; }
+.tmdb-cache-panel details ul { max-height: 240px; overflow-y: auto; }

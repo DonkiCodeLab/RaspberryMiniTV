@@ -1,3 +1,5 @@
+import TmdbCachePanel from "./TmdbCachePanel";
+import { localTmdbImageUrl } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
 import { MEDIA_MARKS_KEY, mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason, loadMediaMarks } from "./mediaMarks.js";
@@ -109,10 +111,10 @@ import {
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
+import { getRaspberryMovieLibraryItems, getMovieTmdbId, loadMovieDetails } from "./movieCatalog";
 import {
   loadMediaLibrary,
   removeMediaLibraryItem,
-  saveMediaLibrary,
   upsertMediaLibraryItem,
 } from "./mediaLibrary";
 import {
@@ -1577,60 +1579,6 @@ async function readFilesFromDataTransfer(dataTransfer) {
   return Array.from(dataTransfer?.files || []);
 }
 
-function getRaspberryMovieLibraryItems(videos) {
-  const rootFiles = Array.isArray(videos?.movieRootFiles) ? videos.movieRootFiles : [];
-  const directoryBuckets = Array.isArray(videos?.movieDirectories) ? videos.movieDirectories : [];
-  const entries = [
-    ...rootFiles,
-    ...directoryBuckets.flatMap((bucket) => (Array.isArray(bucket?.videos) ? bucket.videos : [])),
-  ];
-
-  return entries
-    .map((entry) => {
-      const id = Number(entry?.tmdbId) || 0;
-      const fileRelativePath = String(entry?.relativePath || "").trim();
-      const fileName = String(entry?.file || "").trim();
-      const name = String(entry?.name || stripFileExtension(fileName)).trim();
-
-      return id && name && fileRelativePath
-        ? {
-            id,
-            name,
-            fileRelativePath,
-            fileName,
-          }
-        : null;
-    })
-    .filter(Boolean);
-}
-
-function mergeMediaLibraryItems(currentItems, incomingItems) {
-  const nextItems = Array.isArray(currentItems) ? [...currentItems] : [];
-  let changed = false;
-
-  incomingItems.forEach((incomingItem) => {
-    const existingIndex = nextItems.findIndex((item) => Number(item.id) === Number(incomingItem.id));
-    if (existingIndex < 0) {
-      nextItems.push(incomingItem);
-      changed = true;
-      return;
-    }
-
-    const existingItem = nextItems[existingIndex];
-    const mergedItem = {
-      ...existingItem,
-      ...incomingItem,
-      name: existingItem.name || incomingItem.name,
-    };
-    if (JSON.stringify(existingItem) !== JSON.stringify(mergedItem)) {
-      nextItems[existingIndex] = mergedItem;
-      changed = true;
-    }
-  });
-
-  return changed ? nextItems : currentItems;
-}
-
 function getRaspberryProfiles(videos, collectionType) {
   const libraryItems = videos?.mediaLibrary?.[collectionType];
   if (!libraryItems || typeof libraryItems !== "object") return {};
@@ -1639,7 +1587,7 @@ function getRaspberryProfiles(videos, collectionType) {
     if (!item || typeof item !== "object") return profiles;
     const profileKey =
       collectionType === "movies"
-        ? String(Number(item.tmdbId) || "").trim()
+        ? String(item.relativePath || Number(item.tmdbId) || "").trim()
         : String(item.relativePath || "").trim();
     if (!profileKey) return profiles;
 
@@ -5272,6 +5220,7 @@ function RaspberryPage({
               {tmdbSettingsStatus ? (
                 <span className="raspberry-tmdb-card__status">{tmdbSettingsStatus}</span>
               ) : null}
+              <TmdbCachePanel language={raspberryLanguage} />
             </article>
           </section>
         </div>
@@ -5909,7 +5858,7 @@ export default function App() {
   const [seasonHeroImage, setSeasonHeroImage] = useState("");
   const [seriesProfiles, setSeriesProfiles] = useState(() => loadSeriesProfiles("series"));
   const [movieProfiles, setMovieProfiles] = useState(() => loadSeriesProfiles("movies"));
-  const [movieLibrary, setMovieLibrary] = useState(() => loadMediaLibrary("movies"));
+  const [movieLibrary, setMovieLibrary] = useState(() => mockMode ? loadMediaLibrary("movies") : []);
   const [tmdbSeriesMap, setTmdbSeriesMap] = useState({});
   const [tmdbMovieMap, setTmdbMovieMap] = useState({});
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -6233,17 +6182,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const raspberryMovies = getRaspberryMovieLibraryItems(videos);
-    if (!raspberryMovies.length) return;
-
-    setMovieLibrary((currentLibrary) => {
-      const nextLibrary = mergeMediaLibraryItems(currentLibrary, raspberryMovies);
-      if (nextLibrary !== currentLibrary) {
-        saveMediaLibrary("movies", nextLibrary);
-      }
-      return nextLibrary;
-    });
-  }, [videos]);
+    if (!videos || mockMode) return;
+    // Replace the snapshot, including an empty library after the last deletion.
+    // Keep legacy browser data untouched; it is no longer the live catalog.
+    setMovieLibrary(getRaspberryMovieLibraryItems(videos));
+  }, [videos, mockMode]);
 
   useEffect(() => {
     const raspberrySeriesProfiles = getRaspberryProfiles(videos, "series");
@@ -6461,29 +6404,8 @@ export default function App() {
       setError("");
 
       try {
-        const entries = await Promise.all(
-          movieLibrary.map(async (movie) => {
-            const profile = movieProfiles[String(movie.id)] || {};
-            const tmdbMovie = await getMovieById(movie.id, tmdbLanguage);
-
-            return [
-              String(movie.id),
-              {
-                ...tmdbMovie,
-                key: String(movie.id),
-                name: profile.name || tmdbMovie?.name || movie.name,
-                heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
-                heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
-                imdbUrl: String(profile.imdbUrl || tmdbMovie?.imdbUrl || "").trim(),
-                rottenTomatoesUrl: String(profile.rottenTomatoesUrl || tmdbMovie?.rottenTomatoesUrl || "").trim(),
-              },
-            ];
-          })
-        );
-
-        if (!cancelled) {
-          setTmdbMovieMap(Object.fromEntries(entries));
-        }
+        const details = await loadMovieDetails(movieLibrary, getMovieById, tmdbLanguage);
+        if (!cancelled) setTmdbMovieMap(details);
       } catch (nextError) {
         if (!cancelled) {
           setError(nextError.message || "No se pudo cargar TMDB.");
@@ -6499,7 +6421,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [movieLibrary, movieProfiles]);
+  }, [movieLibrary, tmdbLanguage]);
 
   const seriesOptions = useMemo(() => {
     return directories.map((directory) => {
@@ -6511,7 +6433,7 @@ export default function App() {
         id: tmdbSeries?.id || null,
         directoryPath: directory.relativePath,
         name: profile.name || tmdbSeries?.name || directory.name,
-        heroImage: profile.heroImage || tmdbSeries?.heroImage || cartellLogo,
+        heroImage: localTmdbImageUrl(profile.heroImage) || tmdbSeries?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
         imageOptions: tmdbSeries?.imageOptions || [],
         firstAirDate: tmdbSeries?.firstAirDate || "",
@@ -6527,16 +6449,17 @@ export default function App() {
   const movieOptions = useMemo(() => {
     return movieLibrary.map((movie) => {
       const tmdbMovie = tmdbMovieMap[String(movie.id)] || null;
-      const profile = movieProfiles[String(movie.id)] || {};
+      const profile = movieProfiles[String(movie.id)] || movieProfiles[String(getMovieTmdbId(movie))] || {};
 
       return {
         key: String(movie.id),
-        id: Number(movie.id),
+        id: movie.id,
+        tmdbId: getMovieTmdbId(movie),
         name: profile.name || tmdbMovie?.name || movie.name,
         fileRelativePath: movie.fileRelativePath || "",
         fileName: movie.fileName || "",
         originalName: tmdbMovie?.originalName || "",
-        heroImage: profile.heroImage || tmdbMovie?.heroImage || cartellLogo,
+        heroImage: localTmdbImageUrl(profile.heroImage) || tmdbMovie?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
         imdbUrl: normalizeImdbUrl(profile.imdbUrl || tmdbMovie?.imdbUrl),
         rottenTomatoesUrl: normalizeRottenTomatoesUrl(profile.rottenTomatoesUrl || tmdbMovie?.rottenTomatoesUrl),
@@ -6563,7 +6486,7 @@ export default function App() {
   const selectedMovie =
     selectedMovieId == null
       ? null
-      : movieOptions.find((movie) => Number(movie.id) === Number(selectedMovieId)) || null;
+      : movieOptions.find((movie) => String(movie.id) === String(selectedMovieId)) || null;
 
   useEffect(() => {
     if (!raspberryHealth.running) return;
@@ -6912,17 +6835,18 @@ export default function App() {
 
     try {
       if (activeMediaType === "movies") {
-        const nextProfiles = updateSeriesProfile(String(activeItem.id), updates, "movies");
-        setMovieProfiles(nextProfiles);
         const movieEntry = activeItem.fileRelativePath
           ? { relativePath: activeItem.fileRelativePath }
           : resolvePlayableMovieEntry(activeItem);
+        if (!movieEntry?.relativePath && !mockMode) {
+          throw new Error("No se encontró el archivo para guardar la ficha en la Raspberry.");
+        }
         if (movieEntry?.relativePath) {
           await saveMediaProfile({
             collection: "movies",
             relativePath: movieEntry.relativePath,
             name: updates.name || activeItem.name,
-            tmdbId: activeItem.id,
+            tmdbId: getMovieTmdbId(activeItem),
             file: activeItem.fileName || movieEntry.relativePath.split("/").pop() || "",
             heroImage: updates.heroImage,
             heroImageCrop: updates.heroImageCrop,
@@ -6930,6 +6854,8 @@ export default function App() {
             rottenTomatoesUrl: updates.rottenTomatoesUrl,
           });
         }
+        // Only report a saved profile after the Raspberry has accepted it.
+        setMovieProfiles(updateSeriesProfile(String(activeItem.id), updates, "movies"));
       } else {
         const nextProfiles = updateSeriesProfile(activeItem.directoryPath, updates, "series");
         setSeriesProfiles(nextProfiles);
@@ -6986,10 +6912,11 @@ export default function App() {
         if (movieEntry?.relativePath) {
           await removeMovieFile(movieEntry.relativePath);
         }
-        setMovieLibrary(removeMediaLibraryItem("movies", activeItem.id));
+        setMovieLibrary((current) => current.filter((movie) => String(movie.id) !== String(activeItem.id)));
+        if (mockMode) removeMediaLibraryItem("movies", activeItem.id);
         setMovieProfiles(removeSeriesProfile(String(activeItem.id), "movies"));
         setSelectedMovieId((current) =>
-          Number(current) === Number(activeItem.id) ? null : current
+          String(current) === String(activeItem.id) ? null : current
         );
         const nextVideos = await getVideos();
         setVideos(nextVideos);
@@ -7401,7 +7328,7 @@ export default function App() {
   }
 
   function handleOpenMovieDetails(movieId) {
-    setSelectedMovieId(Number(movieId));
+    setSelectedMovieId(movieId);
     setMediaFilterOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -7502,8 +7429,8 @@ export default function App() {
         );
         await new Promise((resolve) => window.setTimeout(resolve, 700));
       }
-      setMovieLibrary(nextLibrary);
-      setSelectedMovieId(selectedSeriesResult.id);
+      if (mockMode) setMovieLibrary(nextLibrary);
+      setSelectedMovieId(uploadedMovie?.item?.relativePath || selectedSeriesResult.id);
       setAddSeriesOpen(false);
       setUploadLookupOpen(false);
       setUploadSelectedFiles([]);

@@ -1,4 +1,5 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
+from tmdb_cache import TmdbCache
 import json
 import io
 import os
@@ -396,6 +397,7 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
     }
     items[safe_relative_path] = item
     save_movie_library(items)
+    queue_tmdb_artwork('movie', item)
     return item
 
 
@@ -426,6 +428,7 @@ def upsert_series_metadata(relative_path, updates):
         item["heroImageCrop"] = updates.get("heroImageCrop") if isinstance(updates.get("heroImageCrop"), dict) else None
     series_items[safe_relative_path] = item
     save_media_library(library)
+    queue_tmdb_artwork('tv', item, refresh="episodes" in updates)
     return item
 
 
@@ -712,6 +715,7 @@ def upsert_media_profile(collection, key, updates):
 
     collection_items[safe_key] = item
     save_media_library(library)
+    queue_tmdb_artwork(("movie" if safe_collection == "movies" else "tv"), item)
     return item
 
 
@@ -836,6 +840,8 @@ def is_public_frontend_request():
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
     if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content"} and not submitted_pin:
+        submitted_pin = str(request.args.get("pin") or "").strip()
+    if request.path.startswith("/tmdb/images/") and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -2267,6 +2273,7 @@ def create_series():
         "relativePath": join_video_relative_path("TVShows", slug),
         "tmdbId": tmdb_id,
     }
+    upsert_series_metadata(item["relativePath"], item)
     return jsonify({"ok": True, "item": item})
 
 
@@ -2960,20 +2967,27 @@ def save_media_profile():
     if not media_path:
         return jsonify({"error": "Invalid media path"}), 400
 
-    item = upsert_media_profile(
-        collection,
-        relative_path,
-        {
-            "name": data.get("name"),
-            "tmdbId": data.get("tmdbId"),
-            "file": data.get("file"),
-            "heroImage": data.get("heroImage"),
-            "heroImageCrop": data.get("heroImageCrop"),
-            "imdbUrl": data.get("imdbUrl"),
-            "rottenTomatoesUrl": data.get("rottenTomatoesUrl"),
-        },
-    )
+    fields = ("name", "tmdbId", "file", "heroImage", "heroImageCrop", "imdbUrl", "rottenTomatoesUrl")
+    item = upsert_media_profile(collection, relative_path, {key: data[key] for key in fields if key in data})
     return jsonify({"ok": True, "item": item})
+
+
+@app.route("/movies/browser-backup", methods=["POST"])
+def backup_browser_movie_library():
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict) or not isinstance(data.get("library"), list) or not isinstance(data.get("profiles"), dict):
+        return jsonify({"error": "Invalid browser movie library"}), 400
+    payload = json.dumps({"library": data["library"], "profiles": data["profiles"]}, ensure_ascii=False, sort_keys=True)
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    backup_dir = os.path.join(MULTIMEDIA_DIR, "Recovery")
+    os.makedirs(backup_dir, exist_ok=True)
+    backup_path = os.path.join(backup_dir, f"browser-movies-{digest}.json")
+    try:
+        with open(backup_path, "x", encoding="utf-8") as handle:
+            handle.write(payload)
+    except FileExistsError:
+        pass
+    return jsonify({"ok": True, "backup": os.path.basename(backup_path), "movies": len(data["library"]), "profiles": len(data["profiles"])})
 
 
 @app.route("/movies", methods=["DELETE"])
@@ -3263,6 +3277,64 @@ def update_weather_settings():
     return jsonify({"ok": True, "location": saved_settings["weather_location"], "details": details})
 
 
+def tmdb_credentials():
+    settings = load_settings()
+    return {
+        "apiKey": settings.get("tmdb_api_key") or os.environ.get("TMDB_API_KEY", "") or os.environ.get("VITE_TMDB_API_KEY", ""),
+        "bearerToken": settings.get("tmdb_bearer_token") or os.environ.get("TMDB_BEARER_TOKEN", "") or os.environ.get("VITE_TMDB_BEARER_TOKEN", ""),
+    }
+
+
+tmdb_artwork = TmdbCache(os.path.join(MULTIMEDIA_DIR, "TmdbCache"), tmdb_credentials)
+
+
+def queue_tmdb_artwork(kind, item, refresh=False):
+    # A disk/network failure in artwork must not turn a successful video upload into a failure.
+    try:
+        tmdb_artwork.enqueue(kind, item.get("tmdbId"), item.get("heroImage", ""), refresh=refresh)
+    except Exception:
+        app.logger.exception("No se pudo encolar la descarga de imágenes TMDB")
+
+
+@app.route("/tmdb/json/<path:tmdb_path>", methods=["GET"])
+def cached_tmdb_json(tmdb_path):
+    try:
+        return jsonify(tmdb_artwork.json("/" + tmdb_path, request.args.to_dict()))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception:
+        return jsonify({"error": "No se pudo obtener la ficha local/TMDB. Revisa conexión y credenciales."}), 502
+
+
+@app.route("/tmdb/images/<filename>", methods=["GET"])
+def cached_tmdb_image(filename):
+    try:
+        path = tmdb_artwork.image("/" + filename)
+        return send_file(path, max_age=31536000, conditional=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception:
+        return jsonify({"error": "No se pudo descargar la imagen de TMDB"}), 502
+
+
+def tmdb_missing_ids():
+    library = load_media_library()
+    return [path for collection in ("movies", "series")
+            for path, item in library.get(collection, {}).items()
+            if not item.get("tmdbId")]
+
+
+@app.route("/tmdb/cache", methods=["GET", "POST"])
+def tmdb_cache_status():
+    if request.method == "POST":
+        library = load_media_library()
+        for collection, kind in (("movies", "movie"), ("series", "tv")):
+            for item in library.get(collection, {}).values():
+                queue_tmdb_artwork(kind, item)
+    tmdb_artwork.start()
+    return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids()})
+
+
 @app.route("/settings/tmdb", methods=["GET"])
 def get_tmdb_settings():
     settings = load_settings()
@@ -3339,4 +3411,5 @@ def health():
 
 if __name__ == "__main__":
     ensure_media_directories()
+    tmdb_artwork.start()
     app.run(host="0.0.0.0", port=PORT)

@@ -1501,3 +1501,28 @@ export async function gameSystemArtwork(systemId, file, reset = false) {
   if (result.image?.startsWith('/')) result.image = `${getBaseUrl()}${result.image}`;
   return result;
 }
+
+// TMDB requests go through the Raspberry's persistent cache in connected mode.
+export function getCachedTmdbJson(path, { language, query = {} } = {}) {
+  const params = new URLSearchParams();
+  if (language) params.set("language", language);
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+  });
+  return request(`/tmdb/json${path}?${params}`);
+}
+
+export function getTmdbCacheStatus(start = false) {
+  if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para descargar el catálogo."));
+  return request("/tmdb/cache", start ? { method: "POST" } : {});
+}
+
+export function localTmdbImageUrl(value) {
+  if (!value || isMockModeEnabled()) return value;
+  const remote = String(value).match(/^https:\/\/image\.tmdb\.org\/t\/p\/[^/]+(\/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg))$/);
+  const local = String(value).match(/\/tmdb\/images(\/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg))(?:\?.*)?$/);
+  const path = remote?.[1] || local?.[1];
+  if (!path) return value;
+  const params = new URLSearchParams({ pin: getStoredWebPin() });
+  return `${getBaseUrl()}/tmdb/images${path}?${params}`;
+}

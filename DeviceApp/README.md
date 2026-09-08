@@ -279,3 +279,55 @@ Nota importante:
 
 - `minitv-menu.service` ahora queda gestionado como un proceso normal de `systemd`, asi que `stop`, `start`, `restart` y `status` son bastante mas fiables para depurar bloqueos.
 - Si alguna vez usas `start_with_splash.sh`, ese script pinta una imagen encima de la consola con `fbi`. Para depurar, no lo uses o mata `fbi` con `sudo pkill fbi`.
+
+### TMDB local y migración del catálogo
+
+La API guarda los JSON y las imágenes de TMDB en `MultimediaContent/TmdbCache/`
+(en el disco de la Raspberry, compartidos por todos los navegadores). La web conectada
+consulta esta caché; solo se contacta con TMDB cuando falta un recurso. El modo mock
+sigue usando TMDB directamente.
+
+Al crear una serie, subir películas/episodios o asociar una ficha se encola su descarga
+sin bloquear la subida del vídeo. Se guardan las fichas en español, catalán e inglés,
+los carteles, fondos y logos de todos los idiomas, carteles de temporadas e imágenes
+de episodios, incluidos especiales y variantes. Las imágenes se guardan a tamaño
+original, una sola vez por nombre de archivo TMDB. Esto puede ocupar bastante espacio
+para series largas; está incluido en el uso de disco de MultimediaContent.
+
+Para el catálogo existente:
+
+1. Instalar esta versión en la Raspberry y reiniciar `minitv-api.service` con la web
+   compilada (`cd WebApp && npm run build`). No basta con actualizar solo la web.
+2. Abrir los ajustes de la Raspberry en la web y comprobar las credenciales de TMDB.
+3. En **Contenido TMDB en local**, pulsar **Descargar catálogo / reintentar pendientes**.
+4. Consultar completados, pendientes y errores. Puede cerrarse el navegador: la cola
+   sigue en la API. Al reiniciar el servicio, los trabajos interrumpidos se retoman.
+5. Los títulos sin ID aparecen en una lista; asociarlos a su ficha TMDB desde la web
+   y repetir. No se asignan resultados por similitud de nombres automáticamente.
+
+La migración es idempotente: repetirla omite trabajos completos y reintenta fallidos,
+reutilizando los archivos ya descargados. Un error parcial nunca se marca completado.
+La cola se persiste en `jobs.json`, los archivos se publican mediante reemplazo atómico
+y las descargas tienen tiempo límite y reintentos para errores transitorios/429.
+No se borran vídeos, perfiles ni imágenes al migrar. Los trabajos se deduplican por
+ID TMDB, aunque haya varios archivos de vídeo para una misma película.
+
+Al subir nuevos episodios se actualizan las fichas de esa serie para descubrir nuevas
+temporadas e imágenes; los gráficos existentes no se vuelven a descargar. Durante la
+navegación normal las fichas no caducan. Las búsquedas nuevas necesitan conexión;
+las fichas e imágenes ya almacenadas se sirven sin conexión a TMDB. Enlaces externos
+como IMDb, Rotten Tomatoes o su resolución mediante Wikidata conservan su comportamiento.
+
+API autenticada con el PIN habitual:
+
+- `GET /tmdb/cache`: progreso, errores e identificadores pendientes de asignar.
+- `POST /tmdb/cache`: encolar catálogo/reintentar fallidos.
+- `GET /tmdb/json/<ruta>`: JSON persistente de búsquedas/fichas permitidas.
+- `GET /tmdb/images/<archivo>?pin=...`: imagen local (la descarga si falta).
+
+Las credenciales de TMDB las obtiene el servidor de sus ajustes o de las variables de
+entorno habituales. Nunca se guardan en los JSON de la caché. Copiar toda la carpeta
+`TmdbCache` junto al contenido multimedia para conservarla en las copias de seguridad.
+Los endpoints de imágenes siguen la [documentación de TMDB](https://developer.themoviedb.org/docs/image-basics).
+
+Pruebas: `python3 -m unittest discover -s DeviceApp/tests` (requiere Flask).

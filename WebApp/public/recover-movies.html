@@ -1,0 +1,14 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Recuperar fichas de películas</title>
+<style>body{font:18px system-ui;max-width:720px;margin:60px auto;padding:24px;background:#161616;color:#fff}button{padding:16px;font:inherit}pre{white-space:pre-wrap}</style>
+<h1>Recuperar fichas de películas</h1><p>Guarda una copia de las fichas conservadas en este navegador en tu Raspberry. No modifica ni borra los datos originales.</p>
+<pre id="status"></pre><button id="backup">Guardar copia en la Raspberry</button>
+<script type="module">
+const library=JSON.parse(localStorage.getItem('minitv-web-media-library-v1:movies')||'[]');
+const profiles=JSON.parse(localStorage.getItem('minitv-web-media-profiles-v1:movies')||'{}');
+const status=document.querySelector('#status');status.textContent=`Películas conservadas: ${library.length}\nFichas conservadas: ${Object.keys(profiles).length}`;
+document.querySelector('#backup').onclick=async()=>{try{
+const pin=sessionStorage.getItem('minitv-web-pin')||prompt('PIN de la Raspberry');
+const r=await fetch('/movies/browser-backup',{method:'POST',headers:{'Content-Type':'application/json','X-Web-Pin':pin},body:JSON.stringify({library,profiles})});
+const d=await r.json();if(!r.ok)throw Error(d.error);status.textContent+=`\nCopia guardada: ${d.backup}`;
+}catch(e){status.textContent+=`\nError: ${e.message}`;}};
+</script></html>
