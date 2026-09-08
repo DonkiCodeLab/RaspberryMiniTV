@@ -5577,15 +5577,15 @@ function BookCover({ book }) {
 function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onSelect, onOpen, onEdit, onDelete, renderMarks }) {
   const visibleBooks = books.filter((book) => {
     const collectionKey = book.collection || `__book__${book.relativePath}`;
-    return collectionKey === selectedCollection;
+    return !selectedCollection || collectionKey === selectedCollection;
   });
   return (
     <section className="books-library seasons-section">
+      <div className="seasons-section__label">{countLabel}</div>
       {!visibleBooks.length ? (
         <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
       ) : (
         <>
-          <div className="seasons-section__label">{countLabel}</div>
           <div className="books-library__grid">
             {visibleBooks.map((book) => (
               <article
@@ -5836,14 +5836,14 @@ function BookReader({ book, onClose }) {
   );
 }
 
-function PicturesLibrary({ pictures, onUpload, t }) {
+function PicturesLibrary({ pictures, onUpload, t, countLabel }) {
   const [openPicture, setOpenPicture] = useState(null);
   return (
     <section className="pictures-library seasons-section" aria-label={t("media_pictures")}>
+      <div className="seasons-section__label">{countLabel}</div>
       <div className="pictures-library__header">
         <div>
           <h1>{t("media_pictures")}</h1>
-          <p>{pictures.length} {pictures.length === 1 ? "foto" : "fotos"}</p>
         </div>
         <button className="dialog-button dialog-button--accent" type="button" onClick={onUpload}>+ {t("upload_pictures")}</button>
       </div>
@@ -6158,9 +6158,6 @@ export default function App() {
         setWeatherLocation(String(nextWeatherSettings?.location || ""));
         setWeatherLocationDetails(nextWeatherSettings?.details || null);
         setBirthdays(Array.isArray(nextBirthdays?.birthdays) ? nextBirthdays.birthdays : []);
-
-        const firstDirectory = nextVideos?.directories?.[0]?.relativePath || "";
-        setSelectedDirectoryPath((current) => current || firstDirectory);
       } catch (nextError) {
         if (cancelled) return;
         if (nextError?.status === 401) {
@@ -6352,9 +6349,8 @@ export default function App() {
   const consoleGames = gameLibrary.filter(game => systemForGame(game)?.id === selectedSystemId);
   const selectedGame =
     consoleGames.find((game) => game.relativePath === selectedGamePath) ||
-    consoleGames[0] ||
     null;
-  const selectedBook = bookLibrary.find((book) => book.relativePath === selectedBookPath) || bookLibrary[0] || null;
+  const selectedBook = bookLibrary.find((book) => book.relativePath === selectedBookPath) || null;
   const bookCollections = useMemo(() => {
     const groups = new Map();
     const profiles = videos?.bookCollections || {};
@@ -6381,7 +6377,7 @@ export default function App() {
 
   useEffect(() => {
     if (!bookLibrary.length) setSelectedBookPath("");
-    else if (!bookLibrary.some((book) => book.relativePath === selectedBookPath)) setSelectedBookPath(bookLibrary[0].relativePath);
+    else if (!bookLibrary.some((book) => book.relativePath === selectedBookPath)) setSelectedBookPath("");
   }, [bookLibrary, selectedBookPath]);
 
   useEffect(() => {
@@ -6390,7 +6386,7 @@ export default function App() {
       return;
     }
     if (!gameLibrary.some((game) => game.relativePath === selectedGamePath)) {
-      setSelectedGamePath(gameLibrary[0].relativePath || "");
+      setSelectedGamePath("");
     }
   }, [gameLibrary, selectedGamePath]);
 
@@ -6858,6 +6854,8 @@ export default function App() {
     setActiveMediaType(nextType);
     if (nextType === "movies") setSelectedMovieId(null);
     if (nextType === "series") setSelectedDirectoryPath("");
+    if (nextType === "books") setSelectedBookPath("");
+    if (nextType === "games") setSelectedGamePath("");
     setMediaFilterOpen(false);
     setCurrentView("series");
     setSeasonEpisodes(null);
@@ -7001,7 +6999,7 @@ export default function App() {
         setSeriesProfiles(nextProfiles);
         const nextVideos = await getVideos();
         setVideos(nextVideos);
-        setSelectedDirectoryPath(nextVideos?.directories?.[0]?.relativePath || "");
+        setSelectedDirectoryPath("");
       }
       setSettingsOpen(false);
     } catch (nextError) {
@@ -7108,8 +7106,7 @@ export default function App() {
       setVideos(nextVideos);
       setSelectedGamePath((current) => {
         if (current !== game.relativePath) return current;
-        const nextGames = Array.isArray(nextVideos?.games) ? nextVideos.games : [];
-        return nextGames[0]?.relativePath || "";
+        return "";
       });
     } catch (nextError) {
       window.alert(nextError.message || t("delete_media_failed", { media: t("media_games_singular").toLowerCase() }));
@@ -8277,11 +8274,11 @@ export default function App() {
   useEffect(() => {
     if (!mediaFiltersActive) return;
     if (isBooksMode) {
-      if (filteredBooks.length && !filteredBooks.some((book) => book.relativePath === selectedBookPath)) {
+      if (selectedBookPath && filteredBooks.length && !filteredBooks.some((book) => book.relativePath === selectedBookPath)) {
         setSelectedBookPath(filteredBooks[0].relativePath);
       }
     } else if (isGamesMode) {
-      if (filteredGameOptions.length && !filteredGameOptions.some((game) => game.relativePath === selectedGame?.relativePath)) {
+      if (selectedGamePath && filteredGameOptions.length && !filteredGameOptions.some((game) => game.relativePath === selectedGame?.relativePath)) {
         setSelectedGamePath(filteredGameOptions[0].relativePath);
       }
     } else if (isMoviesMode && selectedMovieId != null) {
@@ -8295,17 +8292,6 @@ export default function App() {
   const formatBookCollectionLabel = (collection) => {
     if (!collection) return t("media_books");
     return collection.label;
-  };
-  const formatBookCount = (collection) => {
-    if (!collection) return "";
-    const count = collection.books.length;
-    const language = normalizeRaspberryLanguage(raspberryLanguage);
-    const countLabel = language === "ca"
-      ? `${count} ${count === 1 ? "llibre" : "llibres"}`
-      : language === "en"
-        ? `${count} ${count === 1 ? "book" : "books"}`
-        : `${count} ${count === 1 ? "libro" : "libros"}`;
-    return countLabel;
   };
   const selectorValue = isBooksMode
     ? selectedBookCollection
@@ -8343,16 +8329,18 @@ export default function App() {
         value: isMoviesMode ? String(item.id) : item.directoryPath,
         label: item.name,
       }));
-  const filterTotal = isBooksMode
-    ? bookCollections.length
+  const isMediaDetail = (isSeriesMode && Boolean(selectedSeries)) || (isMoviesMode && Boolean(selectedMovie));
+  const filterTotal = isPicturesMode ? pictureLibrary.length : isBooksMode
+    ? bookLibrary.length
     : isGamesMode
-      ? gameLibrary.length
+      ? consoleGames.length
       : isMoviesMode
         ? movieOptions.length
         : seriesOptions.length;
-  const filterVisible = isBooksMode
-    ? filteredBookCollections.length
+  const filterVisible = isPicturesMode ? pictureLibrary.length : isBooksMode
+    ? filteredBooks.filter(book => !selectedBookCollection || (book.collection || `__book__${book.relativePath}`) === selectedBookCollection).length
     : selectorOptions.length;
+  const libraryCountLabel = `${t("movie_filter_count", { shown: filterVisible, total: filterTotal })} ${t(`media_${activeMediaType}`).toLocaleLowerCase(normalizeRaspberryLanguage(raspberryLanguage))}`;
   const emptyTitle = isMoviesMode ? t("no_movies_available") : t("no_seasons_available");
   const emptyDescription = isMoviesMode
     ? t("add_movie_prompt")
@@ -8708,7 +8696,8 @@ export default function App() {
                 </section>
 
                 {isPicturesMode ? null : isGamesMode ? <GameConsoleCarousel
-                  systemId={selectedSystemId} onSystemChange={setSelectedSystemId}
+                  countLabel={libraryCountLabel}
+                  systemId={selectedSystemId} onSystemChange={(systemId) => { setSelectedSystemId(systemId); setSelectedGamePath(""); }}
                   games={gameLibrary} visibleGames={filteredGameOptions}
                   onFilter={() => setMediaFilterOpen(current => !current)} filterLabel={t("movie_filter_title")}
                   selectedPath={selectedGame?.relativePath || ""}
@@ -8723,14 +8712,25 @@ export default function App() {
                       alt={selectedItem?.name || "Cartell principal"}
                     />
 
-                    {isMoviesMode || isSeriesMode ? (
+                    {isMediaDetail ? (
                       <div className="movie-library__hero-tools">
-                        {(isMoviesMode ? selectedMovie : selectedSeries) ? (
-                          <button type="button" className="movie-library__back" onClick={isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
-                            <span aria-hidden="true">←</span> {t(isMoviesMode ? "movie_library" : "series_library")}
-                          </button>
-                        ) : (
-                          <>
+                        <button type="button" className="movie-library__back" onClick={isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
+                          <span aria-hidden="true">←</span> {t(isMoviesMode ? "movie_library" : "series_library")}
+                        </button>
+                      </div>
+                    ) : null}
+
+                    {!isMediaDetail ? <div className="series-hero__controls-layer">
+                      <div
+                        className="series-hero__controls-backdrop"
+                        aria-hidden="true"
+                        style={{
+                          WebkitMaskImage: `url(${cartellMask})`,
+                          maskImage: `url(${cartellMask})`,
+                        }}
+                      />
+                      {isSeriesMode || isMoviesMode ? (
+                        <div className="movie-library__browse-tools">
                             <label className="movie-library__sort">
                               <span>{t("movie_sort_label")}</span>
                               <select
@@ -8746,26 +8746,6 @@ export default function App() {
                               <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "grid" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("grid") : setSeriesLibraryView("grid")} aria-label={t("movie_view_grid")} title={t("movie_view_grid")}>▦</button>
                               <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "list" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("list") : setSeriesLibraryView("list")} aria-label={t("movie_view_list")} title={t("movie_view_list")}>☰</button>
                             </div>
-                          </>
-                        )}
-                      </div>
-                    ) : null}
-
-                    <div className="series-hero__controls-layer">
-                      <div
-                        className="series-hero__controls-backdrop"
-                        aria-hidden="true"
-                        style={{
-                          WebkitMaskImage: `url(${cartellMask})`,
-                          maskImage: `url(${cartellMask})`,
-                        }}
-                      />
-                      {filterTotal ? (
-                        <div className="movie-filter__count">
-                          {t("movie_filter_count", {
-                            shown: filterVisible,
-                            total: filterTotal,
-                          })}
                         </div>
                       ) : null}
                       <div
@@ -8826,11 +8806,11 @@ export default function App() {
                           }
                         />
                       </div>
-                    </div>
+                    </div> : null}
 
                     {hasSettingsButton ? (
                       <button
-                        className="series-icon-button series-icon-button--hero series-icon-button--hero-settings"
+                        className={`series-icon-button series-icon-button--hero series-icon-button--hero-settings${isMediaDetail ? " series-icon-button--detail-settings" : ""}`}
                         onClick={handleOpenCustomization}
                         type="button"
                         aria-label={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.key.startsWith("__book__") ? "libro" : "colección"}`}
@@ -8856,7 +8836,7 @@ export default function App() {
                   </div>
                 </header>}
 
-                {filterTotal && mediaFilterOpen ? (
+                {!isMediaDetail && filterTotal > 0 && mediaFilterOpen ? (
                   <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
@@ -8898,16 +8878,19 @@ export default function App() {
 
                 {filterVisible > 0 && isSeriesMode && selectedSeries ? renderMarks("series", selectedSeries.id || selectedSeries.directoryPath, false) : null}
                 {isPicturesMode ? (
-                  <PicturesLibrary pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
+                  <PicturesLibrary countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
                 ) : mediaFiltersActive && !filterVisible ? (
-                  <section className="empty-state"><div className="empty-state__card"><p>{t("movie_filter_no_results")}</p></div></section>
+                  <section className="empty-state seasons-section">
+                    {!isMediaDetail && !isGamesMode ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}
+                    <div className="empty-state__card"><p>{t("movie_filter_no_results")}</p></div>
+                  </section>
                 ) : isBooksMode ? (
                   <BooksLibrary
                     renderMarks={(book) => renderMarks("book", book.relativePath)}
                     books={filteredBooks}
                     selectedCollection={selectedBookCollection}
                     selectedPath={selectedBookPath}
-                    countLabel={formatBookCount(filteredBookCollections.find((collection) => collection.key === selectedBookCollection))}
+                    countLabel={libraryCountLabel}
                     onSelect={setSelectedBookPath}
                     onOpen={setBookOpenTarget}
                     onEdit={setBookMetadataTarget}
@@ -9040,7 +9023,8 @@ export default function App() {
                     </section>
                   ) : null
                 ) : isLibraryEmpty ? (
-                  <section className="empty-state">
+                  <section className="empty-state seasons-section">
+                    {!isMediaDetail ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}
                     <div className="empty-state__card empty-state__card--library">
                       <h2>{emptyTitle}</h2>
                       <img
@@ -9071,7 +9055,7 @@ export default function App() {
                   </section>
                 ) : isSeriesMode && !selectedSeries ? (
                   <section className="movie-library seasons-section">
-                    <div className="seasons-section__label">{t("series_library")}</div>
+                    <div className="seasons-section__label">{libraryCountLabel}</div>
                     <div className={`movie-library__items movie-library__items--${seriesLibraryView}`}>
                       {filteredSeriesOptions.map((series) => {
                         const poster = series.imageOptions?.[1] || series.heroImage || cartellLogo;
@@ -9123,7 +9107,7 @@ export default function App() {
                   </section>
                 ) : isMoviesMode && !selectedMovie ? (
                   <section className="movie-library seasons-section">
-                    <div className="seasons-section__label">{t("movie_library")}</div>
+                    <div className="seasons-section__label">{libraryCountLabel}</div>
                     <div className={`movie-library__items movie-library__items--${movieLibraryView}`}>
                       {filteredMovieOptions.map((movie) => {
                         const downloadUrl = getMovieDownloadUrl(movie);

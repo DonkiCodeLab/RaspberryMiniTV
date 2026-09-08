@@ -5920,3 +5920,22 @@ img {
   .media-switch__option { flex-direction: column; gap: 5px; padding: 8px 4px; font-size: 11px; }
   .media-switch__icon { width: 20px; height: 20px; }
 }
+
+/* Library controls sit just above the selector; detail artwork stays clear. */
+.movie-library__browse-tools {
+  position: absolute;
+  left: 1.25%;
+  bottom: calc(var(--series-controls-band-height) + 0.55rem);
+  max-width: calc(var(--series-visible-width) - 2.5%);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  pointer-events: auto;
+  z-index: 3;
+}
+.series-icon-button--hero-settings.series-icon-button--detail-settings {
+  top: auto;
+  bottom: calc((var(--series-controls-band-height) - var(--series-controls-item-size)) / 2);
+}
+.console-library.seasons-section { margin-top: 1.5rem; }

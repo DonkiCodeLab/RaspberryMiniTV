@@ -18,9 +18,16 @@ const FALLBACK_SERIES = [
   },
   {
     key: "dragon-ball",
+    id: 12609,
     name: "Dragon Ball",
     searchQuery: "Dragon Ball",
     aliases: ["Dragon Ball", "Bola de Dragon", "Bola de Dragón"],
+  },
+  {
+    key: "dragon-ball-z",
+    id: 12971,
+    name: "Dragon Ball Z",
+    aliases: ["Dragon Ball Z", "Bola de Dragon Z", "Bola de Dragón Z"],
   },
   {
     key: "dr-slump",
@@ -314,6 +321,14 @@ export async function searchMovies(query, language) {
 
 async function searchTvSeriesByName(query, language) {
   const results = await searchTvSeries(query, language);
+  const normalizedQuery = normalizeText(query);
+  const exactMatches = results.filter((result) =>
+    [result.name, result.originalName].some((name) => normalizeText(name) === normalizedQuery)
+  );
+  if (exactMatches.length === 1) return exactMatches[0];
+  if (exactMatches.length > 1) {
+    throw new Error(`Hay varias series TMDB con el título "${query}". Selecciona la ficha correcta en TMDB.`);
+  }
   return results[0] || null;
 }
 

@@ -6,7 +6,7 @@ const COPY = {
   ca: ['Consoles', 'jocs', 'Afegir joc', 'Canviar fons', 'Restaurar fons', 'Encara no hi ha jocs per a aquesta consola.', 'El rendiment depèn del joc', 'Anterior', 'Següent', 'Imatge desada', 'Desant…'],
   en: ['Consoles', 'games', 'Add game', 'Change background', 'Reset background', 'No games for this console yet.', 'Performance varies by game', 'Previous', 'Next', 'Image saved', 'Saving…'],
 };
-export default function GameConsoleCarousel({ systemId, onSystemChange, games, visibleGames, onFilter, filterLabel, selectedPath, onGameChange, onUpload, onDevice, language }) {
+export default function GameConsoleCarousel({ systemId, onSystemChange, games, visibleGames, onFilter, filterLabel, selectedPath, onGameChange, onUpload, onDevice, language, countLabel }) {
   const c = COPY[language] || COPY.es;
   const system = GAME_SYSTEMS.find(s => s.id === systemId) || GAME_SYSTEMS[0];
   const [custom, setCustom] = useState({});
@@ -69,10 +69,13 @@ export default function GameConsoleCarousel({ systemId, onSystemChange, games, v
     </div>
     {status && <p className="console-status" role="status">{status}</p>}
     <button className="console-filter" type="button" onClick={onFilter}>{filterLabel}</button>
+    <div className="console-library seasons-section">
+      <div className="seasons-section__label">{countLabel}</div>
     <div className="console-games" aria-label={system.name}>
       {displayedGames.length ? displayedGames.map(game => <button type="button" key={game.relativePath} className={game.relativePath === selectedPath ? 'active' : ''} aria-pressed={game.relativePath === selectedPath} onClick={() => onGameChange(game.relativePath)}>
         {game.coverImage ? <img src={game.coverImage} alt="" loading="lazy" /> : <span className="console-game-placeholder">▣</span>}<span>{game.name || game.file}</span>
       </button>) : <p>{ownGames.length ? ({es: "No hay juegos que coincidan con los filtros.", ca: "No hi ha jocs que coincideixin amb els filtres.", en: "No games match the filters."}[language] || "No games match the filters.") : c[5]}</p>}
+    </div>
     </div>
     <a className="console-credits" href="https://github.com/Siddy212/iconic-es-de#acknowledgments" target="_blank" rel="noreferrer">Iconic · Siddy212 &amp; artists · CC BY-NC-SA · Credits</a>
   </section>;
