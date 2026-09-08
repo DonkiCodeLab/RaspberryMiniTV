@@ -16,6 +16,12 @@ DETAIL_RE = re.compile(r"/(?:movie/\d+(?:/images)?|tv/\d+(?:/images|/season/\d+(
 LANGUAGES = ("es-ES", "ca-ES", "en-US")
 
 
+class TmdbError(RuntimeError):
+    def __init__(self, message, code):
+        super().__init__(message)
+        self.code = code
+
+
 def atomic_write(path, data):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -72,12 +78,16 @@ class TmdbCache:
                     return data, response.headers.get_content_type()
             except urllib.error.HTTPError as exc:
                 if attempt == 2 or exc.code not in (429, 500, 502, 503, 504):
-                    raise RuntimeError(f"TMDB HTTP {exc.code}") from None
+                    raise TmdbError(
+                        "TMDB rechazó las credenciales. Revisa la API key o el token en Ajustes."
+                        if exc.code in (401, 403) else f"TMDB respondió con HTTP {exc.code}.",
+                        "TMDB_AUTH_ERROR" if exc.code in (401, 403) else "TMDB_HTTP_ERROR",
+                    ) from None
                 delay = exc.headers.get("Retry-After", "")
                 time.sleep(min(30, int(delay)) if delay.isdigit() else 2 ** attempt)
             except (OSError, TimeoutError):
                 if attempt == 2:
-                    raise RuntimeError("No se pudo conectar con TMDB") from None
+                    raise TmdbError("La Raspberry no puede conectar con TMDB. Revisa su conexión a Internet, DNS y certificados.", "TMDB_CONNECTION_ERROR") from None
                 time.sleep(2 ** attempt)
 
     def json(self, path, params=None, refresh=False):
@@ -113,7 +123,7 @@ class TmdbCache:
             elif credentials.get("apiKey"):
                 params["api_key"] = credentials["apiKey"]
             else:
-                raise RuntimeError("Configura las credenciales de TMDB antes de descargar")
+                raise TmdbError("Faltan las credenciales de TMDB en la Raspberry. Guárdalas en Raspberry → Ajustes → TMDB.", "TMDB_CREDENTIALS_MISSING")
             url = "https://api.themoviedb.org/3" + path + "?" + urllib.parse.urlencode(params)
             raw, _ = self._download(url, headers, 16 * 1024 * 1024)
             data = json.loads(raw)

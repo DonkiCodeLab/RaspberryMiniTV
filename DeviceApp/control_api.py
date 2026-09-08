@@ -1,5 +1,5 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
-from tmdb_cache import TmdbCache
+from tmdb_cache import TmdbCache, TmdbError
 import json
 import io
 import os
@@ -3301,8 +3301,14 @@ def cached_tmdb_json(tmdb_path):
         return jsonify(tmdb_artwork.json("/" + tmdb_path, request.args.to_dict()))
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
-    except Exception:
-        return jsonify({"error": "No se pudo obtener la ficha local/TMDB. Revisa conexión y credenciales."}), 502
+    except TmdbError as exc:
+        return jsonify({"error": str(exc), "code": exc.code}), 503 if exc.code == "TMDB_CREDENTIALS_MISSING" else 502
+    except OSError as exc:
+        app.logger.warning("TMDB cache storage failed: %s errno=%s", type(exc).__name__, exc.errno)
+        return jsonify({"error": "No se pudo leer o guardar la caché TMDB en la Raspberry. Revisa espacio y permisos del disco.", "code": "TMDB_STORAGE_ERROR"}), 500
+    except Exception as exc:
+        app.logger.warning("TMDB cache failed: %s", type(exc).__name__)
+        return jsonify({"error": "No se pudo procesar la ficha TMDB en la Raspberry.", "code": "TMDB_CACHE_ERROR"}), 502
 
 
 @app.route("/tmdb/images/<filename>", methods=["GET"])

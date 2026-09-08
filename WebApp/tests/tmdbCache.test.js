@@ -33,3 +33,30 @@ test('connected catalog uses Raspberry cache and PIN without frontend TMDB crede
     assert.equal(api.localTmdbImageUrl('/my-cover.jpg'), '/my-cover.jpg');
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
+
+
+test('legacy web credentials migrate once and server credentials remain authoritative', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: 'http://raspberry:5050', hostname: 'raspberry' }, sessionStorage: { getItem: () => '1234' } };
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, options });
+    return { ok: true, text: async () => '{}' };
+  };
+  try {
+    const tmdb = await loadBrowserModule('../src/tmdbApi.js');
+    tmdb.setTmdbCredentials({ bearerToken: 'legacy-test-token' });
+    await tmdb.initializeTmdbCredentials({ apiKey: '', bearerToken: '' });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, 'http://raspberry:5050/settings/tmdb');
+    assert.equal(calls[0].options.method, 'POST');
+    assert.equal(calls[0].options.headers['X-Web-Pin'], '1234');
+    assert.equal(JSON.parse(calls[0].options.body).bearerToken, 'legacy-test-token');
+    await tmdb.initializeTmdbCredentials({ apiKey: 'server-test-key', bearerToken: '' });
+    assert.equal(calls.length, 1);
+    assert.deepEqual(tmdb.readTmdbCredentials(), { apiKey: 'server-test-key', bearerToken: '' });
+    tmdb.setTmdbCredentials({ bearerToken: 'legacy-test-token' });
+    globalThis.fetch = async () => ({ ok: false, status: 500, text: async () => '{"error":"save failed"}' });
+    await assert.rejects(tmdb.initializeTmdbCredentials({}), /save failed/);
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});

@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from tmdb_cache import TmdbCache, LANGUAGES
+from tmdb_cache import TmdbCache, LANGUAGES, TmdbError
 import control_api as api
 
 
@@ -103,6 +103,24 @@ class TmdbCacheTests(unittest.TestCase):
                 response = client.post('/tmdb/cache', headers={'X-Web-Pin': '1234'})
                 self.assertEqual(response.json['pending'], 1)
                 self.assertEqual(response.json['missingIds'], ['Movies/b.mp4'])
+
+    def test_missing_credentials_and_upstream_failures_have_distinct_safe_errors(self):
+        self.cache.credentials = lambda: {}
+        with patch.object(api, 'tmdb_artwork', self.cache), patch.object(api, 'is_authorized_request', return_value=True):
+            client = api.app.test_client()
+            response = client.get('/tmdb/json/tv/1')
+            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.json['code'], 'TMDB_CREDENTIALS_MISSING')
+            self.cache.credentials = lambda: {"apiKey": "secret"}
+            with patch.object(self.cache, '_download', side_effect=TmdbError('TMDB rejected credentials', 'TMDB_AUTH_ERROR')):
+                response = client.get('/tmdb/json/tv/1')
+                self.assertEqual(response.status_code, 502)
+                self.assertEqual(response.json['code'], 'TMDB_AUTH_ERROR')
+                self.assertNotIn('secret', response.get_data(as_text=True))
+            with patch.object(self.cache, '_download', side_effect=PermissionError(13, 'denied')):
+                response = client.get('/tmdb/json/tv/1')
+                self.assertEqual(response.status_code, 500)
+                self.assertEqual(response.json['code'], 'TMDB_STORAGE_ERROR')
 
     def test_upload_metadata_and_profile_edits_enqueue_downloads(self):
         library = {'movies': {}, 'series': {}}

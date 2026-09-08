@@ -128,7 +128,7 @@ import {
   getTvSeasonEpisodes,
   getTvSeriesById,
   resolveSeriesFromNames,
-  readTmdbCredentials,
+  initializeTmdbCredentials,
   searchMovies,
   searchTvSeries,
   setTmdbCredentials,
@@ -6085,12 +6085,8 @@ export default function App() {
         ]);
         if (cancelled) return;
 
-        const bundledTmdbSettings = readTmdbCredentials();
-        const loadedTmdbSettings = {
-          apiKey: String(nextTmdbSettings?.apiKey || bundledTmdbSettings.apiKey || ""),
-          bearerToken: String(nextTmdbSettings?.bearerToken || bundledTmdbSettings.bearerToken || ""),
-        };
-        setTmdbCredentials(loadedTmdbSettings);
+        const loadedTmdbSettings = await initializeTmdbCredentials(nextTmdbSettings);
+        if (cancelled) return;
         setTmdbSettings(loadedTmdbSettings);
         setVideos(nextVideos);
         if (nextLanguage?.language) {

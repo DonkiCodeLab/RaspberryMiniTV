@@ -1,4 +1,4 @@
-import { getCachedTmdbJson, isMockMode, localTmdbImageUrl } from "./api/raspberryApi";
+import { getCachedTmdbJson, isMockMode, localTmdbImageUrl, updateRaspberryTmdbSettings } from "./api/raspberryApi";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 const TMDB_ENGLISH_FALLBACK_LANGUAGE = "en-US";
@@ -185,6 +185,17 @@ export function setTmdbCredentials({ apiKey = "", bearerToken = "" } = {}) {
     apiKey: String(apiKey || "").trim(),
     bearerToken: String(bearerToken || "").trim(),
   };
+}
+
+export async function initializeTmdbCredentials(serverCredentials = {}) {
+  const hasServerCredentials = Boolean(serverCredentials.apiKey || serverCredentials.bearerToken);
+  const credentials = hasServerCredentials ? serverCredentials : readTmdbCredentials();
+  if (!isMockMode() && !hasServerCredentials && (credentials.apiKey || credentials.bearerToken)) {
+    // Upgrade older installs before their catalog starts requesting the server cache.
+    await updateRaspberryTmdbSettings(credentials);
+  }
+  setTmdbCredentials(credentials);
+  return credentials;
 }
 
 export function readTmdbCredentials() {
