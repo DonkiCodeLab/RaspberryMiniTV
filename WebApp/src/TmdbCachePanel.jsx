@@ -3,19 +3,19 @@ import { getTmdbCacheStatus, cancelTmdbCacheDownload, isMockMode } from "./api/r
 
 const labels = {
   es: {
-    storage: "Espacio de la caché", disk: "del disco", capacity: "Capacidad del disco", storageUnavailable: "No se pudo consultar el espacio de la caché.",
+    storage: "Espacio de la caché", disk: "del disco", storageUnavailable: "No se pudo consultar el espacio de la caché.",
     downloading: "Descarga en curso…", cancel: "Cancelar descarga", cancelling: "Cancelando…", cancelled: "cancelados", resume: "Reanudar descarga", stopped: "Descarga cancelada. Se conserva todo lo descargado. Una petición en curso puede tardar unos segundos en detenerse.",
     title: "Contenido TMDB en local", copy: "Guarda fichas, carteles, fondos, logos e imágenes de temporadas y episodios en la Raspberry. Las nuevas incorporaciones se descargan automáticamente. Puedes cerrar esta página durante la descarga.",
     start: "Descargar catálogo / reintentar pendientes", busy: "Preparando…", complete: "completados", pending: "pendientes", failed: "con errores", missing: "Sin ID de TMDB: asigna su ficha para poder descargarlos.", errors: "Detalles de errores", mock: "Conecta con la Raspberry para descargar el catálogo.",
   },
   ca: {
-    storage: "Espai de la memòria cau", disk: "del disc", capacity: "Capacitat del disc", storageUnavailable: "No s’ha pogut consultar l’espai de la memòria cau.",
+    storage: "Espai de la memòria cau", disk: "del disc", storageUnavailable: "No s’ha pogut consultar l’espai de la memòria cau.",
     downloading: "Descàrrega en curs…", cancel: "Cancel·lar descàrrega", cancelling: "Cancel·lant…", cancelled: "cancel·lats", resume: "Reprendre descàrrega", stopped: "Descàrrega cancel·lada. Es conserva tot el que s’ha descarregat. Una petició en curs pot trigar uns segons a aturar-se.",
     title: "Contingut TMDB en local", copy: "Desa fitxes, cartells, fons, logos i imatges de temporades i episodis a la Raspberry. Les noves incorporacions es descarreguen automàticament. Pots tancar aquesta pàgina durant la descàrrega.",
     start: "Descarregar catàleg / reintentar pendents", busy: "Preparant…", complete: "completats", pending: "pendents", failed: "amb errors", missing: "Sense ID de TMDB: assigna la seva fitxa per descarregar-los.", errors: "Detalls dels errors", mock: "Connecta amb la Raspberry per descarregar el catàleg.",
   },
   en: {
-    storage: "Cache storage", disk: "of disk", capacity: "Disk capacity", storageUnavailable: "Cache storage usage is unavailable.",
+    storage: "Cache storage", disk: "of disk", storageUnavailable: "Cache storage usage is unavailable.",
     downloading: "Download in progress…", cancel: "Cancel download", cancelling: "Cancelling…", cancelled: "cancelled", resume: "Resume download", stopped: "Download cancelled. Downloaded files are retained. An in-flight request may take a few seconds to stop.",
     title: "Local TMDB content", copy: "Save metadata, posters, backdrops, logos, season and episode artwork on the Raspberry. New additions download automatically. You can close this page while downloads continue.",
     start: "Download catalog / retry pending", busy: "Preparing…", complete: "complete", pending: "pending", failed: "failed", missing: "Missing TMDB ID: assign a title to download its content.", errors: "Error details", mock: "Connect to the Raspberry to download the catalog.",
@@ -59,8 +59,6 @@ export default function TmdbCachePanel({ language }) {
     <p>{t.copy}</p>
     {status?.storage?.available ? <div className="tmdb-cache-storage">
       <strong>{t.storage}: {amount(status.storage.gb)} GB · {amount(status.storage.percent)} % {t.disk}</strong>
-      <meter min="0" max="100" value={status.storage.percent} aria-label={t.storage} />
-      <span>{t.capacity}: {number(status.storage.diskTotalGb)} GB</span>
     </div> : status?.storage && <p>{t.storageUnavailable}</p>}
     <button className="dialog-button" type="button" disabled={Boolean(busy) || active || !status || isMockMode()} onClick={() => runAction()}>{busy === "start" ? t.busy : active ? t.downloading : status?.cancelled ? t.resume : t.start}</button>
     {active && <button className="dialog-button" type="button" disabled={Boolean(busy)} onClick={() => runAction(true)}>{busy === "cancel" ? t.cancelling : t.cancel}</button>}
