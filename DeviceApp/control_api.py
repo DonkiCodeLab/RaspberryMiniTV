@@ -3329,15 +3329,23 @@ def tmdb_missing_ids():
             if not item.get("tmdbId")]
 
 
-@app.route("/tmdb/cache", methods=["GET", "POST"])
+tmdb_cache_action_lock = threading.Lock()
+
+
+@app.route("/tmdb/cache", methods=["GET", "POST", "DELETE"])
 def tmdb_cache_status():
-    if request.method == "POST":
-        library = load_media_library()
-        for collection, kind in (("movies", "movie"), ("series", "tv")):
-            for item in library.get(collection, {}).values():
-                queue_tmdb_artwork(kind, item)
-    tmdb_artwork.start()
-    return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids()})
+    with tmdb_cache_action_lock:
+        if request.method == "DELETE":
+            tmdb_artwork.cancel()
+        elif request.method == "POST":
+            status = tmdb_artwork.status()
+            if not (status["pending"] or status["running"]):
+                library = load_media_library()
+                for collection, kind in (("movies", "movie"), ("series", "tv")):
+                    for item in library.get(collection, {}).values():
+                        queue_tmdb_artwork(kind, item)
+        tmdb_artwork.start()
+        return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids()})
 
 
 @app.route("/settings/tmdb", methods=["GET"])

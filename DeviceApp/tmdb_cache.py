@@ -70,6 +70,7 @@ class TmdbCache:
                 return None
         opener = urllib.request.build_opener(NoRedirect)
         for attempt in range(3):
+            self._check_worker()
             try:
                 with opener.open(urllib.request.Request(url, headers=headers), timeout=30) as response:
                     data = response.read(limit + 1)
@@ -252,6 +253,16 @@ class TmdbCache:
                 raise
         self.start()
 
+    def cancel(self):
+        # Invalidate in-flight writes; already published cache files remain reusable.
+        with self.state_lock, self.jobs_lock:
+            for key, job in self.jobs.items():
+                if job["state"] in ("pending", "running"):
+                    self.generations[key] = self.generations.get(key, 0) + 1
+                    job.update(state="cancelled", error="", refresh=False)
+            self._save_jobs()
+        return self.status()
+
     def start(self):
         with self.jobs_lock:
             if self.worker and self.worker.is_alive():
@@ -283,7 +294,7 @@ class TmdbCache:
             finally:
                 self.worker_context.job = None
             with self.jobs_lock:
-                if self.jobs.get(key) is job:
+                if self.jobs.get(key) is job and job["state"] == "running":
                     job.update(state=state, error=error)
                 try:
                     self._save_jobs()
@@ -384,6 +395,6 @@ class TmdbCache:
     def status(self):
         with self.jobs_lock:
             jobs = [dict(job) for job in self.jobs.values()]
-        return {"total": len(jobs), **{state: sum(j["state"] == state for j in jobs) for state in ("pending", "running", "complete", "failed")},
+        return {"total": len(jobs), **{state: sum(j["state"] == state for j in jobs) for state in ("pending", "running", "complete", "failed", "cancelled")},
                 "errors": [{"media": f'{j["kind"]}/{j["id"]}', "error": j["error"]} for j in jobs if j["state"] == "failed"],
                 "current": next((f'{j["kind"]}/{j["id"]}' for j in jobs if j["state"] == "running"), "")}

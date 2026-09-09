@@ -5950,3 +5950,5 @@ img {
 .tmdb-cache-panel progress { width: 100%; accent-color: #ffd90f; }
 .tmdb-cache-panel details { margin-top: 12px; }
 .tmdb-cache-panel details ul { max-height: 240px; overflow-y: auto; }
+
+.tmdb-cache-panel > .dialog-button { margin: 0 12px 12px 0; }

@@ -80,6 +80,59 @@ class TmdbCacheTests(unittest.TestCase):
             self.assertEqual(warm.call_count, 1)
         self.assertEqual(reopened.status()['complete'], 1)
 
+    def test_cancel_persists_and_repeated_start_does_not_resume_until_enqueued(self):
+        with patch.object(self.cache, 'start'):
+            self.cache.enqueue('movie', 1)
+            self.cache.enqueue('tv', 2)
+        self.cache.jobs['movie/1']['state'] = 'complete'
+        self.cache.cancel()
+        self.assertEqual(self.cache.status()['cancelled'], 1)
+        reopened = TmdbCache(self.temp.name, lambda: {})
+        with patch.object(reopened, 'warm') as warm:
+            reopened._run()
+            warm.assert_not_called()
+        with patch.object(reopened, 'start'):
+            reopened.enqueue('tv', 2)
+        self.assertEqual(reopened.status()['pending'], 1)
+        self.assertEqual(reopened.status()['complete'], 1)
+
+    def test_cancel_running_job_retains_files_and_does_not_become_failure(self):
+        started, release = threading.Event(), threading.Event()
+        with patch.object(self.cache, 'start'):
+            self.cache.enqueue('movie', 1)
+            self.cache.enqueue('movie', 2)
+        def warm(*args):
+            started.set()
+            release.wait(5)
+            self.cache._check_worker()
+        with patch.object(self.cache, 'warm', side_effect=warm) as warm_mock:
+            worker = threading.Thread(target=self.cache._run)
+            worker.start()
+            try:
+                self.assertTrue(started.wait(5))
+                self.cache.cancel()
+            finally:
+                release.set()
+                worker.join(5)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(warm_mock.call_count, 1)
+        self.assertEqual(self.cache.status()['cancelled'], 2)
+        self.assertEqual(self.cache.status()['failed'], 0)
+
+    def test_repeated_migration_requests_do_not_enqueue_while_active_and_cancel_requires_pin(self):
+        library = {'movies': {'Movies/a.mp4': {'tmdbId': 1}}}
+        with patch.object(api, 'tmdb_artwork', self.cache), patch.object(api, 'load_media_library', return_value=library), patch.object(api, 'is_authorized_request', return_value=True), patch.object(self.cache, 'start'):
+            client = api.app.test_client()
+            self.assertEqual(client.post('/tmdb/cache').json['pending'], 1)
+            with patch.object(self.cache, 'enqueue') as enqueue:
+                client.post('/tmdb/cache')
+                enqueue.assert_not_called()
+            self.assertEqual(client.delete('/tmdb/cache').json['cancelled'], 1)
+            self.assertEqual(client.get('/tmdb/cache').json['cancelled'], 1)
+            self.assertEqual(client.post('/tmdb/cache').json['pending'], 1)
+        with patch.object(api, 'is_authorized_request', return_value=False):
+            self.assertEqual(api.app.test_client().delete('/tmdb/cache').status_code, 401)
+
     def test_full_disk_is_reported_without_leaving_running_jobs(self):
         with patch.object(self.cache, 'start'):
             self.cache.enqueue('movie', 1)

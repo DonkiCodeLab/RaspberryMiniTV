@@ -352,3 +352,13 @@ Las descargas activas se cancelan mediante una generación por título: sus resp
 pendientes no pueden volver a guardar datos después de la limpieza. Si falla la
 limpieza en disco, se conserva la entrada del catálogo para que se pueda reintentar
 el borrado, incluso si el vídeo ya se eliminó.
+
+
+Durante una descarga el botón de inicio queda desactivado y muestra «Descarga en
+curso…». «Cancelar descarga» cancela los trabajos pendientes y el activo sin borrar
+lo ya guardado. La petición de red en curso puede tardar hasta su tiempo límite en
+terminar, pero no se publican sus resultados tras cancelar. El estado `cancelled`
+se conserva al reiniciar; «Reanudar descarga» vuelve a encolar los títulos pendientes
+aprovechando la caché. Las peticiones repetidas de inicio durante una descarga no
+vuelven a encolar el catálogo. `DELETE /tmdb/cache` cancela la descarga y requiere PIN.
+Las descargas bajo demanda para navegar por la web siguen funcionando.

@@ -1526,3 +1526,7 @@ export function localTmdbImageUrl(value) {
   const params = new URLSearchParams({ pin: getStoredWebPin() });
   return `${getBaseUrl()}/tmdb/images${path}?${params}`;
 }
+
+export function cancelTmdbCacheDownload() {
+  return request("/tmdb/cache", { method: "DELETE" });
+}
