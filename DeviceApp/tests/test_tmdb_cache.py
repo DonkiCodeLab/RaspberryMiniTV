@@ -133,6 +133,30 @@ class TmdbCacheTests(unittest.TestCase):
         with patch.object(api, 'is_authorized_request', return_value=False):
             self.assertEqual(api.app.test_client().delete('/tmdb/cache').status_code, 401)
 
+    def test_storage_counts_all_cache_files_and_uses_cache_disk_capacity(self):
+        (self.cache.root / 'images').mkdir()
+        (self.cache.root / 'images/a.jpg').write_bytes(b'a' * 200)
+        (self.cache.root / 'metadata').mkdir()
+        (self.cache.root / 'metadata/a.json').write_bytes(b'a' * 100)
+        (self.cache.root / 'index.json').write_bytes(b'a' * 50)
+        (self.cache.root / 'jobs.json').write_bytes(b'a' * 50)
+        with patch('tmdb_cache.shutil.disk_usage') as usage:
+            usage.return_value.total = 2000
+            result = self.cache.storage()
+            self.assertEqual(result['bytes'], 400)
+            self.assertEqual(result['percent'], 20)
+            self.assertEqual(result['gb'], 400 / 1_000_000_000)
+            usage.assert_called_once_with(self.cache.root)
+            self.cache.storage()
+            usage.assert_called_once()
+
+    def test_storage_empty_cache_and_unavailable_disk(self):
+        self.cache.root = self.cache.root / 'not-created'
+        self.assertEqual(self.cache.storage()['bytes'], 0)
+        self.cache.storage_snapshot = None
+        with patch('tmdb_cache.shutil.disk_usage', side_effect=PermissionError()):
+            self.assertEqual(self.cache.storage(), {'available': False})
+
     def test_full_disk_is_reported_without_leaving_running_jobs(self):
         with patch.object(self.cache, 'start'):
             self.cache.enqueue('movie', 1)

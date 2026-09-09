@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import tempfile
 import threading
 import time
@@ -42,6 +43,9 @@ class TmdbCache:
         self.io_locks = [threading.RLock() for _ in range(64)]
         self.network_slots = threading.BoundedSemaphore(3)
         self.jobs_lock = threading.RLock()
+        self.storage_lock = threading.Lock()
+        self.storage_snapshot = None
+        self.storage_checked_at = 0
         self.state_lock = threading.RLock()
         self.generations = {}
         self.worker_context = threading.local()
@@ -391,6 +395,37 @@ class TmdbCache:
                         count += 1
             atomic_write(self.root / "index.json", json.dumps(self.index).encode())
             return {"metadata": len(deleted_metadata), "images": count}
+
+    def storage(self):
+        # Limit directory scans while several browsers poll download progress.
+        with self.storage_lock:
+            now = time.monotonic()
+            if self.storage_snapshot is not None and now - self.storage_checked_at < 10:
+                return dict(self.storage_snapshot)
+            try:
+                total_bytes = 0
+                def fail(error):
+                    raise error
+                for directory, _, filenames in (os.walk(self.root, followlinks=False, onerror=fail) if self.root.exists() else []):
+                    for filename in filenames:
+                        path = Path(directory) / filename
+                        try:
+                            if not path.is_symlink():
+                                total_bytes += path.stat().st_size
+                        except FileNotFoundError:
+                            pass  # Atomic downloads/deletions can race the scan.
+                disk_path = self.root
+                while not disk_path.exists() and disk_path != disk_path.parent:
+                    disk_path = disk_path.parent
+                capacity = shutil.disk_usage(disk_path).total
+                snapshot = {"available": True, "bytes": total_bytes, "gb": total_bytes / 1_000_000_000,
+                            "diskTotalGb": capacity / 1_000_000_000,
+                            "percent": total_bytes / capacity * 100 if capacity else 0}
+            except OSError:
+                snapshot = {"available": False}
+            self.storage_snapshot = snapshot
+            self.storage_checked_at = now
+            return dict(snapshot)
 
     def status(self):
         with self.jobs_lock:

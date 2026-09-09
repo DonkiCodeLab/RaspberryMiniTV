@@ -362,3 +362,5 @@ se conserva al reiniciar; «Reanudar descarga» vuelve a encolar los títulos pe
 aprovechando la caché. Las peticiones repetidas de inicio durante una descarga no
 vuelven a encolar el catálogo. `DELETE /tmdb/cache` cancela la descarga y requiere PIN.
 Las descargas bajo demanda para navegar por la web siguen funcionando.
+
+El panel TMDB muestra el tamaño de toda la caché (imágenes, JSON, índice y cola) en GB decimales y su porcentaje respecto a la capacidad total del disco que contiene la caché. La medición se renueva cada 10 segundos mientras se consulta el progreso.

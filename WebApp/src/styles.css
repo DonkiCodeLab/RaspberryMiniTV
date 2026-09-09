@@ -5952,3 +5952,7 @@ img {
 .tmdb-cache-panel details ul { max-height: 240px; overflow-y: auto; }
 
 .tmdb-cache-panel > .dialog-button { margin: 0 12px 12px 0; }
+
+.tmdb-cache-storage { display: grid; gap: 8px; margin: 16px 0 24px; }
+.tmdb-cache-storage meter { width: 100%; height: 16px; }
+.tmdb-cache-storage span { font-size: 0.9em; opacity: 0.8; }
