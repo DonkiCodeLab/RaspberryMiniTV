@@ -24,14 +24,15 @@ test('connected catalog uses Raspberry cache and PIN without frontend TMDB crede
     const movie = await tmdb.getMovieById(1, 'es-ES');
     assert.equal(movie.name, 'Test');
     assert.equal(movie.rottenTomatoesUrl, 'https://www.rottentomatoes.com/m/stored_test');
-    assert.equal(movie.heroImage, 'http://raspberry:5050/tmdb/images/back.jpg?pin=1234');
+    assert.equal(movie.heroImage, 'http://raspberry:5050/tmdb/images/back.jpg?pin=1234&width=1280');
     assert.ok(movie.imageOptions.every(url => url.includes('/tmdb/images/')));
     assert.ok(requests.every(({ options }) => options.headers['X-Web-Pin'] === '1234'));
     assert.equal(tmdb.buildTmdbImageUrl(null), null);
     const api = await loadBrowserModule('../src/api/raspberryApi.js');
-    assert.equal(api.localTmdbImageUrl('https://image.tmdb.org/t/p/w500/custom.jpg'), 'http://raspberry:5050/tmdb/images/custom.jpg?pin=1234');
+    assert.equal(api.localTmdbImageUrl('https://image.tmdb.org/t/p/w500/custom.jpg'), 'http://raspberry:5050/tmdb/images/custom.jpg?pin=1234&width=500');
     assert.equal(api.localTmdbImageUrl('http://old-host/tmdb/images/custom.jpg?pin=old'), 'http://raspberry:5050/tmdb/images/custom.jpg?pin=1234');
     assert.equal(api.localTmdbImageUrl('/my-cover.jpg'), '/my-cover.jpg');
+    assert.equal(api.localTmdbImageUrl('http://old-host/tmdb/images/custom.jpg?pin=old&width=500'), 'http://raspberry:5050/tmdb/images/custom.jpg?pin=1234&width=500');
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
 
@@ -75,7 +76,7 @@ test('library loads a single compact local response without detail requests', as
     const tmdb = await loadBrowserModule('../src/tmdbApi.js');
     const cards = await tmdb.getLibrarySummaries([{ id: 'Movies/test.mp4', tmdbId: 1 }], [], 'es-ES');
     assert.equal(requests.length, 1);
-    assert.equal(cards.movies[1].posterImage, 'http://raspberry:5050/tmdb/images/poster.jpg?pin=1234');
+    assert.equal(cards.movies[1].posterImage, 'http://raspberry:5050/tmdb/images/poster.jpg?pin=1234&width=500');
     assert.equal(cards.movies[1].imageOptions, undefined);
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });

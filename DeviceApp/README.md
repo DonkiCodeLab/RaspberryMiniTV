@@ -364,3 +364,9 @@ vuelven a encolar el catálogo. `DELETE /tmdb/cache` cancela la descarga y requi
 Las descargas bajo demanda para navegar por la web siguen funcionando.
 
 El panel TMDB muestra el tamaño de toda la caché (imágenes, JSON, índice y cola) en GB decimales y su porcentaje respecto a la capacidad total del disco que contiene la caché. La medición se renueva cada 10 segundos mientras se consulta el progreso.
+
+### Miniaturas de la biblioteca
+
+La API necesita Pillow (`sudo apt-get install python3-pil`) para generar las versiones
+WebP de las portadas. Se guardan en `MultimediaContent/TmdbCache/thumbnails/` y se
+reutilizan en las siguientes visitas; los originales se conservan en `images/`.

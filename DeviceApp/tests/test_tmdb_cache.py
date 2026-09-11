@@ -84,6 +84,25 @@ class TmdbCacheTests(unittest.TestCase):
             self.assertEqual(response.json['movies']['1']['name'], 'Test')
             self.assertEqual(response.json['series'], {})
 
+    def test_display_thumbnail_preserves_original_and_is_reused_offline(self):
+        from PIL import Image
+        source = self.cache.root / 'images' / 'poster.jpg'
+        source.parent.mkdir(parents=True)
+        Image.new('RGB', (2000, 3000), '#ffd429').save(source, 'JPEG')
+        original = source.read_bytes()
+        with patch.object(self.cache, '_download', side_effect=AssertionError('offline')):
+            thumbnail = self.cache.display_image('/poster.jpg', 500)
+            with Image.open(thumbnail) as image:
+                self.assertEqual(image.size, (500, 750))
+                self.assertEqual(image.format, 'WEBP')
+            self.assertLess(thumbnail.stat().st_size, source.stat().st_size)
+            self.assertEqual(source.read_bytes(), original)
+            reopened = TmdbCache(self.temp.name, lambda: {})
+            with patch('PIL.Image.open', side_effect=AssertionError('must reuse thumbnail')):
+                self.assertEqual(reopened.display_image('/poster.jpg', 500), thumbnail)
+            with self.assertRaises(ValueError): self.cache.display_image('/poster.jpg', 99999)
+            with self.assertRaises(ValueError): self.cache.display_image('/../secret.jpg', 500)
+
     def test_failed_download_is_not_cached_and_can_be_retried(self):
         with patch.object(self.cache, '_download', return_value=(b'not image', 'text/html')):
             with self.assertRaises(ValueError): self.cache.image('/poster.jpg')

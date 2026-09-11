@@ -1528,6 +1528,9 @@ export function localTmdbImageUrl(value) {
   const path = remote?.[1] || local?.[1];
   if (!path) return value;
   const params = new URLSearchParams({ pin: getStoredWebPin() });
+  const requestedWidth = String(value).match(/\/t\/p\/w(342|500|780|1280)\//)?.[1]
+    || String(value).match(/[?&]width=(342|500|780|1280)(?:&|$)/)?.[1];
+  if (requestedWidth) params.set("width", requestedWidth);
   return `${getBaseUrl()}/tmdb/images${path}?${params}`;
 }
 

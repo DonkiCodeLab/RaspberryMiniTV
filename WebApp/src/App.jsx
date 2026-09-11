@@ -1,3 +1,4 @@
+import { preloadLibraryCovers } from "./preloadLibraryCovers";
 import TmdbCachePanel from "./TmdbCachePanel";
 import { localTmdbImageUrl } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
@@ -6357,9 +6358,12 @@ export default function App() {
     if (!videos) return;
     const libraryMovies = mockMode ? movieLibrary : getRaspberryMovieLibraryItems(videos);
     let cancelled = false;
+    const controller = new AbortController();
     setTmdbLoading(true);
     setError("");
-    getLibrarySummaries(libraryMovies, directories, tmdbLanguage).then(summaries => {
+    getLibrarySummaries(libraryMovies, directories, tmdbLanguage).then(async summaries => {
+      await preloadLibraryCovers([...Object.values(summaries.series), ...Object.values(summaries.movies)]
+        .map(card => card.posterImage), { signal: controller.signal });
       if (cancelled) return;
       setTmdbSeriesMap(current => Object.fromEntries(directories.map(directory => {
         const card = summaries.series[String(directory.tmdbId)] || {};
@@ -6376,7 +6380,7 @@ export default function App() {
     }).finally(() => {
       if (!cancelled) setTmdbLoading(false);
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; controller.abort(); };
   }, [videos, mockMode ? movieLibrary : null, directories, tmdbLanguage]);
 
   useEffect(() => {

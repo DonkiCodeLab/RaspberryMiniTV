@@ -3327,7 +3327,8 @@ def cached_tmdb_json(tmdb_path):
 @app.route("/tmdb/images/<filename>", methods=["GET"])
 def cached_tmdb_image(filename):
     try:
-        path = tmdb_artwork.image("/" + filename)
+        width = request.args.get("width")
+        path = tmdb_artwork.display_image("/" + filename, int(width) if width is not None else None)
         return send_file(path, max_age=31536000, conditional=True)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400

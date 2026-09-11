@@ -1,5 +1,6 @@
 """Persistent TMDB metadata/artwork and a single resumable download worker."""
 import hashlib
+import io
 from contextlib import nullcontext
 import json
 import os
@@ -43,6 +44,7 @@ class TmdbCache:
         self.credentials = credentials
         self.io_locks = [threading.RLock() for _ in range(64)]
         self.link_locks = [threading.RLock() for _ in range(64)]
+        self.thumbnail_slots = threading.BoundedSemaphore(2)
         self.network_slots = threading.BoundedSemaphore(3)
         self.jobs_lock = threading.RLock()
         self.storage_lock = threading.Lock()
@@ -225,6 +227,40 @@ class TmdbCache:
                     break
         return results
 
+    def display_image(self, path, width=None):
+        if width is None:
+            return self.image(path)
+        if width not in (342, 500, 780, 1280):
+            raise ValueError("Tamaño de imagen no permitido")
+        if not IMAGE_RE.fullmatch(path):
+            raise ValueError("Ruta de imagen no permitida")
+        target = self.root / "thumbnails" / str(width) / (path.lstrip("/") + ".webp")
+        if target.is_file() and target.stat().st_size:
+            return target
+        source = self.image(path)
+        if source.suffix == ".svg":
+            return source
+        with self.state_lock:
+            generation = self.generations.get("image:" + path, 0)
+        with self.io_locks[hash(str(target)) % len(self.io_locks)]:
+            if target.is_file() and target.stat().st_size:
+                return target
+            from PIL import Image, ImageOps
+            with self.thumbnail_slots, Image.open(source) as original:
+                original.draft("RGB", (width, width * 2))
+                resized = ImageOps.exif_transpose(original)
+                resized.thumbnail((width, max(1, round(width * resized.height / resized.width))))
+                if resized.mode not in ("RGB", "RGBA"):
+                    resized = resized.convert("RGBA" if "transparency" in resized.info else "RGB")
+                buffer = io.BytesIO()
+                resized.save(buffer, "WEBP", quality=82, method=3)
+            with self.state_lock:
+                self._check_worker()
+                if generation != self.generations.get("image:" + path, 0):
+                    raise RuntimeError("Miniatura cancelada por borrado del catálogo")
+                atomic_write(target, buffer.getvalue())
+        return target
+
     def image(self, path):
         if not IMAGE_RE.fullmatch(path):
             raise ValueError("Ruta de imagen no permitida")
@@ -301,6 +337,11 @@ class TmdbCache:
             if kind == "movie":
                 params["append_to_response"] = "external_ids"
             detail = collect(base, params)
+            if language == LANGUAGES[0] and detail.get("poster_path"):
+                try:
+                    self.display_image(detail["poster_path"], 500)
+                except Exception as exc:
+                    errors.append(f"Miniatura: {exc}")
             if kind == "movie" and language == LANGUAGES[0]:
                 self._with_movie_links(base, detail, refresh=refresh, lookup=True)
             if kind == "tv":
@@ -483,6 +524,8 @@ class TmdbCache:
             for path in candidates - protected_images:
                 if IMAGE_RE.fullmatch(path):
                     self.generations["image:" + path] = self.generations.get("image:" + path, 0) + 1
+                    for width in (342, 500, 780, 1280):
+                        (self.root / "thumbnails" / str(width) / (path.lstrip("/") + ".webp")).unlink(missing_ok=True)
                     target = self.root / "images" / path.lstrip("/")
                     if target.is_file():
                         target.unlink()
