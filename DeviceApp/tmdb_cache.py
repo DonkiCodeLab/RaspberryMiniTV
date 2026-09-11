@@ -50,6 +50,8 @@ class TmdbCache:
         self.storage_lock = threading.Lock()
         self.storage_snapshot = None
         self.storage_checked_at = 0
+        self.storage_refresh_lock = threading.Lock()
+        self.storage_refreshing = False
         self.state_lock = threading.RLock()
         self.generations = {}
         self.worker_context = threading.local()
@@ -557,6 +559,20 @@ class TmdbCache:
                         count += 1
             atomic_write(self.root / "index.json", json.dumps(self.index).encode())
             return {"metadata": len(deleted_metadata), "images": count}
+
+    def storage_background(self):
+        """Return immediately; a single worker scans disk outside HTTP requests."""
+        with self.storage_refresh_lock:
+            if not self.storage_refreshing and (self.storage_snapshot is None or time.monotonic() - self.storage_checked_at >= 60):
+                self.storage_refreshing = True
+                def refresh():
+                    try:
+                        self.storage()
+                    finally:
+                        with self.storage_refresh_lock:
+                            self.storage_refreshing = False
+                threading.Thread(target=refresh, name="tmdb-storage", daemon=True).start()
+            return {**(self.storage_snapshot or {"available": False}), "calculating": self.storage_refreshing}
 
     def storage(self):
         # Limit directory scans while several browsers poll download progress.

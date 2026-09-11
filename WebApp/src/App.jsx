@@ -4925,7 +4925,7 @@ function RaspberryPage({
 
       <div className="raspberry-page__tv-shell">
         <div className="raspberry-page__tv-card">
-          <img className="raspberry-page__tv-image" src={tvGreen} alt={t("raspberry_tv_alt")} />
+          <img className="raspberry-page__tv-image" src={tvGreen} alt={t("raspberry_tv_alt")} loading="eager" fetchPriority="high" decoding="async" />
         </div>
       </div>
 
@@ -4982,6 +4982,8 @@ function RaspberryPage({
                     >
                       <img
                         className="raspberry-language-option__icon"
+                        loading="eager"
+                        fetchPriority="high"
                         src={isSelected ? option.selectedIcon : option.normalIcon}
                         alt=""
                         aria-hidden="true"

@@ -6012,3 +6012,5 @@ img {
 .library-loading__card { width: min(560px, calc(100vw - 40px)); box-sizing: border-box; max-height: calc(100dvh - 40px); overflow-y: auto; }
 .library-loading__detail { margin: 1rem 0 0; font-size: .9rem; line-height: 1.5; color: #e3edf2; overflow-wrap: anywhere; }
 .library-loading__pending { margin: .8rem 0 0; padding: 0; list-style: none; text-align: left; font-size: .82rem; line-height: 1.6; color: #ffd429; overflow-wrap: anywhere; }
+.tmdb-cache-calculating { display: flex; align-items: center; gap: .7rem; }
+.tmdb-cache-spinner { display: inline-block; width: 18px; height: 18px; flex-shrink: 0; border: 3px solid #ffffff30; border-top-color: #ffd429; border-radius: 50%; animation: library-spin 1s linear infinite; }

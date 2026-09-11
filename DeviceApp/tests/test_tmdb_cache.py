@@ -261,6 +261,21 @@ class TmdbCacheTests(unittest.TestCase):
             self.cache.storage()
             usage.assert_called_once()
 
+    def test_background_storage_returns_while_scan_is_blocked_and_deduplicates(self):
+        started, release = threading.Event(), threading.Event()
+        def scan():
+            started.set()
+            release.wait(5)
+        with patch.object(self.cache, 'storage', side_effect=scan) as storage:
+            try:
+                first = self.cache.storage_background()
+                self.assertTrue(first['calculating'])
+                self.assertTrue(started.wait(1))
+                self.assertTrue(self.cache.storage_background()['calculating'])
+                storage.assert_called_once()
+            finally:
+                release.set()
+
     def test_storage_empty_cache_and_unavailable_disk(self):
         self.cache.root = self.cache.root / 'not-created'
         self.assertEqual(self.cache.storage()['bytes'], 0)

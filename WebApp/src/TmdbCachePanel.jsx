@@ -3,18 +3,21 @@ import { getTmdbCacheStatus, cancelTmdbCacheDownload, isMockMode } from "./api/r
 
 const labels = {
   es: {
+    calculating: "Calculando el espacio de TMDB en segundo plano…",
     storage: "Espacio de la caché", disk: "del disco", storageUnavailable: "No se pudo consultar el espacio de la caché.",
     downloading: "Descarga en curso…", cancel: "Cancelar descarga", cancelling: "Cancelando…", cancelled: "cancelados", resume: "Reanudar descarga", stopped: "Descarga cancelada. Se conserva todo lo descargado. Una petición en curso puede tardar unos segundos en detenerse.",
     title: "Contenido TMDB en local", copy: "Guarda fichas, carteles, fondos, logos e imágenes de temporadas y episodios en la Raspberry. Las nuevas incorporaciones se descargan automáticamente. Puedes cerrar esta página durante la descarga.",
     start: "Descargar catálogo / reintentar pendientes", busy: "Preparando…", complete: "completados", pending: "pendientes", failed: "con errores", missing: "Sin ID de TMDB: asigna su ficha para poder descargarlos.", errors: "Detalles de errores", mock: "Conecta con la Raspberry para descargar el catálogo.",
   },
   ca: {
+    calculating: "Calculant l’espai de TMDB en segon pla…",
     storage: "Espai de la memòria cau", disk: "del disc", storageUnavailable: "No s’ha pogut consultar l’espai de la memòria cau.",
     downloading: "Descàrrega en curs…", cancel: "Cancel·lar descàrrega", cancelling: "Cancel·lant…", cancelled: "cancel·lats", resume: "Reprendre descàrrega", stopped: "Descàrrega cancel·lada. Es conserva tot el que s’ha descarregat. Una petició en curs pot trigar uns segons a aturar-se.",
     title: "Contingut TMDB en local", copy: "Desa fitxes, cartells, fons, logos i imatges de temporades i episodis a la Raspberry. Les noves incorporacions es descarreguen automàticament. Pots tancar aquesta pàgina durant la descàrrega.",
     start: "Descarregar catàleg / reintentar pendents", busy: "Preparant…", complete: "completats", pending: "pendents", failed: "amb errors", missing: "Sense ID de TMDB: assigna la seva fitxa per descarregar-los.", errors: "Detalls dels errors", mock: "Connecta amb la Raspberry per descarregar el catàleg.",
   },
   en: {
+    calculating: "Calculating TMDB storage in the background…",
     storage: "Cache storage", disk: "of disk", storageUnavailable: "Cache storage usage is unavailable.",
     downloading: "Download in progress…", cancel: "Cancel download", cancelling: "Cancelling…", cancelled: "cancelled", resume: "Resume download", stopped: "Download cancelled. Downloaded files are retained. An in-flight request may take a few seconds to stop.",
     title: "Local TMDB content", copy: "Save metadata, posters, backdrops, logos, season and episode artwork on the Raspberry. New additions download automatically. You can close this page while downloads continue.",
@@ -43,7 +46,15 @@ export default function TmdbCachePanel({ language }) {
       } catch (e) { if (!disposed && !action.current.busy && revision === action.current.revision) setError(e.message); }
       if (!disposed) timer = setTimeout(poll, 5000);
     }
-    poll();
+    // Let the header graphics finish first, but do not wait forever on a broken image.
+    const graphics = [...document.querySelectorAll(".raspberry-page img")];
+    Promise.race([
+      Promise.all(graphics.map(image => image.decode ? image.decode().catch(() => {}) : Promise.resolve())),
+      new Promise(resolve => { timer = setTimeout(resolve, 5000); }),
+    ]).then(() => {
+      clearTimeout(timer);
+      if (!disposed) timer = setTimeout(poll, 0);
+    });
     return () => { disposed = true; clearTimeout(timer); };
   }, []);
   async function runAction(cancel = false) {
@@ -57,9 +68,10 @@ export default function TmdbCachePanel({ language }) {
   return <section className="tmdb-cache-panel">
     <h3>{t.title}</h3>
     <p>{t.copy}</p>
+    {!isMockMode() && !error && (!status || status.storage?.calculating) && <p className="tmdb-cache-calculating" role="status"><span className="tmdb-cache-spinner" aria-hidden="true" />{t.calculating}</p>}
     {status?.storage?.available ? <div className="tmdb-cache-storage">
       <strong>{t.storage}: {amount(status.storage.gb)} GB · {amount(status.storage.percent)} % {t.disk}</strong>
-    </div> : status?.storage && <p>{t.storageUnavailable}</p>}
+    </div> : status?.storage && !status.storage.calculating && <p>{t.storageUnavailable}</p>}
     <button className="dialog-button" type="button" disabled={Boolean(busy) || active || !status || isMockMode()} onClick={() => runAction()}>{busy === "start" ? t.busy : active ? t.downloading : status?.cancelled ? t.resume : t.start}</button>
     {active && <button className="dialog-button" type="button" disabled={Boolean(busy)} onClick={() => runAction(true)}>{busy === "cancel" ? t.cancelling : t.cancel}</button>}
     {!active && status?.cancelled > 0 && <p role="status">{t.stopped}</p>}

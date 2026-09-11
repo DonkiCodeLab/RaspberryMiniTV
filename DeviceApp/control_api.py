@@ -3359,7 +3359,7 @@ def tmdb_cache_status():
                     for item in library.get(collection, {}).values():
                         queue_tmdb_artwork(kind, item)
         tmdb_artwork.start()
-        return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids(), "storage": tmdb_artwork.storage()})
+        return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids(), "storage": tmdb_artwork.storage_background()})
 
 
 @app.route("/settings/tmdb", methods=["GET"])
