@@ -5833,11 +5833,12 @@ function PicturesLibrary({ pictures, onUpload, t, countLabel }) {
   );
 }
 
-function LibraryLoading({ label }) {
+function LibraryLoading({ label, progress }) {
   return <div className="library-loading" role="dialog" aria-modal="true" aria-label={label}>
     <div className="library-loading__card" role="status" aria-live="polite">
       <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
       <h2>{label}</h2>
+      {progress?.total > 0 ? <progress className="library-loading__progress" value={progress.completed} max={progress.total} aria-label={label} /> : null}
     </div>
   </div>;
 }
@@ -5854,6 +5855,7 @@ export default function App() {
   const [unlocked, setUnlocked] = useState(mockMode || Boolean(getStoredWebPin()));
   const [videos, setVideos] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
+  const [coverProgress, setCoverProgress] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const detailCache = useRef(new Map());
   const seasonCache = useRef(new Map());
@@ -6363,7 +6365,7 @@ export default function App() {
     setError("");
     getLibrarySummaries(libraryMovies, directories, tmdbLanguage).then(async summaries => {
       await preloadLibraryCovers([...Object.values(summaries.series), ...Object.values(summaries.movies)]
-        .map(card => card.posterImage), { signal: controller.signal });
+        .map(card => card.posterImage), { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
       if (cancelled) return;
       setTmdbSeriesMap(current => Object.fromEntries(directories.map(directory => {
         const card = summaries.series[String(directory.tmdbId)] || {};
@@ -8418,7 +8420,7 @@ export default function App() {
         ) : (
           <>
             {!error && (!videos || loading || tmdbLoading || detailLoading) ? (
-              <LibraryLoading label={t(!videos || loading || tmdbLoading ? "loading_library" : "loading_details")} />
+              <LibraryLoading label={t(!videos || loading || tmdbLoading ? "loading_library" : "loading_details")} progress={tmdbLoading ? coverProgress : null} />
             ) : error ? (
               <section className="empty-state">
                 <div className="empty-state__card">

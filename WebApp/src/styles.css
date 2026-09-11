@@ -6006,3 +6006,6 @@ img {
 @media (prefers-reduced-motion: reduce) {
   .library-loading__spinner span { animation: none; }
 }
+.library-loading__progress { display: block; width: 100%; height: 5px; margin-top: 1.3rem; accent-color: #ffd429; border: 0; border-radius: 4px; overflow: hidden; }
+.library-loading__progress::-webkit-progress-bar { background: #ffffff18; }
+.library-loading__progress::-webkit-progress-value { background: #ffd429; }
