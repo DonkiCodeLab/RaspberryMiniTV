@@ -97,6 +97,22 @@ class TmdbCache:
                     raise TmdbError("La Raspberry no puede conectar con TMDB. Revisa su conexión a Internet, DNS y certificados.", "TMDB_CONNECTION_ERROR") from None
                 time.sleep(2 ** attempt)
 
+    def library_summary(self, kind, tmdb_id, language):
+        """Read only local metadata and return the fields needed by library cards."""
+        params = {"language": language}
+        if kind == "movie":
+            params["append_to_response"] = "external_ids"
+        path = f"/{kind}/{int(tmdb_id)}"
+        key = hashlib.sha256((path + "?" + urllib.parse.urlencode(sorted(params.items()))).encode()).hexdigest()
+        try:
+            data = json.loads((self.root / "metadata" / (key + ".json")).read_text())
+        except (OSError, ValueError):
+            return {"id": int(tmdb_id)}
+        return {"id": int(tmdb_id), "name": data.get("title") or data.get("name") or "",
+                "posterPath": data.get("poster_path") or "", "voteAverage": data.get("vote_average") or 0,
+                "releaseDate": data.get("release_date") or "", "firstAirDate": data.get("first_air_date") or "",
+                "genres": [genre.get("name", "") for genre in data.get("genres", [])]}
+
     def json(self, path, params=None, refresh=False):
         if not DETAIL_RE.fullmatch(path) and path not in ("/search/movie", "/search/tv"):
             raise ValueError("Ruta TMDB no permitida")

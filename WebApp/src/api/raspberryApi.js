@@ -1503,6 +1503,10 @@ export async function gameSystemArtwork(systemId, file, reset = false) {
 }
 
 // TMDB requests go through the Raspberry's persistent cache in connected mode.
+export function getCachedLibrarySummaries(language) {
+  return request(`/tmdb/library?${new URLSearchParams({ language })}`);
+}
+
 export function getCachedTmdbJson(path, { language, query = {} } = {}) {
   const params = new URLSearchParams();
   if (language) params.set("language", language);

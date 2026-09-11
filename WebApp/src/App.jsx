@@ -111,7 +111,7 @@ import {
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
-import { getRaspberryMovieLibraryItems, getMovieTmdbId, loadMovieDetails } from "./movieCatalog";
+import { getRaspberryMovieLibraryItems, getMovieTmdbId } from "./movieCatalog";
 import {
   loadMediaLibrary,
   removeMediaLibraryItem,
@@ -127,6 +127,7 @@ import {
   getMovieById,
   getTvSeasonEpisodes,
   getTvSeriesById,
+  getLibrarySummaries,
   resolveSeriesFromNames,
   initializeTmdbCredentials,
   searchMovies,
@@ -523,6 +524,8 @@ const UI_STRINGS = {
     enter: "Entrar",
     loading_movies: "Cargando películas...",
     loading_seasons: "Cargando temporadas...",
+    loading_library: "Cargando biblioteca",
+    loading_details: "Cargando contenido",
     loading_movie_copy: "Estoy preparando la portada y los datos TMDB de la película seleccionada.",
     loading_series_copy: "Estoy preparando la portada y la cartelera TMDB de la serie seleccionada.",
     connection_error: "Error de conexión",
@@ -886,6 +889,8 @@ const UI_STRINGS = {
     enter: "Entrar",
     loading_movies: "Carregant pel·lícules...",
     loading_seasons: "Carregant temporades...",
+    loading_library: "Carregant biblioteca",
+    loading_details: "Carregant contingut",
     loading_movie_copy: "Estic preparant la portada i les dades TMDB de la pel·lícula seleccionada.",
     loading_series_copy: "Estic preparant la portada i la cartellera TMDB de la sèrie seleccionada.",
     connection_error: "Error de connexió",
@@ -1249,6 +1254,8 @@ const UI_STRINGS = {
     enter: "Enter",
     loading_movies: "Loading movies...",
     loading_seasons: "Loading seasons...",
+    loading_library: "Loading library",
+    loading_details: "Loading content",
     loading_movie_copy: "Preparing the cover and TMDB data for the selected movie.",
     loading_series_copy: "Preparing the cover and TMDB lineup for the selected series.",
     connection_error: "Connection error",
@@ -5825,6 +5832,15 @@ function PicturesLibrary({ pictures, onUpload, t, countLabel }) {
   );
 }
 
+function LibraryLoading({ label }) {
+  return <div className="library-loading" role="dialog" aria-modal="true" aria-label={label}>
+    <div className="library-loading__card" role="status" aria-live="polite">
+      <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
+      <h2>{label}</h2>
+    </div>
+  </div>;
+}
+
 export default function App() {
   const [mediaMarks, setMediaMarks] = useState(loadMediaMarks);
   const mockMode = isMockMode();
@@ -5837,6 +5853,9 @@ export default function App() {
   const [unlocked, setUnlocked] = useState(mockMode || Boolean(getStoredWebPin()));
   const [videos, setVideos] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const detailCache = useRef(new Map());
+  const seasonCache = useRef(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
@@ -6335,90 +6354,59 @@ export default function App() {
   }, [selectedGame?.relativePath]);
 
   useEffect(() => {
-    if (!directories.length) {
-      setTmdbSeriesMap({});
-      return;
-    }
-
+    if (!videos) return;
+    const libraryMovies = mockMode ? movieLibrary : getRaspberryMovieLibraryItems(videos);
     let cancelled = false;
-
-    async function loadTmdbSeries() {
-      setTmdbLoading(true);
-      setError("");
-
-      try {
-        const entries = await Promise.all(
-          directories.map(async (directory) => {
-            const profile = seriesProfiles[directory.relativePath] || {};
-            const tmdbSeries = directory.tmdbId
-              ? await getTvSeriesById(directory.tmdbId, tmdbLanguage)
-              : await resolveSeriesFromNames({
-                  directoryName: directory.name,
-                  displayName: profile.name || directory.name,
-                  language: tmdbLanguage,
-                });
-
-            return [
-              directory.relativePath,
-              {
-                ...tmdbSeries,
-                directoryPath: directory.relativePath,
-              },
-            ];
-          })
-        );
-
-        if (!cancelled) {
-          setTmdbSeriesMap(Object.fromEntries(entries));
-        }
-      } catch (nextError) {
-        if (!cancelled) {
-          setError(nextError.message || "No se pudo cargar TMDB.");
-        }
-      } finally {
-        if (!cancelled) {
-          setTmdbLoading(false);
-        }
-      }
-    }
-
-    loadTmdbSeries();
-    return () => {
-      cancelled = true;
-    };
-  }, [directories, seriesProfiles]);
+    setTmdbLoading(true);
+    setError("");
+    getLibrarySummaries(libraryMovies, directories, tmdbLanguage).then(summaries => {
+      if (cancelled) return;
+      setTmdbSeriesMap(current => Object.fromEntries(directories.map(directory => {
+        const card = summaries.series[String(directory.tmdbId)] || {};
+        const detail = current[directory.relativePath];
+        return [directory.relativePath, { ...card, ...(detail?._detailsLanguage === tmdbLanguage ? detail : {}) }];
+      })));
+      setTmdbMovieMap(current => Object.fromEntries(libraryMovies.map(movie => {
+        const card = summaries.movies[String(getMovieTmdbId(movie))] || {};
+        const detail = current[String(movie.id)];
+        return [String(movie.id), { ...card, ...(detail?._detailsLanguage === tmdbLanguage ? detail : {}) }];
+      })));
+    }).catch(nextError => {
+      if (!cancelled) setError(nextError.message || "No se pudo cargar la biblioteca.");
+    }).finally(() => {
+      if (!cancelled) setTmdbLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [videos, mockMode ? movieLibrary : null, directories, tmdbLanguage]);
 
   useEffect(() => {
-    if (!movieLibrary.length) {
-      setTmdbMovieMap({});
-      return;
-    }
-
+    const isMovie = activeMediaType === "movies";
+    const entry = isMovie
+      ? movieLibrary.find(movie => String(movie.id) === String(selectedMovieId))
+      : activeMediaType === "series" ? directories.find(directory => directory.relativePath === selectedDirectoryPath) : null;
+    if (!entry) { setDetailLoading(false); return; }
     let cancelled = false;
-
-    async function loadTmdbMovies() {
-      setTmdbLoading(true);
-      setError("");
-
-      try {
-        const details = await loadMovieDetails(movieLibrary, getMovieById, tmdbLanguage);
-        if (!cancelled) setTmdbMovieMap(details);
-      } catch (nextError) {
-        if (!cancelled) {
-          setError(nextError.message || "No se pudo cargar TMDB.");
-        }
-      } finally {
-        if (!cancelled) {
-          setTmdbLoading(false);
-        }
-      }
+    const id = isMovie ? getMovieTmdbId(entry) : Number(entry.tmdbId);
+    const key = `${activeMediaType}:${id || entry.relativePath}:${tmdbLanguage}`;
+    setDetailLoading(true);
+    setError("");
+    if (!detailCache.current.has(key)) {
+      const request = isMovie ? (id ? getMovieById(id, tmdbLanguage) : Promise.resolve({}))
+        : id ? getTvSeriesById(id, tmdbLanguage)
+        : resolveSeriesFromNames({ directoryName: entry.name, displayName: entry.name, language: tmdbLanguage });
+      detailCache.current.set(key, request.catch(error => { detailCache.current.delete(key); throw error; }));
     }
-
-    loadTmdbMovies();
-    return () => {
-      cancelled = true;
-    };
-  }, [movieLibrary, tmdbLanguage]);
+    detailCache.current.get(key).then(detail => {
+      if (cancelled) return;
+      const update = current => ({ ...current, [isMovie ? String(entry.id) : entry.relativePath]: {
+        ...current[isMovie ? String(entry.id) : entry.relativePath], ...detail, _detailsLanguage: tmdbLanguage,
+      } });
+      if (isMovie) setTmdbMovieMap(update); else setTmdbSeriesMap(update);
+    }).catch(nextError => {
+      if (!cancelled) setError(nextError.message || "No se pudo cargar la ficha.");
+    }).finally(() => { if (!cancelled) setDetailLoading(false); });
+    return () => { cancelled = true; };
+  }, [activeMediaType, selectedMovieId, selectedDirectoryPath, movieLibrary, directories, tmdbLanguage]);
 
   const seriesOptions = useMemo(() => {
     return directories.map((directory) => {
@@ -6427,12 +6415,13 @@ export default function App() {
 
       return {
         key: directory.relativePath,
-        id: tmdbSeries?.id || null,
+        id: tmdbSeries?.id || Number(directory.tmdbId) || null,
         directoryPath: directory.relativePath,
         name: profile.name || tmdbSeries?.name || directory.name,
         heroImage: localTmdbImageUrl(profile.heroImage) || tmdbSeries?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
         imageOptions: tmdbSeries?.imageOptions || [],
+        posterImage: tmdbSeries?.posterImage || "",
         firstAirDate: tmdbSeries?.firstAirDate || "",
         voteAverage: tmdbSeries?.voteAverage || 0,
         seasons: tmdbSeries?.seasons || [],
@@ -6461,6 +6450,7 @@ export default function App() {
         imdbUrl: normalizeImdbUrl(profile.imdbUrl || tmdbMovie?.imdbUrl),
         rottenTomatoesUrl: normalizeRottenTomatoesUrl(profile.rottenTomatoesUrl || tmdbMovie?.rottenTomatoesUrl),
         imageOptions: tmdbMovie?.imageOptions || [],
+        posterImage: tmdbMovie?.posterImage || "",
         overview: tmdbMovie?.overview || "",
         releaseDate: tmdbMovie?.releaseDate || "",
         runtime: tmdbMovie?.runtime || 0,
@@ -6627,15 +6617,20 @@ export default function App() {
     let cancelled = false;
 
     async function loadSeasonEpisodes() {
+      setSeasonEpisodes(null);
       setSeasonEpisodesLoading(true);
       setError("");
 
       try {
-        const nextSeason = await getTvSeasonEpisodes({
-          seriesId: selectedSeries.id,
-          seasonNumber: selectedSeason.seasonNumber || selectedSeason.id,
-          language: tmdbLanguage,
-        });
+        const seasonKey = `${selectedSeries.id}:${selectedSeason.seasonNumber || selectedSeason.id}:${tmdbLanguage}`;
+        if (!seasonCache.current.has(seasonKey)) {
+          seasonCache.current.set(seasonKey, getTvSeasonEpisodes({
+            seriesId: selectedSeries.id,
+            seasonNumber: selectedSeason.seasonNumber || selectedSeason.id,
+            language: tmdbLanguage,
+          }).catch(error => { seasonCache.current.delete(seasonKey); throw error; }));
+        }
+        const nextSeason = await seasonCache.current.get(seasonKey);
 
         if (!cancelled) {
           setSeasonEpisodes(nextSeason);
@@ -6655,7 +6650,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [currentView, selectedSeries, selectedSeason]);
+  }, [currentView, selectedSeries?.id, selectedSeason?.seasonNumber, selectedSeason?.id, tmdbLanguage]);
 
   useEffect(() => {
     if (currentView !== "season" || !selectedSeason) {
@@ -8418,17 +8413,8 @@ export default function App() {
           </div>
         ) : (
           <>
-            {loading || tmdbLoading ? (
-              <section className="empty-state">
-                <div className="empty-state__card">
-                  <h2>{isMoviesMode ? t("loading_movies") : t("loading_seasons")}</h2>
-                  <p>
-                    {isMoviesMode
-                      ? t("loading_movie_copy")
-                      : t("loading_series_copy")}
-                  </p>
-                </div>
-              </section>
+            {!error && (loading || tmdbLoading || detailLoading) ? (
+              <LibraryLoading label={t(loading || tmdbLoading ? "loading_library" : "loading_details")} />
             ) : error ? (
               <section className="empty-state">
                 <div className="empty-state__card">
@@ -8555,7 +8541,7 @@ export default function App() {
                       <h1>{selectedSeries.name}</h1>
                       <p>{selectedSeason.title}</p>
                       <span>
-                        {`${selectedSeason.episodeCount} ${t("chapters_summary")} / ${formatSeriesRuntime(selectedSeason.totalRuntimeMinutes)}`}
+                        {`${selectedSeason.episodeCount} ${t("chapters_summary")}${seasonEpisodes?.episodes?.length ? ` / ${formatSeriesRuntime(seasonEpisodes.episodes.reduce((total, episode) => total + episode.runtime, 0))}` : ""}`}
                       </span>
                     </div>
                   </header>
@@ -8567,12 +8553,7 @@ export default function App() {
                 </div>
 
                 {seasonEpisodesLoading ? (
-                  <section className="empty-state">
-                    <div className="empty-state__card">
-                      <h2>{t("loading_episodes")}</h2>
-                      <p>{t("reading_season")}</p>
-                    </div>
-                  </section>
+                  <LibraryLoading label={t("loading_details")} />
                 ) : (
                   <section className="season-page__episodes">
                     {(seasonEpisodes?.episodes || []).map((episode) => (
@@ -8982,7 +8963,7 @@ export default function App() {
                     <div className="seasons-section__label">{libraryCountLabel}</div>
                     <div className={`movie-library__items movie-library__items--${seriesLibraryView}`}>
                       {filteredSeriesOptions.map((series) => {
-                        const poster = series.imageOptions?.[1] || series.heroImage || cartellLogo;
+                        const poster = series.posterImage || series.imageOptions?.[1] || series.heroImage || cartellLogo;
                         const year = series.firstAirDate?.slice(0, 4) || t("not_available");
                         const rating = Number(series.voteAverage) > 0 ? `${(series.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
                         return (
@@ -9012,7 +8993,7 @@ export default function App() {
                 ) : isSeriesMode ? (
                   <section className="seasons-section">
                     <div className="seasons-section__label">
-                      {`${seasons.length} ${t("seasons_label")} (${selectedSeries?.episodeCount || 0} ${t("chapters_summary")} / ${formatSeriesRuntime(selectedSeries?.totalRuntimeMinutes)})`}
+                      {`${seasons.length} ${t("seasons_label")} (${selectedSeries?.episodeCount || 0} ${t("chapters_summary")})`}
                     </div>
                     <div className={`season-grid${seasons.length === 1 ? " season-grid--single" : ""}`}>
                       {seasons.map((season) => (
@@ -9035,7 +9016,7 @@ export default function App() {
                     <div className={`movie-library__items movie-library__items--${movieLibraryView}`}>
                       {filteredMovieOptions.map((movie) => {
                         const downloadUrl = getMovieDownloadUrl(movie);
-                        const poster = movie.imageOptions?.[1] || movie.heroImage || cartellLogo;
+                        const poster = movie.posterImage || movie.imageOptions?.[1] || movie.heroImage || cartellLogo;
                         const year = movie.releaseDate?.slice(0, 4) || t("not_available");
                         const rating = Number(movie.voteAverage) > 0 ? `${(movie.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
                         return (

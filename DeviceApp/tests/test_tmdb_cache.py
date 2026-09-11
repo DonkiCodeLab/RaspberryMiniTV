@@ -65,6 +65,25 @@ class TmdbCacheTests(unittest.TestCase):
             self.assertEqual(updated['rottenTomatoesUrl'], 'https://www.rottentomatoes.com/m/test')
             self.assertEqual(lookup.call_count, 1)
 
+    def test_library_summary_is_compact_and_never_downloads(self):
+        movie = {'id': 1, 'title': 'Test', 'poster_path': '/poster.jpg',
+                 'overview': 'Long details', 'external_ids': {}, 'genres': [{'name': 'Drama'}]}
+        with patch.object(self.cache, '_download', return_value=(json.dumps(movie).encode(), 'application/json')):
+            self.cache.json('/movie/1', {'language': 'es-ES', 'append_to_response': 'external_ids'})
+        with patch.object(self.cache, '_download', side_effect=AssertionError('offline')):
+            card = self.cache.library_summary('movie', 1, 'es-ES')
+            self.assertEqual(card['posterPath'], '/poster.jpg')
+            self.assertEqual(card['genres'], ['Drama'])
+            self.assertNotIn('overview', card)
+            self.assertNotIn('external_ids', card)
+            self.assertEqual(self.cache.library_summary('movie', 999, 'es-ES'), {'id': 999})
+        with patch.object(api, 'tmdb_artwork', self.cache), patch.object(api, 'is_authorized_request', return_value=True), \
+                patch.object(api, 'load_media_library', return_value={'movies': {'Movies/a.mp4': {'tmdbId': 1}}, 'series': {}}):
+            response = api.app.test_client().get('/tmdb/library?language=es-ES')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json['movies']['1']['name'], 'Test')
+            self.assertEqual(response.json['series'], {})
+
     def test_failed_download_is_not_cached_and_can_be_retried(self):
         with patch.object(self.cache, '_download', return_value=(b'not image', 'text/html')):
             with self.assertRaises(ValueError): self.cache.image('/poster.jpg')

@@ -5967,3 +5967,42 @@ img {
 .tmdb-cache-panel > .dialog-button { margin: 0 12px 12px 0; }
 
 .tmdb-cache-storage { margin: 16px 0 24px; }
+
+.library-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(13, 30, 41, .36);
+  backdrop-filter: blur(7px);
+}
+.library-loading__card {
+  width: min(360px, 100%);
+  box-sizing: border-box;
+  padding: 2.4rem 1.5rem 1.8rem;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(145deg, #284b5f, #10232e);
+  border: 1px solid rgba(255, 212, 41, .5);
+  border-radius: 26px;
+  box-shadow: 0 20px 70px #10232e66;
+}
+.library-loading__card h2 { margin: 1.5rem 0 0; font-size: 1.25rem; }
+.library-loading__spinner { position: relative; width: 76px; height: 76px; margin: auto; }
+.library-loading__spinner span {
+  position: absolute;
+  inset: 0;
+  border: 3px solid #ffd42920;
+  border-top-color: #ffd429;
+  border-right-color: #ffd429;
+  border-radius: 50%;
+  animation: library-spin 1.15s linear infinite;
+}
+.library-loading__spinner span:nth-child(2) { inset: 12px; border-color: #ffffff18; border-bottom-color: #fff; animation-direction: reverse; animation-duration: 1.6s; }
+.library-loading__spinner span:nth-child(3) { inset: 28px; border: 0; background: #ffd429; box-shadow: 0 0 20px #ffd42966; }
+@keyframes library-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .library-loading__spinner span { animation: none; }
+}

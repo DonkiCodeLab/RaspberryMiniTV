@@ -61,3 +61,43 @@ test('legacy web credentials migrate once and server credentials remain authorit
     await assert.rejects(tmdb.initializeTmdbCredentials({}), /save failed/);
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
+
+test('library loads a single compact local response without detail requests', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: 'http://raspberry:5050', hostname: 'raspberry' }, sessionStorage: { getItem: () => '1234' } };
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    assert.equal(url, 'http://raspberry:5050/tmdb/library?language=es-ES');
+    return { ok: true, text: async () => JSON.stringify({ movies: { 1: { id: 1, name: 'Test', posterPath: '/poster.jpg' } }, series: {} }) };
+  };
+  try {
+    const tmdb = await loadBrowserModule('../src/tmdbApi.js');
+    const cards = await tmdb.getLibrarySummaries([{ id: 'Movies/test.mp4', tmdbId: 1 }], [], 'es-ES');
+    assert.equal(requests.length, 1);
+    assert.equal(cards.movies[1].posterImage, 'http://raspberry:5050/tmdb/images/poster.jpg?pin=1234');
+    assert.equal(cards.movies[1].imageOptions, undefined);
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
+
+test('opening a series does not fetch its seasons episodes', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: 'http://raspberry:5050', hostname: 'raspberry' }, sessionStorage: { getItem: () => '1234' } };
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    assert.ok(!url.includes('/season/'), 'chapter metadata must wait until a season is opened');
+    const data = url.includes('/images') ? { posters: [] } : {
+      id: 1, name: 'Test', overview: 'Stored', poster_path: '/poster.jpg',
+      seasons: [{ season_number: 1, episode_count: 10, poster_path: '/season.jpg' }]
+    };
+    return { ok: true, text: async () => JSON.stringify(data) };
+  };
+  try {
+    const tmdb = await loadBrowserModule('../src/tmdbApi.js');
+    const series = await tmdb.getTvSeriesById(1, 'es-ES');
+    assert.equal(requests.length, 2);
+    assert.equal(series.seasons.length, 1);
+    assert.ok(series.seasons[0].image.includes('/season.jpg'));
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});

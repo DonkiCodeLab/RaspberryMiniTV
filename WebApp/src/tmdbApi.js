@@ -1,4 +1,4 @@
-import { getCachedTmdbJson, isMockMode, localTmdbImageUrl, updateRaspberryTmdbSettings } from "./api/raspberryApi";
+import { getCachedLibrarySummaries, getCachedTmdbJson, isMockMode, localTmdbImageUrl, updateRaspberryTmdbSettings } from "./api/raspberryApi";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 const TMDB_ENGLISH_FALLBACK_LANGUAGE = "en-US";
@@ -351,6 +351,31 @@ async function getMovieImages(movieId, language) {
   return uniqueImageList([...posters, ...backdrops]);
 }
 
+export async function getLibrarySummaries(movies, directories, language) {
+  let summaries;
+  if (!isMockMode()) {
+    summaries = await getCachedLibrarySummaries(language);
+  } else {
+    // Development mode has no Raspberry cache; request only the main card metadata.
+    const read = async (kind, id) => {
+      const data = await fetchTmdbJson(`/${kind}/${id}`, { language });
+      return [String(id), { id, name: data.title || data.name, posterPath: data.poster_path,
+        releaseDate: data.release_date, firstAirDate: data.first_air_date,
+        voteAverage: data.vote_average, genres: (data.genres || []).map(g => g.name) }];
+    };
+    const movieIds = [...new Set(movies.map(m => Number(m.tmdbId ?? m.id)).filter(Boolean))];
+    const seriesIds = [...new Set(directories.map(d => Number(d.tmdbId)).filter(Boolean))];
+    const [movieEntries, seriesEntries] = await Promise.all([
+      Promise.all(movieIds.map(id => read("movie", id))),
+      Promise.all(seriesIds.map(id => read("tv", id))),
+    ]);
+    summaries = { movies: Object.fromEntries(movieEntries), series: Object.fromEntries(seriesEntries) };
+  }
+  const cards = collection => Object.fromEntries(Object.entries(collection || {}).map(([id, card]) =>
+    [id, { ...card, posterImage: buildTmdbImageUrl(card.posterPath, "w500") }]));
+  return { movies: cards(summaries.movies), series: cards(summaries.series) };
+}
+
 export async function getTvSeriesById(seriesId, language) {
   const [show, availableImages] = await Promise.all([
     fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}`, { language }),
@@ -380,35 +405,6 @@ export async function getTvSeriesById(seriesId, language) {
       };
     })
     .sort((a, b) => a.seasonNumber - b.seasonNumber);
-  const defaultEpisodeRuntime = (Array.isArray(show?.episode_run_time) ? show.episode_run_time : [])
-    .map(Number)
-    .find((runtime) => Number.isFinite(runtime) && runtime > 0) || 0;
-  const seasonRuntimeResults = await Promise.all(
-    seasons.map(async (season) => {
-      try {
-        const seasonDetails = await fetchTmdbJson(
-          `/tv/${seriesId}/season/${season.seasonNumber}`,
-          { language }
-        );
-
-        return (Array.isArray(seasonDetails?.episodes) ? seasonDetails.episodes : []).reduce(
-          (total, episode) => {
-            const episodeRuntime = Number(episode?.runtime);
-            return total + (Number.isFinite(episodeRuntime) && episodeRuntime > 0
-              ? episodeRuntime
-              : defaultEpisodeRuntime);
-          },
-          0
-        );
-      } catch {
-        return season.episodeCount * defaultEpisodeRuntime;
-      }
-    })
-  );
-  const seasonsWithRuntime = seasons.map((season, index) => ({
-    ...season,
-    totalRuntimeMinutes: seasonRuntimeResults[index] || 0,
-  }));
 
   return {
     id: Number(show?.id) || Number(seriesId),
@@ -419,8 +415,7 @@ export async function getTvSeriesById(seriesId, language) {
     imageOptions,
     seasonCount: seasons.length,
     totalEpisodeCount: seasons.reduce((total, season) => total + (season.episodeCount || 0), 0),
-    totalRuntimeMinutes: seasonRuntimeResults.reduce((total, runtime) => total + runtime, 0),
-    seasons: seasonsWithRuntime,
+    seasons,
   };
 }
 

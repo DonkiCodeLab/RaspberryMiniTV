@@ -3295,6 +3295,19 @@ def queue_tmdb_artwork(kind, item, refresh=False):
         app.logger.exception("No se pudo encolar la descarga de imágenes TMDB")
 
 
+@app.route("/tmdb/library", methods=["GET"])
+def cached_tmdb_library():
+    language = request.args.get("language", "es-ES")
+    if language not in ("es-ES", "ca-ES", "en-US"):
+        return jsonify({"error": "Idioma no permitido"}), 400
+    library = load_media_library()
+    result = {}
+    for collection, kind in (("movies", "movie"), ("series", "tv")):
+        ids = {int(item["tmdbId"]) for item in library.get(collection, {}).values() if item.get("tmdbId")}
+        result[collection] = {str(tmdb_id): tmdb_artwork.library_summary(kind, tmdb_id, language) for tmdb_id in ids}
+    return jsonify(result)
+
+
 @app.route("/tmdb/json/<path:tmdb_path>", methods=["GET"])
 def cached_tmdb_json(tmdb_path):
     try:
