@@ -5833,11 +5833,22 @@ function PicturesLibrary({ pictures, onUpload, t, countLabel }) {
   );
 }
 
-function LibraryLoading({ label, progress }) {
+function LibraryLoading({ label, progress, stage }) {
+  const [now, setNow] = useState(Date.now());
+  const [started] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   return <div className="library-loading" role="dialog" aria-modal="true" aria-label={label}>
     <div className="library-loading__card" role="status" aria-live="polite">
       <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
       <h2>{label}</h2>
+      <p className="library-loading__detail">{stage || label} · {Math.max(0, Math.floor((now - started) / 1000))} s</p>
+      {progress?.total > 0 ? <>
+        <p className="library-loading__detail">Portadas: {progress.completed}/{progress.total} revisadas · {progress.loaded || 0} cargadas · {progress.failed || 0} errores · {progress.timedOut || 0} tiempos agotados</p>
+        <ul className="library-loading__pending">{progress.active?.map(item => <li key={item.name}>Esperando: {item.name} · {Math.max(0, Math.floor((now - item.started) / 1000))} s</li>)}</ul>
+      </> : null}
       {progress?.total > 0 ? <progress className="library-loading__progress" value={progress.completed} max={progress.total} aria-label={label} /> : null}
     </div>
   </div>;
@@ -5856,6 +5867,7 @@ export default function App() {
   const [videos, setVideos] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
   const [coverProgress, setCoverProgress] = useState(null);
+  const [libraryStage, setLibraryStage] = useState("Conectando con la Raspberry");
   const [detailLoading, setDetailLoading] = useState(false);
   const detailCache = useRef(new Map());
   const seasonCache = useRef(new Map());
@@ -6093,22 +6105,42 @@ export default function App() {
 
     async function load() {
       setLoading(true);
+      setCoverProgress(null);
       setError("");
       setRaspberryLanguageError("");
       setRaspberryAlarmsLoaded(false);
 
+      const pending = new Set();
+      const track = async (name, read) => {
+        const started = Date.now();
+        pending.add(name);
+        if (!cancelled) setLibraryStage(`Leyendo: ${[...pending].join(", ")}`);
+        console.info(`[Biblioteca] Inicio: ${name}`);
+        try {
+          const result = await read();
+          console.info(`[Biblioteca] Completado: ${name}`, { ms: Date.now() - started });
+          return result;
+        } catch (error) {
+          console.error(`[Biblioteca] Error: ${name}`, { ms: Date.now() - started, status: error?.status });
+          throw error;
+        } finally {
+          pending.delete(name);
+          if (!cancelled) setLibraryStage(pending.size ? `Leyendo: ${[...pending].join(", ")}` : "Preparando biblioteca");
+        }
+      };
+
       try {
         const [nextVideos, nextLanguage, nextAlarmSettings, nextWeatherSettings, nextTmdbSettings, nextBirthdays] = await Promise.all([
-          getVideos(),
-          getRaspberryLanguage(),
-          getRaspberryAlarms(),
-          getRaspberryWeatherSettings(),
-          getRaspberryTmdbSettings(),
-          getRaspberryBirthdays(),
+          track("catálogo local", getVideos),
+          track("idioma", getRaspberryLanguage),
+          track("alarmas", getRaspberryAlarms),
+          track("ajustes del tiempo", getRaspberryWeatherSettings),
+          track("configuración TMDB", getRaspberryTmdbSettings),
+          track("cumpleaños", getRaspberryBirthdays),
         ]);
         if (cancelled) return;
 
-        const loadedTmdbSettings = await initializeTmdbCredentials(nextTmdbSettings);
+        const loadedTmdbSettings = await track("inicialización de TMDB", () => initializeTmdbCredentials(nextTmdbSettings));
         if (cancelled) return;
         setTmdbSettings(loadedTmdbSettings);
         setVideos(nextVideos);
@@ -6362,10 +6394,20 @@ export default function App() {
     let cancelled = false;
     const controller = new AbortController();
     setTmdbLoading(true);
+    setCoverProgress(null);
+    setLibraryStage("Leyendo resumen local de series y películas");
+    const summaryStarted = Date.now();
+    console.info("[Biblioteca] Inicio: resumen local", { language: tmdbLanguage });
     setError("");
     getLibrarySummaries(libraryMovies, directories, tmdbLanguage).then(async summaries => {
-      await preloadLibraryCovers([...Object.values(summaries.series), ...Object.values(summaries.movies)]
-        .map(card => card.posterImage), { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
+      if (cancelled) return;
+      console.info("[Biblioteca] Completado: resumen local", { ms: Date.now() - summaryStarted });
+      setLibraryStage("Cargando miniaturas locales de series y películas");
+      const covers = [
+        ...Object.values(summaries.series).map(card => ({ url: card.posterImage, name: `Serie: ${card.name || card.id}` })),
+        ...Object.values(summaries.movies).map(card => ({ url: card.posterImage, name: `Película: ${card.name || card.id}` })),
+      ];
+      await preloadLibraryCovers(covers, { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
       if (cancelled) return;
       setTmdbSeriesMap(current => Object.fromEntries(directories.map(directory => {
         const card = summaries.series[String(directory.tmdbId)] || {};
@@ -6378,6 +6420,7 @@ export default function App() {
         return [String(movie.id), { ...card, ...(detail?._detailsLanguage === tmdbLanguage ? detail : {}) }];
       })));
     }).catch(nextError => {
+      console.error("[Biblioteca] Error al preparar biblioteca", { ms: Date.now() - summaryStarted, status: nextError?.status });
       if (!cancelled) setError(nextError.message || "No se pudo cargar la biblioteca.");
     }).finally(() => {
       if (!cancelled) setTmdbLoading(false);
@@ -8420,7 +8463,7 @@ export default function App() {
         ) : (
           <>
             {!error && (!videos || loading || tmdbLoading || detailLoading) ? (
-              <LibraryLoading label={t(!videos || loading || tmdbLoading ? "loading_library" : "loading_details")} progress={tmdbLoading ? coverProgress : null} />
+              <LibraryLoading label={t(!videos || loading || tmdbLoading ? "loading_library" : "loading_details")} stage={!videos || loading || tmdbLoading ? libraryStage : null} progress={tmdbLoading ? coverProgress : null} />
             ) : error ? (
               <section className="empty-state">
                 <div className="empty-state__card">
