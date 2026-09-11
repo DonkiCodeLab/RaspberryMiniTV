@@ -1843,6 +1843,7 @@ function HeaderArt({ image, crop, alt }) {
         <div className="series-hero__visible-window">
           <img
             src={image}
+            fetchPriority="high"
             alt=""
             aria-hidden="true"
             draggable="false"
@@ -2358,7 +2359,7 @@ function MovieImageCarousel({
   return (
     <div className="movie-panel__gallery">
       <div className="movie-panel__hero-media">
-        <img src={currentImage} alt={title} />
+        <img key={currentImage} src={currentImage} alt={title} fetchPriority="high" />
       </div>
 
       {safeImages.length > 1 ? (
@@ -8987,7 +8988,7 @@ export default function App() {
                         return (
                           <article className="movie-library__card" key={series.directoryPath}>
                             <button className="movie-library__poster" type="button" onClick={() => handleOpenSeriesDetails(series.directoryPath)} aria-label={`${t("movie_details")}: ${series.name}`}>
-                              <img src={poster} alt={`Portada de ${series.name}`} />
+                              <img src={poster} alt={`Portada de ${series.name}`} loading="lazy" decoding="async" fetchPriority="low" />
                             </button>
                             <div className="movie-library__info">
                               <h2>{series.name}</h2>
@@ -9040,7 +9041,7 @@ export default function App() {
                         return (
                           <article className="movie-library__card" key={movie.id}>
                             <button className="movie-library__poster" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={`${t("movie_details")}: ${movie.name}`}>
-                              <img src={poster} alt={`Portada de ${movie.name}`} />
+                              <img src={poster} alt={`Portada de ${movie.name}`} loading="lazy" decoding="async" fetchPriority="low" />
                             </button>
                             <div className="movie-library__info">
                               <h2>{movie.name}</h2>

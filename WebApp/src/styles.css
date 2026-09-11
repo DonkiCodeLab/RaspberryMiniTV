@@ -5921,18 +5921,31 @@ img {
   .media-switch__icon { width: 20px; height: 20px; }
 }
 
-/* Library controls sit just above the selector; detail artwork stays clear. */
+/* Place library controls above the DonkiCode lettering. */
 .movie-library__browse-tools {
   position: absolute;
-  left: 1.25%;
-  bottom: calc(var(--series-controls-band-height) + 0.55rem);
-  max-width: calc(var(--series-visible-width) - 2.5%);
+  left: 26.5%;
+  top: 8%;
+  max-width: 44%;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.65rem;
   pointer-events: auto;
   z-index: 3;
+}
+
+@media (max-width: 900px) {
+  .series-hero:has(.movie-library__browse-tools) {
+    margin-top: 3.75rem;
+  }
+
+  .movie-library__browse-tools {
+    left: 0;
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    max-width: 100%;
+  }
 }
 .series-icon-button--hero-settings.series-icon-button--detail-settings {
   top: auto;
