@@ -376,6 +376,8 @@ const UI_STRINGS = {
     dashboard_general_title: "Información general",
     dashboard_clock_title: "Configuración del reloj",
     dashboard_auxiliary_title: "Servicios auxiliares",
+    logout_title: "Cerrar sesión",
+    logout_copy: "Al cerrar la sesión, tendrás que introducir el PIN para volver a acceder.",
     stats_series_installed: "Series instaladas",
     stats_movies_installed: "Películas instaladas",
     stats_games_installed: "Juegos instalados",
@@ -741,6 +743,8 @@ const UI_STRINGS = {
     dashboard_general_title: "Informació general",
     dashboard_clock_title: "Configuració del rellotge",
     dashboard_auxiliary_title: "Serveis auxiliars",
+    logout_title: "Tancar la sessió",
+    logout_copy: "En tancar la sessió, hauràs d’introduir el PIN per tornar a accedir.",
     stats_series_installed: "Sèries instal·lades",
     stats_movies_installed: "Pel·lícules instal·lades",
     stats_games_installed: "Jocs instal·lats",
@@ -1106,6 +1110,8 @@ const UI_STRINGS = {
     dashboard_general_title: "General information",
     dashboard_clock_title: "Clock settings",
     dashboard_auxiliary_title: "Auxiliary services",
+    logout_title: "Log out",
+    logout_copy: "You will need to enter the PIN to access the app again.",
     stats_series_installed: "Installed series",
     stats_movies_installed: "Installed movies",
     stats_games_installed: "Installed games",
@@ -4801,6 +4807,7 @@ function RaspberryPage({
   raspberryTab,
   onChangeTab,
   onBack,
+  onLogout,
   t,
   seriesCount,
   seriesUsedGb,
@@ -5232,6 +5239,13 @@ function RaspberryPage({
                 <span className="raspberry-tmdb-card__status">{tmdbSettingsStatus}</span>
               ) : null}
               <TmdbCachePanel language={raspberryLanguage} />
+            </article>
+          </section>
+          <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
+            <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
+            <article className="raspberry-tmdb-card">
+              <p>{t("logout_copy")}</p>
+              <button className="dialog-button" type="button" onClick={onLogout}>{t("logout_title")}</button>
             </article>
           </section>
         </div>
@@ -8478,6 +8492,12 @@ export default function App() {
                 raspberryTab={raspberryTab}
                 onChangeTab={setRaspberryTab}
                 onBack={handleBackFromRaspberry}
+                onLogout={() => {
+                  setStoredWebPin("");
+                  setWebPinInput("");
+                  setUnlocked(false);
+                  window.location.reload();
+                }}
                 t={t}
                 seriesCount={installedSeriesCount}
                 seriesUsedGb={raspberryLibraryCounts.series.usedGb}
