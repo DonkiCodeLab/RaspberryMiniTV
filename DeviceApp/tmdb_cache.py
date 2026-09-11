@@ -316,8 +316,29 @@ class TmdbCache:
     def warm(self, kind, tmdb_id, extra_images=(), refresh=False):
         base = f"/{kind}/{tmdb_id}"
         images = set(extra_images)
+        thumbnails = {(path, 1280) for path in extra_images}
         errors = []
         collected = {}
+        def collect_thumbnails(data):
+            # Match the sizes used by library cards, seasons and detail galleries.
+            if isinstance(data, dict):
+                for field, widths in (("poster_path", (500, 780)),
+                                      ("backdrop_path", (1280,)),
+                                      ("still_path", (780,))):
+                    path = data.get(field)
+                    if isinstance(path, str) and IMAGE_RE.fullmatch(path):
+                        thumbnails.update((path, width) for width in widths)
+                for field, width in (("posters", 780), ("backdrops", 1280), ("stills", 780)):
+                    for item in data.get(field, []):
+                        path = item.get("file_path")
+                        if isinstance(path, str) and IMAGE_RE.fullmatch(path):
+                            thumbnails.add((path, width))
+                for value in data.values():
+                    collect_thumbnails(value)
+            elif isinstance(data, list):
+                for value in data:
+                    collect_thumbnails(value)
+
         def collect(path, params=None):
             self._check_worker()
             try:
@@ -327,6 +348,7 @@ class TmdbCache:
                 data = self.json(path, params, refresh=refresh)
                 collected[key] = data
                 images.update(self._images_in(data))
+                collect_thumbnails(data)
                 return data
             except Exception as exc:
                 errors.append(f"{path}: {exc}")
@@ -337,11 +359,6 @@ class TmdbCache:
             if kind == "movie":
                 params["append_to_response"] = "external_ids"
             detail = collect(base, params)
-            if language == LANGUAGES[0] and detail.get("poster_path"):
-                try:
-                    self.display_image(detail["poster_path"], 500)
-                except Exception as exc:
-                    errors.append(f"Miniatura: {exc}")
             if kind == "movie" and language == LANGUAGES[0]:
                 self._with_movie_links(base, detail, refresh=refresh, lookup=True)
             if kind == "tv":
@@ -362,6 +379,12 @@ class TmdbCache:
                 self.image(path)
             except Exception as exc:
                 errors.append(f"{path}: {exc}")
+        for path, width in sorted(thumbnails, key=lambda item: (item[1], item[0])):
+            self._check_worker()
+            try:
+                self.display_image(path, width)
+            except Exception as exc:
+                errors.append(f"Miniatura {path} ({width}): {exc}")
         if errors:
             raise RuntimeError("; ".join(errors)[:4000])
 
@@ -381,7 +404,8 @@ class TmdbCache:
         with self.jobs_lock:
             previous = self.jobs.get(key, {})
             images = sorted(set(previous.get("images", [])) | set(extra))
-            if previous.get("state") in ("pending", "running", "complete") and images == previous.get("images", []) and not refresh:
+            prepared = previous.get("state") in ("pending", "running") or (previous.get("state") == "complete" and previous.get("thumbnailsReady"))
+            if prepared and images == previous.get("images", []) and not refresh:
                 return
             self.jobs[key] = {"kind": kind, "id": int(tmdb_id), "state": "pending", "error": "", "images": images, "refresh": refresh}
             try:
@@ -434,6 +458,7 @@ class TmdbCache:
             with self.jobs_lock:
                 if self.jobs.get(key) is job and job["state"] == "running":
                     job.update(state=state, error=error)
+                    job["thumbnailsReady"] = state == "complete"
                 try:
                     self._save_jobs()
                 except OSError as exc:

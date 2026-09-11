@@ -135,13 +135,35 @@ class TmdbCacheTests(unittest.TestCase):
             if path == '/tv/1': return {'seasons': [{'season_number': 0}, {'season_number': 1}], 'backdrop_path': '/back.jpg', 'networks': [{'logo_path': '/logo.png'}]}
             if path.endswith('/images'): return {'posters': [{'file_path': '/variant.jpg'}], 'stills': [{'file_path': '/still2.jpg'}]}
             return {'episodes': [{'episode_number': 1, 'still_path': '/still.jpg'}], 'poster_path': '/season.jpg'}
-        with patch.object(self.cache, 'json', side_effect=fetch), patch.object(self.cache, 'image') as images:
+        with patch.object(self.cache, 'json', side_effect=fetch), patch.object(self.cache, 'image') as images, patch.object(self.cache, 'display_image') as thumbnails:
             self.cache.warm('tv', 1)
+        self.assertEqual({call.args for call in thumbnails.call_args_list}, {
+            ('/back.jpg', 1280), ('/variant.jpg', 780), ('/still2.jpg', 780),
+            ('/still.jpg', 780), ('/season.jpg', 500), ('/season.jpg', 780)})
+        self.assertEqual(thumbnails.call_count, 6)
         self.assertEqual({call.args[0] for call in images.call_args_list}, {'/back.jpg', '/logo.png', '/variant.jpg', '/still2.jpg', '/still.jpg', '/season.jpg'})
         for language in LANGUAGES:
             self.assertIn(('/tv/1/season/1', {'language': language}), paths)
         self.assertIn(('/tv/1/season/0/episode/1/images', None), paths)
         self.assertEqual(paths.count(('/tv/1/images', None)), 1)
+
+    def test_upload_preparation_generates_all_language_covers_and_fails_on_thumbnail_error(self):
+        def fetch(path, params=None, refresh=False):
+            if path.endswith('/images'):
+                return {'backdrops': [{'file_path': '/gallery.jpg'}]}
+            return {'poster_path': f"/{params['language']}.jpg"}
+        with patch.object(self.cache, 'start'):
+            self.cache.enqueue('movie', 1)
+        with patch.object(self.cache, 'json', side_effect=fetch), patch.object(self.cache, '_with_movie_links'), patch.object(self.cache, 'image'), patch.object(self.cache, 'display_image', side_effect=OSError('disk full')):
+            self.cache._run()
+        self.assertEqual(self.cache.status()['failed'], 1)
+        with patch.object(self.cache, 'start'):
+            self.cache.enqueue('movie', 1)
+        with patch.object(self.cache, 'json', side_effect=fetch), patch.object(self.cache, '_with_movie_links'), patch.object(self.cache, 'image'), patch.object(self.cache, 'display_image') as thumbnails:
+            self.cache._run()
+        self.assertEqual(self.cache.status()['complete'], 1)
+        self.assertEqual({call.args for call in thumbnails.call_args_list},
+                         {(f'/{language}.jpg', width) for language in LANGUAGES for width in (500, 780)} | {('/gallery.jpg', 1280)})
 
     def test_jobs_deduplicate_retry_and_resume_after_restart(self):
         with patch.object(self.cache, 'start'):
@@ -162,6 +184,12 @@ class TmdbCacheTests(unittest.TestCase):
             reopened.enqueue('movie', 1)
             self.assertEqual(warm.call_count, 1)
         self.assertEqual(reopened.status()['complete'], 1)
+
+    def test_reupload_prepares_thumbnails_for_legacy_completed_job(self):
+        self.cache.jobs['movie/1'] = {'kind': 'movie', 'id': 1, 'state': 'complete', 'images': [], 'error': ''}
+        with patch.object(self.cache, 'start'):
+            self.cache.enqueue('movie', 1)
+        self.assertEqual(self.cache.status()['pending'], 1)
 
     def test_cancel_persists_and_repeated_start_does_not_resume_until_enqueued(self):
         with patch.object(self.cache, 'start'):

@@ -370,3 +370,10 @@ El panel TMDB muestra el tamaño de toda la caché (imágenes, JSON, índice y c
 La API necesita Pillow (`sudo apt-get install python3-pil`) para generar las versiones
 WebP de las portadas. Se guardan en `MultimediaContent/TmdbCache/thumbnails/` y se
 reutilizan en las siguientes visitas; los originales se conservan en `images/`.
+
+Al subir una película o serie, la preparación de TMDB genera también las miniaturas
+antes de marcar el trabajo como completado: portadas de biblioteca y temporadas a
+500 px, pósteres y capturas de capítulos a 780 px, y fondos a 1280 px, en los tres
+idiomas disponibles. Se incluyen las variantes de las galerías. Esta preparación
+continúa en segundo plano después de recibir el vídeo; su progreso y posibles
+fallos aparecen en el panel TMDB. Las versiones ya guardadas se reutilizan.
