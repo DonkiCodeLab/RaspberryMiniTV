@@ -144,7 +144,7 @@ class TmdbCache:
                 atomic_write(target, raw)
             return self._with_movie_links(path, data)
 
-    def _with_movie_links(self, path, data, refresh=False, lookup=False):
+    def _with_movie_links(self, path, data, refresh=False, lookup=False, lookup_results=None):
         """Persist movie links once, shared by languages, browsers and restarts."""
         if not re.fullmatch(r"/movie/\d+", path) or "external_ids" not in data:
             return data
@@ -170,7 +170,8 @@ class TmdbCache:
             wikidata_id = str((data.get("external_ids") or {}).get("wikidata_id") or "")
             if re.fullmatch(r"Q\d+", wikidata_id):
                 try:
-                    url = self._rotten_tomatoes_lookup(wikidata_id) or fallback
+                    url = (lookup_results[wikidata_id] if lookup_results is not None
+                           else self._rotten_tomatoes_lookup(wikidata_id)) or fallback
                 except (OSError, ValueError, KeyError, TypeError):
                     # Persist the useful search link too; a failure must not cause
                     # another Internet request on every library visit.
@@ -183,20 +184,30 @@ class TmdbCache:
             return {**data, "rottenTomatoesUrl": url}
 
     def _rotten_tomatoes_lookup(self, wikidata_id):
-        query = urllib.parse.urlencode({"action": "wbgetentities", "ids": wikidata_id,
+        return self._rotten_tomatoes_lookup_many([wikidata_id]).get(wikidata_id, "")
+
+    def _rotten_tomatoes_lookup_many(self, wikidata_ids):
+        query = urllib.parse.urlencode({"action": "wbgetentities", "ids": "|".join(wikidata_ids),
                                        "props": "claims", "format": "json"})
         request = urllib.request.Request("https://www.wikidata.org/w/api.php?" + query,
                                          headers={"User-Agent": "DonkiCodeMiniTV/1.0", "Accept": "application/json"})
-        with self.network_slots, urllib.request.urlopen(request, timeout=4) as response:
+        with self.network_slots, urllib.request.urlopen(request, timeout=4 if len(wikidata_ids) == 1 else 15) as response:
             raw = response.read(4 * 1024 * 1024 + 1)
             if len(raw) > 4 * 1024 * 1024:
                 raise ValueError("Respuesta Wikidata demasiado grande")
-            entity = json.loads(raw).get("entities", {}).get(wikidata_id, {})
-        for claim in entity.get("claims", {}).get("P1258", []):
-            value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
-            if isinstance(value, str) and re.fullmatch(r"m/[A-Za-z0-9_-]+", value):
-                return "https://www.rottentomatoes.com/" + value
-        return ""
+            payload = json.loads(raw)
+            if "error" in payload:
+                raise ValueError("No se pudo consultar Wikidata")
+            entities = payload.get("entities", {})
+        results = {}
+        for wikidata_id in wikidata_ids:
+            results[wikidata_id] = ""
+            for claim in entities.get(wikidata_id, {}).get("claims", {}).get("P1258", []):
+                value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
+                if isinstance(value, str) and re.fullmatch(r"m/[A-Za-z0-9_-]+", value.strip()):
+                    results[wikidata_id] = "https://www.rottentomatoes.com/" + value.strip()
+                    break
+        return results
 
     def image(self, path):
         if not IMAGE_RE.fullmatch(path):
