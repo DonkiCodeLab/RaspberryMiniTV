@@ -8413,8 +8413,8 @@ export default function App() {
           </div>
         ) : (
           <>
-            {!error && (loading || tmdbLoading || detailLoading) ? (
-              <LibraryLoading label={t(loading || tmdbLoading ? "loading_library" : "loading_details")} />
+            {!error && (!videos || loading || tmdbLoading || detailLoading) ? (
+              <LibraryLoading label={t(!videos || loading || tmdbLoading ? "loading_library" : "loading_details")} />
             ) : error ? (
               <section className="empty-state">
                 <div className="empty-state__card">
