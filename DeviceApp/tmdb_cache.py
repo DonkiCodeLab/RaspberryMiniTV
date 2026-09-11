@@ -1,5 +1,6 @@
 """Persistent TMDB metadata/artwork and a single resumable download worker."""
 import hashlib
+from contextlib import nullcontext
 import json
 import os
 from pathlib import Path
@@ -41,6 +42,7 @@ class TmdbCache:
         self.root = Path(root)
         self.credentials = credentials
         self.io_locks = [threading.RLock() for _ in range(64)]
+        self.link_locks = [threading.RLock() for _ in range(64)]
         self.network_slots = threading.BoundedSemaphore(3)
         self.jobs_lock = threading.RLock()
         self.storage_lock = threading.Lock()
@@ -118,7 +120,7 @@ class TmdbCache:
                         if generation != self.generations.get(owner, 0):
                             raise RuntimeError("Descarga cancelada por borrado del catálogo")
                         self._index_metadata(target.name, owner, data)
-                    return data
+                    return self._with_movie_links(path, data)
             except (OSError, ValueError):
                 pass
             credentials = self.credentials()
@@ -140,7 +142,61 @@ class TmdbCache:
                     raise RuntimeError("Descarga cancelada por borrado del catálogo")
                 self._index_metadata(target.name, owner, data)
                 atomic_write(target, raw)
+            return self._with_movie_links(path, data)
+
+    def _with_movie_links(self, path, data, refresh=False, lookup=False):
+        """Persist movie links once, shared by languages, browsers and restarts."""
+        if not re.fullmatch(r"/movie/\d+", path) or "external_ids" not in data:
             return data
+        owner = path.lstrip("/")
+        target = self.root / "links" / (owner.replace("/", "-") + ".json")
+        with self.state_lock:
+            generation = self.generations.get(owner, 0)
+        with self.link_locks[hash(owner) % len(self.link_locks)] if lookup else nullcontext():
+            if not refresh:
+                try:
+                    saved = json.loads(target.read_text())
+                    if isinstance(saved.get("rottenTomatoesUrl"), str):
+                        return {**data, "rottenTomatoesUrl": saved["rottenTomatoesUrl"]}
+                except (OSError, ValueError, AttributeError):
+                    pass
+            title = str(data.get("original_title") or data.get("title") or "").strip()
+            year = re.match(r"\d{4}", str(data.get("release_date") or ""))
+            query = " ".join(filter(None, [title, year.group() if year else ""]))
+            fallback = "https://www.rottentomatoes.com/search/?" + urllib.parse.urlencode({"search": query}) if query else ""
+            if not lookup:
+                return {**data, "rottenTomatoesUrl": fallback}
+            url = fallback
+            wikidata_id = str((data.get("external_ids") or {}).get("wikidata_id") or "")
+            if re.fullmatch(r"Q\d+", wikidata_id):
+                try:
+                    url = self._rotten_tomatoes_lookup(wikidata_id) or fallback
+                except (OSError, ValueError, KeyError, TypeError):
+                    # Persist the useful search link too; a failure must not cause
+                    # another Internet request on every library visit.
+                    pass
+            with self.state_lock:
+                self._check_worker()
+                if generation != self.generations.get(owner, 0):
+                    raise RuntimeError("Enlace cancelado por borrado del catálogo")
+                atomic_write(target, json.dumps({"rottenTomatoesUrl": url}).encode())
+            return {**data, "rottenTomatoesUrl": url}
+
+    def _rotten_tomatoes_lookup(self, wikidata_id):
+        query = urllib.parse.urlencode({"action": "wbgetentities", "ids": wikidata_id,
+                                       "props": "claims", "format": "json"})
+        request = urllib.request.Request("https://www.wikidata.org/w/api.php?" + query,
+                                         headers={"User-Agent": "DonkiCodeMiniTV/1.0", "Accept": "application/json"})
+        with self.network_slots, urllib.request.urlopen(request, timeout=4) as response:
+            raw = response.read(4 * 1024 * 1024 + 1)
+            if len(raw) > 4 * 1024 * 1024:
+                raise ValueError("Respuesta Wikidata demasiado grande")
+            entity = json.loads(raw).get("entities", {}).get(wikidata_id, {})
+        for claim in entity.get("claims", {}).get("P1258", []):
+            value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
+            if isinstance(value, str) and re.fullmatch(r"m/[A-Za-z0-9_-]+", value):
+                return "https://www.rottentomatoes.com/" + value
+        return ""
 
     def image(self, path):
         if not IMAGE_RE.fullmatch(path):
@@ -153,7 +209,15 @@ class TmdbCache:
             if target.is_file() and target.stat().st_size:
                 return target
             raw, content_type = self._download("https://image.tmdb.org/t/p/original" + path, {}, 64 * 1024 * 1024)
-            if not content_type.startswith("image/"):
+            # Some TMDB CDN responses omit Content-Type (urllib reports text/plain).
+            # Only accept a recognized raster signature matching the requested suffix.
+            suffix = target.suffix.lower()
+            recognized = (
+                (suffix in {".jpg", ".jpeg"} and raw.startswith(b"\xff\xd8\xff"))
+                or (suffix == ".png" and raw.startswith(b"\x89PNG\r\n\x1a\n"))
+                or (suffix == ".webp" and raw.startswith(b"RIFF") and raw[8:12] == b"WEBP")
+            )
+            if not content_type.startswith("image/") and not recognized:
                 raise ValueError("TMDB no devolvió una imagen")
             with self.state_lock:
                 self._check_worker()
@@ -210,6 +274,8 @@ class TmdbCache:
             if kind == "movie":
                 params["append_to_response"] = "external_ids"
             detail = collect(base, params)
+            if kind == "movie" and language == LANGUAGES[0]:
+                self._with_movie_links(base, detail, refresh=refresh, lookup=True)
             if kind == "tv":
                 for season in detail.get("seasons", []):
                     number = season.get("season_number")
@@ -361,6 +427,7 @@ class TmdbCache:
                 self._legacy_metadata(owner)
             for owner in unused:
                 self.generations[owner] = self.generations.get(owner, 0) + 1
+                (self.root / "links" / (owner.replace("/", "-") + ".json")).unlink(missing_ok=True)
                 job = self.jobs.pop(owner, {})
                 candidates.update(job.get("images", []))
             self._save_jobs()

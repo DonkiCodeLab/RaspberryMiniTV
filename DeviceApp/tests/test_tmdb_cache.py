@@ -32,6 +32,39 @@ class TmdbCacheTests(unittest.TestCase):
             self.assertEqual(reopened.image('/poster.jpg').read_bytes(), b'image-data')
         self.assertNotIn('test-secret', ''.join(p.read_text() for p in Path(self.temp.name).rglob('*.json')))
 
+    def test_movie_links_are_prepared_once_and_read_offline_after_restart(self):
+        movie = {"id": 1, "title": "Prueba", "original_title": "Test", "release_date": "2000-01-01",
+                 "external_ids": {"wikidata_id": "Q123"}}
+        raw = json.dumps(movie).encode()
+        with patch.object(self.cache, '_download', return_value=(raw, 'application/json')), \
+                patch.object(self.cache, '_rotten_tomatoes_lookup', return_value='https://www.rottentomatoes.com/m/test') as lookup:
+            # Reading an existing library never performs link lookups.
+            first = self.cache.json('/movie/1', {'language': 'es-ES'})
+            self.assertIn('/search/', first['rottenTomatoesUrl'])
+            lookup.assert_not_called()
+            with patch.object(self.cache, 'image'):
+                self.cache.warm('movie', 1)
+                self.cache.warm('movie', 1)
+            self.assertEqual(lookup.call_count, 1)
+        reopened = TmdbCache(self.temp.name, lambda: {})
+        with patch.object(reopened, '_download', side_effect=AssertionError('offline')), \
+                patch.object(reopened, '_rotten_tomatoes_lookup', side_effect=AssertionError('offline')):
+            for language in LANGUAGES:
+                result = reopened.json('/movie/1', {'language': language, 'append_to_response': 'external_ids'})
+                self.assertEqual(result['rottenTomatoesUrl'], 'https://www.rottentomatoes.com/m/test')
+
+    def test_movie_link_fallback_is_persistent_and_explicit_refresh_retries(self):
+        movie = {'title': 'Test', 'external_ids': {'wikidata_id': 'Q123'}}
+        with patch.object(self.cache, '_rotten_tomatoes_lookup', side_effect=OSError('offline')) as lookup:
+            first = self.cache._with_movie_links('/movie/1', movie, lookup=True)
+            self.cache._with_movie_links('/movie/1', movie, lookup=True)
+            self.assertEqual(lookup.call_count, 1)
+            self.assertIn('/search/', first['rottenTomatoesUrl'])
+        with patch.object(self.cache, '_rotten_tomatoes_lookup', return_value='https://www.rottentomatoes.com/m/test') as lookup:
+            updated = self.cache._with_movie_links('/movie/1', movie, lookup=True, refresh=True)
+            self.assertEqual(updated['rottenTomatoesUrl'], 'https://www.rottentomatoes.com/m/test')
+            self.assertEqual(lookup.call_count, 1)
+
     def test_failed_download_is_not_cached_and_can_be_retried(self):
         with patch.object(self.cache, '_download', return_value=(b'not image', 'text/html')):
             with self.assertRaises(ValueError): self.cache.image('/poster.jpg')
@@ -44,6 +77,18 @@ class TmdbCacheTests(unittest.TestCase):
             with self.assertRaises(ValueError): self.cache.image(path)
         for path in ['/configuration', '//evil.com', '/movie/1/../../account']:
             with self.assertRaises(ValueError): self.cache.json(path)
+
+    def test_image_signature_fallback_when_cdn_omits_content_type(self):
+        for path, raw in [('/photo.jpg', b'\xff\xd8\xff\xe0JPEG'),
+                          ('/logo.png', b'\x89PNG\r\n\x1a\nPNG'),
+                          ('/art.webp', b'RIFF\x04\x00\x00\x00WEBP')]:
+            with self.subTest(path=path), patch.object(self.cache, '_download', return_value=(raw, 'text/plain')):
+                self.assertEqual(self.cache.image(path).read_bytes(), raw)
+        for raw in (b'<html>Error</html>', b'{"error":"unavailable"}', b'RIFF', b'\x89PNG\r\n\x1a\n'):
+            with self.subTest(raw=raw), patch.object(self.cache, '_download', return_value=(raw, 'text/plain')):
+                with self.assertRaises(ValueError):
+                    self.cache.image('/invalid.jpg')
+                self.assertFalse((self.cache.root / 'images/invalid.jpg').exists())
 
     def test_warm_includes_all_languages_seasons_episodes_and_image_variants(self):
         paths = []

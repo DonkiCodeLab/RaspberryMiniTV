@@ -2,7 +2,6 @@ import { getCachedTmdbJson, isMockMode, localTmdbImageUrl, updateRaspberryTmdbSe
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 const TMDB_ENGLISH_FALLBACK_LANGUAGE = "en-US";
-const WIKIDATA_ENTITY_DATA_BASE_URL = "https://www.wikidata.org/wiki/Special:EntityData";
 
 const FALLBACK_SERIES = [
   {
@@ -69,35 +68,6 @@ function buildRottenTomatoesSearchUrl(title, releaseDate) {
   return query
     ? `https://www.rottentomatoes.com/search/?search=${encodeURIComponent(query)}`
     : "";
-}
-
-async function resolveRottenTomatoesUrl(wikidataId, title, releaseDate) {
-  const safeWikidataId = String(wikidataId || "").trim();
-  if (safeWikidataId) {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 4000);
-    try {
-      const response = await fetch(`${WIKIDATA_ENTITY_DATA_BASE_URL}/${encodeURIComponent(safeWikidataId)}.json`, {
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const claims = data?.entities?.[safeWikidataId]?.claims?.P1258;
-        const rottenTomatoesId = Array.isArray(claims)
-          ? claims.map((claim) => claim?.mainsnak?.datavalue?.value).find(hasText)
-          : "";
-        if (rottenTomatoesId) {
-          return `https://www.rottentomatoes.com/${String(rottenTomatoesId).replace(/^\/+/, "")}`;
-        }
-      }
-    } catch {
-      // A title/year search remains useful when Wikidata has no RT identifier.
-    } finally {
-      window.clearTimeout(timeoutId);
-    }
-  }
-  return buildRottenTomatoesSearchUrl(title, releaseDate);
 }
 
 function isGenericEpisodeTitle(title, episodeNumber) {
@@ -474,9 +444,7 @@ export async function getMovieById(movieId, language) {
     ...availableImages,
   ]);
   const imdbId = String(movie?.external_ids?.imdb_id || movie?.imdb_id || "").trim();
-  const wikidataId = String(movie?.external_ids?.wikidata_id || "").trim();
-  const rottenTomatoesUrl = await resolveRottenTomatoesUrl(
-    wikidataId,
+  const rottenTomatoesUrl = movie?.rottenTomatoesUrl || buildRottenTomatoesSearchUrl(
     movie?.title || movie?.original_title,
     movie?.release_date
   );

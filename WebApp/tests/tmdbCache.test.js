@@ -16,13 +16,14 @@ test('connected catalog uses Raspberry cache and PIN without frontend TMDB crede
     requests.push({ url, options });
     assert.ok(url.startsWith('http://raspberry:5050/tmdb/json/'));
     const data = url.includes('/images') ? { posters: [{ file_path: '/poster.jpg' }] }
-      : { id: 1, title: 'Test', overview: 'Stored overview', poster_path: '/poster.jpg', backdrop_path: '/back.jpg' };
+      : { id: 1, title: 'Test', overview: 'Stored overview', poster_path: '/poster.jpg', backdrop_path: '/back.jpg', external_ids: { wikidata_id: 'Q123' }, rottenTomatoesUrl: 'https://www.rottentomatoes.com/m/stored_test' };
     return { ok: true, text: async () => JSON.stringify(data) };
   };
   try {
     const tmdb = await loadBrowserModule('../src/tmdbApi.js');
     const movie = await tmdb.getMovieById(1, 'es-ES');
     assert.equal(movie.name, 'Test');
+    assert.equal(movie.rottenTomatoesUrl, 'https://www.rottentomatoes.com/m/stored_test');
     assert.equal(movie.heroImage, 'http://raspberry:5050/tmdb/images/back.jpg?pin=1234');
     assert.ok(movie.imageOptions.every(url => url.includes('/tmdb/images/')));
     assert.ok(requests.every(({ options }) => options.headers['X-Web-Pin'] === '1234'));
