@@ -59,3 +59,34 @@ test('decode and load callbacks count once and cancellation is not counted as su
   assert.equal(latest.completed, 0);
   assert.deepEqual(latest.active, []);
 });
+
+test('cards reuse the decoded preload image without assigning src again', async () => {
+  const { acquireLibraryCover } = await import('../src/preloadLibraryCovers.js');
+  let assigned = 0, decoded = false;
+  const image = { parentElement: null, decode: async () => { decoded = true; }, set src(value) { assigned++; this.url = value; }, get src() { return this.url; } };
+  await preloadLibraryCovers(['reuse-cover'], { createImage: () => image, log: () => {} });
+  assert.equal(decoded, true);
+  assert.equal(acquireLibraryCover('reuse-cover'), image);
+  assert.equal(assigned, 1);
+  image.parentElement = {};
+  const duplicate = acquireLibraryCover('reuse-cover', () => ({}));
+  assert.notEqual(duplicate, image);
+  image.parentElement = null;
+  assert.equal(acquireLibraryCover('reuse-cover'), image);
+  assert.equal(assigned, 1);
+});
+
+test('preload waits for decoding even if load fires first', async () => {
+  let resolveDecode, finished = false;
+  const task = preloadLibraryCovers(['decode-first'], {
+    log: () => {}, createImage: () => ({
+      decode: () => new Promise(resolve => { resolveDecode = resolve; }),
+      set src(value) { queueMicrotask(() => this.onload?.()); },
+    }),
+  }).then(() => { finished = true; });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(finished, false);
+  resolveDecode();
+  await task;
+  assert.equal(finished, true);
+});

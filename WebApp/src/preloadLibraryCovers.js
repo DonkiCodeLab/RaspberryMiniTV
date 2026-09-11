@@ -1,14 +1,26 @@
 // Warm both tabs' small covers without flooding the Raspberry with requests.
 export const coverPreloadResults = new Map();
+const preparedCovers = new Map();
+
+export function acquireLibraryCover(url, createImage = () => new Image()) {
+  const prepared = preparedCovers.get(url);
+  if (prepared && !prepared.parentElement) return prepared;
+  const image = createImage();
+  image.loading = 'eager';
+  image.src = url;
+  return image;
+}
 export async function preloadLibraryCovers(urls, { signal, createImage = () => new Image(), timeoutMs = 12000, onProgress = () => {}, log = (event, data) => console.info(`[Biblioteca] ${event}`, data) } = {}) {
   coverPreloadResults.clear();
   const pending = [...new Map(urls.map(item => typeof item === 'string' ? { url: item, name: item.split('?')[0] } : item).filter(item => item?.url).map(item => [item.url, item])).values()];
+  const wanted = new Set(pending.map(item => item.url));
+  for (const url of preparedCovers.keys()) if (!wanted.has(url)) preparedCovers.delete(url);
   let cursor = 0, completed = 0, loaded = 0, failed = 0, timedOut = 0;
   const active = new Map();
   const publish = () => onProgress({ completed, total: pending.length, loaded, failed, timedOut, active: [...active.values()] });
   publish();
   const load = ({ url, name }) => new Promise(resolve => {
-    const image = createImage();
+    const image = preparedCovers.get(url) || createImage();
     const started = Date.now();
     const resource = url.split('?')[0]; // Never print the PIN carried by image URLs.
     let timer, finished = false;
@@ -19,6 +31,7 @@ export async function preloadLibraryCovers(urls, { signal, createImage = () => n
       if (finished) return;
       finished = true;
       coverPreloadResults.set(url, outcome);
+      if (outcome === 'cargada') preparedCovers.set(url, image);
       clearTimeout(timer);
       image.onload = image.onerror = null;
       signal?.removeEventListener('abort', abort);
@@ -34,13 +47,14 @@ export async function preloadLibraryCovers(urls, { signal, createImage = () => n
       resolve();
     };
     const abort = () => { finish('cancelada'); image.src = ''; };
-    image.onload = () => finish('cargada');
+    image.onload = () => { if (!image.decode) finish('cargada'); };
     image.onerror = () => finish('error');
     signal?.addEventListener('abort', abort, { once: true });
     timer = setTimeout(() => { finish('tiempo agotado'); image.src = ''; }, timeoutMs);
-    image.src = url;
-    if (image.complete && image.naturalWidth) finish('cargada');
-    else if (image.decode) image.decode().then(() => finish('cargada'), () => finish('error'));
+    image.loading = 'eager';
+    if (image.src !== url) image.src = url;
+    if (image.decode) image.decode().then(() => finish('cargada'), () => finish('error'));
+    else if (image.complete && image.naturalWidth) finish('cargada');
   });
   await Promise.all(Array.from({ length: Math.min(6, pending.length) }, async () => {
     while (!signal?.aborted && cursor < pending.length) await load(pending[cursor++]);

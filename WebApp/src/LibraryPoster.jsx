@@ -1,10 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { coverPreloadResults } from './preloadLibraryCovers';
+import React, { useLayoutEffect, useRef } from 'react';
+import { acquireLibraryCover, coverPreloadResults } from './preloadLibraryCovers';
 
 export default function LibraryPoster({ src, name }) {
   const ref = useRef(null);
-  useEffect(() => {
-    const image = ref.current;
+  useLayoutEffect(() => {
+    const container = ref.current;
+    const image = acquireLibraryCover(src);
+    image.alt = `Portada de ${name}`;
+    container.appendChild(image);
     const started = performance.now();
     const initial = { name, resource: src.split('?')[0], width: new URL(src, location.href).searchParams.get('width'), precarga: coverPreloadResults.get(src) || 'sin registro', visible: image.getBoundingClientRect().top < innerHeight };
     const log = (event, extra = {}) => console.info(`[Películas] ${event} ${JSON.stringify({ ...initial, ms: Math.round(performance.now() - started), ...extra })}`);
@@ -24,7 +27,7 @@ export default function LibraryPoster({ src, name }) {
     const timer = setTimeout(() => {
       if (!finished) log('sigue pendiente', { visible: image.getBoundingClientRect().top < innerHeight });
     }, 3000);
-    return () => { clearTimeout(timer); image.removeEventListener('load', loaded); image.removeEventListener('error', failed); };
+    return () => { clearTimeout(timer); image.removeEventListener('load', loaded); image.removeEventListener('error', failed); image.remove(); };
   }, [src, name]);
-  return <img ref={ref} src={src} alt={`Portada de ${name}`} loading="lazy" decoding="async" fetchPriority="low" />;
+  return <span ref={ref} style={{ display: 'block', width: '100%', height: '100%' }} />;
 }
