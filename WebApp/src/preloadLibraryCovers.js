@@ -1,5 +1,7 @@
 // Warm both tabs' small covers without flooding the Raspberry with requests.
+export const coverPreloadResults = new Map();
 export async function preloadLibraryCovers(urls, { signal, createImage = () => new Image(), timeoutMs = 12000, onProgress = () => {}, log = (event, data) => console.info(`[Biblioteca] ${event}`, data) } = {}) {
+  coverPreloadResults.clear();
   const pending = [...new Map(urls.map(item => typeof item === 'string' ? { url: item, name: item.split('?')[0] } : item).filter(item => item?.url).map(item => [item.url, item])).values()];
   let cursor = 0, completed = 0, loaded = 0, failed = 0, timedOut = 0;
   const active = new Map();
@@ -16,6 +18,7 @@ export async function preloadLibraryCovers(urls, { signal, createImage = () => n
     const finish = outcome => {
       if (finished) return;
       finished = true;
+      coverPreloadResults.set(url, outcome);
       clearTimeout(timer);
       image.onload = image.onerror = null;
       signal?.removeEventListener('abort', abort);

@@ -1,4 +1,5 @@
 import { preloadLibraryCovers } from "./preloadLibraryCovers";
+import LibraryPoster from "./LibraryPoster";
 import TmdbCachePanel from "./TmdbCachePanel";
 import { localTmdbImageUrl } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
@@ -9093,7 +9094,7 @@ export default function App() {
                         return (
                           <article className="movie-library__card" key={movie.id}>
                             <button className="movie-library__poster" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={`${t("movie_details")}: ${movie.name}`}>
-                              <img src={poster} alt={`Portada de ${movie.name}`} loading="lazy" decoding="async" fetchPriority="low" />
+                              <LibraryPoster src={poster} name={movie.name} />
                             </button>
                             <div className="movie-library__info">
                               <h2>{movie.name}</h2>
