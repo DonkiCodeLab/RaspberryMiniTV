@@ -13,7 +13,11 @@ export async function waitForCoverPreview(preload, budgetMs = 2000) {
 }
 
 export function acquireLibraryCover(url, createImage = () => new Image()) {
-  const prepared = preparedCovers.get(url);
+  let prepared = preparedCovers.get(url);
+  if (prepared?.complete && prepared.naturalWidth === 0) {
+    preparedCovers.delete(url);
+    prepared = null;
+  }
   if (prepared && !prepared.parentElement) return prepared;
   const image = createImage();
   image.loading = 'eager';

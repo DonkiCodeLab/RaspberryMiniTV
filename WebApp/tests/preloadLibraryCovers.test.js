@@ -100,3 +100,13 @@ test('a stalled cover cannot block opening the library beyond the preview budget
   await background;
   await waitForCoverPreview(Promise.resolve(), 5000);
 });
+
+
+test('a failed image is retried when the local preparation finishes and the view is reopened', async () => {
+  const { acquireLibraryCover } = await import('../src/preloadLibraryCovers.js');
+  const failed = acquireLibraryCover('pending-local-image', () => ({ complete: false }));
+  failed.complete = true; failed.naturalWidth = 0;
+  const retry = acquireLibraryCover('pending-local-image', () => ({}));
+  assert.notEqual(retry, failed);
+  assert.equal(retry.src, 'pending-local-image');
+});
