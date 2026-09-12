@@ -1,3 +1,4 @@
+import { requestWithTimeout } from '../requestWithTimeout.js';
 import { GAME_SYSTEMS } from "../gameSystems";
 import { uploadBookBatch } from "./bookUploadBatch.js";
 const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").trim();
@@ -1513,7 +1514,7 @@ export function getCachedTmdbJson(path, { language, query = {} } = {}) {
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
   });
-  return request(`/tmdb/json${path}?${params}`);
+  return requestWithTimeout(signal => request(`/tmdb/json${path}?${params}`, { signal }));
 }
 
 export function getTmdbCacheStatus(start = false) {

@@ -5886,6 +5886,8 @@ export default function App() {
   const [coverProgress, setCoverProgress] = useState(null);
   const [libraryStage, setLibraryStage] = useState("Conectando con la Raspberry");
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
+  const [detailRetry, setDetailRetry] = useState(0);
   const detailCache = useRef(new Map());
   const seasonCache = useRef(new Map());
   const [loading, setLoading] = useState(true);
@@ -6450,6 +6452,7 @@ export default function App() {
     const entry = isMovie
       ? movieLibrary.find(movie => String(movie.id) === String(selectedMovieId))
       : activeMediaType === "series" ? directories.find(directory => directory.relativePath === selectedDirectoryPath) : null;
+    setDetailError("");
     if (!entry) { setDetailLoading(false); return; }
     let cancelled = false;
     const id = isMovie ? getMovieTmdbId(entry) : Number(entry.tmdbId);
@@ -6469,10 +6472,10 @@ export default function App() {
       } });
       if (isMovie) setTmdbMovieMap(update); else setTmdbSeriesMap(update);
     }).catch(nextError => {
-      if (!cancelled) setError(nextError.message || "No se pudo cargar la ficha.");
+      if (!cancelled) setDetailError(nextError.message || "No se pudo cargar la ficha.");
     }).finally(() => { if (!cancelled) setDetailLoading(false); });
     return () => { cancelled = true; };
-  }, [activeMediaType, selectedMovieId, selectedDirectoryPath, movieLibrary, directories, tmdbLanguage]);
+  }, [activeMediaType, selectedMovieId, selectedDirectoryPath, movieLibrary, directories, tmdbLanguage, detailRetry]);
 
   const seriesOptions = useMemo(() => {
     return directories.map((directory) => {
@@ -8479,7 +8482,10 @@ export default function App() {
           </div>
         ) : (
           <>
-            {!error && (!videos || loading || tmdbLoading || detailLoading) ? (
+            {(detailLoading || detailError) && !loading && !tmdbLoading && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
+              {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
+            </div> : null}
+            {!error && (!videos || loading || tmdbLoading) ? (
               <LibraryLoading label={t(!videos || loading || tmdbLoading ? "loading_library" : "loading_details")} stage={!videos || loading || tmdbLoading ? libraryStage : null} progress={tmdbLoading ? coverProgress : null} />
             ) : error ? (
               <section className="empty-state">
