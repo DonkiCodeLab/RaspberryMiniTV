@@ -2,6 +2,7 @@
 Run with --check to report missing variants only; safe to resume generation.
 """
 import json
+import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from control_api import load_media_library, tmdb_artwork
@@ -27,6 +28,13 @@ def main():
     library = load_media_library()
     owners = {f'{kind}/{item["tmdbId"]}' for collection, kind in (("movies", "movie"), ("series", "tv")) for item in library.get(collection, {}).values() if item.get('tmdbId')}
     wanted = set()
+    for collection in ('movies', 'series'):
+        for item in library.get(collection, {}).values():
+            hero = item.get('heroImage', '')
+            path = tmdb_artwork.profile_image(hero)
+            size = re.search(r'/w(342|500|780|1280)/|[?&]width=(342|500|780|1280)', hero)
+            if path and size:
+                wanted.add((path, int(next(value for value in size.groups() if value))))
     for filename, entry in tmdb_artwork.index.items():
         if entry.get('owner') in owners:
             wanted.update(variants(json.loads((tmdb_artwork.root / 'metadata' / filename).read_text())))

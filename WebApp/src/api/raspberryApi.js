@@ -345,7 +345,7 @@ export function getHealth() {
     });
   }
 
-  return request("/health");
+  return requestWithTimeout(signal => request("/health", { signal }));
 }
 
 export function getVideos() {
@@ -353,7 +353,7 @@ export function getVideos() {
     return Promise.resolve(buildMockVideoLibrary());
   }
 
-  return request("/videos");
+  return requestWithTimeout(signal => request("/videos", { signal }));
 }
 
 export function getRaspberryLanguage() {
@@ -361,7 +361,7 @@ export function getRaspberryLanguage() {
     return Promise.resolve({ ok: true, language: mockLanguage, mock: true });
   }
 
-  return request("/settings/language");
+  return requestWithTimeout(signal => request("/settings/language", { signal }));
 }
 
 export function updateRaspberryLanguage(language) {
@@ -1539,7 +1539,7 @@ export function getCachedTmdbJson(path, { language, query = {}, importPreview = 
 
 export function getTmdbCacheStatus(start = false) {
   if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para descargar el catálogo."));
-  return request("/tmdb/cache", start ? { method: "POST" } : {});
+  return requestWithTimeout(signal => request("/tmdb/cache", { ...(start ? { method: "POST" } : {}), signal }));
 }
 
 export function localTmdbImageUrl(value) {
