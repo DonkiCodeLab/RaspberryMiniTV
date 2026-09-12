@@ -272,7 +272,7 @@ export async function searchTvSeries(query, language) {
     originalName: item?.original_name || "",
     overview: item?.overview || "",
     firstAirDate: item?.first_air_date || "",
-    posterImage: buildTmdbImageUrl(item?.poster_path, "w342"),
+    posterImage: buildTmdbImageUrl(item?.poster_path, "w342")?.replace("/tmdb/images/", "/tmdb/import/images/"),
     backdropImage: buildTmdbImageUrl(item?.backdrop_path, "w780"),
   }));
 }
@@ -297,7 +297,7 @@ export async function searchMovies(query, language) {
     originalName: item?.original_title || "",
     overview: item?.overview || "",
     releaseDate: item?.release_date || "",
-    posterImage: buildTmdbImageUrl(item?.poster_path, "w342"),
+    posterImage: buildTmdbImageUrl(item?.poster_path, "w342")?.replace("/tmdb/images/", "/tmdb/import/images/"),
     backdropImage: buildTmdbImageUrl(item?.backdrop_path, "w780"),
   }));
 }
@@ -483,47 +483,16 @@ export async function resolveSeriesFromNames({ directoryName, displayName, langu
 
 export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language }) {
   const season = await fetchTmdbJson(`/tv/${seriesId}/season/${seasonNumber}`, {
-    language,
+    language, query: { level: "cards" },
   });
-  let englishEpisodesByNumber = new Map();
-
-  if (language && language !== TMDB_ENGLISH_FALLBACK_LANGUAGE) {
-    const primaryEpisodes = Array.isArray(season?.episodes) ? season.episodes : [];
-    const needsFallback = primaryEpisodes.some(
-      (episode) =>
-        !hasText(episode?.overview) ||
-        isGenericEpisodeTitle(episode?.name, Number(episode?.episode_number) || 0)
-    );
-
-    if (needsFallback) {
-      try {
-        const englishSeason = await fetchTmdbJson(`/tv/${seriesId}/season/${seasonNumber}`, {
-          language: TMDB_ENGLISH_FALLBACK_LANGUAGE,
-        });
-        englishEpisodesByNumber = new Map(
-          (Array.isArray(englishSeason?.episodes) ? englishSeason.episodes : []).map((episode) => [
-            Number(episode?.episode_number) || 0,
-            episode,
-          ])
-        );
-      } catch {
-        englishEpisodesByNumber = new Map();
-      }
-    }
-  }
-
   const episodes = (season?.episodes || []).map((episode) => {
     const episodeNumber = Number(episode?.episode_number) || 0;
-    const fallbackEpisode = englishEpisodesByNumber.get(episodeNumber);
+
 
     return {
       id: Number(episode?.id) || `${seasonNumber}-${episodeNumber}`,
       episodeNumber,
-      title:
-        isGenericEpisodeTitle(episode?.name, episodeNumber) && hasText(fallbackEpisode?.name)
-          ? fallbackEpisode.name
-          : episode?.name || `Episodio ${episodeNumber}`,
-      synopsis: episode?.overview || fallbackEpisode?.overview || "",
+      title: episode?.name || `Episodio ${episodeNumber}`,
       airDate: episode?.air_date || "",
       image: buildTmdbImageUrl(episode?.still_path, "w780"),
       runtime: Number(episode?.runtime) || 0,
@@ -541,4 +510,9 @@ export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language }) 
       buildTmdbImageUrl(season?.poster_path, "w500"),
     episodes,
   };
+}
+
+export async function getTvEpisodeDetails({ seriesId, seasonNumber, episodeNumber, language }) {
+  const episode = await fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}`, { language });
+  return { title: episode.name, synopsis: episode.overview || '', runtime: episode.runtime || 0, voteAverage: episode.vote_average || 0, airDate: episode.air_date || '', image: buildTmdbImageUrl(episode.still_path, 'w780') };
 }

@@ -1508,13 +1508,28 @@ export function getCachedLibrarySummaries(language) {
   return requestWithTimeout(signal => request(`/tmdb/library?${new URLSearchParams({ language })}`, { signal }));
 }
 
+const localMetadataRequests = new Map();
+export function clearLocalMetadataCache() { localMetadataRequests.clear(); }
+export function prepareTmdbTitle(kind, id) {
+  clearLocalMetadataCache();
+  return request('/tmdb/prepare', { method: 'POST', body: JSON.stringify({ kind, id }) });
+}
+
 export function getCachedTmdbJson(path, { language, query = {} } = {}) {
   const params = new URLSearchParams();
   if (language) params.set("language", language);
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
   });
-  return requestWithTimeout(signal => request(`/tmdb/json${path}?${params}`, { signal }));
+  const endpoint = `/tmdb/json${path}?${params}`;
+  const key = `${getBaseUrl()}:${getStoredWebPin()}:${endpoint}`;
+  if (!localMetadataRequests.has(key)) {
+    localMetadataRequests.set(key, requestWithTimeout(signal => request(endpoint, { signal })).catch(error => {
+      localMetadataRequests.delete(key);
+      throw error;
+    }));
+  }
+  return localMetadataRequests.get(key);
 }
 
 export function getTmdbCacheStatus(start = false) {

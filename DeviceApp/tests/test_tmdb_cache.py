@@ -297,7 +297,9 @@ class TmdbCacheTests(unittest.TestCase):
             client = api.app.test_client()
             self.assertEqual(client.get('/tmdb/cache').status_code, 401)
             self.assertEqual(client.get('/tmdb/images/a.jpg').status_code, 401)
-            with patch.object(self.cache, '_download', return_value=(b'jpeg', 'image/jpeg')):
+            (self.cache.root / 'images').mkdir(exist_ok=True)
+            (self.cache.root / 'images/a.jpg').write_bytes(b'jpeg')
+            with patch.object(self.cache, '_download', side_effect=AssertionError('navigation must stay offline')):
                 response = client.get('/tmdb/images/a.jpg?pin=1234')
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.data, b'jpeg')
@@ -311,17 +313,17 @@ class TmdbCacheTests(unittest.TestCase):
         self.cache.credentials = lambda: {}
         with patch.object(api, 'tmdb_artwork', self.cache), patch.object(api, 'is_authorized_request', return_value=True):
             client = api.app.test_client()
-            response = client.get('/tmdb/json/tv/1')
+            response = client.get('/tmdb/json/search/tv?query=test')
             self.assertEqual(response.status_code, 503)
             self.assertEqual(response.json['code'], 'TMDB_CREDENTIALS_MISSING')
             self.cache.credentials = lambda: {"apiKey": "secret"}
             with patch.object(self.cache, '_download', side_effect=TmdbError('TMDB rejected credentials', 'TMDB_AUTH_ERROR')):
-                response = client.get('/tmdb/json/tv/1')
+                response = client.get('/tmdb/json/search/tv?query=test')
                 self.assertEqual(response.status_code, 502)
                 self.assertEqual(response.json['code'], 'TMDB_AUTH_ERROR')
                 self.assertNotIn('secret', response.get_data(as_text=True))
             with patch.object(self.cache, '_download', side_effect=PermissionError(13, 'denied')):
-                response = client.get('/tmdb/json/tv/1')
+                response = client.get('/tmdb/json/search/tv?query=test')
                 self.assertEqual(response.status_code, 500)
                 self.assertEqual(response.json['code'], 'TMDB_STORAGE_ERROR')
 
@@ -333,6 +335,28 @@ class TmdbCacheTests(unittest.TestCase):
             api.upsert_media_profile('movies', 'Movies/a.mp4', {'heroImage': 'https://image.tmdb.org/t/p/w500/custom.jpg'})
         self.assertEqual([call.args[0] for call in queue.call_args_list], ['movie', 'tv', 'movie'])
         self.assertTrue(queue.call_args_list[1].kwargs['refresh'])
+
+    def test_navigation_is_offline_and_episode_details_are_separate_from_cards(self):
+        data = {'name': 'Season', 'episodes': [{'id': 7, 'episode_number': 1, 'name': 'Pilot', 'overview': 'Full synopsis', 'still_path': '/still.jpg'}]}
+        with patch.object(self.cache, '_download', return_value=(json.dumps(data).encode(), 'application/json')):
+            self.cache.json('/tv/1/season/1', {'language': 'es-ES'})
+        with patch.object(api, 'tmdb_artwork', self.cache), patch.object(api, 'is_authorized_request', return_value=True), patch.object(self.cache, '_download', side_effect=AssertionError('network forbidden')), patch.object(self.cache, '_index_metadata', side_effect=AssertionError('navigation must not rewrite index')):
+            client = api.app.test_client()
+            cards = client.get('/tmdb/json/tv/1/season/1?language=es-ES&level=cards')
+            self.assertEqual(cards.status_code, 200)
+            self.assertNotIn('overview', cards.json['episodes'][0])
+            episode = client.get('/tmdb/json/tv/1/season/1/episode/1?language=es-ES')
+            self.assertEqual(episode.json['overview'], 'Full synopsis')
+            self.assertEqual(client.get('/tmdb/json/movie/999').status_code, 409)
+            self.assertEqual(client.get('/tmdb/images/missing.jpg?width=500').status_code, 409)
+
+    def test_upload_worker_publishes_phase_progress(self):
+        self.cache.jobs['movie/1'] = {'kind': 'movie', 'id': 1, 'state': 'running', 'error': ''}
+        self.cache.worker_context.job = ('movie/1', 0)
+        self.cache._progress('thumbnails', 3, 8, '/poster.jpg')
+        progress = self.cache.status()['jobs']['movie/1']['progress']
+        self.assertEqual(progress, {'phase': 'thumbnails', 'completed': 3, 'total': 8, 'current': '/poster.jpg'})
+        self.cache.worker_context.job = None
 
 class TmdbCleanupTests(unittest.TestCase):
     setUp = TmdbCacheTests.setUp

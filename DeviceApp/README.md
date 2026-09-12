@@ -377,3 +377,21 @@ antes de marcar el trabajo como completado: portadas de biblioteca y temporadas 
 idiomas disponibles. Se incluyen las variantes de las galerías. Esta preparación
 continúa en segundo plano después de recibir el vídeo; su progreso y posibles
 fallos aparecen en el panel TMDB. Las versiones ya guardadas se reutilizan.
+
+### Flujo local por niveles
+
+Las rutas de navegación `/tmdb/json/…` y `/tmdb/images/…` leen exclusivamente
+ficheros locales; si faltan responden `409 TMDB_LOCAL_MISSING`. No descargan ni
+generan miniaturas ni reescriben el índice al navegar. Las búsquedas y las vistas
+previas de importación usan las rutas separadas `search/…` e `import/images/…`.
+La subida encola la preparación del título; `/tmdb/cache` expone por título la
+fase (`metadata`, `images`, `thumbnails`), fichero actual y contadores.
+
+El navegador carga primero las portadas. Una serie proporciona sus temporadas;
+una temporada devuelve solo las tarjetas de episodios (`level=cards`). La ficha
+completa de un episodio se lee al abrirlo, desde los metadatos locales de su
+ temporada. Los metadatos y las imágenes visitadas se reutilizan durante la sesión;
+la finalización de una nueva preparación invalida los datos afectados en la web.
+`python3 DeviceApp/prepare_local_media.py --check` comprueba las variantes de la
+biblioteca existente; sin `--check` genera las que faltan desde los originales
+locales, sin contactar con TMDB.

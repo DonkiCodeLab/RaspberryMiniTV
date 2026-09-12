@@ -102,3 +102,33 @@ test('opening a series does not fetch its seasons episodes', async () => {
     assert.ok(series.seasons[0].image.includes('/season.jpg'));
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
+
+test('returning to movie and season reuses metadata; episode information waits for selection', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: 'http://raspberry:5050', hostname: 'raspberry' }, sessionStorage: { getItem: () => '1234' } };
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    const data = url.includes('/episode/') ? { name: 'Pilot', overview: 'Full synopsis' }
+      : url.includes('/season/') ? { name: 'Season', season_number: 1, episodes: [{ id: 7, episode_number: 1, name: 'Pilot', still_path: '/still.jpg' }] }
+      : url.includes('/images') ? { posters: [] } : { id: 1, title: 'Film', overview: 'Stored' };
+    return { ok: true, text: async () => JSON.stringify(data) };
+  };
+  try {
+    const tmdb = await loadBrowserModule('../src/tmdbApi.js');
+    await tmdb.getMovieById(777, 'es-ES');
+    await tmdb.getMovieById(777, 'es-ES');
+    assert.equal(requests.length, 2);
+    const params = { seriesId: 777, seasonNumber: 1, language: 'es-ES' };
+    const season = await tmdb.getTvSeasonEpisodes(params);
+    await tmdb.getTvSeasonEpisodes(params);
+    assert.equal(requests.length, 3);
+    assert.ok(requests[2].includes('level=cards'));
+    assert.equal(season.episodes[0].synopsis, undefined);
+    assert.ok(!requests.some(url => url.includes('/episode/')));
+    const episode = await tmdb.getTvEpisodeDetails({ ...params, episodeNumber: 1 });
+    assert.equal(episode.synopsis, 'Full synopsis');
+    await tmdb.getTvEpisodeDetails({ ...params, episodeNumber: 1 });
+    assert.equal(requests.length, 4);
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});

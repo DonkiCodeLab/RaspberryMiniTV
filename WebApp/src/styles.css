@@ -6015,3 +6015,5 @@ img {
 .tmdb-cache-calculating { display: flex; align-items: center; gap: .7rem; }
 .tmdb-cache-spinner { display: inline-block; width: 18px; height: 18px; flex-shrink: 0; border: 3px solid #ffffff30; border-top-color: #ffd429; border-radius: 50%; animation: library-spin 1s linear infinite; }
 .detail-load-status { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: .8rem; max-width: calc(100vw - 2rem); padding: .8rem 1.2rem; border: 1px solid #ffd429; border-radius: 16px; background: #172f3e; color: white; box-shadow: 0 4px 18px #0005; }
+.tmdb-upload-progress { position: fixed; right: 1rem; bottom: 1rem; z-index: 10000; padding: 1rem; width: min(360px, calc(100vw - 2rem)); box-sizing: border-box; border: 1px solid #ffd429; border-radius: 16px; background: #172f3e; color: white; box-shadow: 0 4px 18px #0005; overflow-wrap: anywhere; }
+.tmdb-upload-progress progress { width: 100%; accent-color: #ffd429; }

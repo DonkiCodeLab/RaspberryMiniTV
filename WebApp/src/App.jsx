@@ -1,7 +1,9 @@
-import { preloadLibraryCovers, waitForCoverPreview } from "./preloadLibraryCovers";
+import { preloadLibraryCovers } from "./preloadLibraryCovers";
 import LibraryPoster from "./LibraryPoster";
+import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
 import { localTmdbImageUrl } from "./api/raspberryApi";
+import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
 import { MEDIA_MARKS_KEY, mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason, loadMediaMarks } from "./mediaMarks.js";
@@ -128,6 +130,7 @@ import {
 import {
   getMovieById,
   getTvSeasonEpisodes,
+  getTvEpisodeDetails,
   getTvSeriesById,
   getLibrarySummaries,
   resolveSeriesFromNames,
@@ -1856,15 +1859,7 @@ function HeaderArt({ image, crop, alt }) {
         </>
       ) : (
         <div className="series-hero__visible-window">
-          <img
-            src={image}
-            fetchPriority="high"
-            alt=""
-            aria-hidden="true"
-            draggable="false"
-            onDragStart={(event) => event.preventDefault()}
-            style={getHeaderImageStyle(crop)}
-          />
+          <LibraryPoster src={image} name={alt} alt="" style={getHeaderImageStyle(crop)} />
         </div>
       )}
 
@@ -2002,7 +1997,7 @@ function SeasonCard({ season, isActive, disabled, onSelect, onDelete = () => {},
       >
       <div className="season-card__image-wrap">
         {season.image ? (
-          <img src={season.image} alt={season.title} className="season-card__image" />
+          <LibraryPoster src={season.image} name={season.title} alt={season.title} className="season-card__image" />
         ) : (
           <div className="season-card__fallback">{season.title}</div>
         )}
@@ -2282,7 +2277,7 @@ function EpisodeRow({ episode, available, onSelect, t }) {
         type="button"
       >
       <div className="episode-card__thumb">
-        {episode.image ? <img src={episode.image} alt={episode.title} /> : null}
+        {episode.image ? <LibraryPoster src={episode.image} name={episode.title} alt={episode.title} /> : null}
       </div>
 
       <div className="episode-card__body">
@@ -2374,7 +2369,7 @@ function MovieImageCarousel({
   return (
     <div className="movie-panel__gallery">
       <div className="movie-panel__hero-media">
-        <img key={currentImage} src={currentImage} alt={title} fetchPriority="high" />
+        <LibraryPoster key={currentImage} src={currentImage} name={title} alt={title} />
       </div>
 
       {safeImages.length > 1 ? (
@@ -2431,6 +2426,9 @@ function EpisodeDetailsModal({
   season,
   seriesName,
   playing,
+  loading = false,
+  error = "",
+  onRetry,
   available,
   showPlayButton = true,
   watched,
@@ -2500,11 +2498,13 @@ function EpisodeDetailsModal({
         </header>
 
         <div className="episode-dialog__body">
+          {loading && <p role="status"><span className="tmdb-cache-spinner" /> Cargando información del episodio…</p>}
+          {error && <p role="alert">{error} <button type="button" onClick={onRetry}>Reintentar</button></p>}
           <MediaMarkButtons watched={watched} onWatched={onWatched} t={t} />
           <div className="episode-dialog__overview">
             {episode.image ? (
               <div className="episode-dialog__media">
-                <img src={episode.image} alt={episode.title} />
+                <LibraryPoster src={episode.image} name={episode.title} alt={episode.title} />
               </div>
             ) : (
               <div className="episode-dialog__media episode-dialog__media--empty">
@@ -5884,12 +5884,20 @@ export default function App() {
   const [videos, setVideos] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
   const [coverProgress, setCoverProgress] = useState(null);
+  const [coverWarning, setCoverWarning] = useState("");
   const [libraryStage, setLibraryStage] = useState("Conectando con la Raspberry");
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
   const [detailRetry, setDetailRetry] = useState(0);
   const detailCache = useRef(new Map());
+  const readyDetails = useRef(new Set());
+  const readySeasons = useRef(new Map());
   const seasonCache = useRef(new Map());
+  const episodeCache = useRef(new Map());
+  const [episodeLoading, setEpisodeLoading] = useState(false);
+  const [episodeError, setEpisodeError] = useState("");
+  const [episodeRetry, setEpisodeRetry] = useState(0);
+  const [tmdbUpload, setTmdbUpload] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState("");
@@ -6414,6 +6422,7 @@ export default function App() {
     const controller = new AbortController();
     setTmdbLoading(true);
     setCoverProgress(null);
+    setCoverWarning("");
     setLibraryStage("Leyendo resumen local de series y películas");
     const summaryStarted = Date.now();
     console.info("[Biblioteca] Inicio: resumen local", { language: tmdbLanguage });
@@ -6426,9 +6435,9 @@ export default function App() {
         ...Object.values(summaries.series).map(card => ({ url: card.posterImage, name: `Serie: ${card.name || card.id}` })),
         ...Object.values(summaries.movies).map(card => ({ url: card.posterImage, name: `Película: ${card.name || card.id}` })),
       ];
-      const preload = preloadLibraryCovers(covers, { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
-      await waitForCoverPreview(preload);
+      const prepared = await preloadLibraryCovers(covers, { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
       if (cancelled) return;
+      if (prepared.loaded < prepared.total) setCoverWarning(`${prepared.total - prepared.loaded} portadas no están disponibles. Consulta la preparación local de TMDB en el dashboard.`);
       setTmdbSeriesMap(current => Object.fromEntries(directories.map(directory => {
         const card = summaries.series[String(directory.tmdbId)] || {};
         const detail = current[directory.relativePath];
@@ -6458,13 +6467,17 @@ export default function App() {
     let cancelled = false;
     const id = isMovie ? getMovieTmdbId(entry) : Number(entry.tmdbId);
     const key = `${activeMediaType}:${id || entry.relativePath}:${tmdbLanguage}`;
-    setDetailLoading(true);
+    setDetailLoading(!readyDetails.current.has(key));
     setError("");
     if (!detailCache.current.has(key)) {
       const request = isMovie ? (id ? getMovieById(id, tmdbLanguage) : Promise.resolve({}))
         : id ? getTvSeriesById(id, tmdbLanguage)
-        : resolveSeriesFromNames({ directoryName: entry.name, displayName: entry.name, language: tmdbLanguage });
-      detailCache.current.set(key, request.catch(error => { detailCache.current.delete(key); throw error; }));
+        : Promise.resolve({});
+      detailCache.current.set(key, request.then(async detail => {
+        await preloadLibraryCovers([detail.heroImage, ...(detail.seasons || []).map(season => season.image)].filter(Boolean), { preserve: true, timeoutMs: 4000 });
+        readyDetails.current.add(key);
+        return detail;
+      }).catch(error => { detailCache.current.delete(key); throw error; }));
     }
     detailCache.current.get(key).then(detail => {
       if (cancelled) return;
@@ -6687,17 +6700,26 @@ export default function App() {
     let cancelled = false;
 
     async function loadSeasonEpisodes() {
+      const seasonKey = `${selectedSeries.id}:${selectedSeason.seasonNumber || selectedSeason.id}:${tmdbLanguage}`;
+      if (readySeasons.current.has(seasonKey)) {
+        setSeasonEpisodes(readySeasons.current.get(seasonKey));
+        setSeasonEpisodesLoading(false);
+        return;
+      }
       setSeasonEpisodes(null);
       setSeasonEpisodesLoading(true);
       setError("");
 
       try {
-        const seasonKey = `${selectedSeries.id}:${selectedSeason.seasonNumber || selectedSeason.id}:${tmdbLanguage}`;
         if (!seasonCache.current.has(seasonKey)) {
           seasonCache.current.set(seasonKey, getTvSeasonEpisodes({
             seriesId: selectedSeries.id,
             seasonNumber: selectedSeason.seasonNumber || selectedSeason.id,
             language: tmdbLanguage,
+          }).then(async season => {
+            await preloadLibraryCovers([season.heroImage, ...season.episodes.map(episode => episode.image)].filter(Boolean), { preserve: true, timeoutMs: 4000 });
+            readySeasons.current.set(seasonKey, season);
+            return season;
           }).catch(error => { seasonCache.current.delete(seasonKey); throw error; }));
         }
         const nextSeason = await seasonCache.current.get(seasonKey);
@@ -7190,6 +7212,25 @@ export default function App() {
     setEpisodeDialogOpen(true);
   }
 
+  useEffect(() => {
+    if (!episodeDialogOpen || !selectedEpisode || !selectedSeries?.id || !selectedSeason) return;
+    let cancelled = false;
+    const key = `${selectedSeries.id}:${selectedSeason.id}:${selectedEpisode.episodeNumber}:${tmdbLanguage}`;
+    setEpisodeError("");
+    if (episodeCache.current.has(key)) {
+      setSelectedEpisode(current => ({ ...current, ...episodeCache.current.get(key) }));
+      setEpisodeLoading(false);
+      return;
+    }
+    setEpisodeLoading(true);
+    getTvEpisodeDetails({ seriesId: selectedSeries.id, seasonNumber: selectedSeason.seasonNumber || selectedSeason.id, episodeNumber: selectedEpisode.episodeNumber, language: tmdbLanguage }).then(detail => {
+      episodeCache.current.set(key, detail);
+      if (!cancelled) setSelectedEpisode(current => ({ ...current, ...detail }));
+    }).catch(error => { if (!cancelled) setEpisodeError(error.message); })
+      .finally(() => { if (!cancelled) setEpisodeLoading(false); });
+    return () => { cancelled = true; };
+  }, [episodeDialogOpen, selectedSeries?.id, selectedSeason?.id, selectedEpisode?.episodeNumber, tmdbLanguage, episodeRetry]);
+
   function handleCloseEpisodeDetails() {
     setEpisodeDialogOpen(false);
     setSelectedEpisode(null);
@@ -7414,8 +7455,13 @@ export default function App() {
   }
 
   async function handleAddMediaItem(selectedSeriesResult, targetMediaType = activeMediaType) {
+    if (!mockMode && ['movies', 'series'].includes(targetMediaType)) {
+      const kind = targetMediaType === 'movies' ? 'movie' : 'tv';
+      await prepareTmdbTitle(kind, selectedSeriesResult.id);
+      setTmdbUpload({ kind, id: selectedSeriesResult.id, name: selectedSeriesResult.name, videoComplete: false });
+    }
     if (targetMediaType === "movies") {
-      const movieDetails = await getMovieById(selectedSeriesResult.id, tmdbLanguage);
+      const movieDetails = selectedSeriesResult;
       const uploadFile = uploadLookupOpen ? uploadSelectedFiles[0] : null;
       const movieTitle = String(selectedSeriesResult.name || movieDetails?.name || "").trim();
       let uploadedMovie = null;
@@ -7430,6 +7476,7 @@ export default function App() {
             onProgress: setUploadProgress,
             signal,
           });
+          setTmdbUpload(current => current ? { ...current, videoComplete: true } : current);
         } finally {
           clearUploadAbortController();
         }
@@ -7493,6 +7540,7 @@ export default function App() {
       }
       if (mockMode) setMovieLibrary(nextLibrary);
       setSelectedMovieId(uploadedMovie?.item?.relativePath || selectedSeriesResult.id);
+      setTmdbUpload(current => current ? { ...current, videoComplete: true } : current);
       setAddSeriesOpen(false);
       setUploadLookupOpen(false);
       setUploadSelectedFiles([]);
@@ -7503,7 +7551,7 @@ export default function App() {
 
     let addResponse = null;
     if (uploadLookupOpen && targetMediaType === "series") {
-      const seriesDetails = await getTvSeriesById(selectedSeriesResult.id, tmdbLanguage);
+      const seriesDetails = selectedSeriesResult;
       const latestVideos = await getVideos();
       const existingSeries = (latestVideos?.directories || []).find(
         (item) =>
@@ -7541,6 +7589,7 @@ export default function App() {
             onProgress: setUploadProgress,
             signal,
           });
+          setTmdbUpload(current => current ? { ...current, videoComplete: true } : current);
         } finally {
           clearUploadAbortController();
         }
@@ -7589,6 +7638,7 @@ export default function App() {
       );
       await new Promise((resolve) => window.setTimeout(resolve, 700));
     }
+    setTmdbUpload(current => current ? { ...current, videoComplete: true } : current);
     setAddSeriesOpen(false);
     setUploadLookupOpen(false);
     setUploadSelectedFiles([]);
@@ -8483,7 +8533,7 @@ export default function App() {
           </div>
         ) : (
           <>
-            {!loading && !tmdbLoading && !detailLoading && !detailError && coverProgress?.completed < coverProgress?.total && currentView !== "raspberry" ? <div className="detail-load-status" role="status"><span className="tmdb-cache-spinner" aria-hidden="true" /> Preparando portadas en segundo plano: {coverProgress.completed}/{coverProgress.total}. Ya puedes navegar.</div> : null}
+            {!loading && !tmdbLoading && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
             {(detailLoading || detailError) && !loading && !tmdbLoading && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
@@ -8633,7 +8683,7 @@ export default function App() {
                 </div>
 
                 {seasonEpisodesLoading ? (
-                  <LibraryLoading label={t("loading_details")} />
+                  <p role="status"><span className="tmdb-cache-spinner" /> Cargando miniaturas de {selectedSeason.title}…</p>
                 ) : (
                   <section className="season-page__episodes">
                     {(seasonEpisodes?.episodes || []).map((episode) => (
@@ -9049,7 +9099,7 @@ export default function App() {
                         return (
                           <article className="movie-library__card" key={series.directoryPath}>
                             <button className="movie-library__poster" type="button" onClick={() => handleOpenSeriesDetails(series.directoryPath)} aria-label={`${t("movie_details")}: ${series.name}`}>
-                              <img src={poster} alt={`Portada de ${series.name}`} loading="lazy" decoding="async" fetchPriority="low" />
+                              <LibraryPoster src={poster} name={series.name} />
                             </button>
                             <div className="movie-library__info">
                               <h2>{series.name}</h2>
@@ -9328,6 +9378,13 @@ export default function App() {
               onClose={handleCloseBookUpload}
               t={t}
             />
+            <TmdbUploadProgress upload={tmdbUpload} onClose={() => setTmdbUpload(null)} onReady={() => {
+              clearLocalMetadataCache();
+              detailCache.current.clear(); readyDetails.current.clear();
+              seasonCache.current.clear(); readySeasons.current.clear(); episodeCache.current.clear();
+              setVideos(current => current ? { ...current } : current);
+              setDetailRetry(value => value + 1);
+            }} />
             <UploadValidationModal
               visible={Boolean(uploadValidationError)}
               title={uploadValidationError?.title || ""}
@@ -9369,6 +9426,9 @@ export default function App() {
               tmdbLanguage={tmdbLanguage}
             />
             <EpisodeDetailsModal
+              loading={episodeLoading}
+              error={episodeError}
+              onRetry={() => setEpisodeRetry(value => value + 1)}
               watched={episodeWatched(mediaMarks, selectedSeasonMarkKey(), selectedEpisode?.episodeNumber)}
               onWatched={(value) => saveMarks(markEpisode(mediaMarks, selectedSeasonMarkKey(), selectedEpisode.episodeNumber, value))}
               visible={episodeDialogOpen}

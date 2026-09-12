@@ -15,7 +15,7 @@ import urllib.parse
 import urllib.request
 
 IMAGE_RE = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg)")
-DETAIL_RE = re.compile(r"/(?:movie/\d+(?:/images)?|tv/\d+(?:/images|/season/\d+(?:/images|/episode/\d+/images)?)?)")
+DETAIL_RE = re.compile(r"/(?:movie/\d+(?:/images)?|tv/\d+(?:/images|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
 LANGUAGES = ("es-ES", "ca-ES", "en-US")
 
 
@@ -117,7 +117,7 @@ class TmdbCache:
                 "releaseDate": data.get("release_date") or "", "firstAirDate": data.get("first_air_date") or "",
                 "genres": [genre.get("name", "") for genre in data.get("genres", [])]}
 
-    def json(self, path, params=None, refresh=False):
+    def json(self, path, params=None, refresh=False, local_only=False):
         if not DETAIL_RE.fullmatch(path) and path not in ("/search/movie", "/search/tv"):
             raise ValueError("Ruta TMDB no permitida")
         params = {k: str(v) for k, v in (params or {}).items()
@@ -127,6 +127,18 @@ class TmdbCache:
             params = {}
         cache_key = hashlib.sha256((path + "?" + urllib.parse.urlencode(sorted(params.items()))).encode()).hexdigest()
         target = self.root / "metadata" / (cache_key + ".json")
+        if local_only:
+            try:
+                return self._with_movie_links(path, json.loads(target.read_text()))
+            except (OSError, ValueError):
+                # Episode details already exist inside locally saved season metadata.
+                episode = re.fullmatch(r"(.*/season/\d+)/episode/(\d+)", path)
+                if episode:
+                    season = self.json(episode[1], params, local_only=True)
+                    for item in season.get("episodes", []):
+                        if item.get("episode_number") == int(episode[2]):
+                            return item
+                raise TmdbError("Contenido aún no preparado en local. Reintenta cuando termine la preparación de TMDB.", "TMDB_LOCAL_MISSING")
         owner = "/".join(path.strip("/").split("/")[:2]) if DETAIL_RE.fullmatch(path) else None
         with self.state_lock:
             generation = self.generations.get(owner, 0)
@@ -229,7 +241,14 @@ class TmdbCache:
                     break
         return results
 
-    def display_image(self, path, width=None):
+    def display_image(self, path, width=None, local_only=False):
+        if local_only:
+            if not IMAGE_RE.fullmatch(path) or width not in (None, 342, 500, 780, 1280):
+                raise ValueError("Imagen o tamaño no permitido")
+            target = self.root / "thumbnails" / str(width) / (path.lstrip("/") + ".webp") if width else self.root / "images" / path.lstrip("/")
+            if target.is_file() and target.stat().st_size:
+                return target
+            raise TmdbError("Imagen pendiente de preparación local", "TMDB_LOCAL_MISSING")
         if width is None:
             return self.image(path)
         if width not in (342, 500, 780, 1280):
@@ -321,6 +340,7 @@ class TmdbCache:
         thumbnails = {(path, 1280) for path in extra_images}
         errors = []
         collected = {}
+        self._progress("metadata", 0, 0, base)
         def collect_thumbnails(data):
             # Match the sizes used by library cards, seasons and detail galleries.
             if isinstance(data, dict):
@@ -349,6 +369,7 @@ class TmdbCache:
                     return collected[key]
                 data = self.json(path, params, refresh=refresh)
                 collected[key] = data
+                self._progress("metadata", len(collected), 0, path)
                 images.update(self._images_in(data))
                 collect_thumbnails(data)
                 return data
@@ -375,20 +396,30 @@ class TmdbCache:
                         if isinstance(episode_number, int) and episode_number > 0:
                             collect(season_path + f"/episode/{episode_number}/images")
                     collect(season_path + "/images")
-        for path in sorted(images):
+        for count, path in enumerate(sorted(images), 1):
             self._check_worker()
             try:
                 self.image(path)
             except Exception as exc:
                 errors.append(f"{path}: {exc}")
-        for path, width in sorted(thumbnails, key=lambda item: (item[1], item[0])):
+            self._progress("images", count, len(images), path)
+        for count, (path, width) in enumerate(sorted(thumbnails, key=lambda item: (item[1], item[0])), 1):
             self._check_worker()
             try:
                 self.display_image(path, width)
             except Exception as exc:
                 errors.append(f"Miniatura {path} ({width}): {exc}")
+            self._progress("thumbnails", count, len(thumbnails), path)
         if errors:
             raise RuntimeError("; ".join(errors)[:4000])
+
+    def _progress(self, phase, completed, total, current):
+        context = getattr(self.worker_context, "job", None)
+        if context:
+            with self.jobs_lock:
+                job = self.jobs.get(context[0])
+                if job and job["state"] == "running":
+                    job["progress"] = {"phase": phase, "completed": completed, "total": total, "current": current}
 
     def _save_jobs(self):
         atomic_write(self.root / "jobs.json", json.dumps(self.jobs, ensure_ascii=False).encode())
@@ -609,5 +640,6 @@ class TmdbCache:
         with self.jobs_lock:
             jobs = [dict(job) for job in self.jobs.values()]
         return {"total": len(jobs), **{state: sum(j["state"] == state for j in jobs) for state in ("pending", "running", "complete", "failed", "cancelled")},
+                "jobs": {f'{j["kind"]}/{j["id"]}': {key: j.get(key) for key in ("state", "progress", "error")} for j in jobs},
                 "errors": [{"media": f'{j["kind"]}/{j["id"]}', "error": j["error"]} for j in jobs if j["state"] == "failed"],
                 "current": next((f'{j["kind"]}/{j["id"]}' for j in jobs if j["state"] == "running"), "")}

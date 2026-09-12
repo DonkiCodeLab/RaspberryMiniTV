@@ -840,7 +840,7 @@ def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
     if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
-    if request.path.startswith("/tmdb/images/") and not submitted_pin:
+    if request.path.startswith(("/tmdb/images/", "/tmdb/import/images/")) and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -3311,11 +3311,14 @@ def cached_tmdb_library():
 @app.route("/tmdb/json/<path:tmdb_path>", methods=["GET"])
 def cached_tmdb_json(tmdb_path):
     try:
-        return jsonify(tmdb_artwork.json("/" + tmdb_path, request.args.to_dict()))
+        data = tmdb_artwork.json("/" + tmdb_path, request.args.to_dict(), local_only=not tmdb_path.startswith("search/"))
+        if request.args.get("level") == "cards" and re.fullmatch(r"tv/\d+/season/\d+", tmdb_path):
+            data = {**data, "episodes": [{key: episode.get(key) for key in ("id", "episode_number", "name", "still_path", "air_date", "runtime")} for episode in data.get("episodes", [])]}
+        return jsonify(data)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except TmdbError as exc:
-        return jsonify({"error": str(exc), "code": exc.code}), 503 if exc.code == "TMDB_CREDENTIALS_MISSING" else 502
+        return jsonify({"error": str(exc), "code": exc.code}), 409 if exc.code == "TMDB_LOCAL_MISSING" else 503 if exc.code == "TMDB_CREDENTIALS_MISSING" else 502
     except OSError as exc:
         app.logger.warning("TMDB cache storage failed: %s errno=%s", type(exc).__name__, exc.errno)
         return jsonify({"error": "No se pudo leer o guardar la caché TMDB en la Raspberry. Revisa espacio y permisos del disco.", "code": "TMDB_STORAGE_ERROR"}), 500
@@ -3328,12 +3331,23 @@ def cached_tmdb_json(tmdb_path):
 def cached_tmdb_image(filename):
     try:
         width = request.args.get("width")
-        path = tmdb_artwork.display_image("/" + filename, int(width) if width is not None else None)
+        path = tmdb_artwork.display_image("/" + filename, int(width) if width is not None else None, local_only=True)
         return send_file(path, max_age=31536000, conditional=True)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    except TmdbError as exc:
+        return jsonify({"error": str(exc), "code": exc.code}), 409
     except Exception:
         return jsonify({"error": "No se pudo descargar la imagen de TMDB"}), 502
+
+
+@app.route("/tmdb/import/images/<filename>", methods=["GET"])
+def import_tmdb_preview(filename):
+    """Explicit import/search previews, never used by library navigation."""
+    try:
+        return send_file(tmdb_artwork.display_image("/" + filename, 342), max_age=31536000, conditional=True)
+    except Exception:
+        return jsonify({"error": "No se pudo preparar la vista previa"}), 502
 
 
 def tmdb_missing_ids():
@@ -3344,6 +3358,16 @@ def tmdb_missing_ids():
 
 
 tmdb_cache_action_lock = threading.Lock()
+
+
+@app.route("/tmdb/prepare", methods=["POST"])
+def prepare_tmdb_title():
+    data = request.get_json(silent=True) or {}
+    kind, tmdb_id = data.get("kind"), data.get("id")
+    if kind not in ("movie", "tv") or not str(tmdb_id).isdigit() or int(tmdb_id) <= 0:
+        return jsonify({"error": "Título no válido"}), 400
+    tmdb_artwork.enqueue(kind, tmdb_id)
+    return jsonify(tmdb_artwork.status())
 
 
 @app.route("/tmdb/cache", methods=["GET", "POST", "DELETE"])
