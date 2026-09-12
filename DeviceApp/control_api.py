@@ -3308,10 +3308,11 @@ def cached_tmdb_library():
     return jsonify(result)
 
 
+@app.route("/tmdb/import/json/<path:tmdb_path>", methods=["GET"])
 @app.route("/tmdb/json/<path:tmdb_path>", methods=["GET"])
 def cached_tmdb_json(tmdb_path):
     try:
-        data = tmdb_artwork.json("/" + tmdb_path, request.args.to_dict(), local_only=not tmdb_path.startswith("search/"))
+        data = tmdb_artwork.json("/" + tmdb_path, request.args.to_dict(), local_only=not (tmdb_path.startswith("search/") or request.path.startswith("/tmdb/import/")))
         if request.args.get("level") == "cards" and re.fullmatch(r"tv/\d+/season/\d+", tmdb_path):
             data = {**data, "episodes": [{key: episode.get(key) for key in ("id", "episode_number", "name", "still_path", "air_date", "runtime")} for episode in data.get("episodes", [])]}
         return jsonify(data)
@@ -3345,7 +3346,7 @@ def cached_tmdb_image(filename):
 def import_tmdb_preview(filename):
     """Explicit import/search previews, never used by library navigation."""
     try:
-        return send_file(tmdb_artwork.display_image("/" + filename, 342), max_age=31536000, conditional=True)
+        return send_file(tmdb_artwork.display_image("/" + filename, int(request.args.get("width", 342))), max_age=31536000, conditional=True)
     except Exception:
         return jsonify({"error": "No se pudo preparar la vista previa"}), 502
 

@@ -350,6 +350,16 @@ class TmdbCacheTests(unittest.TestCase):
             self.assertEqual(client.get('/tmdb/json/movie/999').status_code, 409)
             self.assertEqual(client.get('/tmdb/images/missing.jpg?width=500').status_code, 409)
 
+    def test_online_preview_is_explicit_and_library_does_not_fetch_missing_data(self):
+        with patch.object(api, 'tmdb_artwork', self.cache), patch.object(api, 'is_authorized_request', return_value=True), patch.object(self.cache, '_download', return_value=(b'{"id": 987, "title": "Preview"}', 'application/json')) as download:
+            client = api.app.test_client()
+            self.assertEqual(client.get('/tmdb/json/movie/987').status_code, 409)
+            download.assert_not_called()
+            self.assertEqual(client.get('/tmdb/import/json/movie/987').json['title'], 'Preview')
+            self.assertEqual(download.call_count, 1)
+            self.assertEqual(client.get('/tmdb/json/movie/987').json['title'], 'Preview')
+            self.assertEqual(download.call_count, 1)
+
     def test_upload_worker_publishes_phase_progress(self):
         self.cache.jobs['movie/1'] = {'kind': 'movie', 'id': 1, 'state': 'running', 'error': ''}
         self.cache.worker_context.job = ('movie/1', 0)

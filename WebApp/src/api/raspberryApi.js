@@ -1515,16 +1515,21 @@ export function prepareTmdbTitle(kind, id) {
   return request('/tmdb/prepare', { method: 'POST', body: JSON.stringify({ kind, id }) });
 }
 
-export function getCachedTmdbJson(path, { language, query = {} } = {}) {
+export function getCachedTmdbJson(path, { language, query = {}, importPreview = false } = {}) {
   const params = new URLSearchParams();
   if (language) params.set("language", language);
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
   });
-  const endpoint = `/tmdb/json${path}?${params}`;
+  const endpoint = `/tmdb/${importPreview ? "import/" : ""}json${path}?${params}`;
   const key = `${getBaseUrl()}:${getStoredWebPin()}:${endpoint}`;
   if (!localMetadataRequests.has(key)) {
-    localMetadataRequests.set(key, requestWithTimeout(signal => request(endpoint, { signal })).catch(error => {
+    const started = Date.now();
+    console.info(`[Datos locales] Leyendo ${path}`);
+    localMetadataRequests.set(key, requestWithTimeout(signal => request(endpoint, { signal })).then(data => {
+      console.info(`[Datos locales] Listo ${path}: ${Date.now() - started} ms`);
+      return data;
+    }).catch(error => {
       localMetadataRequests.delete(key);
       throw error;
     }));

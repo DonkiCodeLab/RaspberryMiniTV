@@ -4159,8 +4159,8 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
     try {
       const details =
         mediaType === "movies"
-          ? await getMovieById(result.id, tmdbLanguage)
-          : await getTvSeriesById(result.id, tmdbLanguage);
+          ? await getMovieById(result.id, tmdbLanguage, true)
+          : await getTvSeriesById(result.id, tmdbLanguage, true);
       setSelectedItem(details);
       if (mediaType === "series") {
         setSelectedSeasonId(null);
@@ -4189,6 +4189,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
       try {
         const nextSeason = await getTvSeasonEpisodes({
           seriesId: selectedItem.id,
+          importPreview: true,
           seasonNumber: selectedSeason.seasonNumber || selectedSeason.id,
           language: tmdbLanguage,
         });
@@ -6474,7 +6475,7 @@ export default function App() {
         : id ? getTvSeriesById(id, tmdbLanguage)
         : Promise.resolve({});
       detailCache.current.set(key, request.then(async detail => {
-        await preloadLibraryCovers([detail.heroImage, ...(detail.seasons || []).map(season => season.image)].filter(Boolean), { preserve: true, timeoutMs: 4000 });
+        await preloadLibraryCovers([detail.heroImage, ...(isMovie ? (detail.imageOptions || []).slice(0, MAX_MOVIE_IMAGES) : (detail.seasons || []).map(season => season.image))].filter(Boolean), { preserve: true, timeoutMs: 4000 });
         readyDetails.current.add(key);
         return detail;
       }).catch(error => { detailCache.current.delete(key); throw error; }));

@@ -132,3 +132,26 @@ test('returning to movie and season reuses metadata; episode information waits f
     assert.equal(requests.length, 4);
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
+
+
+test('online preview uses an explicit import route separate from library navigation', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: 'http://raspberry:5050', hostname: 'raspberry' }, sessionStorage: { getItem: () => '1234' } };
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    const data = url.includes('/images') ? { posters: [] } : { title: 'Preview', overview: 'Overview', poster_path: '/preview.jpg' };
+    return { ok: true, text: async () => JSON.stringify(data) };
+  };
+  try {
+    const tmdb = await loadBrowserModule('../src/tmdbApi.js');
+    const preview = await tmdb.getMovieById(888, 'es-ES', true);
+    assert.ok(requests.every(url => url.includes('/tmdb/import/json/')));
+    assert.ok(preview.heroImage.includes('/tmdb/import/images/'));
+    requests.length = 0;
+    const local = await tmdb.getMovieById(888, 'es-ES');
+    assert.equal(requests.length, 2);
+    assert.ok(requests.every(url => url.includes('/tmdb/json/')));
+    assert.ok(local.heroImage.includes('/tmdb/images/'));
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});

@@ -85,14 +85,14 @@ function isGenericEpisodeTitle(title, episodeNumber) {
   ]).has(normalizedTitle);
 }
 
-async function fetchTmdbJsonWithEnglishOverview(path, { language, query } = {}) {
-  const data = await fetchTmdbJson(path, { language, query });
+async function fetchTmdbJsonWithEnglishOverview(path, { language, query, importPreview = false } = {}) {
+  const data = await fetchTmdbJson(path, { language, query, importPreview });
 
   if (!hasText(data?.overview) && language && language !== TMDB_ENGLISH_FALLBACK_LANGUAGE) {
     try {
       const fallbackData = await fetchTmdbJson(path, {
         language: TMDB_ENGLISH_FALLBACK_LANGUAGE,
-        query,
+        query, importPreview,
       });
 
       if (hasText(fallbackData?.overview)) {
@@ -215,8 +215,8 @@ function createTmdbRequest(path, { language, query = {} } = {}) {
   return { url: url.toString(), headers };
 }
 
-async function fetchTmdbJson(path, { language, query } = {}) {
-  if (!isMockMode()) return getCachedTmdbJson(path, { language, query });
+async function fetchTmdbJson(path, { language, query, importPreview = false } = {}) {
+  if (!isMockMode()) return getCachedTmdbJson(path, { language, query, importPreview });
   const { url, headers } = createTmdbRequest(path, { language, query });
   const response = await fetch(url, { method: "GET", headers });
 
@@ -228,9 +228,10 @@ async function fetchTmdbJson(path, { language, query } = {}) {
   return response.json();
 }
 
-export function buildTmdbImageUrl(path, size = "w500") {
+export function buildTmdbImageUrl(path, size = "w500", importPreview = false) {
   if (!path) return null;
-  return localTmdbImageUrl(`${TMDB_IMAGE_BASE_URL}/${size}${path}`);
+  const url = localTmdbImageUrl(`${TMDB_IMAGE_BASE_URL}/${size}${path}`);
+  return importPreview ? url.replace("/tmdb/images/", "/tmdb/import/images/") : url;
 }
 
 function getKnownSeriesMatch(...values) {
@@ -315,37 +316,37 @@ async function searchTvSeriesByName(query, language) {
   return results[0] || null;
 }
 
-async function getTvSeriesImages(seriesId, language) {
+async function getTvSeriesImages(seriesId, language, importPreview = false) {
   const data = await fetchTmdbJson(`/tv/${seriesId}/images`, {
-    language,
+    language, importPreview,
     query: {
       include_image_language: "null,en,es",
     },
   });
 
   const posters = (Array.isArray(data?.posters) ? data.posters : []).map((item) =>
-    buildTmdbImageUrl(item?.file_path, "w780")
+    buildTmdbImageUrl(item?.file_path, "w780", importPreview)
   );
   const backdrops = (Array.isArray(data?.backdrops) ? data.backdrops : []).map((item) =>
-    buildTmdbImageUrl(item?.file_path, "w1280")
+    buildTmdbImageUrl(item?.file_path, "w1280", importPreview)
   );
 
   return uniqueImageList([...posters, ...backdrops]);
 }
 
-async function getMovieImages(movieId, language) {
+async function getMovieImages(movieId, language, importPreview = false) {
   const data = await fetchTmdbJson(`/movie/${movieId}/images`, {
-    language,
+    language, importPreview,
     query: {
       include_image_language: "null,en,es",
     },
   });
 
   const posters = (Array.isArray(data?.posters) ? data.posters : []).map((item) =>
-    buildTmdbImageUrl(item?.file_path, "w780")
+    buildTmdbImageUrl(item?.file_path, "w780", importPreview)
   );
   const backdrops = (Array.isArray(data?.backdrops) ? data.backdrops : []).map((item) =>
-    buildTmdbImageUrl(item?.file_path, "w1280")
+    buildTmdbImageUrl(item?.file_path, "w1280", importPreview)
   );
 
   return uniqueImageList([...posters, ...backdrops]);
@@ -376,19 +377,19 @@ export async function getLibrarySummaries(movies, directories, language) {
   return { movies: cards(summaries.movies), series: cards(summaries.series) };
 }
 
-export async function getTvSeriesById(seriesId, language) {
+export async function getTvSeriesById(seriesId, language, importPreview = false) {
   const [show, availableImages] = await Promise.all([
-    fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}`, { language }),
-    getTvSeriesImages(seriesId, language).catch(() => []),
+    fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}`, { language, importPreview }),
+    getTvSeriesImages(seriesId, language, importPreview).catch(() => []),
   ]);
   const heroImage =
-    buildTmdbImageUrl(show?.backdrop_path, "w1280") ||
-    buildTmdbImageUrl(show?.poster_path, "w780") ||
+    buildTmdbImageUrl(show?.backdrop_path, "w1280", importPreview) ||
+    buildTmdbImageUrl(show?.poster_path, "w780", importPreview) ||
     null;
   const imageOptions = uniqueImageList([
     heroImage,
-    buildTmdbImageUrl(show?.poster_path, "w780"),
-    buildTmdbImageUrl(show?.backdrop_path, "w1280"),
+    buildTmdbImageUrl(show?.poster_path, "w780", importPreview),
+    buildTmdbImageUrl(show?.backdrop_path, "w1280", importPreview),
     ...availableImages,
   ]);
 
@@ -401,7 +402,7 @@ export async function getTvSeriesById(seriesId, language) {
         seasonNumber,
         title: season?.name || `Season ${seasonNumber}`,
         episodeCount: Number(season?.episode_count) || 0,
-        image: buildTmdbImageUrl(season?.poster_path, "w500"),
+        image: buildTmdbImageUrl(season?.poster_path, "w500", importPreview),
       };
     })
     .sort((a, b) => a.seasonNumber - b.seasonNumber);
@@ -419,23 +420,23 @@ export async function getTvSeriesById(seriesId, language) {
   };
 }
 
-export async function getMovieById(movieId, language) {
+export async function getMovieById(movieId, language, importPreview = false) {
   const [movie, availableImages] = await Promise.all([
     fetchTmdbJsonWithEnglishOverview(`/movie/${movieId}`, {
-      language,
+      language, importPreview,
       query: { append_to_response: "external_ids" },
     }),
-    getMovieImages(movieId, language).catch(() => []),
+    getMovieImages(movieId, language, importPreview).catch(() => []),
   ]);
 
   const heroImage =
-    buildTmdbImageUrl(movie?.backdrop_path, "w1280") ||
-    buildTmdbImageUrl(movie?.poster_path, "w780") ||
+    buildTmdbImageUrl(movie?.backdrop_path, "w1280", importPreview) ||
+    buildTmdbImageUrl(movie?.poster_path, "w780", importPreview) ||
     null;
   const imageOptions = uniqueImageList([
     heroImage,
-    buildTmdbImageUrl(movie?.poster_path, "w780"),
-    buildTmdbImageUrl(movie?.backdrop_path, "w1280"),
+    buildTmdbImageUrl(movie?.poster_path, "w780", importPreview),
+    buildTmdbImageUrl(movie?.backdrop_path, "w1280", importPreview),
     ...availableImages,
   ]);
   const imdbId = String(movie?.external_ids?.imdb_id || movie?.imdb_id || "").trim();
@@ -481,9 +482,9 @@ export async function resolveSeriesFromNames({ directoryName, displayName, langu
   return getTvSeriesById(seriesId, language);
 }
 
-export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language }) {
+export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language, importPreview = false }) {
   const season = await fetchTmdbJson(`/tv/${seriesId}/season/${seasonNumber}`, {
-    language, query: { level: "cards" },
+    language, importPreview, query: importPreview ? {} : { level: "cards" },
   });
   const episodes = (season?.episodes || []).map((episode) => {
     const episodeNumber = Number(episode?.episode_number) || 0;
@@ -493,8 +494,9 @@ export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language }) 
       id: Number(episode?.id) || `${seasonNumber}-${episodeNumber}`,
       episodeNumber,
       title: episode?.name || `Episodio ${episodeNumber}`,
+      ...(importPreview ? { synopsis: episode.overview || "" } : {}),
       airDate: episode?.air_date || "",
-      image: buildTmdbImageUrl(episode?.still_path, "w780"),
+      image: buildTmdbImageUrl(episode?.still_path, "w780", importPreview),
       runtime: Number(episode?.runtime) || 0,
       voteAverage: Number(episode?.vote_average) || 0,
     };
@@ -504,10 +506,10 @@ export async function getTvSeasonEpisodes({ seriesId, seasonNumber, language }) 
     id: Number(season?.season_number) || Number(seasonNumber),
     title: season?.name || `Temporada ${seasonNumber}`,
     episodeCount: episodes.length,
-    image: buildTmdbImageUrl(season?.poster_path, "w500"),
+    image: buildTmdbImageUrl(season?.poster_path, "w500", importPreview),
     heroImage:
-      buildTmdbImageUrl(season?.poster_path, "w780") ||
-      buildTmdbImageUrl(season?.poster_path, "w500"),
+      buildTmdbImageUrl(season?.poster_path, "w780", importPreview) ||
+      buildTmdbImageUrl(season?.poster_path, "w500", importPreview),
     episodes,
   };
 }
