@@ -2,6 +2,16 @@
 export const coverPreloadResults = new Map();
 const preparedCovers = new Map();
 
+// A slow cover may continue in the background, but must not hold the whole page.
+export async function waitForCoverPreview(preload, budgetMs = 2000) {
+  let timer;
+  try {
+    await Promise.race([preload, new Promise(resolve => { timer = setTimeout(resolve, budgetMs); })]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function acquireLibraryCover(url, createImage = () => new Image()) {
   const prepared = preparedCovers.get(url);
   if (prepared && !prepared.parentElement) return prepared;

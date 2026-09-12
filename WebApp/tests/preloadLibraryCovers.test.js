@@ -90,3 +90,13 @@ test('preload waits for decoding even if load fires first', async () => {
   await task;
   assert.equal(finished, true);
 });
+
+test('a stalled cover cannot block opening the library beyond the preview budget', async () => {
+  const { waitForCoverPreview } = await import('../src/preloadLibraryCovers.js');
+  let finish;
+  const background = new Promise(resolve => { finish = resolve; });
+  await waitForCoverPreview(background, 5);
+  finish();
+  await background;
+  await waitForCoverPreview(Promise.resolve(), 5000);
+});

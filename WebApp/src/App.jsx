@@ -1,4 +1,4 @@
-import { preloadLibraryCovers } from "./preloadLibraryCovers";
+import { preloadLibraryCovers, waitForCoverPreview } from "./preloadLibraryCovers";
 import LibraryPoster from "./LibraryPoster";
 import TmdbCachePanel from "./TmdbCachePanel";
 import { localTmdbImageUrl } from "./api/raspberryApi";
@@ -6426,7 +6426,8 @@ export default function App() {
         ...Object.values(summaries.series).map(card => ({ url: card.posterImage, name: `Serie: ${card.name || card.id}` })),
         ...Object.values(summaries.movies).map(card => ({ url: card.posterImage, name: `Película: ${card.name || card.id}` })),
       ];
-      await preloadLibraryCovers(covers, { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
+      const preload = preloadLibraryCovers(covers, { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
+      await waitForCoverPreview(preload);
       if (cancelled) return;
       setTmdbSeriesMap(current => Object.fromEntries(directories.map(directory => {
         const card = summaries.series[String(directory.tmdbId)] || {};
@@ -8482,6 +8483,7 @@ export default function App() {
           </div>
         ) : (
           <>
+            {!loading && !tmdbLoading && !detailLoading && !detailError && coverProgress?.completed < coverProgress?.total && currentView !== "raspberry" ? <div className="detail-load-status" role="status"><span className="tmdb-cache-spinner" aria-hidden="true" /> Preparando portadas en segundo plano: {coverProgress.completed}/{coverProgress.total}. Ya puedes navegar.</div> : null}
             {(detailLoading || detailError) && !loading && !tmdbLoading && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
