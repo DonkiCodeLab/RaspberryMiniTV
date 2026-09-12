@@ -1773,6 +1773,7 @@ function normalizeLibraryUsageItem(item) {
 
 function normalizeLibraryCounts(counts) {
   return {
+    calculating: counts?.calculating ?? !counts,
     series: normalizeLibraryUsageItem(counts?.series),
     movies: normalizeLibraryUsageItem(counts?.movies),
     games: normalizeLibraryUsageItem(counts?.games),
@@ -4607,7 +4608,7 @@ function UploadValidationModal({ visible, title, message, onClose, t }) {
   );
 }
 
-function RaspberryStatCard({ label, value, usedGb, percent, icon, t }) {
+function RaspberryStatCard({ label, value, usedGb, percent, icon, t, calculating }) {
   return (
     <article className="raspberry-stat-card">
       <div className="raspberry-stat-card__label">
@@ -4616,7 +4617,7 @@ function RaspberryStatCard({ label, value, usedGb, percent, icon, t }) {
       </div>
       <strong>{value}</strong>
       <span>
-        {t("section_storage_used", {
+        {calculating ? "Calculando espacio…" : t("section_storage_used", {
           gb: formatStorageGb(usedGb),
           percent: formatPercent(percent),
         })}
@@ -4830,6 +4831,7 @@ function RaspberryPage({
   totalStorageGb,
   multimediaUsedGb,
   multimediaPercent,
+  statsCalculating,
   alarm,
   alarmSounds,
   alarmPreviewSound,
@@ -5010,6 +5012,7 @@ function RaspberryPage({
               ) : null}
             </article>
             <RaspberryStatCard
+              calculating={statsCalculating}
               label={t("stats_series_installed")}
               value={seriesCount}
               usedGb={seriesUsedGb}
@@ -5018,6 +5021,7 @@ function RaspberryPage({
               t={t}
             />
             <RaspberryStatCard
+              calculating={statsCalculating}
               label={t("stats_movies_installed")}
               value={movieCount}
               usedGb={movieUsedGb}
@@ -5026,6 +5030,7 @@ function RaspberryPage({
               t={t}
             />
             <RaspberryStatCard
+              calculating={statsCalculating}
               label={t("stats_games_installed")}
               value={gameCount}
               usedGb={gameUsedGb}
@@ -5034,6 +5039,7 @@ function RaspberryPage({
               t={t}
             />
             <RaspberryStatCard
+              calculating={statsCalculating}
               label={t("stats_books_installed")}
               value={bookCount}
               usedGb={bookUsedGb}
@@ -5042,6 +5048,7 @@ function RaspberryPage({
               t={t}
             />
             <RaspberryStatCard
+              calculating={statsCalculating}
               label={t("stats_pictures_installed")}
               value={pictureCount}
               usedGb={pictureUsedGb}
@@ -5063,7 +5070,7 @@ function RaspberryPage({
               </div>
               <div className="raspberry-storage-card__copy raspberry-storage-card__copy--media">
                 <p>{t("multimedia_occupied")}</p>
-                <strong>{formatStorageGb(multimediaUsedGb)} GB</strong>
+                <strong>{statsCalculating ? "Calculando…" : `${formatStorageGb(multimediaUsedGb)} GB`}</strong>
               </div>
             </article>
             </div>
@@ -6296,7 +6303,10 @@ export default function App() {
 
     let cancelled = false;
 
+    let refreshing = false;
     async function refreshRaspberryStatus() {
+      if (refreshing || cancelled) return;
+      refreshing = true;
       try {
         const nextHealth = await getHealth();
         if (!cancelled) {
@@ -6343,7 +6353,7 @@ export default function App() {
           });
           setRaspberryCurrentPlayback(null);
         }
-      }
+      } finally { refreshing = false; }
     }
 
     refreshRaspberryStatus();
@@ -8397,7 +8407,7 @@ export default function App() {
   const selectedGamePlatformExtension = getFileExtension(selectedGame?.file || selectedGame?.relativePath);
   const selectedGamePlatformIcon = systemForGame(selectedGame)?.assets.console || GAME_PLATFORM_ICONS[selectedGamePlatformExtension] || null;
   const selectedGamePlatformLabel = selectedGame?.platformName || GAME_PLATFORM_LABELS[selectedGamePlatformExtension] || t("media_games_singular");
-  const raspberryLibraryCounts = normalizeLibraryCounts(videos?.libraryCounts || raspberryHealth?.libraryCounts);
+  const raspberryLibraryCounts = normalizeLibraryCounts(raspberryHealth?.ok ? raspberryHealth.libraryCounts : videos?.libraryCounts);
   const installedSeriesCount = raspberryLibraryCounts.series.count;
   const installedMovieCount = raspberryLibraryCounts.movies.count;
   const installedGameCount = raspberryLibraryCounts.games.count;
@@ -8575,6 +8585,7 @@ export default function App() {
                 totalStorageGb={totalStorageGb}
                 multimediaUsedGb={multimediaUsedGb}
                 multimediaPercent={multimediaPercent}
+                statsCalculating={raspberryLibraryCounts.calculating}
                 alarm={raspberryAlarm}
                 alarmSounds={raspberryAlarmSounds}
                 alarmPreviewSound={alarmPreviewSound}

@@ -1,5 +1,6 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
+from background_stats import BackgroundStats
 import json
 import io
 import os
@@ -787,11 +788,12 @@ def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root
     return library
 
 
-def get_storage_stats():
+def _calculate_storage_stats(multimedia_bytes=None):
     ensure_media_directories()
     target_path = VIDEOS_DIR if os.path.exists(VIDEOS_DIR) else BASE_DIR
     usage = shutil.disk_usage(target_path)
-    multimedia_bytes = get_directory_size(MULTIMEDIA_DIR)
+    if multimedia_bytes is None:
+        multimedia_bytes = get_directory_size(MULTIMEDIA_DIR)
     total_gb = round(usage.total / (1024 ** 3), 1)
     used_gb = round((usage.total - usage.free) / (1024 ** 3), 1)
     percent = round(((usage.total - usage.free) / usage.total) * 100, 1) if usage.total else 0.0
@@ -806,6 +808,22 @@ def get_storage_stats():
         "multimediaUsedGb": round(multimedia_bytes / (1024 ** 3), 1),
         "multimediaPercentUsed": multimedia_percent,
     }
+
+
+library_stats = BackgroundStats(
+    os.path.join(MULTIMEDIA_DIR, "library_stats.json"),
+    lambda: {"storage": _calculate_storage_stats(), "libraryCounts": _calculate_library_counts()},
+)
+
+
+def get_storage_stats():
+    snapshot = library_stats.read()
+    return {**(snapshot["storage"] if snapshot else _calculate_storage_stats(0)), "calculating": snapshot is None}
+
+
+def get_library_counts():
+    snapshot = library_stats.read()
+    return {**(snapshot["libraryCounts"] if snapshot else {}), "calculating": snapshot is None}
 
 
 def web_dist_available():
@@ -964,7 +982,7 @@ def get_directory_size(path):
     return total
 
 
-def get_library_counts():
+def _calculate_library_counts():
     ensure_media_directories()
     usage = shutil.disk_usage(VIDEOS_DIR if os.path.exists(VIDEOS_DIR) else BASE_DIR)
     multimedia_bytes = get_directory_size(MULTIMEDIA_DIR)
@@ -3463,20 +3481,19 @@ def alarm_sound_file(filename):
 def health():
     with lock:
         playback = current_playback_status()
-        return jsonify(
-            {
-                "ok": True,
-                "ts": int(time.time()),
-                "language": current_language(),
-                "storage": get_storage_stats(),
-                "libraryCounts": get_library_counts(),
-                "playing": playback["playing"],
-                "directory": playback["directory"],
-                "file": playback["file"],
-                "running": playback["running"],
-            }
-        )
-
+    return jsonify(
+        {
+            "ok": True,
+            "ts": int(time.time()),
+            "language": current_language(),
+            "storage": get_storage_stats(),
+            "libraryCounts": get_library_counts(),
+            "playing": playback["playing"],
+            "directory": playback["directory"],
+            "file": playback["file"],
+            "running": playback["running"],
+        }
+    )
 
 if __name__ == "__main__":
     import faulthandler
