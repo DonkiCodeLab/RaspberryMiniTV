@@ -6158,34 +6158,31 @@ export default function App() {
       };
 
       try {
-        const [nextVideos, nextLanguage, nextAlarmSettings, nextWeatherSettings, nextTmdbSettings, nextBirthdays] = await Promise.all([
+        const [nextVideos, nextLanguage] = await Promise.all([
           track("catálogo local", getVideos),
           track("idioma", getRaspberryLanguage),
-          track("alarmas", getRaspberryAlarms),
-          track("ajustes del tiempo", getRaspberryWeatherSettings),
-          track("configuración TMDB", getRaspberryTmdbSettings),
-          track("cumpleaños", getRaspberryBirthdays),
         ]);
         if (cancelled) return;
-
-        const loadedTmdbSettings = await track("inicialización de TMDB", () => initializeTmdbCredentials(nextTmdbSettings));
-        if (cancelled) return;
-        setTmdbSettings(loadedTmdbSettings);
-        setVideos(nextVideos);
-        if (nextLanguage?.language) {
-          setRaspberryLanguage(normalizeRaspberryLanguage(nextLanguage.language));
-        }
-        if (Array.isArray(nextAlarmSettings?.alarms)) {
-          setRaspberryAlarm(nextAlarmSettings.alarms);
-        }
-        if (Array.isArray(nextAlarmSettings?.sounds)) {
-          setRaspberryAlarmSounds(nextAlarmSettings.sounds);
-          setAlarmPreviewSound((current) => current || nextAlarmSettings.sounds[0] || "");
-        }
-        setRaspberryAlarmsLoaded(true);
-        setWeatherLocation(String(nextWeatherSettings?.location || ""));
-        setWeatherLocationDetails(nextWeatherSettings?.details || null);
-        setBirthdays(Array.isArray(nextBirthdays?.birthdays) ? nextBirthdays.birthdays : []);
+        if (nextLanguage?.language) setRaspberryLanguage(normalizeRaspberryLanguage(nextLanguage.language));
+        // Settings have their own background load; they are not library media.
+        const settings = Promise.all([
+          getRaspberryAlarms(), getRaspberryWeatherSettings(), getRaspberryTmdbSettings(), getRaspberryBirthdays(),
+        ]).then(async ([alarms, weather, tmdb, birthdays]) => {
+          const loadedTmdbSettings = await initializeTmdbCredentials(tmdb);
+          if (cancelled) return;
+          setTmdbSettings(loadedTmdbSettings);
+          if (Array.isArray(alarms?.alarms)) setRaspberryAlarm(alarms.alarms);
+          if (Array.isArray(alarms?.sounds)) {
+            setRaspberryAlarmSounds(alarms.sounds);
+            setAlarmPreviewSound(current => current || alarms.sounds[0] || "");
+          }
+          setRaspberryAlarmsLoaded(true);
+          setWeatherLocation(String(weather?.location || ""));
+          setWeatherLocationDetails(weather?.details || null);
+          setBirthdays(Array.isArray(birthdays?.birthdays) ? birthdays.birthdays : []);
+        }).catch(error => console.error("[Ajustes] No se pudieron cargar los ajustes", { status: error?.status }));
+        if (mockMode) await settings;
+        if (!cancelled) setVideos(nextVideos);
       } catch (nextError) {
         if (cancelled) return;
         if (nextError?.status === 401) {

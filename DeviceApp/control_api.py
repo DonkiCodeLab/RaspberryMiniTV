@@ -846,6 +846,23 @@ def is_authorized_request():
 
 
 @app.before_request
+def time_local_library_request():
+    if request.path == "/videos" or request.path.startswith(("/tmdb/json/", "/tmdb/library")):
+        request.environ["minitv.local_started"] = time.perf_counter()
+        print(f"[Biblioteca local] Inicio {request.path}", flush=True)
+
+
+@app.after_request
+def log_local_library_request(response):
+    started = request.environ.get("minitv.local_started")
+    if started is not None:
+        elapsed = (time.perf_counter() - started) * 1000
+        response.headers["Server-Timing"] = f"local;dur={elapsed:.1f}"
+        print(f"[Biblioteca local] Fin {request.path}: {response.status_code}, {elapsed:.1f} ms", flush=True)
+    return response
+
+
+@app.before_request
 def require_web_pin():
     if request.path in {"/movies/upload", "/movies/upload/raw", "/series/upload"}:
         log_upload_event(
