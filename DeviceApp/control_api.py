@@ -3479,6 +3479,9 @@ def health():
 
 
 if __name__ == "__main__":
+    import faulthandler
+    import signal
+    faulthandler.register(signal.SIGUSR1, all_threads=True)
     ensure_media_directories()
     tmdb_artwork.start()
     app.run(host="0.0.0.0", port=PORT)
