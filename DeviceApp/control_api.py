@@ -1,6 +1,8 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
 from background_stats import BackgroundStats
+import catalog_store
+from functools import wraps
 import json
 import io
 import os
@@ -127,6 +129,9 @@ current = {"proc": None, "id": None, "directory": None, "file": None}
 qr_proc = {"proc": None}
 qr_visible = {"shown": False}
 camera_lock = threading.Lock()
+# Last directory listing, used to report files without profiles without saving
+# scan placeholders or rescanning the disk on every TMDB progress poll.
+scanned_media_paths = {}
 
 
 def normalize_language_code(language):
@@ -305,61 +310,47 @@ def empty_media_library():
     }
 
 
-def load_media_library():
-    library = empty_media_library()
-    try:
-        with open(MEDIA_LIBRARY_PATH, "r", encoding="utf-8") as handle:
-            loaded = json.load(handle)
-        if isinstance(loaded, dict):
-            library.update(
-                {
-                    "version": int(loaded.get("version") or 1),
-                    "series": loaded.get("series") if isinstance(loaded.get("series"), dict) else {},
-                    "movies": loaded.get("movies") if isinstance(loaded.get("movies"), dict) else {},
-                    "games": loaded.get("games") if isinstance(loaded.get("games"), dict) else {},
-                    "books": loaded.get("books") if isinstance(loaded.get("books"), dict) else {},
-                    "bookCollections": loaded.get("bookCollections") if isinstance(loaded.get("bookCollections"), dict) else {},
-                }
-            )
-    except Exception:
-        pass
+def media_library_transaction(function):
+    @wraps(function)
+    def wrapped(*args, **kwargs):
+        with catalog_store.transaction(MEDIA_LIBRARY_PATH):
+            return function(*args, **kwargs)
+    return wrapped
 
-    if not library.get("movies") and os.path.exists(LEGACY_MOVIE_LIBRARY_PATH):
+
+@app.errorhandler(catalog_store.CatalogError)
+def catalog_storage_error(error):
+    app.logger.error("Catalog storage error: %s", error)
+    return jsonify({"error": str(error), "code": "CATALOG_STORAGE_ERROR"}), 503
+
+
+def load_media_library():
+    library = catalog_store.read(MEDIA_LIBRARY_PATH)
+    if library is not None:
+        return library
+    library = empty_media_library()
+    # Migrate only when the new catalog does not exist, never on a read error
+    # or after an intentional deletion of the last movie.
+    if os.path.exists(LEGACY_MOVIE_LIBRARY_PATH):
         try:
-            with open(LEGACY_MOVIE_LIBRARY_PATH, "r", encoding="utf-8") as handle:
-                legacy_movies = json.load(handle)
-            if isinstance(legacy_movies, dict):
-                library["movies"] = legacy_movies
-        except Exception:
-            pass
+            with open(LEGACY_MOVIE_LIBRARY_PATH, encoding="utf-8") as handle:
+                library["movies"] = json.load(handle)
+            library = catalog_store.normalize(library)
+        except (OSError, ValueError) as exc:
+            raise catalog_store.CatalogError("No se puede leer el catálogo antiguo; se conserva sin cambios.") from exc
     return library
 
 
 def save_media_library(library):
     ensure_media_directories()
-    current = empty_media_library()
-    if isinstance(library, dict):
-        current.update(
-            {
-                "version": int(library.get("version") or 1),
-                "series": library.get("series") if isinstance(library.get("series"), dict) else {},
-                "movies": library.get("movies") if isinstance(library.get("movies"), dict) else {},
-                "games": library.get("games") if isinstance(library.get("games"), dict) else {},
-                "books": library.get("books") if isinstance(library.get("books"), dict) else {},
-                "bookCollections": library.get("bookCollections") if isinstance(library.get("bookCollections"), dict) else {},
-            }
-        )
-
-    with open(MEDIA_LIBRARY_PATH, "w", encoding="utf-8") as handle:
-        json.dump(current, handle, ensure_ascii=False, indent=2)
-
-    return current
+    return catalog_store.save(MEDIA_LIBRARY_PATH, library)
 
 
 def load_movie_library():
     return load_media_library().get("movies", {})
 
 
+@media_library_transaction
 def save_movie_library(items):
     library = load_media_library()
     safe_items = {}
@@ -384,6 +375,7 @@ def save_movie_library(items):
     return safe_items
 
 
+@media_library_transaction
 def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
@@ -391,6 +383,7 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
 
     items = load_movie_library()
     item = {
+        **items.get(safe_relative_path, {}),
         "relativePath": safe_relative_path,
         "name": str(name or "").strip(),
         "tmdbId": int(tmdb_id or 0),
@@ -402,6 +395,7 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
     return item
 
 
+@media_library_transaction
 def upsert_series_metadata(relative_path, updates):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
@@ -464,6 +458,7 @@ def get_series_directory_videos(target_dir):
     )
 
 
+@media_library_transaction
 def refresh_series_metadata_from_disk(relative_path):
     safe_relative_path = str(relative_path or "").strip()
     series_path = resolve_relative_video_path(safe_relative_path, TVSHOWS_DIR)
@@ -492,6 +487,7 @@ def remove_series_metadata(relative_path):
     return remove_catalog_metadata("series", "tv", relative_path)
 
 
+@media_library_transaction
 def remove_catalog_metadata(collection, kind, relative_path):
     safe_path = str(relative_path or "").strip().rstrip("/")
     if not safe_path:
@@ -635,6 +631,7 @@ def remove_local_game_image_url(image_url):
             pass
 
 
+@media_library_transaction
 def upsert_game_metadata(relative_path, updates):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
@@ -673,6 +670,7 @@ def upsert_game_metadata(relative_path, updates):
     return item
 
 
+@media_library_transaction
 def remove_game_metadata(relative_path):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
@@ -687,6 +685,7 @@ def remove_game_metadata(relative_path):
     return item
 
 
+@media_library_transaction
 def upsert_media_profile(collection, key, updates):
     safe_collection = "movies" if collection == "movies" else "series"
     safe_key = str(key or "").strip()
@@ -720,6 +719,7 @@ def upsert_media_profile(collection, key, updates):
 
 
 def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root_files):
+    global scanned_media_paths
     library = load_media_library()
     series_items = library.setdefault("series", {})
     movie_items = library.setdefault("movies", {})
@@ -784,7 +784,12 @@ def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root
                 "source": current_item.get("source") or "scan",
             }
 
-    save_media_library(library)
+    # Directory listings are read-only. A scan must never replace saved profiles.
+    scanned_media_paths = {
+        "catalog": MEDIA_LIBRARY_PATH,
+        "series": tuple(directory["relativePath"] for directory in tvshow_directories if directory.get("relativePath")),
+        "movies": tuple(movie["relativePath"] for movie in movie_entries if movie.get("relativePath")),
+    }
     return library
 
 
@@ -2032,6 +2037,7 @@ def upload_books():
 
 
 @app.route("/books", methods=["DELETE"])
+@media_library_transaction
 def delete_book():
     relative_path = str(request.args.get("relativePath") or "").strip()
     target_path = resolve_book_path(relative_path)
@@ -2054,6 +2060,7 @@ def delete_book():
 
 
 @app.route("/books/profile", methods=["POST"])
+@media_library_transaction
 def save_book_profile():
     data = request.form if request.form else (request.get_json(silent=True) or {})
     relative_path = str(data.get("relativePath") or "").strip()
@@ -2094,6 +2101,7 @@ def custom_book_cover(filename):
 
 
 @app.route("/books/collection/profile", methods=["POST"])
+@media_library_transaction
 def save_book_collection_profile():
     data = request.form
     collection = str(data.get("collection") or "").strip().strip("/")
@@ -2119,6 +2127,7 @@ def save_book_collection_profile():
 
 
 @app.route("/books/collection", methods=["DELETE"])
+@media_library_transaction
 def delete_book_collection():
     collection = str(request.args.get("collection") or "").strip().strip("/")
     target_path = resolve_book_path(collection)
@@ -3011,7 +3020,12 @@ def backup_browser_movie_library():
     data = request.get_json(silent=True) or {}
     if not isinstance(data, dict) or not isinstance(data.get("library"), list) or not isinstance(data.get("profiles"), dict):
         return jsonify({"error": "Invalid browser movie library"}), 400
-    payload = json.dumps({"library": data["library"], "profiles": data["profiles"]}, ensure_ascii=False, sort_keys=True)
+    snapshot = {"library": data["library"], "profiles": data["profiles"]}
+    if "seriesProfiles" in data:
+        if not isinstance(data["seriesProfiles"], dict):
+            return jsonify({"error": "Invalid browser series profiles"}), 400
+        snapshot["seriesProfiles"] = data["seriesProfiles"]
+    payload = json.dumps(snapshot, ensure_ascii=False, sort_keys=True)
     digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
     backup_dir = os.path.join(MULTIMEDIA_DIR, "Recovery")
     os.makedirs(backup_dir, exist_ok=True)
@@ -3388,9 +3402,12 @@ def import_tmdb_preview(filename):
 
 def tmdb_missing_ids():
     library = load_media_library()
+    scanned = scanned_media_paths
+    if scanned.get("catalog") != MEDIA_LIBRARY_PATH:
+        scanned = {}
     return [path for collection in ("movies", "series")
-            for path, item in library.get(collection, {}).items()
-            if not item.get("tmdbId")]
+            for path in sorted(set(library.get(collection, {})) | set(scanned.get(collection, ())))
+            if not library.get(collection, {}).get(path, {}).get("tmdbId")]
 
 
 tmdb_cache_action_lock = threading.Lock()

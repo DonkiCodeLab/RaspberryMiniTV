@@ -282,6 +282,21 @@ Nota importante:
 
 ### TMDB local y migración del catálogo
 
+El catálogo que relaciona los vídeos con sus IDs, nombres y portadas personalizados
+es `MultimediaContent/media_library.json`. Consultar la biblioteca no modifica ese
+archivo. Las modificaciones se serializan entre peticiones y procesos, y se publican
+mediante reemplazo atómico después de sincronizarlas con el disco. Si el JSON está
+dañado o no se puede leer, la API devuelve `503 CATALOG_STORAGE_ERROR` y conserva
+el archivo: nunca interpreta ese error como una biblioteca vacía.
+
+Cada cambio real conserva las versiones anterior y nueva en
+`MultimediaContent/Recovery/media-library-<sha256>.json`. Las copias se deduplican
+por contenido y las consultas no generan nuevas versiones. Estas copias incluyen
+los perfiles de películas, series, juegos y libros; no duplican los vídeos ni la
+caché de imágenes. No se restauran automáticamente: una restauración debe comparar
+las rutas exactas y conservar las incorporaciones posteriores. Las copias solo
+existen para cambios realizados desde la instalación de esta protección.
+
 La API guarda los JSON y las imágenes de TMDB en `MultimediaContent/TmdbCache/`
 (en el disco de la Raspberry, compartidos por todos los navegadores). La web conectada
 consulta esta caché; solo se contacta con TMDB cuando falta un recurso. El modo mock
