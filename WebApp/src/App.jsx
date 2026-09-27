@@ -15,6 +15,9 @@ import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
 import cloudsBackground from "./assets/cloud.gif";
 import deleteIcon from "./assets/delete.png";
+import detailsIcon from "./assets/details.png";
+import downloadIcon from "./assets/download.png";
+import downloadHoverIcon from "./assets/download2.png";
 import emptyStateIcon from "./assets/empty.png";
 import gameboyAdvanceIcon from "./assets/gameboy_advance.png";
 import gameboyColorIcon from "./assets/gameboy_color.png";
@@ -41,6 +44,8 @@ import movieIconBlack from "./assets/icon_movie_black.png";
 import movieIconWhite from "./assets/icon_movie_white.png";
 import movieIconYellow from "./assets/icon_movie_yellow.png";
 import picturesIcon from "./assets/icon_pictures.svg";
+import picturesIconBlack from "./assets/icon_pictures_black.png";
+import picturesIconYellow from "./assets/icon_pictures_yellow.png";
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import screenOffIcon from "./assets/screen_off.png";
@@ -174,8 +179,8 @@ const MEDIA_TYPES = [
   {
     id: "pictures",
     labelKey: "media_pictures",
-    activeIcon: picturesIcon,
-    inactiveIcon: picturesIcon,
+    activeIcon: picturesIconBlack,
+    inactiveIcon: picturesIconYellow,
   },
 ];
 
@@ -1827,6 +1832,18 @@ function getHeaderImageStyle(crop) {
     transform: `scale(${normalized.zoom})`,
     transformOrigin: "center center",
   };
+}
+
+function MovieDownload({ url, name, label }) {
+  const graphics = <>
+    <img className="movie-download__default" src={downloadIcon} alt="" aria-hidden="true" />
+    <img className="movie-download__hover" src={downloadHoverIcon} alt="" aria-hidden="true" />
+  </>;
+  return url ? (
+    <a className="movie-download" href={url} download={name} aria-label={label} title={label}>{graphics}</a>
+  ) : (
+    <button className="movie-download" type="button" disabled aria-label={label} title={label}>{graphics}</button>
+  );
 }
 
 function HeaderArt({ image, crop, alt }) {
@@ -4333,7 +4350,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
         </form>
         ) : (
           <div className="tmdb-browser__toolbar">
-            <button className="season-page__back tmdb-browser__back" onClick={handleBack} type="button">
+            <button className="back-button season-page__back tmdb-browser__back" onClick={handleBack} type="button">
               <span className="season-page__back-arrow" aria-hidden="true">←</span>
               <span className="season-page__back-label">{t("back")}</span>
             </button>
@@ -4929,7 +4946,7 @@ function RaspberryPage({
 
   return (
     <section className="raspberry-page">
-      <button className="season-page__back raspberry-page__back" onClick={onBack} type="button">
+      <button className="back-button season-page__back raspberry-page__back" onClick={onBack} type="button">
         <span className="season-page__back-arrow" aria-hidden="true">←</span>
         <span className="season-page__back-label">{t("back")}</span>
       </button>
@@ -6983,15 +7000,17 @@ export default function App() {
     setSelectedGamePath(response?.item?.relativePath || selectedGame.relativePath);
   }
 
-  async function handleDeleteSeries(skipConfirm = false) {
-    const activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
+  async function handleDeleteSeries(
+    skipConfirm = false,
+    activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries
+  ) {
     if (!activeItem) return;
     const mediaLabel = activeMediaType === "movies" ? t("media_movies_singular") : t("media_series_singular");
     if (!skipConfirm) {
       setDeleteConfirmation({
         media: mediaLabel,
         name: activeItem.name,
-        onConfirm: () => handleDeleteSeries(true),
+        onConfirm: () => handleDeleteSeries(true, activeItem),
       });
       return;
     }
@@ -8643,7 +8662,7 @@ export default function App() {
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
               <section className="season-page">
                 <button
-                  className="season-page__back season-page__back--fixed"
+                  className="back-button season-page__back season-page__back--fixed"
                   onClick={handleBackToSeries}
                   type="button"
                 >
@@ -8758,7 +8777,7 @@ export default function App() {
 
                     {isMediaDetail ? (
                       <div className="movie-library__hero-tools">
-                        <button type="button" className="movie-library__back" onClick={isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
+                        <button type="button" className="back-button" onClick={isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
                           <span aria-hidden="true">←</span> {t(isMoviesMode ? "movie_library" : "series_library")}
                         </button>
                       </div>
@@ -8852,6 +8871,14 @@ export default function App() {
                       </div>
                     </div> : null}
 
+                    <div
+                      className={isMediaDetail ? "series-hero__detail-controls" : "series-hero__settings-slot"}
+                      style={isMediaDetail ? {
+                        WebkitMaskImage: `url(${cartellMask})`,
+                        maskImage: `url(${cartellMask})`,
+                      } : undefined}
+                    >
+                    <div className={isMediaDetail ? "series-hero__detail-actions" : "series-hero__settings-slot"}>
                     {hasSettingsButton ? (
                       <button
                         className={`series-icon-button series-icon-button--hero series-icon-button--hero-settings${isMediaDetail ? " series-icon-button--detail-settings" : ""}`}
@@ -8869,6 +8896,14 @@ export default function App() {
                         />
                       </button>
                     ) : null}
+
+                    {isMediaDetail ? (
+                      isMoviesMode
+                        ? renderMarks("movie", selectedMovie.id)
+                        : renderMarks("series", selectedSeries.id || selectedSeries.directoryPath, false)
+                    ) : null}
+                    </div>
+                    </div>
 
                     <button
                       className="series-hero__tv-button"
@@ -8920,7 +8955,6 @@ export default function App() {
                   </section>
                 ) : null}
 
-                {filterVisible > 0 && isSeriesMode && selectedSeries ? renderMarks("series", selectedSeries.id || selectedSeries.directoryPath, false) : null}
                 {isPicturesMode ? (
                   <PicturesLibrary countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
                 ) : mediaFiltersActive && !filterVisible ? (
@@ -9166,9 +9200,20 @@ export default function App() {
                             <div className="movie-library__info">
                               <h2>{movie.name}</h2>
                               <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
-                              <div className="movie-library__actions">
-                                <button type="button" onClick={() => handleOpenMovieDetails(movie.id)}>{t("movie_details")}</button>
-                                {downloadUrl ? <a href={downloadUrl} download={movie.fileName || movie.name}>{t("movie_download")}</a> : <button type="button" disabled>{t("movie_download")}</button>}
+                              <div className="movie-library__actions movie-library__actions--icons">
+                                <button className="movie-details" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={`${t("movie_details")}: ${movie.name}`} title={t("movie_details")}>
+                                  <img src={detailsIcon} alt="" aria-hidden="true" />
+                                </button>
+                                <MovieDownload url={downloadUrl} name={movie.fileName || movie.name} label={t("movie_download")} />
+                                <button
+                                  className="media-delete-button movie-library__delete"
+                                  type="button"
+                                  onClick={() => handleDeleteSeries(false, movie)}
+                                  aria-label={`${t("delete_media", { media: t("media_movies_singular") })}: ${movie.name}`}
+                                  title={t("delete_media", { media: t("media_movies_singular") })}
+                                >
+                                  <img src={deleteIcon} alt="" aria-hidden="true" />
+                                </button>
                               </div>
                             </div>
                           </article>
@@ -9180,6 +9225,10 @@ export default function App() {
                   <section className="movie-panel seasons-section">
                     <div className="seasons-section__label">{t("movie_file_label")}</div>
                     <div className="movie-panel__card">
+                      <div className="movie-panel__file-actions">
+                      {getMovieDownloadUrl(selectedMovie) ? (
+                        <MovieDownload url={getMovieDownloadUrl(selectedMovie)} name={selectedMovie.fileName || selectedMovie.name} label={t("movie_download")} />
+                      ) : null}
                       <button
                         className="media-delete-button media-delete-button--movie"
                         onClick={() => handleDeleteSeries()}
@@ -9189,6 +9238,7 @@ export default function App() {
                       >
                         <img src={deleteIcon} alt="" aria-hidden="true" />
                       </button>
+                      </div>
                       <button
                         className="movie-panel__play"
                         onClick={() => handlePlayMovie("minitv")}
@@ -9215,12 +9265,6 @@ export default function App() {
                         <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                         <span>{t("play_on_external_monitor")}</span>
                       </button>
-                      {getMovieDownloadUrl(selectedMovie) ? (
-                        <a className="movie-panel__play movie-panel__download" href={getMovieDownloadUrl(selectedMovie)} download={selectedMovie.fileName || selectedMovie.name}>
-                          <span aria-hidden="true">↓</span>
-                          <span>{t("movie_download")}</span>
-                        </a>
-                      ) : null}
 
                       <MovieImageCarousel
                         title={selectedMovie.name}
@@ -9245,7 +9289,6 @@ export default function App() {
                       <div className="movie-panel__content">
                         <div className="movie-panel__header">
                           <h2>{selectedMovie.name}</h2>
-                          {renderMarks("movie", selectedMovie.id)}
                           {selectedMovie.originalName &&
                           selectedMovie.originalName !== selectedMovie.name ? (
                             <p>{selectedMovie.originalName}</p>

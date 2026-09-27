@@ -184,7 +184,7 @@ fix_*.patch
 
 # Local project artifacts
 .venv-mac-preview/
-DeviceApp/__pycache__/*.pyc
+__pycache__/
 DeviceApp/user_settings.json
 DeviceApp/alarm_sounds/*
 !DeviceApp/alarm_sounds/.gitkeep

@@ -334,8 +334,8 @@ def play_intro():
             [
                 "--vo=gpu-next",
                 "--gpu-context=wayland",
-                "--screen=0",
-                "--fs-screen=0",
+                f"--screen-name={os.environ.get('MINITV_DRM_CONNECTOR', 'HDMI-A-1').strip() or 'HDMI-A-1'}",
+                f"--fs-screen-name={os.environ.get('MINITV_DRM_CONNECTOR', 'HDMI-A-1').strip() or 'HDMI-A-1'}",
             ]
         )
     elif not os.environ.get("DISPLAY"):
@@ -1271,7 +1271,7 @@ class DeviceAppMenu:
         self.games_entries = []
         self.games_status = ""
         self.games_return_state = "main"
-        self.loading_asset = self.prepare_asset(LOADING_VIDEO_PATH)
+        self.loading_asset = load_image(LOADING_VIDEO_PATH)
         self.loading_spinner_asset = load_image(LOADING_VIDEO_SPINNER_PATH)
         self.web_pin_icons = {
             "CLEAR": load_image(CLEAR_ICON_PATH),
@@ -2980,14 +2980,19 @@ class DeviceAppMenu:
         if alsa_device.lower() not in ("", "auto", "default"):
             command.append(f"--audio-device=alsa/{alsa_device}")
         if os.environ.get("WAYLAND_DISPLAY"):
-            # Weston exposes the MiniTV first and the external monitor second.
-            screen_index = 1 if output == "external" else 0
+            # mpv's output enumeration can differ from SDL/Weston ordering.
+            # Select the physical connector so MiniTV never targets the TV.
+            screen_name = (
+                os.environ.get("MINITV_EXTERNAL_DRM_CONNECTOR", "HDMI-A-2").strip() or "HDMI-A-2"
+                if output == "external"
+                else os.environ.get("MINITV_DRM_CONNECTOR", "HDMI-A-1").strip() or "HDMI-A-1"
+            )
             command.extend(
                 [
                     "--vo=gpu-next",
                     "--gpu-context=wayland",
-                    f"--screen={screen_index}",
-                    f"--fs-screen={screen_index}",
+                    f"--screen-name={screen_name}",
+                    f"--fs-screen-name={screen_name}",
                 ]
             )
         elif output == "external":
@@ -4517,18 +4522,24 @@ class DeviceAppMenu:
             self.draw_menu_tile(button_id, rect, self.tr("more.poweroff"), self.pressed_button == button_id, RED)
 
     def draw_loading_video(self):
+        # Compose in the original coordinate system, then fit uniformly. Scaling
+        # the background to the display independently makes the logo elliptical.
+        canvas = pygame.Surface((BASE_WIDTH, BASE_HEIGHT))
+        canvas.fill(BLACK)
+        center = (BASE_WIDTH // 2, BASE_HEIGHT // 2)
         if self.loading_asset is not None:
-            self.screen.blit(self.loading_asset, (0, 0))
-        else:
-            self.screen.fill(BLACK)
+            background = fit_image_contain(self.loading_asset, canvas.get_size())
+            canvas.blit(background, background.get_rect(center=center))
         if self.loading_spinner_asset is not None:
             self.loading_rotation = (self.loading_rotation + 2) % 360
             rotated = pygame.transform.rotozoom(self.loading_spinner_asset, -self.loading_rotation, 0.924)
-            rotated_rect = rotated.get_rect(center=(self.width // 2, self.height // 2))
-            self.screen.blit(rotated, rotated_rect)
+            canvas.blit(rotated, rotated.get_rect(center=center))
 
         title = self.title_font.render(self.tr("loading.title"), True, WHITE)
-        self.screen.blit(title, title.get_rect(center=(self.width // 2, self.height - 64)))
+        canvas.blit(title, title.get_rect(center=(BASE_WIDTH // 2, BASE_HEIGHT - 64)))
+        fitted = fit_image_contain(canvas, self.screen.get_size())
+        self.screen.fill(BLACK)
+        self.screen.blit(fitted, fitted.get_rect(center=self.screen.get_rect().center))
 
     def draw_video_preview(self):
         if self.video_preview_asset is not None:
