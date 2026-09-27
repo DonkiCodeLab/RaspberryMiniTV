@@ -282,20 +282,51 @@ Nota importante:
 
 ### TMDB local y migración del catálogo
 
-El catálogo que relaciona los vídeos con sus IDs, nombres y portadas personalizados
-es `MultimediaContent/media_library.json`. Consultar la biblioteca no modifica ese
-archivo. Las modificaciones se serializan entre peticiones y procesos, y se publican
-mediante reemplazo atómico después de sincronizarlas con el disco. Si el JSON está
-dañado o no se puede leer, la API devuelve `503 CATALOG_STORAGE_ERROR` y conserva
-el archivo: nunca interpreta ese error como una biblioteca vacía.
+El catálogo activo es `MultimediaContent/media_library.sqlite3`. Cada película,
+serie, juego, libro y colección ocupa una fila; los capítulos se guardan en una
+tabla relacionada. Los campos personalizados se conservan completos en el JSON de
+cada ficha. Los vídeos, libros e imágenes continúan en sus directorios.
 
-Cada cambio real conserva las versiones anterior y nueva en
-`MultimediaContent/Recovery/media-library-<sha256>.json`. Las copias se deduplican
-por contenido y las consultas no generan nuevas versiones. Estas copias incluyen
-los perfiles de películas, series, juegos y libros; no duplican los vídeos ni la
-caché de imágenes. No se restauran automáticamente: una restauración debe comparar
-las rutas exactas y conservar las incorporaciones posteriores. Las copias solo
-existen para cambios realizados desde la instalación de esta protección.
+La API y el menú de juegos usan SQLite. El primer acceso importa una sola vez
+`media_library.json` (o el antiguo `movie_library.json` si aquel nunca existió).
+La importación crea una base temporal, compara **todos** los datos exportados con
+el original y verifica integridad y claves externas antes de publicarla mediante
+reemplazo atómico. El JSON original no se modifica. El marcador
+`media_library.sqlite3.migrated` impide reimportar silenciosamente un JSON antiguo
+si desaparece la base. Un error de almacenamiento devuelve
+`503 CATALOG_STORAGE_ERROR`; nunca se interpreta como una biblioteca vacía.
+
+Las modificaciones usan `BEGIN IMMEDIATE` durante toda la lectura/modificación,
+con transacciones anidadas mediante savepoints, espera de bloqueo de 30 segundos y
+`synchronous=EXTRA` con journal de rollback. SQLite coordina los distintos hilos y
+procesos; solo se actualizan las filas modificadas. Las lecturas usan una instantánea
+coherente. Guardar una instantánea anterior a otra modificación se rechaza.
+Consultar o escanear los directorios no modifica las fichas guardadas.
+
+`catalog_changes` conserva los valores anteriores y nuevos de cada ficha modificada,
+con revisión y fecha, dentro de la misma transacción. También se conservan exportaciones
+JSON completas de recuperación en `Recovery/media-library-<sha256>.json`, deduplicadas
+por contenido. Incluyen todos los perfiles y no duplican vídeos ni imágenes. Una
+exportación puede corresponder a un cambio que finalmente se canceló; el historial
+SQLite solo contiene transacciones confirmadas. No se restaura ninguna copia de forma
+automática ni se borran las incorporaciones posteriores.
+
+Para migrar o comprobar manualmente (desde la raíz del proyecto):
+
+```sh
+sudo python3 DeviceApp/migrate_catalog.py
+sudo python3 DeviceApp/migrate_catalog.py --backup /ruta/nueva/catalogo.sqlite3
+sudo python3 DeviceApp/migrate_catalog.py --export /ruta/nueva/catalogo.json
+```
+
+La copia SQLite usa la API de backup, se verifica y conserva también el historial.
+Las exportaciones y copias exigen un destino nuevo. Para volver a la versión JSON,
+detener primero `minitv-api.service` y `minitv-menu.service`, exportar el **estado actual**
+a un archivo nuevo, conservar la base y las copias, instalar el código anterior y
+colocar esa exportación como `media_library.json` antes de arrancar. No usar el JSON
+de la importación inicial si ha habido cambios posteriores. Una vuelta posterior a
+SQLite requiere una migración explícita del JSON actualizado en un destino nuevo;
+no eliminar el marcador para forzar una reimportación sobre la base existente.
 
 La API guarda los JSON y las imágenes de TMDB en `MultimediaContent/TmdbCache/`
 (en el disco de la Raspberry, compartidos por todos los navegadores). La web conectada

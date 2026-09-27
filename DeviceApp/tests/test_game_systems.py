@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import control_api as api
+import catalog_store
 from game_platforms import resolve_platform, stored_platform
 
 
@@ -68,6 +69,11 @@ class GameSystemsTest(unittest.TestCase):
     def test_artwork_requires_authentication(self):
         with patch.object(api, 'is_authorized_request', return_value=False):
             self.assertEqual(self.client.post('/games/systems/ngp/artwork', data={'reset': '1'}).status_code, 401)
+
+    def test_catalog_failure_does_not_guess_an_incompatible_emulator(self):
+        with patch.object(catalog_store, 'read_item', side_effect=catalog_store.CatalogError('corrupt')):
+            with self.assertLogs('game_platforms', level='ERROR'):
+                self.assertEqual(stored_platform('playstation.chd', self.temp.name), {})
 
 
 if __name__ == '__main__':

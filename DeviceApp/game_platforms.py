@@ -1,5 +1,7 @@
 import json
+import logging
 import os
+import catalog_store
 
 with open(os.path.join(os.path.dirname(__file__), "..", "assets", "game_platforms.json"), encoding="utf-8") as handle:
     GAME_SYSTEMS = json.load(handle)
@@ -23,8 +25,11 @@ def resolve_platform(filename, platform_id=None):
 
 def stored_platform(filename, multimedia_dir):
     try:
-        with open(os.path.join(multimedia_dir, "media_library.json"), encoding="utf-8") as handle:
-            item = json.load(handle).get("games", {}).get("Games/" + os.path.basename(filename), {})
+        item = catalog_store.read_item(os.path.join(multimedia_dir, "media_library.json"),
+                                       "games", "Games/" + os.path.basename(filename)) or {}
         return resolve_platform(os.path.basename(filename), item.get("platform")) or {}
+    except catalog_store.CatalogError:
+        logging.getLogger(__name__).exception("No se puede leer la plataforma guardada del juego")
+        return {}
     except (OSError, ValueError):
         return resolve_platform(os.path.basename(filename)) or {}

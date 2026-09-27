@@ -53,6 +53,7 @@ GAME_COVERS_DIR = os.path.join(MULTIMEDIA_DIR, "GameCovers")
 WEB_DIST_DIR = os.path.join(REPO_DIR, "WebApp", "dist")
 EMULATORJS_DIR = os.path.join(REPO_DIR, "WebApp", "node_modules", "@emulatorjs", "emulatorjs", "data")
 EMULATORJS_PACKAGES_DIR = os.path.join(REPO_DIR, "WebApp", "node_modules", "@emulatorjs")
+# Legacy path anchors the one-time import; catalog_store uses media_library.sqlite3.
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
 LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
 EP_RE = re.compile(r"(S(\d{2})E(\d{2,}))", re.IGNORECASE)
@@ -313,7 +314,7 @@ def empty_media_library():
 def media_library_transaction(function):
     @wraps(function)
     def wrapped(*args, **kwargs):
-        with catalog_store.transaction(MEDIA_LIBRARY_PATH):
+        with catalog_store.transaction(MEDIA_LIBRARY_PATH, LEGACY_MOVIE_LIBRARY_PATH):
             return function(*args, **kwargs)
     return wrapped
 
@@ -325,20 +326,7 @@ def catalog_storage_error(error):
 
 
 def load_media_library():
-    library = catalog_store.read(MEDIA_LIBRARY_PATH)
-    if library is not None:
-        return library
-    library = empty_media_library()
-    # Migrate only when the new catalog does not exist, never on a read error
-    # or after an intentional deletion of the last movie.
-    if os.path.exists(LEGACY_MOVIE_LIBRARY_PATH):
-        try:
-            with open(LEGACY_MOVIE_LIBRARY_PATH, encoding="utf-8") as handle:
-                library["movies"] = json.load(handle)
-            library = catalog_store.normalize(library)
-        except (OSError, ValueError) as exc:
-            raise catalog_store.CatalogError("No se puede leer el catálogo antiguo; se conserva sin cambios.") from exc
-    return library
+    return catalog_store.read(MEDIA_LIBRARY_PATH, LEGACY_MOVIE_LIBRARY_PATH)
 
 
 def save_media_library(library):
@@ -360,6 +348,7 @@ def save_movie_library(items):
             if not safe_relative_path or not isinstance(item, dict):
                 continue
             safe_items[safe_relative_path] = {
+                **item,
                 "relativePath": safe_relative_path,
                 "name": str(item.get("name") or "").strip(),
                 "tmdbId": int(item.get("tmdbId") or 0),
@@ -381,7 +370,8 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
     if not safe_relative_path:
         return None
 
-    items = load_movie_library()
+    library = load_media_library()
+    items = library["movies"]
     item = {
         **items.get(safe_relative_path, {}),
         "relativePath": safe_relative_path,
@@ -390,7 +380,7 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
         "file": str(filename or os.path.basename(safe_relative_path)).strip(),
     }
     items[safe_relative_path] = item
-    save_movie_library(items)
+    save_media_library(library)
     queue_tmdb_artwork('movie', item)
     return item
 
