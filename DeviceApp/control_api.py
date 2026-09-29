@@ -2,6 +2,7 @@ from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
 from background_stats import BackgroundStats
 import catalog_store
+import book_metadata
 from functools import wraps
 import json
 import io
@@ -1055,7 +1056,7 @@ def resolve_book_path(relative_path):
 def list_book_entries():
     ensure_media_directories()
     library = load_media_library()
-    book_metadata = library.get("books") if isinstance(library.get("books"), dict) else {}
+    book_profiles = library.get("books") if isinstance(library.get("books"), dict) else {}
     items = []
     for root, _dirs, files in os.walk(BOOKS_DIR):
         for filename in sorted(files, key=str.lower):
@@ -1065,8 +1066,9 @@ def list_book_entries():
             relative = os.path.relpath(full_path, BOOKS_DIR).replace("\\", "/")
             collection = os.path.dirname(relative).replace("\\", "/")
             relative_path = f"Books/{relative}"
-            metadata = book_metadata.get(relative_path) if isinstance(book_metadata.get(relative_path), dict) else {}
+            metadata = book_profiles.get(relative_path) if isinstance(book_profiles.get(relative_path), dict) else {}
             items.append({
+                **book_metadata.normalize_profile(metadata),
                 "name": str(metadata.get("title") or os.path.splitext(filename)[0]).strip(),
                 "file": filename,
                 "format": os.path.splitext(filename)[1].lower().lstrip("."),
@@ -1974,6 +1976,15 @@ def upload_books():
         uploaded_files = request.files.getlist("files")
         requested_collection = str(request.form.get("collection") or "").strip()
         requested_title = str(request.form.get("title") or "").strip()
+        try:
+            profile = json.loads(request.form.get("metadata") or "{}")
+            if not isinstance(profile, dict):
+                raise ValueError("Invalid metadata")
+            profile = book_metadata.normalize_profile(profile)
+        except (ValueError, TypeError):
+            return jsonify({"error": "La ficha del libro no es válida."}), 400
+        if profile and len(uploaded_files) != 1:
+            return jsonify({"error": "Confirma una ficha para cada libro."}), 400
         if not uploaded_files:
             return jsonify({"error": "Missing book files"}), 400
 
@@ -2003,7 +2014,15 @@ def upload_books():
             os.replace(partial_path, target_path)
             partial_path = None
             relative = os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
-            saved.append({"name": os.path.splitext(target_name)[0], "file": target_name, "relativePath": f"Books/{relative}"})
+            relative_path = f"Books/{relative}"
+            try:
+                item = prepare_book_profile(relative_path, {"title": requested_title or os.path.splitext(filename)[0], **profile})
+                persist_book_profile(relative_path, item)
+            except Exception:
+                # This is a new unique file: an unconfirmed catalog write must not leave a phantom upload.
+                os.remove(target_path)
+                raise
+            saved.append({**item, "name": item["title"], "file": target_name, "relativePath": relative_path})
             log_upload_event(f"book saved relative={relative!r} bytes={os.path.getsize(target_path)}")
     except Exception as exc:
         if partial_path and os.path.isfile(partial_path):
@@ -2038,7 +2057,7 @@ def delete_book():
     previous = library.setdefault("books", {}).pop(relative_path, None)
     previous_cover = str(previous.get("coverUrl") or "") if isinstance(previous, dict) else ""
     if previous_cover.startswith("/book-covers/"):
-        cover_path = os.path.join(BOOK_COVERS_DIR, os.path.basename(urllib.parse.unquote(previous_cover.split("/book-covers/", 1)[1])))
+        cover_path = os.path.join(BOOK_COVERS_DIR, os.path.basename(urllib.parse.unquote(urllib.parse.urlsplit(previous_cover).path)))
         if os.path.isfile(cover_path):
             os.remove(cover_path)
     save_media_library(library)
@@ -2049,36 +2068,49 @@ def delete_book():
     return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
 
 
-@app.route("/books/profile", methods=["POST"])
+def prepare_book_profile(relative_path, data):
+    item = book_metadata.normalize_profile(data)
+    uploaded_cover = request.files.get("coverFile")
+    if uploaded_cover and uploaded_cover.filename:
+        extension = os.path.splitext(uploaded_cover.filename)[1].lower()
+        if extension not in BOOK_COVER_EXTENSIONS:
+            raise ValueError("Unsupported cover image")
+        os.makedirs(BOOK_COVERS_DIR, exist_ok=True)
+        cover_name = f"manual-{hashlib.sha256(relative_path.encode('utf-8')).hexdigest()[:24]}{extension}"
+        uploaded_cover.save(os.path.join(BOOK_COVERS_DIR, cover_name))
+        item["coverUrl"] = f"/book-covers/{urllib.parse.quote(cover_name)}?v={time.time_ns()}"
+    elif item.get("coverUrl"):
+        item["coverUrl"] = book_metadata.cache_cover(item["coverUrl"], BOOK_COVERS_DIR, relative_path)
+    return item
+
+
 @media_library_transaction
+def persist_book_profile(relative_path, updates):
+    library = load_media_library()
+    previous = library.setdefault("books", {}).get(relative_path, {})
+    item = {**previous, **updates}
+    library["books"][relative_path] = item
+    save_media_library(library)
+    return item
+
+
+@app.route("/books/profile", methods=["POST"])
 def save_book_profile():
     data = request.form if request.form else (request.get_json(silent=True) or {})
     relative_path = str(data.get("relativePath") or "").strip()
     target_path = resolve_book_path(relative_path)
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
-    cover_url = str(data.get("coverUrl") or "").strip()
-    uploaded_cover = request.files.get("coverFile")
-    if uploaded_cover and uploaded_cover.filename:
-        extension = os.path.splitext(uploaded_cover.filename)[1].lower()
-        if extension not in BOOK_COVER_EXTENSIONS:
-            return jsonify({"error": "Unsupported cover image"}), 400
-        os.makedirs(BOOK_COVERS_DIR, exist_ok=True)
-        cover_name = f"manual-{hashlib.sha256(relative_path.encode('utf-8')).hexdigest()[:24]}{extension}"
-        uploaded_cover.save(os.path.join(BOOK_COVERS_DIR, cover_name))
-        cover_url = f"/book-covers/{urllib.parse.quote(cover_name)}"
-    item = {
-        "title": str(data.get("title") or os.path.splitext(os.path.basename(target_path))[0]).strip(),
-        "author": str(data.get("author") or "").strip(),
-        "year": str(data.get("year") or "").strip(),
-        "isbn": str(data.get("isbn") or "").strip(),
-        "description": str(data.get("description") or "").strip(),
-        "coverUrl": cover_url,
-        "openLibraryKey": str(data.get("openLibraryKey") or "").strip(),
-    }
-    library = load_media_library()
-    library.setdefault("books", {})[relative_path] = item
-    save_media_library(library)
+    # Canonicalize the key, so alternate path spellings cannot create invisible profiles.
+    relative_path = "Books/" + os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
+    try:
+        item = prepare_book_profile(relative_path, data)
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception:
+        return jsonify({"error": "No se pudo guardar la portada de Open Library. Reintenta o usa la portada del archivo."}), 502
+    item["title"] = item.get("title") or os.path.splitext(os.path.basename(target_path))[0]
+    item = persist_book_profile(relative_path, item)
     return jsonify({"ok": True, "item": {**item, "relativePath": relative_path}})
 
 
@@ -2109,7 +2141,7 @@ def save_book_collection_profile():
         os.makedirs(BOOK_COVERS_DIR, exist_ok=True)
         cover_name = f"collection-{hashlib.sha256(collection.encode('utf-8')).hexdigest()[:24]}{extension}"
         uploaded_cover.save(os.path.join(BOOK_COVERS_DIR, cover_name))
-        cover_url = f"/book-covers/{urllib.parse.quote(cover_name)}"
+        cover_url = f"/book-covers/{urllib.parse.quote(cover_name)}?v={time.time_ns()}"
     item = {"name": str(data.get("name") or collection).strip(), "coverUrl": cover_url}
     library["bookCollections"][collection] = item
     save_media_library(library)
@@ -2129,7 +2161,7 @@ def delete_book_collection():
     metadata = library.setdefault("bookCollections", {}).pop(collection, None)
     cover_url = str(metadata.get("coverUrl") or "") if isinstance(metadata, dict) else ""
     if cover_url.startswith("/book-covers/"):
-        cover_path = os.path.join(BOOK_COVERS_DIR, os.path.basename(urllib.parse.unquote(cover_url.split("/book-covers/", 1)[1])))
+        cover_path = os.path.join(BOOK_COVERS_DIR, os.path.basename(urllib.parse.unquote(urllib.parse.urlsplit(cover_url).path)))
         if os.path.isfile(cover_path):
             os.remove(cover_path)
     shutil.rmtree(target_path)
@@ -2139,39 +2171,20 @@ def delete_book_collection():
 
 @app.route("/books/search", methods=["GET"])
 def search_open_library_books():
-    query = str(request.args.get("query") or "").strip()
-    language = normalize_language_code(request.args.get("language"))
-    if not query:
-        return jsonify({"items": []})
-    params = urllib.parse.urlencode({
-        "q": query,
-        "lang": language,
-        "limit": 8,
-        "fields": "key,title,author_name,first_publish_year,isbn,cover_i,language",
-    })
-    api_request = urllib.request.Request(
-        f"https://openlibrary.org/search.json?{params}",
-        headers={"User-Agent": "RaspberryMiniTV/1.0 (book metadata lookup)"},
-    )
     try:
-        with urllib.request.urlopen(api_request, timeout=12) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except Exception as error:
-        return jsonify({"error": f"Open Library unavailable: {error}"}), 502
-    items = []
-    for document in (payload.get("docs") or [])[:8]:
-        cover_id = document.get("cover_i")
-        key = str(document.get("key") or "").strip()
-        items.append({
-            "openLibraryKey": key,
-            "title": str(document.get("title") or "").strip(),
-            "author": ", ".join(str(value) for value in (document.get("author_name") or [])[:3]),
-            "year": str(document.get("first_publish_year") or ""),
-            "isbn": str((document.get("isbn") or [""])[0]),
-            "coverUrl": f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg?default=false" if cover_id else "",
-            "openLibraryUrl": f"https://openlibrary.org{key}" if key.startswith("/") else "",
-        })
-    return jsonify({"items": items})
+        return jsonify({"items": book_metadata.search(str(request.args.get("query") or ""), normalize_language_code(request.args.get("language")))})
+    except Exception:
+        return jsonify({"error": "Open Library no está disponible. Puedes reintentar o completar la ficha manualmente."}), 502
+
+
+@app.route("/books/metadata", methods=["GET"])
+def open_library_book_details():
+    try:
+        return jsonify({"item": book_metadata.details(request.args.get("workKey"), request.args.get("editionKey"))})
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception:
+        return jsonify({"error": "No se pudo obtener la ficha completa de Open Library. Vuelve a seleccionar el resultado para reintentar."}), 502
 
 
 @app.route("/books/content", methods=["GET"])
@@ -2182,7 +2195,7 @@ def stream_book():
         return jsonify({"error": "Book not found"}), 404
     return send_file(
         target_path,
-        mimetype="application/pdf" if os.path.splitext(target_path)[1].lower() == ".pdf" else None,
+        mimetype={".pdf": "application/pdf", ".epub": "application/epub+zip"}.get(os.path.splitext(target_path)[1].lower()),
         conditional=True,
         as_attachment=False,
         download_name=os.path.basename(target_path),

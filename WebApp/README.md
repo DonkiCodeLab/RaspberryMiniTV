@@ -74,6 +74,17 @@ npm install
 npm run dev
 ```
 
+## Biblioteca de libros
+
+- Al seleccionar un libro suelto en **Uploads → Libros**, se busca su título en Open Library. Para EPUB se leen primero el título y autor internos. Selecciona una coincidencia, revisa los datos y pulsa **Confirmar libro y subir**. Cancelar no sube el archivo.
+- La búsqueda no necesita una clave API. La ficha obtiene los datos disponibles de la obra y su edición: autores, sinopsis, editorial, publicación, ISBN, idioma, páginas y temas. Si no hay coincidencia o el servicio no responde, se puede editar la ficha manualmente.
+- El archivo se guarda en `MultimediaContent/Books`, la ficha en el catálogo SQLite (`MultimediaContent/media_library.sqlite3`) y las portadas seleccionadas de Open Library en `MultimediaContent/BookCovers`. El catálogo existente también genera sus copias locales de recuperación. Consultar una ficha guardada no vuelve a pedirla a Open Library.
+- Para un libro ya subido, **Entrar → Buscar información del libro** permite identificarlo y guardar su ficha sin volver a subirlo. Las colecciones mantienen su subida por carpetas y cada volumen tiene su propia ficha.
+- **Entrar** muestra la ficha y **Leer** permite elegir Raspberry o navegador. Los EPUB se renderizan dentro de la web con EPUB.js, índice, paginación, tamaño de letra y posición guardada en ese navegador. La dependencia se incluye en la compilación, sin CDN ni aplicación externa. Los EPUB con DRM no son compatibles. La lectura PDF existente se conserva.
+- La opción Raspberry envía el comando al lector configurado en el dispositivo; requiere que el menú de la MiniTV esté en ejecución.
+
+Comprobaciones de libros: `node --test tests/bookLibrary.test.js tests/bookReading.test.js` desde `WebApp`, y `python -m unittest discover -s DeviceApp/tests -p 'test_book*.py'` desde la raíz con el entorno Python del backend.
+
 Si arrancas la web en tu Mac con `localhost` y no defines `VITE_RASPBERRY_API_BASE_URL`, entra automaticamente en `modo maqueta local`:
 
 - no pide PIN

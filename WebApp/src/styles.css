@@ -168,6 +168,34 @@ img {
   pointer-events: none;
 }
 
+.series-hero__section-title {
+  /* Match the LAB lettering in cartell_logo.png, including the icons' visible bounds. */
+  position: absolute;
+  left: 40.5%;
+  top: 56%;
+  height: 10.95cqh;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 1.1cqw;
+  margin: 0;
+  color: #ffd429;
+  font-size: clamp(0.8rem, 2.1cqw, 1.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.series-hero__section-icon {
+  width: auto;
+  height: 100%;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+}
+
 .series-hero__art {
   position: absolute;
   inset: 0;
@@ -5741,6 +5769,12 @@ img {
   .episode-dialog__delete { width: 100%; min-height: 58px; }
 }
 .books-library__grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 300px)); justify-content:center; align-items:start; gap:26px; }
+.books-library__title { margin:0 0 16px; text-align:center; overflow-wrap:anywhere; font-size:clamp(24px,4vw,36px); }
+.series-hero__visible-window--book { background:#17212b; }
+.books-library__card-copy.books-library__collection-copy { grid-template-columns:minmax(0,1fr); }
+.books-library__card-copy.books-library__collection-copy small { grid-column:1; }
+.books-library__cover-button:focus-visible { outline:3px solid #ffd429; outline-offset:-5px; }
+.book-metadata__preview:has(.books-library__generated-cover) { position:relative; height:auto; aspect-ratio:3/4; overflow:hidden; }
 .books-library__card { display:grid; grid-template-rows:auto auto auto; min-width:0; overflow:hidden; border:2px solid transparent; border-radius:34px; background:rgba(41,66,81,.9); color:#f5f8ff; box-shadow:0 14px 30px rgba(27,42,56,.2); }
 .books-library__card.active { border-color:#ffd429; box-shadow:0 14px 34px rgba(0,0,0,.18), 0 0 0 3px rgba(255,212,41,.2); }
 .books-library__cover-button { position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; padding:0; border:0; border-radius:0; background:#17212b; cursor:pointer; }
@@ -6136,9 +6170,24 @@ img {
   align-items: center;
   justify-content: center;
   gap: clamp(0.2rem, 1vw, 0.6rem);
+  margin-inline: -.9rem;
+  margin-bottom: -.9rem;
+  padding: .65rem .9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.045);
 }
 
-.movie-library__actions--icons .movie-details,
+@media (min-width: 721px) {
+  .movie-library__items--list .movie-library__actions--icons {
+    align-self: stretch;
+    margin-top: -.9rem;
+    margin-left: 0;
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+.movie-library__actions--icons .movie-favorite,
 .movie-library__actions--icons .movie-download {
   width: 100%;
   height: 44px;
@@ -6149,21 +6198,45 @@ img {
   background: transparent;
 }
 
-.movie-library__actions--icons .movie-details img {
+.movie-library__actions--icons .movie-favorite svg {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 26px;
+  height: 26px;
 }
 
-.movie-library__actions--icons .movie-details:is(:hover, :focus-visible) {
+.movie-library__actions--icons .movie-favorite.is-favorite {
+  color: #ffb3d0;
+}
+
+.movie-library__actions--icons .movie-favorite:is(:hover, :focus-visible) {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.movie-library__actions--icons .movie-details:focus-visible {
+.movie-library__actions--icons .movie-favorite:focus-visible {
   outline: 2px solid #ffd429;
   outline-offset: 4px;
 }
+
+.movie-favorite-confirm {
+  margin: auto;
+  width: min(520px, calc(100% - 2rem));
+}
+
+.movie-favorite-confirm::backdrop {
+  background: rgba(9, 17, 23, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.movie-favorite-confirm__icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  color: #ffb3d0;
+}
+
+.movie-favorite-confirm__icon svg { width: 100%; height: 100%; }
+.movie-favorite-confirm .dialog-copy { overflow-wrap: anywhere; }
+.movie-favorite-confirm .dialog-card__actions { flex-wrap: wrap; }
 
 .movie-library__actions--icons .movie-library__delete {
   position: static;
@@ -6190,3 +6263,37 @@ img {
   outline: 2px solid #ffd429;
   outline-offset: 4px;
 }
+
+/* Book information stays readable alongside the existing library artwork. */
+.book-details { color:#f5f8ff; background:rgba(27,48,62,.92); padding:clamp(20px,4vw,48px); border-radius:24px; }
+.book-details__layout { display:grid; grid-template-columns:minmax(150px,250px) minmax(0,1fr); gap:clamp(24px,4vw,48px); align-items:start; }
+.book-details__cover { position:relative; aspect-ratio:2/3; border-radius:16px; overflow:hidden; box-shadow:0 14px 32px #0005; }
+.book-details__cover .books-library__cover-image { object-fit:contain; background:#14212a; }
+.book-details__copy { min-width:0; }
+.book-details__copy h1 { margin:8px 0; font-size:clamp(28px,4vw,44px); line-height:1.15; overflow-wrap:anywhere; }
+.book-details__copy h2 { font-size:20px; margin:26px 0 10px; color:#ffd429; }
+.book-details__eyebrow { margin:0; color:#ffd429; letter-spacing:.08em; font-size:12px; text-transform:uppercase; }
+.book-details__subtitle,.book-details__author { color:#d6e2e9; font-size:20px; margin:10px 0; }
+.book-details__description { white-space:pre-line; line-height:1.75; overflow-wrap:anywhere; }
+.book-details__actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:22px 0; }
+.book-details__actions > .dialog-button:first-child { min-width:140px; }
+.book-details__facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:18px; margin:26px 0; border-block:1px solid #ffffff26; padding:20px 0; }
+.book-details__facts dt { color:#b5c6d1; font-size:13px; margin-bottom:5px; }
+.book-details__facts dd { margin:0; overflow-wrap:anywhere; }
+.book-details__source { display:inline-block; color:#ffd429; margin-top:18px; }
+.book-details > .back-button { margin-bottom:24px; }
+.book-metadata__intro { margin:0; padding:0 22px; line-height:1.6; color:#c5d0d8; }
+fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
+.book-metadata__results button[aria-pressed="true"] { border:2px solid #ffd429; background:#314652; }
+.book-metadata__results button:disabled { cursor:wait; opacity:.65; }
+.epub-reader__body { min-height:0; display:grid; grid-template-rows:auto minmax(0,1fr) auto; padding:12px clamp(10px,4vw,64px); gap:10px; }
+.epub-reader__toc { display:flex; justify-content:center; align-items:center; gap:12px; }
+.epub-reader__toc select { max-width:min(600px,75vw); min-width:0; padding:9px 12px; border-radius:8px; border:1px solid #58636d; background:#202b35; color:#fff; }
+.epub-reader__viewport { position:relative; min-height:0; overflow:hidden; border-radius:8px; background:#fffdf5; }
+.epub-reader__pages { width:100%; height:100%; }
+.epub-reader__status { position:absolute; inset:0; display:grid; place-content:center; justify-items:center; padding:24px; color:#24231f; background:#fffdf5; text-align:center; }
+.epub-reader__hint { text-align:center; color:#bac7d1; }
+.epub-reader .book-reader__header { grid-template-columns:minmax(160px,1fr) auto auto; }
+.epub-reader .book-reader__zoom button { font-size:18px; }
+@media(max-width:900px) { .epub-reader .book-reader__header { grid-template-columns:1fr auto; }.epub-reader .book-reader__pagination { grid-column:1/-1; grid-row:2; }.epub-reader .book-reader__controls{grid-column:2;grid-row:1;} }
+@media(max-width:600px) { .book-details__layout{grid-template-columns:1fr}.book-details__cover{width:180px;justify-self:center}.epub-reader .book-reader__header{gap:8px}.epub-reader .book-reader__file{grid-column:1}.epub-reader .book-reader__file strong{font-size:14px}.epub-reader .book-reader__pagination span{font-size:13px;min-width:0}.epub-reader .book-reader__controls{gap:4px;width:auto}.epub-reader .book-reader__zoom{gap:2px;padding:2px}.epub-reader .book-reader__controls button{min-width:32px;height:34px;padding:0 5px}.epub-reader__hint{font-size:11px}.epub-reader__body{padding:8px;gap:8px}.epub-reader .book-reader__zoom output{font-size:12px;min-width:34px} }

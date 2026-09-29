@@ -11,6 +11,7 @@
   "dependencies": {
     "@emulatorjs/cores": "^4.2.3",
     "@emulatorjs/emulatorjs": "^4.2.3",
+    "epubjs": "^0.3.93",
     "pdfjs-dist": "^6.3.289",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

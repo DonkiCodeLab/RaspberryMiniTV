@@ -1,5 +1,8 @@
+import EpubReader from "./EpubReader";
+import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
 import { preloadLibraryCovers } from "./preloadLibraryCovers";
 import LibraryPoster from "./LibraryPoster";
+import { buildBookCollections } from "./bookLibrary.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
 import { localTmdbImageUrl } from "./api/raspberryApi";
@@ -15,7 +18,6 @@ import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
 import cloudsBackground from "./assets/cloud.gif";
 import deleteIcon from "./assets/delete.png";
-import detailsIcon from "./assets/details.png";
 import downloadIcon from "./assets/download.png";
 import downloadHoverIcon from "./assets/download2.png";
 import emptyStateIcon from "./assets/empty.png";
@@ -78,7 +80,7 @@ import {
   getMediaStreamUrl,
   getBookContent,
   getBookContentUrl,
-  getBookCoverUrl,
+  getBookDisplayCoverUrl,
   openBookOnRaspberry,
   getRaspberryAlarms,
   getRaspberryBirthdays,
@@ -99,7 +101,6 @@ import {
   removeSeriesEpisode,
   removeSeriesSeason,
   searchGameMetadata,
-  searchBookMetadata,
   saveBookMetadata,
   saveBookCollectionMetadata,
   saveMediaProfile,
@@ -157,12 +158,14 @@ const MEDIA_TYPES = [
     labelKey: "media_series",
     activeIcon: tvshowIconBlack,
     inactiveIcon: tvshowIconYellow,
+    headerIcon: { viewBox: "46 1 219 253", width: 310, height: 254 },
   },
   {
     id: "movies",
     labelKey: "media_movies",
     activeIcon: movieIconBlack,
     inactiveIcon: movieIconYellow,
+    headerIcon: { viewBox: "0 0 310 254", width: 310, height: 254 },
   },
   {
     id: "games",
@@ -175,6 +178,7 @@ const MEDIA_TYPES = [
     labelKey: "media_books",
     activeIcon: bookIconBlack,
     inactiveIcon: bookIconYellow,
+    headerIcon: { viewBox: "9 10 46 45", width: 64, height: 64 },
   },
   {
     id: "pictures",
@@ -287,6 +291,10 @@ const UI_STRINGS = {
     media_movies: "Películas",
     media_games: "Juegos",
     media_books: "Libros",
+    book_library: "Biblioteca",
+    book_enter: "Entrar",
+    book_collection_count: "Colección · {count} libro(s)",
+    book_library_items: "libros y colecciones",
     media_pictures: "Fotos",
     media_series_singular: "serie",
     media_movies_singular: "película",
@@ -317,6 +325,10 @@ const UI_STRINGS = {
     mark_unwatched: "No visto",
     mark_favorite: "Favorito",
     mark_not_favorite: "No favorito",
+    movie_favorite_add: "Añadir a favoritos",
+    movie_favorite_remove: "Quitar de favoritos",
+    movie_favorite_add_confirm: "¿Seguro que quieres añadir «{name}» a favoritos?",
+    movie_favorite_remove_confirm: "¿Seguro que quieres quitar «{name}» de favoritos?",
     mark_all_watched: "Marcar todos como vistos",
     mark_all_unwatched: "Marcar todos como no vistos",
     mark_season_confirm: "¿Marcar todos los capítulos de «{season}» como {state}?",
@@ -654,6 +666,10 @@ const UI_STRINGS = {
     media_movies: "Pel·lícules",
     media_games: "Jocs",
     media_books: "Llibres",
+    book_library: "Biblioteca",
+    book_enter: "Entrar",
+    book_collection_count: "Col·lecció · {count} llibre(s)",
+    book_library_items: "llibres i col·leccions",
     media_pictures: "Fotos",
     media_series_singular: "sèrie",
     media_movies_singular: "pel·lícula",
@@ -684,6 +700,10 @@ const UI_STRINGS = {
     mark_unwatched: "No vist",
     mark_favorite: "Favorit",
     mark_not_favorite: "No favorit",
+    movie_favorite_add: "Afegir a favorits",
+    movie_favorite_remove: "Treure de favorits",
+    movie_favorite_add_confirm: "Segur que vols afegir «{name}» a favorits?",
+    movie_favorite_remove_confirm: "Segur que vols treure «{name}» de favorits?",
     mark_all_watched: "Marcar tots com a vistos",
     mark_all_unwatched: "Marcar tots com a no vistos",
     mark_season_confirm: "Vols marcar tots els capítols de «{season}» com a {state}?",
@@ -1021,6 +1041,10 @@ const UI_STRINGS = {
     media_movies: "Movies",
     media_games: "Games",
     media_books: "Books",
+    book_library: "Library",
+    book_enter: "Enter",
+    book_collection_count: "Collection · {count} book(s)",
+    book_library_items: "books and collections",
     media_pictures: "Pictures",
     media_series_singular: "series",
     media_movies_singular: "movie",
@@ -1051,6 +1075,10 @@ const UI_STRINGS = {
     mark_unwatched: "Unwatched",
     mark_favorite: "Favorite",
     mark_not_favorite: "Not favorite",
+    movie_favorite_add: "Add to favorites",
+    movie_favorite_remove: "Remove from favorites",
+    movie_favorite_add_confirm: "Are you sure you want to add “{name}” to favorites?",
+    movie_favorite_remove_confirm: "Are you sure you want to remove “{name}” from favorites?",
     mark_all_watched: "Mark all as watched",
     mark_all_unwatched: "Mark all as unwatched",
     mark_season_confirm: "Mark all episodes of “{season}” as {state}?",
@@ -1846,7 +1874,7 @@ function MovieDownload({ url, name, label }) {
   );
 }
 
-function HeaderArt({ image, crop, alt }) {
+function HeaderArt({ image, crop, alt, bookCover = false }) {
   const usesFullMaskArtwork = image === cartellLogo;
 
   return (
@@ -1876,8 +1904,8 @@ function HeaderArt({ image, crop, alt }) {
           </div>
         </>
       ) : (
-        <div className="series-hero__visible-window">
-          <LibraryPoster src={image} name={alt} alt="" style={getHeaderImageStyle(crop)} />
+        <div className={`series-hero__visible-window${bookCover ? " series-hero__visible-window--book" : ""}`}>
+          <LibraryPoster src={image} name={alt} alt="" style={{ ...getHeaderImageStyle(crop), ...(bookCover ? { objectFit: "contain" } : {}) }} />
         </div>
       )}
 
@@ -2666,6 +2694,44 @@ function BrowserGameModal({ game, onClose, t }) {
         />
       </div>
     </div>,
+    document.body
+  );
+}
+
+function MovieFavoriteConfirmModal({ confirmation, onClose, onConfirm, t }) {
+  const dialogRef = useRef(null);
+  const actionKey = confirmation.favorite ? "movie_favorite_add" : "movie_favorite_remove";
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const trigger = document.activeElement;
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus();
+    };
+  }, []);
+
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      className="dialog-card dialog-card--compact movie-favorite-confirm"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="movie-favorite-title"
+      aria-describedby="movie-favorite-copy"
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+    >
+      <div className="dialog-card__header">
+        <h2 id="movie-favorite-title">{t(actionKey)}</h2>
+        <span className="movie-favorite-confirm__icon"><MediaMarkIcon favorite active={confirmation.favorite} /></span>
+      </div>
+      <p className="dialog-copy" id="movie-favorite-copy">{t(`${actionKey}_confirm`, { name: confirmation.name })}</p>
+      <div className="dialog-card__actions">
+        <button className="dialog-button dialog-button--ghost" type="button" onClick={onClose}>{t("cancel")}</button>
+        <button className="dialog-button dialog-button--accent" type="button" onClick={onConfirm}>{t(actionKey)}</button>
+      </div>
+    </dialog>,
     document.body
   );
 }
@@ -5551,7 +5617,7 @@ function RaspberryPage({
 }
 
 function BookCover({ book }) {
-  const imageUrl = book.coverUrl || getBookCoverUrl(book.relativePath);
+  const imageUrl = getBookDisplayCoverUrl(book);
   const [imageAvailable, setImageAvailable] = useState(true);
 
   useEffect(() => setImageAvailable(true), [imageUrl]);
@@ -5562,7 +5628,7 @@ function BookCover({ book }) {
       aria-label={`Portada de ${book.name}`}
       role="img"
     >
-      {imageAvailable ? (
+      {imageAvailable && imageUrl ? (
         <img
           className="books-library__cover-image"
           src={imageUrl}
@@ -5574,25 +5640,81 @@ function BookCover({ book }) {
   );
 }
 
-function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onSelect, onOpen, onEdit, onDelete, renderMarks }) {
-  const visibleBooks = books.filter((book) => {
-    const collectionKey = book.collection || `__book__${book.relativePath}`;
-    return !selectedCollection || collectionKey === selectedCollection;
-  });
+function BookCollectionLibrary({ collections, countLabel, onSelect, t }) {
   return (
     <section className="books-library seasons-section">
       <div className="seasons-section__label">{countLabel}</div>
-      {!visibleBooks.length ? (
+      {!collections.length ? (
+        <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
+      ) : (
+        <div className="books-library__grid">
+          {collections.map((collection) => (
+            <article key={collection.key} className="books-library__card">
+              <button className="books-library__cover-button" onClick={() => onSelect(collection.key)} type="button" aria-label={`${t("book_enter")}: ${collection.label}`}>
+                <BookCover book={collection.coverBook} />
+              </button>
+              <div className="books-library__card-copy books-library__collection-copy">
+                <strong title={collection.label}>{collection.label}</strong>
+                <small>{collection.isCollection ? t("book_collection_count", { count: collection.books.length }) : collection.books[0].format.toUpperCase()}</small>
+              </div>
+              <div className="books-library__card-actions">
+                <button className="dialog-button dialog-button--accent" onClick={() => onSelect(collection.key)} type="button">{t("book_enter")}</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function BookDetails({ book, onRead, onEdit, onDelete, onBack, renderMarks }) {
+  const sourceKey = /^\/(books\/OL\d+M|works\/OL\d+W)$/.test(book.editionKey || book.openLibraryKey || "") ? book.editionKey || book.openLibraryKey : "";
+  const details = [["Editorial", book.publisher], ["Publicación", book.publishDate || book.year], ["ISBN", book.isbn], ["Idioma", book.language], ["Páginas", book.pageCount], ["Formato", book.format.toUpperCase()]];
+  return <section className="book-details seasons-section" aria-label={`Ficha de ${book.name}`}>
+    {onBack ? <button className="back-button" type="button" onClick={onBack}>← Colección</button> : null}
+    <div className="book-details__layout">
+      <div className="book-details__cover"><BookCover book={book} /></div>
+      <div className="book-details__copy">
+        <p className="book-details__eyebrow">Tu biblioteca · {book.format.toUpperCase()}</p>
+        <h1>{book.name}</h1>
+        {book.subtitle ? <p className="book-details__subtitle">{book.subtitle}</p> : null}
+        {book.author ? <p className="book-details__author">{book.author}</p> : null}
+        <div className="book-details__actions">
+          <button className="dialog-button dialog-button--accent" type="button" onClick={() => onRead(book)}>Leer</button>
+          <button className="dialog-button dialog-button--ghost" type="button" onClick={() => onEdit(book)}>{book.openLibraryKey ? "Editar ficha" : "Buscar información del libro"}</button>
+          <button className="books-library__delete" type="button" onClick={() => onDelete(book)} aria-label={`Eliminar ${book.name}`}><img src={deleteIcon} alt="" /></button>
+        </div>
+        {renderMarks(book)}
+        <dl className="book-details__facts">{details.filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+        <h2>Sinopsis</h2>
+        <p className="book-details__description">{book.description || "Todavía no hay sinopsis. Busca el libro en Open Library o completa su ficha."}</p>
+        {book.subjects ? <><h2>Temas</h2><p>{book.subjects}</p></> : null}
+        {sourceKey ? <a className="book-details__source" href={`https://openlibrary.org${sourceKey}`} target="_blank" rel="noreferrer">Ficha original en Open Library ↗</a> : null}
+      </div>
+    </div>
+  </section>;
+}
+
+function BooksLibrary({ books, title, countLabel, onOpen, onEdit, onDelete, renderMarks }) {
+  const [detailPath, setDetailPath] = useState("");
+  const detail = books.length === 1 ? books[0] : books.find(book => book.relativePath === detailPath);
+  if (detail) return <BookDetails book={detail} onRead={onOpen} onEdit={onEdit} onDelete={onDelete} renderMarks={renderMarks} onBack={books.length > 1 ? () => setDetailPath("") : null} />;
+  return (
+    <section className="books-library seasons-section">
+      <h1 className="books-library__title">{title}</h1>
+      <div className="seasons-section__label">{countLabel}</div>
+      {!books.length ? (
         <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
       ) : (
         <>
           <div className="books-library__grid">
-            {visibleBooks.map((book) => (
+            {books.map((book) => (
               <article
                 key={book.relativePath}
-                className={`books-library__card${selectedPath === book.relativePath ? " active" : ""}`}
+                className="books-library__card"
               >
-                <button className="books-library__cover-button" onClick={() => onOpen(book)} type="button">
+                <button className="books-library__cover-button" onClick={() => setDetailPath(book.relativePath)} type="button" aria-label={`Entrar: ${book.name}`}>
                   <BookCover book={book} />
                 </button>
                 <div className="books-library__card-copy">
@@ -5602,7 +5724,7 @@ function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onS
                 </div>
                 {renderMarks(book)}
                 <div className="books-library__card-actions">
-                  <button className="dialog-button dialog-button--accent" onClick={() => onOpen(book)} type="button">Abrir</button>
+                  <button className="dialog-button dialog-button--accent" onClick={() => setDetailPath(book.relativePath)} type="button">Entrar</button>
                   <button className="dialog-button dialog-button--ghost" onClick={() => onEdit(book)} type="button">Customizar</button>
                   <button className="books-library__delete" onClick={() => onDelete(book)} type="button" aria-label={`Eliminar ${book.name}`} title="Eliminar"><img src={deleteIcon} alt="" /></button>
                 </div>
@@ -5612,73 +5734,6 @@ function BooksLibrary({ books, selectedCollection, selectedPath, countLabel, onS
         </>
       )}
     </section>
-  );
-}
-
-function BookMetadataModal({ book, language, onClose, onSave, onDelete }) {
-  const [form, setForm] = useState({});
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [busy, setBusy] = useState("");
-  const [error, setError] = useState("");
-  const [coverFile, setCoverFile] = useState(null);
-  const [coverPreview, setCoverPreview] = useState("");
-
-  useEffect(() => {
-    if (!book) return;
-    setForm({ title: book.name || "", author: book.author || "", year: book.year || "", isbn: book.isbn || "", description: book.description || "", coverUrl: book.coverUrl || "", openLibraryKey: book.openLibraryKey || "" });
-    setQuery(book.name || "");
-    setResults([]);
-    setError("");
-    setCoverFile(null);
-  }, [book]);
-
-  useEffect(() => {
-    if (!coverFile) { setCoverPreview(""); return undefined; }
-    const preview = URL.createObjectURL(coverFile);
-    setCoverPreview(preview);
-    return () => URL.revokeObjectURL(preview);
-  }, [coverFile]);
-
-  if (!book) return null;
-  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-
-  async function handleSearch() {
-    if (!query.trim()) return;
-    try {
-      setBusy("search"); setError("");
-      const response = await searchBookMetadata(query, language);
-      setResults(Array.isArray(response?.items) ? response.items : []);
-    } catch (nextError) {
-      setError(nextError.message || "No se pudo consultar Open Library.");
-      setResults([]);
-    } finally { setBusy(""); }
-  }
-
-  return createPortal(
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="dialog-card book-metadata" onClick={(event) => event.stopPropagation()}>
-        <div className="dialog-card__header"><div><p>Biblioteca</p><h2>Customizar libro</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
-        <div className="book-metadata__body">
-          <section className="book-metadata__lookup">
-            <label className="dialog-field"><span>Buscar por título, autor o ISBN</span><div className="book-metadata__search"><input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleSearch(); } }} /><button className="dialog-button dialog-button--accent" onClick={handleSearch} disabled={busy === "search"} type="button">{busy === "search" ? "Buscando…" : "Buscar"}</button></div></label>
-            {error ? <p className="book-metadata__error">{error}</p> : null}
-            {!busy && !results.length ? <p className="book-metadata__hint">Si no hay coincidencias, completa manualmente los campos de la derecha.</p> : null}
-            <div className="book-metadata__results">{results.map((result) => <button key={`${result.openLibraryKey}-${result.isbn}`} onClick={() => setForm((current) => ({ ...current, ...result }))} type="button">{result.coverUrl ? <img src={result.coverUrl} alt="" /> : <span>📖</span>}<span><strong>{result.title}</strong><small>{result.author || "Autor desconocido"}{result.year ? ` · ${result.year}` : ""}</small></span></button>)}</div>
-          </section>
-          <section className="book-metadata__form">
-            {coverPreview || form.coverUrl ? <img className="book-metadata__preview" src={coverPreview || form.coverUrl} alt="Portada seleccionada" /> : null}
-            <label className="dialog-field"><span>Título</span><input value={form.title || ""} onChange={(event) => update("title", event.target.value)} /></label>
-            <label className="dialog-field"><span>Autor</span><input value={form.author || ""} onChange={(event) => update("author", event.target.value)} /></label>
-            <div className="book-metadata__row"><label className="dialog-field"><span>Año</span><input value={form.year || ""} onChange={(event) => update("year", event.target.value)} /></label><label className="dialog-field"><span>ISBN</span><input value={form.isbn || ""} onChange={(event) => update("isbn", event.target.value)} /></label></div>
-            <label className="dialog-field"><span>URL de portada</span><input type="url" value={form.coverUrl || ""} onChange={(event) => update("coverUrl", event.target.value)} /></label>
-            <label className="dialog-field book-metadata__file"><span>Portada manual desde el equipo</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile ? coverFile.name : "La imagen elegida sustituirá la portada automática de Donkicode Lab."}</small></label>
-            <label className="dialog-field"><span>Descripción</span><textarea value={form.description || ""} onChange={(event) => update("description", event.target.value)} rows="5" /></label>
-          </section>
-        </div>
-        <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(book)} type="button">Borrar libro completo</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy === "save" || !String(form.title || "").trim()} onClick={async () => { try { setBusy("save"); setError(""); await onSave({ ...form, coverFile, relativePath: book.relativePath }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la ficha."); } finally { setBusy(""); } }} type="button">{busy === "save" ? "Guardando…" : "Guardar cambios"}</button></div>
-      </div>
-    </div>, document.body
   );
 }
 
@@ -5700,9 +5755,9 @@ function BookCollectionModal({ collection, onClose, onSave, onDelete }) {
       <div className="dialog-card book-collection-modal" onClick={(event) => event.stopPropagation()}>
         <div className="dialog-card__header"><div><p>Biblioteca</p><h2>Customizar colección</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
         <div className="book-collection-modal__body">
-          {preview || collection.coverUrl ? <img className="book-metadata__preview" src={preview || collection.coverUrl} alt="Portada de la colección" /> : null}
+          <div className="book-metadata__preview"><BookCover book={{ ...collection.coverBook, coverUrl: preview || collection.coverBook.coverUrl }} /></div>
           <label className="dialog-field"><span>Nombre de la colección</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
-          <label className="dialog-field book-metadata__file"><span>Portada manual</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile?.name || "Esta portada se mostrará en la cabecera de la colección."}</small></label>
+          <label className="dialog-field book-metadata__file"><span>Portada manual</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile?.name || "Esta portada se mostrará en la ficha y en la cartelera de la colección. Por defecto se usa el primer libro."}</small></label>
           {error ? <p className="book-metadata__error">{error}</p> : null}
         </div>
         <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(collection)} type="button">Borrar colección completa</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy || !name.trim()} onClick={async () => { try { setBusy(true); await onSave({ collection: collection.key, name, coverFile, coverUrl: collection.coverUrl || "" }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la colección."); } finally { setBusy(false); } }} type="button">{busy ? "Guardando…" : "Guardar cambios"}</button></div>
@@ -5929,7 +5984,7 @@ export default function App() {
   const [selectedMovieId, setSelectedMovieId] = useState(null);
   const [selectedGamePath, setSelectedGamePath] = useState("");
   const [selectedSystemId, setSelectedSystemId] = useState("gb");
-  const [selectedBookPath, setSelectedBookPath] = useState("");
+  const [selectedBookCollection, setSelectedBookCollection] = useState("");
   const [openBook, setOpenBook] = useState(null);
   const [bookOpenTarget, setBookOpenTarget] = useState(null);
   const [bookOpenBusy, setBookOpenBusy] = useState(false);
@@ -6026,6 +6081,7 @@ export default function App() {
     pictures: "",
   });
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [movieFavoriteConfirmation, setMovieFavoriteConfirmation] = useState(null);
   const seasonHeroShellRef = useRef(null);
   const alarmPreviewAudioRef = useRef(null);
   const uploadAbortControllerRef = useRef(null);
@@ -6036,8 +6092,19 @@ export default function App() {
     try {
       window.localStorage.setItem(MEDIA_MARKS_KEY, JSON.stringify(next));
       setMediaMarks(next);
+      return true;
     } catch {
       window.alert(t("mark_save_error"));
+      return false;
+    }
+  }
+
+  function confirmMovieFavorite() {
+    if (!movieFavoriteConfirmation) return;
+    const { id, favorite } = movieFavoriteConfirmation;
+    const key = mediaMarkKey("movie", id);
+    if (saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], favorite } })) {
+      setMovieFavoriteConfirmation(null);
     }
   }
 
@@ -6126,7 +6193,7 @@ export default function App() {
   function handleCloseBookUpload() {
     const uploadedBook = bookUploadDialog?.phase === "done" ? bookUploadDialog.book : null;
     setBookUploadDialog(null);
-    if (uploadedBook) setBookMetadataTarget(uploadedBook);
+    if (uploadedBook) handleOpenBookCollection(`__book__${uploadedBook.relativePath}`);
   }
 
   function handleCloseUploadDialog() {
@@ -6390,41 +6457,20 @@ export default function App() {
       { sensitivity: "base", numeric: true }
     );
   const gameLibrary = Array.isArray(videos?.games) ? [...videos.games].sort(compareMediaNames) : [];
-  const bookLibrary = Array.isArray(videos?.books) ? [...videos.books].sort(compareMediaNames) : [];
   const pictureLibrary = Array.isArray(videos?.pictures) ? [...videos.pictures].sort((left, right) => (Number(right.modifiedAt) || 0) - (Number(left.modifiedAt) || 0) || compareMediaNames(left, right)) : [];
   const consoleGames = gameLibrary.filter(game => systemForGame(game)?.id === selectedSystemId);
   const selectedGame =
     consoleGames.find((game) => game.relativePath === selectedGamePath) ||
     null;
-  const selectedBook = bookLibrary.find((book) => book.relativePath === selectedBookPath) || null;
-  const bookCollections = useMemo(() => {
-    const groups = new Map();
-    const profiles = videos?.bookCollections || {};
-    bookLibrary.forEach((book) => {
-      const key = book.collection || `__book__${book.relativePath}`;
-      if (!groups.has(key)) groups.set(key, {
-        key,
-        label: profiles[key]?.name || book.collection || book.name,
-        coverUrl: profiles[key]?.coverUrl || "",
-        books: [],
-      });
-      groups.get(key).books.push(book);
-    });
-    return Array.from(groups.values()).sort((a, b) =>
-      a.label.localeCompare(b.label, normalizeRaspberryLanguage(raspberryLanguage), {
-        sensitivity: "base",
-        numeric: true,
-      })
-    );
-  }, [bookLibrary, raspberryLanguage, videos?.bookCollections]);
-  const selectedBookCollection = selectedBook
-    ? selectedBook.collection || `__book__${selectedBook.relativePath}`
-    : "";
+  const bookCollections = useMemo(() => buildBookCollections(
+    videos?.books || [], videos?.bookCollections || {}, normalizeRaspberryLanguage(raspberryLanguage)
+  ), [videos?.books, videos?.bookCollections, raspberryLanguage]);
+  const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
+  const selectedBook = activeBookCollection?.books[0] || null;
 
   useEffect(() => {
-    if (!bookLibrary.length) setSelectedBookPath("");
-    else if (!bookLibrary.some((book) => book.relativePath === selectedBookPath)) setSelectedBookPath("");
-  }, [bookLibrary, selectedBookPath]);
+    if (selectedBookCollection && !activeBookCollection) setSelectedBookCollection("");
+  }, [activeBookCollection, selectedBookCollection]);
 
   useEffect(() => {
     if (!gameLibrary.length) {
@@ -6615,16 +6661,13 @@ export default function App() {
       : activeMediaType === "movies"
         ? selectedMovie
         : selectedSeries;
-  const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
   const hasSettingsButton = activeMediaType === "books" ? Boolean(activeBookCollection) : Boolean(selectedItem);
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage = activeMediaType === "games"
     ? selectedGame?.coverImage || cartellLogo
     : activeMediaType === "books"
-      ? activeBookCollection?.coverUrl || (activeBookCollection?.key.startsWith("__book__")
-        ? selectedBook?.coverUrl || getBookCoverUrl(selectedBook?.relativePath) || cartellLogo
-        : cartellLogo)
+      ? getBookDisplayCoverUrl(activeBookCollection?.coverBook) || cartellLogo
       : activeMediaType === "movies" && !selectedMovie
         ? cartellLogo
         : selectedItem?.heroImage || cartellLogo;
@@ -6886,7 +6929,7 @@ export default function App() {
     setActiveMediaType(nextType);
     if (nextType === "movies") setSelectedMovieId(null);
     if (nextType === "series") setSelectedDirectoryPath("");
-    if (nextType === "books") setSelectedBookPath("");
+    if (nextType === "books") setSelectedBookCollection("");
     if (nextType === "games") setSelectedGamePath("");
     setMediaFilterOpen(false);
     setCurrentView("series");
@@ -6900,7 +6943,7 @@ export default function App() {
   function handleOpenCustomization() {
     if (activeMediaType === "books") {
       if (!activeBookCollection) return;
-      if (activeBookCollection.key.startsWith("__book__")) {
+      if (!activeBookCollection.isCollection) {
         setBookMetadataTarget(activeBookCollection.books[0]);
       } else {
         setBookCollectionTarget(activeBookCollection);
@@ -7478,6 +7521,19 @@ export default function App() {
   function handleBackToSeriesLibrary() {
     setSelectedDirectoryPath("");
     setSettingsOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleOpenBookCollection(collectionKey) {
+    setSelectedBookCollection(collectionKey);
+    setMediaFilterOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleBackToBookLibrary() {
+    setSelectedBookCollection("");
+    setBookMetadataTarget(null);
+    setBookCollectionTarget(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -8066,6 +8122,12 @@ export default function App() {
   }
 
   async function handleSaveBookMetadata(profile) {
+    if (bookMetadataTarget?.uploadFile) {
+      const file = bookMetadataTarget.uploadFile;
+      setBookMetadataTarget(null);
+      await handleUploadFiles([file], profile);
+      return;
+    }
     await saveBookMetadata(profile);
     setVideos(await getVideos());
     setBookMetadataTarget(null);
@@ -8090,14 +8152,14 @@ export default function App() {
     }
     try {
       await removeBookCollection(collection.key);
-      setSelectedBookPath("");
+      setSelectedBookCollection("");
       setVideos(await getVideos());
     } catch (nextError) {
       window.alert(nextError.message || "No se pudo eliminar la colección.");
     }
   }
 
-  async function handleUploadFiles(files) {
+  async function handleUploadFiles(files, confirmedBookProfile = null) {
     const safeFiles = Array.isArray(files) ? files.filter((file) => file && !isIgnoredUploadFile(file)) : [];
     if (!safeFiles.length) return;
 
@@ -8138,13 +8200,16 @@ export default function App() {
       const firstPath = String(bookFiles[0].webkitRelativePath || "").replace(/\\/g, "/");
       const detectedCollection = firstPath.includes("/") ? firstPath.split("/")[0] : "";
       const isCollectionUpload = Boolean(detectedCollection) || bookFiles.length > 1;
+      if (!isCollectionUpload && !confirmedBookProfile) {
+        setBookMetadataTarget({ name: bookSearchQuery(bookFiles[0].name), format: getFileExtension(bookFiles[0].name), uploadFile: bookFiles[0] });
+        return;
+      }
       const suggestedTitle = isCollectionUpload
         ? detectedCollection || "Nueva colección"
         : stripFileExtension(bookFiles[0].name);
-      const requestedTitle = window.prompt(
-        isCollectionUpload ? "Nombre de la colección" : "Título del libro",
-        suggestedTitle
-      );
+      const requestedTitle = isCollectionUpload
+        ? window.prompt("Nombre de la colección", suggestedTitle)
+        : confirmedBookProfile.title;
       if (requestedTitle === null) return;
       const safeTitle = requestedTitle.trim() || suggestedTitle;
       const collection = isCollectionUpload ? safeTitle : "";
@@ -8168,6 +8233,7 @@ export default function App() {
           },
           collection,
           title: isCollectionUpload ? "" : safeTitle,
+          metadata: confirmedBookProfile,
           signal,
           onProgress: (progress) => {
             setUploadProgress(progress);
@@ -8203,6 +8269,7 @@ export default function App() {
         });
         setCurrentView("series");
         setActiveMediaType("books");
+        setSelectedBookCollection("");
       } catch (nextError) {
         clearUploadAbortController();
         setUploadProgress(null);
@@ -8300,6 +8367,7 @@ export default function App() {
   const isGamesMode = activeMediaType === "games";
   const isBooksMode = activeMediaType === "books";
   const isPicturesMode = activeMediaType === "pictures";
+  const activeMediaSection = MEDIA_TYPES.find((mediaType) => mediaType.id === activeMediaType);
   const activeFilterQuery = mediaFilterQueries[activeMediaType] || "";
   const normalizedFilterQuery = normalizeMediaLabel(activeFilterQuery);
   const favoritesOnly = Boolean(mediaFavoritesOnly[activeMediaType]);
@@ -8326,24 +8394,18 @@ export default function App() {
       ? (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right)
       : compareMediaNames(left, right));
   const filteredGameOptions = consoleGames.filter((game) => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath));
-  const filteredBookCollections = bookCollections.map((collection) => ({
-    ...collection,
-    books: collection.books.filter((book) =>
+  const filteredBookCollections = bookCollections.filter((collection) =>
+    collection.books.some((book) =>
       (matchesName(collection.label) || matchesName(book.name)) && matchesFavorite("book", book.relativePath)
-    ),
-  })).filter((collection) => collection.books.length);
-  const filteredBooks = filteredBookCollections.flatMap((collection) => collection.books);
+    )
+  );
   const selectorOptions = isGamesMode ? filteredGameOptions : isMoviesMode ? filteredMovieOptions : filteredSeriesOptions;
   const activeFilterCount = Number(Boolean(activeFilterQuery.trim())) + Number(favoritesOnly) + (isMoviesMode ? selectedMovieGenres.length : 0);
   const mediaFiltersActive = activeFilterCount > 0;
 
   useEffect(() => {
-    if (!mediaFiltersActive) return;
-    if (isBooksMode) {
-      if (selectedBookPath && filteredBooks.length && !filteredBooks.some((book) => book.relativePath === selectedBookPath)) {
-        setSelectedBookPath(filteredBooks[0].relativePath);
-      }
-    } else if (isGamesMode) {
+    if (!mediaFiltersActive || isBooksMode) return;
+    if (isGamesMode) {
       if (selectedGamePath && filteredGameOptions.length && !filteredGameOptions.some((game) => game.relativePath === selectedGame?.relativePath)) {
         setSelectedGamePath(filteredGameOptions[0].relativePath);
       }
@@ -8354,7 +8416,7 @@ export default function App() {
     } else if (selectedDirectoryPath && filteredSeriesOptions.length && !filteredSeriesOptions.some((series) => series.directoryPath === selectedSeries?.directoryPath)) {
       setSelectedDirectoryPath(filteredSeriesOptions[0].directoryPath);
     }
-  }, [mediaFiltersActive, isBooksMode, isGamesMode, isMoviesMode, filteredBooks, filteredGameOptions, filteredMovieOptions, filteredSeriesOptions, selectedBookPath, selectedGame?.relativePath, selectedMovie?.id, selectedMovieId, selectedSeries?.directoryPath]);
+  }, [mediaFiltersActive, isBooksMode, isGamesMode, isMoviesMode, filteredGameOptions, filteredMovieOptions, filteredSeriesOptions, selectedGame?.relativePath, selectedMovie?.id, selectedMovieId, selectedSeries?.directoryPath]);
   const formatBookCollectionLabel = (collection) => {
     if (!collection) return t("media_books");
     return collection.label;
@@ -8395,18 +8457,18 @@ export default function App() {
         value: isMoviesMode ? String(item.id) : item.directoryPath,
         label: item.name,
       }));
-  const isMediaDetail = (isSeriesMode && Boolean(selectedSeries)) || (isMoviesMode && Boolean(selectedMovie));
+  const isMediaDetail = (isSeriesMode && Boolean(selectedSeries)) || (isMoviesMode && Boolean(selectedMovie)) || (isBooksMode && Boolean(activeBookCollection));
   const filterTotal = isPicturesMode ? pictureLibrary.length : isBooksMode
-    ? bookLibrary.length
+    ? activeBookCollection?.books.length ?? bookCollections.length
     : isGamesMode
       ? consoleGames.length
       : isMoviesMode
         ? movieOptions.length
         : seriesOptions.length;
   const filterVisible = isPicturesMode ? pictureLibrary.length : isBooksMode
-    ? filteredBooks.filter(book => !selectedBookCollection || (book.collection || `__book__${book.relativePath}`) === selectedBookCollection).length
+    ? activeBookCollection?.books.length ?? filteredBookCollections.length
     : selectorOptions.length;
-  const libraryCountLabel = `${t("movie_filter_count", { shown: filterVisible, total: filterTotal })} ${t(`media_${activeMediaType}`).toLocaleLowerCase(normalizeRaspberryLanguage(raspberryLanguage))}`;
+  const libraryCountLabel = `${t("movie_filter_count", { shown: filterVisible, total: filterTotal })} ${t(isBooksMode && !activeBookCollection ? "book_library_items" : `media_${activeMediaType}`).toLocaleLowerCase(normalizeRaspberryLanguage(raspberryLanguage))}`;
   const emptyTitle = isMoviesMode ? t("no_movies_available") : t("no_seasons_available");
   const emptyDescription = isMoviesMode
     ? t("add_movie_prompt")
@@ -8772,13 +8834,23 @@ export default function App() {
                     <HeaderArt
                       image={headerImage}
                       crop={headerImageCrop}
-                      alt={selectedItem?.name || "Cartell principal"}
+                      bookCover={isBooksMode && Boolean(activeBookCollection)}
+                      alt={(isBooksMode ? activeBookCollection?.label : selectedItem?.name) || "Cartell principal"}
                     />
+
+                    {!isMediaDetail ? (
+                      <h1 className="series-hero__section-title" key={activeMediaType}>
+                        <svg className="series-hero__section-icon" viewBox={activeMediaSection.headerIcon.viewBox} aria-hidden="true" focusable="false">
+                          <image href={activeMediaSection.inactiveIcon} width={activeMediaSection.headerIcon.width} height={activeMediaSection.headerIcon.height} />
+                        </svg>
+                        <span>{t(activeMediaSection.labelKey)}</span>
+                      </h1>
+                    ) : null}
 
                     {isMediaDetail ? (
                       <div className="movie-library__hero-tools">
-                        <button type="button" className="back-button" onClick={isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
-                          <span aria-hidden="true">←</span> {t(isMoviesMode ? "movie_library" : "series_library")}
+                        <button type="button" className="back-button" onClick={isBooksMode ? handleBackToBookLibrary : isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
+                          <span aria-hidden="true">←</span> {t(isBooksMode ? "book_library" : isMoviesMode ? "movie_library" : "series_library")}
                         </button>
                       </div>
                     ) : null}
@@ -8860,7 +8932,7 @@ export default function App() {
                           disabled={!heroSelectorOptions.length}
                           onChange={(nextValue) =>
                             isBooksMode
-                              ? setSelectedBookPath(filteredBookCollections.find((collection) => collection.key === nextValue)?.books[0]?.relativePath || "")
+                              ? handleOpenBookCollection(nextValue)
                               : isGamesMode
                               ? setSelectedGamePath(nextValue)
                               : isMoviesMode
@@ -8884,8 +8956,8 @@ export default function App() {
                         className={`series-icon-button series-icon-button--hero series-icon-button--hero-settings${isMediaDetail ? " series-icon-button--detail-settings" : ""}`}
                         onClick={handleOpenCustomization}
                         type="button"
-                        aria-label={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.key.startsWith("__book__") ? "libro" : "colección"}`}
-                        title={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.key.startsWith("__book__") ? "libro" : "colección"}`}
+                        aria-label={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.isCollection ? "colección" : "libro"}`}
+                        title={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.isCollection ? "colección" : "libro"}`}
                       >
                         <img
                           className="series-icon-button__image series-icon-button__image--settings"
@@ -8897,7 +8969,7 @@ export default function App() {
                       </button>
                     ) : null}
 
-                    {isMediaDetail ? (
+                    {isMediaDetail && !isBooksMode ? (
                       isMoviesMode
                         ? renderMarks("movie", selectedMovie.id)
                         : renderMarks("series", selectedSeries.id || selectedSeries.directoryPath, false)
@@ -8963,17 +9035,25 @@ export default function App() {
                     <div className="empty-state__card"><p>{t("movie_filter_no_results")}</p></div>
                   </section>
                 ) : isBooksMode ? (
+                  activeBookCollection ? (
                   <BooksLibrary
+                    key={activeBookCollection.key}
                     renderMarks={(book) => renderMarks("book", book.relativePath)}
-                    books={filteredBooks}
-                    selectedCollection={selectedBookCollection}
-                    selectedPath={selectedBookPath}
+                    books={activeBookCollection.books}
+                    title={activeBookCollection.label}
                     countLabel={libraryCountLabel}
-                    onSelect={setSelectedBookPath}
                     onOpen={setBookOpenTarget}
                     onEdit={setBookMetadataTarget}
                     onDelete={handleDeleteBook}
                   />
+                  ) : (
+                    <BookCollectionLibrary
+                      collections={filteredBookCollections}
+                      countLabel={libraryCountLabel}
+                      onSelect={handleOpenBookCollection}
+                      t={t}
+                    />
+                  )
                 ) : isGamesMode ? (
                   selectedGame && filteredGameOptions.some(game => game.relativePath === selectedGame.relativePath) ? (
                     <section className="game-panel seasons-section">
@@ -9189,6 +9269,7 @@ export default function App() {
                     <div className={`movie-library__items movie-library__items--${movieLibraryView}`}>
                       {filteredMovieOptions.map((movie) => {
                         const downloadUrl = getMovieDownloadUrl(movie);
+                        const isFavorite = Boolean(mediaMarks[mediaMarkKey("movie", movie.id)]?.favorite);
                         const poster = movie.posterImage || movie.imageOptions?.[1] || movie.heroImage || cartellLogo;
                         const year = movie.releaseDate?.slice(0, 4) || t("not_available");
                         const rating = Number(movie.voteAverage) > 0 ? `${(movie.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
@@ -9201,8 +9282,15 @@ export default function App() {
                               <h2>{movie.name}</h2>
                               <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
                               <div className="movie-library__actions movie-library__actions--icons">
-                                <button className="movie-details" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={`${t("movie_details")}: ${movie.name}`} title={t("movie_details")}>
-                                  <img src={detailsIcon} alt="" aria-hidden="true" />
+                                <button
+                                  className={`movie-favorite${isFavorite ? " is-favorite" : ""}`}
+                                  type="button"
+                                  onClick={() => setMovieFavoriteConfirmation({ id: movie.id, name: movie.name, favorite: !isFavorite })}
+                                  aria-pressed={isFavorite}
+                                  aria-label={`${t(isFavorite ? "mark_favorite" : "mark_not_favorite")}: ${movie.name}`}
+                                  title={t(isFavorite ? "movie_favorite_remove" : "movie_favorite_add")}
+                                >
+                                  <MediaMarkIcon favorite active={isFavorite} />
                                 </button>
                                 <MovieDownload url={downloadUrl} name={movie.fileName || movie.name} label={t("movie_download")} />
                                 <button
@@ -9444,7 +9532,7 @@ export default function App() {
               onClose={() => setUploadValidationError(null)}
               t={t}
             />
-            <BookReader book={openBook} onClose={() => setOpenBook(null)} />
+            {openBook?.format === "epub" ? <EpubReader book={openBook} onClose={() => setOpenBook(null)} /> : <BookReader book={openBook} onClose={() => setOpenBook(null)} />}
             <BookOpenModal
               book={bookOpenTarget}
               busy={bookOpenBusy}
@@ -9454,6 +9542,7 @@ export default function App() {
               t={t}
             />
             <BookMetadataModal
+              BookCover={BookCover}
               book={bookMetadataTarget}
               language={normalizeRaspberryLanguage(raspberryLanguage)}
               onClose={() => setBookMetadataTarget(null)}
@@ -9471,6 +9560,14 @@ export default function App() {
               onClose={() => setDeleteConfirmation(null)}
               t={t}
             />
+            {movieFavoriteConfirmation ? (
+              <MovieFavoriteConfirmModal
+                confirmation={movieFavoriteConfirmation}
+                onClose={() => setMovieFavoriteConfirmation(null)}
+                onConfirm={confirmMovieFavorite}
+                t={t}
+              />
+            ) : null}
             <TmdbBrowserModal
               visible={tmdbBrowserOpen}
               onClose={() => setTmdbBrowserOpen(false)}

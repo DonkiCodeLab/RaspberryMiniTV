@@ -1267,7 +1267,7 @@ export function getBookContentUrl(relativePath) {
   return `${getBaseUrl()}/books/content?${params.toString()}`;
 }
 
-export async function getBookContent(relativePath, { signal } = {}) {
+export async function getBookContent(relativePath, { signal, format = "pdf" } = {}) {
   const url = getBookContentUrl(relativePath);
   if (!url) throw new Error("Missing book path");
 
@@ -1291,8 +1291,9 @@ export async function getBookContent(relativePath, { signal } = {}) {
 
   const data = new Uint8Array(await response.arrayBuffer());
   const pdfHeader = String.fromCharCode(...data.subarray(0, 1024));
-  if (!data.length || !pdfHeader.includes("%PDF-")) {
-    throw new Error("El servidor no devolvió un archivo PDF válido.");
+  if (!data.length || (format === "pdf" && !pdfHeader.includes("%PDF-")) ||
+      (format === "epub" && (data[0] !== 0x50 || data[1] !== 0x4b))) {
+    throw new Error(`El servidor no devolvió un archivo ${format.toUpperCase()} válido.`);
   }
   return data;
 }
@@ -1316,15 +1317,21 @@ export function getBookCoverUrl(relativePath) {
   return `${getBaseUrl()}/books/cover?${params.toString()}`;
 }
 
-export async function uploadBookFiles({ files, collection = "", title = "", onProgress, onReport, signal } = {}) {
+export function getBookDisplayCoverUrl(book) {
+  const coverUrl = String(book?.coverUrl || "").trim();
+  if (coverUrl.startsWith("/book-covers/")) return `${getBaseUrl()}${coverUrl}`;
+  return coverUrl || getBookCoverUrl(book?.relativePath);
+}
+
+export async function uploadBookFiles({ files, collection = "", title = "", metadata, onProgress, onReport, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) throw new Error("Missing book files");
   return uploadBookBatch({ files: safeFiles, onProgress, onReport, signal,
-    uploadOne: (file, progress) => uploadBookRequest({ files: [file], collection, title: safeFiles.length === 1 ? title : "", onProgress: progress, signal }),
+    uploadOne: (file, progress) => uploadBookRequest({ files: [file], collection, title: safeFiles.length === 1 ? title : "", metadata: safeFiles.length === 1 ? metadata : undefined, onProgress: progress, signal }),
   });
 }
 
-async function uploadBookRequest({ files, collection = "", title = "", onProgress, signal } = {}) {
+async function uploadBookRequest({ files, collection = "", title = "", metadata, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) throw new Error("Missing book files");
   if (isMockModeEnabled()) {
@@ -1337,6 +1344,11 @@ async function uploadBookRequest({ files, collection = "", title = "", onProgres
   safeFiles.forEach((file) => form.append("files", file, file.webkitRelativePath || file.name));
   form.append("collection", collection);
   form.append("title", title);
+  if (metadata) {
+    const { coverFile, relativePath, ...fields } = metadata;
+    form.append("metadata", JSON.stringify(fields));
+    if (coverFile instanceof File) form.append("coverFile", coverFile);
+  }
   return new Promise((resolve, reject) => {
     if (signal?.aborted) { reject(createAbortError()); return; }
     const xhr = new XMLHttpRequest();
@@ -1380,9 +1392,14 @@ export function removeBookFile(relativePath) {
   return request(`/books?relativePath=${encodeURIComponent(relativePath)}`, { method: "DELETE" });
 }
 
-export function searchBookMetadata(query, language = "es") {
+export function searchBookMetadata(query, language = "es", { signal } = {}) {
   const params = new URLSearchParams({ query: String(query || "").trim(), language });
-  return request(`/books/search?${params.toString()}`);
+  return request(`/books/search?${params.toString()}`, { signal });
+}
+
+export function getBookMetadataDetails(result, { signal } = {}) {
+  const params = new URLSearchParams({ workKey: result.openLibraryKey || "", editionKey: result.editionKey || "" });
+  return request(`/books/metadata?${params}`, { signal });
 }
 
 export function saveBookMetadata(profile) {

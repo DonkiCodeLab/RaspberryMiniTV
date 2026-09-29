@@ -183,6 +183,7 @@ fix_*.patch
 /packages/**/types_generated/
 
 # Local project artifacts
+/tmp/
 .venv-mac-preview/
 __pycache__/
 DeviceApp/user_settings.json
