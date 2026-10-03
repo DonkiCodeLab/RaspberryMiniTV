@@ -1559,6 +1559,19 @@ export function getTmdbCacheStatus(start = false) {
   return requestWithTimeout(signal => request("/tmdb/cache", { ...(start ? { method: "POST" } : {}), signal }));
 }
 
+export function getOscarCatalog(language) {
+  return requestWithTimeout(signal => request(`/oscars?${new URLSearchParams({ language })}`, { signal }));
+}
+
+export function prepareOscarCatalog() {
+  return requestWithTimeout(signal => request('/oscars/prepare', { method: 'POST', signal }));
+}
+
+export function oscarImageUrl(path, width = 500) {
+  if (!path) return '';
+  return `${getBaseUrl()}/oscars/images${path}?${new URLSearchParams({ pin: getStoredWebPin(), width })}`;
+}
+
 export function localTmdbImageUrl(value) {
   if (!value || isMockModeEnabled()) return value;
   const remote = String(value).match(/^https:\/\/image\.tmdb\.org\/t\/p\/[^/]+(\/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg))$/);

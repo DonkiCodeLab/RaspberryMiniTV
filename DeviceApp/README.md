@@ -452,3 +452,44 @@ El servidor registra inicio, fin y milisegundos de las consultas locales, sin
 incluir el PIN. Para diagnosticar una espera se pueden volcar únicamente las
 pilas de los hilos con `sudo systemctl kill -s SIGUSR1 --kill-whom=main minitv-api.service`;
 las pilas aparecen en el journal del servicio.
+
+
+### Colección permanente Óscar
+
+La tercera vista de Películas recorre las 98 ganadoras de **Mejor película**, desde la
+ceremonia de 1929 hasta la de 2026. El manifiesto versionado está en
+`DeviceApp/data/oscar_best_picture.json`, con IDs contrastados en TMDB. Los años
+corresponden a la ceremonia: 1930 tiene dos ediciones y 1933 no tuvo ceremonia.
+Fuentes: [Academia](https://www.oscars.org/oscars/ceremonies),
+[ceremonia de 2026](https://www.oscars.org/oscars/ceremonies/2026) y
+[cronología de ceremonias](https://en.wikipedia.org/wiki/List_of_Academy_Awards_ceremonies).
+Para incorporar premios futuros se añade una edición al manifiesto; las ediciones
+ya guardadas nunca se eliminan al actualizarlo.
+
+Al entrar en la vista se prepara automáticamente la colección con las credenciales
+TMDB existentes. Primero se guardan las fichas en castellano, catalán e inglés y las
+portadas/fondos principales de todas las ganadoras; después, los inventarios de
+imágenes, originales y miniaturas de las galerías completas. Las transferencias
+se limitan a tres en paralelo. El progreso y los fallos aparecen en la vista, con
+reintento que reutiliza los archivos guardados. La cola se recupera al reiniciar la API.
+
+Todo queda en `MultimediaContent/TmdbCache/Oscars/`: manifiesto `catalog.json`,
+fichas `metadata/`, originales `images/`, miniaturas `thumbnails/` y cola `jobs.json`.
+Este directorio es independiente del vídeo y de la limpieza de la caché normal;
+borrar una película, incluso su última copia, no borra el archivo Óscar. Los
+endpoints de esta colección no ofrecen borrado. La navegación consulta únicamente
+el disco y funciona sin Internet una vez preparada.
+
+La ficha solo se habilita cuando el catálogo escaneado contiene un archivo con el
+mismo ID de TMDB. Los títulos similares y los remakes no habilitan otra película.
+El carrusel admite deslizador, flechas, teclado y arrastre; respeta la preferencia
+de movimiento reducido. La selección se conserva al volver desde una ficha.
+
+API protegida por PIN: `GET /oscars?language=es-ES`, `POST /oscars/prepare` y
+`GET /oscars/images/<archivo>?width=500`. Las fichas e imágenes habituales pueden
+reutilizar el archivo Óscar cuando faltan en la caché normal. Para inspeccionar
+el archivo sin descargar: `python3 DeviceApp/prepare_oscars.py --check`. Para
+prepararlo desde consola, con las credenciales TMDB configuradas en Ajustes o en
+las variables de entorno existentes: `python3 DeviceApp/prepare_oscars.py`. No
+ejecutar la preparación por consola a la vez que otra API que escriba en la misma
+carpeta de caché.

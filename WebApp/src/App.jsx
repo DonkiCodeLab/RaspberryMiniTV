@@ -2,6 +2,8 @@ import EpubReader from "./EpubReader";
 import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
 import { preloadLibraryCovers } from "./preloadLibraryCovers";
 import LibraryPoster from "./LibraryPoster";
+import OscarLibrary, { OscarIcon } from "./OscarLibrary";
+import { oscarStrings } from "./oscarCatalog";
 import { buildBookCollections } from "./bookLibrary.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
@@ -6067,6 +6069,7 @@ export default function App() {
   const [movieFrameIndex, setMovieFrameIndex] = useState(1);
   const [moviePlaying, setMoviePlaying] = useState(false);
   const [movieLibraryView, setMovieLibraryView] = useState("grid");
+  const [oscarEdition, setOscarEdition] = useState(null);
   const [movieLibrarySort, setMovieLibrarySort] = useState("name");
   const [seriesLibraryView, setSeriesLibraryView] = useState("grid");
   const [seriesLibrarySort, setSeriesLibrarySort] = useState("name");
@@ -8364,6 +8367,7 @@ export default function App() {
 
   const isSeriesMode = activeMediaType === "series";
   const isMoviesMode = activeMediaType === "movies";
+  const isOscarView = isMoviesMode && movieLibraryView === "oscars" && !selectedMovie;
   const isGamesMode = activeMediaType === "games";
   const isBooksMode = activeMediaType === "books";
   const isPicturesMode = activeMediaType === "pictures";
@@ -8401,7 +8405,7 @@ export default function App() {
   );
   const selectorOptions = isGamesMode ? filteredGameOptions : isMoviesMode ? filteredMovieOptions : filteredSeriesOptions;
   const activeFilterCount = Number(Boolean(activeFilterQuery.trim())) + Number(favoritesOnly) + (isMoviesMode ? selectedMovieGenres.length : 0);
-  const mediaFiltersActive = activeFilterCount > 0;
+  const mediaFiltersActive = activeFilterCount > 0 && !(isMoviesMode && movieLibraryView === "oscars");
 
   useEffect(() => {
     if (!mediaFiltersActive || isBooksMode) return;
@@ -8866,7 +8870,7 @@ export default function App() {
                       />
                       {isSeriesMode || isMoviesMode ? (
                         <div className="movie-library__browse-tools">
-                            <label className="movie-library__sort">
+                            {!isOscarView && <label className="movie-library__sort">
                               <span>{t("movie_sort_label")}</span>
                               <select
                                 value={isMoviesMode ? movieLibrarySort : seriesLibrarySort}
@@ -8876,14 +8880,15 @@ export default function App() {
                                 {isMoviesMode ? <option value="year">{t("movie_sort_year")}</option> : null}
                                 <option value="rating">{t("movie_sort_rating")}</option>
                               </select>
-                            </label>
+                            </label>}
                             <div className="movie-library__view-switch" role="group" aria-label={t(isMoviesMode ? "movie_library" : "series_library")}>
                               <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "grid" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("grid") : setSeriesLibraryView("grid")} aria-label={t("movie_view_grid")} title={t("movie_view_grid")}>▦</button>
                               <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "list" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("list") : setSeriesLibraryView("list")} aria-label={t("movie_view_list")} title={t("movie_view_list")}>☰</button>
+                              {isMoviesMode && <button type="button" className={`oscar-view-button${isOscarView ? " active" : ""}`} onClick={() => setMovieLibraryView("oscars")} aria-pressed={isOscarView} aria-label={(oscarStrings[raspberryLanguage] || oscarStrings.es).view} title={(oscarStrings[raspberryLanguage] || oscarStrings.es).view}><OscarIcon /></button>}
                             </div>
                         </div>
                       ) : null}
-                      <div
+                      {!isOscarView && <div
                         className={`series-hero__controls-row${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
                         {filterTotal ? (
@@ -8940,7 +8945,7 @@ export default function App() {
                               : handleOpenSeriesDetails(nextValue)
                           }
                         />
-                      </div>
+                      </div>}
                     </div> : null}
 
                     <div
@@ -8987,7 +8992,7 @@ export default function App() {
                   </div>
                 </header>}
 
-                {!isMediaDetail && filterTotal > 0 && mediaFilterOpen ? (
+                {!isOscarView && !isMediaDetail && filterTotal > 0 && mediaFilterOpen ? (
                   <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
@@ -9027,7 +9032,9 @@ export default function App() {
                   </section>
                 ) : null}
 
-                {isPicturesMode ? (
+                {isOscarView ? (
+                  <OscarLibrary movies={movieOptions} language={tmdbLanguage} edition={oscarEdition} onEditionChange={setOscarEdition} onOpenMovie={handleOpenMovieDetails} />
+                ) : isPicturesMode ? (
                   <PicturesLibrary countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
                 ) : mediaFiltersActive && !filterVisible ? (
                   <section className="empty-state seasons-section">

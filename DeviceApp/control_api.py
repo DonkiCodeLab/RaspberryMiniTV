@@ -1,5 +1,6 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
+from oscar_catalog import OscarCatalog
 from background_stats import BackgroundStats
 import catalog_store
 import book_metadata
@@ -854,7 +855,7 @@ def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
     if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
-    if request.path.startswith(("/tmdb/images/", "/tmdb/import/images/")) and not submitted_pin:
+    if request.path.startswith(("/tmdb/images/", "/tmdb/import/images/", "/oscars/images/")) and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -3337,6 +3338,39 @@ def tmdb_credentials():
 
 
 tmdb_artwork = TmdbCache(os.path.join(MULTIMEDIA_DIR, "TmdbCache"), tmdb_credentials)
+oscar_artwork = OscarCatalog(os.path.join(MULTIMEDIA_DIR, "TmdbCache", "Oscars"), tmdb_credentials)
+
+
+@app.route("/oscars", methods=["GET"])
+def oscar_library():
+    try:
+        return jsonify(oscar_artwork.snapshot(request.args.get("language", "es-ES")))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/oscars/prepare", methods=["POST"])
+def prepare_oscar_library():
+    try:
+        return jsonify(oscar_artwork.prepare())
+    except TmdbError as exc:
+        return jsonify({"error": str(exc), "code": exc.code}), 503
+    except OSError:
+        return jsonify({"error": "No se pudo guardar la colección Óscar. Revisa el espacio y los permisos del disco."}), 500
+
+
+@app.route("/oscars/images/<filename>", methods=["GET"])
+def oscar_image(filename):
+    try:
+        width = request.args.get("width")
+        path = oscar_artwork.display_image("/" + filename, int(width) if width else None, local_only=True)
+        return send_file(path, max_age=31536000, conditional=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except TmdbError as exc:
+        return jsonify({"error": str(exc), "code": exc.code}), 409
+    except OSError:
+        return jsonify({"error": "No se pudo leer la imagen de la colección Óscar."}), 500
 
 
 def queue_tmdb_artwork(kind, item, refresh=False):
@@ -3356,7 +3390,12 @@ def cached_tmdb_library():
     result = {}
     for collection, kind in (("movies", "movie"), ("series", "tv")):
         ids = {int(item["tmdbId"]) for item in library.get(collection, {}).values() if item.get("tmdbId")}
-        result[collection] = {str(tmdb_id): tmdb_artwork.library_summary(kind, tmdb_id, language) for tmdb_id in ids}
+        result[collection] = {}
+        for tmdb_id in ids:
+            summary = tmdb_artwork.library_summary(kind, tmdb_id, language)
+            if kind == "movie" and not summary.get("name"):
+                summary = oscar_artwork.library_summary(kind, tmdb_id, language)
+            result[collection][str(tmdb_id)] = summary
     return jsonify(result)
 
 
@@ -3364,7 +3403,12 @@ def cached_tmdb_library():
 @app.route("/tmdb/json/<path:tmdb_path>", methods=["GET"])
 def cached_tmdb_json(tmdb_path):
     try:
-        data = tmdb_artwork.json("/" + tmdb_path, request.args.to_dict(), local_only=not (tmdb_path.startswith("search/") or request.path.startswith("/tmdb/import/")))
+        try:
+            data = tmdb_artwork.json("/" + tmdb_path, request.args.to_dict(), local_only=not (tmdb_path.startswith("search/") or request.path.startswith("/tmdb/import/")))
+        except TmdbError as exc:
+            if exc.code != "TMDB_LOCAL_MISSING" or not tmdb_path.startswith("movie/"):
+                raise
+            data = oscar_artwork.json("/" + tmdb_path, request.args.to_dict(), local_only=True)
         if request.args.get("level") == "cards" and re.fullmatch(r"tv/\d+/season/\d+", tmdb_path):
             data = {**data, "episodes": [{key: episode.get(key) for key in ("id", "episode_number", "name", "still_path", "air_date", "runtime")} for episode in data.get("episodes", [])]}
         return jsonify(data)
@@ -3384,7 +3428,12 @@ def cached_tmdb_json(tmdb_path):
 def cached_tmdb_image(filename):
     try:
         width = request.args.get("width")
-        path = tmdb_artwork.display_image("/" + filename, int(width) if width is not None else None, local_only=True)
+        try:
+            path = tmdb_artwork.display_image("/" + filename, int(width) if width is not None else None, local_only=True)
+        except TmdbError as exc:
+            if exc.code != "TMDB_LOCAL_MISSING":
+                raise
+            path = oscar_artwork.display_image("/" + filename, int(width) if width is not None else None, local_only=True)
         return send_file(path, max_age=31536000, conditional=True)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -3521,4 +3570,5 @@ if __name__ == "__main__":
     faulthandler.register(signal.SIGUSR1, all_threads=True)
     ensure_media_directories()
     tmdb_artwork.start()
+    oscar_artwork.start()
     app.run(host="0.0.0.0", port=PORT)

@@ -396,6 +396,12 @@ class TmdbCache:
                         if isinstance(episode_number, int) and episode_number > 0:
                             collect(season_path + f"/episode/{episode_number}/images")
                     collect(season_path + "/images")
+        errors.extend(self._warm_images(images, thumbnails))
+        if errors:
+            raise RuntimeError("; ".join(errors)[:4000])
+
+    def _warm_images(self, images, thumbnails):
+        errors = []
         for count, path in enumerate(sorted(images), 1):
             self._check_worker()
             try:
@@ -410,8 +416,7 @@ class TmdbCache:
             except Exception as exc:
                 errors.append(f"Miniatura {path} ({width}): {exc}")
             self._progress("thumbnails", count, len(thumbnails), path)
-        if errors:
-            raise RuntimeError("; ".join(errors)[:4000])
+        return errors
 
     def _progress(self, phase, completed, total, current):
         context = getattr(self.worker_context, "job", None)

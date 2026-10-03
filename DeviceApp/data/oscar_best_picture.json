@@ -1,0 +1,697 @@
+{
+  "updatedAt": "2026-10-03",
+  "category": "Best Picture",
+  "sources": [
+    "https://www.oscars.org/oscars/ceremonies",
+    "https://www.oscars.org/oscars/ceremonies/2026",
+    "https://en.wikipedia.org/wiki/List_of_Academy_Awards_ceremonies"
+  ],
+  "winners": [
+    {
+      "edition": 1,
+      "ceremonyYear": 1929,
+      "releaseYear": 1927,
+      "title": "Wings",
+      "tmdbId": 28966
+    },
+    {
+      "edition": 2,
+      "ceremonyYear": 1930,
+      "releaseYear": 1929,
+      "title": "The Broadway Melody",
+      "tmdbId": 65203
+    },
+    {
+      "edition": 3,
+      "ceremonyYear": 1930,
+      "releaseYear": 1930,
+      "title": "All Quiet on the Western Front",
+      "tmdbId": 143
+    },
+    {
+      "edition": 4,
+      "ceremonyYear": 1931,
+      "releaseYear": 1931,
+      "title": "Cimarron",
+      "tmdbId": 42861
+    },
+    {
+      "edition": 5,
+      "ceremonyYear": 1932,
+      "releaseYear": 1932,
+      "title": "Grand Hotel",
+      "tmdbId": 33680
+    },
+    {
+      "edition": 6,
+      "ceremonyYear": 1934,
+      "releaseYear": 1933,
+      "title": "Cavalcade",
+      "tmdbId": 56164
+    },
+    {
+      "edition": 7,
+      "ceremonyYear": 1935,
+      "releaseYear": 1934,
+      "title": "It Happened One Night",
+      "tmdbId": 3078
+    },
+    {
+      "edition": 8,
+      "ceremonyYear": 1936,
+      "releaseYear": 1935,
+      "title": "Mutiny on the Bounty",
+      "tmdbId": 12311
+    },
+    {
+      "edition": 9,
+      "ceremonyYear": 1937,
+      "releaseYear": 1936,
+      "title": "The Great Ziegfeld",
+      "tmdbId": 43277
+    },
+    {
+      "edition": 10,
+      "ceremonyYear": 1938,
+      "releaseYear": 1937,
+      "title": "The Life of Emile Zola",
+      "tmdbId": 43278
+    },
+    {
+      "edition": 11,
+      "ceremonyYear": 1939,
+      "releaseYear": 1938,
+      "title": "You Can't Take It with You",
+      "tmdbId": 34106
+    },
+    {
+      "edition": 12,
+      "ceremonyYear": 1940,
+      "releaseYear": 1939,
+      "title": "Gone with the Wind",
+      "tmdbId": 770
+    },
+    {
+      "edition": 13,
+      "ceremonyYear": 1941,
+      "releaseYear": 1940,
+      "title": "Rebecca",
+      "tmdbId": 223
+    },
+    {
+      "edition": 14,
+      "ceremonyYear": 1942,
+      "releaseYear": 1941,
+      "title": "How Green Was My Valley",
+      "tmdbId": 43266
+    },
+    {
+      "edition": 15,
+      "ceremonyYear": 1943,
+      "releaseYear": 1942,
+      "title": "Mrs. Miniver",
+      "tmdbId": 27367
+    },
+    {
+      "edition": 16,
+      "ceremonyYear": 1944,
+      "releaseYear": 1942,
+      "title": "Casablanca",
+      "tmdbId": 289
+    },
+    {
+      "edition": 17,
+      "ceremonyYear": 1945,
+      "releaseYear": 1944,
+      "title": "Going My Way",
+      "tmdbId": 17661
+    },
+    {
+      "edition": 18,
+      "ceremonyYear": 1946,
+      "releaseYear": 1945,
+      "title": "The Lost Weekend",
+      "tmdbId": 28580
+    },
+    {
+      "edition": 19,
+      "ceremonyYear": 1947,
+      "releaseYear": 1946,
+      "title": "The Best Years of Our Lives",
+      "tmdbId": 887
+    },
+    {
+      "edition": 20,
+      "ceremonyYear": 1948,
+      "releaseYear": 1947,
+      "title": "Gentleman's Agreement",
+      "tmdbId": 33667
+    },
+    {
+      "edition": 21,
+      "ceremonyYear": 1949,
+      "releaseYear": 1948,
+      "title": "Hamlet",
+      "tmdbId": 23383
+    },
+    {
+      "edition": 22,
+      "ceremonyYear": 1950,
+      "releaseYear": 1949,
+      "title": "All the King's Men",
+      "tmdbId": 25430
+    },
+    {
+      "edition": 23,
+      "ceremonyYear": 1951,
+      "releaseYear": 1950,
+      "title": "All About Eve",
+      "tmdbId": 705
+    },
+    {
+      "edition": 24,
+      "ceremonyYear": 1952,
+      "releaseYear": 1951,
+      "title": "An American in Paris",
+      "tmdbId": 2769
+    },
+    {
+      "edition": 25,
+      "ceremonyYear": 1953,
+      "releaseYear": 1952,
+      "title": "The Greatest Show on Earth",
+      "tmdbId": 27191
+    },
+    {
+      "edition": 26,
+      "ceremonyYear": 1954,
+      "releaseYear": 1953,
+      "title": "From Here to Eternity",
+      "tmdbId": 11426
+    },
+    {
+      "edition": 27,
+      "ceremonyYear": 1955,
+      "releaseYear": 1954,
+      "title": "On the Waterfront",
+      "tmdbId": 654
+    },
+    {
+      "edition": 28,
+      "ceremonyYear": 1956,
+      "releaseYear": 1955,
+      "title": "Marty",
+      "tmdbId": 15919
+    },
+    {
+      "edition": 29,
+      "ceremonyYear": 1957,
+      "releaseYear": 1956,
+      "title": "Around the World in 80 Days",
+      "tmdbId": 2897
+    },
+    {
+      "edition": 30,
+      "ceremonyYear": 1958,
+      "releaseYear": 1957,
+      "title": "The Bridge on the River Kwai",
+      "tmdbId": 826
+    },
+    {
+      "edition": 31,
+      "ceremonyYear": 1959,
+      "releaseYear": 1958,
+      "title": "Gigi",
+      "tmdbId": 17281
+    },
+    {
+      "edition": 32,
+      "ceremonyYear": 1960,
+      "releaseYear": 1959,
+      "title": "Ben-Hur",
+      "tmdbId": 665
+    },
+    {
+      "edition": 33,
+      "ceremonyYear": 1961,
+      "releaseYear": 1960,
+      "title": "The Apartment",
+      "tmdbId": 284
+    },
+    {
+      "edition": 34,
+      "ceremonyYear": 1962,
+      "releaseYear": 1961,
+      "title": "West Side Story",
+      "tmdbId": 1725
+    },
+    {
+      "edition": 35,
+      "ceremonyYear": 1963,
+      "releaseYear": 1962,
+      "title": "Lawrence of Arabia",
+      "tmdbId": 947
+    },
+    {
+      "edition": 36,
+      "ceremonyYear": 1964,
+      "releaseYear": 1963,
+      "title": "Tom Jones",
+      "tmdbId": 5769
+    },
+    {
+      "edition": 37,
+      "ceremonyYear": 1965,
+      "releaseYear": 1964,
+      "title": "My Fair Lady",
+      "tmdbId": 11113
+    },
+    {
+      "edition": 38,
+      "ceremonyYear": 1966,
+      "releaseYear": 1965,
+      "title": "The Sound of Music",
+      "tmdbId": 15121
+    },
+    {
+      "edition": 39,
+      "ceremonyYear": 1967,
+      "releaseYear": 1966,
+      "title": "A Man for All Seasons",
+      "tmdbId": 874
+    },
+    {
+      "edition": 40,
+      "ceremonyYear": 1968,
+      "releaseYear": 1967,
+      "title": "In the Heat of the Night",
+      "tmdbId": 10633
+    },
+    {
+      "edition": 41,
+      "ceremonyYear": 1969,
+      "releaseYear": 1968,
+      "title": "Oliver!",
+      "tmdbId": 17917
+    },
+    {
+      "edition": 42,
+      "ceremonyYear": 1970,
+      "releaseYear": 1969,
+      "title": "Midnight Cowboy",
+      "tmdbId": 3116
+    },
+    {
+      "edition": 43,
+      "ceremonyYear": 1971,
+      "releaseYear": 1970,
+      "title": "Patton",
+      "tmdbId": 11202
+    },
+    {
+      "edition": 44,
+      "ceremonyYear": 1972,
+      "releaseYear": 1971,
+      "title": "The French Connection",
+      "tmdbId": 1051
+    },
+    {
+      "edition": 45,
+      "ceremonyYear": 1973,
+      "releaseYear": 1972,
+      "title": "The Godfather",
+      "tmdbId": 238
+    },
+    {
+      "edition": 46,
+      "ceremonyYear": 1974,
+      "releaseYear": 1973,
+      "title": "The Sting",
+      "tmdbId": 9277
+    },
+    {
+      "edition": 47,
+      "ceremonyYear": 1975,
+      "releaseYear": 1974,
+      "title": "The Godfather Part II",
+      "tmdbId": 240
+    },
+    {
+      "edition": 48,
+      "ceremonyYear": 1976,
+      "releaseYear": 1975,
+      "title": "One Flew Over the Cuckoo's Nest",
+      "tmdbId": 510
+    },
+    {
+      "edition": 49,
+      "ceremonyYear": 1977,
+      "releaseYear": 1976,
+      "title": "Rocky",
+      "tmdbId": 1366
+    },
+    {
+      "edition": 50,
+      "ceremonyYear": 1978,
+      "releaseYear": 1977,
+      "title": "Annie Hall",
+      "tmdbId": 703
+    },
+    {
+      "edition": 51,
+      "ceremonyYear": 1979,
+      "releaseYear": 1978,
+      "title": "The Deer Hunter",
+      "tmdbId": 11778
+    },
+    {
+      "edition": 52,
+      "ceremonyYear": 1980,
+      "releaseYear": 1979,
+      "title": "Kramer vs. Kramer",
+      "tmdbId": 12102
+    },
+    {
+      "edition": 53,
+      "ceremonyYear": 1981,
+      "releaseYear": 1980,
+      "title": "Ordinary People",
+      "tmdbId": 16619
+    },
+    {
+      "edition": 54,
+      "ceremonyYear": 1982,
+      "releaseYear": 1981,
+      "title": "Chariots of Fire",
+      "tmdbId": 9443
+    },
+    {
+      "edition": 55,
+      "ceremonyYear": 1983,
+      "releaseYear": 1982,
+      "title": "Gandhi",
+      "tmdbId": 783
+    },
+    {
+      "edition": 56,
+      "ceremonyYear": 1984,
+      "releaseYear": 1983,
+      "title": "Terms of Endearment",
+      "tmdbId": 11050
+    },
+    {
+      "edition": 57,
+      "ceremonyYear": 1985,
+      "releaseYear": 1984,
+      "title": "Amadeus",
+      "tmdbId": 279
+    },
+    {
+      "edition": 58,
+      "ceremonyYear": 1986,
+      "releaseYear": 1985,
+      "title": "Out of Africa",
+      "tmdbId": 606
+    },
+    {
+      "edition": 59,
+      "ceremonyYear": 1987,
+      "releaseYear": 1986,
+      "title": "Platoon",
+      "tmdbId": 792
+    },
+    {
+      "edition": 60,
+      "ceremonyYear": 1988,
+      "releaseYear": 1987,
+      "title": "The Last Emperor",
+      "tmdbId": 746
+    },
+    {
+      "edition": 61,
+      "ceremonyYear": 1989,
+      "releaseYear": 1988,
+      "title": "Rain Man",
+      "tmdbId": 380
+    },
+    {
+      "edition": 62,
+      "ceremonyYear": 1990,
+      "releaseYear": 1989,
+      "title": "Driving Miss Daisy",
+      "tmdbId": 403
+    },
+    {
+      "edition": 63,
+      "ceremonyYear": 1991,
+      "releaseYear": 1990,
+      "title": "Dances with Wolves",
+      "tmdbId": 581
+    },
+    {
+      "edition": 64,
+      "ceremonyYear": 1992,
+      "releaseYear": 1991,
+      "title": "The Silence of the Lambs",
+      "tmdbId": 274
+    },
+    {
+      "edition": 65,
+      "ceremonyYear": 1993,
+      "releaseYear": 1992,
+      "title": "Unforgiven",
+      "tmdbId": 33
+    },
+    {
+      "edition": 66,
+      "ceremonyYear": 1994,
+      "releaseYear": 1993,
+      "title": "Schindler's List",
+      "tmdbId": 424
+    },
+    {
+      "edition": 67,
+      "ceremonyYear": 1995,
+      "releaseYear": 1994,
+      "title": "Forrest Gump",
+      "tmdbId": 13
+    },
+    {
+      "edition": 68,
+      "ceremonyYear": 1996,
+      "releaseYear": 1995,
+      "title": "Braveheart",
+      "tmdbId": 197
+    },
+    {
+      "edition": 69,
+      "ceremonyYear": 1997,
+      "releaseYear": 1996,
+      "title": "The English Patient",
+      "tmdbId": 409
+    },
+    {
+      "edition": 70,
+      "ceremonyYear": 1998,
+      "releaseYear": 1997,
+      "title": "Titanic",
+      "tmdbId": 597
+    },
+    {
+      "edition": 71,
+      "ceremonyYear": 1999,
+      "releaseYear": 1998,
+      "title": "Shakespeare in Love",
+      "tmdbId": 1934
+    },
+    {
+      "edition": 72,
+      "ceremonyYear": 2000,
+      "releaseYear": 1999,
+      "title": "American Beauty",
+      "tmdbId": 14
+    },
+    {
+      "edition": 73,
+      "ceremonyYear": 2001,
+      "releaseYear": 2000,
+      "title": "Gladiator",
+      "tmdbId": 98
+    },
+    {
+      "edition": 74,
+      "ceremonyYear": 2002,
+      "releaseYear": 2001,
+      "title": "A Beautiful Mind",
+      "tmdbId": 453
+    },
+    {
+      "edition": 75,
+      "ceremonyYear": 2003,
+      "releaseYear": 2002,
+      "title": "Chicago",
+      "tmdbId": 1574
+    },
+    {
+      "edition": 76,
+      "ceremonyYear": 2004,
+      "releaseYear": 2003,
+      "title": "The Lord of the Rings: The Return of the King",
+      "tmdbId": 122
+    },
+    {
+      "edition": 77,
+      "ceremonyYear": 2005,
+      "releaseYear": 2004,
+      "title": "Million Dollar Baby",
+      "tmdbId": 70
+    },
+    {
+      "edition": 78,
+      "ceremonyYear": 2006,
+      "releaseYear": 2004,
+      "title": "Crash",
+      "tmdbId": 1640
+    },
+    {
+      "edition": 79,
+      "ceremonyYear": 2007,
+      "releaseYear": 2006,
+      "title": "The Departed",
+      "tmdbId": 1422
+    },
+    {
+      "edition": 80,
+      "ceremonyYear": 2008,
+      "releaseYear": 2007,
+      "title": "No Country for Old Men",
+      "tmdbId": 6977
+    },
+    {
+      "edition": 81,
+      "ceremonyYear": 2009,
+      "releaseYear": 2008,
+      "title": "Slumdog Millionaire",
+      "tmdbId": 12405
+    },
+    {
+      "edition": 82,
+      "ceremonyYear": 2010,
+      "releaseYear": 2008,
+      "title": "The Hurt Locker",
+      "tmdbId": 12162
+    },
+    {
+      "edition": 83,
+      "ceremonyYear": 2011,
+      "releaseYear": 2010,
+      "title": "The King's Speech",
+      "tmdbId": 45269
+    },
+    {
+      "edition": 84,
+      "ceremonyYear": 2012,
+      "releaseYear": 2011,
+      "title": "The Artist",
+      "tmdbId": 74643
+    },
+    {
+      "edition": 85,
+      "ceremonyYear": 2013,
+      "releaseYear": 2012,
+      "title": "Argo",
+      "tmdbId": 68734
+    },
+    {
+      "edition": 86,
+      "ceremonyYear": 2014,
+      "releaseYear": 2013,
+      "title": "12 Years a Slave",
+      "tmdbId": 76203
+    },
+    {
+      "edition": 87,
+      "ceremonyYear": 2015,
+      "releaseYear": 2014,
+      "title": "Birdman or (The Unexpected Virtue of Ignorance)",
+      "tmdbId": 194662
+    },
+    {
+      "edition": 88,
+      "ceremonyYear": 2016,
+      "releaseYear": 2015,
+      "title": "Spotlight",
+      "tmdbId": 314365
+    },
+    {
+      "edition": 89,
+      "ceremonyYear": 2017,
+      "releaseYear": 2016,
+      "title": "Moonlight",
+      "tmdbId": 376867
+    },
+    {
+      "edition": 90,
+      "ceremonyYear": 2018,
+      "releaseYear": 2017,
+      "title": "The Shape of Water",
+      "tmdbId": 399055
+    },
+    {
+      "edition": 91,
+      "ceremonyYear": 2019,
+      "releaseYear": 2018,
+      "title": "Green Book",
+      "tmdbId": 490132
+    },
+    {
+      "edition": 92,
+      "ceremonyYear": 2020,
+      "releaseYear": 2019,
+      "title": "Parasite",
+      "tmdbId": 496243
+    },
+    {
+      "edition": 93,
+      "ceremonyYear": 2021,
+      "releaseYear": 2020,
+      "title": "Nomadland",
+      "tmdbId": 581734
+    },
+    {
+      "edition": 94,
+      "ceremonyYear": 2022,
+      "releaseYear": 2021,
+      "title": "CODA",
+      "tmdbId": 776503
+    },
+    {
+      "edition": 95,
+      "ceremonyYear": 2023,
+      "releaseYear": 2022,
+      "title": "Everything Everywhere All at Once",
+      "tmdbId": 545611
+    },
+    {
+      "edition": 96,
+      "ceremonyYear": 2024,
+      "releaseYear": 2023,
+      "title": "Oppenheimer",
+      "tmdbId": 872585
+    },
+    {
+      "edition": 97,
+      "ceremonyYear": 2025,
+      "releaseYear": 2024,
+      "title": "Anora",
+      "tmdbId": 1064213
+    },
+    {
+      "edition": 98,
+      "ceremonyYear": 2026,
+      "releaseYear": 2025,
+      "title": "One Battle After Another",
+      "tmdbId": 1054867
+    }
+  ]
+}
