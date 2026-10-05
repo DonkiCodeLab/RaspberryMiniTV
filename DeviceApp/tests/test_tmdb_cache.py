@@ -84,6 +84,49 @@ class TmdbCacheTests(unittest.TestCase):
             self.assertEqual(response.json['movies']['1']['name'], 'Test')
             self.assertEqual(response.json['series'], {})
 
+    def test_series_card_totals_use_cached_episodes_and_exclude_specials(self):
+        show = {'id': 1, 'name': 'Test', 'episode_run_time': [50], 'seasons': [
+            {'season_number': 0, 'episode_count': 1},
+            {'season_number': 1, 'episode_count': 2},
+            {'season_number': 2, 'episode_count': 1},
+        ]}
+        metadata = {
+            '/tv/1': show,
+            '/tv/1/season/1': {'episodes': [{'episode_number': 1, 'runtime': 42}, {'episode_number': 2, 'runtime': 48}]},
+            '/tv/1/season/2': {'episodes': [{'episode_number': 1, 'runtime': 60}]},
+        }
+        for path, data in metadata.items():
+            with patch.object(self.cache, '_download', return_value=(json.dumps(data).encode(), 'application/json')):
+                self.cache.json(path, {'language': 'es-ES'})
+        with patch.object(self.cache, '_download', side_effect=AssertionError('offline')):
+            card = self.cache.library_summary('tv', 1, 'es-ES')
+        self.assertEqual(card['seasonCount'], 2)
+        self.assertEqual(card['totalEpisodeCount'], 3)
+        self.assertEqual(card['totalRuntimeMinutes'], 150)
+        self.assertFalse(card['runtimeIsEstimated'])
+        self.assertNotIn('seasons', card)
+
+    def test_series_runtime_estimates_missing_episodes_without_network(self):
+        show = {'seasons': [{'season_number': 1, 'episode_count': 2}, {'season_number': 2, 'episode_count': 1}],
+                'episode_run_time': [40, 50]}
+        season = {'episodes': [{'episode_number': 1, 'runtime': 60}, {'episode_number': 2, 'runtime': None}]}
+        for path, data in (('/tv/1', show), ('/tv/1/season/1', season)):
+            with patch.object(self.cache, '_download', return_value=(json.dumps(data).encode(), 'application/json')):
+                self.cache.json(path, {'language': 'es-ES'})
+        with patch.object(self.cache, '_download', side_effect=AssertionError('offline')):
+            card = self.cache.library_summary('tv', 1, 'es-ES')
+        self.assertEqual(card['totalRuntimeMinutes'], 150)
+        self.assertTrue(card['runtimeIsEstimated'])
+
+    def test_series_runtime_missing_data_is_not_a_zero_hour_total(self):
+        for extra, expected in (({}, None), ({'last_episode_to_air': {'runtime': 22}}, 66)):
+            with self.subTest(extra=extra), patch.object(self.cache, '_download', side_effect=AssertionError('offline')):
+                totals = self.cache._series_totals(1, 'es-ES', {
+                    'seasons': [{'season_number': 1, 'episode_count': 3}], **extra,
+                })
+                self.assertEqual(totals['totalRuntimeMinutes'], expected)
+                self.assertEqual(totals['runtimeIsEstimated'], expected is not None)
+
     def test_display_thumbnail_preserves_original_and_is_reused_offline(self):
         from PIL import Image
         source = self.cache.root / 'images' / 'poster.jpg'

@@ -1,0 +1,37 @@
+.movie-torrents { margin-top: 24px; padding: 24px; border: 1px solid rgba(255, 220, 53, .3); border-radius: 20px; background: #141a20; color: #fff; }
+.movie-torrents h3 { margin: 0 0 10px; color: #ffdc35; }
+.movie-torrents > p { line-height: 1.6; color: #d1d7dc; }
+.movie-torrents__search { display: flex; align-items: end; gap: 12px; margin: 18px 0; }
+.movie-torrents__search label { flex: 1; min-width: 0; }
+.movie-torrents__table { overflow-x: auto; max-height: 520px; }
+.movie-torrents table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.movie-torrents th, .movie-torrents td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #ffffff24; }
+.movie-torrents th { color: #ffdc35; }
+.movie-torrents td:first-child { min-width: 180px; overflow-wrap: anywhere; }
+.movie-torrents td:not(:first-child) { white-space: nowrap; }
+.movie-torrents__success { border-left: 3px solid #ffdc35; padding-left: 16px; }
+.movie-torrents__overwrite { margin: 16px 0; padding: 20px; border: 1px solid #ffdc35; border-radius: 16px; background: #242b32; }
+.movie-torrents__overwrite h4 { margin: 0 0 10px; color: #ffdc35; }
+.movie-torrents__overwrite p { line-height: 1.5; }
+.torrent-dashboard__header, .torrent-job__heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.torrent-dashboard__jobs { display: grid; gap: 14px; }
+.raspberry-torrents-card { padding: clamp(16px, 2vw, 24px); color: #fff; }
+.torrent-dashboard__header { margin-bottom: 0.85rem; }
+.torrent-dashboard__header .raspberry-dashboard-section__title { margin-bottom: 0; }
+.torrent-dashboard__scroll { max-height: min(62vh, 640px); overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #ffdc35 #151c24; padding: 4px 10px 4px 4px; border-radius: 12px; }
+.torrent-dashboard__scroll:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
+.torrent-dashboard__group + .torrent-dashboard__group { margin-top: 24px; }
+.torrent-dashboard__group-title { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; color: #fff; font-size: 16px; }
+.torrent-dashboard__group-title span { border-radius: 12px; padding: 2px 8px; background: #151c24; color: #ffdc35; font-size: 12px; }
+.torrent-dashboard__hint { margin: 0 0 14px; color: #e5edf4; font-size: 13px; line-height: 1.5; }
+.torrent-job { padding: 20px; background: #151c24; color: #fff; border: 1px solid #ffffff24; border-radius: 18px; min-width: 0; }
+.torrent-job h4 { margin: 0; font-size: 18px; }
+.torrent-job__name { overflow-wrap: anywhere; color: #c2cbd4; font-size: 13px; }
+.torrent-job__state { color: #ffdc35; font-size: 13px; }
+.torrent-job__state--complete { color: #8fe0b3; }
+.torrent-job__state--failed { color: #ffb0a6; }
+.torrent-job progress { width: 100%; height: 10px; accent-color: #ffdc35; }
+.torrent-job__stats { font-size: 13px; line-height: 1.6; }
+.torrent-job__actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.torrent-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 600px) { .movie-torrents { padding: 16px; } .movie-torrents__search { align-items: stretch; flex-direction: column; } .torrent-job { padding: 16px; } }

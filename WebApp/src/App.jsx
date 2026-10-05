@@ -1,12 +1,26 @@
+import { playbackArtwork, refreshCurrentPlayback } from "./currentPlayback.js";
+import { seriesArtwork } from "./seriesArtwork.js";
+import LibraryScrollRail from "./LibraryScrollRail.jsx";
+import BackToTop from "./BackToTop.jsx";
+import MovieLibraryItems from "./MovieLibraryItems.jsx";
+import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
+import { libraryScrollLabel, compareLibraryItems } from "./libraryScroll.js";
 import EpubReader from "./EpubReader";
+import BookPageSelector from "./BookPageSelector.jsx";
 import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
+import BookLibraryControls, { BookTypeField } from "./BookLibraryControls.jsx";
 import { preloadLibraryCovers } from "./preloadLibraryCovers";
 import LibraryPoster from "./LibraryPoster";
 import OscarLibrary, { OscarIcon } from "./OscarLibrary";
-import { oscarStrings } from "./oscarCatalog";
-import { buildBookCollections } from "./bookLibrary.js";
+import { awardStrings, movieAwards } from "./awardCatalog.js";
+import MovieAwardBadges from "./MovieAwardBadges.jsx";
+import AwardSelector from "./AwardSelector.jsx";
+import { buildBookCollections, matchesBookQuery } from "./bookLibrary.js";
+import { bookLanguageName, isGraphicNovel } from "./bookMetadata.js";
+import { bookStrings } from "./bookStrings.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
+import TorrentDownloads, { MovieTorrentSearch, useTorrentDownloads } from "./TorrentDownloads.jsx";
 import { localTmdbImageUrl } from "./api/raspberryApi";
 import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
@@ -117,9 +131,12 @@ import {
   uploadGameFile,
   uploadBookFiles,
   uploadMovieFile,
+  uploadMovieSubtitles,
+  checkUploadConflicts,
   uploadPictureFiles,
   getPictureContentUrl,
   uploadSeriesFiles,
+  controlPlaybackSubtitles,
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
@@ -314,6 +331,9 @@ const UI_STRINGS = {
     upload_series: "Serie",
     upload_movie: "Película",
     upload_movie_title_field: "Título de la película",
+    movie_subtitles: "Subtítulos externos (.srt, opcional)",
+    movie_subtitles_hint: "Se guardará junto al vídeo, con el mismo nombre y extensión .srt. Sustituye el SRT existente.",
+    movie_subtitles_failed: "El vídeo se ha guardado, pero los subtítulos no. Puedes volver a subirlos desde la edición de la ficha.",
     upload_game: "Juego",
     upload_books: "Libros",
     upload_pictures: "Fotos",
@@ -359,6 +379,7 @@ const UI_STRINGS = {
     imdb_url: "URL de IMDb",
     imdb_url_placeholder: "https://www.imdb.com/title/tt.../",
     imdb_link: "Enlace a IMDb",
+    tmdb_link: "Enlace a TMDB",
     imdb_no_link: "Sin enlace a URL",
     rotten_tomatoes_url: "URL de Rotten Tomatoes",
     rotten_tomatoes_url_placeholder: "https://www.rottentomatoes.com/m/...",
@@ -487,6 +508,16 @@ const UI_STRINGS = {
     next_episode: "Siguiente capítulo",
     volume_down: "Volumen -",
     volume_up: "Volumen +",
+    subtitle_toggle: "Activar/desactivar subtítulos",
+    subtitle_next: "Siguiente pista de subtítulos",
+    subtitle_on: "Subtítulos activados",
+    subtitle_off: "Subtítulos desactivados",
+    subtitle_external: "Pista externa",
+    subtitle_embedded: "Pista integrada",
+    subtitle_queued: "Orden enviada. Comprueba los subtítulos en la pantalla de reproducción.",
+    subtitle_none: "Este vídeo no tiene subtítulos seleccionables.",
+    subtitle_not_playing: "Inicia un vídeo en la MiniTV o monitor externo y vuelve a intentarlo.",
+    subtitle_control_failed: "No se pudieron cambiar los subtítulos.",
     power_off: "Apagar mini tele",
     power_off_confirm_title: "Apagar mini tele",
     power_off_confirm_copy: "¿Seguro que quieres apagar la mini televisión?",
@@ -550,6 +581,8 @@ const UI_STRINGS = {
     enter: "Entrar",
     loading_movies: "Cargando películas...",
     loading_seasons: "Cargando temporadas...",
+    seasons_load_error: "No se pudieron cargar las temporadas",
+    retry_load: "Reintentar",
     loading_library: "Cargando biblioteca",
     loading_details: "Cargando contenido",
     loading_movie_copy: "Estoy preparando la portada y los datos TMDB de la película seleccionada.",
@@ -558,7 +591,7 @@ const UI_STRINGS = {
     loading_episodes: "Cargando capítulos...",
     reading_season: "Estoy leyendo la temporada seleccionada desde TMDB.",
     add_movie_prompt: "Añade una película desde TMDB con el botón + para empezar esta lista.",
-    no_season_info: "No he podido cargar la información de temporadas desde TMDB para la serie seleccionada.",
+    no_season_info: "No hay información de temporadas disponible para la serie seleccionada.",
     pin_digits: "Introduce un PIN numérico de 4 dígitos.",
     pin_validate_failed: "No se pudo validar el PIN.",
     save_changes_failed: "No se pudieron guardar los cambios.",
@@ -578,13 +611,16 @@ const UI_STRINGS = {
     upload_series_subdirectories_error: "Todo el contenido de la serie debe estar dentro del directorio, sin subdirectorios.",
     upload_series_format_error: "Todos los ficheros deben contener el formato SxxExx.",
     upload_duplicates_title: "La serie ya contiene capítulos",
+    upload_existing_title: "El contenido ya existe",
+    upload_existing_copy: "{existing} archivo(s) ya existen. ¿Quieres sobrescribirlos? Si cancelas, se conservará el contenido actual.",
+    upload_replace: "Sí, sobrescribir",
     upload_duplicates_copy: "{existing} de {total} vídeos ya están cargados en la Raspberry. ¿Qué quieres hacer?",
     upload_overwrite_existing: "Sobrescribir los existentes",
     upload_only_new: "Subir solo los nuevos",
     upload_button: "Upload",
     tmdb_browser_title: "Visualizar ficha en TMDB",
     tmdb_browser_copy:
-      "Consulta el contenido de la serie o película en TMDB antes de preparar tus archivos locales, así la carga queda lo más ordenada posible.",
+      "Consulta las fichas de series y películas en TMDB. En las películas también puedes elegir un torrent y seguir su descarga desde el dashboard.",
     tmdb_browser_open: "Visualizar TMDB",
     game_browser_title: "Buscar ficha de juego",
     game_browser_copy:
@@ -633,9 +669,12 @@ const UI_STRINGS = {
     series_library: "Todas las series",
     select_series: "Seleccionar serie",
     no_movies_available: "Sin películas disponibles",
-    no_seasons_available: "Sin series disponibles",
+    no_seasons_available: "Sin temporadas disponibles",
     seasons_label: "TEMPORADAS",
     chapters_summary: "Capítulos",
+    series_stats_seasons: "Temp.",
+    series_stats_hours: "Horas",
+    series_runtime_estimated: "Duración total aproximada",
     loading_movie_runtime: "{minutes} minutos",
     tmdb_rating_missing: "Valoración TMDB no disponible",
     movie_file_label: "FICHA DE LA PELÍCULA",
@@ -689,6 +728,9 @@ const UI_STRINGS = {
     upload_series: "Sèrie",
     upload_movie: "Pel·lícula",
     upload_movie_title_field: "Títol de la pel·lícula",
+    movie_subtitles: "Subtítols externs (.srt, opcional)",
+    movie_subtitles_hint: "Es desarà al costat del vídeo, amb el mateix nom i extensió .srt. Substitueix el SRT existent.",
+    movie_subtitles_failed: "El vídeo s’ha desat, però els subtítols no. Pots tornar a pujar-los des de l’edició de la fitxa.",
     upload_game: "Joc",
     upload_books: "Llibres",
     upload_pictures: "Fotos",
@@ -734,6 +776,7 @@ const UI_STRINGS = {
     imdb_url: "URL d'IMDb",
     imdb_url_placeholder: "https://www.imdb.com/title/tt.../",
     imdb_link: "Enllaç a la fitxa d'IMDb",
+    tmdb_link: "Enllaç a la fitxa de TMDB",
     imdb_no_link: "Sense enllaç a URL",
     rotten_tomatoes_url: "URL de Rotten Tomatoes",
     rotten_tomatoes_url_placeholder: "https://www.rottentomatoes.com/m/...",
@@ -862,6 +905,16 @@ const UI_STRINGS = {
     next_episode: "Capítol següent",
     volume_down: "Volum -",
     volume_up: "Volum +",
+    subtitle_toggle: "Activar/desactivar subtítols",
+    subtitle_next: "Pista de subtítols següent",
+    subtitle_on: "Subtítols activats",
+    subtitle_off: "Subtítols desactivats",
+    subtitle_external: "Pista externa",
+    subtitle_embedded: "Pista integrada",
+    subtitle_queued: "Ordre enviada. Comprova els subtítols a la pantalla de reproducció.",
+    subtitle_none: "Aquest vídeo no té subtítols seleccionables.",
+    subtitle_not_playing: "Inicia un vídeo a la MiniTV o monitor extern i torna-ho a provar.",
+    subtitle_control_failed: "No s’han pogut canviar els subtítols.",
     power_off: "Apagar mini tele",
     power_off_confirm_title: "Apagar mini tele",
     power_off_confirm_copy: "Segur que vols apagar la mini televisió?",
@@ -925,6 +978,8 @@ const UI_STRINGS = {
     enter: "Entrar",
     loading_movies: "Carregant pel·lícules...",
     loading_seasons: "Carregant temporades...",
+    seasons_load_error: "No s’han pogut carregar les temporades",
+    retry_load: "Torna-ho a provar",
     loading_library: "Carregant biblioteca",
     loading_details: "Carregant contingut",
     loading_movie_copy: "Estic preparant la portada i les dades TMDB de la pel·lícula seleccionada.",
@@ -933,7 +988,7 @@ const UI_STRINGS = {
     loading_episodes: "Carregant capítols...",
     reading_season: "Estic llegint la temporada seleccionada des de TMDB.",
     add_movie_prompt: "Afegeix una pel·lícula des de TMDB amb el botó + per començar aquesta llista.",
-    no_season_info: "No he pogut carregar la informació de temporades des de TMDB per a la sèrie seleccionada.",
+    no_season_info: "No hi ha informació de temporades disponible per a la sèrie seleccionada.",
     pin_digits: "Introdueix un PIN numèric de 4 dígits.",
     pin_validate_failed: "No s'ha pogut validar el PIN.",
     save_changes_failed: "No s'han pogut desar els canvis.",
@@ -953,13 +1008,16 @@ const UI_STRINGS = {
     upload_series_subdirectories_error: "Tot el contingut de la sèrie ha d'estar dins del directori, sense subdirectoris.",
     upload_series_format_error: "Tots els fitxers han de contenir el format SxxExx.",
     upload_duplicates_title: "La sèrie ja conté capítols",
+    upload_existing_title: "El contingut ja existeix",
+    upload_existing_copy: "{existing} fitxer(s) ja existeixen. Vols sobreescriure’ls? Si cancel·les, es conservarà el contingut actual.",
+    upload_replace: "Sí, sobreescriure",
     upload_duplicates_copy: "{existing} de {total} vídeos ja estan carregats a la Raspberry. Què vols fer?",
     upload_overwrite_existing: "Sobreescriure els existents",
     upload_only_new: "Pujar només els nous",
     upload_button: "Upload",
     tmdb_browser_title: "Visualitzar fitxa a TMDB",
     tmdb_browser_copy:
-      "Consulta el contingut de la sèrie o pel·lícula a TMDB abans de preparar els fitxers locals, així la càrrega queda tan ordenada com sigui possible.",
+      "Consulta les fitxes de sèries i pel·lícules a TMDB. A les pel·lícules també pots triar un torrent i seguir-ne la descàrrega al dashboard.",
     tmdb_browser_open: "Visualitzar TMDB",
     game_browser_title: "Cercar fitxa de joc",
     game_browser_copy:
@@ -1011,6 +1069,9 @@ const UI_STRINGS = {
     no_seasons_available: "No hi ha temporades disponibles",
     seasons_label: "TEMPORADES",
     chapters_summary: "Capítols",
+    series_stats_seasons: "Temp.",
+    series_stats_hours: "Hores",
+    series_runtime_estimated: "Durada total aproximada",
     loading_movie_runtime: "{minutes} minuts",
     tmdb_rating_missing: "Valoració TMDB no disponible",
     movie_file_label: "FITXA DE LA PEL·LÍCULA",
@@ -1064,6 +1125,9 @@ const UI_STRINGS = {
     upload_series: "Series",
     upload_movie: "Movie",
     upload_movie_title_field: "Movie title",
+    movie_subtitles: "External subtitles (.srt, optional)",
+    movie_subtitles_hint: "Saved beside the video with the same name and .srt extension. Replaces the existing SRT.",
+    movie_subtitles_failed: "The video was saved, but the subtitles were not. Retry from the movie details editor.",
     upload_game: "Game",
     upload_books: "Books",
     upload_pictures: "Pictures",
@@ -1109,6 +1173,7 @@ const UI_STRINGS = {
     imdb_url: "IMDb URL",
     imdb_url_placeholder: "https://www.imdb.com/title/tt.../",
     imdb_link: "Link to the IMDb page",
+    tmdb_link: "Link to the TMDB page",
     imdb_no_link: "No URL link",
     rotten_tomatoes_url: "Rotten Tomatoes URL",
     rotten_tomatoes_url_placeholder: "https://www.rottentomatoes.com/m/...",
@@ -1237,6 +1302,16 @@ const UI_STRINGS = {
     next_episode: "Next episode",
     volume_down: "Volume -",
     volume_up: "Volume +",
+    subtitle_toggle: "Toggle subtitles",
+    subtitle_next: "Next subtitle track",
+    subtitle_on: "Subtitles on",
+    subtitle_off: "Subtitles off",
+    subtitle_external: "External track",
+    subtitle_embedded: "Embedded track",
+    subtitle_queued: "Command sent. Check subtitles on the playback screen.",
+    subtitle_none: "This video has no selectable subtitles.",
+    subtitle_not_playing: "Start a video on the MiniTV or external monitor and try again.",
+    subtitle_control_failed: "Could not change subtitles.",
     power_off: "Power off mini TV",
     power_off_confirm_title: "Power off mini TV",
     power_off_confirm_copy: "Are you sure you want to turn off the mini TV?",
@@ -1300,6 +1375,8 @@ const UI_STRINGS = {
     enter: "Enter",
     loading_movies: "Loading movies...",
     loading_seasons: "Loading seasons...",
+    seasons_load_error: "Could not load seasons",
+    retry_load: "Retry",
     loading_library: "Loading library",
     loading_details: "Loading content",
     loading_movie_copy: "Preparing the cover and TMDB data for the selected movie.",
@@ -1308,7 +1385,7 @@ const UI_STRINGS = {
     loading_episodes: "Loading episodes...",
     reading_season: "Reading the selected season from TMDB.",
     add_movie_prompt: "Add a movie from TMDB with the + button to start this list.",
-    no_season_info: "Could not load TMDB season information for the selected series.",
+    no_season_info: "No season information is available for the selected series.",
     pin_digits: "Enter a 4-digit numeric PIN.",
     pin_validate_failed: "PIN validation failed.",
     save_changes_failed: "Changes could not be saved.",
@@ -1328,13 +1405,16 @@ const UI_STRINGS = {
     upload_series_subdirectories_error: "All series content must be inside the directory, without subdirectories.",
     upload_series_format_error: "Every file must contain the SxxExx format.",
     upload_duplicates_title: "The series already contains episodes",
+    upload_existing_title: "Content already exists",
+    upload_existing_copy: "{existing} file(s) already exist. Do you want to overwrite them? Cancel to keep the current content.",
+    upload_replace: "Yes, overwrite",
     upload_duplicates_copy: "{existing} of {total} videos are already on the Raspberry. What would you like to do?",
     upload_overwrite_existing: "Overwrite existing videos",
     upload_only_new: "Upload only new videos",
     upload_button: "Upload",
     tmdb_browser_title: "View TMDB details",
     tmdb_browser_copy:
-      "Check the series or movie content on TMDB before preparing your local files, so the upload stays as tidy as possible.",
+      "Browse series and movie details on TMDB. For movies, you can also choose a torrent and follow its download on the dashboard.",
     tmdb_browser_open: "View TMDB",
     game_browser_title: "Search game details",
     game_browser_copy:
@@ -1386,6 +1466,9 @@ const UI_STRINGS = {
     no_seasons_available: "No seasons available",
     seasons_label: "SEASONS",
     chapters_summary: "Episodes",
+    series_stats_seasons: "Seasons",
+    series_stats_hours: "Hours",
+    series_runtime_estimated: "Estimated total runtime",
     loading_movie_runtime: "{minutes} minutes",
     tmdb_rating_missing: "TMDB rating unavailable",
     movie_file_label: "MOVIE DETAILS",
@@ -2153,7 +2236,7 @@ function createEpisodePlaybackInfo({ series, season, episode, playbackId }) {
     episodeNumber: episode.episodeNumber || 0,
     episodeTitle: episode.title || "",
     title: series.name || "",
-    image: episode.image || season?.image || series.heroImage || cartellLogo,
+    image: playbackArtwork(series, season?.image || episode.image || cartellLogo),
     paused: false,
   };
 }
@@ -2169,13 +2252,13 @@ function createMoviePlaybackInfo({ movie, movieEntry }) {
     movieId: movie.id || null,
     title: movie.name || "",
     originalTitle: movie.originalName || "",
-    image: movie.heroImage || movie.imageOptions?.[0] || cartellLogo,
+    image: playbackArtwork(movie, cartellLogo),
     paused: false,
   };
 }
 
 function createPlaybackInfoFromHealth({ health, seriesOptions, movieOptions }) {
-  const playbackId = String(health?.playing || "").trim().toUpperCase();
+  const playbackId = String(health?.playing || stripFileExtension(String(health?.file || "").split("/").pop()) || "").trim().toUpperCase();
   const directory = String(health?.directory || "").trim();
   const filePath = String(health?.file || "").trim();
   if (!playbackId) return null;
@@ -2643,6 +2726,36 @@ function EpisodeDetailsModal({
   );
 }
 
+function PlaybackSubtitleControls({ disabled = false, playbackKey = "", t }) {
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  useEffect(() => setFeedback(null), [playbackKey, disabled]);
+  async function change(action) {
+    setBusy(true);
+    setFeedback(null);
+    try {
+      const result = await controlPlaybackSubtitles(action);
+      setFeedback(result);
+    } catch (error) {
+      setFeedback({ error: error.code || "subtitle_control_failed" });
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <div className="playback-subtitles">
+    <div className="playback-subtitles__buttons">
+      <button className="dialog-button dialog-button--ghost" type="button" disabled={disabled || busy} onClick={() => change("toggle")}>{t("subtitle_toggle")}</button>
+      <button className="dialog-button dialog-button--ghost" type="button" disabled={disabled || busy} onClick={() => change("next")}>{t("subtitle_next")}</button>
+    </div>
+    {feedback ? <p role={feedback.error ? "alert" : "status"}>
+      {feedback.error ? t(feedback.error) : feedback.queued ? t("subtitle_queued") : <>
+        {t(feedback.enabled ? "subtitle_on" : "subtitle_off")}
+        {feedback.enabled && feedback.track ? ` · ${t(feedback.track.external ? "subtitle_external" : "subtitle_embedded")} ${feedback.track.label || feedback.track.id}` : ""}
+      </>}
+    </p> : null}
+  </div>;
+}
+
 function BrowserPlayerModal({ playback, onClose, t }) {
   useEffect(() => {
     if (!playback) return () => {};
@@ -2787,13 +2900,33 @@ function DeleteConfirmModal({ confirmation, onClose, t }) {
   );
 }
 
-function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave, onDelete, t }) {
+function MovieSubtitleField({ file, onChange, disabled = false, t }) {
+  return <label className="dialog-field">
+    <span>{t("movie_subtitles")}</span>
+    <input type="file" accept=".srt" disabled={disabled} onChange={event => {
+      const selected = event.target.files?.[0] || null;
+      if (selected && (!/\.srt$/i.test(selected.name) || !selected.size || selected.size > 5 * 1024 * 1024)) {
+        event.target.value = "";
+        onChange(null);
+        window.alert("Selecciona un archivo .srt con contenido de hasta 5 MB.");
+        return;
+      }
+      onChange(selected);
+    }} />
+    <small>{t("movie_subtitles_hint")}</small>
+    {file ? <span>{file.name}</span> : null}
+  </label>;
+}
+
+function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave, onDelete, t, language, movieRelativePath }) {
   const [name, setName] = useState(item?.name || "");
   const [imdbUrl, setImdbUrl] = useState(item?.imdbUrl || "");
   const [rottenTomatoesUrl, setRottenTomatoesUrl] = useState(item?.rottenTomatoesUrl || "");
   const [heroImage, setHeroImage] = useState(item?.heroImage || "");
   const [heroImageCrop, setHeroImageCrop] = useState(item?.heroImageCrop || DEFAULT_HERO_CROP);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [subtitleFile, setSubtitleFile] = useState(null);
+  const [subtitleBusy, setSubtitleBusy] = useState(false);
 
   useEffect(() => {
     setName(item?.name || "");
@@ -2802,7 +2935,10 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
     setHeroImage(item?.heroImage || imageOptions?.[0] || "");
     setHeroImageCrop(normalizeHeroCrop(item?.heroImageCrop || DEFAULT_HERO_CROP));
     setDeleteConfirmOpen(false);
+    setSubtitleFile(null);
   }, [item, imageOptions, visible]);
+
+  useEffect(() => { setSubtitleBusy(false); }, [movieRelativePath, visible]);
 
   if (!visible) return null;
 
@@ -2849,6 +2985,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
               <button
                 className="dialog-card__icon-button dialog-card__icon-button--danger"
                 onClick={() => setDeleteConfirmOpen(true)}
+                disabled={subtitleBusy}
                 type="button"
                 aria-label={t("delete_media", { media: mediaLabel })}
                 title={t("delete_media", { media: mediaLabel })}
@@ -2857,8 +2994,10 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
               </button>
               <button
                 className="dialog-card__icon-button dialog-card__icon-button--accent"
+                disabled={subtitleBusy}
                 onClick={() =>
                   onSave({
+                    subtitleFile,
                     name,
                     heroImage,
                     heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop) : null,
@@ -2875,6 +3014,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
               <button
                 className="dialog-card__icon-button dialog-card__close"
                 onClick={onClose}
+                disabled={subtitleBusy}
                 type="button"
                 aria-label={t("cancel")}
                 title={t("cancel")}
@@ -2919,6 +3059,10 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
           ) : null}
 
         <div className="dialog-card__body">
+          {mediaType === "movies" ? <>
+            <MovieSubtitleField key={`${item.id}-${visible}`} file={subtitleFile} onChange={setSubtitleFile} disabled={subtitleBusy} t={t} />
+            <MovieSubtitleDownload key={`subtitles-${movieRelativePath}`} relativePath={movieRelativePath} language={language} disabled={Boolean(subtitleFile)} onBusyChange={setSubtitleBusy} />
+          </> : null}
           <label className="dialog-field">
             <span>{t("visible_name")}</span>
             <input
@@ -3237,27 +3381,30 @@ function GameSettingsModal({ visible, game, onClose, onSave, t }) {
   );
 }
 
-function SeriesDuplicateModal({ duplicateCount, totalCount, onChoose, t }) {
+function SeriesDuplicateModal({ duplicateCount, totalCount, mediaType = "series", onChoose, t }) {
   if (!duplicateCount) return null;
 
   return (
     <div className="modal-backdrop">
-      <div className="dialog-card dialog-card--compact" onClick={(event) => event.stopPropagation()}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby="upload-conflict-title" className="dialog-card dialog-card--compact" onClick={(event) => event.stopPropagation()}>
         <div className="dialog-card__header">
           <div>
-            <p>{t("upload_series")}</p>
-            <h2>{t("upload_duplicates_title")}</h2>
+            <p>{t(mediaType === "series" ? "upload_series" : mediaType === "books" ? "upload_books" : "upload_movie")}</p>
+            <h2 id="upload-conflict-title">{t("upload_existing_title")}</h2>
           </div>
         </div>
         <p className="dialog-copy">
-          {t("upload_duplicates_copy", { existing: duplicateCount, total: totalCount })}
+          {t(mediaType === "series" ? "upload_duplicates_copy" : "upload_existing_copy", { existing: duplicateCount, total: totalCount })}
         </p>
         <div className="dialog-card__actions">
-          <button className="dialog-button dialog-button--ghost" onClick={() => onChoose("new")} type="button">
-            {t("upload_only_new")}
+          <button autoFocus className="dialog-button dialog-button--ghost" onClick={() => onChoose("cancel")} type="button">
+            {t("cancel")}
           </button>
+          {mediaType === "series" && <button className="dialog-button dialog-button--ghost" onClick={() => onChoose("new")} type="button">
+            {t("upload_only_new")}
+          </button>}
           <button className="dialog-button dialog-button--accent" onClick={() => onChoose("overwrite")} type="button">
-            {t("upload_overwrite_existing")}
+            {t("upload_replace")}
           </button>
         </div>
       </div>
@@ -3282,6 +3429,7 @@ function AddMediaModal({
   const [results, setResults] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [uploadTitle, setUploadTitle] = useState("");
+  const [subtitleFile, setSubtitleFile] = useState(null);
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -3292,6 +3440,7 @@ function AddMediaModal({
       setResults([]);
       setSelectedId(null);
       setUploadTitle("");
+      setSubtitleFile(null);
       setSearching(false);
       setSubmitting(false);
       setError("");
@@ -3351,7 +3500,7 @@ function AddMediaModal({
 
     const itemToAdd =
       mediaType === "movies" && uploadFileName
-        ? { ...selectedItem, name: uploadTitle.trim() || selectedItem.name }
+        ? { ...selectedItem, name: uploadTitle.trim() || selectedItem.name, subtitleFile }
         : selectedItem;
 
     setSubmitting(true);
@@ -3531,6 +3680,7 @@ function AddMediaModal({
           )}
         </div>
 
+        {mediaType === "movies" && uploadFileName ? <MovieSubtitleField file={subtitleFile} onChange={setSubtitleFile} disabled={submitting} t={t} /> : null}
         {mediaType === "movies" && uploadFileName && selectedId ? (
           <label className="dialog-field add-series-upload-title">
             <span>{t("upload_movie_title_field")}</span>
@@ -3822,14 +3972,6 @@ function GameUploadModal({
 }
 
 const BOOK_UPLOAD_REPORT_KEY = "minitv-book-upload-report-v1";
-function loadBookUploadReport() {
-  try {
-    const report = JSON.parse(window.localStorage.getItem(BOOK_UPLOAD_REPORT_KEY) || "null");
-    if (!report || !Array.isArray(report.files)) return null;
-    return report.status === "uploading" ? { ...report, status: "interrupted", note: "La página se cerró antes de recibir el resultado. Comprueba los archivos en la biblioteca antes de repetir la subida." } : report;
-  } catch { return null; }
-}
-
 function BookUploadProgressModal({ upload, onCancel, onClose, t }) {
   if (!upload) return null;
   const progressValue = clamp(Number(upload.progress?.percent) || 0, 0, 100);
@@ -4149,8 +4291,8 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
   );
 }
 
-function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
-  const [mediaType, setMediaType] = useState("series");
+function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType = "series", onTorrentStarted, onTorrentDashboard }) {
+  const [mediaType, setMediaType] = useState(initialMediaType);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -4166,7 +4308,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
 
   useEffect(() => {
     if (!visible) {
-      setMediaType("series");
+      setMediaType(initialMediaType);
       setQuery("");
       setResults([]);
       setSelectedItem(null);
@@ -4177,7 +4319,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
       setMovieFrameIndex(0);
       setError("");
     }
-  }, [visible]);
+  }, [visible, initialMediaType]);
 
   useEffect(() => {
     if (!visible) return () => {};
@@ -4592,43 +4734,49 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage }) {
                       ) : null}
                     </div>
 
-                    <div className="movie-panel__facts">
-                      <div className="movie-panel__fact">
-                        <strong>{t("release")}</strong>
-                        <span>{selectedItem.releaseDate || t("release_unknown")}</span>
-                      </div>
-                      <div className="movie-panel__fact">
-                        <strong>{t("duration")}</strong>
-                        <span>
-                          {selectedItem.runtime
-                            ? formatMovieRuntime(selectedItem.runtime, t)
-                            : t("duration_unknown")}
-                        </span>
-                      </div>
-                      <div className="movie-panel__fact">
-                        <strong>{t("rating")}</strong>
-                        <span>
-                          {typeof selectedItem.voteAverage === "number" && selectedItem.voteAverage > 0
-                            ? `${selectedItem.voteAverage.toFixed(1)} / 10`
-                            : t("tmdb_rating_missing")}
-                        </span>
-                      </div>
-                      <div className="movie-panel__fact">
-                        <strong>{t("genres")}</strong>
-                        <span>
-                          {selectedItem.genres?.length
-                            ? selectedItem.genres.join(" · ")
-                            : t("not_available")}
-                        </span>
-                      </div>
+                    <div className="tmdb-browser-movie__links">
+                      {selectedItem.imdbUrl ? (
+                        <a className="tmdb-browser-movie__link tmdb-browser-movie__link--imdb" href={selectedItem.imdbUrl} target="_blank" rel="noopener noreferrer" aria-label={t("imdb_link")}>
+                          <span>IMDb</span><span aria-hidden="true">↗</span>
+                        </a>
+                      ) : null}
+                      <a className="tmdb-browser-movie__link tmdb-browser-movie__link--tmdb" href={`https://www.themoviedb.org/movie/${selectedItem.id}`} target="_blank" rel="noopener noreferrer" aria-label={t("tmdb_link")}>
+                        <span>TMDB</span><span aria-hidden="true">↗</span>
+                      </a>
                     </div>
 
-                    <div className="movie-panel__overview">
-                      <strong>{t("synopsis")}</strong>
-                      <p>{selectedItem.overview || t("synopsis_unavailable")}</p>
-                    </div>
+                    <dl className="tmdb-browser-movie__facts">
+                      <div>
+                        <dt>{t("release")}</dt>
+                        <dd>{selectedItem.releaseDate || t("release_unknown")}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("duration")}</dt>
+                        <dd>{selectedItem.runtime ? `${selectedItem.runtime} min` : t("duration_unknown")}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("rating")}</dt>
+                        <dd className="tmdb-browser-movie__rating">
+                          {typeof selectedItem.voteAverage === "number" && selectedItem.voteAverage > 0 ? (
+                            <><span aria-hidden="true">★</span> {selectedItem.voteAverage.toFixed(1)} <small>/ 10</small></>
+                          ) : t("tmdb_rating_missing")}
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <ul className="tmdb-browser-movie__genres" aria-label={t("genres")}>
+                      {(selectedItem.genres?.length ? selectedItem.genres : [t("not_available")]).map((genre) => (
+                        <li key={genre}>{genre}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="movie-panel__overview">
+                    <strong>{t("synopsis")}</strong>
+                    <p>{selectedItem.overview || t("synopsis_unavailable")}</p>
                   </div>
                 </div>
+                <MovieTorrentSearch key={selectedItem.id} movie={selectedItem} language={tmdbLanguage} onStarted={onTorrentStarted} onDashboard={onTorrentDashboard} />
               </div>
             )}
           </section>
@@ -4745,8 +4893,8 @@ function RaspberryPoweroffModal({ visible, busy, onClose, onConfirm, t }) {
 function RaspberryNowPlayingCard({ playback, playbackActive, t }) {
   const isEpisode = playback?.kind === "episode";
   const isMovie = playback?.kind === "movie";
-  const image = playbackActive ? playback?.image : "";
-  const isEmpty = !playbackActive || !playback;
+  const image = playbackActive ? playback?.image || cartellLogo : "";
+  const isEmpty = !playbackActive;
 
   return (
     <div className={`raspberry-now-playing-card${isEmpty ? " is-empty" : ""}`}>
@@ -4768,7 +4916,7 @@ function RaspberryNowPlayingCard({ playback, playbackActive, t }) {
             ? isEpisode
               ? playback.seriesName || playback.title
               : playback.title
-            : t("nothing_playing")}
+            : playbackActive ? t("content_in_progress") : t("nothing_playing")}
         </strong>
 
         {playbackActive && playback && isEpisode ? (
@@ -4958,11 +5106,14 @@ function RaspberryPage({
   onTmdbSettingsSave,
   uploadMediaType,
   onUploadMediaTypeChange,
+  uploadBookIsGraphicNovel,
+  onUploadBookTypeChange,
   onUploadFiles,
   uploadDragActive,
   onUploadDragStateChange,
   uploadSummary,
   onOpenTmdbBrowser,
+  torrentDownloads,
 }) {
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
   const [cameraImageUrl, setCameraImageUrl] = useState("");
@@ -5161,6 +5312,7 @@ function RaspberryPage({
             </div>
           </section>
 
+          <TorrentDownloads downloads={torrentDownloads} language={raspberryLanguage} />
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-clock-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-clock-title">
               {t("dashboard_clock_title")}
@@ -5382,6 +5534,7 @@ function RaspberryPage({
             />
 
             <div className="raspberry-controls-remote">
+              <PlaybackSubtitleControls disabled={controlsDisabled || currentPlaybackInfo?.kind === "game" || currentPlaybackInfo?.kind === "book"} playbackKey={raspberryHealth.file} t={t} />
               <div className="raspberry-controls-grid">
                 <button
                   className={`dialog-button raspberry-control-button raspberry-control-button--primary${playbackActive ? " dialog-button--accent" : ""}`}
@@ -5515,6 +5668,8 @@ function RaspberryPage({
               </div>
             </div>
 
+            {uploadMediaType === "books" ? <BookTypeField language={raspberryLanguage} batch checked={uploadBookIsGraphicNovel} onChange={onUploadBookTypeChange} /> : null}
+
             <label
               className={`raspberry-upload-dropzone${uploadDragActive ? " is-dragging" : ""}`}
               onDragEnter={() => onUploadDragStateChange(true)}
@@ -5642,26 +5797,52 @@ function BookCover({ book }) {
   );
 }
 
-function BookCollectionLibrary({ collections, countLabel, onSelect, t }) {
+function BookCardActions({ books, name, visible, marks, onMark, onDelete, t, language }) {
+  const bt = bookStrings(language);
+  const [downloadsOpen, setDownloadsOpen] = useState(false);
+  const watched = books.length > 0 && books.every(book => marks[mediaMarkKey("book", book.relativePath)]?.watched);
+  const favorite = books.length > 0 && books.every(book => marks[mediaMarkKey("book", book.relativePath)]?.favorite);
+  return <div className="movie-library__actions-reveal books-library__actions-reveal" inert={!visible} aria-hidden={!visible}>
+    <div className="movie-library__actions-clip">
+      <div className="movie-library__actions movie-library__actions--icons">
+        <button className={`movie-watched${watched ? " is-watched" : ""}`} type="button" aria-pressed={watched}
+          aria-label={`${t(watched ? "mark_watched" : "mark_unwatched")}: ${name}`} title={t(watched ? "mark_watched" : "mark_unwatched")}
+          onClick={() => onMark("watched", !watched)}><MediaMarkIcon active={watched} /></button>
+        <button className={`movie-favorite${favorite ? " is-favorite" : ""}`} type="button" aria-pressed={favorite}
+          aria-label={`${t(favorite ? "mark_favorite" : "mark_not_favorite")}: ${name}`} title={t(favorite ? "mark_favorite" : "mark_not_favorite")}
+          onClick={() => onMark("favorite", !favorite)}><MediaMarkIcon favorite active={favorite} /></button>
+        {books.length === 1 ? <MovieDownload url={getBookContentUrl(books[0].relativePath)} name={books[0].file || books[0].name} label={bt.download} /> :
+          <button className="movie-download" type="button" aria-label={`${bt.download}: ${name}`} title={bt.download} aria-expanded={downloadsOpen}
+            onClick={() => setDownloadsOpen(value => !value)}><img src={downloadIcon} alt="" /></button>}
+        <button className="media-delete-button movie-library__delete" type="button" onClick={onDelete} aria-label={`${bt.remove}: ${name}`} title={bt.remove}><img src={deleteIcon} alt="" /></button>
+      </div>
+      {books.length > 1 && downloadsOpen ? <div className="books-library__downloads">{books.map(book => <a key={book.relativePath} href={getBookContentUrl(book.relativePath)} download={book.file || book.name}>{book.name}</a>)}</div> : null}
+    </div>
+  </div>;
+}
+
+function BookCollectionLibrary({ collections, countLabel, onSelect, t, language, type, sort, direction, onDirectionChange, actionsVisible, onActionsChange, renderActions }) {
+  const bt = bookStrings(language);
   return (
-    <section className="books-library seasons-section">
+    <section className="books-library seasons-section library-with-scroll-rail">
+      <LibraryScrollRail labels={collections.map(item => libraryScrollLabel(item, sort, language))} language={language} sort={sort} direction={direction} onDirectionChange={onDirectionChange} actionsVisible={actionsVisible} onActionsChange={onActionsChange} actionLabels={bt} />
       <div className="seasons-section__label">{countLabel}</div>
       {!collections.length ? (
-        <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
+        <div className="empty-state__card"><h2>{type === "graphic" ? bt.emptyGraphicNovels : bt.emptyNovels}</h2><p>{bt.emptyHint}</p></div>
       ) : (
-        <div className="books-library__grid">
+        <div className={`books-library__grid movie-library__items--reveal-actions${actionsVisible ? " is-actions-visible" : ""}`}>
           {collections.map((collection) => (
-            <article key={collection.key} className="books-library__card">
+            <article data-library-index key={collection.key} className="books-library__card">
               <button className="books-library__cover-button" onClick={() => onSelect(collection.key)} type="button" aria-label={`${t("book_enter")}: ${collection.label}`}>
                 <BookCover book={collection.coverBook} />
               </button>
               <div className="books-library__card-copy books-library__collection-copy">
                 <strong title={collection.label}>{collection.label}</strong>
-                <small>{collection.isCollection ? t("book_collection_count", { count: collection.books.length }) : collection.books[0].format.toUpperCase()}</small>
+                <small className="books-library__author">{collection.author || bt.unknownAuthor}</small>
+                {!collection.isCollection ? <small className="books-library__metadata">{collection.year || "—"} / {[...new Set(collection.books.map(book => book.format.toUpperCase()))].join(", ")}</small> : null}
+                {collection.isCollection ? <small>{t("book_collection_count", { count: collection.books.length })}</small> : null}
               </div>
-              <div className="books-library__card-actions">
-                <button className="dialog-button dialog-button--accent" onClick={() => onSelect(collection.key)} type="button">{t("book_enter")}</button>
-              </div>
+              {renderActions(collection)}
             </article>
           ))}
         </div>
@@ -5670,66 +5851,70 @@ function BookCollectionLibrary({ collections, countLabel, onSelect, t }) {
   );
 }
 
-function BookDetails({ book, onRead, onEdit, onDelete, onBack, renderMarks }) {
+function BookDetails({ book, language, onRead, onEdit, onDelete, onBack, renderMarks }) {
+  const t = bookStrings(language);
   const sourceKey = /^\/(books\/OL\d+M|works\/OL\d+W)$/.test(book.editionKey || book.openLibraryKey || "") ? book.editionKey || book.openLibraryKey : "";
-  const details = [["Editorial", book.publisher], ["Publicación", book.publishDate || book.year], ["ISBN", book.isbn], ["Idioma", book.language], ["Páginas", book.pageCount], ["Formato", book.format.toUpperCase()]];
-  return <section className="book-details seasons-section" aria-label={`Ficha de ${book.name}`}>
-    {onBack ? <button className="back-button" type="button" onClick={onBack}>← Colección</button> : null}
+  const details = [[t.publisher, book.publisher], [t.publishDate, book.publishDate || book.year], [t.isbn, book.isbn], [t.language, bookLanguageName(book.language, language)], [t.pageCount, book.pageCount], [t.format, book.format.toUpperCase()]];
+  return <section className="book-details seasons-section" aria-label={`${t.infoTitle}: ${book.name}`}>
+    {onBack ? <button className="back-button" type="button" onClick={onBack}>← {t.collection}</button> : null}
     <div className="book-details__layout">
       <div className="book-details__cover"><BookCover book={book} /></div>
       <div className="book-details__copy">
-        <p className="book-details__eyebrow">Tu biblioteca · {book.format.toUpperCase()}</p>
+        <p className="book-details__eyebrow">{t.yourLibrary}</p>
         <h1>{book.name}</h1>
+        <p className="book-details__author">{book.author || t.unknownAuthor}</p>
+        <p className="book-details__metadata">{book.year || "—"} / {book.format.toUpperCase()}</p>
         {book.subtitle ? <p className="book-details__subtitle">{book.subtitle}</p> : null}
-        {book.author ? <p className="book-details__author">{book.author}</p> : null}
         <div className="book-details__actions">
-          <button className="dialog-button dialog-button--accent" type="button" onClick={() => onRead(book)}>Leer</button>
-          <button className="dialog-button dialog-button--ghost" type="button" onClick={() => onEdit(book)}>{book.openLibraryKey ? "Editar ficha" : "Buscar información del libro"}</button>
-          <button className="books-library__delete" type="button" onClick={() => onDelete(book)} aria-label={`Eliminar ${book.name}`}><img src={deleteIcon} alt="" /></button>
+          <button className="dialog-button dialog-button--accent" type="button" onClick={() => onRead(book)}>{t.read}</button>
+          <button className="dialog-button dialog-button--ghost" type="button" onClick={() => onEdit(book)}>{book.openLibraryKey ? t.edit : t.lookup}</button>
+          <button className="books-library__delete" type="button" onClick={() => onDelete(book)} aria-label={`${t.remove} ${book.name}`}><img src={deleteIcon} alt="" /></button>
         </div>
         {renderMarks(book)}
         <dl className="book-details__facts">{details.filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-        <h2>Sinopsis</h2>
-        <p className="book-details__description">{book.description || "Todavía no hay sinopsis. Busca el libro en Open Library o completa su ficha."}</p>
-        {book.subjects ? <><h2>Temas</h2><p>{book.subjects}</p></> : null}
-        {sourceKey ? <a className="book-details__source" href={`https://openlibrary.org${sourceKey}`} target="_blank" rel="noreferrer">Ficha original en Open Library ↗</a> : null}
+        {book.pageCountSource?.startsWith("epub-") ? <p className="book-metadata__hint">{book.pageCountSource === "epub-page-list" ? t.epubPageList : t.epubFixedPages}</p> : null}
+        {book.pageCountSource === "openlibrary" ? <p className="book-metadata__hint">{t.catalogPages}</p> : null}
+        <h2>{t.description}</h2>
+        {book.descriptionFallback ? <p className="book-metadata__hint">{t.fallback}</p> : null}
+        <p className="book-details__description">{book.description || t.noDescription}</p>
+        {book.subjects ? <><h2>{t.topics}</h2><p>{book.subjects}</p></> : null}
+        {sourceKey ? <a className="book-details__source" href={`https://openlibrary.org${sourceKey}`} target="_blank" rel="noreferrer">{t.source}</a> : null}
       </div>
     </div>
   </section>;
 }
 
-function BooksLibrary({ books, title, countLabel, onOpen, onEdit, onDelete, renderMarks }) {
+function BooksLibrary({ books, title, author, language, sort, direction, onDirectionChange, countLabel, onOpen, onEdit, onDelete, renderMarks, actionsVisible, onActionsChange, renderActions }) {
+  const t = bookStrings(language);
   const [detailPath, setDetailPath] = useState("");
   const detail = books.length === 1 ? books[0] : books.find(book => book.relativePath === detailPath);
-  if (detail) return <BookDetails book={detail} onRead={onOpen} onEdit={onEdit} onDelete={onDelete} renderMarks={renderMarks} onBack={books.length > 1 ? () => setDetailPath("") : null} />;
+  if (detail) return <BookDetails book={detail} language={language} onRead={onOpen} onEdit={onEdit} onDelete={onDelete} renderMarks={renderMarks} onBack={books.length > 1 ? () => setDetailPath("") : null} />;
   return (
-    <section className="books-library seasons-section">
+    <section className="books-library seasons-section library-with-scroll-rail">
+      <LibraryScrollRail labels={books.map(item => libraryScrollLabel(item, sort, language))} language={language} sort={sort} direction={direction} onDirectionChange={onDirectionChange} actionsVisible={actionsVisible} onActionsChange={onActionsChange} actionLabels={t} />
       <h1 className="books-library__title">{title}</h1>
+      {author ? <p className="books-library__author">{author}</p> : null}
       <div className="seasons-section__label">{countLabel}</div>
       {!books.length ? (
-        <div className="empty-state__card"><h2>No hay libros</h2><p>Sube un archivo o una carpeta con una colección.</p></div>
+        <div className="empty-state__card"><h2>{t.empty}</h2><p>{t.emptyHint}</p></div>
       ) : (
         <>
-          <div className="books-library__grid">
+          <div className={`books-library__grid movie-library__items--reveal-actions${actionsVisible ? " is-actions-visible" : ""}`}>
             {books.map((book) => (
               <article
                 key={book.relativePath}
+                data-library-index
                 className="books-library__card"
               >
-                <button className="books-library__cover-button" onClick={() => setDetailPath(book.relativePath)} type="button" aria-label={`Entrar: ${book.name}`}>
+                <button className="books-library__cover-button" onClick={() => setDetailPath(book.relativePath)} type="button" aria-label={`${t.enter}: ${book.name}`}>
                   <BookCover book={book} />
                 </button>
                 <div className="books-library__card-copy">
-                  <span className="books-library__format">{book.format}</span>
                   <strong>{book.name}</strong>
-                  {book.author ? <small>{book.author}{book.year ? ` · ${book.year}` : ""}</small> : null}
+                  <small className="books-library__author">{book.author || t.unknownAuthor}</small>
+                  <small className="books-library__metadata">{book.year || "—"} / {book.format.toUpperCase()}</small>
                 </div>
-                {renderMarks(book)}
-                <div className="books-library__card-actions">
-                  <button className="dialog-button dialog-button--accent" onClick={() => setDetailPath(book.relativePath)} type="button">Entrar</button>
-                  <button className="dialog-button dialog-button--ghost" onClick={() => onEdit(book)} type="button">Customizar</button>
-                  <button className="books-library__delete" onClick={() => onDelete(book)} type="button" aria-label={`Eliminar ${book.name}`} title="Eliminar"><img src={deleteIcon} alt="" /></button>
-                </div>
+                {renderActions(book)}
               </article>
             ))}
           </div>
@@ -5739,13 +5924,16 @@ function BooksLibrary({ books, title, countLabel, onOpen, onEdit, onDelete, rend
   );
 }
 
-function BookCollectionModal({ collection, onClose, onSave, onDelete }) {
+function BookCollectionModal({ collection, language, onClose, onSave, onDelete }) {
+  const [graphicNovel, setGraphicNovel] = useState(false);
+  const [typeChanged, setTypeChanged] = useState(false);
   const [name, setName] = useState("");
+  const [author, setAuthor] = useState("");
   const [coverFile, setCoverFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => { setName(collection?.label || ""); setCoverFile(null); setError(""); }, [collection]);
+  useEffect(() => { setName(collection?.label || ""); setAuthor(collection?.author || ""); setGraphicNovel(Boolean(collection?.books?.length) && collection.books.every(isGraphicNovel)); setTypeChanged(false); setCoverFile(null); setError(""); }, [collection]);
   useEffect(() => {
     if (!coverFile) { setPreview(""); return undefined; }
     const url = URL.createObjectURL(coverFile); setPreview(url);
@@ -5758,11 +5946,13 @@ function BookCollectionModal({ collection, onClose, onSave, onDelete }) {
         <div className="dialog-card__header"><div><p>Biblioteca</p><h2>Customizar colección</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
         <div className="book-collection-modal__body">
           <div className="book-metadata__preview"><BookCover book={{ ...collection.coverBook, coverUrl: preview || collection.coverBook.coverUrl }} /></div>
+          <BookTypeField language={language} collection checked={graphicNovel} mixed={!typeChanged && !graphicNovel && collection.books.some(isGraphicNovel)} onChange={value => { setGraphicNovel(value); setTypeChanged(true); }} />
           <label className="dialog-field"><span>Nombre de la colección</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
+          <label className="dialog-field"><span>{bookStrings(language).author}</span><input value={author} maxLength={1000} onChange={event => setAuthor(event.target.value)} /></label>
           <label className="dialog-field book-metadata__file"><span>Portada manual</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile?.name || "Esta portada se mostrará en la ficha y en la cartelera de la colección. Por defecto se usa el primer libro."}</small></label>
           {error ? <p className="book-metadata__error">{error}</p> : null}
         </div>
-        <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(collection)} type="button">Borrar colección completa</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy || !name.trim()} onClick={async () => { try { setBusy(true); await onSave({ collection: collection.key, name, coverFile, coverUrl: collection.coverUrl || "" }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la colección."); } finally { setBusy(false); } }} type="button">{busy ? "Guardando…" : "Guardar cambios"}</button></div>
+        <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(collection)} type="button">Borrar colección completa</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy || !name.trim()} onClick={async () => { try { setBusy(true); await onSave({ collection: collection.key, name, author, coverFile, coverUrl: collection.coverUrl || "", ...(typeChanged ? { isGraphicNovel: graphicNovel } : {}) }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la colección."); } finally { setBusy(false); } }} type="button">{busy ? "Guardando…" : "Guardar cambios"}</button></div>
       </div>
     </div>, document.body
   );
@@ -5793,6 +5983,7 @@ function BookOpenModal({ book, busy, onClose, onOpenBrowser, onOpenRaspberry, t 
 
 function BookReader({ book, onClose }) {
   const canvasRef = useRef(null);
+  const pageContainerRef = useRef(null);
   const renderTaskRef = useRef(null);
   const [pdf, setPdf] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
@@ -5803,7 +5994,7 @@ function BookReader({ book, onClose }) {
   const changeZoom = (delta) => setZoom((value) => Math.min(3, Math.max(.6, Number((value + delta).toFixed(1)))));
 
   useEffect(() => {
-    if (!book || book.format !== "pdf") { setPdf(null); return undefined; }
+    if (!book || !["pdf", "cbr", "cbz"].includes(book.format)) { setPdf(null); return undefined; }
     let cancelled = false;
     const controller = new AbortController();
     let task = null;
@@ -5827,6 +6018,11 @@ function BookReader({ book, onClose }) {
       });
     return () => { cancelled = true; controller.abort(); task?.destroy(); };
   }, [book?.relativePath, book?.format]);
+
+  useEffect(() => {
+    pageContainerRef.current?.scrollTo({ top: 0, left: 0 });
+    setReaderError("");
+  }, [pageNumber]);
 
   useEffect(() => {
     if (!pdf || !canvasRef.current) return undefined;
@@ -5854,7 +6050,7 @@ function BookReader({ book, onClose }) {
         </div>
         <div className="book-reader__pagination" aria-label="Navegación de páginas">
           <button onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={!pdf || pageNumber <= 1} type="button" aria-label="Página anterior">‹</button>
-          <span>Página {pageNumber} de {pdf?.numPages ?? "—"}</span>
+          <BookPageSelector key={book.relativePath} page={pageNumber} total={pdf?.numPages} onSelect={setPageNumber} />
           <button onClick={() => setPageNumber((page) => Math.min(pdf?.numPages || page, page + 1))} disabled={!pdf || pageNumber >= pdf.numPages} type="button" aria-label="Página siguiente">›</button>
         </div>
         <div className="book-reader__controls">
@@ -5867,8 +6063,8 @@ function BookReader({ book, onClose }) {
           <button className="book-reader__close" onClick={() => setCloseConfirmationOpen(true)} type="button" aria-label="Cerrar lector">×</button>
         </div>
       </header>
-      {book.format === "pdf" ? (
-        <div className="book-reader__page">{readerError ? <p className="book-reader__error">{readerError}</p> : null}<canvas ref={canvasRef} aria-label={`Página ${pageNumber}`} /></div>
+      {["pdf", "cbr", "cbz"].includes(book.format) ? (
+        <div ref={pageContainerRef} className="book-reader__page">{readerError ? <p className="book-reader__error">{readerError}</p> : !pdf ? <p role="status">Preparando las páginas…</p> : null}<canvas ref={canvasRef} aria-label={`Página ${pageNumber}`} /></div>
       ) : (
         <div className="book-reader__fallback">
           <span>📚</span><h2>{book.name}</h2>
@@ -5968,14 +6164,18 @@ export default function App() {
   const [coverProgress, setCoverProgress] = useState(null);
   const [coverWarning, setCoverWarning] = useState("");
   const [libraryStage, setLibraryStage] = useState("Conectando con la Raspberry");
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState("");
+  const [detailLoadState, setDetailLoadState] = useState({ key: "", loading: false, error: "" });
   const [detailRetry, setDetailRetry] = useState(0);
   const detailCache = useRef(new Map());
-  const readyDetails = useRef(new Set());
   const readySeasons = useRef(new Map());
   const seasonCache = useRef(new Map());
   const episodeCache = useRef(new Map());
+  const torrentDownloads = useTorrentDownloads(unlocked, async () => {
+    clearLocalMetadataCache();
+    detailCache.current.clear();
+    setVideos(await getVideos());
+    setDetailRetry(value => value + 1);
+  });
   const [episodeLoading, setEpisodeLoading] = useState(false);
   const [episodeError, setEpisodeError] = useState("");
   const [episodeRetry, setEpisodeRetry] = useState(0);
@@ -5987,6 +6187,9 @@ export default function App() {
   const [selectedGamePath, setSelectedGamePath] = useState("");
   const [selectedSystemId, setSelectedSystemId] = useState("gb");
   const [selectedBookCollection, setSelectedBookCollection] = useState("");
+  const [bookLibraryType, setBookLibraryType] = useState("novel");
+  const [bookLibrarySort, setBookLibrarySort] = useState("name");
+  const [bookSortDirection, setBookSortDirection] = useState("asc");
   const [openBook, setOpenBook] = useState(null);
   const [bookOpenTarget, setBookOpenTarget] = useState(null);
   const [bookOpenBusy, setBookOpenBusy] = useState(false);
@@ -6048,6 +6251,7 @@ export default function App() {
   const [tmdbSettingsStatus, setTmdbSettingsStatus] = useState("");
   const [tmdbSettingsSaving, setTmdbSettingsSaving] = useState(false);
   const [uploadMediaType, setUploadMediaType] = useState("series");
+  const [uploadBookIsGraphicNovel, setUploadBookIsGraphicNovel] = useState(false);
   const [uploadDragActive, setUploadDragActive] = useState(false);
   const [uploadLookupOpen, setUploadLookupOpen] = useState(false);
   const [uploadLookupQuery, setUploadLookupQuery] = useState("");
@@ -6056,7 +6260,6 @@ export default function App() {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
   const [bookUploadDialog, setBookUploadDialog] = useState(null);
-  const [bookUploadReport, setBookUploadReport] = useState(loadBookUploadReport);
   const [uploadValidationError, setUploadValidationError] = useState(null);
   const [seriesDuplicatePrompt, setSeriesDuplicatePrompt] = useState(null);
   const [gameLookupOpen, setGameLookupOpen] = useState(false);
@@ -6069,8 +6272,12 @@ export default function App() {
   const [movieFrameIndex, setMovieFrameIndex] = useState(1);
   const [moviePlaying, setMoviePlaying] = useState(false);
   const [movieLibraryView, setMovieLibraryView] = useState("grid");
-  const [oscarEdition, setOscarEdition] = useState(null);
+  const [awardType, setAwardType] = useState("oscars");
+  const [awardEditions, setAwardEditions] = useState({});
   const [movieLibrarySort, setMovieLibrarySort] = useState("name");
+  const [movieSortDirection, setMovieSortDirection] = useState("asc");
+  const [movieActionsVisible, setMovieActionsVisible] = useState(false);
+  const [bookActionsVisible, setBookActionsVisible] = useState(false);
   const [seriesLibraryView, setSeriesLibraryView] = useState("grid");
   const [seriesLibrarySort, setSeriesLibrarySort] = useState("name");
   const [mediaFilterOpen, setMediaFilterOpen] = useState(false);
@@ -6118,6 +6325,21 @@ export default function App() {
     return <MediaMarkButtons watched={marks.watched} favorite={marks.favorite} onWatched={allowWatched ? (value) => update("watched", value) : undefined} onFavorite={allowFavorite ? (value) => update("favorite", value) : undefined} t={t} />;
   }
 
+  function renderBookActions(entry) {
+    const collection = entry.isCollection ? bookCollections.find(item => item.key === entry.key) || entry : null;
+    const books = collection?.books || entry.books || [entry];
+    return <BookCardActions books={books} name={entry.label || entry.name} visible={bookActionsVisible} marks={mediaMarks} t={t} language={raspberryLanguage}
+      onMark={(field, value) => {
+        const next = { ...mediaMarks };
+        for (const book of books) {
+          const key = mediaMarkKey("book", book.relativePath);
+          next[key] = { ...next[key], [field]: value };
+        }
+        saveMarks(next);
+      }}
+      onDelete={() => collection ? handleDeleteBookCollection(collection) : handleDeleteBook(books[0])} />;
+  }
+
   function selectedSeasonMarkKey() {
     return seasonMarkKey(selectedSeries?.id || selectedSeries?.directoryPath, selectedSeason?.seasonNumber ?? selectedSeason?.id);
   }
@@ -6146,10 +6368,10 @@ export default function App() {
     setSeriesDuplicatePrompt(null);
   }
 
-  function requestSeriesDuplicateAction(duplicateCount, totalCount) {
+  function requestSeriesDuplicateAction(duplicateCount, totalCount, mediaType = "series") {
     return new Promise((resolve) => {
       seriesDuplicateResolverRef.current = resolve;
-      setSeriesDuplicatePrompt({ duplicateCount, totalCount });
+      setSeriesDuplicatePrompt({ duplicateCount, totalCount, mediaType });
     });
   }
 
@@ -6189,7 +6411,6 @@ export default function App() {
   function recordBookUploadReport(report) {
     try { window.localStorage.setItem(BOOK_UPLOAD_REPORT_KEY, JSON.stringify(report)); }
     catch { report = { ...report, storageError: "No se pudo conservar el informe en este navegador. Descárgalo antes de cerrar la página." }; }
-    setBookUploadReport(report);
     return report;
   }
 
@@ -6466,8 +6687,9 @@ export default function App() {
     consoleGames.find((game) => game.relativePath === selectedGamePath) ||
     null;
   const bookCollections = useMemo(() => buildBookCollections(
-    videos?.books || [], videos?.bookCollections || {}, normalizeRaspberryLanguage(raspberryLanguage)
-  ), [videos?.books, videos?.bookCollections, raspberryLanguage]);
+    videos?.books || [], videos?.bookCollections || {}, normalizeRaspberryLanguage(raspberryLanguage),
+    { type: bookLibraryType, sort: bookLibrarySort, direction: bookSortDirection }
+  ), [videos?.books, videos?.bookCollections, raspberryLanguage, bookLibraryType, bookLibrarySort, bookSortDirection]);
   const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
   const selectedBook = activeBookCollection?.books[0] || null;
 
@@ -6506,7 +6728,11 @@ export default function App() {
       console.info("[Biblioteca] Completado: resumen local", { ms: Date.now() - summaryStarted });
       setLibraryStage("Cargando miniaturas locales de series y películas");
       const covers = [
-        ...Object.values(summaries.series).map(card => ({ url: card.posterImage, name: `Serie: ${card.name || card.id}` })),
+        ...directories.map(directory => {
+          const card = summaries.series[String(directory.tmdbId)] || {};
+          const profile = seriesProfiles[directory.relativePath] || {};
+          return { url: seriesArtwork(profile, card, "", localTmdbImageUrl).posterImage, name: `Serie: ${profile.name || card.name || directory.name}` };
+        }),
         ...Object.values(summaries.movies).map(card => ({ url: card.posterImage, name: `Película: ${card.name || card.id}` })),
       ];
       const prepared = await preloadLibraryCovers(covers, { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
@@ -6529,19 +6755,23 @@ export default function App() {
       if (!cancelled) setTmdbLoading(false);
     });
     return () => { cancelled = true; controller.abort(); };
-  }, [videos, mockMode ? movieLibrary : null, directories, tmdbLanguage]);
+  }, [videos, mockMode ? movieLibrary : null, directories, tmdbLanguage, seriesProfiles]);
+
+  const detailSelectionKey = JSON.stringify([activeMediaType, selectedMovieId, selectedDirectoryPath, tmdbLanguage, detailRetry]);
 
   useEffect(() => {
     const isMovie = activeMediaType === "movies";
     const entry = isMovie
       ? movieLibrary.find(movie => String(movie.id) === String(selectedMovieId))
       : activeMediaType === "series" ? directories.find(directory => directory.relativePath === selectedDirectoryPath) : null;
-    setDetailError("");
-    if (!entry) { setDetailLoading(false); return; }
+    if (!entry) {
+      setDetailLoadState({ key: detailSelectionKey, loading: false, error: "" });
+      return;
+    }
     let cancelled = false;
     const id = isMovie ? getMovieTmdbId(entry) : Number(entry.tmdbId);
     const key = `${activeMediaType}:${id || entry.relativePath}:${tmdbLanguage}`;
-    setDetailLoading(!readyDetails.current.has(key));
+    setDetailLoadState({ key: detailSelectionKey, loading: true, error: "" });
     setError("");
     if (!detailCache.current.has(key)) {
       const request = isMovie ? (id ? getMovieById(id, tmdbLanguage) : Promise.resolve({}))
@@ -6549,7 +6779,6 @@ export default function App() {
         : Promise.resolve({});
       detailCache.current.set(key, request.then(async detail => {
         await preloadLibraryCovers([detail.heroImage, ...(isMovie ? (detail.imageOptions || []).slice(0, MAX_MOVIE_IMAGES) : (detail.seasons || []).map(season => season.image))].filter(Boolean), { preserve: true, timeoutMs: 4000 });
-        readyDetails.current.add(key);
         return detail;
       }).catch(error => { detailCache.current.delete(key); throw error; }));
     }
@@ -6559,11 +6788,12 @@ export default function App() {
         ...current[isMovie ? String(entry.id) : entry.relativePath], ...detail, _detailsLanguage: tmdbLanguage,
       } });
       if (isMovie) setTmdbMovieMap(update); else setTmdbSeriesMap(update);
+      setDetailLoadState({ key: detailSelectionKey, loading: false, error: "" });
     }).catch(nextError => {
-      if (!cancelled) setDetailError(nextError.message || "No se pudo cargar la ficha.");
-    }).finally(() => { if (!cancelled) setDetailLoading(false); });
+      if (!cancelled) setDetailLoadState({ key: detailSelectionKey, loading: false, error: nextError.message || "No se pudo cargar la ficha." });
+    });
     return () => { cancelled = true; };
-  }, [activeMediaType, selectedMovieId, selectedDirectoryPath, movieLibrary, directories, tmdbLanguage, detailRetry]);
+  }, [activeMediaType, selectedMovieId, selectedDirectoryPath, movieLibrary, directories, tmdbLanguage, detailSelectionKey]);
 
   const seriesOptions = useMemo(() => {
     return directories.map((directory) => {
@@ -6575,16 +6805,16 @@ export default function App() {
         id: tmdbSeries?.id || Number(directory.tmdbId) || null,
         directoryPath: directory.relativePath,
         name: profile.name || tmdbSeries?.name || directory.name,
-        heroImage: localTmdbImageUrl(profile.heroImage) || tmdbSeries?.heroImage || cartellLogo,
+        ...seriesArtwork(profile, tmdbSeries || {}, cartellLogo, localTmdbImageUrl),
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
         imageOptions: tmdbSeries?.imageOptions || [],
-        posterImage: tmdbSeries?.posterImage || "",
         firstAirDate: tmdbSeries?.firstAirDate || "",
         voteAverage: tmdbSeries?.voteAverage || 0,
         seasons: tmdbSeries?.seasons || [],
-        seasonCount: tmdbSeries?.seasonCount || 0,
-        episodeCount: tmdbSeries?.totalEpisodeCount || 0,
-        totalRuntimeMinutes: tmdbSeries?.totalRuntimeMinutes || 0,
+        seasonCount: tmdbSeries?.seasonCount ?? null,
+        episodeCount: tmdbSeries?.totalEpisodeCount ?? null,
+        totalRuntimeMinutes: tmdbSeries?.totalRuntimeMinutes ?? null,
+        runtimeIsEstimated: Boolean(tmdbSeries?.runtimeIsEstimated),
       };
     }).sort(compareMediaNames);
   }, [directories, seriesProfiles, tmdbSeriesMap, raspberryLanguage]);
@@ -6635,25 +6865,9 @@ export default function App() {
   useEffect(() => {
     if (!raspberryHealth.running) return;
 
-    const playbackId = String(raspberryHealth.playing || "").trim().toUpperCase();
-    const directory = String(raspberryHealth.directory || "").trim();
-    if (!playbackId) return;
-
-    setRaspberryCurrentPlayback((current) => {
-      if (
-        current &&
-        String(current.playbackId || "").trim().toUpperCase() === playbackId &&
-        String(current.directory || "").trim() === directory
-      ) {
-        return current;
-      }
-
-      return createPlaybackInfoFromHealth({
-        health: raspberryHealth,
-        seriesOptions,
-        movieOptions,
-      });
-    });
+    setRaspberryCurrentPlayback(current => refreshCurrentPlayback(current, createPlaybackInfoFromHealth({
+      health: raspberryHealth, seriesOptions, movieOptions,
+    })));
   }, [movieOptions, raspberryHealth, seriesOptions]);
 
   const selectedItem =
@@ -6665,6 +6879,10 @@ export default function App() {
         ? selectedMovie
         : selectedSeries;
   const hasSettingsButton = activeMediaType === "books" ? Boolean(activeBookCollection) : Boolean(selectedItem);
+  // A new selection is pending from its first render, before the effect starts.
+  const detailLoading = Boolean(selectedItem) && ["series", "movies"].includes(activeMediaType)
+    && (detailLoadState.key !== detailSelectionKey || detailLoadState.loading);
+  const detailError = detailLoadState.key === detailSelectionKey ? detailLoadState.error : "";
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage = activeMediaType === "games"
@@ -6728,7 +6946,7 @@ export default function App() {
               ? {
                   ...current,
                   episodeTitle: episode.title,
-                  image: episode.image || current.image,
+                  image: current.image || episode.image,
                 }
               : current
           );
@@ -6949,7 +7167,7 @@ export default function App() {
       if (!activeBookCollection.isCollection) {
         setBookMetadataTarget(activeBookCollection.books[0]);
       } else {
-        setBookCollectionTarget(activeBookCollection);
+        setBookCollectionTarget({ ...activeBookCollection, books: (videos?.books || []).filter(book => book.relativePath.startsWith(`Books/${activeBookCollection.key}/`)) });
       }
       return;
     }
@@ -6974,6 +7192,7 @@ export default function App() {
   function handleOpenUploadsForMedia(mediaType) {
     const safeMediaType = ["games", "movies", "books", "pictures"].includes(mediaType) ? mediaType : "series";
     setUploadMediaType(safeMediaType);
+    if (safeMediaType === "books") setUploadBookIsGraphicNovel(bookLibraryType === "graphic");
     setRaspberryReturnView(currentView === "season" ? "season" : "series");
     setRaspberryTab("uploads");
     setCurrentView("raspberry");
@@ -6984,7 +7203,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
-  async function handleSaveSeriesSettings(updates) {
+  async function handleSaveSeriesSettings({ subtitleFile, ...updates }) {
     const activeItem = activeMediaType === "movies" ? selectedMovie : selectedSeries;
     if (!activeItem) return;
 
@@ -6997,6 +7216,7 @@ export default function App() {
           throw new Error("No se encontró el archivo para guardar la ficha en la Raspberry.");
         }
         if (movieEntry?.relativePath) {
+          if (subtitleFile) await uploadMovieSubtitles({ relativePath: movieEntry.relativePath, file: subtitleFile });
           await saveMediaProfile({
             collection: "movies",
             relativePath: movieEntry.relativePath,
@@ -7012,8 +7232,6 @@ export default function App() {
         // Only report a saved profile after the Raspberry has accepted it.
         setMovieProfiles(updateSeriesProfile(String(activeItem.id), updates, "movies"));
       } else {
-        const nextProfiles = updateSeriesProfile(activeItem.directoryPath, updates, "series");
-        setSeriesProfiles(nextProfiles);
         await saveMediaProfile({
           collection: "series",
           relativePath: activeItem.directoryPath,
@@ -7022,6 +7240,7 @@ export default function App() {
           heroImage: updates.heroImage,
           heroImageCrop: updates.heroImageCrop,
         });
+        setSeriesProfiles(updateSeriesProfile(activeItem.directoryPath, updates, "series"));
       }
       setSettingsOpen(false);
     } catch (nextError) {
@@ -7541,10 +7760,12 @@ export default function App() {
   }
 
   async function handleAddMediaItem(selectedSeriesResult, targetMediaType = activeMediaType) {
-    if (!mockMode && ['movies', 'series'].includes(targetMediaType)) {
-      const kind = targetMediaType === 'movies' ? 'movie' : 'tv';
-      await prepareTmdbTitle(kind, selectedSeriesResult.id);
-      setTmdbUpload({ kind, id: selectedSeriesResult.id, name: selectedSeriesResult.name, videoComplete: false });
+    async function prepareUploadArtwork() {
+      if (!mockMode && ['movies', 'series'].includes(targetMediaType)) {
+        const kind = targetMediaType === 'movies' ? 'movie' : 'tv';
+        await prepareTmdbTitle(kind, selectedSeriesResult.id);
+        setTmdbUpload({ kind, id: selectedSeriesResult.id, name: selectedSeriesResult.name, videoComplete: false });
+      }
     }
     if (targetMediaType === "movies") {
       const movieDetails = selectedSeriesResult;
@@ -7553,15 +7774,27 @@ export default function App() {
       let uploadedMovie = null;
 
       if (uploadFile) {
+        const { conflicts } = await checkUploadConflicts({ mediaType: "movies", files: [uploadFile.name], title: movieTitle, tmdbId: selectedSeriesResult.id });
+        if (conflicts.length && await requestSeriesDuplicateAction(conflicts.length, 1, "movies") !== "overwrite") return;
         setUploadProgress(0);
         const signal = createUploadSignal();
         try {
           uploadedMovie = await uploadMovieFile({
             file: uploadFile,
             movie: selectedSeriesResult,
+            overwriteExisting: conflicts.length > 0,
             onProgress: setUploadProgress,
             signal,
           });
+          // The API queues artwork only after publishing the finished video.
+          if (!mockMode) setTmdbUpload({ kind: "movie", id: selectedSeriesResult.id, name: movieTitle, videoComplete: true });
+          if (selectedSeriesResult.subtitleFile) {
+            try {
+              await uploadMovieSubtitles({ relativePath: uploadedMovie.item.relativePath, file: selectedSeriesResult.subtitleFile, signal });
+            } catch (subtitleError) {
+              window.alert(`${t("movie_subtitles_failed")}\n${subtitleError.message}`);
+            }
+          }
           setTmdbUpload(current => current ? { ...current, videoComplete: true } : current);
         } finally {
           clearUploadAbortController();
@@ -7651,10 +7884,11 @@ export default function App() {
       );
       const duplicateFiles = uploadSelectedFiles.filter((file) => existingEpisodeIds.has(getUploadEpisodeId(file)));
       let filesToUpload = uploadSelectedFiles;
-      let overwriteExisting = true;
+      let overwriteExisting = false;
 
       if (duplicateFiles.length) {
         const duplicateAction = await requestSeriesDuplicateAction(duplicateFiles.length, uploadSelectedFiles.length);
+        if (duplicateAction === "cancel") return;
         overwriteExisting = duplicateAction === "overwrite";
         if (!overwriteExisting) {
           filesToUpload = uploadSelectedFiles.filter((file) => !existingEpisodeIds.has(getUploadEpisodeId(file)));
@@ -7663,6 +7897,7 @@ export default function App() {
 
       setUploadProgress(0);
       if (filesToUpload.length) {
+        await prepareUploadArtwork();
         const signal = createUploadSignal();
         try {
           addResponse = await uploadSeriesFiles({
@@ -7680,7 +7915,9 @@ export default function App() {
           clearUploadAbortController();
         }
       } else {
-        addResponse = { ok: true, item: existingSeries };
+        setUploadProgress(null);
+        return;
+
       }
       const profileKey = addResponse?.item?.relativePath || "";
       if (profileKey) {
@@ -8133,12 +8370,14 @@ export default function App() {
     }
     await saveBookMetadata(profile);
     setVideos(await getVideos());
+    setBookLibraryType(profile.isGraphicNovel ? "graphic" : "novel");
     setBookMetadataTarget(null);
   }
 
   async function handleSaveBookCollection(profile) {
     await saveBookCollectionMetadata(profile);
     setVideos(await getVideos());
+    if (typeof profile.isGraphicNovel === "boolean") setBookLibraryType(profile.isGraphicNovel ? "graphic" : "novel");
     setBookCollectionTarget(null);
   }
 
@@ -8204,7 +8443,7 @@ export default function App() {
       const detectedCollection = firstPath.includes("/") ? firstPath.split("/")[0] : "";
       const isCollectionUpload = Boolean(detectedCollection) || bookFiles.length > 1;
       if (!isCollectionUpload && !confirmedBookProfile) {
-        setBookMetadataTarget({ name: bookSearchQuery(bookFiles[0].name), format: getFileExtension(bookFiles[0].name), uploadFile: bookFiles[0] });
+        setBookMetadataTarget({ name: bookSearchQuery(bookFiles[0].name), format: getFileExtension(bookFiles[0].name), uploadFile: bookFiles[0], isGraphicNovel: uploadBookIsGraphicNovel });
         return;
       }
       const suggestedTitle = isCollectionUpload
@@ -8220,6 +8459,8 @@ export default function App() {
         ? `${safeTitle} · ${bookFiles.length} libro(s)`
         : bookFiles[0].name;
       try {
+        const { conflicts } = await checkUploadConflicts({ mediaType: "books", files: bookFiles.map(file => file.webkitRelativePath || file.name), collection, title: isCollectionUpload ? "" : safeTitle });
+        if (conflicts.length && await requestSeriesDuplicateAction(conflicts.length, bookFiles.length, "books") !== "overwrite") return;
         setUploadSummary(`Subiendo ${bookFiles.length} libro(s)…`);
         setUploadProgress({ percent: 0, fileName: uploadLabel, status: "uploading" });
         setBookUploadDialog({
@@ -8230,13 +8471,14 @@ export default function App() {
         const signal = createUploadSignal();
         const uploadResponse = await uploadBookFiles({
           files: bookFiles,
+          overwriteExisting: conflicts.length > 0,
           onReport: (report) => {
             const savedReport = recordBookUploadReport(report);
             setBookUploadDialog((current) => current ? { ...current, report: savedReport } : current);
           },
           collection,
           title: isCollectionUpload ? "" : safeTitle,
-          metadata: confirmedBookProfile,
+          metadata: confirmedBookProfile || { isGraphicNovel: uploadBookIsGraphicNovel },
           signal,
           onProgress: (progress) => {
             setUploadProgress(progress);
@@ -8272,6 +8514,7 @@ export default function App() {
         });
         setCurrentView("series");
         setActiveMediaType("books");
+        setBookLibraryType((confirmedBookProfile?.isGraphicNovel ?? uploadBookIsGraphicNovel) ? "graphic" : "novel");
         setSelectedBookCollection("");
       } catch (nextError) {
         clearUploadAbortController();
@@ -8383,15 +8626,7 @@ export default function App() {
   const filteredMovieOptions = movieOptions.filter((movie) =>
     matchesName(movie.name) && matchesFavorite("movie", movie.id) &&
     (!selectedMovieGenres.length || (movie.genres || []).some((genre) => selectedMovieGenres.includes(genre)))
-  ).sort((left, right) => {
-    if (movieLibrarySort === "year") {
-      return (Number(right.releaseDate?.slice(0, 4)) || 0) - (Number(left.releaseDate?.slice(0, 4)) || 0) || compareMediaNames(left, right);
-    }
-    if (movieLibrarySort === "rating") {
-      return (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right);
-    }
-    return compareMediaNames(left, right);
-  });
+  ).sort((left, right) => compareLibraryItems(left, right, movieLibrarySort, movieSortDirection, normalizeRaspberryLanguage(raspberryLanguage)));
   const filteredSeriesOptions = seriesOptions
     .filter((series) => matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath))
     .sort((left, right) => seriesLibrarySort === "rating"
@@ -8400,8 +8635,11 @@ export default function App() {
   const filteredGameOptions = consoleGames.filter((game) => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath));
   const filteredBookCollections = bookCollections.filter((collection) =>
     collection.books.some((book) =>
-      (matchesName(collection.label) || matchesName(book.name)) && matchesFavorite("book", book.relativePath)
+      matchesBookQuery(book, activeFilterQuery, `${collection.label} ${collection.author || ""}`) && matchesFavorite("book", book.relativePath)
     )
+  );
+  const filteredActiveBooks = activeBookCollection?.books.filter(book =>
+    matchesBookQuery(book, activeFilterQuery, `${activeBookCollection.label} ${activeBookCollection.author || ""}`) && matchesFavorite("book", book.relativePath)
   );
   const selectorOptions = isGamesMode ? filteredGameOptions : isMoviesMode ? filteredMovieOptions : filteredSeriesOptions;
   const activeFilterCount = Number(Boolean(activeFilterQuery.trim())) + Number(favoritesOnly) + (isMoviesMode ? selectedMovieGenres.length : 0);
@@ -8422,7 +8660,7 @@ export default function App() {
     }
   }, [mediaFiltersActive, isBooksMode, isGamesMode, isMoviesMode, filteredGameOptions, filteredMovieOptions, filteredSeriesOptions, selectedGame?.relativePath, selectedMovie?.id, selectedMovieId, selectedSeries?.directoryPath]);
   const formatBookCollectionLabel = (collection) => {
-    if (!collection) return t("media_books");
+    if (!collection) return bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovel : t("media_books");
     return collection.label;
   };
   const selectorValue = isBooksMode
@@ -8470,7 +8708,7 @@ export default function App() {
         ? movieOptions.length
         : seriesOptions.length;
   const filterVisible = isPicturesMode ? pictureLibrary.length : isBooksMode
-    ? activeBookCollection?.books.length ?? filteredBookCollections.length
+    ? filteredActiveBooks?.length ?? filteredBookCollections.length
     : selectorOptions.length;
   const libraryCountLabel = `${t("movie_filter_count", { shown: filterVisible, total: filterTotal })} ${t(isBooksMode && !activeBookCollection ? "book_library_items" : `media_${activeMediaType}`).toLocaleLowerCase(normalizeRaspberryLanguage(raspberryLanguage))}`;
   const emptyTitle = isMoviesMode ? t("no_movies_available") : t("no_seasons_available");
@@ -8519,17 +8757,10 @@ export default function App() {
     <main
       className="app-shell"
       style={{
-        backgroundImage: `url(${cloudsBackground})`,
+        "--clouds-background": `url(${cloudsBackground})`,
       }}
     >
       <div className={`page-overlay${currentView === "season" ? " page-overlay--season" : ""}`}>
-        {unlocked && bookUploadReport && !bookUploadDialog ? <button className="book-upload-report-open dialog-button dialog-button--ghost" type="button" onClick={() => setBookUploadDialog({
-          phase: bookUploadReport.status === "done" ? "done" : "error",
-          summary: "Informe de la última subida de libros y cómics",
-          error: bookUploadReport.error || bookUploadReport.note || "Subida sin completar",
-          report: bookUploadReport,
-        })}>Ver última subida de cómics/libros</button> : null}
-
         {!unlocked ? (
           <div className="unlock-page">
             <header className="series-hero unlock-hero">
@@ -8627,7 +8858,7 @@ export default function App() {
         ) : (
           <>
             {!loading && !tmdbLoading && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
-            {(detailLoading || detailError) && !loading && !tmdbLoading && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
+            {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !loading && !tmdbLoading && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
             {!error && (!videos || loading || tmdbLoading) ? (
@@ -8719,10 +8950,13 @@ export default function App() {
                 onTmdbSettingsSave={handleTmdbSettingsSave}
                 uploadMediaType={uploadMediaType}
                 onUploadMediaTypeChange={setUploadMediaType}
+                uploadBookIsGraphicNovel={uploadBookIsGraphicNovel}
+                onUploadBookTypeChange={setUploadBookIsGraphicNovel}
                 onUploadFiles={handleUploadFiles}
                 uploadDragActive={uploadDragActive}
                 onUploadDragStateChange={handleUploadDragStateChange}
                 uploadSummary={uploadSummary}
+                torrentDownloads={torrentDownloads}
                 onOpenTmdbBrowser={() => setTmdbBrowserOpen(true)}
               />
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
@@ -8847,7 +9081,7 @@ export default function App() {
                         <svg className="series-hero__section-icon" viewBox={activeMediaSection.headerIcon.viewBox} aria-hidden="true" focusable="false">
                           <image href={activeMediaSection.inactiveIcon} width={activeMediaSection.headerIcon.width} height={activeMediaSection.headerIcon.height} />
                         </svg>
-                        <span>{t(activeMediaSection.labelKey)}</span>
+                        <span>{isBooksMode && bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovel : t(activeMediaSection.labelKey)}</span>
                       </h1>
                     ) : null}
 
@@ -8868,7 +9102,8 @@ export default function App() {
                           maskImage: `url(${cartellMask})`,
                         }}
                       />
-                      {isSeriesMode || isMoviesMode ? (
+                      {isBooksMode ? <BookLibraryControls language={raspberryLanguage} sort={bookLibrarySort} onSortChange={setBookLibrarySort}
+                        type={bookLibraryType} onTypeChange={setBookLibraryType} /> : isSeriesMode || isMoviesMode ? (
                         <div className="movie-library__browse-tools">
                             {!isOscarView && <label className="movie-library__sort">
                               <span>{t("movie_sort_label")}</span>
@@ -8884,10 +9119,11 @@ export default function App() {
                             <div className="movie-library__view-switch" role="group" aria-label={t(isMoviesMode ? "movie_library" : "series_library")}>
                               <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "grid" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("grid") : setSeriesLibraryView("grid")} aria-label={t("movie_view_grid")} title={t("movie_view_grid")}>▦</button>
                               <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "list" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("list") : setSeriesLibraryView("list")} aria-label={t("movie_view_list")} title={t("movie_view_list")}>☰</button>
-                              {isMoviesMode && <button type="button" className={`oscar-view-button${isOscarView ? " active" : ""}`} onClick={() => setMovieLibraryView("oscars")} aria-pressed={isOscarView} aria-label={(oscarStrings[raspberryLanguage] || oscarStrings.es).view} title={(oscarStrings[raspberryLanguage] || oscarStrings.es).view}><OscarIcon /></button>}
+                              {isMoviesMode && <button type="button" className={`oscar-view-button${isOscarView ? " active" : ""}`} onClick={() => setMovieLibraryView("oscars")} aria-pressed={isOscarView} aria-label={awardStrings(raspberryLanguage).view} title={awardStrings(raspberryLanguage).view}><OscarIcon /></button>}
                             </div>
                         </div>
                       ) : null}
+                      {isOscarView && <AwardSelector value={awardType} onChange={setAwardType} language={raspberryLanguage} />}
                       {!isOscarView && <div
                         className={`series-hero__controls-row${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
@@ -8896,9 +9132,9 @@ export default function App() {
                             className={`movie-filter__toggle${mediaFilterOpen ? " is-open" : ""}${mediaFiltersActive ? " has-filters" : ""}`}
                             type="button"
                             onClick={() => setMediaFilterOpen((current) => !current)}
-                            aria-label={t("movie_filter")}
+                            aria-label={isBooksMode ? bookStrings(raspberryLanguage).searchLibrary : t("movie_filter")}
                             aria-expanded={mediaFilterOpen}
-                            title={t("movie_filter")}
+                            title={isBooksMode ? bookStrings(raspberryLanguage).searchLibrary : t("movie_filter")}
                           >
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                               <path d={mediaFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} />
@@ -8928,7 +9164,7 @@ export default function App() {
                           options={heroSelectorOptions}
                           value={selectorValue}
                           placeholder={
-                            heroSelectorOptions.length
+                            isBooksMode || heroSelectorOptions.length
                               ? selectorLabel
                               : isGamesMode
                                 ? t("games_empty_title")
@@ -8999,8 +9235,8 @@ export default function App() {
                       {mediaFiltersActive ? <button type="button" onClick={() => { setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: "" })); setMediaFavoritesOnly((current) => ({ ...current, [activeMediaType]: false })); if (isMoviesMode) setMovieGenreFilters((current) => ({ ...current, [raspberryLanguage]: [] })); }}>{t("movie_filter_clear")}</button> : null}
                     </div>
                     <label className="movie-filter__search">
-                      <span>{t("movie_filter_search")}</span>
-                      <input type="search" value={activeFilterQuery} onChange={(event) => setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: event.target.value }))} placeholder={t("movie_filter_search_placeholder")} autoFocus />
+                      <span>{isBooksMode ? bookStrings(raspberryLanguage).searchLibrary : t("movie_filter_search")}</span>
+                      <input type="search" value={activeFilterQuery} onChange={(event) => setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: event.target.value }))} placeholder={isBooksMode ? bookStrings(raspberryLanguage).searchLibraryPlaceholder : t("movie_filter_search_placeholder")} autoFocus />
                     </label>
                     <label className="movie-filter__favorites">
                       <input type="checkbox" checked={favoritesOnly} onChange={(event) => setMediaFavoritesOnly((current) => ({ ...current, [activeMediaType]: event.target.checked }))} />
@@ -9033,7 +9269,7 @@ export default function App() {
                 ) : null}
 
                 {isOscarView ? (
-                  <OscarLibrary movies={movieOptions} language={tmdbLanguage} edition={oscarEdition} onEditionChange={setOscarEdition} onOpenMovie={handleOpenMovieDetails} />
+                  <OscarLibrary key={awardType} award={awardType} movies={movieOptions} language={tmdbLanguage} edition={awardEditions[awardType]} onEditionChange={edition => setAwardEditions(current => ({ ...current, [awardType]: edition }))} onOpenMovie={handleOpenMovieDetails} />
                 ) : isPicturesMode ? (
                   <PicturesLibrary countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
                 ) : mediaFiltersActive && !filterVisible ? (
@@ -9044,10 +9280,16 @@ export default function App() {
                 ) : isBooksMode ? (
                   activeBookCollection ? (
                   <BooksLibrary
+                    actionsVisible={bookActionsVisible} onActionsChange={setBookActionsVisible} renderActions={renderBookActions}
+                    direction={bookSortDirection}
+                    onDirectionChange={setBookSortDirection}
+                    sort={bookLibrarySort}
                     key={activeBookCollection.key}
+                    language={raspberryLanguage}
                     renderMarks={(book) => renderMarks("book", book.relativePath)}
-                    books={activeBookCollection.books}
+                    books={filteredActiveBooks || activeBookCollection.books}
                     title={activeBookCollection.label}
+                    author={activeBookCollection.author}
                     countLabel={libraryCountLabel}
                     onOpen={setBookOpenTarget}
                     onEdit={setBookMetadataTarget}
@@ -9055,6 +9297,12 @@ export default function App() {
                   />
                   ) : (
                     <BookCollectionLibrary
+                      actionsVisible={bookActionsVisible} onActionsChange={setBookActionsVisible} renderActions={renderBookActions}
+                      direction={bookSortDirection}
+                      onDirectionChange={setBookSortDirection}
+                      sort={bookLibrarySort}
+                      language={raspberryLanguage}
+                      type={bookLibraryType}
                       collections={filteredBookCollections}
                       countLabel={libraryCountLabel}
                       onSelect={handleOpenBookCollection}
@@ -9223,7 +9471,7 @@ export default function App() {
                     <div className="seasons-section__label">{libraryCountLabel}</div>
                     <div className={`movie-library__items movie-library__items--${seriesLibraryView}`}>
                       {filteredSeriesOptions.map((series) => {
-                        const poster = series.posterImage || series.imageOptions?.[1] || series.heroImage || cartellLogo;
+                        const poster = series.posterImage;
                         const year = series.firstAirDate?.slice(0, 4) || t("not_available");
                         const rating = Number(series.voteAverage) > 0 ? `${(series.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
                         return (
@@ -9234,13 +9482,39 @@ export default function App() {
                             <div className="movie-library__info">
                               <h2>{series.name}</h2>
                               <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
-                              <div className="movie-library__actions movie-library__actions--single">
-                                <button type="button" onClick={() => handleOpenSeriesDetails(series.directoryPath)}>{t("movie_details")}</button>
-                              </div>
+                              <dl className="series-library__stats">
+                                <div title={t("seasons_label")}>
+                                  <dt>{t("series_stats_seasons")}</dt>
+                                  <dd>{series.seasonCount ?? "—"}</dd>
+                                </div>
+                                <div>
+                                  <dt>{t("chapters_summary")}</dt>
+                                  <dd>{series.episodeCount ?? "—"}</dd>
+                                </div>
+                                <div title={t(series.totalRuntimeMinutes == null ? "not_available" : series.runtimeIsEstimated ? "series_runtime_estimated" : "duration")}>
+                                  <dt>{t("series_stats_hours")}</dt>
+                                  <dd>{series.totalRuntimeMinutes == null ? "—" : `${series.runtimeIsEstimated ? "≈ " : ""}${new Intl.NumberFormat(normalizeRaspberryLanguage(raspberryLanguage), { maximumFractionDigits: 1 }).format(series.totalRuntimeMinutes / 60)}`}</dd>
+                                </div>
+                              </dl>
                             </div>
                           </article>
                         );
                       })}
+                    </div>
+                  </section>
+                ) : isSeriesMode && detailLoading ? (
+                  <section className="empty-state" aria-busy="true" role="status" aria-live="polite">
+                    <div className="empty-state__card empty-state__card--library">
+                      <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
+                      <h2>{t("loading_seasons")}</h2>
+                    </div>
+                  </section>
+                ) : isSeriesMode && detailError ? (
+                  <section className="empty-state" role="alert">
+                    <div className="empty-state__card empty-state__card--library">
+                      <h2>{t("seasons_load_error")}</h2>
+                      <p>{detailError}</p>
+                      <button type="button" onClick={() => setDetailRetry(value => value + 1)}>{t("retry_load")}</button>
                     </div>
                   </section>
                 ) : isSeriesMode && !seasons.length ? (
@@ -9271,50 +9545,70 @@ export default function App() {
                     </div>
                   </section>
                 ) : isMoviesMode && !selectedMovie ? (
-                  <section className="movie-library seasons-section">
+                  <section className="movie-library seasons-section library-with-scroll-rail">
+                    <LibraryScrollRail labels={filteredMovieOptions.map(item => libraryScrollLabel(item, movieLibrarySort, normalizeRaspberryLanguage(raspberryLanguage)))} language={raspberryLanguage} sort={movieLibrarySort} direction={movieSortDirection} onDirectionChange={setMovieSortDirection} actionsVisible={movieActionsVisible} onActionsChange={movieLibraryView === "list" ? undefined : setMovieActionsVisible} />
                     <div className="seasons-section__label">{libraryCountLabel}</div>
-                    <div className={`movie-library__items movie-library__items--${movieLibraryView}`}>
+                    <MovieLibraryItems view={movieLibraryView} actionsVisible={movieActionsVisible}>
                       {filteredMovieOptions.map((movie) => {
                         const downloadUrl = getMovieDownloadUrl(movie);
-                        const isFavorite = Boolean(mediaMarks[mediaMarkKey("movie", movie.id)]?.favorite);
+                        const awards = movieLibraryView === "grid" ? movieAwards(getMovieTmdbId(movie), raspberryLanguage) : [];
+                        const markKey = mediaMarkKey("movie", movie.id);
+                        const movieMarks = mediaMarks[markKey] || {};
+                        const isFavorite = Boolean(movieMarks.favorite);
+                        const isWatched = Boolean(movieMarks.watched);
                         const poster = movie.posterImage || movie.imageOptions?.[1] || movie.heroImage || cartellLogo;
                         const year = movie.releaseDate?.slice(0, 4) || t("not_available");
                         const rating = Number(movie.voteAverage) > 0 ? `${(movie.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
                         return (
-                          <article className="movie-library__card" key={movie.id}>
-                            <button className="movie-library__poster" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={`${t("movie_details")}: ${movie.name}`}>
+                          <article data-library-index className="movie-library__card" key={movie.id}>
+                            <button className="movie-library__poster" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={[`${t("movie_details")}: ${movie.name}`, ...awards.map(award => award.label)].join(" · ")}>
                               <LibraryPoster src={poster} name={movie.name} />
+                              <MovieAwardBadges awards={awards} />
                             </button>
                             <div className="movie-library__info">
                               <h2>{movie.name}</h2>
                               <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
-                              <div className="movie-library__actions movie-library__actions--icons">
-                                <button
-                                  className={`movie-favorite${isFavorite ? " is-favorite" : ""}`}
-                                  type="button"
-                                  onClick={() => setMovieFavoriteConfirmation({ id: movie.id, name: movie.name, favorite: !isFavorite })}
-                                  aria-pressed={isFavorite}
-                                  aria-label={`${t(isFavorite ? "mark_favorite" : "mark_not_favorite")}: ${movie.name}`}
-                                  title={t(isFavorite ? "movie_favorite_remove" : "movie_favorite_add")}
-                                >
-                                  <MediaMarkIcon favorite active={isFavorite} />
-                                </button>
-                                <MovieDownload url={downloadUrl} name={movie.fileName || movie.name} label={t("movie_download")} />
-                                <button
-                                  className="media-delete-button movie-library__delete"
-                                  type="button"
-                                  onClick={() => handleDeleteSeries(false, movie)}
-                                  aria-label={`${t("delete_media", { media: t("media_movies_singular") })}: ${movie.name}`}
-                                  title={t("delete_media", { media: t("media_movies_singular") })}
-                                >
-                                  <img src={deleteIcon} alt="" aria-hidden="true" />
-                                </button>
+                              <div className="movie-library__actions-reveal" inert={movieLibraryView !== "list" && !movieActionsVisible} aria-hidden={movieLibraryView !== "list" && !movieActionsVisible}>
+                                <div className="movie-library__actions-clip">
+                                  <div className="movie-library__actions movie-library__actions--icons">
+                                    <button
+                                      className={`movie-watched${isWatched ? " is-watched" : ""}`}
+                                      type="button"
+                                      onClick={() => saveMarks({ ...mediaMarks, [markKey]: { ...movieMarks, watched: !isWatched } })}
+                                      aria-pressed={isWatched}
+                                      aria-label={`${t(isWatched ? "mark_watched" : "mark_unwatched")}: ${movie.name}`}
+                                      title={t(isWatched ? "mark_watched" : "mark_unwatched")}
+                                    >
+                                      <MediaMarkIcon active={isWatched} />
+                                    </button>
+                                    <button
+                                      className={`movie-favorite${isFavorite ? " is-favorite" : ""}`}
+                                      type="button"
+                                      onClick={() => setMovieFavoriteConfirmation({ id: movie.id, name: movie.name, favorite: !isFavorite })}
+                                      aria-pressed={isFavorite}
+                                      aria-label={`${t(isFavorite ? "mark_favorite" : "mark_not_favorite")}: ${movie.name}`}
+                                      title={t(isFavorite ? "movie_favorite_remove" : "movie_favorite_add")}
+                                    >
+                                      <MediaMarkIcon favorite active={isFavorite} />
+                                    </button>
+                                    <MovieDownload url={downloadUrl} name={movie.fileName || movie.name} label={t("movie_download")} />
+                                    <button
+                                      className="media-delete-button movie-library__delete"
+                                      type="button"
+                                      onClick={() => handleDeleteSeries(false, movie)}
+                                      aria-label={`${t("delete_media", { media: t("media_movies_singular") })}: ${movie.name}`}
+                                      title={t("delete_media", { media: t("media_movies_singular") })}
+                                    >
+                                      <img src={deleteIcon} alt="" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </article>
                         );
                       })}
-                    </div>
+                    </MovieLibraryItems>
                   </section>
                 ) : (
                   <section className="movie-panel seasons-section">
@@ -9360,6 +9654,14 @@ export default function App() {
                         <span className="playback-action__play-icon" aria-hidden="true">▶</span>
                         <span>{t("play_on_external_monitor")}</span>
                       </button>
+
+                      <MovieSubtitleDownload key={`subtitles-${selectedMovie.fileRelativePath || selectedMovie.id}`}
+                        relativePath={selectedMovie.fileRelativePath || resolvePlayableMovieEntry(selectedMovie)?.relativePath}
+                        language={raspberryLanguage} />
+
+                      {raspberryHealth.running && raspberryHealth.file === (resolvePlayableMovieEntry(selectedMovie)?.relativePath || selectedMovie.fileRelativePath) ? (
+                        <PlaybackSubtitleControls playbackKey={raspberryHealth.file} t={t} />
+                      ) : null}
 
                       <MovieImageCarousel
                         title={selectedMovie.name}
@@ -9472,6 +9774,8 @@ export default function App() {
               <SettingsModal
                 visible={settingsOpen}
                 mediaType={activeMediaType}
+                language={raspberryLanguage}
+                movieRelativePath={activeMediaType === "movies" && selectedMovie ? selectedMovie.fileRelativePath || resolvePlayableMovieEntry(selectedMovie)?.relativePath : ""}
                 item={selectedItem}
                 imageOptions={selectedItem?.imageOptions || []}
                 onClose={() => setSettingsOpen(false)}
@@ -9503,6 +9807,7 @@ export default function App() {
               tmdbLanguage={tmdbLanguage}
             />
             <SeriesDuplicateModal
+              mediaType={seriesDuplicatePrompt?.mediaType}
               duplicateCount={seriesDuplicatePrompt?.duplicateCount || 0}
               totalCount={seriesDuplicatePrompt?.totalCount || 0}
               onChoose={chooseSeriesDuplicateAction}
@@ -9527,7 +9832,7 @@ export default function App() {
             />
             <TmdbUploadProgress upload={tmdbUpload} onClose={() => setTmdbUpload(null)} onReady={() => {
               clearLocalMetadataCache();
-              detailCache.current.clear(); readyDetails.current.clear();
+              detailCache.current.clear();
               seasonCache.current.clear(); readySeasons.current.clear(); episodeCache.current.clear();
               setVideos(current => current ? { ...current } : current);
               setDetailRetry(value => value + 1);
@@ -9558,6 +9863,7 @@ export default function App() {
             />
             <BookCollectionModal
               collection={bookCollectionTarget}
+              language={raspberryLanguage}
               onClose={() => setBookCollectionTarget(null)}
               onSave={handleSaveBookCollection}
               onDelete={handleDeleteBookCollection}
@@ -9580,6 +9886,9 @@ export default function App() {
               onClose={() => setTmdbBrowserOpen(false)}
               t={t}
               tmdbLanguage={tmdbLanguage}
+              initialMediaType={uploadMediaType === "movies" ? "movies" : "series"}
+              onTorrentStarted={torrentDownloads.refresh}
+              onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); }}
             />
             <EpisodeDetailsModal
               loading={episodeLoading}
@@ -9615,6 +9924,7 @@ export default function App() {
           </>
         )}
       </div>
+      {unlocked && currentView !== "raspberry" && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
   );
 }

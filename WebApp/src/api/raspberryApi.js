@@ -270,6 +270,7 @@ async function request(path, options = {}) {
   if (!response.ok) {
     const error = new Error(payload?.error || `HTTP ${response.status}`);
     error.status = response.status;
+    error.code = payload?.code;
     throw error;
   }
 
@@ -290,6 +291,28 @@ export function getApiBaseUrl() {
 
 export function isMockMode() {
   return isMockModeEnabled();
+}
+
+export function searchMovieTorrents(query, signal) {
+  if (isMockModeEnabled()) return Promise.resolve({ results: [], demo: true });
+  return request(`/torrents/search?${new URLSearchParams({ q: query })}`, { signal });
+}
+
+export function startMovieTorrent(torrent, movie, overwriteExisting = false) {
+  if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para descargar torrents."));
+  return request("/torrents", { method: "POST", body: JSON.stringify({
+    infoHash: torrent.infoHash, name: torrent.name, sizeBytes: torrent.sizeBytes, overwriteExisting,
+    movie: { id: movie.id, name: movie.name },
+  }) });
+}
+
+export function getMovieTorrents(signal) {
+  if (isMockModeEnabled()) return Promise.resolve({ jobs: [], demo: true });
+  return request("/torrents", { signal });
+}
+
+export function controlMovieTorrent(id, action) {
+  return request(`/torrents/${encodeURIComponent(id)}`, { method: "POST", body: JSON.stringify({ action }) });
 }
 
 export function getStoredWebPin() {
@@ -353,7 +376,8 @@ export function getVideos() {
     return Promise.resolve(buildMockVideoLibrary());
   }
 
-  return requestWithTimeout(signal => request("/videos", { signal }));
+  // The full catalog also travels over remote Raspberry connections.
+  return requestWithTimeout(signal => request("/videos", { signal }), 30000);
 }
 
 export function getRaspberryLanguage() {
@@ -625,7 +649,45 @@ function attachUploadAbort(xhr, signal, reject) {
   return () => signal.removeEventListener("abort", handleAbort);
 }
 
-export function uploadMovieFile({ file, movie, onProgress, signal } = {}) {
+export async function checkUploadConflicts(options) {
+  if (isMockModeEnabled()) return { conflicts: [] };
+  return request("/uploads/check", { method: "POST", body: JSON.stringify(options) });
+}
+
+export async function uploadMovieSubtitles({ relativePath, file, signal } = {}) {
+  if (!relativePath || !file || !/\.srt$/i.test(file.name)) {
+    throw new Error("Selecciona un archivo .srt para esta película.");
+  }
+  if (!file.size || file.size > 5 * 1024 * 1024) {
+    throw new Error("El archivo SRT debe tener contenido y no superar los 5 MB.");
+  }
+  if (isMockModeEnabled()) return { ok: true, mock: true };
+  const body = new FormData();
+  body.append("relativePath", relativePath);
+  body.append("file", file);
+  return request("/movies/subtitles", { method: "POST", body, signal });
+}
+
+export async function getSubtitleSettings(signal) {
+  if (isMockModeEnabled()) return { configured: false, demo: true };
+  return request("/settings/subtitles", { signal });
+}
+
+export async function saveSubtitleSettings(settings) {
+  if (isMockModeEnabled()) throw new Error("OpenSubtitles: conecta con la Raspberry para configurar la cuenta.");
+  return request("/settings/subtitles", { method: "POST", body: JSON.stringify(settings) });
+}
+
+export async function obtainMovieSubtitles({ relativePath, language = "es" }) {
+  if (isMockModeEnabled()) {
+    const error = new Error("Conecta con la Raspberry para descargar subtítulos.");
+    error.code = "SUBTITLE_DEMO";
+    throw error;
+  }
+  return request("/movies/subtitles/obtain", { method: "POST", body: JSON.stringify({ relativePath, language }) });
+}
+
+export function uploadMovieFile({ file, movie, overwriteExisting = false, onProgress, signal } = {}) {
   if (!file) {
     return Promise.reject(new Error("Missing file"));
   }
@@ -656,6 +718,7 @@ export function uploadMovieFile({ file, movie, onProgress, signal } = {}) {
 
   return new Promise((resolve, reject) => {
     const params = new URLSearchParams({
+      overwriteExisting: String(overwriteExisting),
       filename: file.name || "movie.mp4",
       name: movieName,
       tmdbId: String(tmdbId),
@@ -1258,17 +1321,18 @@ export function uploadPictureFiles({ files, onProgress, signal } = {}) {
   });
 }
 
-export function getBookContentUrl(relativePath) {
+export function getBookContentUrl(relativePath, { render } = {}) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) return "";
   const params = new URLSearchParams({ relativePath: safeRelativePath });
+  if (render) params.set("render", render);
   const storedPin = getStoredWebPin();
   if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
   return `${getBaseUrl()}/books/content?${params.toString()}`;
 }
 
 export async function getBookContent(relativePath, { signal, format = "pdf" } = {}) {
-  const url = getBookContentUrl(relativePath);
+  const url = getBookContentUrl(relativePath, { render: /\.(cbr|cbz)$/i.test(relativePath) && format === "pdf" ? "pdf" : undefined });
   if (!url) throw new Error("Missing book path");
 
   const storedPin = getStoredWebPin();
@@ -1323,15 +1387,17 @@ export function getBookDisplayCoverUrl(book) {
   return coverUrl || getBookCoverUrl(book?.relativePath);
 }
 
-export async function uploadBookFiles({ files, collection = "", title = "", metadata, onProgress, onReport, signal } = {}) {
+export async function uploadBookFiles({ files, collection = "", title = "", metadata, overwriteExisting = false, onProgress, onReport, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) throw new Error("Missing book files");
   return uploadBookBatch({ files: safeFiles, onProgress, onReport, signal,
-    uploadOne: (file, progress) => uploadBookRequest({ files: [file], collection, title: safeFiles.length === 1 ? title : "", metadata: safeFiles.length === 1 ? metadata : undefined, onProgress: progress, signal }),
+    uploadOne: (file, progress) => uploadBookRequest({ files: [file], collection, overwriteExisting, title: safeFiles.length === 1 ? title : "",
+      metadata: safeFiles.length === 1 ? metadata : typeof metadata?.isGraphicNovel === "boolean" ? { isGraphicNovel: metadata.isGraphicNovel } : undefined,
+      onProgress: progress, signal }),
   });
 }
 
-async function uploadBookRequest({ files, collection = "", title = "", metadata, onProgress, signal } = {}) {
+async function uploadBookRequest({ files, collection = "", title = "", metadata, overwriteExisting = false, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) throw new Error("Missing book files");
   if (isMockModeEnabled()) {
@@ -1342,6 +1408,7 @@ async function uploadBookRequest({ files, collection = "", title = "", metadata,
   }
   const form = new FormData();
   safeFiles.forEach((file) => form.append("files", file, file.webkitRelativePath || file.name));
+  form.append("overwriteExisting", String(overwriteExisting));
   form.append("collection", collection);
   form.append("title", title);
   if (metadata) {
@@ -1397,15 +1464,15 @@ export function searchBookMetadata(query, language = "es", { signal } = {}) {
   return request(`/books/search?${params.toString()}`, { signal });
 }
 
-export function getBookMetadataDetails(result, { signal } = {}) {
-  const params = new URLSearchParams({ workKey: result.openLibraryKey || "", editionKey: result.editionKey || "" });
+export function getBookMetadataDetails(result, { signal, language = "es" } = {}) {
+  const params = new URLSearchParams({ workKey: result.openLibraryKey || "", editionKey: result.editionKey || "", language });
   return request(`/books/metadata?${params}`, { signal });
 }
 
 export function saveBookMetadata(profile) {
   const form = new FormData();
   Object.entries(profile || {}).forEach(([key, value]) => {
-    if (key !== "coverFile" && value !== undefined && value !== null) form.append(key, String(value));
+    if (key !== "coverFile" && value !== undefined && value !== null) form.append(key, key === "localizedMetadata" ? JSON.stringify(value) : String(value));
   });
   if (profile?.coverFile instanceof File) form.append("coverFile", profile.coverFile);
   return request("/books/profile", { method: "POST", body: form });
@@ -1414,8 +1481,10 @@ export function saveBookMetadata(profile) {
 export function saveBookCollectionMetadata(profile) {
   const form = new FormData();
   form.append("collection", String(profile?.collection || ""));
+  if (profile?.author !== undefined) form.append("author", String(profile.author || ""));
   form.append("name", String(profile?.name || ""));
   form.append("coverUrl", String(profile?.coverUrl || ""));
+  if (typeof profile?.isGraphicNovel === "boolean") form.append("isGraphicNovel", String(profile.isGraphicNovel));
   if (profile?.coverFile instanceof File) form.append("coverFile", profile.coverFile);
   return request("/books/collection/profile", { method: "POST", body: form });
 }
@@ -1442,6 +1511,11 @@ export async function captureCameraImage() {
     throw error;
   }
   return response.blob();
+}
+
+export function controlPlaybackSubtitles(action) {
+  if (isMockModeEnabled()) return Promise.resolve({ ok: true, queued: true });
+  return request("/playback/subtitles", { method: "POST", body: JSON.stringify({ action }) });
 }
 
 export function volumeUp() {
@@ -1570,6 +1644,19 @@ export function prepareOscarCatalog() {
 export function oscarImageUrl(path, width = 500) {
   if (!path) return '';
   return `${getBaseUrl()}/oscars/images${path}?${new URLSearchParams({ pin: getStoredWebPin(), width })}`;
+}
+
+export function getAwardCatalog(award, language) {
+  return requestWithTimeout(signal => request(`/awards/${award}?${new URLSearchParams({ language })}`, { signal }));
+}
+
+export function prepareAwardCatalog(award) {
+  return requestWithTimeout(signal => request(`/awards/${award}/prepare`, { method: 'POST', signal }));
+}
+
+export function awardImageUrl(award, path, width = 500) {
+  if (!path) return '';
+  return `${getBaseUrl()}/awards/${award}/images${path}?${new URLSearchParams({ pin: getStoredWebPin(), width })}`;
 }
 
 export function localTmdbImageUrl(value) {

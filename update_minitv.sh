@@ -56,6 +56,15 @@ git fetch origin main
 git switch main
 git pull --ff-only origin main
 
+# Shared CBR/CBZ rendering for browser previews, covers and the Wayland reader.
+if ! command -v unrar >/dev/null 2>&1 || ! command -v bsdtar >/dev/null 2>&1 || ! /usr/bin/python3 -c 'import fitz' >/dev/null 2>&1; then
+  log "Instalando el soporte de cómics CBR y CBZ"
+  bash "${SCRIPT_DIR}/DeviceApp/install_comic_support.sh"
+fi
+
+log "Preparando el motor de descargas torrent"
+bash "${SCRIPT_DIR}/DeviceApp/install_torrent_support.sh"
+
 if [[ -f "${WEB_DIR}/package.json" ]]; then
   command -v npm >/dev/null 2>&1 || fail "npm no está instalado y no se puede compilar la web."
 

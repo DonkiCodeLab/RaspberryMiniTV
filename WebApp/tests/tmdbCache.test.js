@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 
-async function loadBrowserModule(entry) {
+async function loadBrowserModule(entry, env = {}) {
   const result = await build({ entryPoints: [new URL(entry, import.meta.url).pathname], bundle: true, write: false,
-    format: 'esm', platform: 'browser', define: { 'import.meta.env': '{}' } });
+    format: 'esm', platform: 'browser', define: { 'import.meta.env': JSON.stringify(env) } });
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`);
 }
 
@@ -70,7 +70,8 @@ test('library loads a single compact local response without detail requests', as
   globalThis.fetch = async url => {
     requests.push(url);
     assert.equal(url, 'http://raspberry:5050/tmdb/library?language=es-ES');
-    return { ok: true, text: async () => JSON.stringify({ movies: { 1: { id: 1, name: 'Test', posterPath: '/poster.jpg' } }, series: {} }) };
+    return { ok: true, text: async () => JSON.stringify({ movies: { 1: { id: 1, name: 'Test', posterPath: '/poster.jpg' } },
+      series: { 2: { id: 2, seasonCount: 2, totalEpisodeCount: 3, totalRuntimeMinutes: 150, runtimeIsEstimated: false } } }) };
   };
   try {
     const tmdb = await loadBrowserModule('../src/tmdbApi.js');
@@ -78,6 +79,32 @@ test('library loads a single compact local response without detail requests', as
     assert.equal(requests.length, 1);
     assert.equal(cards.movies[1].posterImage, 'http://raspberry:5050/tmdb/images/poster.jpg?pin=1234&width=500');
     assert.equal(cards.movies[1].imageOptions, undefined);
+    assert.equal(cards.series[2].seasonCount, 2);
+    assert.equal(cards.series[2].totalEpisodeCount, 3);
+    assert.equal(cards.series[2].totalRuntimeMinutes, 150);
+    assert.equal(cards.series[2].runtimeIsEstimated, false);
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
+
+test('demo series cards include totals before opening details and flag estimated runtimes', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: 'http://localhost:5173', hostname: 'localhost' } };
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    assert.ok(!url.includes('/season/'));
+    return { ok: true, json: async () => ({ id: 1, name: 'Test', episode_run_time: [20, 24],
+      seasons: [{ season_number: 0, episode_count: 10 }, { season_number: 1, episode_count: 3 }] }) };
+  };
+  try {
+    const tmdb = await loadBrowserModule('../src/tmdbApi.js', { VITE_WEB_DEV_MODE: 'mock' });
+    tmdb.setTmdbCredentials({ apiKey: 'test-key' });
+    const cards = await tmdb.getLibrarySummaries([], [{ tmdbId: 1 }], 'es-ES');
+    assert.equal(requests.length, 1);
+    assert.equal(cards.series[1].seasonCount, 1);
+    assert.equal(cards.series[1].totalEpisodeCount, 3);
+    assert.equal(cards.series[1].totalRuntimeMinutes, 66);
+    assert.equal(cards.series[1].runtimeIsEstimated, true);
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
 
@@ -97,6 +124,7 @@ test('opening a series does not fetch its seasons episodes', async () => {
   try {
     const tmdb = await loadBrowserModule('../src/tmdbApi.js');
     const series = await tmdb.getTvSeriesById(1, 'es-ES');
+    assert.equal(series.posterImage, 'http://raspberry:5050/tmdb/images/poster.jpg?pin=1234&width=500');
     assert.equal(requests.length, 2);
     assert.equal(series.seasons.length, 1);
     assert.ok(series.seasons[0].image.includes('/season.jpg'));

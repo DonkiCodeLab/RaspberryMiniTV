@@ -1,5 +1,18 @@
 # WebApp
 
+La ficha de una película guardada incluye **Obtener subtítulo**, con español,
+catalán e inglés. Busca y guarda automáticamente el SRT en la Raspberry, primero
+por la huella del fichero y después por su ficha y versión. **Configurar
+OpenSubtitles** permite guardar la cuenta una sola vez; los errores y las
+coincidencias aproximadas se muestran en la ficha. La carga manual de SRT sigue
+disponible en el editor. [Configuración y funcionamiento](../DeviceApp/README.md#subtítulos-durante-la-reproducción).
+
+En Uploads → Películas → TMDB, la ficha muestra torrents de The Pirate Bay,
+con tamaño en MB y seeds de mayor a menor. La descarga se realiza en la Raspberry
+y se controla desde la nueva sección del dashboard. El vídeo se añade cuando
+está completo y después se preparan los recursos TMDB. El modo demo no inicia
+descargas reales. Instalación y funcionamiento: [DeviceApp](../DeviceApp/README.md#descargas-de-películas-por-torrent).
+
 Base inicial para migrar la app de React Native a una web React que pueda ejecutarse en una Raspberry Pi dentro de la red local.
 
 ## Si, es viable en Raspberry Pi
@@ -76,14 +89,18 @@ npm run dev
 
 ## Biblioteca de libros
 
+- El selector con iconos distingue **Novelas** y **Novelas gráficas**. El orden por **Nombre** usa el título en el idioma del sistema; **Año** muestra primero los más recientes y deja los libros sin fecha al final. Las colecciones usan el primer año conocido de sus volúmenes y conservan la portada del primer archivo.
+- **Novela gráfica** puede marcarse o desmarcarse al subir y en la ficha de edición. En subidas de carpetas o varios archivos, la selección de Uploads se aplica a todos los volúmenes. Sin clasificación guardada, CBZ/CBR se consideran novelas gráficas y PDF/EPUB novelas; una elección manual siempre tiene prioridad. Una colección mixta aparece en ambos tipos con los volúmenes correspondientes.
 - Al seleccionar un libro suelto en **Uploads → Libros**, se busca su título en Open Library. Para EPUB se leen primero el título y autor internos. Selecciona una coincidencia, revisa los datos y pulsa **Confirmar libro y subir**. Cancelar no sube el archivo.
 - La búsqueda no necesita una clave API. La ficha obtiene los datos disponibles de la obra y su edición: autores, sinopsis, editorial, publicación, ISBN, idioma, páginas y temas. Si no hay coincidencia o el servicio no responde, se puede editar la ficha manualmente.
+- La búsqueda prioriza ediciones en el idioma del sistema (castellano, catalán o inglés). Al confirmar una coincidencia se consultan también las ediciones de esa misma obra en los tres idiomas y se guardan sus textos disponibles. La biblioteca cambia de idioma sin conexión, conservando el ISBN, editorial y portada de la edición elegida. Las páginas se consultan primero en la edición seleccionada de Open Library, incluyendo su descripción de paginación si falta el campo numérico. Si no constan, se usa la lista de páginas o maquetación fija del EPUB cuando existe. Los valores introducidos manualmente se respetan. La ficha indica cuándo el recuento procede del EPUB y puede diferir de las pantallas del lector. El selector **Idioma de los textos** permite revisar o completar cada versión. Open Library no traduce sinopsis: si falta una versión se indica que se está mostrando el texto original. **Actualizar los tres idiomas** completa las versiones de una ficha antigua sin sustituir sus textos ya guardados.
 - El archivo se guarda en `MultimediaContent/Books`, la ficha en el catálogo SQLite (`MultimediaContent/media_library.sqlite3`) y las portadas seleccionadas de Open Library en `MultimediaContent/BookCovers`. El catálogo existente también genera sus copias locales de recuperación. Consultar una ficha guardada no vuelve a pedirla a Open Library.
 - Para un libro ya subido, **Entrar → Buscar información del libro** permite identificarlo y guardar su ficha sin volver a subirlo. Las colecciones mantienen su subida por carpetas y cada volumen tiene su propia ficha.
 - **Entrar** muestra la ficha y **Leer** permite elegir Raspberry o navegador. Los EPUB se renderizan dentro de la web con EPUB.js, índice, paginación, tamaño de letra y posición guardada en ese navegador. La dependencia se incluye en la compilación, sin CDN ni aplicación externa. Los EPUB con DRM no son compatibles. La lectura PDF existente se conserva.
+- En el lector del navegador, escribe el número en **Página** y pulsa **Ir** o **Enter** para saltar directamente. PDF, CBZ y CBR usan las páginas del archivo completo; en EPUB el selector recorre la sección actual y el índice permite cambiar de capítulo. Sus páginas se recalculan al cambiar la pantalla o el tamaño de letra.
 - La opción Raspberry envía el comando al lector configurado en el dispositivo; requiere que el menú de la MiniTV esté en ejecución.
 
-Comprobaciones de libros: `node --test tests/bookLibrary.test.js tests/bookReading.test.js` desde `WebApp`, y `python -m unittest discover -s DeviceApp/tests -p 'test_book*.py'` desde la raíz con el entorno Python del backend.
+Comprobaciones de libros: `node --test tests/bookLibrary.test.js tests/bookMetadata.test.js tests/bookReading.test.js` desde `WebApp`, y `python -m unittest discover -s DeviceApp/tests -p 'test_book*.py'` desde la raíz con el entorno Python del backend.
 
 Si arrancas la web en tu Mac con `localhost` y no defines `VITE_RASPBERRY_API_BASE_URL`, entra automaticamente en `modo maqueta local`:
 

@@ -1,15 +1,22 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
+from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
+import movie_subtitles
 from oscar_catalog import OscarCatalog
 from background_stats import BackgroundStats
 import catalog_store
 import book_metadata
+from epub_cover import extract_epub_cover
+from comic_reader import ComicError, comic_pdf, comic_cover
 from functools import wraps
 import json
+import gzip
 import io
 import os
 import re
 import shutil
+from playback_process import player_is_running
+
 import socket
 import subprocess
 import threading
@@ -135,6 +142,9 @@ camera_lock = threading.Lock()
 # Last directory listing, used to report files without profiles without saving
 # scan placeholders or rescanning the disk on every TMDB progress poll.
 scanned_media_paths = {}
+subtitle_provider = movie_subtitles.OpenSubtitles()
+subtitle_download_lock = threading.Lock()
+SUBTITLE_SETTINGS_PATH = os.path.join(BASE_DIR, "subtitle_settings.json")
 
 
 def normalize_language_code(language):
@@ -855,7 +865,8 @@ def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
     if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
-    if request.path.startswith(("/tmdb/images/", "/tmdb/import/images/", "/oscars/images/")) and not submitted_pin:
+    if (request.path.startswith(("/tmdb/images/", "/tmdb/import/images/", "/oscars/images/")) or
+            re.fullmatch(r"/awards/(palme|goya|oscars)/images/[^/]+", request.path)) and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     return submitted_pin == current_web_pin()
 
@@ -874,6 +885,22 @@ def log_local_library_request(response):
         elapsed = (time.perf_counter() - started) * 1000
         response.headers["Server-Timing"] = f"local;dur={elapsed:.1f}"
         print(f"[Biblioteca local] Fin {request.path}: {response.status_code}, {elapsed:.1f} ms", flush=True)
+    return response
+
+
+@app.after_request
+def compress_video_catalog(response):
+    if (request.path == "/videos" and request.method == "GET" and response.status_code == 200
+            and response.mimetype == "application/json" and not response.is_streamed
+            and not response.headers.get("Content-Encoding")):
+        response.vary.add("Accept-Encoding")
+        if request.accept_encodings["gzip"] > 0:
+            content = response.get_data()
+            if len(content) >= 1024:
+                compressed = gzip.compress(content, compresslevel=5)
+                if len(compressed) < len(content):
+                    response.set_data(compressed)
+                    response.headers["Content-Encoding"] = "gzip"
     return response
 
 
@@ -1070,6 +1097,7 @@ def list_book_entries():
             metadata = book_profiles.get(relative_path) if isinstance(book_profiles.get(relative_path), dict) else {}
             items.append({
                 **book_metadata.normalize_profile(metadata),
+                "isGraphicNovel": book_metadata.is_graphic_novel(metadata, filename),
                 "name": str(metadata.get("title") or os.path.splitext(filename)[0]).strip(),
                 "file": filename,
                 "format": os.path.splitext(filename)[1].lower().lstrip("."),
@@ -1087,6 +1115,10 @@ def list_book_entries():
 
 
 def extract_book_cover(book_path):
+    if os.path.splitext(book_path)[1].lower() == ".epub":
+        return extract_epub_cover(book_path, BOOK_COVERS_DIR)
+    if os.path.splitext(book_path)[1].lower() in {".cbr", ".cbz"}:
+        return comic_cover(book_path, os.path.join(BOOK_COVERS_DIR, "comics"))
     os.makedirs(BOOK_COVERS_DIR, exist_ok=True)
     stat = os.stat(book_path)
     cache_key = f"{os.path.relpath(book_path, BOOKS_DIR)}-{stat.st_mtime_ns}-{stat.st_size}"
@@ -1415,6 +1447,9 @@ def read_playback_state():
         "playing": str(data.get("playing") or "").strip().upper() or None,
         "directory": str(data.get("directory") or "").strip(),
         "file": str(data.get("file") or "").strip(),
+        "playerPid": data.get("playerPid"),
+        "playerStart": data.get("playerStart"),
+        "backend": data.get("backend"),
     }
 
 
@@ -1422,21 +1457,19 @@ def send_mpv_command(*command_parts):
     if not os.path.exists(MPV_SOCKET_PATH):
         return None
 
-    payload = json.dumps({"command": list(command_parts)}).encode("utf-8") + b"\n"
+    payload = json.dumps({"command": list(command_parts), "request_id": 1}).encode("utf-8") + b"\n"
     client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     client.settimeout(1.0)
     try:
         client.connect(MPV_SOCKET_PATH)
         client.sendall(payload)
-        data = b""
-        while not data.endswith(b"\n"):
-            chunk = client.recv(65536)
-            if not chunk:
-                break
-            data += chunk
-        if not data:
-            return None
-        return json.loads(data.decode("utf-8").strip())
+        # mpv may emit events before the reply; only consume our command response.
+        with client.makefile("rb") as stream:
+            for line in stream:
+                response = json.loads(line)
+                if response.get("request_id") == 1:
+                    return response
+        return None
     except Exception:
         return None
     finally:
@@ -1458,14 +1491,17 @@ def current_playback_status():
             "running": True,
         }
 
-    if mpv_is_running():
-        state = read_playback_state() or {}
-        return {
-            "playing": state.get("playing"),
-            "directory": state.get("directory") or "",
-            "file": state.get("file") or "",
-            "running": True,
-        }
+    state = read_playback_state() or {}
+    if player_is_running(state):
+        return {"playing": state.get("playing"), "directory": state.get("directory") or "",
+                "file": state.get("file") or "", "running": True}
+
+    response = send_mpv_command("get_property", "path")
+    if isinstance(response, dict) and response.get("error") == "success" and response.get("data"):
+        # Recover identity even when the menu state file is missing or outdated.
+        state = playback_state_for_path(response["data"])
+        return {"playing": state.get("playing"), "directory": state.get("directory") or "",
+                "file": state.get("file") or "", "running": True}
 
     clear_playback_state()
     return {
@@ -1813,6 +1849,7 @@ def build_mpv_command(filepath):
     return [
         "mpv",
         "--fullscreen",
+        "--sub-auto=exact",
         f"--input-ipc-server={MPV_SOCKET_PATH}",
         filepath,
     ]
@@ -2004,25 +2041,25 @@ def upload_books():
             desired_filename = filename
             if requested_title and len(uploaded_files) == 1:
                 desired_filename = os.path.basename(requested_title.replace("\\", "/")) + os.path.splitext(filename)[1].lower()
-            target_name = unique_media_filename(target_dir, desired_filename)
-            target_path = os.path.join(target_dir, target_name)
+            target_path = upload_target("books", filename, requested_title, collection)
+            replacing = os.path.isfile(target_path)
+            if replacing and request.form.get("overwriteExisting") != "true":
+                return jsonify({"error": "El libro ya existe. Confirma si quieres sobrescribirlo."}), 409
+            target_dir = os.path.dirname(target_path)
+            target_name = os.path.basename(target_path)
             log_upload_event(f"book saving source={original_path!r} target={target_path!r}")
             with tempfile.NamedTemporaryFile(dir=target_dir, prefix=".upload-", suffix=".part", delete=False) as temporary:
                 partial_path = temporary.name
                 uploaded.save(temporary)
             if os.path.getsize(partial_path) == 0:
                 raise ValueError("El archivo recibido está vacío")
-            os.replace(partial_path, target_path)
-            partial_path = None
             relative = os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
             relative_path = f"Books/{relative}"
-            try:
-                item = prepare_book_profile(relative_path, {"title": requested_title or os.path.splitext(filename)[0], **profile})
-                persist_book_profile(relative_path, item)
-            except Exception:
-                # This is a new unique file: an unconfirmed catalog write must not leave a phantom upload.
-                os.remove(target_path)
-                raise
+            item = prepare_book_profile(relative_path, {"title": requested_title or os.path.splitext(filename)[0],
+                "isGraphicNovel": book_metadata.is_graphic_novel(profile, filename), **profile})
+            persist_book_profile(relative_path, item)
+            os.replace(partial_path, target_path)
+            partial_path = None
             saved.append({**item, "name": item["title"], "file": target_name, "relativePath": relative_path})
             log_upload_event(f"book saved relative={relative!r} bytes={os.path.getsize(target_path)}")
     except Exception as exc:
@@ -2129,8 +2166,13 @@ def save_book_collection_profile():
     data = request.form
     collection = str(data.get("collection") or "").strip().strip("/")
     target_path = resolve_book_path(collection)
-    if not collection or not target_path or not os.path.isdir(target_path):
+    if not collection or not target_path or target_path == os.path.abspath(BOOKS_DIR) or not os.path.isdir(target_path):
         return jsonify({"error": "Book collection not found"}), 404
+    collection = os.path.relpath(target_path, BOOKS_DIR).replace("\\", "/")
+    try:
+        type_update = book_metadata.normalize_profile({"isGraphicNovel": data["isGraphicNovel"]}) if "isGraphicNovel" in data else {}
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
     library = load_media_library()
     previous = library.setdefault("bookCollections", {}).get(collection, {})
     cover_url = str(data.get("coverUrl") or previous.get("coverUrl") or "").strip()
@@ -2143,8 +2185,17 @@ def save_book_collection_profile():
         cover_name = f"collection-{hashlib.sha256(collection.encode('utf-8')).hexdigest()[:24]}{extension}"
         uploaded_cover.save(os.path.join(BOOK_COVERS_DIR, cover_name))
         cover_url = f"/book-covers/{urllib.parse.quote(cover_name)}?v={time.time_ns()}"
-    item = {"name": str(data.get("name") or collection).strip(), "coverUrl": cover_url}
+    item = {**previous, "name": str(data.get("name") or collection).strip(), "coverUrl": cover_url}
+    if "author" in data:
+        item["author"] = str(data.get("author") or "").strip()[:1000]
     library["bookCollections"][collection] = item
+    if type_update:
+        profiles = library.setdefault("books", {})
+        for root, _dirs, files in os.walk(target_path):
+            for filename in files:
+                if is_book_file(filename):
+                    key = "Books/" + os.path.relpath(os.path.join(root, filename), BOOKS_DIR).replace("\\", "/")
+                    profiles[key] = {**profiles.get(key, {}), **type_update}
     save_media_library(library)
     return jsonify({"ok": True, "item": {**item, "collection": collection}})
 
@@ -2181,7 +2232,8 @@ def search_open_library_books():
 @app.route("/books/metadata", methods=["GET"])
 def open_library_book_details():
     try:
-        return jsonify({"item": book_metadata.details(request.args.get("workKey"), request.args.get("editionKey"))})
+        return jsonify({"item": book_metadata.details(request.args.get("workKey"), request.args.get("editionKey"),
+            normalize_language_code(request.args.get("language")))})
     except ValueError as error:
         return jsonify({"error": str(error)}), 400
     except Exception:
@@ -2194,6 +2246,13 @@ def stream_book():
     target_path = resolve_book_path(relative_path)
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
+    if request.args.get("render") == "pdf" and os.path.splitext(target_path)[1].lower() in {".cbr", ".cbz"}:
+        try:
+            rendered = comic_pdf(target_path, os.path.join(BOOK_COVERS_DIR, "comics"))
+        except ComicError as error:
+            return jsonify({"error": str(error)}), 422
+        return send_file(rendered, mimetype="application/pdf", conditional=True,
+                         download_name=os.path.splitext(os.path.basename(target_path))[0] + ".pdf")
     return send_file(
         target_path,
         mimetype={".pdf": "application/pdf", ".epub": "application/epub+zip"}.get(os.path.splitext(target_path)[1].lower()),
@@ -2220,7 +2279,10 @@ def book_cover():
     target_path = resolve_book_path(relative_path)
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
-    cover_path = extract_book_cover(target_path)
+    try:
+        cover_path = extract_book_cover(target_path)
+    except ComicError as error:
+        return jsonify({"error": str(error)}), 422
     if not cover_path:
         return jsonify({"error": "Book cover not found"}), 404
     return send_file(cover_path, conditional=True)
@@ -2409,6 +2471,164 @@ def delete_series_season():
     )
 
 
+def upload_target(media_type, filename, title="", collection="", tmdb_id=0):
+    """Use the same identity for preflight checks and the actual write."""
+    filename = os.path.basename(str(filename).replace("\\", "/"))
+    base, extension = os.path.splitext(filename)
+    root = MOVIES_DIR if media_type == "movies" else BOOKS_DIR
+    parts = [] if media_type == "movies" else [slugify(part, "collection") for part in collection.split("/") if part and part not in {".", ".."}]
+    directory = os.path.join(root, *parts)
+    candidate = os.path.join(directory, f"{slugify(title or base, 'movie')}{extension.lower()}")
+    for relative, item in load_media_library().get(media_type, {}).items():
+        if not isinstance(item, dict):
+            continue
+        path = os.path.abspath(os.path.join(VIDEOS_DIR, relative)) if media_type == "movies" else resolve_book_path(relative)
+        if not path or not os.path.realpath(path).startswith(os.path.realpath(root) + os.sep) or not os.path.isfile(path):
+            continue
+        same_id = media_type == "movies" and tmdb_id and str(item.get("tmdbId")) == str(tmdb_id)
+        same_title = slugify(item.get("name") or item.get("title"), "") == slugify(title or base, "")
+        if same_id or (same_title and os.path.dirname(path) == os.path.abspath(directory)):
+            return path
+    return candidate
+
+
+def import_torrent_movie(job, source):
+    """Publish the finished video atomically before adding its profile or queuing artwork."""
+    ensure_media_directories()
+    movie = job["movie"]
+    filename = f"{slugify(movie['name'], 'movie')[:120]}-{movie['id']}-{job['id'][:12]}{source.suffix.lower()}"
+    target = os.path.join(MOVIES_DIR, filename)
+    previous_path = None
+    published = False
+    with tempfile.TemporaryDirectory(dir=MOVIES_DIR, prefix=".torrent-import-") as temporary:
+        backup = os.path.join(temporary, "previous")
+        try:
+            with catalog_store.transaction(MEDIA_LIBRARY_PATH, LEGACY_MOVIE_LIBRARY_PATH):
+                library = load_media_library()
+                previous = {}
+                for entry in library["movies"].values():
+                    if int(entry.get("tmdbId") or 0) != movie["id"]:
+                        continue
+                    existing = resolve_relative_video_path(entry.get("relativePath"), MOVIES_DIR)
+                    if not existing or not os.path.isfile(existing):
+                        continue
+                    if not job.get("overwriteExisting") and not os.path.samefile(source, existing):
+                        raise ValueError("Esta película ya está en la biblioteca. El vídeo descargado se conserva para reintentar.")
+                    previous, previous_path = entry, existing
+                    break
+                # Keep the existing path when the container matches, and its profile in either case.
+                if previous_path and os.path.splitext(previous_path)[1].lower() == source.suffix.lower():
+                    target = previous_path
+                relative = os.path.relpath(target, VIDEOS_DIR).replace("\\", "/")
+                if os.path.lexists(target) and not os.path.samefile(source, target):
+                    if os.path.islink(target) or target != previous_path or not job.get("overwriteExisting"):
+                        raise ValueError("Ya existe otro fichero con el nombre de destino.")
+                    os.link(target, backup)
+                if not os.path.exists(target) or not os.path.samefile(source, target):
+                    staged = os.path.join(temporary, "finished")
+                    os.link(source, staged)
+                    os.replace(staged, target)
+                    published = True
+                item = {**previous, "relativePath": relative, "name": movie["name"],
+                        "tmdbId": movie["id"], "file": os.path.basename(target)}
+                if previous.get("relativePath") != relative:
+                    library["movies"].pop(previous.get("relativePath"), None)
+                library["movies"][relative] = item
+                save_media_library(library)
+        except Exception:
+            if published:
+                if os.path.exists(backup):
+                    os.replace(backup, target)
+                else:
+                    os.unlink(target)
+            raise
+        if previous_path and previous_path != target:
+            os.unlink(previous_path)
+    queue_tmdb_artwork("movie", item)
+    return item
+
+
+movie_torrents = None
+movie_torrents_lock = threading.Lock()
+
+
+def get_movie_torrents():
+    global movie_torrents
+    with movie_torrents_lock:
+        if movie_torrents is None:
+            movie_torrents = TorrentDownloads(
+                os.path.join(MULTIMEDIA_DIR, "Torrents"), import_torrent_movie,
+                lambda tmdb_id: tmdb_artwork.status().get("jobs", {}).get(f"movie/{tmdb_id}"),
+                lambda tmdb_id: tmdb_artwork.enqueue("movie", tmdb_id),
+            )
+        movie_torrents.start()
+        return movie_torrents
+
+
+@app.errorhandler(TorrentError)
+def torrent_error(error):
+    return jsonify({"error": str(error)}), 503
+
+
+@app.route("/torrents/search", methods=["GET"])
+def find_movie_torrents():
+    try:
+        return jsonify({"results": search_torrents(request.args.get("q"))})
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/torrents", methods=["GET", "POST"])
+def movie_torrent_jobs():
+    manager = get_movie_torrents()
+    if request.method == "GET":
+        return jsonify(manager.snapshot())
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Solicitud de descarga no válida."}), 400
+    movie = data.get("movie")
+    if isinstance(movie, dict) and data.get("overwriteExisting") is not True:
+        for entry in load_movie_library().values():
+            if str(entry.get("tmdbId")) == str(movie.get("id")):
+                path = resolve_relative_video_path(entry.get("relativePath"), MOVIES_DIR)
+                if path and os.path.isfile(path):
+                    return jsonify({"error": "Esta película ya está descargada. ¿Quieres sobrescribirla o cancelar la descarga?",
+                                    "code": "MOVIE_ALREADY_DOWNLOADED"}), 409
+    try:
+        return jsonify({"job": manager.add(data)}), 202
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/torrents/<job_id>", methods=["POST"])
+def control_movie_torrent(job_id):
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Solicitud no válida."}), 400
+    try:
+        return jsonify({"job": get_movie_torrents().action(job_id, data.get("action"))})
+    except KeyError:
+        return jsonify({"error": "Descarga no encontrada."}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/uploads/check", methods=["POST"])
+def check_upload_conflicts():
+    data = request.get_json(silent=True) or {}
+    media_type = data.get("mediaType")
+    if media_type not in {"movies", "books"}:
+        return jsonify({"error": "Unsupported media type"}), 400
+    conflicts = []
+    for filename in data.get("files", []):
+        normalized = str(filename).replace("\\", "/").strip("/")
+        collection = data.get("collection") or os.path.dirname(normalized)
+        target = upload_target(media_type, normalized, data.get("title") or "", collection, data.get("tmdbId") or 0)
+        if os.path.isfile(target):
+            conflicts.append(filename)
+    return jsonify({"conflicts": conflicts})
+
+
 @app.route("/movies/upload", methods=["POST"])
 def upload_movie():
     uploaded_file = request.files.get("file")
@@ -2425,8 +2645,10 @@ def upload_movie():
     original_filename = os.path.basename(uploaded_file.filename)
     original_extension = os.path.splitext(original_filename)[1]
     desired_base = name or os.path.splitext(original_filename)[0]
-    target_filename = unique_media_filename(MOVIES_DIR, f"{desired_base}{original_extension}")
-    target_path = os.path.join(MOVIES_DIR, target_filename)
+    target_path = upload_target("movies", original_filename, desired_base, tmdb_id=tmdb_id)
+    if os.path.exists(target_path) and request.form.get("overwriteExisting") != "true":
+        return jsonify({"error": "La película ya existe. Confirma si quieres sobrescribirla."}), 409
+    target_filename = os.path.basename(target_path)
     log_upload_event(
         f"movie start original={original_filename} name={name} tmdbId={tmdb_id} target={target_path} moviesRoot={MOVIES_DIR}"
     )
@@ -2486,8 +2708,10 @@ def upload_movie_raw():
     ensure_media_directories()
     original_extension = os.path.splitext(original_filename)[1]
     desired_base = name or os.path.splitext(original_filename)[0]
-    target_filename = unique_media_filename(MOVIES_DIR, f"{desired_base}{original_extension}")
-    target_path = os.path.join(MOVIES_DIR, target_filename)
+    target_path = upload_target("movies", original_filename, desired_base, tmdb_id=tmdb_id)
+    if os.path.exists(target_path) and request.args.get("overwriteExisting") != "true":
+        return jsonify({"error": "La película ya existe. Confirma si quieres sobrescribirla."}), 409
+    target_filename = os.path.basename(target_path)
     partial_path = f"{target_path}.part"
     expected_size = int(request.content_length or 0)
     log_upload_event(
@@ -2577,7 +2801,7 @@ def upload_series():
     directory_name = str(request.form.get("directoryName") or name).strip()
     tmdb_id = int(request.form.get("tmdbId") or 0)
     hero_image = str(request.form.get("heroImage") or "").strip()
-    overwrite_existing = str(request.form.get("overwriteExisting") or "true").strip().lower() not in {"0", "false", "no"}
+    overwrite_existing = str(request.form.get("overwriteExisting") or "false").strip().lower() not in {"0", "false", "no"}
     hero_image_crop = None
     try:
         parsed_crop = json.loads(request.form.get("heroImageCrop") or "null")
@@ -2976,6 +3200,83 @@ def play_game():
     )
 
 
+@app.route("/movies/subtitles", methods=["POST"])
+def upload_movie_subtitles():
+    relative_path = str(request.form.get("relativePath") or "").strip()
+    movie_path = resolve_relative_video_path(relative_path, MOVIES_DIR)
+    if not movie_path or os.path.commonpath([os.path.realpath(movie_path), os.path.realpath(MOVIES_DIR)]) != os.path.realpath(MOVIES_DIR):
+        return jsonify({"error": "Invalid movie path"}), 400
+    if not is_supported_upload_file(movie_path) or not os.path.isfile(movie_path):
+        return jsonify({"error": "Movie file not found"}), 404
+    subtitle = request.files.get("file")
+    if not subtitle or not str(subtitle.filename or "").lower().endswith(".srt"):
+        return jsonify({"error": "Select an .srt subtitle file"}), 400
+    content = subtitle.stream.read(5 * 1024 * 1024 + 1)
+    if not content.strip() or len(content) > 5 * 1024 * 1024:
+        return jsonify({"error": "Subtitle must be non-empty and no larger than 5 MB"}), 400
+    subtitle_path = os.path.splitext(movie_path)[0] + ".srt"
+    movie_subtitles.atomic_write(subtitle_path, content, mode=0o644)
+    return jsonify({"ok": True, "file": os.path.basename(subtitle_path)})
+
+
+@app.route("/settings/subtitles", methods=["GET", "POST"])
+def subtitle_settings():
+    try:
+        if request.method == "POST":
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({"error": "Invalid settings"}), 400
+            result = movie_subtitles.save_credentials(SUBTITLE_SETTINGS_PATH, data)
+        else:
+            result = movie_subtitles.credentials_status(movie_subtitles.load_credentials(SUBTITLE_SETTINGS_PATH))
+        return jsonify({"ok": True, **result})
+    except movie_subtitles.SubtitleError as error:
+        return jsonify({"error": error.code, "code": error.code}), error.status
+    except OSError:
+        return jsonify({"error": "Cannot save subtitle settings", "code": "SUBTITLE_SAVE_FAILED"}), 500
+
+
+@app.route("/movies/subtitles/obtain", methods=["POST"])
+def obtain_movie_subtitles():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid request"}), 400
+    relative_path = str(data.get("relativePath") or "").strip()
+    language = data.get("language", "es")
+    if not isinstance(language, str) or language not in movie_subtitles.LANGUAGES:
+        return jsonify({"error": "Unsupported subtitle language"}), 400
+    movie_path = resolve_relative_video_path(relative_path, MOVIES_DIR)
+    root = os.path.realpath(MOVIES_DIR)
+    if not movie_path or os.path.commonpath([os.path.realpath(movie_path), root]) != root:
+        return jsonify({"error": "Invalid movie path"}), 400
+    if not is_supported_upload_file(movie_path) or not os.path.isfile(movie_path):
+        return jsonify({"error": "Movie file not found", "code": "SUBTITLE_MOVIE_CHANGED"}), 404
+    if not subtitle_download_lock.acquire(blocking=False):
+        return jsonify({"error": "Subtitle download in progress", "code": "SUBTITLE_BUSY"}), 409
+    try:
+        # Use the saved profile for this file, never a client-supplied film ID.
+        canonical_path = os.path.relpath(movie_path, VIDEOS_DIR).replace(os.sep, "/")
+        metadata = load_movie_library().get(canonical_path, {})
+        before = os.stat(movie_path)
+        content, result = subtitle_provider.obtain(movie_path, metadata, language, movie_subtitles.load_credentials(SUBTITLE_SETTINGS_PATH))
+        after = os.stat(movie_path)
+        identity = lambda stat: (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns)
+        if identity(before) != identity(after) or os.path.commonpath([os.path.realpath(movie_path), root]) != root:
+            raise movie_subtitles.SubtitleError("SUBTITLE_MOVIE_CHANGED", 409)
+        subtitle_path = os.path.splitext(movie_path)[0] + ".srt"
+        # Kodi may run as the desktop user while the API runs as root.
+        movie_subtitles.atomic_write(subtitle_path, content, mode=0o644)
+        return jsonify({"ok": True, "file": os.path.basename(subtitle_path), **result})
+    except movie_subtitles.SubtitleError as error:
+        return jsonify({"error": error.code, "code": error.code}), error.status
+    except FileNotFoundError:
+        return jsonify({"error": "Movie file not found", "code": "SUBTITLE_MOVIE_CHANGED"}), 409
+    except OSError:
+        return jsonify({"error": "Cannot save subtitle", "code": "SUBTITLE_SAVE_FAILED"}), 500
+    finally:
+        subtitle_download_lock.release()
+
+
 @app.route("/movies", methods=["POST"])
 def save_movie():
     data = request.get_json(force=True, silent=True) or {}
@@ -3060,6 +3361,9 @@ def delete_movie():
         shutil.rmtree(movie_path)
     else:
         os.remove(movie_path)
+        subtitle_path = os.path.splitext(movie_path)[0] + ".srt"
+        if os.path.isfile(subtitle_path):
+            os.remove(subtitle_path)
     remove_movie_metadata(relative_path)
     return jsonify({"ok": True, "relativePath": relative_path, "removed": True})
 
@@ -3220,6 +3524,64 @@ def stop():
     return jsonify({"ok": True})
 
 
+def checked_subtitle_command(*parts):
+    response = send_mpv_command(*parts)
+    if not isinstance(response, dict) or response.get("error") != "success":
+        raise RuntimeError("subtitle_control_failed")
+    return response.get("data")
+
+
+@app.route("/playback/subtitles", methods=["POST"])
+def control_playback_subtitles():
+    data = request.get_json(silent=True) or {}
+    action = data.get("action") if isinstance(data, dict) else None
+    if action not in {"toggle", "next"}:
+        return jsonify({"error": "Invalid subtitle action"}), 400
+    with lock:
+        tracks_response = send_mpv_command("get_property", "track-list")
+        if isinstance(tracks_response, dict) and tracks_response.get("error") == "success":
+            tracks = [track for track in tracks_response.get("data", []) if track.get("type") == "sub"]
+            if not tracks:
+                return jsonify({"error": "No selectable subtitles", "code": "subtitle_none"}), 409
+            try:
+                selected_id = checked_subtitle_command("get_property", "sid")
+                visible = checked_subtitle_command("get_property", "sub-visibility")
+                selected = next((track for track in tracks if track["id"] == selected_id), None)
+                if action == "next":
+                    index = tracks.index(selected) if selected else -1
+                    selected = tracks[(index + 1) % len(tracks)]
+                    checked_subtitle_command("set_property", "sid", selected["id"])
+                    enabled = True
+                else:
+                    enabled = not (visible and selected is not None)
+                    if enabled and selected is None:
+                        selected = tracks[0]
+                        checked_subtitle_command("set_property", "sid", selected["id"])
+                checked_subtitle_command("set_property", "sub-visibility", enabled)
+            except RuntimeError:
+                return jsonify({"error": "Subtitle command failed", "code": "subtitle_control_failed"}), 503
+            label = " · ".join(str(value) for value in (selected.get("lang"), selected.get("title")) if value) if selected else ""
+            return jsonify({"ok": True, "enabled": enabled, "track": {
+                "id": selected["id"], "label": label, "external": bool(selected.get("external"))
+            } if selected else None})
+
+        state = read_playback_state() or {}
+        if state.get("backend") != "kodi" or not player_is_running(state):
+            return jsonify({"error": "No controllable video playing", "code": "subtitle_not_playing"}), 409
+        kodi_send = shutil.which("kodi-send")
+        if not kodi_send:
+            return jsonify({"error": "kodi-send not installed", "code": "subtitle_control_failed"}), 503
+        # Kodi shows the selected language/visibility in its own on-screen display.
+        kodi_action = "ShowSubtitles" if action == "toggle" else "NextSubtitle"
+        try:
+            result = subprocess.run([kodi_send, f"--action={kodi_action}"], capture_output=True, timeout=3, check=False)
+        except (OSError, subprocess.TimeoutExpired):
+            return jsonify({"error": "Kodi command failed", "code": "subtitle_control_failed"}), 503
+        if result.returncode:
+            return jsonify({"error": "Kodi command failed", "code": "subtitle_control_failed"}), 503
+        return jsonify({"ok": True, "queued": True, "backend": "kodi"})
+
+
 @app.route("/volume/up", methods=["POST"])
 def volume_up():
     with lock:
@@ -3339,6 +3701,56 @@ def tmdb_credentials():
 
 tmdb_artwork = TmdbCache(os.path.join(MULTIMEDIA_DIR, "TmdbCache"), tmdb_credentials)
 oscar_artwork = OscarCatalog(os.path.join(MULTIMEDIA_DIR, "TmdbCache", "Oscars"), tmdb_credentials)
+award_artwork = {
+    name: OscarCatalog(os.path.join(MULTIMEDIA_DIR, "TmdbCache", "Awards", name), tmdb_credentials,
+                       os.path.join(BASE_DIR, "data", filename), cards_only=True)
+    for name, filename in (("palme", "palme_dor.json"), ("goya", "goya_best_picture.json"))
+}
+
+
+def award_catalog(name):
+    return oscar_artwork if name == "oscars" else award_artwork.get(name)
+
+
+@app.route("/awards/<award>", methods=["GET"])
+def awards_library(award):
+    catalog = award_catalog(award)
+    if catalog is None:
+        return jsonify({"error": "Premio no encontrado"}), 404
+    try:
+        return jsonify(catalog.snapshot(request.args.get("language", "es-ES")))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/awards/<award>/prepare", methods=["POST"])
+def prepare_awards_library(award):
+    catalog = award_catalog(award)
+    if catalog is None:
+        return jsonify({"error": "Premio no encontrado"}), 404
+    try:
+        return jsonify(catalog.prepare())
+    except TmdbError as exc:
+        return jsonify({"error": str(exc), "code": exc.code}), 503
+    except OSError:
+        return jsonify({"error": "No se pudo guardar la colección de premios."}), 500
+
+
+@app.route("/awards/<award>/images/<filename>", methods=["GET"])
+def award_image(award, filename):
+    catalog = award_catalog(award)
+    if catalog is None:
+        return jsonify({"error": "Premio no encontrado"}), 404
+    try:
+        width = request.args.get("width")
+        path = catalog.display_image("/" + filename, int(width) if width else None, local_only=True)
+        return send_file(path, max_age=31536000, conditional=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except TmdbError as exc:
+        return jsonify({"error": str(exc), "code": exc.code}), 409
+    except OSError:
+        return jsonify({"error": "No se pudo leer la imagen del premio."}), 500
 
 
 @app.route("/oscars", methods=["GET"])
@@ -3571,4 +3983,10 @@ if __name__ == "__main__":
     ensure_media_directories()
     tmdb_artwork.start()
     oscar_artwork.start()
+    for catalog in award_artwork.values():
+        catalog.start()
+    try:
+        get_movie_torrents()
+    except Exception:
+        app.logger.exception("No se pudo recuperar la cola de torrents")
     app.run(host="0.0.0.0", port=PORT)

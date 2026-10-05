@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import seed from '../../DeviceApp/data/oscar_best_picture.json';
-import { getOscarCatalog, prepareOscarCatalog, oscarImageUrl, isMockMode } from './api/raspberryApi';
-import { matchOscarMovies, oscarSelectionIndex, oscarStrings } from './oscarCatalog';
+import { awardCatalogs, awardStrings } from './awardCatalog.js';
+import { AwardIcon } from './AwardSelector.jsx';
+import { getAwardCatalog, prepareAwardCatalog, awardImageUrl, isMockMode } from './api/raspberryApi';
+import { matchOscarMovies, oscarSelectionIndex } from './oscarCatalog';
 import './OscarLibrary.css';
 
 export function OscarIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M8 3h8v5a4 4 0 0 1-8 0V3ZM8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 12v6m-4 3h8m-9 0v-3h10v3" /></svg>;
 }
 
-export default function OscarLibrary({ movies, language, edition, onEditionChange, onOpenMovie }) {
-  const words = oscarStrings[language.split('-')[0]] || oscarStrings.es;
+export default function OscarLibrary({ award = 'oscars', movies, language, edition, onEditionChange, onOpenMovie }) {
+  const words = awardStrings(language, award);
+  const seed = awardCatalogs[award];
   const mock = isMockMode();
   const [catalog, setCatalog] = useState(null);
   const [error, setError] = useState('');
@@ -27,7 +29,7 @@ export default function OscarLibrary({ movies, language, edition, onEditionChang
     setError('');
     async function read() {
       try {
-        const data = await getOscarCatalog(language);
+        const data = await getAwardCatalog(award, language);
         if (disposed) return;
         setCatalog(data);
         setLoading(false);
@@ -41,14 +43,14 @@ export default function OscarLibrary({ movies, language, edition, onEditionChang
       await read();
       if (disposed) return;
       clearTimeout(timer);
-      try { await prepareOscarCatalog(); }
+      try { await prepareAwardCatalog(award); }
       catch (err) { if (!disposed) setError(err.message || words.connection); }
       if (!disposed) await read();
     })();
     return () => { disposed = true; clearTimeout(timer); };
-  }, [language, attempt, mock, words.connection]);
+  }, [award, language, attempt, mock, words.connection]);
 
-  const winners = useMemo(() => matchOscarMovies(catalog?.winners || seed.winners, movies), [catalog, movies]);
+  const winners = useMemo(() => matchOscarMovies(catalog?.winners || seed.winners, movies), [catalog, movies, seed]);
   const index = oscarSelectionIndex(winners, edition);
   const selected = winners[index];
   const selectedName = selected.name || selected.title;
@@ -60,16 +62,16 @@ export default function OscarLibrary({ movies, language, edition, onEditionChang
   const progressLabel = preparingCovers
     ? `${words.preparingCovers} · ${progress.completed} / ${progress.total}`
     : `${words.preparing} · ${status?.complete || 0} / ${winners.length}`;
-  const choose = (nextIndex) => onEditionChange(winners[Math.max(0, Math.min(winners.length - 1, nextIndex))].edition);
-  const posterFor = winner => mock ? winner.movie?.posterImage : oscarImageUrl(winner.posterPath);
-  const backdrop = mock ? '' : oscarImageUrl(selected.backdropPath, 1280);
+  const choose = (nextIndex) => onEditionChange(winners[Math.max(0, Math.min(winners.length - 1, nextIndex))].key ?? winners[Math.max(0, Math.min(winners.length - 1, nextIndex))].edition);
+  const posterFor = winner => mock ? winner.movie?.posterImage : awardImageUrl(award, winner.posterPath);
+  const backdrop = mock ? '' : awardImageUrl(award, selected.backdropPath, 1280);
   const decadeIndices = winners.flatMap((winner, i) =>
     i === 0 || i === winners.length - 1 || (winner.ceremonyYear % 10 === 0 && winner.ceremonyYear !== winners[i - 1]?.ceremonyYear) ? [i] : []);
 
   return <section className="oscar-library" aria-label={words.eyebrow}>
     {backdrop && <div className="oscar-library__backdrop" key={backdrop} style={{ backgroundImage: `url("${backdrop}")` }} aria-hidden="true" />}
     <div className="oscar-library__heading">
-      <span className="oscar-library__eyebrow"><OscarIcon /> {words.eyebrow}</span>
+      <span className="oscar-library__eyebrow"><AwardIcon award={award} /> {words.eyebrow}</span>
       <h2>{words.title}</h2>
       <p>{words.subtitle}</p>
       <span className="oscar-library__count">{winners.filter(winner => winner.movie).length} / {winners.length} {words.collection}</span>
@@ -90,7 +92,7 @@ export default function OscarLibrary({ movies, language, edition, onEditionChang
         const focused = offset === 0;
         const near = distance <= 5;
         const poster = near ? posterFor(winner) : '';
-        return <button type="button" key={winner.edition}
+        return <button type="button" key={winner.key ?? winner.edition}
           className={`oscar-cover${focused ? ' is-selected' : ''}${winner.movie ? ' is-available' : ''}`}
           style={{ '--offset': Math.max(-6, Math.min(6, offset)), '--scale': focused ? 1 : Math.max(.38, .72 - distance * .095), zIndex: 10 - Math.min(6, distance), opacity: distance > 4 ? 0 : focused ? 1 : Math.max(.3, .85 - distance * .12), visibility: near ? 'visible' : 'hidden' }}
           tabIndex={focused ? 0 : -1} aria-hidden={!near}
@@ -100,7 +102,7 @@ export default function OscarLibrary({ movies, language, edition, onEditionChang
             if (focused && winner.movie) onOpenMovie(winner.movie.id);
             else { choose(i); range.current?.focus({ preventScroll: true }); }
           }}>
-          <span className="oscar-cover__fallback"><OscarIcon /><strong>{winner.name || winner.title}</strong><span>{winner.releaseYear}</span></span>
+          <span className="oscar-cover__fallback"><AwardIcon award={award} /><strong>{winner.name || winner.title}</strong><span>{winner.releaseYear}</span></span>
           {poster && <img key={poster} src={poster} alt="" draggable="false" onError={event => { event.currentTarget.style.visibility = 'hidden'; }} />}
           <span className="oscar-cover__year">{winner.ceremonyYear}</span>
           {winner.movie && <span className="oscar-cover__available" aria-hidden="true">✓</span>}
@@ -132,6 +134,7 @@ export default function OscarLibrary({ movies, language, edition, onEditionChang
       {active && !preparingCovers && currentWinner && <span>{currentWinner.name || currentWinner.title}{progress?.total > 0 ? ` · ${progress.completed} / ${progress.total} ${words.images}` : ''}</span>}
       {!active && !mock && (error || status?.failed > 0) && <button type="button" onClick={() => setAttempt(value => value + 1)}>{words.retry}</button>}
     </div>}
-    <footer className="oscar-library__footer"><div><strong>{words.permanent}</strong><span>{words.saved}</span></div><a href="https://www.oscars.org/oscars/ceremonies" target="_blank" rel="noreferrer">{words.source} ↗</a></footer>
+    {words.scope && <p className="award-library__scope">{words.scope}</p>}
+    <footer className="oscar-library__footer"><div><strong>{words.permanent}</strong><span>{words.saved}</span></div><a href={seed.sources[0]} target="_blank" rel="noreferrer">{words.source} ↗</a></footer>
   </section>;
 }

@@ -1,0 +1,5 @@
+.movie-library__items--grid .movie-library__poster { position: relative; }
+.movie-award-badges { position: absolute; z-index: 2; top: 9px; left: 9px; right: 9px; display: flex; flex-wrap: wrap; gap: 5px; pointer-events: none; }
+.movie-award-badge { --award-cutout: #14212a; display: grid; place-items: center; width: 34px; height: 43px; border-radius: 9px; border: 1px solid #e4c67e99; background: #14212aeb; color: #f3d783; box-shadow: 0 2px 8px #0007; pointer-events: auto; }
+.movie-award-badge .award-icon { width: 25px; height: 34px; }
+@media (max-width: 600px) { .movie-award-badges { top: 6px; left: 6px; right: 6px; gap: 4px; } .movie-award-badge { width: 28px; height: 36px; border-radius: 7px; } .movie-award-badge .award-icon { width: 21px; height: 28px; } }

@@ -10,18 +10,19 @@ SEED_PATH = Path(__file__).parent / "data" / "oscar_best_picture.json"
 
 
 class OscarCatalog(TmdbCache):
-    def __init__(self, root, credentials):
+    def __init__(self, root, credentials, seed_path=SEED_PATH, cards_only=False):
         super().__init__(root, credentials)
         self.catalog_lock = threading.RLock()
         self.cards_primed = False
-        self.seed = json.loads(SEED_PATH.read_text())
+        self.seed = json.loads(Path(seed_path).read_text())
+        self.cards_only = cards_only
         # A newer release may add winners; an older release must never erase them.
         try:
             saved = json.loads((self.root / "catalog.json").read_text())
         except (OSError, ValueError):
             saved = {}
-        winners = {item["edition"]: item for item in saved.get("winners", [])}
-        winners.update({item["edition"]: item for item in self.seed["winners"]})
+        winners = {item.get("key", item["edition"]): item for item in saved.get("winners", [])}
+        winners.update({item.get("key", item["edition"]): item for item in self.seed["winners"]})
         self.winners = sorted(winners.values(), key=lambda item: item["edition"])
 
     def prepare(self):
@@ -34,7 +35,7 @@ class OscarCatalog(TmdbCache):
                     return self.status()
             credentials = self.credentials()
             if not (credentials.get("apiKey") or credentials.get("bearerToken")):
-                raise TmdbError("Guarda las credenciales de TMDB en Ajustes para preparar la colección Óscar.",
+                raise TmdbError("Guarda las credenciales de TMDB en Ajustes para preparar la colección de premios.",
                                 "TMDB_CREDENTIALS_MISSING")
             # Enqueue is idempotent and keeps completed downloads across restarts.
             for winner in reversed(self.winners):
@@ -64,6 +65,16 @@ class OscarCatalog(TmdbCache):
         return failures
 
     def warm(self, kind, tmdb_id, extra_images=(), refresh=False):
+        if self.cards_only:
+            # Award browsing needs permanent cards, not every image in each gallery.
+            for index, language in enumerate(LANGUAGES):
+                self._check_worker()
+                detail = self.json(f"/movie/{tmdb_id}", {"language": language, "append_to_response": "external_ids"}, refresh=refresh)
+                for field, width in (("poster_path", 500), ("backdrop_path", 1280)):
+                    if detail.get(field):
+                        self.display_image(detail[field], width)
+                self._progress("cards", index + 1, len(LANGUAGES), language)
+            return
         if not self.cards_primed:
             self.cards_primed = True
             self.prime_cards()

@@ -34,6 +34,47 @@ class BookProfileTests(unittest.TestCase):
         (self.root / "Books" / "single.pdf").write_bytes(b"book")
         self.client = api.app.test_client()
 
+    def test_collection_type_updates_all_volumes_without_replacing_metadata(self):
+        nested = self.root / "Books" / "The Boys" / "Extras"
+        nested.mkdir()
+        (nested / "02.pdf").write_bytes(b"book")
+        (nested / "notes.txt").write_text("notes")
+        key = "Books/The Boys/01.cbz"
+        metadata = {"title": "Uno", "coverUrl": "/book-covers/custom.png", "localizedMetadata": {"es": {"description": "Texto"}}, "isGraphicNovel": False}
+        api.persist_book_profile(key, metadata)
+        api.persist_book_profile("Books/single.pdf", {"isGraphicNovel": False})
+        for value in ("true", "false"):
+            response = self.client.post("/books/collection/profile", data={"collection": "Books/The Boys", "name": "Colección", "isGraphicNovel": value})
+            self.assertEqual(response.status_code, 200)
+            profiles = api.load_media_library()["books"]
+            self.assertEqual(profiles[key], {**metadata, "isGraphicNovel": value == "true"})
+            self.assertEqual(profiles["Books/The Boys/Extras/02.pdf"]["isGraphicNovel"], value == "true")
+            self.assertFalse(profiles["Books/single.pdf"]["isGraphicNovel"])
+            self.assertNotIn("Books/The Boys/Extras/notes.txt", profiles)
+            visible = {book["relativePath"]: book for book in api.list_book_entries()}
+            self.assertEqual(visible[key]["isGraphicNovel"], value == "true")
+        self.client.post("/books/collection/profile", data={"collection": "The Boys", "name": "Nuevo nombre"})
+        self.assertEqual(api.load_media_library()["books"], profiles)
+
+    def test_collection_author_persists_without_changing_volume_authors(self):
+        key = "Books/The Boys/01.cbz"
+        api.persist_book_profile(key, {"author": "Volume author"})
+        response = self.client.post("/books/collection/profile", data={"collection": "The Boys", "author": "  Collection author  "})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["item"]["author"], "Collection author")
+        self.client.post("/books/collection/profile", data={"collection": "The Boys", "name": "Renamed"})
+        library = api.load_media_library()
+        self.assertEqual(library["bookCollections"]["The Boys"]["author"], "Collection author")
+        self.assertEqual(library["books"][key]["author"], "Volume author")
+        self.client.post("/books/collection/profile", data={"collection": "The Boys", "author": ""})
+        self.assertEqual(api.load_media_library()["bookCollections"]["The Boys"]["author"], "")
+
+    def test_collection_rejects_invalid_type_and_library_root(self):
+        for data, status in (({"collection": "The Boys", "isGraphicNovel": "invalid"}, 400), ({"collection": "Books", "isGraphicNovel": "true"}, 404)):
+            response = self.client.post("/books/collection/profile", data=data)
+            self.assertEqual(response.status_code, status)
+        self.assertFalse(api.load_media_library().get("books"))
+
     def test_names_and_cover_replacements_persist_and_versioned_covers_can_be_deleted(self):
         for endpoint, identity, metadata_key, name_key in (
             ("/books/profile", {"relativePath": "Books/single.pdf"}, "books", "title"),

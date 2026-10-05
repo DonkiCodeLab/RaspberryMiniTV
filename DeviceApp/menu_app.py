@@ -1,3 +1,4 @@
+from playback_process import process_identity
 from game_platforms import EXTENSIONS, stored_platform
 import json
 import os
@@ -615,7 +616,7 @@ def parse_video_entry(filename):
     return match.group(1).upper() if match else os.path.splitext(filename)[0].upper()
 
 
-def write_playback_state(filepath):
+def write_playback_state(filepath, player_pid=None, backend=None):
     try:
         relative_path = os.path.relpath(filepath, VIDEOS_DIR).replace(os.sep, "/")
     except ValueError:
@@ -626,10 +627,15 @@ def write_playback_state(filepath):
         "directory": os.path.dirname(relative_path).replace(os.sep, "/"),
         "file": relative_path,
         "updatedAt": int(time.time()),
+        "playerPid": player_pid,
+        "backend": backend,
+        "playerStart": process_identity(player_pid),
     }
     try:
-        with open(PLAYBACK_STATE_PATH, "w", encoding="utf-8") as handle:
+        temp_path = f"{PLAYBACK_STATE_PATH}.{os.getpid()}.tmp"
+        with open(temp_path, "w", encoding="utf-8") as handle:
             json.dump(payload, handle, ensure_ascii=False)
+        os.replace(temp_path, PLAYBACK_STATE_PATH)
     except Exception:
         pass
 
@@ -2810,15 +2816,21 @@ class DeviceAppMenu:
 
     def open_book_path(self, full_path):
         extension = os.path.splitext(full_path)[1].lower()
+        original_path = full_path
+        if extension in {".cbr", ".cbz"}:
+            from comic_reader import ComicError, comic_pdf
+            try:
+                full_path = comic_pdf(full_path, os.path.join(MULTIMEDIA_DIR, "BookCovers", "comics"))
+                extension = ".pdf"
+            except ComicError as error:
+                append_debug_log(BOOK_DEBUG_LOG_PATH, str(error))
+                self.browser_status = str(error)
+                return
         using_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
         if DESKTOP_PREVIEW and sys.platform == "darwin":
             commands = [["open", full_path]]
         elif extension == ".epub":
             commands = [["foliate", full_path], ["ebook-viewer", full_path], ["calibre", full_path]]
-        elif extension == ".cbr":
-            commands = [["mcomix", full_path], ["comic-reader", full_path]]
-        elif extension == ".cbz":
-            commands = [["mupdf-gl", full_path], ["mupdf", full_path], ["mcomix", full_path]]
         else:
             commands = [
                 # Keep Evince's native header bar visible so the reader always
@@ -2867,8 +2879,8 @@ class DeviceAppMenu:
                         )
                         continue
                     self.book_proc = candidate_proc
-                    self.book_current_path = full_path
-                    self.browser_status = os.path.basename(full_path)
+                    self.book_current_path = original_path
+                    self.browser_status = os.path.basename(original_path)
                     self.state = "book"
                     log_debug(f"BOOK reader started command={command[0]} file={full_path}")
                     return
@@ -2974,6 +2986,7 @@ class DeviceAppMenu:
         command = [
             "mpv",
             "--fullscreen",
+            "--sub-auto=exact",
             f"--input-ipc-server={MPV_SOCKET_PATH}",
         ]
         alsa_device = get_alsa_device()
@@ -3304,7 +3317,7 @@ class DeviceAppMenu:
         self.loading_video_path = None
         self.loading_video_output = "minitv"
         self.loading_video_start_seconds = 0.0
-        write_playback_state(self.video_current_path)
+        write_playback_state(self.video_current_path, self.video_proc.pid, self.video_backend)
         self.reset_external_touch_sequence()
         self.state = "external_video" if self.video_output == "external" else "video"
 

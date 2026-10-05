@@ -67,3 +67,5 @@
   .oscar-cover, .oscar-cover img { transition: none; }
   .oscar-library__backdrop { animation: none; }
 }
+
+.award-library__scope { margin: 1rem auto; max-width: 740px; padding: 0 1.2rem; color: #bdc1bc; font-size: .75rem; text-align: center; line-height: 1.5; }

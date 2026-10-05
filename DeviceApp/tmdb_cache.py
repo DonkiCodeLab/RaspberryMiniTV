@@ -112,10 +112,49 @@ class TmdbCache:
             data = json.loads((self.root / "metadata" / (key + ".json")).read_text())
         except (OSError, ValueError):
             return {"id": int(tmdb_id)}
-        return {"id": int(tmdb_id), "name": data.get("title") or data.get("name") or "",
+        summary = {"id": int(tmdb_id), "name": data.get("title") or data.get("name") or "",
                 "posterPath": data.get("poster_path") or "", "voteAverage": data.get("vote_average") or 0,
                 "releaseDate": data.get("release_date") or "", "firstAirDate": data.get("first_air_date") or "",
                 "genres": [genre.get("name", "") for genre in data.get("genres", [])]}
+        if kind == "tv":
+            summary.update(self._series_totals(tmdb_id, language, data))
+        return summary
+
+    def _series_totals(self, tmdb_id, language, data):
+        # Match the series page: regular seasons only, excluding specials.
+        seasons = [season for season in data.get("seasons", []) if (season.get("season_number") or 0) > 0]
+        episode_count = (sum(season.get("episode_count") or 0 for season in seasons)
+                         if "seasons" in data else data.get("number_of_episodes"))
+        known_runtimes = []
+        for season in seasons:
+            try:
+                cached = self.json(f"/tv/{int(tmdb_id)}/season/{season['season_number']}",
+                                   {"language": language}, local_only=True)
+            except TmdbError:
+                continue
+            episodes = {episode.get("episode_number"): episode for episode in cached.get("episodes", [])
+                        if (episode.get("episode_number") or 0) > 0}
+            for episode in list(episodes.values())[:season.get("episode_count") or 0]:
+                runtime = episode.get("runtime")
+                if isinstance(runtime, (int, float)) and runtime > 0:
+                    known_runtimes.append(runtime)
+
+        missing = max(0, (episode_count or 0) - len(known_runtimes))
+        typical = [runtime for runtime in data.get("episode_run_time", [])
+                   if isinstance(runtime, (int, float)) and runtime > 0]
+        fallback = typical or known_runtimes
+        last_runtime = (data.get("last_episode_to_air") or {}).get("runtime")
+        if not fallback and isinstance(last_runtime, (int, float)) and last_runtime > 0:
+            fallback = [last_runtime]
+        total = None
+        if episode_count and (not missing or fallback):
+            total = round(sum(known_runtimes) + (missing * sum(fallback) / len(fallback) if missing else 0))
+        return {
+            "seasonCount": len(seasons) if "seasons" in data else data.get("number_of_seasons"),
+            "totalEpisodeCount": episode_count,
+            "totalRuntimeMinutes": total,
+            "runtimeIsEstimated": total is not None and missing > 0,
+        }
 
     def json(self, path, params=None, refresh=False, local_only=False):
         if not DETAIL_RE.fullmatch(path) and path not in ("/search/movie", "/search/tv"):

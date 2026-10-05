@@ -187,6 +187,7 @@ fix_*.patch
 .venv-mac-preview/
 __pycache__/
 DeviceApp/user_settings.json
+DeviceApp/subtitle_settings.json
 DeviceApp/alarm_sounds/*
 !DeviceApp/alarm_sounds/.gitkeep
 DeviceApp/menu/Loading_INTRO.png

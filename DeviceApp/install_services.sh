@@ -46,6 +46,8 @@ install_service() {
 
 require_root
 
+MINITV_REPO_DIR="${REPO_DIR}" bash "${SCRIPT_DIR}/install_torrent_support.sh"
+
 if [[ -z "${KODI_HOME}" ]]; then
   echo "No se encuentra el usuario de Kodi: ${KODI_USER}" >&2
   exit 1

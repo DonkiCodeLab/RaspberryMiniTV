@@ -1,0 +1,605 @@
+{
+  "updatedAt": "2026-10-05",
+  "category": "Palme d’Or (feature film)",
+  "sources": [
+    "https://www.festival-cannes.com/en/retrospective/",
+    "https://www.festival-cannes.com/en/press/press-releases/the-79th-festival-de-cannes-winners-list/",
+    "https://en.wikipedia.org/wiki/Palme_d%27Or"
+  ],
+  "winners": [
+    {
+      "key": "1955-marty",
+      "edition": 8,
+      "ceremonyYear": 1955,
+      "releaseYear": 1955,
+      "title": "Marty",
+      "originalTitle": "Marty",
+      "tmdbId": 15919
+    },
+    {
+      "key": "1956-the-silent-world",
+      "edition": 9,
+      "ceremonyYear": 1956,
+      "releaseYear": 1956,
+      "title": "The Silent World",
+      "originalTitle": "Le Monde du silence",
+      "tmdbId": 60234
+    },
+    {
+      "key": "1957-friendly-persuasion",
+      "edition": 10,
+      "ceremonyYear": 1957,
+      "releaseYear": 1956,
+      "title": "Friendly Persuasion",
+      "originalTitle": "Friendly Persuasion",
+      "tmdbId": 43258
+    },
+    {
+      "key": "1958-the-cranes-are-flying",
+      "edition": 11,
+      "ceremonyYear": 1958,
+      "releaseYear": 1957,
+      "title": "The Cranes Are Flying",
+      "originalTitle": "Летят журавли",
+      "tmdbId": 38360
+    },
+    {
+      "key": "1959-black-orpheus",
+      "edition": 12,
+      "ceremonyYear": 1959,
+      "releaseYear": 1959,
+      "title": "Black Orpheus",
+      "originalTitle": "Orfeu Negro",
+      "tmdbId": 40423
+    },
+    {
+      "key": "1960-la-dolce-vita",
+      "edition": 13,
+      "ceremonyYear": 1960,
+      "releaseYear": 1960,
+      "title": "La dolce vita",
+      "originalTitle": "La dolce vita",
+      "tmdbId": 439
+    },
+    {
+      "key": "1961-the-long-absence",
+      "edition": 14,
+      "ceremonyYear": 1961,
+      "releaseYear": 1961,
+      "title": "The Long Absence",
+      "originalTitle": "Une aussi longue absence",
+      "tmdbId": 131836
+    },
+    {
+      "key": "1961-viridiana",
+      "edition": 14,
+      "ceremonyYear": 1961,
+      "releaseYear": 1961,
+      "title": "Viridiana",
+      "originalTitle": "Viridiana",
+      "tmdbId": 4497
+    },
+    {
+      "key": "1962-o-pagador-de-promessas",
+      "edition": 15,
+      "ceremonyYear": 1962,
+      "releaseYear": 1962,
+      "title": "O Pagador de Promessas",
+      "originalTitle": "O Pagador de Promessas",
+      "tmdbId": 59990
+    },
+    {
+      "key": "1963-the-leopard",
+      "edition": 16,
+      "ceremonyYear": 1963,
+      "releaseYear": 1963,
+      "title": "The Leopard",
+      "originalTitle": "Il gattopardo",
+      "tmdbId": 1040
+    },
+    {
+      "key": "1975-chronicle-of-the-years-of-fire",
+      "edition": 28,
+      "ceremonyYear": 1975,
+      "releaseYear": 1975,
+      "title": "Chronicle of the Years of Fire",
+      "originalTitle": "Chronique des Années de Braise",
+      "tmdbId": 52555
+    },
+    {
+      "key": "1976-taxi-driver",
+      "edition": 29,
+      "ceremonyYear": 1976,
+      "releaseYear": 1976,
+      "title": "Taxi Driver",
+      "originalTitle": "Taxi Driver",
+      "tmdbId": 103
+    },
+    {
+      "key": "1977-padre-padrone",
+      "edition": 30,
+      "ceremonyYear": 1977,
+      "releaseYear": 1977,
+      "title": "Padre Padrone",
+      "originalTitle": "Padre padrone",
+      "tmdbId": 42225
+    },
+    {
+      "key": "1978-the-tree-of-wooden-clogs",
+      "edition": 31,
+      "ceremonyYear": 1978,
+      "releaseYear": 1978,
+      "title": "The Tree of Wooden Clogs",
+      "originalTitle": "L'albero degli zoccoli",
+      "tmdbId": 31542
+    },
+    {
+      "key": "1979-apocalypse-now",
+      "edition": 32,
+      "ceremonyYear": 1979,
+      "releaseYear": 1979,
+      "title": "Apocalypse Now",
+      "originalTitle": "Apocalypse Now",
+      "tmdbId": 28
+    },
+    {
+      "key": "1979-the-tin-drum",
+      "edition": 32,
+      "ceremonyYear": 1979,
+      "releaseYear": 1979,
+      "title": "The Tin Drum",
+      "originalTitle": "Die Blechtrommel",
+      "tmdbId": 659
+    },
+    {
+      "key": "1980-all-that-jazz",
+      "edition": 33,
+      "ceremonyYear": 1980,
+      "releaseYear": 1979,
+      "title": "All That Jazz",
+      "originalTitle": "All That Jazz",
+      "tmdbId": 16858
+    },
+    {
+      "key": "1980-kagemusha",
+      "edition": 33,
+      "ceremonyYear": 1980,
+      "releaseYear": 1980,
+      "title": "Kagemusha",
+      "originalTitle": "影武者",
+      "tmdbId": 11953
+    },
+    {
+      "key": "1981-man-of-iron",
+      "edition": 34,
+      "ceremonyYear": 1981,
+      "releaseYear": 1981,
+      "title": "Man of Iron",
+      "originalTitle": "Człowiek z żelaza",
+      "tmdbId": 225
+    },
+    {
+      "key": "1982-missing",
+      "edition": 35,
+      "ceremonyYear": 1982,
+      "releaseYear": 1982,
+      "title": "Missing",
+      "originalTitle": "Missing",
+      "tmdbId": 15600
+    },
+    {
+      "key": "1982-yol",
+      "edition": 35,
+      "ceremonyYear": 1982,
+      "releaseYear": 1982,
+      "title": "Yol",
+      "originalTitle": "Yol",
+      "tmdbId": 52556
+    },
+    {
+      "key": "1983-the-ballad-of-narayama",
+      "edition": 36,
+      "ceremonyYear": 1983,
+      "releaseYear": 1983,
+      "title": "The Ballad of Narayama",
+      "originalTitle": "楢山節考",
+      "tmdbId": 42113
+    },
+    {
+      "key": "1984-paris-texas",
+      "edition": 37,
+      "ceremonyYear": 1984,
+      "releaseYear": 1984,
+      "title": "Paris, Texas",
+      "originalTitle": "Paris, Texas",
+      "tmdbId": 655
+    },
+    {
+      "key": "1985-when-father-was-away-on-business",
+      "edition": 38,
+      "ceremonyYear": 1985,
+      "releaseYear": 1985,
+      "title": "When Father Was Away on Business",
+      "originalTitle": "Otac na službenom putu",
+      "tmdbId": 21042
+    },
+    {
+      "key": "1986-the-mission",
+      "edition": 39,
+      "ceremonyYear": 1986,
+      "releaseYear": 1986,
+      "title": "The Mission",
+      "originalTitle": "The Mission",
+      "tmdbId": 11416
+    },
+    {
+      "key": "1987-under-the-sun-of-satan",
+      "edition": 40,
+      "ceremonyYear": 1987,
+      "releaseYear": 1987,
+      "title": "Under the Sun of Satan",
+      "originalTitle": "Sous le soleil de Satan",
+      "tmdbId": 31300
+    },
+    {
+      "key": "1988-pelle-the-conqueror",
+      "edition": 41,
+      "ceremonyYear": 1988,
+      "releaseYear": 1987,
+      "title": "Pelle the Conqueror",
+      "originalTitle": "Pelle Erobreren",
+      "tmdbId": 11174
+    },
+    {
+      "key": "1989-sex-lies-and-videotape",
+      "edition": 42,
+      "ceremonyYear": 1989,
+      "releaseYear": 1989,
+      "title": "Sex, Lies, and Videotape",
+      "originalTitle": "sex, lies, and videotape",
+      "tmdbId": 1412
+    },
+    {
+      "key": "1990-wild-at-heart",
+      "edition": 43,
+      "ceremonyYear": 1990,
+      "releaseYear": 1990,
+      "title": "Wild at Heart",
+      "originalTitle": "Wild at Heart",
+      "tmdbId": 483
+    },
+    {
+      "key": "1991-barton-fink",
+      "edition": 44,
+      "ceremonyYear": 1991,
+      "releaseYear": 1991,
+      "title": "Barton Fink",
+      "originalTitle": "Barton Fink",
+      "tmdbId": 290
+    },
+    {
+      "key": "1992-the-best-intentions",
+      "edition": 45,
+      "ceremonyYear": 1992,
+      "releaseYear": 1992,
+      "title": "The Best Intentions",
+      "originalTitle": "Den goda viljan",
+      "tmdbId": 41764
+    },
+    {
+      "key": "1993-farewell-my-concubine",
+      "edition": 46,
+      "ceremonyYear": 1993,
+      "releaseYear": 1993,
+      "title": "Farewell My Concubine",
+      "originalTitle": "霸王别姬",
+      "tmdbId": 10997
+    },
+    {
+      "key": "1993-the-piano",
+      "edition": 46,
+      "ceremonyYear": 1993,
+      "releaseYear": 1993,
+      "title": "The Piano",
+      "originalTitle": "The Piano",
+      "tmdbId": 713
+    },
+    {
+      "key": "1994-pulp-fiction",
+      "edition": 47,
+      "ceremonyYear": 1994,
+      "releaseYear": 1994,
+      "title": "Pulp Fiction",
+      "originalTitle": "Pulp Fiction",
+      "tmdbId": 680
+    },
+    {
+      "key": "1995-underground",
+      "edition": 48,
+      "ceremonyYear": 1995,
+      "releaseYear": 1995,
+      "title": "Underground",
+      "originalTitle": "Подземље",
+      "tmdbId": 11902
+    },
+    {
+      "key": "1996-secrets-lies",
+      "edition": 49,
+      "ceremonyYear": 1996,
+      "releaseYear": 1996,
+      "title": "Secrets & Lies",
+      "originalTitle": "Secrets & Lies",
+      "tmdbId": 11159
+    },
+    {
+      "key": "1997-the-eel",
+      "edition": 50,
+      "ceremonyYear": 1997,
+      "releaseYear": 1997,
+      "title": "The Eel",
+      "originalTitle": "うなぎ",
+      "tmdbId": 20506
+    },
+    {
+      "key": "1997-taste-of-cherry",
+      "edition": 50,
+      "ceremonyYear": 1997,
+      "releaseYear": 1997,
+      "title": "Taste of Cherry",
+      "originalTitle": "طعم گيلاس",
+      "tmdbId": 30020
+    },
+    {
+      "key": "1998-eternity-and-a-day",
+      "edition": 51,
+      "ceremonyYear": 1998,
+      "releaseYear": 1998,
+      "title": "Eternity and a Day",
+      "originalTitle": "Μια αιωνιότητα και μια μέρα",
+      "tmdbId": 24858
+    },
+    {
+      "key": "1999-rosetta",
+      "edition": 52,
+      "ceremonyYear": 1999,
+      "releaseYear": 1999,
+      "title": "Rosetta",
+      "originalTitle": "Rosetta",
+      "tmdbId": 11489
+    },
+    {
+      "key": "2000-dancer-in-the-dark",
+      "edition": 53,
+      "ceremonyYear": 2000,
+      "releaseYear": 2000,
+      "title": "Dancer in the Dark",
+      "originalTitle": "Dancer in the Dark",
+      "tmdbId": 16
+    },
+    {
+      "key": "2001-the-son-s-room",
+      "edition": 54,
+      "ceremonyYear": 2001,
+      "releaseYear": 2001,
+      "title": "The Son's Room",
+      "originalTitle": "La stanza del figlio",
+      "tmdbId": 11447
+    },
+    {
+      "key": "2002-the-pianist",
+      "edition": 55,
+      "ceremonyYear": 2002,
+      "releaseYear": 2002,
+      "title": "The Pianist",
+      "originalTitle": "The Pianist",
+      "tmdbId": 423
+    },
+    {
+      "key": "2003-elephant",
+      "edition": 56,
+      "ceremonyYear": 2003,
+      "releaseYear": 2003,
+      "title": "Elephant",
+      "originalTitle": "Elephant",
+      "tmdbId": 1807
+    },
+    {
+      "key": "2004-fahrenheit-9-11",
+      "edition": 57,
+      "ceremonyYear": 2004,
+      "releaseYear": 2004,
+      "title": "Fahrenheit 9/11",
+      "originalTitle": "Fahrenheit 9/11",
+      "tmdbId": 1777
+    },
+    {
+      "key": "2005-l-enfant",
+      "edition": 58,
+      "ceremonyYear": 2005,
+      "releaseYear": 2005,
+      "title": "L'Enfant",
+      "originalTitle": "L'enfant",
+      "tmdbId": 11490
+    },
+    {
+      "key": "2006-the-wind-that-shakes-the-barley",
+      "edition": 59,
+      "ceremonyYear": 2006,
+      "releaseYear": 2006,
+      "title": "The Wind That Shakes the Barley",
+      "originalTitle": "The Wind That Shakes the Barley",
+      "tmdbId": 1116
+    },
+    {
+      "key": "2007-4-months-3-weeks-and-2-days",
+      "edition": 60,
+      "ceremonyYear": 2007,
+      "releaseYear": 2007,
+      "title": "4 Months, 3 Weeks and 2 Days",
+      "originalTitle": "4 luni, 3 săptămâni și 2 zile",
+      "tmdbId": 2009
+    },
+    {
+      "key": "2008-the-class",
+      "edition": 61,
+      "ceremonyYear": 2008,
+      "releaseYear": 2008,
+      "title": "The Class",
+      "originalTitle": "Entre les murs",
+      "tmdbId": 8841
+    },
+    {
+      "key": "2009-the-white-ribbon",
+      "edition": 62,
+      "ceremonyYear": 2009,
+      "releaseYear": 2009,
+      "title": "The White Ribbon",
+      "originalTitle": "Das weiße Band - Eine deutsche Kindergeschichte",
+      "tmdbId": 37903
+    },
+    {
+      "key": "2010-uncle-boonmee-who-can-recall-his-past-lives",
+      "edition": 63,
+      "ceremonyYear": 2010,
+      "releaseYear": 2010,
+      "title": "Uncle Boonmee Who Can Recall His Past Lives",
+      "originalTitle": "ลุงบุญมีระลึกชาติ",
+      "tmdbId": 38368
+    },
+    {
+      "key": "2011-the-tree-of-life",
+      "edition": 64,
+      "ceremonyYear": 2011,
+      "releaseYear": 2011,
+      "title": "The Tree of Life",
+      "originalTitle": "The Tree of Life",
+      "tmdbId": 8967
+    },
+    {
+      "key": "2012-amour",
+      "edition": 65,
+      "ceremonyYear": 2012,
+      "releaseYear": 2012,
+      "title": "Amour",
+      "originalTitle": "Amour",
+      "tmdbId": 86837
+    },
+    {
+      "key": "2013-blue-is-the-warmest-colour",
+      "edition": 66,
+      "ceremonyYear": 2013,
+      "releaseYear": 2013,
+      "title": "Blue Is the Warmest Colour",
+      "originalTitle": "La Vie d'Adèle - Chapitres 1 et 2",
+      "tmdbId": 152584
+    },
+    {
+      "key": "2014-winter-sleep",
+      "edition": 67,
+      "ceremonyYear": 2014,
+      "releaseYear": 2014,
+      "title": "Winter Sleep",
+      "originalTitle": "Kış Uykusu",
+      "tmdbId": 265169
+    },
+    {
+      "key": "2015-dheepan",
+      "edition": 68,
+      "ceremonyYear": 2015,
+      "releaseYear": 2015,
+      "title": "Dheepan",
+      "originalTitle": "Dheepan",
+      "tmdbId": 314402
+    },
+    {
+      "key": "2016-i-daniel-blake",
+      "edition": 69,
+      "ceremonyYear": 2016,
+      "releaseYear": 2016,
+      "title": "I, Daniel Blake",
+      "originalTitle": "I, Daniel Blake",
+      "tmdbId": 374473
+    },
+    {
+      "key": "2017-the-square",
+      "edition": 70,
+      "ceremonyYear": 2017,
+      "releaseYear": 2017,
+      "title": "The Square",
+      "originalTitle": "The Square",
+      "tmdbId": 401246
+    },
+    {
+      "key": "2018-shoplifters",
+      "edition": 71,
+      "ceremonyYear": 2018,
+      "releaseYear": 2018,
+      "title": "Shoplifters",
+      "originalTitle": "万引き家族",
+      "tmdbId": 505192
+    },
+    {
+      "key": "2019-parasite",
+      "edition": 72,
+      "ceremonyYear": 2019,
+      "releaseYear": 2019,
+      "title": "Parasite",
+      "originalTitle": "기생충",
+      "tmdbId": 496243
+    },
+    {
+      "key": "2021-titane",
+      "edition": 74,
+      "ceremonyYear": 2021,
+      "releaseYear": 2021,
+      "title": "Titane",
+      "originalTitle": "Titane",
+      "tmdbId": 630240
+    },
+    {
+      "key": "2022-triangle-of-sadness",
+      "edition": 75,
+      "ceremonyYear": 2022,
+      "releaseYear": 2022,
+      "title": "Triangle of Sadness",
+      "originalTitle": "Triangle of Sadness",
+      "tmdbId": 497828
+    },
+    {
+      "key": "2023-anatomy-of-a-fall",
+      "edition": 76,
+      "ceremonyYear": 2023,
+      "releaseYear": 2023,
+      "title": "Anatomy of a Fall",
+      "originalTitle": "Anatomie d'une chute",
+      "tmdbId": 915935
+    },
+    {
+      "key": "2024-anora",
+      "edition": 77,
+      "ceremonyYear": 2024,
+      "releaseYear": 2024,
+      "title": "Anora",
+      "originalTitle": "Anora",
+      "tmdbId": 1064213
+    },
+    {
+      "key": "2025-it-was-just-an-accident",
+      "edition": 78,
+      "ceremonyYear": 2025,
+      "releaseYear": 2025,
+      "title": "It Was Just an Accident",
+      "originalTitle": "Un simple accident",
+      "tmdbId": 1456349
+    },
+    {
+      "key": "2026-fjord",
+      "edition": 79,
+      "ceremonyYear": 2026,
+      "releaseYear": 2026,
+      "title": "Fjord",
+      "originalTitle": "Fjord",
+      "tmdbId": 1401459
+    }
+  ]
+}

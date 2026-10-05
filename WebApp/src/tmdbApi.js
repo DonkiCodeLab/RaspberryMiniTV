@@ -352,6 +352,21 @@ async function getMovieImages(movieId, language, importPreview = false) {
   return uniqueImageList([...posters, ...backdrops]);
 }
 
+function getSeriesSummaryTotals(show) {
+  const seasons = (show.seasons || []).filter(season => Number(season.season_number) > 0);
+  const totalEpisodeCount = Array.isArray(show.seasons)
+    ? seasons.reduce((total, season) => total + (Number(season.episode_count) || 0), 0)
+    : show.number_of_episodes ?? null;
+  const runtimes = (show.episode_run_time || []).map(Number).filter(runtime => Number.isFinite(runtime) && runtime > 0);
+  const runtime = runtimes.length ? runtimes.reduce((total, value) => total + value, 0) / runtimes.length
+    : Number(show.last_episode_to_air?.runtime) || 0;
+  const totalRuntimeMinutes = totalEpisodeCount > 0 && runtime > 0 ? Math.round(totalEpisodeCount * runtime) : null;
+  return {
+    seasonCount: Array.isArray(show.seasons) ? seasons.length : show.number_of_seasons ?? null,
+    totalEpisodeCount, totalRuntimeMinutes, runtimeIsEstimated: totalRuntimeMinutes !== null,
+  };
+}
+
 export async function getLibrarySummaries(movies, directories, language) {
   let summaries;
   if (!isMockMode()) {
@@ -362,7 +377,8 @@ export async function getLibrarySummaries(movies, directories, language) {
       const data = await fetchTmdbJson(`/${kind}/${id}`, { language });
       return [String(id), { id, name: data.title || data.name, posterPath: data.poster_path,
         releaseDate: data.release_date, firstAirDate: data.first_air_date,
-        voteAverage: data.vote_average, genres: (data.genres || []).map(g => g.name) }];
+        voteAverage: data.vote_average, genres: (data.genres || []).map(g => g.name),
+        ...(kind === "tv" ? getSeriesSummaryTotals(data) : {}) }];
     };
     const movieIds = [...new Set(movies.map(m => Number(m.tmdbId ?? m.id)).filter(Boolean))];
     const seriesIds = [...new Set(directories.map(d => Number(d.tmdbId)).filter(Boolean))];
@@ -410,6 +426,7 @@ export async function getTvSeriesById(seriesId, language, importPreview = false)
   return {
     id: Number(show?.id) || Number(seriesId),
     name: show?.name || "Unknown show",
+    posterImage: buildTmdbImageUrl(show?.poster_path, "w500", importPreview),
     firstAirDate: show?.first_air_date || "",
     voteAverage: Number(show?.vote_average) || 0,
     heroImage,

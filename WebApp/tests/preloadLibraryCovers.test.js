@@ -110,3 +110,26 @@ test('a failed image is retried when the local preparation finishes and the view
   assert.notEqual(retry, failed);
   assert.equal(retry.src, 'pending-local-image');
 });
+
+test('cancelling or timing out a preload never clears an image adopted by a visible card', async () => {
+  const { acquireLibraryCover } = await import('../src/preloadLibraryCovers.js');
+  for (const reason of ['abort', 'timeout']) {
+    const url = `visible-${reason}`;
+    const image = acquireLibraryCover(url, () => ({ decode: () => new Promise(() => {}) }));
+    const controller = new AbortController();
+    const pending = preloadLibraryCovers([url], { signal: controller.signal, timeoutMs: 5, log: () => {} });
+    image.parentElement = {}; // The card mounts while preload is still running.
+    if (reason === 'abort') controller.abort();
+    await pending;
+    assert.equal(image.src, url);
+  }
+});
+
+test('cancelling a detached preload still releases its request', async () => {
+  const image = {};
+  const controller = new AbortController();
+  const pending = preloadLibraryCovers(['detached'], { signal: controller.signal, createImage: () => image, log: () => {} });
+  controller.abort();
+  await pending;
+  assert.equal(image.src, '');
+});

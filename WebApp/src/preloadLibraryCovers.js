@@ -68,11 +68,13 @@ export async function preloadLibraryCovers(urls, { signal, createImage = () => n
       publish();
       resolve();
     };
-    const abort = () => { finish('cancelada'); image.src = ''; };
+    // A card may have adopted the cached image while decoding was pending.
+    const cancelRequest = () => { if (!image.parentElement) image.src = ''; };
+    const abort = () => { finish('cancelada'); cancelRequest(); };
     image.onload = () => { if (!image.decode) finish('cargada'); };
     image.onerror = () => finish('error');
     signal?.addEventListener('abort', abort, { once: true });
-    timer = setTimeout(() => { finish('tiempo agotado'); image.src = ''; }, timeoutMs);
+    timer = setTimeout(() => { finish('tiempo agotado'); cancelRequest(); }, timeoutMs);
     image.loading = 'eager';
     if (image.src !== url) image.src = url;
     if (image.decode) image.decode().then(() => finish('cargada'), () => finish('error'));

@@ -33,3 +33,9 @@ test('selection preserves both 1930 ceremonies and defaults to the newest editio
   assert.equal(oscarSelectionIndex(winners, null), 1);
   assert.equal(oscarSelectionIndex(winners, 999), 1);
 });
+
+test('joint winners remain individually selectable in the same edition', () => {
+  const tied = [{key:'2025-el47',edition:39}, {key:'2025-infiltrada',edition:39}];
+  assert.equal(oscarSelectionIndex(tied,'2025-el47'),0);
+  assert.equal(oscarSelectionIndex(tied,'2025-infiltrada'),1);
+});

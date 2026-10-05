@@ -26,6 +26,15 @@ test('EPUB bytes use authenticated fetch; PDF checks and HTTP errors remain inta
     await assert.rejects(api.getBookContent('Books/book.pdf'), /PDF válido/);
     globalThis.fetch = async () => new Response('%PDF-1.7 content');
     assert.equal((await api.getBookContent('Books/book.pdf'))[0], 37);
+    for (const extension of ['cbr', 'cbz', 'CBR']) {
+      globalThis.fetch = async (url, options) => {
+        assert.equal(new URL(url).searchParams.get('render'), 'pdf');
+        assert.equal(options.headers['X-Web-Pin'], 'test-pin');
+        return new Response('%PDF-1.7 comic');
+      };
+      assert.equal((await api.getBookContent(`Books/comic.${extension}`))[0], 37);
+      assert.equal(new URL(api.getBookContentUrl(`Books/comic.${extension}`)).searchParams.get('render'), null);
+    }
     globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     await assert.rejects(api.getBookContent('Books/book.epub', { format: 'epub' }), error => error.status === 401);
   } finally { Object.assign(globalThis, previous); }
@@ -56,5 +65,17 @@ test('a confirmed upload sends the reviewed metadata and artwork with the file',
     assert.deepEqual(JSON.parse(sent[0].get('metadata')), { title: 'Reviewed title', publisher: 'Editorial', editionKey: '/books/OL2M' });
     assert.equal(sent[0].get('coverFile').name, 'cover.png');
     assert.equal(sent[0].get('files').name, 'book.epub');
+    for (const isGraphicNovel of [true, false]) {
+      sent.length = 0;
+      await api.uploadBookFiles({ files: [file, new File(['comic'], 'comic.cbz')], collection: 'Mixed',
+        metadata: { isGraphicNovel, title: 'Do not copy this title to each volume', coverFile } });
+      assert.equal(sent.length, 2);
+      for (const form of sent) {
+        assert.deepEqual(JSON.parse(form.get('metadata')), { isGraphicNovel });
+        assert.equal(form.get('collection'), 'Mixed');
+        assert.equal(form.get('title'), '');
+        assert.equal(form.get('coverFile'), null);
+      }
+    }
   } finally { Object.assign(globalThis, previous); }
 });

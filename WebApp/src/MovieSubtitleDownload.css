@@ -1,0 +1,11 @@
+.movie-subtitle-download { padding: 16px; margin: 16px 0; border: 1px solid #ffffff30; border-radius: 14px; background: #ffffff08; min-width: 0; }
+.movie-subtitle-download p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.movie-subtitle-download__actions { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 12px; }
+.movie-subtitle-download__actions .dialog-field { flex: 1 1 130px; margin: 0; }
+.movie-subtitle-download__actions .dialog-button { flex: 1 1 160px; white-space: normal; }
+.movie-subtitle-download select { width: 100%; min-height: 44px; border-radius: 8px; padding: 8px 12px; background: #161c22; color: #fff; border: 1px solid #ffffff40; }
+.movie-subtitle-download__settings { display: grid; gap: 12px; margin-top: 16px; }
+.movie-subtitle-download__settings a { color: inherit; text-decoration: underline; }
+.movie-subtitle-download__result { margin: 12px 0; padding: 12px; background: #84d39415; border-radius: 8px; overflow-wrap: anywhere; }
+.movie-subtitle-download__result strong { display: block; margin-bottom: 8px; }
+.movie-subtitle-download__result p:last-child { margin: 0; }

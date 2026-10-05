@@ -1,0 +1,380 @@
+{
+  "updatedAt": "2026-10-05",
+  "category": "Mejor película",
+  "sources": [
+    "https://www.premiosgoya.com/",
+    "https://www.premiosgoya.com/40-edicion/articulos/ver/palmares-40-premios-goya/",
+    "https://en.wikipedia.org/wiki/Goya_Award_for_Best_Film"
+  ],
+  "winners": [
+    {
+      "key": "1987-voyage-to-nowhere",
+      "edition": 1,
+      "ceremonyYear": 1987,
+      "releaseYear": 1986,
+      "title": "Voyage to Nowhere",
+      "originalTitle": "El viaje a ninguna parte",
+      "tmdbId": 156453
+    },
+    {
+      "key": "1988-the-enchanted-forest",
+      "edition": 2,
+      "ceremonyYear": 1988,
+      "releaseYear": 1987,
+      "title": "The Enchanted Forest",
+      "originalTitle": "El bosque animado",
+      "tmdbId": 60311
+    },
+    {
+      "key": "1989-women-on-the-verge-of-a-nervous-breakdown",
+      "edition": 3,
+      "ceremonyYear": 1989,
+      "releaseYear": 1988,
+      "title": "Women on the Verge of a Nervous Breakdown",
+      "originalTitle": "Mujeres al borde de un ataque de nervios",
+      "tmdbId": 4203
+    },
+    {
+      "key": "1990-twisted-obsession",
+      "edition": 4,
+      "ceremonyYear": 1990,
+      "releaseYear": 1989,
+      "title": "Twisted Obsession",
+      "originalTitle": "El sueño del mono loco",
+      "tmdbId": 110928
+    },
+    {
+      "key": "1991-ay-carmela",
+      "edition": 5,
+      "ceremonyYear": 1991,
+      "releaseYear": 1990,
+      "title": "¡Ay Carmela!",
+      "originalTitle": "¡Ay, Carmela!",
+      "tmdbId": 41806
+    },
+    {
+      "key": "1992-lovers",
+      "edition": 6,
+      "ceremonyYear": 1992,
+      "releaseYear": 1991,
+      "title": "Lovers",
+      "originalTitle": "Amantes",
+      "tmdbId": 41782
+    },
+    {
+      "key": "1993-belle-poque",
+      "edition": 7,
+      "ceremonyYear": 1993,
+      "releaseYear": 1992,
+      "title": "Belle Époque",
+      "originalTitle": "Belle Époque",
+      "tmdbId": 2470
+    },
+    {
+      "key": "1994-everyone-to-jail",
+      "edition": 8,
+      "ceremonyYear": 1994,
+      "releaseYear": 1993,
+      "title": "Everyone to Jail",
+      "originalTitle": "Todos a la cárcel",
+      "tmdbId": 99902
+    },
+    {
+      "key": "1995-running-out-of-time",
+      "edition": 9,
+      "ceremonyYear": 1995,
+      "releaseYear": 1994,
+      "title": "Running Out of Time",
+      "originalTitle": "Días contados",
+      "tmdbId": 114218
+    },
+    {
+      "key": "1996-nobody-will-speak-of-us-when-we-re-dead",
+      "edition": 10,
+      "ceremonyYear": 1996,
+      "releaseYear": 1995,
+      "title": "Nobody Will Speak of Us When We're Dead",
+      "originalTitle": "Nadie hablará de nosotras cuando hayamos muerto",
+      "tmdbId": 74840
+    },
+    {
+      "key": "1997-thesis",
+      "edition": 11,
+      "ceremonyYear": 1997,
+      "releaseYear": 1996,
+      "title": "Thesis",
+      "originalTitle": "Tesis",
+      "tmdbId": 9299
+    },
+    {
+      "key": "1998-the-lucky-star",
+      "edition": 12,
+      "ceremonyYear": 1998,
+      "releaseYear": 1997,
+      "title": "The Lucky Star",
+      "originalTitle": "La buena estrella",
+      "tmdbId": 97295
+    },
+    {
+      "key": "1999-the-girl-of-your-dreams",
+      "edition": 13,
+      "ceremonyYear": 1999,
+      "releaseYear": 1998,
+      "title": "The Girl of Your Dreams",
+      "originalTitle": "La niña de tus ojos",
+      "tmdbId": 67297
+    },
+    {
+      "key": "2000-all-about-my-mother",
+      "edition": 14,
+      "ceremonyYear": 2000,
+      "releaseYear": 1999,
+      "title": "All About My Mother",
+      "originalTitle": "Todo sobre mi madre",
+      "tmdbId": 99
+    },
+    {
+      "key": "2001-pellet",
+      "edition": 15,
+      "ceremonyYear": 2001,
+      "releaseYear": 2000,
+      "title": "El Bola",
+      "originalTitle": "El Bola",
+      "tmdbId": 33504
+    },
+    {
+      "key": "2002-the-others",
+      "edition": 16,
+      "ceremonyYear": 2002,
+      "releaseYear": 2001,
+      "title": "The Others",
+      "originalTitle": "The Others",
+      "tmdbId": 1933
+    },
+    {
+      "key": "2003-mondays-in-the-sun",
+      "edition": 17,
+      "ceremonyYear": 2003,
+      "releaseYear": 2002,
+      "title": "Mondays in the Sun",
+      "originalTitle": "Los lunes al sol",
+      "tmdbId": 54580
+    },
+    {
+      "key": "2004-take-my-eyes",
+      "edition": 18,
+      "ceremonyYear": 2004,
+      "releaseYear": 2003,
+      "title": "Take My Eyes",
+      "originalTitle": "Te doy mis ojos",
+      "tmdbId": 1418
+    },
+    {
+      "key": "2005-the-sea-inside",
+      "edition": 19,
+      "ceremonyYear": 2005,
+      "releaseYear": 2004,
+      "title": "The Sea Inside",
+      "originalTitle": "Mar adentro",
+      "tmdbId": 1913
+    },
+    {
+      "key": "2006-the-secret-life-of-words",
+      "edition": 20,
+      "ceremonyYear": 2006,
+      "releaseYear": 2005,
+      "title": "The Secret Life of Words",
+      "originalTitle": "The Secret Life of Words",
+      "tmdbId": 148
+    },
+    {
+      "key": "2007-volver",
+      "edition": 21,
+      "ceremonyYear": 2007,
+      "releaseYear": 2006,
+      "title": "Volver",
+      "originalTitle": "Volver",
+      "tmdbId": 219
+    },
+    {
+      "key": "2008-solitary-fragments",
+      "edition": 22,
+      "ceremonyYear": 2008,
+      "releaseYear": 2007,
+      "title": "Solitary Fragments",
+      "originalTitle": "La soledad",
+      "tmdbId": 39489
+    },
+    {
+      "key": "2009-camino",
+      "edition": 23,
+      "ceremonyYear": 2009,
+      "releaseYear": 2008,
+      "title": "Camino",
+      "originalTitle": "Camino",
+      "tmdbId": 17893
+    },
+    {
+      "key": "2010-cell-211",
+      "edition": 24,
+      "ceremonyYear": 2010,
+      "releaseYear": 2009,
+      "title": "Cell 211",
+      "originalTitle": "Celda 211",
+      "tmdbId": 33273
+    },
+    {
+      "key": "2011-black-bread",
+      "edition": 25,
+      "ceremonyYear": 2011,
+      "releaseYear": 2010,
+      "title": "Black Bread",
+      "originalTitle": "Pa Negre",
+      "tmdbId": 57521
+    },
+    {
+      "key": "2012-no-rest-for-the-wicked",
+      "edition": 26,
+      "ceremonyYear": 2012,
+      "releaseYear": 2011,
+      "title": "No Rest for the Wicked",
+      "originalTitle": "No habrá paz para los malvados",
+      "tmdbId": 76013
+    },
+    {
+      "key": "2013-blancanieves",
+      "edition": 27,
+      "ceremonyYear": 2013,
+      "releaseYear": 2012,
+      "title": "Blancanieves",
+      "originalTitle": "Blancanieves",
+      "tmdbId": 127864
+    },
+    {
+      "key": "2014-living-is-easy-with-eyes-closed",
+      "edition": 28,
+      "ceremonyYear": 2014,
+      "releaseYear": 2013,
+      "title": "Living Is Easy with Eyes Closed",
+      "originalTitle": "Vivir es fácil con los ojos cerrados",
+      "tmdbId": 209415
+    },
+    {
+      "key": "2015-marshland",
+      "edition": 29,
+      "ceremonyYear": 2015,
+      "releaseYear": 2014,
+      "title": "Marshland",
+      "originalTitle": "La isla mínima",
+      "tmdbId": 236735
+    },
+    {
+      "key": "2016-truman",
+      "edition": 30,
+      "ceremonyYear": 2016,
+      "releaseYear": 2015,
+      "title": "Truman",
+      "originalTitle": "Truman",
+      "tmdbId": 341744
+    },
+    {
+      "key": "2017-the-fury-of-a-patient-man",
+      "edition": 31,
+      "ceremonyYear": 2017,
+      "releaseYear": 2016,
+      "title": "The Fury of a Patient Man",
+      "originalTitle": "Tarde para la ira",
+      "tmdbId": 411638
+    },
+    {
+      "key": "2018-the-bookshop",
+      "edition": 32,
+      "ceremonyYear": 2018,
+      "releaseYear": 2017,
+      "title": "The Bookshop",
+      "originalTitle": "The Bookshop",
+      "tmdbId": 444539
+    },
+    {
+      "key": "2019-champions",
+      "edition": 33,
+      "ceremonyYear": 2019,
+      "releaseYear": 2018,
+      "title": "Champions",
+      "originalTitle": "Campeones",
+      "tmdbId": 456929
+    },
+    {
+      "key": "2020-pain-and-glory",
+      "edition": 34,
+      "ceremonyYear": 2020,
+      "releaseYear": 2019,
+      "title": "Pain and Glory",
+      "originalTitle": "Dolor y gloria",
+      "tmdbId": 519010
+    },
+    {
+      "key": "2021-schoolgirls",
+      "edition": 35,
+      "ceremonyYear": 2021,
+      "releaseYear": 2020,
+      "title": "Schoolgirls",
+      "originalTitle": "Las niñas",
+      "tmdbId": 619443
+    },
+    {
+      "key": "2022-the-good-boss",
+      "edition": 36,
+      "ceremonyYear": 2022,
+      "releaseYear": 2021,
+      "title": "The Good Boss",
+      "originalTitle": "El buen patrón",
+      "tmdbId": 820722
+    },
+    {
+      "key": "2023-the-beasts",
+      "edition": 37,
+      "ceremonyYear": 2023,
+      "releaseYear": 2022,
+      "title": "The Beasts",
+      "originalTitle": "As bestas",
+      "tmdbId": 848685
+    },
+    {
+      "key": "2024-society-of-the-snow",
+      "edition": 38,
+      "ceremonyYear": 2024,
+      "releaseYear": 2023,
+      "title": "Society of the Snow",
+      "originalTitle": "La sociedad de la nieve",
+      "tmdbId": 906126
+    },
+    {
+      "key": "2025-the-47",
+      "edition": 39,
+      "ceremonyYear": 2025,
+      "releaseYear": 2024,
+      "title": "The 47",
+      "originalTitle": "El 47",
+      "tmdbId": 1174481
+    },
+    {
+      "key": "2025-undercover",
+      "edition": 39,
+      "ceremonyYear": 2025,
+      "releaseYear": 2024,
+      "title": "Undercover",
+      "originalTitle": "La infiltrada",
+      "tmdbId": 1215185
+    },
+    {
+      "key": "2026-sundays",
+      "edition": 40,
+      "ceremonyYear": 2026,
+      "releaseYear": 2025,
+      "title": "Sundays",
+      "originalTitle": "Los domingos",
+      "tmdbId": 1443576
+    }
+  ]
+}

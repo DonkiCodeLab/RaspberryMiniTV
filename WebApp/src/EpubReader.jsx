@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBookContent } from "./api/raspberryApi";
+import BookPageSelector from "./BookPageSelector.jsx";
 
 const flattenToc = (items, depth = 0) => items.flatMap((item) => [
   { href: item.href, label: `${"　".repeat(depth)}${item.label.trim()}` },
@@ -107,6 +108,22 @@ export default function EpubReader({ book, onClose }) {
     setTurning(true);
     try {
       if (target === "next" || target === "prev") await renditionRef.current[target]();
+      else if (typeof target === "number") {
+        const rendition = renditionRef.current;
+        const current = await rendition.currentLocation();
+        const manager = rendition.manager;
+        const view = manager.visible().find(item => item.section.index === current.start.index);
+        const total = current.start.displayed.total;
+        if (!view || target < 1 || target > total) return;
+        // Map the current layout's page to a CFI so EPUB.js handles navigation
+        // and position persistence exactly as it does for chapter links.
+        const vertical = manager.settings.axis === "vertical";
+        const size = vertical ? Math.min(manager.container.clientHeight, window.innerHeight) : manager.layout.pageWidth;
+        const index = !vertical && manager.settings.direction === "rtl" ? total - target : target - 1;
+        const mapped = manager.mapping.page(view.contents, view.section.cfiBase, index * size, (index + 1) * size);
+        if (!mapped?.start) throw new Error("Page unavailable");
+        await rendition.display(mapped.start);
+      }
       else await renditionRef.current.display(target);
     } catch { setError("No se pudo mostrar este capítulo. Puedes reintentar la lectura."); }
     finally { setTurning(false); }
@@ -117,7 +134,12 @@ export default function EpubReader({ book, onClose }) {
       <div className="book-reader__file"><strong><span>Leyendo:</span> {book.name}</strong></div>
       <div className="book-reader__pagination" aria-label="Navegación del libro">
         <button type="button" onClick={() => navigate("prev")} disabled={loading || turning || !location || location.atStart} aria-label="Página anterior">‹</button>
-        <span aria-live="polite">{location ? `Sección ${location.start.index + 1} de ${location.chapters} · ${location.start.displayed.page}/${location.start.displayed.total}` : "Cargando…"}</span>
+        <div className="epub-reader__page-selector">
+          <small aria-live="polite">{location ? `Sección ${location.start.index + 1} de ${location.chapters}` : "Cargando…"}</small>
+          <BookPageSelector key={`${book.relativePath}:${location?.start.index}`} section
+            page={location?.start.displayed.page} total={location?.start.displayed.total}
+            disabled={loading || turning || !!error} onSelect={navigate} />
+        </div>
         <button type="button" onClick={() => navigate("next")} disabled={loading || turning || !location || location.atEnd} aria-label="Página siguiente">›</button>
       </div>
       <div className="book-reader__controls">
@@ -143,7 +165,7 @@ export default function EpubReader({ book, onClose }) {
           {error ? <button className="dialog-button dialog-button--accent" type="button" onClick={() => setRetry(value => value + 1)}>Reintentar</button> : null}
         </div> : null}
       </div>
-      <small className="epub-reader__hint">Tu posición se guarda en este navegador. Usa las flechas para pasar página.</small>
+      <small className="epub-reader__hint">Tu posición se guarda en este navegador. Las páginas de cada sección se ajustan a la pantalla y al tamaño de letra.</small>
     </div>
     {confirmClose ? <div className="book-reader__confirm-backdrop">
       <div className="book-reader__confirm" role="alertdialog" aria-modal="true" aria-labelledby="epub-close-title">

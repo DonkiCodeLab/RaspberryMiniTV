@@ -10,7 +10,7 @@ export function matchOscarMovies(winners, movies) {
 }
 
 export function oscarSelectionIndex(winners, edition) {
-  const index = winners.findIndex(winner => winner.edition === edition);
+  const index = winners.findIndex(winner => (winner.key ?? winner.edition) === edition);
   return index < 0 ? Math.max(0, winners.length - 1) : index;
 }
 

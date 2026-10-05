@@ -11,14 +11,45 @@ import urllib.request
 
 
 FIELDS = ("title", "author", "year", "isbn", "description", "coverUrl", "openLibraryKey",
-          "editionKey", "publisher", "publishDate", "language", "pageCount", "subjects", "subtitle")
+          "editionKey", "publisher", "publishDate", "language", "pageCount", "pageCountSource", "subjects", "subtitle")
+LANGUAGES = {"es": "spa", "ca": "cat", "en": "eng"}
+LOCALIZED_FIELDS = ("title", "subtitle", "description", "subjects")
 _request_lock = threading.Lock()
 _last_request = 0
 
 
 def normalize_profile(data):
-    return {key: str(data[key] or "").strip()[:20000 if key == "description" else 2000]
-            for key in FIELDS if key in data}
+    profile = {key: str(data[key] or "").strip()[:20000 if key == "description" else 2000]
+               for key in FIELDS if key in data}
+    if "isGraphicNovel" in data:
+        value = data["isGraphicNovel"]
+        if isinstance(value, str) and value.strip().lower() in {"true", "false"}:
+            value = value.strip().lower() == "true"
+        if not isinstance(value, bool):
+            raise ValueError("Invalid graphic novel classification")
+        profile["isGraphicNovel"] = value
+    if "localizedMetadata" in data:
+        variants = data["localizedMetadata"]
+        if isinstance(variants, str):
+            variants = json.loads(variants)
+        if not isinstance(variants, dict):
+            raise ValueError("Invalid localized book metadata")
+        profile["localizedMetadata"] = {
+            language: {key: str(value[key] or "").strip()[:20000 if key == "description" else 2000]
+                       for key in LOCALIZED_FIELDS if key in value}
+            for language, value in variants.items() if language in LANGUAGES and isinstance(value, dict)
+        }
+    return profile
+
+
+def is_graphic_novel(data, filename):
+    profile = normalize_profile(data)
+    return profile.get("isGraphicNovel", os.path.splitext(filename)[1].lower() in {".cbz", ".cbr"})
+
+
+def normalize_language(language):
+    language = str(language or "").strip().lower().replace("_", "-").split("-")[0]
+    return {"spa": "es", "cat": "ca", "eng": "en"}.get(language, language) if language else "es"
 
 
 def _get(path, params=None):
@@ -50,11 +81,28 @@ def _cover(ids):
     return f"https://covers.openlibrary.org/b/id/{value}-L.jpg?default=false" if value else ""
 
 
-def search(query, language="es"):
+def edition_page_count(edition):
+    count = str(edition.get("number_of_pages") or "").strip()
+    if re.fullmatch(r"[1-9]\d{0,5}", count):
+        return count
+    # Some catalog records only have a physical-description string. Accept one
+    # unambiguous Arabic page sequence; do not guess from ranges or volume counts.
+    pagination = str(edition.get("pagination") or "").strip()
+    match = re.fullmatch(r"(?:[ivxlcdm]+\s*,\s*)?([1-9]\d{0,5})\s*(?:p\.?|pages\.?|páginas\.?|pàgines\.?)", pagination, re.I)
+    return match.group(1) if match else ""
+
+
+def search(query, language="es", *, strict=False):
     if not query.strip():
         return []
-    payload = _get("/search.json", {"q": query[:300], "lang": language, "limit": 8,
-        "fields": "key,title,author_name,first_publish_year,cover_i,editions,editions.key,editions.title,editions.isbn,editions.language"})
+    language = normalize_language(language)
+    language = language if language in LANGUAGES else "es"
+    params = {"q": f"({query[:300]}) language:{LANGUAGES[language]}", "lang": language, "limit": 8,
+        "fields": "key,title,author_name,first_publish_year,cover_i,editions,editions.key,editions.title,editions.isbn,editions.language,editions.cover_i"}
+    payload = _get("/search.json", params)
+    if not payload.get("docs") and not strict:
+        # Keep books without a translation discoverable; the UI shows their edition language.
+        payload = _get("/search.json", {**params, "q": query[:300]})
     items = []
     for doc in (payload.get("docs") or [])[:8]:
         edition = next(iter((doc.get("editions") or {}).get("docs") or []), {})
@@ -69,11 +117,45 @@ def search(query, language="es"):
             # ISBN and language must come from the selected edition, never another edition of the work.
             "isbn": next(iter(edition.get("isbn") or []), ""),
             "language": ", ".join(edition.get("language") or []),
-            "coverUrl": _cover([doc.get("cover_i")])})
+            "coverUrl": _cover([edition.get("cover_i"), doc.get("cover_i")])})
     return items
 
 
-def details(work_key, edition_key=""):
+def _localized_edition(edition, language):
+    codes = {normalize_language(str(item.get("key") or "").rsplit("/", 1)[-1])
+             for item in edition.get("languages") or []}
+    if language not in codes:
+        return {}
+    # Work descriptions/subjects have no language tag. Never call them a translation.
+    # Edition subjects also often use English catalog headings, regardless of book language.
+    # Bilingual editions have useful titles but their description's language is ambiguous.
+    values = {"title": _text(edition.get("title")), "subtitle": _text(edition.get("subtitle")),
+              "description": _text(edition.get("description")) if codes == {language} else ""}
+    return {key: value for key, value in values.items() if value}
+
+
+def localized_metadata(work_key, edition_key, edition, language):
+    variants = {}
+    for code in dict.fromkeys([language, *LANGUAGES]):
+        localized = _localized_edition(edition, code)
+        if not localized and work_key:
+            try:
+                matches = search(f"key:{work_key}", code, strict=True)
+                match = next((item for item in matches if item["openLibraryKey"] == work_key and item["editionKey"]), None)
+                if match:
+                    candidate = edition if match["editionKey"] == edition_key else _get(match["editionKey"] + ".json")
+                    if any(item.get("key") == work_key for item in candidate.get("works") or []):
+                        localized = _localized_edition(candidate, code)
+            except (OSError, ValueError):
+                # A missing/unavailable translation must not block identification or uploading.
+                pass
+        variants[code] = localized
+    return variants
+
+
+def details(work_key, edition_key="", language="es"):
+    language = normalize_language(language)
+    language = language if language in LANGUAGES else "es"
     work_key, edition_key = _key(work_key, "works"), _key(edition_key, "books")
     if not work_key and not edition_key:
         raise ValueError("Selecciona un resultado válido de Open Library.")
@@ -93,6 +175,7 @@ def details(work_key, edition_key=""):
             authors.append(_get(key + ".json").get("name") or "")
     date = str(edition.get("publish_date") or work.get("first_publish_date") or "")
     year = re.search(r"\b\d{4}\b", date)
+    pages = edition_page_count(edition)
     return {"openLibraryKey": work_key, "editionKey": edition_key,
         "title": edition.get("title") or work.get("title") or "",
         "subtitle": edition.get("subtitle") or work.get("subtitle") or "",
@@ -100,10 +183,11 @@ def details(work_key, edition_key=""):
         "isbn": next(iter(edition.get("isbn_13") or edition.get("isbn_10") or []), ""),
         "publisher": ", ".join(edition.get("publishers") or []), "publishDate": date,
         "language": ", ".join(str(item.get("key") or "").rsplit("/", 1)[-1] for item in edition.get("languages") or []),
-        "pageCount": str(edition.get("number_of_pages") or ""),
+        "pageCount": pages, "pageCountSource": "openlibrary" if pages else "",
         "subjects": ", ".join((work.get("subjects") or edition.get("subjects") or [])[:20]),
         "description": _text(edition.get("description") or work.get("description")),
-        "coverUrl": _cover(edition.get("covers") or []) or _cover(work.get("covers") or [])}
+        "coverUrl": _cover(edition.get("covers") or []) or _cover(work.get("covers") or []),
+        "localizedMetadata": localized_metadata(work_key, edition_key, edition, language)}
 
 
 class _CoverRedirect(urllib.request.HTTPRedirectHandler):

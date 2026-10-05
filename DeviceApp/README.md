@@ -2,6 +2,48 @@
 
 Scripts para ejecutar la TV en la Raspberry Pi.
 
+## Descargas de películas por torrent
+
+En Uploads → Películas → TMDB, abre una ficha para buscar en The Pirate Bay
+(apibay.org). Los resultados muestran MB decimales y seeds de mayor a menor;
+puedes ajustar la búsqueda por título/año. «Descargar» inicia una tarea en la
+Raspberry y el dashboard permite ver progreso, velocidad, pausar, reanudar,
+cancelar o reintentar errores. La descarga continúa con el navegador cerrado.
+La lista del dashboard tiene scroll y separa las tareas en curso del historial.
+Las finalizadas y canceladas se conservan tras reiniciar hasta que pulses
+«Quitar del historial» en cada entrada; esto no borra el vídeo ni su ficha TMDB.
+
+`update_minitv.sh` e `install_services.sh` instalan automáticamente la instancia
+dedicada `minitv-torrents.service` de Transmission. Para instalar solo ese soporte:
+
+```bash
+bash DeviceApp/install_torrent_support.sh
+sudo systemctl restart minitv-api.service
+```
+
+Transmission usa RPC en `127.0.0.1:9092` y el puerto de peers `51414`, con dos
+descargas simultáneas. No modifica la configuración de otras instancias.
+La API usa el protocolo RPC de Transmission 3.x/4.x
+([especificación oficial](https://github.com/transmission/transmission/blob/4.0.6/docs/rpc-spec.md)).
+Si ya tienes un motor local con acceso a las mismas rutas, puedes definir
+`MINITV_TRANSMISSION_URL`, `MINITV_TRANSMISSION_USER` y
+`MINITV_TRANSMISSION_PASSWORD` en el entorno de la API.
+
+La cola persistente, los datos temporales y la configuración están en
+`MultimediaContent/Torrents/`. Tras obtener los metadatos del magnet, se selecciona
+el vídeo compatible de mayor tamaño, excluyendo samples; no se importan archivos
+comprimidos ni todas las películas de un pack. El vídeo completo se publica con
+un enlace duro en Movies (ambas carpetas deben estar en el mismo sistema de
+archivos), se guarda su ficha y **solo entonces** se preparan imágenes y recursos
+TMDB. La copia temporal se elimina sin duplicar espacio. Una película existente
+no se sobrescribe. Los reinicios conservan descargas y pausas; los errores de
+TMDB se pueden reintentar sin descargar de nuevo el vídeo.
+
+La búsqueda depende de la disponibilidad de apibay.org. Los resultados se
+asocian a la ficha que has abierto; comprueba el nombre del torrent antes de
+seleccionarlo. La previsualización de la ficha consulta TMDB, pero no encola la
+preparación completa del título hasta que el vídeo está guardado.
+
 ## Archivos
 
 - `control_api.py`: API Flask para listar y reproducir vídeos con `omxplayer`.
@@ -157,11 +199,16 @@ sudo apt install -y python3-flask python3-pygame python3-rpi.gpio python3-evdev 
 ```
 
 Para abrir libros desde el menú instala también los visores. Evince se usa para PDF
-porque funciona de forma nativa en la sesión Wayland de MiniTV; MuPDF cubre CBZ,
-Calibre aporta el lector EPUB y MComix permite abrir CBR:
+porque funciona de forma nativa en la sesión Wayland de MiniTV. Los CBR y CBZ
+se convierten a PDF en `MultimediaContent/BookCovers/comics`, sin modificar el
+original; la web, la portada y el visor comparten esta caché. UnRAR descomprime
+los CBR, incluidos los filtros RAR que libarchive no admite, y `python3-fitz`
+convierte las imágenes. El instalador compila UnRAR desde su fuente oficial si
+no está instalado. Calibre aporta el lector EPUB:
 
 ```bash
-sudo apt install -y evince mupdf calibre mcomix
+sudo apt install -y evince mupdf calibre mcomix libarchive-tools python3-fitz
+bash DeviceApp/install_comic_support.sh
 ```
 
 Si un lector no consigue arrancar, el detalle queda registrado en
@@ -493,3 +540,69 @@ prepararlo desde consola, con las credenciales TMDB configuradas en Ajustes o en
 las variables de entorno existentes: `python3 DeviceApp/prepare_oscars.py`. No
 ejecutar la preparación por consola a la vez que otra API que escriba en la misma
 carpeta de caché.
+
+## Subtítulos durante la reproducción
+
+La ficha y su editor incluyen **Obtener subtítulo**, además de la carga manual de
+SRT. Selecciona español (predeterminado), catalán o inglés. La Raspberry busca en
+OpenSubtitles.com primero por la huella del vídeo (solo lee sus primeros y últimos
+64 KiB); si no hay coincidencia, busca por el ID TMDB de la ficha guardada, o por
+el nombre del fichero cuando no hay ID. Prioriza la coincidencia de versión,
+fuentes fiables, valoración y descargas. Descarta otros idiomas, otras películas,
+subtítulos parciales, traducciones automáticas y entregas divididas en varios CD.
+La consulta de respaldo evalúa la primera página ordenada por descargas; es una
+selección por compatibilidad estimada, no una garantía de sincronización.
+
+En **Configurar OpenSubtitles**, introduce una clave de API, usuario y contraseña
+de OpenSubtitles.com. Consulta su [guía de alta y claves](https://opensubtitles.tawk.help/article/getting-started).
+La cuenta queda en `DeviceApp/subtitle_settings.json`, excluido de Git y con
+permisos `0600`; la API devuelve solo su estado, nunca la clave o contraseña.
+Dejar los campos secretos vacíos al editar conserva los valores anteriores.
+Alternativamente se pueden configurar `OPENSUBTITLES_API_KEY`,
+`OPENSUBTITLES_USERNAME` y `OPENSUBTITLES_PASSWORD` en el entorno del servicio API.
+Los ajustes guardados tienen prioridad y no se necesitan paquetes adicionales.
+
+El botón guarda inmediatamente `<nombre-del-vídeo>.srt`, sustituyendo el anterior
+solo después de validar la descarga UTF-8 (máximo 5 MiB). Los errores de conexión,
+cuota, credenciales o formato conservan el SRT anterior. Se muestra si hubo
+coincidencia por huella o si conviene comprobar la sincronización. No se sube el
+vídeo a internet. La descarga usa la cuota de la cuenta de OpenSubtitles.
+
+API protegida por PIN: `GET/POST /settings/subtitles` y
+`POST /movies/subtitles/obtain` con `{"relativePath":"Movies/pelicula.mkv","language":"es"}`.
+La búsqueda toma los metadatos del catálogo de la Raspberry para ese fichero.
+El modo de demostración no simula una descarga guardada.
+
+La web ofrece **Activar/desactivar subtítulos** y **Siguiente pista de subtítulos**
+en los controles de la Raspberry y en la ficha de la película que está sonando.
+Se aplican al vídeo actual de la MiniTV o del monitor externo. La pista siguiente
+permite recorrer los subtítulos integrados y los archivos externos que haya
+cargado el reproductor. El SRT debe estar junto al vídeo con el mismo nombre base;
+si se ha subido después de iniciar el vídeo, vuelve a iniciar la reproducción.
+
+Con mpv, la web confirma la visibilidad y muestra el idioma o título de la pista
+cuando está disponible. Con Kodi se envían las acciones mediante `kodi-send` y
+se comprueba el cambio en la pantalla de reproducción. Reinicia los servicios
+tras actualizar el código para que el menú registre el reproductor utilizado.
+Este control no modifica el reproductor HTML del navegador ni puede ocultar
+subtítulos que formen parte de la propia imagen del vídeo.
+
+Referencias de los controles: [mpv](https://mpv.io/manual/stable/) y
+[acciones de Kodi](https://kodi.wiki/view/Action_IDs).
+
+### Películas premiadas: Óscar, Palma de Oro y Goya
+
+La vista de premios conserva el archivo Óscar existente y añade dos catálogos independientes:
+`data/palme_dor.json` (66 Palmas de Oro a largometrajes, 1955–2026) y
+`data/goya_best_picture.json` (41 ganadoras de mejor película, 1987–2026).
+Las fuentes oficiales y la fecha de revisión figuran en cada manifiesto. Cannes excluye el antiguo
+Grand Prix, las Palmas especiales/honoríficas y los cortometrajes. Los empates tienen una clave
+por película, además de su número de edición: ambos ganadores permanecen navegables.
+
+API con PIN: `GET /awards/<oscars|palme|goya>?language=es-ES`,
+`POST /awards/<premio>/prepare` y `GET /awards/<premio>/images/<archivo>?width=500`.
+Las rutas `/oscars` siguen siendo compatibles. Los nuevos archivos viven en
+`MultimediaContent/TmdbCache/Awards/{palme,goya}` y conservan las fichas en tres idiomas,
+portadas y fondos aunque se elimine el vídeo de la biblioteca. Se preparan en segundo plano
+al abrir la colección y continúan después de reiniciar. La disponibilidad se cruza por ID de TMDB
+con un fichero real en la biblioteca, nunca por similitud de títulos.

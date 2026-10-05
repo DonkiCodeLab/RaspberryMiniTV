@@ -2,10 +2,41 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { build } from "esbuild";
 import { buildBookCollections } from "../src/bookLibrary.js";
+import { isGraphicNovel } from "../src/bookMetadata.js";
 
 const volume = (number, overrides = {}) => ({
   name: `The Boys ${number}`, file: `The Boys ${number}.cbz`, collection: "The Boys",
   relativePath: `Books/The Boys/The Boys ${number}.cbz`, format: "cbz", ...overrides,
+});
+
+test("book types respect explicit choices, infer legacy comics and split mixed collections", () => {
+  assert.equal(isGraphicNovel({ format: "CBR" }), true);
+  assert.equal(isGraphicNovel({ relativePath: "Books/old.cbz" }), true);
+  assert.equal(isGraphicNovel({ format: "pdf" }), false);
+  assert.equal(isGraphicNovel({ format: "cbz", isGraphicNovel: false }), false);
+  assert.equal(isGraphicNovel({ format: "epub", isGraphicNovel: true }), true);
+  const books = [volume(1), volume(2, { isGraphicNovel: false }), volume(3, { format: "pdf", isGraphicNovel: true })];
+  const novels = buildBookCollections(books, {}, "es", { type: "novel" });
+  const graphics = buildBookCollections(books, {}, "es", { type: "graphic" });
+  assert.deepEqual(novels[0].books.map(book => book.file), ["The Boys 2.cbz"]);
+  assert.deepEqual(graphics[0].books.map(book => book.file), ["The Boys 1.cbz", "The Boys 3.cbz"]);
+  assert.equal(novels[0].coverBook.file, "The Boys 2.cbz");
+  assert.deepEqual(buildBookCollections([volume(1)], {}, "es", { type: "novel" }), []);
+});
+
+test("name and descending year sorting use localized titles, keep unknown years last and stable covers", () => {
+  const standalone = (name, year, extra = {}) => ({ name, year, file: `${name}.pdf`, relativePath: `Books/${name}.pdf`, ...extra });
+  const books = [standalone("Zeta", "2020", { localizedMetadata: { es: { title: "Álbum 2" } } }), standalone("Álbum 10", "2020"), standalone("Nuevo", "2025"), standalone("Sin año", ""),
+    volume(1, { year: "1990", name: "Zeta" }), volume(2, { year: "2026", name: "Alfa" })];
+  const names = buildBookCollections(books);
+  assert.deepEqual(names.map(item => item.label), ["Álbum 2", "Álbum 10", "Nuevo", "Sin año", "The Boys"]);
+  const years = buildBookCollections(books, {}, "es", { sort: "year" });
+  assert.deepEqual(years.map(item => item.label), ["Nuevo", "Álbum 2", "Álbum 10", "The Boys", "Sin año"]);
+  const group = years.find(item => item.isCollection);
+  assert.equal(group.year, 1990);
+  assert.equal(group.coverBook.file, "The Boys 1.cbz");
+  assert.deepEqual(group.books.map(book => book.year), ["2026", "1990"]);
+  assert.equal(books[0].name, "Zeta");
 });
 
 test("the library contains one entry per collection and keeps standalone books separate", () => {
@@ -47,4 +78,49 @@ test("book artwork uses the configured API host and preserves cover versions and
     assert.equal(api.getBookDisplayCoverUrl({ coverUrl: "https://covers.example/1.jpg" }), "https://covers.example/1.jpg");
     assert.equal(api.getBookDisplayCoverUrl(null), "");
   } finally { globalThis.window = previousWindow; }
+});
+
+test("changing book direction sorts collections and volumes without changing their covers", () => {
+  const books = [volume(1, { name: "Alfa", year: 2024 }), volume(2, { name: "Zeta", year: 1990 }), volume(3, { name: "Sin fecha" })];
+  const byName = buildBookCollections(books, {}, "es", { sort: "name", direction: "desc" })[0];
+  assert.deepEqual(byName.books.map(book => book.name), ["Zeta", "Sin fecha", "Alfa"]);
+  const byYear = buildBookCollections(books, {}, "es", { sort: "year", direction: "asc" })[0];
+  assert.deepEqual(byYear.books.map(book => book.name), ["Zeta", "Alfa", "Sin fecha"]);
+  assert.equal(byName.coverBook.relativePath, books[0].relativePath);
+  assert.equal(byYear.coverBook.relativePath, books[0].relativePath);
+});
+
+test("book search matches title, author, year and combined terms without accents or case", async () => {
+  const { matchesBookQuery } = await import("../src/bookLibrary.js");
+  const book = { name: "Alas de ónix", author: "Rebecca Yarros", year: "2025" };
+  for (const query of ["onix", "ÓNIX", "  rebecca  ", "YARROS", "2025", "Yarros 2025", "alas onix"]) {
+    assert.equal(matchesBookQuery(book, query), true, query);
+  }
+  assert.equal(matchesBookQuery(book, "2024"), false);
+  assert.equal(matchesBookQuery(book, "Yarros 2024"), false);
+  assert.equal(matchesBookQuery(book, "Empireo", "Empíreo"), true);
+  assert.equal(matchesBookQuery({ publishDate: "2001-08-15" }, "2001"), true);
+  assert.equal(matchesBookQuery({}, "2025"), false);
+  assert.equal(matchesBookQuery({}, "  "), true);
+});
+
+test("author sorting works for collections and volumes in both directions with unknown authors last", () => {
+  const books = [volume(1, { author: "Zoé" }), volume(2, { author: "Álvaro" }), volume(3),
+    { name: "Solo", relativePath: "Books/solo.epub", author: "Marta" },
+    { name: "Unknown", relativePath: "Books/unknown.epub" }];
+  const asc = buildBookCollections(books, {}, "es", { sort: "author", direction: "asc" });
+  const desc = buildBookCollections(books, {}, "es", { sort: "author", direction: "desc" });
+  assert.deepEqual(asc.map(item => item.label), ["The Boys", "Solo", "Unknown"]);
+  assert.deepEqual(desc.map(item => item.label), ["Solo", "The Boys", "Unknown"]);
+  assert.deepEqual(asc[0].books.map(item => item.author), ["Álvaro", "Zoé", undefined]);
+  assert.deepEqual(desc[1].books.map(item => item.author), ["Zoé", "Álvaro", undefined]);
+  assert.equal(asc[0].coverBook.relativePath, desc[1].coverBook.relativePath);
+});
+
+test("collection author overrides volume authors for display and author sorting", () => {
+  const books = [volume(1, { author: "Volume author" }), volume(2, { author: "Other author" })];
+  const collection = buildBookCollections(books, { "The Boys": { author: "Collection author" } })[0];
+  assert.equal(collection.author, "Collection author");
+  assert.equal(collection.books[0].author, "Volume author");
+  assert.equal(buildBookCollections(books, { "The Boys": { author: "" } })[0].author, "Other author, Volume author");
 });

@@ -1,0 +1,8 @@
+.award-selector { position: absolute; z-index: 3; left: calc(var(--series-visible-width, 83%) / 2); transform: translateX(-50%); bottom: 2.5%; width: 48%; height: 18cqh; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1cqw; pointer-events: auto; }
+.award-selector button { --award-cutout: #172228; min-width: 0; display: flex; align-items: center; justify-content: center; gap: .65cqw; padding: .5cqh 1cqw; color: #e4c67e; background: #182228; border: 1px solid #e4c67e50; border-radius: 16px; font: inherit; font-size: clamp(.7rem, 1.3cqw, 1rem); font-weight: 800; cursor: pointer; transition: background .2s, border-color .2s; }
+.award-selector button:hover { background: #2c3536; border-color: #e4c67e; }
+.award-selector button.is-active { --award-cutout: #ffd429; color: #172228; background: #ffd429; border-color: #ffe990; box-shadow: 0 4px 18px #ffd42920; }
+.award-selector button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.award-icon { display: block; width: 36px; height: 48px; flex-shrink: 0; }
+.award-selector .award-icon { height: min(13cqh, 56px); width: auto; }
+@media (max-width: 600px) { .award-selector { width: 78%; bottom: 1.5%; height: 21cqh; gap: 1cqw; } .award-selector button { border-radius: 9px; gap: 1cqw; font-size: clamp(.6rem, 2.25cqw, .85rem); } }
