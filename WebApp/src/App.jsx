@@ -4,11 +4,13 @@ import LibraryScrollRail from "./LibraryScrollRail.jsx";
 import BackToTop from "./BackToTop.jsx";
 import MovieLibraryItems from "./MovieLibraryItems.jsx";
 import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
+import OpenSubtitlesSettings from "./OpenSubtitlesSettings.jsx";
 import { libraryScrollLabel, compareLibraryItems } from "./libraryScroll.js";
 import EpubReader from "./EpubReader";
 import BookPageSelector from "./BookPageSelector.jsx";
 import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
 import BookLibraryControls, { BookTypeField } from "./BookLibraryControls.jsx";
+import { bookTypeArtwork } from "./bookTypeArtwork.js";
 import { preloadLibraryCovers } from "./preloadLibraryCovers";
 import LibraryPoster from "./LibraryPoster";
 import OscarLibrary, { OscarIcon } from "./OscarLibrary";
@@ -20,10 +22,13 @@ import { bookLanguageName, isGraphicNovel } from "./bookMetadata.js";
 import { bookStrings } from "./bookStrings.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
-import TorrentDownloads, { MovieTorrentSearch, useTorrentDownloads } from "./TorrentDownloads.jsx";
+import TorrentDownloads, { MediaTorrentSearch, useTorrentDownloads } from "./TorrentDownloads.jsx";
 import { localTmdbImageUrl } from "./api/raspberryApi";
 import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
+import GameMetadataPicker from "./GameMetadataPicker.jsx";
+import GameMetadataDetails from "./GameMetadataDetails.jsx";
+import { gameMetadataImageUrl } from "./api/raspberryApi";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
 import { MEDIA_MARKS_KEY, mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason, loadMediaMarks } from "./mediaMarks.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -167,7 +172,6 @@ import {
 
 const HERO_SLIDER_MAX = 0.96;
 const MAX_MOVIE_IMAGES = 7;
-const MAX_GAME_IMAGES = 5;
 const RASPBERRY_ALARM_STORAGE_KEY = "minitv-raspberry-alarm-v1";
 const RASPBERRY_LANGUAGE_STORAGE_KEY = "minitv-raspberry-language-v1";
 const RASPBERRY_CURRENT_PLAYBACK_STORAGE_KEY = "minitv-raspberry-current-playback-v1";
@@ -191,6 +195,7 @@ const MEDIA_TYPES = [
     labelKey: "media_games",
     activeIcon: gameIconBlack,
     inactiveIcon: gameIconYellow,
+    headerIcon: { viewBox: "0 0 310 254", width: 310, height: 254 },
   },
   {
     id: "books",
@@ -564,7 +569,21 @@ const UI_STRINGS = {
     games_no_results: "No se han encontrado juegos para esa búsqueda.",
     games_search_empty: "Escribe un juego para buscar.",
     games_search_failed: "No se pudo buscar la ficha del juego.",
-    games_api_not_configured: "ScreenScraper no está configurado en la Raspberry. Puedes subirlo con la carátula default.",
+    games_api_not_configured: "Configura ScreenScraper o IGDB en la Raspberry para descargar la ficha, carátulas y capturas.",
+    games_metadata_intro: "Buscamos el juego para guardar su ficha, carátulas y capturas en el dispositivo. Elige la coincidencia correcta.",
+    games_metadata_selected: "Ficha seleccionada. Se guardarán todos los datos e imágenes disponibles.",
+    games_metadata_saving: "Guardando ficha e imágenes…",
+    games_metadata_retry: "Completar ficha e imágenes",
+    games_metadata_partial: "La ficha está guardada, pero algunas imágenes no se han descargado. Puedes reintentarlo.",
+    games_metadata_ambiguous: "Hay varias coincidencias. Selecciona la ficha del juego para completarla.",
+    games_metadata_pending: "El juego está guardado. Falta completar su ficha e imágenes.",
+    games_release_date: "Lanzamiento",
+    games_developers: "Desarrollador",
+    games_publishers: "Distribuidor",
+    games_genres: "Géneros",
+    games_players: "Jugadores",
+    games_modes: "Modos de juego",
+    games_rating: "Puntuación",
     upload_game_invalid_title: "Archivo de juego no compatible",
     upload_game_invalid_copy: "Selecciona un único archivo de juego compatible.",
     upload_game_detected: "{name} detectado como {platform}. Añade la carátula y descripción antes de subir.",
@@ -618,10 +637,10 @@ const UI_STRINGS = {
     upload_overwrite_existing: "Sobrescribir los existentes",
     upload_only_new: "Subir solo los nuevos",
     upload_button: "Upload",
-    tmdb_browser_title: "Visualizar ficha en TMDB",
+    tmdb_browser_title: "Descargar torrent",
     tmdb_browser_copy:
-      "Consulta las fichas de series y películas en TMDB. En las películas también puedes elegir un torrent y seguir su descarga desde el dashboard.",
-    tmdb_browser_open: "Visualizar TMDB",
+      "Consulta las fichas de series y películas en TMDB, elige un torrent y sigue su descarga desde el dashboard. En series puedes buscar por temporada y capítulo.",
+    tmdb_browser_open: "Buscar torrent",
     game_browser_title: "Buscar ficha de juego",
     game_browser_copy:
       "Busca una ROM por nombre para revisar carátula, plataforma y descripción dentro de la web antes de subirla.",
@@ -961,7 +980,21 @@ const UI_STRINGS = {
     games_no_results: "No s'han trobat jocs per a aquesta cerca.",
     games_search_empty: "Escriu un joc per cercar.",
     games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
-    games_api_not_configured: "ScreenScraper no està configurat a la Raspberry. Pots pujar-lo amb la caràtula default.",
+    games_api_not_configured: "Configura ScreenScraper o IGDB a la Raspberry per descarregar la fitxa, caràtules i captures.",
+    games_metadata_intro: "Cerquem el joc per desar-ne la fitxa, caràtules i captures al dispositiu. Tria la coincidència correcta.",
+    games_metadata_selected: "Fitxa seleccionada. Es desaran totes les dades i imatges disponibles.",
+    games_metadata_saving: "Desant fitxa i imatges…",
+    games_metadata_retry: "Completar fitxa i imatges",
+    games_metadata_partial: "La fitxa està desada, però algunes imatges no s’han descarregat. Pots reintentar-ho.",
+    games_metadata_ambiguous: "Hi ha diverses coincidències. Selecciona la fitxa del joc per completar-la.",
+    games_metadata_pending: "El joc està desat. Falta completar-ne la fitxa i les imatges.",
+    games_release_date: "Llançament",
+    games_developers: "Desenvolupador",
+    games_publishers: "Distribuïdor",
+    games_genres: "Gèneres",
+    games_players: "Jugadors",
+    games_modes: "Modes de joc",
+    games_rating: "Puntuació",
     upload_game_invalid_title: "Fitxer de joc no compatible",
     upload_game_invalid_copy: "Selecciona un únic fitxer de joc compatible.",
     upload_game_detected: "{name} detectat com {platform}. Afegeix la caràtula i descripció abans de pujar.",
@@ -1015,10 +1048,10 @@ const UI_STRINGS = {
     upload_overwrite_existing: "Sobreescriure els existents",
     upload_only_new: "Pujar només els nous",
     upload_button: "Upload",
-    tmdb_browser_title: "Visualitzar fitxa a TMDB",
+    tmdb_browser_title: "Descarregar torrent",
     tmdb_browser_copy:
-      "Consulta les fitxes de sèries i pel·lícules a TMDB. A les pel·lícules també pots triar un torrent i seguir-ne la descàrrega al dashboard.",
-    tmdb_browser_open: "Visualitzar TMDB",
+      "Consulta les fitxes de sèries i pel·lícules a TMDB, tria un torrent i segueix-ne la descàrrega al dashboard. A les sèries pots cercar per temporada i capítol.",
+    tmdb_browser_open: "Cercar torrent",
     game_browser_title: "Cercar fitxa de joc",
     game_browser_copy:
       "Cerca una ROM pel nom per revisar caràtula, plataforma i descripció dins de la web abans de pujar-la.",
@@ -1358,7 +1391,21 @@ const UI_STRINGS = {
     games_no_results: "No games were found for that search.",
     games_search_empty: "Type a game to search.",
     games_search_failed: "Could not search the game profile.",
-    games_api_not_configured: "ScreenScraper is not configured on the Raspberry. You can upload it with the default cover.",
+    games_api_not_configured: "Configure ScreenScraper or IGDB on the Raspberry to download game details, covers and screenshots.",
+    games_metadata_intro: "Find your game to save its details, covers and screenshots on the device. Choose the correct match.",
+    games_metadata_selected: "Game selected. All available details and images will be saved.",
+    games_metadata_saving: "Saving details and images…",
+    games_metadata_retry: "Complete details and images",
+    games_metadata_partial: "Game details are saved, but some images could not be downloaded. You can retry.",
+    games_metadata_ambiguous: "Several games match. Select the correct game to complete its details.",
+    games_metadata_pending: "The game is saved. Its details and images still need to be completed.",
+    games_release_date: "Release date",
+    games_developers: "Developer",
+    games_publishers: "Publisher",
+    games_genres: "Genres",
+    games_players: "Players",
+    games_modes: "Game modes",
+    games_rating: "Rating",
     upload_game_invalid_title: "Unsupported game file",
     upload_game_invalid_copy: "Select a single supported game file.",
     upload_game_detected: "{name} detected as {platform}. Add the cover and description before uploading.",
@@ -1412,10 +1459,10 @@ const UI_STRINGS = {
     upload_overwrite_existing: "Overwrite existing videos",
     upload_only_new: "Upload only new videos",
     upload_button: "Upload",
-    tmdb_browser_title: "View TMDB details",
+    tmdb_browser_title: "Download torrent",
     tmdb_browser_copy:
-      "Browse series and movie details on TMDB. For movies, you can also choose a torrent and follow its download on the dashboard.",
-    tmdb_browser_open: "View TMDB",
+      "Browse series and movie details on TMDB, choose a torrent and follow its download on the dashboard. For series, you can search by season and episode.",
+    tmdb_browser_open: "Search torrents",
     game_browser_title: "Search game details",
     game_browser_copy:
       "Search a ROM by name to review cover art, platform, and description inside the web app before uploading it.",
@@ -1959,18 +2006,19 @@ function MovieDownload({ url, name, label }) {
   );
 }
 
-function HeaderArt({ image, crop, alt, bookCover = false }) {
+function HeaderArt({ image, crop, alt, bookCover = false, bookType = null, gameSystem = null }) {
   const usesFullMaskArtwork = image === cartellLogo;
+  const bookArtwork = usesFullMaskArtwork ? bookTypeArtwork[bookType] : null;
 
   return (
     <div
-      className="series-hero__art"
+      className={`series-hero__art${gameSystem ? " series-hero__art--games" : ""}${bookArtwork ? " series-hero__art--books" : ""}`}
       style={{
         WebkitMaskImage: `url(${cartellMask})`,
         maskImage: `url(${cartellMask})`,
       }}
       role="img"
-      aria-label={alt}
+      aria-label={gameSystem ? `DonkiCode LAB · ${gameSystem.name}` : alt}
     >
       {usesFullMaskArtwork ? (
         <>
@@ -1982,11 +2030,11 @@ function HeaderArt({ image, crop, alt, bookCover = false }) {
             draggable="false"
             onDragStart={(event) => event.preventDefault()}
           />
-          <div className="series-hero__flask-bubbles" aria-hidden="true">
+          {bookArtwork ? <img className="series-hero__book-type" src={bookArtwork} alt="" aria-hidden="true" draggable="false" /> : gameSystem ? <img className="series-hero__console" src={gameSystem.assets.console} alt="" /> : <div className="series-hero__flask-bubbles" aria-hidden="true">
             {Array.from({ length: 7 }, (_, index) => (
               <span key={`flask-bubble-${index}`} />
             ))}
-          </div>
+          </div>}
         </>
       ) : (
         <div className={`series-hero__visible-window${bookCover ? " series-hero__visible-window--book" : ""}`}>
@@ -2918,7 +2966,7 @@ function MovieSubtitleField({ file, onChange, disabled = false, t }) {
   </label>;
 }
 
-function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave, onDelete, t, language, movieRelativePath }) {
+function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave, onDelete, t, language, movieRelativePath, onConfigureSubtitles }) {
   const [name, setName] = useState(item?.name || "");
   const [imdbUrl, setImdbUrl] = useState(item?.imdbUrl || "");
   const [rottenTomatoesUrl, setRottenTomatoesUrl] = useState(item?.rottenTomatoesUrl || "");
@@ -3061,7 +3109,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
         <div className="dialog-card__body">
           {mediaType === "movies" ? <>
             <MovieSubtitleField key={`${item.id}-${visible}`} file={subtitleFile} onChange={setSubtitleFile} disabled={subtitleBusy} t={t} />
-            <MovieSubtitleDownload key={`subtitles-${movieRelativePath}`} relativePath={movieRelativePath} language={language} disabled={Boolean(subtitleFile)} onBusyChange={setSubtitleBusy} />
+            <MovieSubtitleDownload key={`subtitles-${movieRelativePath}`} relativePath={movieRelativePath} language={language} disabled={Boolean(subtitleFile)} onBusyChange={setSubtitleBusy} onConfigure={onConfigureSubtitles} />
           </> : null}
           <label className="dialog-field">
             <span>{t("visible_name")}</span>
@@ -3742,6 +3790,8 @@ function GameUploadModal({
   onUpload,
   t,
 }) {
+  const [metadataSelection, setMetadataSelection] = useState(null);
+  const [metadataBusy, setMetadataBusy] = useState(false);
   const [gameName, setGameName] = useState("");
   const [description, setDescription] = useState("");
   const [coverFile, setCoverFile] = useState(null);
@@ -3771,6 +3821,7 @@ function GameUploadModal({
       setError("");
       return;
     }
+    setMetadataSelection(null);
     setGameName(initialQuery || stripFileExtension(file?.name || ""));
     setDescription("");
     setCoverFile(null);
@@ -3811,11 +3862,12 @@ function GameUploadModal({
     try {
       await onUpload({
         game: {
-          id: "manual",
+          ...metadataSelection,
+          id: metadataSelection?.id || "manual",
           platform,
           name: safeGameName,
           description: description.trim(),
-          source: coverFile || imageFiles.length ? "local" : "manual",
+          source: metadataSelection?.source || (coverFile || imageFiles.length ? "local" : "manual"),
         },
         cover: coverFile
           ? {
@@ -3867,10 +3919,16 @@ function GameUploadModal({
             handleSubmit();
           }}
         >
+          <GameMetadataPicker key={`${file.name}:${platform}`} initialQuery={initialQuery || stripFileExtension(file.name)}
+            platform={platform} extension={extension} disabled={submitting} t={t} onBusy={setMetadataBusy}
+            onSelect={item => {
+              setMetadataSelection(item);
+              if (item) { setGameName(item.name); setDescription(item.description || ""); }
+            }} />
           <div className="game-upload-layout">
             <div className="game-upload-fields">
               <label className="dialog-field"><span>{t("game_platform_label")}</span>
-                <select value={platform} required disabled={submitting} onChange={event => setPlatform(event.target.value)}>
+                <select value={platform} required disabled={submitting} onChange={event => { setPlatform(event.target.value); setMetadataSelection(null); }}>
                   <option value="" disabled>— {t("game_platform_label")} —</option>
                   {allowedSystems.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
@@ -3923,12 +3981,15 @@ function GameUploadModal({
             <div className="game-cover-picker game-cover-picker--manual">
               <strong>{t("games_cover_picker")}</strong>
               <div className="game-cover-preview">
-                {coverPreviewUrl ? (
-                  <img src={coverPreviewUrl} alt={gameName || file.name} />
+                {(coverPreviewUrl || metadataSelection?.covers?.[0]?.url) ? (
+                  <img src={coverPreviewUrl || gameMetadataImageUrl(metadataSelection?.covers?.[0]?.url)} alt={gameName || file.name} />
                 ) : (
                   <span>{t("games_default_cover")}</span>
                 )}
               </div>
+              {metadataSelection?.screenshots?.length > 0 && <div className="game-extra-preview-grid">
+                {metadataSelection.screenshots.map((entry, index) => <img key={entry.url} src={gameMetadataImageUrl(entry.url)} loading="lazy" alt={`${gameName} ${index + 1}`} />)}
+              </div>}
               {imagePreviewUrls.length ? (
                 <div className="game-extra-preview-grid" aria-label={t("games_extra_images_field")}>
                   {imagePreviewUrls.map((previewUrl, index) => (
@@ -3952,7 +4013,7 @@ function GameUploadModal({
             {uploadProgress !== null ? (
               <div className="upload-progress" role="status" aria-live="polite">
                 <div className="upload-progress__copy">
-                  <strong>{t("upload_copying")}</strong>
+                  <strong>{progressValue >= 100 ? t("games_metadata_saving") : t("upload_copying")}</strong>
                   <span title={file.name}>{file.name}</span>
                 </div>
                 <div className="upload-progress__bar" aria-hidden="true">
@@ -3961,7 +4022,7 @@ function GameUploadModal({
                 <p>{`${progressValue}%`}</p>
               </div>
             ) : null}
-            <button className="dialog-button dialog-button--accent" disabled={submitting} type="submit">
+            <button className="dialog-button dialog-button--accent" disabled={submitting || metadataBusy} type="submit">
               {submitting ? t("adding_button") : t("upload_button")}
             </button>
           </div>
@@ -4097,7 +4158,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
       setResults(nextResults);
       if (nextResults.length) {
         const firstResult = nextResults[0];
-        setSelectedGameId(String(firstResult.id || firstResult.name));
+        setSelectedGameId(`${firstResult.source}:${firstResult.id || firstResult.name}`);
         setSelectedCoverKey(firstResult.covers?.[0]?.url || "");
       } else {
         setError(payload?.configured === false ? t("games_api_not_configured") : t("games_no_results"));
@@ -4113,7 +4174,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
   if (!visible) return null;
 
   const selectedGame =
-    results.find((entry) => String(entry.id || entry.name) === selectedGameId) || null;
+    results.find((entry) => `${entry.source}:${entry.id || entry.name}` === selectedGameId) || null;
   const selectedCover =
     (selectedGame?.covers || []).find((cover) => cover.url && cover.url === selectedCoverKey) ||
     selectedGame?.covers?.[0] ||
@@ -4133,7 +4194,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
       >
         <div className="dialog-card__header">
           <div>
-            <p>ScreenScraper</p>
+            <p>ScreenScraper · IGDB</p>
             <h2>{t("game_browser_title")}</h2>
           </div>
           <button className="dialog-card__close" onClick={onClose} type="button" aria-label={t("close")}>
@@ -4192,7 +4253,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
             {results.length ? (
               <div className="add-series-results__list">
                 {results.map((result) => {
-                  const resultId = String(result.id || result.name);
+                  const resultId = `${result.source}:${result.id || result.name}`;
                   const isSelected = resultId === selectedGameId;
                   return (
                     <button
@@ -4206,7 +4267,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
                     >
                       <div className="add-series-result__poster">
                         {result.covers?.[0]?.url ? (
-                          <img src={result.covers[0].url} alt={result.name} />
+                          <img src={gameMetadataImageUrl(result.covers[0].url)} alt={result.name} />
                         ) : (
                           <span>{t("games_default_cover")}</span>
                         )}
@@ -4238,7 +4299,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
               <div className="game-browser-profile">
                 <div className="game-browser-profile__cover">
                   {selectedCover?.url ? (
-                    <img src={selectedCover.url} alt={selectedGame.name} />
+                    <img src={gameMetadataImageUrl(selectedCover.url)} alt={selectedGame.name} />
                   ) : (
                     <span>{t("games_default_cover")}</span>
                   )}
@@ -4275,7 +4336,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
                             onClick={() => setSelectedCoverKey(cover.url || "")}
                             type="button"
                           >
-                            {cover.url ? <img src={cover.url} alt={cover.label || selectedGame.name} /> : <span>{cover.label || t("games_default_cover")}</span>}
+                            {cover.url ? <img src={gameMetadataImageUrl(cover.url)} alt={cover.label || selectedGame.name} /> : <span>{cover.label || t("games_default_cover")}</span>}
                           </button>
                         );
                       })}
@@ -4452,6 +4513,11 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
     ? Math.min(movieFrameIndex, previewImages.length - 1)
     : 0;
   const canShowSearch = browserView === "results";
+  const releaseDate = selectedItem?.releaseDate;
+  const releaseTimestamp = releaseDate ? Date.parse(`${releaseDate}T00:00:00Z`) : NaN;
+  const formattedReleaseDate = Number.isFinite(releaseTimestamp)
+    ? new Intl.DateTimeFormat(tmdbLanguage, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(releaseTimestamp)
+    : releaseDate || t("release_unknown");
 
   function resetBrowserForMedia(nextType) {
     setMediaType(nextType);
@@ -4748,13 +4814,13 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                     <dl className="tmdb-browser-movie__facts">
                       <div>
                         <dt>{t("release")}</dt>
-                        <dd>{selectedItem.releaseDate || t("release_unknown")}</dd>
+                        <dd>{formattedReleaseDate}</dd>
                       </div>
                       <div>
                         <dt>{t("duration")}</dt>
                         <dd>{selectedItem.runtime ? `${selectedItem.runtime} min` : t("duration_unknown")}</dd>
                       </div>
-                      <div>
+                      <div className="tmdb-browser-movie__score">
                         <dt>{t("rating")}</dt>
                         <dd className="tmdb-browser-movie__rating">
                           {typeof selectedItem.voteAverage === "number" && selectedItem.voteAverage > 0 ? (
@@ -4776,9 +4842,15 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                     <p>{selectedItem.overview || t("synopsis_unavailable")}</p>
                   </div>
                 </div>
-                <MovieTorrentSearch key={selectedItem.id} movie={selectedItem} language={tmdbLanguage} onStarted={onTorrentStarted} onDashboard={onTorrentDashboard} />
               </div>
             )}
+            {!loadingDetails && selectedItem && <MediaTorrentSearch
+              key={`${mediaType}-${selectedItem.id}-${browserView}-${selectedSeasonId || "all"}-${selectedEpisode?.episodeNumber || "all"}`}
+              media={selectedItem} mediaType={mediaType}
+              seasonNumber={mediaType === "series" && browserView !== "seasons" ? selectedSeason?.seasonNumber ?? null : null}
+              episodeNumber={mediaType === "series" && browserView === "episode" ? selectedEpisode?.episodeNumber ?? null : null}
+              language={tmdbLanguage} onStarted={onTorrentStarted} onDashboard={onTorrentDashboard}
+            />}
           </section>
           ) : null}
         </div>
@@ -5042,6 +5114,8 @@ function RaspberryBirthdaysCard({ birthdays, saving, status, onSaveList, t }) {
 function RaspberryPage({
   raspberryTab,
   onChangeTab,
+  dashboardSection,
+  onDashboardSectionShown,
   onBack,
   onLogout,
   t,
@@ -5119,6 +5193,14 @@ function RaspberryPage({
   const [cameraImageUrl, setCameraImageUrl] = useState("");
   const [cameraBusy, setCameraBusy] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const subtitleSettingsRef = useRef(null);
+
+  useEffect(() => {
+    if (raspberryTab !== "dashboard" || dashboardSection !== "subtitles" || !subtitleSettingsRef.current) return;
+    subtitleSettingsRef.current.focus({ preventScroll: true });
+    subtitleSettingsRef.current.scrollIntoView({ behavior: "instant", block: "center" });
+    onDashboardSectionShown("");
+  }, [raspberryTab, dashboardSection, onDashboardSectionShown]);
 
   useEffect(() => () => {
     if (cameraImageUrl) URL.revokeObjectURL(cameraImageUrl);
@@ -5486,6 +5568,7 @@ function RaspberryPage({
               ) : null}
               <TmdbCachePanel language={raspberryLanguage} />
             </article>
+            <OpenSubtitlesSettings language={raspberryLanguage} sectionRef={subtitleSettingsRef} />
           </section>
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
@@ -5752,17 +5835,30 @@ function RaspberryPage({
 
             {!['games', 'books', 'pictures'].includes(uploadMediaType) ? (
               <div className="raspberry-upload-summary raspberry-upload-summary--tmdb">
-                <div>
-                  <strong>{t("tmdb_browser_title")}</strong>
-                  <p>{t("tmdb_browser_copy")}</p>
+                <strong>{t("tmdb_browser_title")}</strong>
+                <div className="raspberry-upload-summary__torrent-body">
+                  <svg className="raspberry-upload-summary__pirate" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false">
+                    <g stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 69 82 91M18 91 82 69M18 69l-5-7m5 7-8 2m72 20 5 7m-5-7 8-2M18 91l-5 7m5-7-8-2m72-20 5-7m-5 7 8 2" />
+                    </g>
+                    <path fill="currentColor" d="M50 5C30 5 18 18 18 36c0 13 6 21 17 25v12h30V61c11-4 17-12 17-25C82 18 70 5 50 5Z" />
+                    <g fill="#1b2d39">
+                      <ellipse cx="36" cy="37" rx="9" ry="10" />
+                      <ellipse cx="64" cy="37" rx="9" ry="10" />
+                      <path d="m50 47-6 11h12ZM41 63h4v10h-4zm14 0h4v10h-4z" />
+                    </g>
+                  </svg>
+                  <div className="raspberry-upload-summary__torrent-content">
+                    <p>{t("tmdb_browser_copy")}</p>
+                    <button
+                      className="dialog-button dialog-button--accent raspberry-upload-summary__action"
+                      onClick={onOpenTmdbBrowser}
+                      type="button"
+                    >
+                      {t("tmdb_browser_open")}
+                    </button>
+                  </div>
                 </div>
-                <button
-                  className="dialog-button dialog-button--accent raspberry-upload-summary__action"
-                  onClick={onOpenTmdbBrowser}
-                  type="button"
-                >
-                  {t("tmdb_browser_open")}
-                </button>
               </div>
             ) : null}
 
@@ -5797,6 +5893,12 @@ function BookCover({ book }) {
   );
 }
 
+function BookListMetadata({ book, language }) {
+  const t = bookStrings(language);
+  const details = [book.publisher, book.language ? bookLanguageName(book.language, language) : "", book.pageCount ? `${t.pageCount}: ${book.pageCount}` : ""].filter(Boolean);
+  return details.length ? <small className="books-library__extra-metadata">{details.join(" · ")}</small> : null;
+}
+
 function BookCardActions({ books, name, visible, marks, onMark, onDelete, t, language }) {
   const bt = bookStrings(language);
   const [downloadsOpen, setDownloadsOpen] = useState(false);
@@ -5821,7 +5923,7 @@ function BookCardActions({ books, name, visible, marks, onMark, onDelete, t, lan
   </div>;
 }
 
-function BookCollectionLibrary({ collections, countLabel, onSelect, t, language, type, sort, direction, onDirectionChange, actionsVisible, onActionsChange, renderActions }) {
+function BookCollectionLibrary({ view, collections, countLabel, onSelect, t, language, type, sort, direction, onDirectionChange, actionsVisible, onActionsChange, renderActions }) {
   const bt = bookStrings(language);
   return (
     <section className="books-library seasons-section library-with-scroll-rail">
@@ -5830,7 +5932,7 @@ function BookCollectionLibrary({ collections, countLabel, onSelect, t, language,
       {!collections.length ? (
         <div className="empty-state__card"><h2>{type === "graphic" ? bt.emptyGraphicNovels : bt.emptyNovels}</h2><p>{bt.emptyHint}</p></div>
       ) : (
-        <div className={`books-library__grid movie-library__items--reveal-actions${actionsVisible ? " is-actions-visible" : ""}`}>
+        <div className={`books-library__grid books-library__grid--${view}${view === "list" ? " movie-library__items--list" : " movie-library__items--reveal-actions"}${actionsVisible ? " is-actions-visible" : ""}`}>
           {collections.map((collection) => (
             <article data-library-index key={collection.key} className="books-library__card">
               <button className="books-library__cover-button" onClick={() => onSelect(collection.key)} type="button" aria-label={`${t("book_enter")}: ${collection.label}`}>
@@ -5839,8 +5941,9 @@ function BookCollectionLibrary({ collections, countLabel, onSelect, t, language,
               <div className="books-library__card-copy books-library__collection-copy">
                 <strong title={collection.label}>{collection.label}</strong>
                 <small className="books-library__author">{collection.author || bt.unknownAuthor}</small>
-                {!collection.isCollection ? <small className="books-library__metadata">{collection.year || "—"} / {[...new Set(collection.books.map(book => book.format.toUpperCase()))].join(", ")}</small> : null}
+                {!collection.isCollection || view === "list" ? <small className="books-library__metadata">{collection.year || "—"} / {[...new Set(collection.books.map(book => book.format.toUpperCase()))].join(", ")}</small> : null}
                 {collection.isCollection ? <small>{t("book_collection_count", { count: collection.books.length })}</small> : null}
+                {view === "list" && !collection.isCollection ? <BookListMetadata book={collection.coverBook} language={language} /> : null}
               </div>
               {renderActions(collection)}
             </article>
@@ -5884,7 +5987,7 @@ function BookDetails({ book, language, onRead, onEdit, onDelete, onBack, renderM
   </section>;
 }
 
-function BooksLibrary({ books, title, author, language, sort, direction, onDirectionChange, countLabel, onOpen, onEdit, onDelete, renderMarks, actionsVisible, onActionsChange, renderActions }) {
+function BooksLibrary({ view, books, title, author, language, sort, direction, onDirectionChange, countLabel, onOpen, onEdit, onDelete, renderMarks, actionsVisible, onActionsChange, renderActions }) {
   const t = bookStrings(language);
   const [detailPath, setDetailPath] = useState("");
   const detail = books.length === 1 ? books[0] : books.find(book => book.relativePath === detailPath);
@@ -5899,7 +6002,7 @@ function BooksLibrary({ books, title, author, language, sort, direction, onDirec
         <div className="empty-state__card"><h2>{t.empty}</h2><p>{t.emptyHint}</p></div>
       ) : (
         <>
-          <div className={`books-library__grid movie-library__items--reveal-actions${actionsVisible ? " is-actions-visible" : ""}`}>
+          <div className={`books-library__grid books-library__grid--${view}${view === "list" ? " movie-library__items--list" : " movie-library__items--reveal-actions"}${actionsVisible ? " is-actions-visible" : ""}`}>
             {books.map((book) => (
               <article
                 key={book.relativePath}
@@ -5913,6 +6016,7 @@ function BooksLibrary({ books, title, author, language, sort, direction, onDirec
                   <strong>{book.name}</strong>
                   <small className="books-library__author">{book.author || t.unknownAuthor}</small>
                   <small className="books-library__metadata">{book.year || "—"} / {book.format.toUpperCase()}</small>
+                  {view === "list" ? <BookListMetadata book={book} language={language} /> : null}
                 </div>
                 {renderActions(book)}
               </article>
@@ -6173,6 +6277,9 @@ export default function App() {
   const torrentDownloads = useTorrentDownloads(unlocked, async () => {
     clearLocalMetadataCache();
     detailCache.current.clear();
+    readySeasons.current.clear();
+    seasonCache.current.clear();
+    episodeCache.current.clear();
     setVideos(await getVideos());
     setDetailRetry(value => value + 1);
   });
@@ -6186,9 +6293,12 @@ export default function App() {
   const [selectedMovieId, setSelectedMovieId] = useState(null);
   const [selectedGamePath, setSelectedGamePath] = useState("");
   const [selectedSystemId, setSelectedSystemId] = useState("gb");
+  const [gameLibrarySort, setGameLibrarySort] = useState("name");
+  const [gameLibraryView, setGameLibraryView] = useState("grid");
   const [selectedBookCollection, setSelectedBookCollection] = useState("");
   const [bookLibraryType, setBookLibraryType] = useState("novel");
   const [bookLibrarySort, setBookLibrarySort] = useState("name");
+  const [bookLibraryView, setBookLibraryView] = useState("grid");
   const [bookSortDirection, setBookSortDirection] = useState("asc");
   const [openBook, setOpenBook] = useState(null);
   const [bookOpenTarget, setBookOpenTarget] = useState(null);
@@ -6200,6 +6310,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState("series");
   const [raspberryReturnView, setRaspberryReturnView] = useState("series");
   const [raspberryTab, setRaspberryTab] = useState("dashboard");
+  const [dashboardSection, setDashboardSection] = useState("");
   const [seasonEpisodes, setSeasonEpisodes] = useState(null);
   const [seasonEpisodesLoading, setSeasonEpisodesLoading] = useState(false);
   const [seasonHeroImage, setSeasonHeroImage] = useState("");
@@ -6328,7 +6439,7 @@ export default function App() {
   function renderBookActions(entry) {
     const collection = entry.isCollection ? bookCollections.find(item => item.key === entry.key) || entry : null;
     const books = collection?.books || entry.books || [entry];
-    return <BookCardActions books={books} name={entry.label || entry.name} visible={bookActionsVisible} marks={mediaMarks} t={t} language={raspberryLanguage}
+    return <BookCardActions books={books} name={entry.label || entry.name} visible={bookLibraryView === "list" || bookActionsVisible} marks={mediaMarks} t={t} language={raspberryLanguage}
       onMark={(field, value) => {
         const next = { ...mediaMarks };
         for (const book of books) {
@@ -6886,7 +6997,7 @@ export default function App() {
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage = activeMediaType === "games"
-    ? selectedGame?.coverImage || cartellLogo
+    ? cartellLogo
     : activeMediaType === "books"
       ? getBookDisplayCoverUrl(activeBookCollection?.coverBook) || cartellLogo
       : activeMediaType === "movies" && !selectedMovie
@@ -7187,6 +7298,12 @@ export default function App() {
   function handleBackFromRaspberry() {
     setCurrentView(raspberryReturnView === "season" ? "season" : "series");
     window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function handleOpenSubtitleSettings() {
+    setRaspberryTab("dashboard");
+    setDashboardSection("subtitles");
+    handleOpenRaspberryPage();
   }
 
   function handleOpenUploadsForMedia(mediaType) {
@@ -8632,7 +8749,9 @@ export default function App() {
     .sort((left, right) => seriesLibrarySort === "rating"
       ? (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right)
       : compareMediaNames(left, right));
-  const filteredGameOptions = consoleGames.filter((game) => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath));
+  const gameYear = (game) => String(game.releaseDate || game.releaseYear || game.year || "").match(/\b(?:19|20)\d{2}\b/)?.[0] || "";
+  const filteredGameOptions = [...consoleGames].sort((left, right) =>
+    (gameLibrarySort === "year" ? (Number(gameYear(right)) || 0) - (Number(gameYear(left)) || 0) : 0) || compareMediaNames(left, right));
   const filteredBookCollections = bookCollections.filter((collection) =>
     collection.books.some((book) =>
       matchesBookQuery(book, activeFilterQuery, `${collection.label} ${collection.author || ""}`) && matchesFavorite("book", book.relativePath)
@@ -8722,7 +8841,7 @@ export default function App() {
     ? Math.min(movieFrameIndex, movieImages.length - 1)
     : 0;
   const gameImages = selectedGame?.imageOptions?.length
-    ? selectedGame.imageOptions.slice(0, MAX_GAME_IMAGES)
+    ? selectedGame.imageOptions
     : [selectedGame?.coverImage].filter(Boolean);
   const safeGameImageIndex = gameImages.length
     ? Math.min(selectedGameImageIndex, gameImages.length - 1)
@@ -8874,6 +8993,8 @@ export default function App() {
               <RaspberryPage
                 raspberryTab={raspberryTab}
                 onChangeTab={setRaspberryTab}
+                dashboardSection={dashboardSection}
+                onDashboardSectionShown={setDashboardSection}
                 onBack={handleBackFromRaspberry}
                 onLogout={() => {
                   setStoredWebPin("");
@@ -9058,30 +9179,23 @@ export default function App() {
                   </div>
                 </section>
 
-                {isPicturesMode ? null : isGamesMode ? <GameConsoleCarousel
-                  countLabel={libraryCountLabel}
-                  systemId={selectedSystemId} onSystemChange={(systemId) => { setSelectedSystemId(systemId); setSelectedGamePath(""); }}
-                  games={gameLibrary} visibleGames={filteredGameOptions}
-                  onFilter={() => setMediaFilterOpen(current => !current)} filterLabel={t("movie_filter_title")}
-                  selectedPath={selectedGame?.relativePath || ""}
-                  onGameChange={setSelectedGamePath} language={raspberryLanguage}
-                  onUpload={() => handleOpenUploadsForMedia("games")}
-                  onDevice={handleOpenRaspberryPage}
-                /> : <header className="series-hero">
+                {isPicturesMode ? null : <header className="series-hero">
                   <div className="series-hero__banner">
                     <HeaderArt
                       image={headerImage}
+                      gameSystem={isGamesMode ? GAME_SYSTEMS.find(system => system.id === selectedSystemId) : null}
                       crop={headerImageCrop}
                       bookCover={isBooksMode && Boolean(activeBookCollection)}
-                      alt={(isBooksMode ? activeBookCollection?.label : selectedItem?.name) || "Cartell principal"}
+                      bookType={isBooksMode ? bookLibraryType : null}
+                      alt={(isBooksMode ? activeBookCollection?.label || (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : selectedItem?.name) || "Cartell principal"}
                     />
 
                     {!isMediaDetail ? (
-                      <h1 className="series-hero__section-title" key={activeMediaType}>
+                      <h1 className={`series-hero__section-title${isBooksMode ? " series-hero__section-title--books" : ""}`} key={activeMediaType}>
                         <svg className="series-hero__section-icon" viewBox={activeMediaSection.headerIcon.viewBox} aria-hidden="true" focusable="false">
                           <image href={activeMediaSection.inactiveIcon} width={activeMediaSection.headerIcon.width} height={activeMediaSection.headerIcon.height} />
                         </svg>
-                        <span>{isBooksMode && bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovel : t(activeMediaSection.labelKey)}</span>
+                        <span>{isBooksMode ? (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : t(activeMediaSection.labelKey)}</span>
                       </h1>
                     ) : null}
 
@@ -9102,29 +9216,29 @@ export default function App() {
                           maskImage: `url(${cartellMask})`,
                         }}
                       />
-                      {isBooksMode ? <BookLibraryControls language={raspberryLanguage} sort={bookLibrarySort} onSortChange={setBookLibrarySort}
-                        type={bookLibraryType} onTypeChange={setBookLibraryType} /> : isSeriesMode || isMoviesMode ? (
+                      {isBooksMode ? <BookLibraryControls language={raspberryLanguage} view={bookLibraryView} onViewChange={setBookLibraryView} viewLabels={{ grid: t("movie_view_grid"), list: t("movie_view_list") }} sort={bookLibrarySort} onSortChange={setBookLibrarySort}
+                        type={bookLibraryType} onTypeChange={setBookLibraryType} /> : isSeriesMode || isMoviesMode || isGamesMode ? (
                         <div className="movie-library__browse-tools">
+                            <div className="movie-library__view-switch" role="group" aria-label={t(isGamesMode ? "media_games" : isMoviesMode ? "movie_library" : "series_library")}>
+                              <button type="button" className={(isGamesMode ? gameLibraryView : isMoviesMode ? movieLibraryView : seriesLibraryView) === "grid" ? "active" : ""} onClick={() => isGamesMode ? setGameLibraryView("grid") : isMoviesMode ? setMovieLibraryView("grid") : setSeriesLibraryView("grid")} aria-pressed={(isGamesMode ? gameLibraryView : isMoviesMode ? movieLibraryView : seriesLibraryView) === "grid"} aria-label={t("movie_view_grid")} title={t("movie_view_grid")}>▦</button>
+                              <button type="button" className={(isGamesMode ? gameLibraryView : isMoviesMode ? movieLibraryView : seriesLibraryView) === "list" ? "active" : ""} onClick={() => isGamesMode ? setGameLibraryView("list") : isMoviesMode ? setMovieLibraryView("list") : setSeriesLibraryView("list")} aria-pressed={(isGamesMode ? gameLibraryView : isMoviesMode ? movieLibraryView : seriesLibraryView) === "list"} aria-label={t("movie_view_list")} title={t("movie_view_list")}>☰</button>
+                              {isMoviesMode && <button type="button" className={`oscar-view-button${isOscarView ? " active" : ""}`} onClick={() => setMovieLibraryView("oscars")} aria-pressed={isOscarView} aria-label={awardStrings(raspberryLanguage).view} title={awardStrings(raspberryLanguage).view}><OscarIcon /></button>}
+                            </div>
                             {!isOscarView && <label className="movie-library__sort">
                               <span>{t("movie_sort_label")}</span>
                               <select
-                                value={isMoviesMode ? movieLibrarySort : seriesLibrarySort}
-                                onChange={(event) => isMoviesMode ? setMovieLibrarySort(event.target.value) : setSeriesLibrarySort(event.target.value)}
+                                value={isGamesMode ? gameLibrarySort : isMoviesMode ? movieLibrarySort : seriesLibrarySort}
+                                onChange={(event) => isGamesMode ? setGameLibrarySort(event.target.value) : isMoviesMode ? setMovieLibrarySort(event.target.value) : setSeriesLibrarySort(event.target.value)}
                               >
                                 <option value="name">{t("movie_sort_name")}</option>
-                                {isMoviesMode ? <option value="year">{t("movie_sort_year")}</option> : null}
-                                <option value="rating">{t("movie_sort_rating")}</option>
+                                {isMoviesMode || isGamesMode ? <option value="year">{t("movie_sort_year")}</option> : null}
+                                {!isGamesMode && <option value="rating">{t("movie_sort_rating")}</option>}
                               </select>
                             </label>}
-                            <div className="movie-library__view-switch" role="group" aria-label={t(isMoviesMode ? "movie_library" : "series_library")}>
-                              <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "grid" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("grid") : setSeriesLibraryView("grid")} aria-label={t("movie_view_grid")} title={t("movie_view_grid")}>▦</button>
-                              <button type="button" className={(isMoviesMode ? movieLibraryView : seriesLibraryView) === "list" ? "active" : ""} onClick={() => isMoviesMode ? setMovieLibraryView("list") : setSeriesLibraryView("list")} aria-label={t("movie_view_list")} title={t("movie_view_list")}>☰</button>
-                              {isMoviesMode && <button type="button" className={`oscar-view-button${isOscarView ? " active" : ""}`} onClick={() => setMovieLibraryView("oscars")} aria-pressed={isOscarView} aria-label={awardStrings(raspberryLanguage).view} title={awardStrings(raspberryLanguage).view}><OscarIcon /></button>}
-                            </div>
                         </div>
                       ) : null}
                       {isOscarView && <AwardSelector value={awardType} onChange={setAwardType} language={raspberryLanguage} />}
-                      {!isOscarView && <div
+                      {isGamesMode ? <div className="series-hero__controls-row series-hero__controls-row--selector-only"><GameConsoleCarousel systemId={selectedSystemId} onSystemChange={(id) => { setSelectedSystemId(id); setSelectedGamePath(""); }} language={raspberryLanguage} /></div> : !isOscarView && <div
                         className={`series-hero__controls-row${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
                         {filterTotal ? (
@@ -9192,7 +9306,7 @@ export default function App() {
                       } : undefined}
                     >
                     <div className={isMediaDetail ? "series-hero__detail-actions" : "series-hero__settings-slot"}>
-                    {hasSettingsButton ? (
+                    {hasSettingsButton && !isGamesMode ? (
                       <button
                         className={`series-icon-button series-icon-button--hero series-icon-button--hero-settings${isMediaDetail ? " series-icon-button--detail-settings" : ""}`}
                         onClick={handleOpenCustomization}
@@ -9228,7 +9342,7 @@ export default function App() {
                   </div>
                 </header>}
 
-                {!isOscarView && !isMediaDetail && filterTotal > 0 && mediaFilterOpen ? (
+                {!isGamesMode && !isOscarView && !isMediaDetail && filterTotal > 0 && mediaFilterOpen ? (
                   <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
@@ -9272,7 +9386,7 @@ export default function App() {
                   <OscarLibrary key={awardType} award={awardType} movies={movieOptions} language={tmdbLanguage} edition={awardEditions[awardType]} onEditionChange={edition => setAwardEditions(current => ({ ...current, [awardType]: edition }))} onOpenMovie={handleOpenMovieDetails} />
                 ) : isPicturesMode ? (
                   <PicturesLibrary countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
-                ) : mediaFiltersActive && !filterVisible ? (
+                ) : !isGamesMode && mediaFiltersActive && !filterVisible ? (
                   <section className="empty-state seasons-section">
                     {!isMediaDetail && !isGamesMode ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}
                     <div className="empty-state__card"><p>{t("movie_filter_no_results")}</p></div>
@@ -9280,6 +9394,7 @@ export default function App() {
                 ) : isBooksMode ? (
                   activeBookCollection ? (
                   <BooksLibrary
+                    view={bookLibraryView}
                     actionsVisible={bookActionsVisible} onActionsChange={setBookActionsVisible} renderActions={renderBookActions}
                     direction={bookSortDirection}
                     onDirectionChange={setBookSortDirection}
@@ -9297,6 +9412,7 @@ export default function App() {
                   />
                   ) : (
                     <BookCollectionLibrary
+                      view={bookLibraryView}
                       actionsVisible={bookActionsVisible} onActionsChange={setBookActionsVisible} renderActions={renderBookActions}
                       direction={bookSortDirection}
                       onDirectionChange={setBookSortDirection}
@@ -9310,9 +9426,26 @@ export default function App() {
                     />
                   )
                 ) : isGamesMode ? (
-                  selectedGame && filteredGameOptions.some(game => game.relativePath === selectedGame.relativePath) ? (
+                  <>
+                    {!selectedGame && <section className="movie-library seasons-section games-library">
+                      <div className="seasons-section__label">{libraryCountLabel}</div>
+                      <MovieLibraryItems view={gameLibraryView}>
+                        {filteredGameOptions.map(game => <article className="movie-library__card" key={game.relativePath}>
+                          <button className="movie-library__poster" type="button" onClick={() => setSelectedGamePath(game.relativePath)} aria-label={`${t("movie_details")}: ${game.name || game.file}`}>
+                            <LibraryPoster src={game.coverImage || emptyStateIcon} name={game.name || game.file} />
+                          </button>
+                          <div className="movie-library__info">
+                            <h2><button className="games-library__title" type="button" onClick={() => setSelectedGamePath(game.relativePath)}>{game.name || game.file}</button></h2>
+                            <div className="movie-library__meta"><span>{gameYear(game) || t("not_available")}</span><span>{systemForGame(game)?.name}</span></div>
+                          </div>
+                        </article>)}
+                      </MovieLibraryItems>
+                      {!filteredGameOptions.length && <p className="games-library__empty">{t("games_empty_title")}</p>}
+                    </section>}
+                  {selectedGame && filteredGameOptions.some(game => game.relativePath === selectedGame.relativePath) ? (
                     <section className="game-panel seasons-section">
                       <div className="seasons-section__label">{t("game_file_label")}</div>
+                      <button type="button" className="back-button" onClick={() => setSelectedGamePath("")}>← {t("media_games")}</button>
                       <div className="game-panel__card">
                         <button
                           className="media-delete-button media-delete-button--game"
@@ -9426,6 +9559,7 @@ export default function App() {
                               </div>
                             </div>
 
+                            <GameMetadataDetails key={selectedGame.relativePath} game={selectedGame} t={t} onRefresh={async () => setVideos(await getVideos())} />
                             <div className="movie-panel__overview game-panel__overview">
                               <strong>{t("synopsis")}</strong>
                               <p>{selectedGame.description || t("synopsis_unavailable")}</p>
@@ -9434,7 +9568,9 @@ export default function App() {
                         </div>
                       </div>
                     </section>
-                  ) : null
+                  ) : null}
+                    <a className="console-credits" href="https://github.com/Siddy212/iconic-es-de#acknowledgments" target="_blank" rel="noreferrer">Iconic · Siddy212 &amp; artists · CC BY-NC-SA · Credits</a>
+                  </>
                 ) : isLibraryEmpty ? (
                   <section className="empty-state seasons-section">
                     {!isMediaDetail ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}
@@ -9657,7 +9793,7 @@ export default function App() {
 
                       <MovieSubtitleDownload key={`subtitles-${selectedMovie.fileRelativePath || selectedMovie.id}`}
                         relativePath={selectedMovie.fileRelativePath || resolvePlayableMovieEntry(selectedMovie)?.relativePath}
-                        language={raspberryLanguage} />
+                        language={raspberryLanguage} onConfigure={handleOpenSubtitleSettings} />
 
                       {raspberryHealth.running && raspberryHealth.file === (resolvePlayableMovieEntry(selectedMovie)?.relativePath || selectedMovie.fileRelativePath) ? (
                         <PlaybackSubtitleControls playbackKey={raspberryHealth.file} t={t} />
@@ -9776,6 +9912,7 @@ export default function App() {
                 mediaType={activeMediaType}
                 language={raspberryLanguage}
                 movieRelativePath={activeMediaType === "movies" && selectedMovie ? selectedMovie.fileRelativePath || resolvePlayableMovieEntry(selectedMovie)?.relativePath : ""}
+                onConfigureSubtitles={handleOpenSubtitleSettings}
                 item={selectedItem}
                 imageOptions={selectedItem?.imageOptions || []}
                 onClose={() => setSettingsOpen(false)}
@@ -9924,7 +10061,7 @@ export default function App() {
           </>
         )}
       </div>
-      {unlocked && currentView !== "raspberry" && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
+      {unlocked && currentView !== "raspberry" && !isOscarView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
   );
 }

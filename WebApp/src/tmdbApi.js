@@ -395,7 +395,9 @@ export async function getLibrarySummaries(movies, directories, language) {
 
 export async function getTvSeriesById(seriesId, language, importPreview = false) {
   const [show, availableImages] = await Promise.all([
-    fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}`, { language, importPreview }),
+    fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}`, { language, importPreview,
+      ...(importPreview ? { query: { append_to_response: "external_ids" } } : {}),
+    }),
     getTvSeriesImages(seriesId, language, importPreview).catch(() => []),
   ]);
   const heroImage =
@@ -426,6 +428,8 @@ export async function getTvSeriesById(seriesId, language, importPreview = false)
   return {
     id: Number(show?.id) || Number(seriesId),
     name: show?.name || "Unknown show",
+    originalName: show?.original_name || "",
+    imdbId: show?.external_ids?.imdb_id || "",
     posterImage: buildTmdbImageUrl(show?.poster_path, "w500", importPreview),
     firstAirDate: show?.first_air_date || "",
     voteAverage: Number(show?.vote_average) || 0,

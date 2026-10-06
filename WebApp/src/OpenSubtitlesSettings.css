@@ -1,0 +1,10 @@
+.opensubtitles-settings { margin-top: 1rem; scroll-margin-block: 1.5rem; }
+.opensubtitles-settings:focus { outline: 2px solid #ffd429; outline-offset: 4px; }
+.opensubtitles-settings h3 { margin: 0 0 0.35rem; color: #ffd429; font-size: 0.86rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.opensubtitles-settings a { color: inherit; text-decoration: underline; }
+.opensubtitles-settings .opensubtitles-settings__form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opensubtitles-settings__form button { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 760px) {
+  .opensubtitles-settings .opensubtitles-settings__form { grid-template-columns: minmax(0, 1fr); }
+  .opensubtitles-settings__form button { justify-self: stretch; }
+}

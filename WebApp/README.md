@@ -3,15 +3,21 @@
 La ficha de una película guardada incluye **Obtener subtítulo**, con español,
 catalán e inglés. Busca y guarda automáticamente el SRT en la Raspberry, primero
 por la huella del fichero y después por su ficha y versión. **Configurar
-OpenSubtitles** permite guardar la cuenta una sola vez; los errores y las
+OpenSubtitles** abre la tarjeta de configuración en **Dashboard → Servicios
+auxiliares**, junto a TMDB, para guardar la cuenta una sola vez; los errores y las
 coincidencias aproximadas se muestran en la ficha. La carga manual de SRT sigue
 disponible en el editor. [Configuración y funcionamiento](../DeviceApp/README.md#subtítulos-durante-la-reproducción).
 
-En Uploads → Películas → TMDB, la ficha muestra torrents de The Pirate Bay,
-con tamaño en MB y seeds de mayor a menor. La descarga se realiza en la Raspberry
+En Uploads → TMDB, las fichas de películas buscan torrents en The Pirate Bay y
+Knaben; las de series añaden EZTV y filtros de temporada/capítulo. Se muestran
+la fuente de cada resultado, tamaño en MB y seeds de mayor a menor. Los
+duplicados se agrupan conservando sus fuentes; si una API no responde, un aviso
+indica que los resultados son parciales. La descarga se realiza en la Raspberry
 y se controla desde la nueva sección del dashboard. El vídeo se añade cuando
-está completo y después se preparan los recursos TMDB. El modo demo no inicia
-descargas reales. Instalación y funcionamiento: [DeviceApp](../DeviceApp/README.md#descargas-de-películas-por-torrent).
+está completo y después se preparan los recursos TMDB. Los packs de series importan
+todos los capítulos identificados de la selección, conservando los que ya existen.
+El modo demo no inicia descargas reales. Instalación y funcionamiento:
+[DeviceApp](../DeviceApp/README.md#descargas-de-películas-y-series-por-torrent).
 
 Base inicial para migrar la app de React Native a una web React que pueda ejecutarse en una Raspberry Pi dentro de la red local.
 
@@ -136,3 +142,9 @@ La migracion mas natural seria:
 2. adaptar las llamadas de `src/services/raspberryApi.js` a esta nueva web
 3. crear endpoints nuevos en `control_api.py` para persistencia
 4. servir el build de React desde la propia Raspberry
+
+### Fichas de juegos
+
+El formulario de añadir juegos busca automáticamente por nombre y consola en ScreenScraper e IGDB. Permite elegir la ficha antes de subir, ver su carátula y capturas y conservar texto o imágenes propios. El servidor guarda la ficha completa y todas las imágenes disponibles en la Raspberry; la biblioteca funciona después sin conexión y muestra fechas, géneros, desarrollador, distribuidor, jugadores/modos y puntuación cuando la fuente los ofrece.
+
+Si faltan imágenes o metadatos, **Completar ficha e imágenes** permite reintentar o elegir una coincidencia sin volver a subir el juego. Configura las credenciales exclusivamente en la Raspberry siguiendo [DeviceApp/README.md](../DeviceApp/README.md#fichas-de-videojuegos-e-imágenes-sin-conexión).

@@ -1,6 +1,8 @@
-"""Persistent movie downloads. Transmission owns transfers; this worker owns imports."""
+"""Torrent search and persistent movie/series downloads with recoverable imports."""
 import base64
 import copy
+from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor, wait
 import json
 import os
 from pathlib import Path
@@ -12,10 +14,43 @@ import urllib.parse
 import urllib.request
 
 from tmdb_cache import atomic_write
+from video_formats import VIDEO_EXTENSIONS
 
-VIDEO_EXTENSIONS = {".mp4", ".m4v", ".mov", ".mkv"}
 HASH_RE = re.compile(r"[a-fA-F0-9]{40}")
 TERMINAL = {"complete", "cancelled", "failed"}
+SEARCH_TIMEOUT = 15
+SEARCH_CACHE_SECONDS = 120
+SEARCH_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="torrent-search")
+SEARCH_CACHE = OrderedDict()
+SEARCH_CACHE_LOCK = threading.Lock()
+EPISODE_RE = re.compile(r"(?<![a-z0-9])(?:s(\d{1,2})[ ._-]*e(\d{1,3})|(\d{1,2})x(\d{1,3}))(?!\d)", re.I)
+
+
+def episode_numbers(name):
+    matches = list(EPISODE_RE.finditer(Path(str(name)).name))
+    if not matches:
+        return None
+    match = matches[0]
+    if len(matches) != 1 or re.match(r"(?:[ ._-]*e\d|[-+]\d)", Path(str(name)).name[match.end():], re.I):
+        raise ValueError("No se admiten varios capítulos unidos en un solo vídeo. Elige otra versión.")
+    season, episode = (int(match[1]), int(match[2])) if match[1] is not None else (int(match[3]), int(match[4]))
+    return (season, episode) if episode > 0 else None
+
+
+def episode_filter(value, label, minimum=0, maximum=99):
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool) or not re.fullmatch(r"\d{1,3}", str(value)) or not minimum <= int(value) <= maximum:
+        raise ValueError(f"{label} no válido.")
+    return int(value)
+
+
+def series_filters(season=None, episode=None):
+    season = episode_filter(season, "Número de temporada")
+    episode = episode_filter(episode, "Número de capítulo", 1, 999)
+    if episode is not None and season is None:
+        raise ValueError("Selecciona la temporada del capítulo.")
+    return season, episode
 
 
 class TorrentError(RuntimeError):
@@ -29,7 +64,7 @@ def positive_int(value):
         return 0
 
 
-def normalize_results(rows):
+def normalize_results(rows, media_type="movies"):
     if not isinstance(rows, list):
         raise TorrentError("The Pirate Bay ha devuelto una respuesta no válida.")
     results = {}
@@ -37,31 +72,181 @@ def normalize_results(rows):
         if not isinstance(row, dict):
             continue
         info_hash = str(row.get("info_hash") or "").lower()
-        # Movies, HD movies and UHD movies only; exclude TV, porn and software.
-        if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or str(row.get("category")) not in {"201", "207", "209"}:
+        categories = {"205", "208", "211"} if media_type == "series" else {"201", "207", "209"}
+        if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or str(row.get("category")) not in categories:
             continue
         size = positive_int(row.get("size"))
         if not size or not str(row.get("name") or "").strip():
             continue
         results[info_hash] = {"infoHash": info_hash, "name": str(row["name"])[:500],
                               "sizeBytes": size, "seeds": positive_int(row.get("seeders")),
-                              "leechers": positive_int(row.get("leechers"))}
+                              "leechers": positive_int(row.get("leechers")), "sources": ["The Pirate Bay"]}
     return sorted(results.values(), key=lambda row: (-row["seeds"], row["name"]))[:100]
 
 
-def search_torrents(query):
-    query = str(query or "").strip()
-    if not query or len(query) > 200:
-        raise ValueError("Escribe un título de hasta 200 caracteres.")
-    url = "https://apibay.org/q.php?" + urllib.parse.urlencode({"q": query, "cat": "200"})
+def _search_json(url, source):
     try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "MiniTV/1.0", "Accept": "application/json"}), timeout=15) as response:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "MiniTV/1.0", "Accept": "application/json"}), timeout=12) as response:
             raw = response.read(4 * 1024 * 1024 + 1)
         if len(raw) > 4 * 1024 * 1024:
             raise ValueError("response too large")
-        return normalize_results(json.loads(raw))
+        return json.loads(raw)
     except (OSError, ValueError) as exc:
-        raise TorrentError("No se pudo consultar The Pirate Bay. Inténtalo de nuevo más tarde.") from exc
+        raise TorrentError(f"No se pudo consultar {source}. Inténtalo de nuevo más tarde.") from exc
+
+
+def search_pirate_bay(query, media_type="movies"):
+    url = "https://apibay.org/q.php?" + urllib.parse.urlencode({"q": query, "cat": "200"})
+    return normalize_results(_search_json(url, "The Pirate Bay"), media_type)
+
+
+def normalize_knaben_results(payload, media_type="movies"):
+    if not isinstance(payload, dict) or not isinstance(payload.get("hits"), list):
+        raise TorrentError("Knaben ha devuelto una respuesta no válida.")
+    results = []
+    for row in payload["hits"]:
+        if not isinstance(row, dict):
+            continue
+        categories = row.get("categoryId")
+        # Prefer subcategories: some movie records incorrectly include the TV parent id.
+        ids = [positive_int(cat) for cat in categories] if isinstance(categories, list) else []
+        is_movie = any(3000000 <= cat < 4000000 for cat in ids)
+        is_series = any(2000000 <= cat < 3000000 for cat in ids) and not is_movie
+        if not (is_series if media_type == "series" else is_movie):
+            continue
+        info_hash = str(row.get("hash") or "").lower()
+        name = row.get("title")
+        size = positive_int(row.get("bytes"))
+        # The current downloader uses public magnets; do not follow arbitrary download URLs.
+        if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or not size or not isinstance(name, str) or not name.strip():
+            continue
+        tracker = row.get("tracker")
+        source = f"{tracker.strip()[:80]} (Knaben)" if isinstance(tracker, str) and tracker.strip() else "Knaben"
+        results.append({"infoHash": info_hash, "name": name[:500], "sizeBytes": size,
+                        "seeds": positive_int(row.get("liveSeeders") if row.get("liveSeeders") is not None else row.get("seeders")),
+                        "leechers": positive_int(row.get("livePeers") if row.get("livePeers") is not None else row.get("peers")),
+                        "sources": [source]})
+    return results
+
+
+def search_knaben(query, media_type="movies"):
+    # API v2: https://knaben.org/api/v2/ ; categories: https://knaben.org/rss/
+    base = 2000000 if media_type == "series" else 3000000
+    categories = ",".join(str(cat) for cat in range(base, base + 8001, 1000))
+    url = "https://api.knaben.org/v2/search?" + urllib.parse.urlencode({
+        "q": query, "c": categories, "o": "seeders", "d": "desc", "s": 100,
+    })
+    return normalize_knaben_results(_search_json(url, "Knaben"), media_type)
+
+
+def search_eztv(imdb_id, season=None, episode=None, page=1):
+    # https://eztvx.to/api/ : exact show lookup, paginated in batches of 100.
+    imdb_id = str(imdb_id or "").removeprefix("tt")
+    if not re.fullmatch(r"\d{5,10}", imdb_id):
+        raise ValueError("Falta un identificador IMDb válido para consultar EZTV.")
+    payload = _search_json("https://eztvx.to/api/get-torrents?" + urllib.parse.urlencode({
+        "imdb_id": imdb_id, "limit": 100, "page": page,
+    }), "EZTV")
+    if not isinstance(payload, dict) or not isinstance(payload.get("torrents"), list):
+        raise TorrentError("EZTV ha devuelto una respuesta no válida.")
+    results = []
+    for row in payload["torrents"]:
+        if not isinstance(row, dict) or str(row.get("imdb_id")) != imdb_id:
+            continue
+        info_hash = str(row.get("hash") or "").lower()
+        name = row.get("title") or row.get("filename")
+        size = positive_int(row.get("size_bytes"))
+        if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or not size or not isinstance(name, str) or not name.strip():
+            continue
+        if season is not None and str(row.get("season")) != str(season):
+            continue
+        if episode is not None and str(row.get("episode")) != str(episode):
+            continue
+        results.append({"infoHash": info_hash, "name": name[:500], "sizeBytes": size,
+                        "seeds": positive_int(row.get("seeds")), "leechers": positive_int(row.get("peers")),
+                        "sources": ["EZTV"]})
+    return {"results": results, "nextEztvPage": page + 1 if page < 100 and page * 100 < positive_int(payload.get("torrents_count")) else None}
+
+
+def merge_torrent_results(rows):
+    results = {}
+    for row in rows:
+        key = row["infoHash"]
+        if key not in results:
+            results[key] = copy.deepcopy(row)
+            continue
+        previous = results[key]
+        sources = list(dict.fromkeys(previous["sources"] + row["sources"]))
+        # The same swarm can appear on several sites; seed counts must not be added.
+        best = row if row["seeds"] > previous["seeds"] else previous
+        results[key] = {**best, "sources": sources, "leechers": max(previous["leechers"], row["leechers"])}
+    return sorted(results.values(), key=lambda row: (-row["seeds"], row["name"]))[:100]
+
+
+def search_torrents(query, media_type="movies", imdb_id=None, season=None, episode=None, eztv_page=1):
+    query = str(query or "").strip()
+    if not query or len(query) > 200:
+        raise ValueError("Escribe un título de hasta 200 caracteres.")
+    if not isinstance(media_type, str) or media_type not in {"movies", "series"}:
+        raise ValueError("Tipo de contenido no válido.")
+    season, episode = series_filters(season, episode)
+    eztv_page = episode_filter(eztv_page, "Página de EZTV", 1, 100)
+    if eztv_page is None or (media_type == "movies" and (season is not None or episode is not None or eztv_page != 1)):
+        raise ValueError("Filtros de búsqueda no válidos.")
+    imdb_id = str(imdb_id or "")
+    if imdb_id and not re.fullmatch(r"(?:tt)?\d{5,10}", imdb_id):
+        raise ValueError("Identificador IMDb no válido.")
+    if eztv_page > 1 and not imdb_id:
+        raise ValueError("Falta el identificador IMDb para consultar más resultados de EZTV.")
+    key = (query, media_type, imdb_id, season, episode, eztv_page)
+    with SEARCH_CACHE_LOCK:
+        cached = SEARCH_CACHE.get(key)
+        if cached and time.monotonic() - cached[0] < SEARCH_CACHE_SECONDS:
+            return copy.deepcopy(cached[1])
+    scoped_query = query
+    if media_type == "series" and season is not None:
+        scoped_query += f" S{season:02d}" + (f"E{episode:02d}" if episode is not None else "")
+    # Keep the movie provider call compatible with existing callers.
+    args = (scoped_query, media_type) if media_type == "series" else (query,)
+    providers = [("piratebay", "The Pirate Bay", search_pirate_bay, args), ("knaben", "Knaben", search_knaben, args)] if eztv_page == 1 else []
+    if media_type == "series" and imdb_id:
+        providers.append(("eztv", "EZTV", search_eztv, (imdb_id, season, episode, eztv_page)))
+    futures = [(provider_id, name, SEARCH_POOL.submit(search, *params)) for provider_id, name, search, params in providers]
+    done, _ = wait([future for _, _, future in futures], timeout=SEARCH_TIMEOUT)
+    rows, sources, next_eztv_page = [], [], None
+    for provider_id, name, future in futures:
+        status = {"id": provider_id, "name": name, "status": "error", "count": 0}
+        if future in done:
+            try:
+                found = future.result()
+                if provider_id == "eztv":
+                    next_eztv_page = found["nextEztvPage"]
+                    found = found["results"]
+                rows.extend(found)
+                status.update(status="ok", count=len(found))
+            except (TorrentError, OSError, ValueError):
+                pass
+        else:
+            future.cancel()
+        sources.append(status)
+    if all(source["status"] == "error" for source in sources):
+        names = " ni ".join(name for _, name, _, _ in providers) or "EZTV"
+        raise TorrentError(f"No se pudo consultar {names}. Inténtalo de nuevo más tarde.")
+    result = {"results": merge_torrent_results(rows), "sources": sources}
+    if media_type == "series":
+        result["nextEztvPage"] = next_eztv_page
+        if not imdb_id:
+            sources.append({"id": "eztv", "name": "EZTV", "status": "skipped", "reason": "missing_imdb", "count": 0})
+        elif eztv_page == 1 and any(source["id"] == "eztv" and source["status"] == "error" for source in sources):
+            result["nextEztvPage"] = 1
+    # Cache only complete responses so that retrying a failed source works immediately.
+    if all(source["status"] == "ok" for source in sources):
+        with SEARCH_CACHE_LOCK:
+            SEARCH_CACHE[key] = (time.monotonic(), copy.deepcopy(result))
+            SEARCH_CACHE.move_to_end(key)
+            while len(SEARCH_CACHE) > 32:
+                SEARCH_CACHE.popitem(last=False)
+    return result
 
 
 class Transmission:
@@ -94,6 +279,10 @@ class Transmission:
 
 
 def video_file(files):
+    return max(video_files(files), key=lambda entry: positive_int(entry[1]["length"]))
+
+
+def video_files(files):
     candidates = []
     for index, item in enumerate(files):
         name = str(item.get("name", ""))
@@ -105,18 +294,50 @@ def video_file(files):
         if positive_int(item.get("length")):
             candidates.append((index, item))
     if not candidates:
-        raise TorrentError("El torrent no contiene un vídeo compatible (MP4, MKV, M4V o MOV).")
-    return max(candidates, key=lambda entry: positive_int(entry[1]["length"]))
+        # Metadata is available even before any video bytes have been downloaded.
+        # Show what was rejected instead of mistaking a suffix filter for a codec error.
+        extensions = sorted({Path(str(item.get("name", ""))).suffix.lower()[:24] or "(sin extensión)"
+                             for item in files})
+        detected = ", ".join(extensions[:20]) or "ningún archivo"
+        if len(extensions) > 20:
+            detected += ", …"
+        raise TorrentError(
+            f"El torrent no contiene un vídeo seleccionable. Extensiones detectadas: {detected}. "
+            "Se excluyen samples, archivos vacíos, comprimidos e imágenes de disco."
+        )
+    return candidates
+
+
+def series_video_files(files, season=None, episode=None):
+    selected, seen = [], set()
+    for index, item in video_files(files):
+        numbers = episode_numbers(item["name"])
+        if numbers is None:
+            continue
+        sn, ep = numbers
+        if (season is not None and sn != season) or (episode is not None and ep != episode):
+            continue
+        if numbers in seen:
+            raise TorrentError("El torrent contiene varias versiones del mismo capítulo. Elige otra versión.")
+        seen.add(numbers)
+        selected.append((index, item, sn, ep))
+    if not selected:
+        raise TorrentError("No hay capítulos compatibles con la selección. Los vídeos deben incluir S01E01 o 1x01 en su nombre.")
+    return selected
 
 
 class TorrentDownloads:
-    def __init__(self, root, import_movie, artwork_status, prepare_artwork, rpc=None):
+    def __init__(self, root, import_movie, artwork_status, prepare_artwork, rpc=None,
+                 import_series=None, series_artwork_status=None, prepare_series_artwork=None):
         self.root = Path(root).resolve()
         self.state_path = self.root / "jobs.json"
         self.rpc = rpc or Transmission()
         self.import_movie = import_movie
         self.artwork_status = artwork_status
         self.prepare_artwork = prepare_artwork
+        self.import_series = import_series
+        self.series_artwork_status = series_artwork_status
+        self.prepare_series_artwork = prepare_series_artwork
         self.lock = threading.RLock()
         self.operation = threading.Lock()
         self.worker = None
@@ -162,20 +383,28 @@ class TorrentDownloads:
 
     def add(self, data):
         info_hash = str(data.get("infoHash", "")).lower()
-        movie = data.get("movie")
-        if not isinstance(movie, dict) or not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40:
-            raise ValueError("Selecciona un torrent y una película válidos.")
-        tmdb_id = positive_int(movie.get("id"))
-        name = str(movie.get("name") or "").strip()[:250]
+        media_type = data.get("mediaType", "movies")
+        if not isinstance(media_type, str) or media_type not in {"movies", "series"}:
+            raise ValueError("Tipo de contenido no válido.")
+        is_series = media_type == "series"
+        media_key = "series" if is_series else "movie"
+        media = data.get(media_key)
+        if not isinstance(media, dict) or not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40:
+            raise ValueError("Selecciona un torrent y una ficha válidos.")
+        if is_series and not all((self.import_series, self.series_artwork_status, self.prepare_series_artwork)):
+            raise TorrentError("Las descargas de series no están configuradas.")
+        season, episode = series_filters(data.get("seasonNumber"), data.get("episodeNumber"))
+        tmdb_id = positive_int(media.get("id"))
+        name = str(media.get("name") or "").strip()[:250]
         if not tmdb_id or not name:
-            raise ValueError("Falta la ficha TMDB de la película.")
+            raise ValueError("Falta la ficha TMDB del contenido.")
         overwrite = data.get("overwriteExisting") is True
         with self.operation:
             archive = None
             for existing in self.jobs.values():
                 if existing["id"] == info_hash:
-                    if existing["movie"]["id"] != tmdb_id:
-                        raise ValueError("Este torrent ya está asociado a otra película.")
+                    if existing.get("mediaType", "movies") != media_type or existing[media_key]["id"] != tmdb_id:
+                        raise ValueError("Este torrent ya está asociado a otro contenido.")
                     if existing["state"] in {"complete", "cancelled"}:
                         self._remove_transfer(existing)
                         if not existing.get("transferRemoved"):
@@ -183,19 +412,27 @@ class TorrentDownloads:
                         archive = copy.deepcopy(existing)
                         archive["id"] = f"{info_hash}-history-{time.time_ns()}"
                     else:
+                        if is_series and (existing.get("seasonNumber"), existing.get("episodeNumber")) != (season, episode):
+                            raise ValueError("Este torrent ya tiene otra selección de capítulos en curso.")
                         if overwrite and not existing.get("overwriteExisting"):
                             self._update(existing, overwriteExisting=True)
                         return copy.deepcopy(existing)
-                if existing["movie"]["id"] == tmdb_id and existing["state"] not in TERMINAL:
+                if not is_series and existing.get("mediaType", "movies") == "movies" and existing["movie"]["id"] == tmdb_id and existing["state"] not in TERMINAL:
                     raise ValueError("Esta película ya tiene una descarga en curso.")
             self.rpc.call("session-get")
             folder = self.root / "downloads" / info_hash
             folder.mkdir(parents=True, exist_ok=True)
             job = {"id": info_hash, "name": str(data.get("name") or name)[:500],
-                   "movie": {"id": tmdb_id, "name": name}, "state": "queued", "error": "",
+                   "mediaType": media_type, media_key: {"id": tmdb_id, "name": name}, "state": "queued", "error": "",
                    "sizeBytes": positive_int(data.get("sizeBytes")), "downloadedBytes": 0,
                    "progress": 0, "rateBytes": 0, "eta": -1, "createdAt": time.time()}
             job["overwriteExisting"] = overwrite
+            if is_series:
+                job.update(seasonNumber=season, episodeNumber=episode, overwriteExisting=False)
+            sources = data.get("sources")
+            if isinstance(sources, list):
+                job["sources"] = list(dict.fromkeys(source.strip()[:100] for source in sources[:8]
+                                                   if isinstance(source, str) and source.strip()))
             with self.lock:
                 if archive:
                     self.jobs[archive["id"]] = archive
@@ -216,7 +453,7 @@ class TorrentDownloads:
         if result.get("torrent-duplicate"):
             self._check_ownership(job)
         else:
-            self._update(job, videoIndex=None)
+            self._update(job, videoIndex=None, videoIndices=None)
 
     def _check_ownership(self, job):
         rows = self.rpc.call("torrent-get", {"ids": [job["id"]], "fields": ["downloadDir"]}).get("torrents", [])
@@ -239,7 +476,7 @@ class TorrentDownloads:
             if job.get("item"):
                 if action != "retry":
                     raise ValueError("El vídeo ya está importado; solo puedes reintentar TMDB.")
-                self.prepare_artwork(job["movie"]["id"])
+                self._prepare_job_artwork(job)
                 self._update(job, state="metadata", error="")
             elif action == "cancel":
                 self._check_ownership(job)
@@ -264,7 +501,7 @@ class TorrentDownloads:
         with self.lock:
             if self.worker and self.worker.is_alive():
                 return
-            self.worker = threading.Thread(target=self._run, name="movie-torrents", daemon=True)
+            self.worker = threading.Thread(target=self._run, name="media-torrents", daemon=True)
             self.worker.start()
 
     def _run(self):
@@ -329,6 +566,9 @@ class TorrentDownloads:
         if row.get("metadataPercentComplete", 0) < 1:
             self._update(job, state="queued", peers=positive_int(row.get("peersConnected")))
             return
+        if job.get("mediaType") == "series":
+            self._advance_series(job, row, folder)
+            return
         index, selected = video_file(row.get("files", []))
         if job.get("videoIndex") != index:
             unwanted = [i for i in range(len(row["files"])) if i != index]
@@ -359,12 +599,50 @@ class TorrentDownloads:
         self._update(job, state="metadata", item=item, progress=100)
         self._finish_artwork(job)
 
+    def _advance_series(self, job, row, folder):
+        selected = series_video_files(row.get("files", []), job.get("seasonNumber"), job.get("episodeNumber"))
+        indices = [index for index, _, _, _ in selected]
+        if job.get("videoIndices") != indices:
+            self.rpc.call("torrent-set", {"ids": [job["id"]], "files-wanted": indices,
+                                          "files-unwanted": [i for i in range(len(row["files"])) if i not in indices]})
+            self._update(job, videoIndices=indices, episodeCount=len(selected))
+            return
+        length = sum(positive_int(item["length"]) for _, item, _, _ in selected)
+        downloaded = sum(min(positive_int(item["length"]), positive_int(item.get("bytesCompleted"))) for _, item, _, _ in selected)
+        status = int(row.get("status", 0))
+        self._update(job, state="paused" if status == 0 and downloaded < length else "downloading",
+                     sizeBytes=length, downloadedBytes=downloaded, progress=round(downloaded * 100 / length, 1),
+                     rateBytes=positive_int(row.get("rateDownload")), eta=row.get("eta", -1),
+                     peers=positive_int(row.get("peersConnected")))
+        if downloaded != length or row.get("leftUntilDone") != 0 or row.get("percentDone", 0) < 1 or status in {1, 2}:
+            return
+        episodes = []
+        for _, selected_file, sn, ep in selected:
+            source = folder / selected_file["name"]
+            if not source.resolve().is_relative_to(folder) or any(p.is_symlink() for p in [source, *source.parents] if p != self.root.parent):
+                raise TorrentError("La ruta del capítulo descargado no es segura.")
+            if not source.is_file() or source.stat().st_size != positive_int(selected_file["length"]):
+                raise TorrentError("Un capítulo descargado está incompleto o no existe.")
+            episodes.append({"source": source, "seasonNumber": sn, "episodeNumber": ep, "id": f"S{sn:02d}E{ep:02d}"})
+        self.rpc.call("torrent-stop", {"ids": [job["id"]]})
+        self._update(job, state="importing", rateBytes=0)
+        item = self.import_series(job, episodes)
+        self._update(job, state="metadata", item=item, progress=100)
+        self._finish_artwork(job)
+
+    def _prepare_job_artwork(self, job):
+        if job.get("mediaType") == "series":
+            self.prepare_series_artwork(job["series"]["id"])
+        else:
+            self.prepare_artwork(job["movie"]["id"])
+
     def _finish_artwork(self, job):
         self._remove_transfer(job)
         try:
-            status = self.artwork_status(job["movie"]["id"])
+            status = (self.series_artwork_status(job["series"]["id"]) if job.get("mediaType") == "series"
+                      else self.artwork_status(job["movie"]["id"]))
             if not status:
-                self.prepare_artwork(job["movie"]["id"])
+                self._prepare_job_artwork(job)
             elif status.get("state") == "complete":
                 self._update(job, state="complete", completedAt=time.time(), error="")
             elif status.get("state") in {"failed", "cancelled"}:

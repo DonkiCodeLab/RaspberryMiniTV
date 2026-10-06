@@ -7,10 +7,19 @@ from unittest.mock import patch
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from menu_app import DeviceAppMenu
+from menu_app import DeviceAppMenu, is_video_file
 
 
 class VideoOutputTests(unittest.TestCase):
+    def test_menu_discovers_legacy_videos_and_passes_them_to_player(self):
+        for filename in ("/movie.AVI", "/movie.mpg", "/movie.webm", "/movie.wmv"):
+            with self.subTest(filename=filename):
+                self.assertTrue(is_video_file(filename))
+                with patch("menu_app.remove_path_if_exists"), patch("menu_app.get_alsa_device", return_value="default"):
+                    command = DeviceAppMenu.__new__(DeviceAppMenu).build_mpv_command(filename)
+                self.assertEqual(command[-1], filename)
+        self.assertFalse(is_video_file("/movie.avi.exe"))
+
     def command(self, output, env):
         with patch.dict(os.environ, env, clear=True), patch("menu_app.remove_path_if_exists"), patch("menu_app.get_alsa_device", return_value="default"):
             return DeviceAppMenu.__new__(DeviceAppMenu).build_mpv_command("/video.mp4", 12.5, output)

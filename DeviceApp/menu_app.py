@@ -1,4 +1,5 @@
 from playback_process import process_identity
+from video_formats import is_video_file
 from game_platforms import EXTENSIONS, stored_platform
 import json
 import os
@@ -552,10 +553,6 @@ def normalize_alarms(value):
             }
         )
     return alarms
-
-
-def is_video_file(filename):
-    return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
 def is_game_rom_file(filename):

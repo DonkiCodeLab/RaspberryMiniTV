@@ -293,16 +293,21 @@ export function isMockMode() {
   return isMockModeEnabled();
 }
 
-export function searchMovieTorrents(query, signal) {
+export function searchMediaTorrents(query, signal, options = {}) {
   if (isMockModeEnabled()) return Promise.resolve({ results: [], demo: true });
-  return request(`/torrents/search?${new URLSearchParams({ q: query })}`, { signal });
+  const params = new URLSearchParams({ q: query });
+  for (const key of ["mediaType", "imdbId", "seasonNumber", "episodeNumber", "eztvPage"]) {
+    if (options[key] !== undefined && options[key] !== null && options[key] !== "") params.set(key, String(options[key]));
+  }
+  return request(`/torrents/search?${params}`, { signal });
 }
 
-export function startMovieTorrent(torrent, movie, overwriteExisting = false) {
+export function startMediaTorrent(torrent, media, { mediaType = "movies", overwriteExisting = false, seasonNumber, episodeNumber } = {}) {
   if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para descargar torrents."));
   return request("/torrents", { method: "POST", body: JSON.stringify({
-    infoHash: torrent.infoHash, name: torrent.name, sizeBytes: torrent.sizeBytes, overwriteExisting,
-    movie: { id: movie.id, name: movie.name },
+    infoHash: torrent.infoHash, name: torrent.name, sizeBytes: torrent.sizeBytes, sources: torrent.sources, overwriteExisting,
+    mediaType, seasonNumber, episodeNumber,
+    [mediaType === "series" ? "series" : "movie"]: { id: media.id, name: media.name },
   }) });
 }
 
@@ -940,6 +945,21 @@ export function searchGameMetadata({ query, extension, platform } = {}) {
   return request(`/games/search?query=${encodeURIComponent(safeQuery)}&extension=${encodeURIComponent(safeExtension)}&platform=${encodeURIComponent(platform || "")}`);
 }
 
+export function getGameMetadata({ source, id, extension, platform } = {}) {
+  return request(`/games/metadata?${new URLSearchParams({ source, id, extension, platform })}`);
+}
+
+export function retryGameMetadata(relativePath, selection) {
+  return request("/games/metadata", { method: "POST", body: JSON.stringify({ relativePath, source: selection?.source, id: selection?.id }) });
+}
+
+export function gameMetadataImageUrl(url) {
+  if (!url) return "";
+  if (url.startsWith("/game-covers/")) return `${getBaseUrl()}${url}`;
+  if (isMockModeEnabled()) return url;
+  return `${getBaseUrl()}/games/metadata/image?${new URLSearchParams({ url, pin: getStoredWebPin() || "" })}`;
+}
+
 export async function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
   if (!file) {
     return Promise.reject(new Error("Missing file"));
@@ -954,7 +974,9 @@ export async function uploadGameFile({ file, game, cover, onProgress, signal } =
   const imagePreviewUrls = Array.isArray(cover?.imagePreviewUrls) ? cover.imagePreviewUrls : [];
   const coverUrl = String(cover?.url || "").trim();
   const source = String(game?.source || (coverFile || imageFiles.length ? "local" : coverUrl ? "screenscraper" : "default")).trim();
-  const screenScraperId = Number(game?.id || game?.screenScraperId) || 0;
+  const metadataSource = ["screenscraper", "igdb"].includes(game?.source) ? game.source : "";
+  const metadataId = metadataSource ? Number(game?.id || game?.metadataId) || 0 : 0;
+  const screenScraperId = metadataSource === "screenscraper" ? metadataId : 0;
 
   if (isMockModeEnabled()) {
     const current = loadMockGamesLibrary();
@@ -998,6 +1020,8 @@ export async function uploadGameFile({ file, game, cover, onProgress, signal } =
     formData.append("coverUrl", coverUrl);
     formData.append("source", source);
     formData.append("screenScraperId", String(screenScraperId));
+    formData.append("metadataSource", metadataSource);
+    formData.append("metadataId", String(metadataId));
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${getBaseUrl()}/games/upload`);

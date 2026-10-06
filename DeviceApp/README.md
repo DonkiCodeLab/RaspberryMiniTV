@@ -2,10 +2,12 @@
 
 Scripts para ejecutar la TV en la Raspberry Pi.
 
-## Descargas de películas por torrent
+## Descargas de películas y series por torrent
 
-En Uploads → Películas → TMDB, abre una ficha para buscar en The Pirate Bay
-(apibay.org). Los resultados muestran MB decimales y seeds de mayor a menor;
+En Uploads → TMDB, el selector **Series / Películas** determina las fuentes:
+las películas consultan The Pirate Bay (apibay.org) y Knaben; las series consultan
+esas mismas fuentes en sus categorías de TV y añaden EZTV. No requieren cuenta, claves ni servicios
+adicionales. Los resultados muestran la **fuente**, MB decimales y seeds de mayor a menor;
 puedes ajustar la búsqueda por título/año. «Descargar» inicia una tarea en la
 Raspberry y el dashboard permite ver progreso, velocidad, pausar, reanudar,
 cancelar o reintentar errores. La descarga continúa con el navegador cerrado.
@@ -30,16 +32,60 @@ Si ya tienes un motor local con acceso a las mismas rutas, puedes definir
 `MINITV_TRANSMISSION_PASSWORD` en el entorno de la API.
 
 La cola persistente, los datos temporales y la configuración están en
-`MultimediaContent/Torrents/`. Tras obtener los metadatos del magnet, se selecciona
+`MultimediaContent/Torrents/`. En películas, tras obtener los metadatos del magnet, se selecciona
 el vídeo compatible de mayor tamaño, excluyendo samples; no se importan archivos
 comprimidos ni todas las películas de un pack. El vídeo completo se publica con
 un enlace duro en Movies (ambas carpetas deben estar en el mismo sistema de
 archivos), se guarda su ficha y **solo entonces** se preparan imágenes y recursos
 TMDB. La copia temporal se elimina sin duplicar espacio. Una película existente
-no se sobrescribe. Los reinicios conservan descargas y pausas; los errores de
+solo se sobrescribe tras confirmarlo. Los reinicios conservan descargas y pausas; los errores de
 TMDB se pueden reintentar sin descargar de nuevo el vídeo.
 
-La búsqueda depende de la disponibilidad de apibay.org. Los resultados se
+El selector de torrents, el catálogo y el menú comparten los formatos de
+`video_formats.py`: además de MP4/M4V/MOV/MKV, aceptan AVI/DivX, WebM,
+MPEG/MPG/M2V, TS/MTS/M2TS, VOB, WMV/ASF, FLV, OGV, 3GP y RM/RMVB.
+Se reproducen directamente con mpv/Kodi, sin cambiar la extensión ni convertir
+el vídeo. La extensión identifica un candidato; la decodificación depende del
+códec y del reproductor instalado. Si no hay candidatos, el error muestra las
+extensiones encontradas en los metadatos del torrent, incluso antes de descargar
+datos. Los comprimidos y las imágenes de disco no se importan. Tras actualizar,
+pulsa «Reintentar» en una descarga rechazada por el filtro anterior.
+
+En series, el buscador aparece en la ficha general, la temporada y el capítulo.
+Los filtros **Temporada / Capítulo** se rellenan con la selección actual y se
+aplican al pulsar «Buscar torrents». Sin filtros se pueden elegir packs completos.
+Se usa el título original para The Pirate Bay/Knaben y el ID IMDb de la ficha TMDB
+para la [API pública de EZTV](https://eztvx.to/api/), que filtra la serie exacta.
+EZTV aplica los filtros de temporada/capítulo y devuelve páginas de 100 entradas;
+«Más resultados de EZTV» permite consultar las siguientes, hasta su límite de
+100 páginas. La falta de ID IMDb se muestra sin impedir las otras fuentes.
+
+El motor de series selecciona todos los vídeos compatibles identificados como
+`S01E01` o `1x01` (también en subcarpetas), dentro de los filtros elegidos. Excluye
+samples y extras sin numeración. Las versiones duplicadas de un mismo capítulo y
+los vídeos con varios capítulos unidos se rechazan para evitar asignaciones
+incorrectas. Al completarse todos los vídeos seleccionados, se publican enlaces
+duros en la carpeta de la serie bajo `TVShows`, se actualiza el catálogo y se
+preparan los recursos TMDB de TV. Se reutiliza la serie que tenga el mismo ID TMDB,
+conservando su ficha y los capítulos existentes; el dashboard indica añadidos y
+omitidos. Los fallos de publicación revierten los nuevos enlaces y permiten reintentar.
+
+La columna **Fuente** identifica la API y, cuando Knaben lo proporciona, el sitio
+de origen: por ejemplo, `1337x (Knaben)`. Un mismo hash encontrado en varios sitios
+aparece una sola vez con todas sus fuentes y el mayor número de seeds observado
+(no se suman). La procedencia se conserva también en las descargas y su historial.
+
+Las consultas tienen un límite global de 15 segundos. Si una fuente falla, se
+muestran los resultados de las otras con un aviso; si fallan todas, se muestra un
+error. Las búsquedas completas se conservan en memoria durante dos minutos para
+reducir consultas repetidas; los fallos no se guardan en caché. Solo se admiten
+categorías del tipo seleccionado y resultados con hash válido: los enlaces que solo ofrecen
+un archivo `.torrent` sin hash no aparecen en esta integración.
+
+Knaben utiliza su [API pública v2](https://knaben.org/api/v2/) y las
+[categorías de películas y TV](https://knaben.org/rss/). Sus resultados proceden de su
+índice y los datos de seeds pueden estar desactualizados. Las fuentes dependen de
+su disponibilidad externa. Los resultados se
 asocian a la ficha que has abierto; comprueba el nombre del torrent antes de
 seleccionarlo. La previsualización de la ficha consulta TMDB, pero no encola la
 preparación completa del título hasta que el vídeo está guardado.
@@ -61,7 +107,8 @@ Cuando te bajes este repositorio en la Raspberry, crea manualmente:
 mkdir -p MultimediaContent/Videos/Movies MultimediaContent/Videos/TVShows
 ```
 
-Y copia ahí tus vídeos `.mp4`, `.m4v`, `.mov` o `.mkv`.
+Y copia ahí tus vídeos en los formatos de `video_formats.py`, incluidos `.mp4`,
+`.m4v`, `.mov`, `.mkv` y `.avi`.
 
 `control_api.py` usa `MultimediaContent/Videos`, con `Movies` para películas y `TVShows` para series, así que no depende de una ruta fija como `/home/...`.
 
@@ -606,3 +653,34 @@ Las rutas `/oscars` siguen siendo compatibles. Los nuevos archivos viven en
 portadas y fondos aunque se elimine el vídeo de la biblioteca. Se preparan en segundo plano
 al abrir la colección y continúan después de reiniciar. La disponibilidad se cruza por ID de TMDB
 con un fichero real en la biblioteca, nunca por similitud de títulos.
+
+### Fichas de videojuegos e imágenes sin conexión
+
+Al añadir una ROM, la web busca su nombre en **ScreenScraper** e **IGDB**, filtrando por la consola elegida. Selecciona la coincidencia correcta antes de subirla. El servidor obtiene la ficha completa por ID y descarga todas las carátulas, capturas y otras imágenes disponibles de esa fuente. Las subidas directas también buscan automáticamente; solo asocian un título exacto y sin ambigüedad.
+
+Configura al menos una fuente en el `.env` de la raíz del repositorio de la Raspberry o en el entorno del servicio. Las credenciales se leen exclusivamente en el servidor; no deben incluirse en variables `VITE_*`.
+
+```dotenv
+# IGDB: aplicación Confidential registrada en Twitch Developer Console.
+IGDB_CLIENT_ID=
+IGDB_CLIENT_SECRET=
+
+# ScreenScraper: credenciales de desarrollador; cuenta de usuario opcional.
+SCREENSCRAPER_DEV_ID=
+SCREENSCRAPER_DEV_PASSWORD=
+SCREENSCRAPER_SOFTNAME=MiniTV
+SCREENSCRAPER_USER=
+SCREENSCRAPER_PASSWORD=
+```
+
+Documentación: [IGDB (registro y autenticación)](https://api-docs.igdb.com/#account-creation) y [ScreenScraper API v2](https://www.screenscraper.fr/webapi2.php). IGDB renueva el token OAuth en el servidor y limita sus peticiones; ScreenScraper se consulta secuencialmente. Si una fuente falla, la búsqueda conserva los resultados de la otra.
+
+- `MultimediaContent/media_library.sqlite3`: ficha del juego, fuente/ID, fechas, descripción, géneros, desarrolladores, distribuidores, jugadores, puntuación y respuesta completa original de la fuente (incluidos los demás campos disponibles). Las credenciales de URLs de ScreenScraper se eliminan antes de guardar.
+- `MultimediaContent/GameMetadata/`: caché de fichas por fuente, ID, consola e idioma. Seleccionar, subir y reintentar reutiliza la misma ficha.
+- `MultimediaContent/GameCovers/`: imágenes locales con nombres derivados de la ruta completa de la ROM y la imagen; dos consolas pueden tener el mismo título sin sobrescribir archivos.
+
+La biblioteca muestra los datos guardados sin consultar APIs. No se limita la galería a cinco imágenes. Las imágenes pueden tener hasta 16 MiB cada una; si una descarga falla, el juego y la ficha se conservan con estado `partial`. **Completar ficha e imágenes** reintenta lo que falta sin volver a subir la ROM y conserva las personalizaciones. Los estados `not_configured`, `not_found`, `needs_selection` y `error` indican por qué una ficha no está completa; nunca se comunica un fallo de metadatos como si hubiera fallado la subida de la ROM.
+
+Rutas autenticadas: `GET /games/search`, `GET /games/metadata?source=…&id=…&platform=…&extension=…`, `GET /games/metadata?relativePath=Games/…` (ficha local completa), `POST /games/metadata` (`relativePath`, opcionalmente `source` e `id`, para completar/reintentar). `POST /games/upload` admite `metadataSource` y `metadataId`; conserva compatibilidad con `screenScraperId`. La vista previa usa `/games/metadata/image` como proxy de imágenes de los proveedores para mantener las credenciales fuera del navegador. Las imágenes elegidas manualmente y el texto personalizado prevalecen sobre la descarga automática.
+
+Comprobación local sin credenciales: `PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s DeviceApp/tests -p 'test_game*.py'` (requiere Flask).

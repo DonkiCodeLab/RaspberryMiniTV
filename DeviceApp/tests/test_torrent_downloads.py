@@ -111,6 +111,10 @@ class TorrentTests(unittest.TestCase):
         restarted.tick()
         self.assertEqual(self.importer.call_count, 1)
 
+    def test_restart_preserves_download_sources(self):
+        self.add(sources=["The Pirate Bay", "1337x (Knaben)", "The Pirate Bay", None])
+        self.assertEqual(self.new_manager().snapshot()["jobs"][0]["sources"], ["The Pirate Bay", "1337x (Knaben)"])
+
     def test_cancel_never_imports_and_survives_restart(self):
         self.add()
         source = self.ready()
@@ -267,6 +271,33 @@ class TorrentTests(unittest.TestCase):
         with self.assertRaises(TorrentError):
             video_file([{"name": "../film.mkv", "length": 100}])
 
+    def test_legacy_video_formats_are_selected_and_safe_paths_still_required(self):
+        for suffix in (".AVI", ".divx", ".mpg", ".mpeg", ".webm", ".wmv", ".m2ts", ".rmvb"):
+            with self.subTest(suffix=suffix):
+                files = [{"name": "sample" + suffix, "length": 1000},
+                         {"name": "Film/movie" + suffix, "length": 100}]
+                self.assertEqual(video_file(files)[0], 1)
+                with self.assertRaisesRegex(TorrentError, "ruta"):
+                    video_file([{"name": "../movie" + suffix, "length": 100}])
+
+    def test_rejected_torrent_reports_detected_extensions(self):
+        for names, expected in ((["film.rar", "film.r00", "info.nfo"], ".rar"),
+                                (["film.iso"], ".iso"), (["film"], "sin extensión"),
+                                ([], "ningún archivo"), (["sample.avi"], ".avi")):
+            with self.subTest(names=names), self.assertRaises(TorrentError) as caught:
+                video_file([{"name": name, "length": 100} for name in names])
+            self.assertIn(expected, str(caught.exception))
+
+    def test_retry_of_previously_rejected_avi_imports_without_conversion(self):
+        self.add()
+        source = self.ready(name="Film/movie.avi")
+        self.manager._update(self.manager.jobs[INFO_HASH], state="failed", error="Old format filter")
+        self.manager.action(INFO_HASH, "retry")
+        self.manager.tick()
+        self.manager.tick()
+        self.importer.assert_called_once_with(self.manager.jobs[INFO_HASH], source)
+        self.assertEqual(self.manager.jobs[INFO_HASH]["state"], "metadata")
+
     def test_incomplete_disk_file_does_not_import_even_if_rpc_says_done(self):
         self.add()
         source = self.ready()
@@ -345,6 +376,20 @@ class TorrentApiTests(unittest.TestCase):
         p = patch.object(api, "ensure_media_directories"); p.start(); self.addCleanup(p.stop)
         self.client = api.app.test_client()
 
+    def test_search_exposes_source_status_and_returns_partial_results(self):
+        payload = {"results": [{"infoHash": INFO_HASH, "sources": ["1337x (Knaben)"]}],
+                   "sources": [{"id": "piratebay", "name": "The Pirate Bay", "status": "error", "count": 0}]}
+        with patch.object(api, "is_authorized_request", return_value=True), patch.object(api, "search_torrents", return_value=payload):
+            response = self.client.get("/torrents/search?q=Sintel")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json, payload)
+
+    def test_search_reports_validation_and_total_failure(self):
+        with patch.object(api, "is_authorized_request", return_value=True):
+            self.assertEqual(self.client.get("/torrents/search?q=").status_code, 400)
+            with patch.object(api, "search_torrents", side_effect=TorrentError("No sources")):
+                self.assertEqual(self.client.get("/torrents/search?q=Sintel").status_code, 503)
+
     def test_endpoints_require_pin(self):
         with patch.object(api, "is_authorized_request", return_value=False), patch.object(api, "get_movie_torrents") as manager:
             for path in ("/torrents", "/torrents/search?q=Film"):
@@ -380,6 +425,17 @@ class TorrentApiTests(unittest.TestCase):
             self.assertEqual(len(api.load_movie_library()), 1)
             self.assertEqual(artwork.call_count, 2)
         source.unlink()
+        self.assertEqual((self.root / item["relativePath"]).read_bytes(), b"finished")
+
+    def test_avi_import_is_visible_to_catalog_and_upload_validation(self):
+        source = self.root / "movie.AVI"
+        source.write_bytes(b"finished")
+        with patch.object(api, "queue_tmdb_artwork"):
+            item = api.import_torrent_movie({"id": INFO_HASH, "movie": {"id": 123, "name": "Film"}}, source)
+        self.assertTrue(item["relativePath"].endswith(".avi"))
+        self.assertTrue(api.is_video_file(item["relativePath"]))
+        self.assertTrue(api.is_supported_upload_file(source.name))
+        self.assertIn(item["relativePath"], api.load_movie_library())
         self.assertEqual((self.root / item["relativePath"]).read_bytes(), b"finished")
 
     def test_existing_movie_is_not_overwritten(self):

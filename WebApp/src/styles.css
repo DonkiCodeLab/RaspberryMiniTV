@@ -111,7 +111,9 @@ img {
   right: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: var(--clouds-background);
+  background-image:
+    linear-gradient(rgba(95, 146, 174, 0.74), rgba(95, 146, 174, 0.74)),
+    var(--clouds-background);
   background-size: var(--clouds-tile-width) auto;
   background-repeat: repeat;
   animation: clouds-drift 120s linear infinite;
@@ -141,7 +143,6 @@ img {
   --series-hero-control-gap: 0.8rem;
   min-height: 100vh;
   padding: 1.5rem 1.25rem 2rem;
-  background: rgba(95, 146, 174, 0.74);
 }
 
 .page-overlay--season {
@@ -215,6 +216,8 @@ img {
   /* Align the visible text baseline with the bottom of LAB and its icon. */
   transform: translateY(0.12em);
 }
+
+.series-hero__section-title--books { font-size: clamp(.65rem, 3cqw, 2.5rem); }
 
 .series-hero__art {
   position: absolute;
@@ -1509,7 +1512,8 @@ img {
 @media (min-width: 1180px) {
   .movie-panel__gallery,
   .movie-panel__content,
-  .movie-panel__play {
+  .movie-panel__play,
+  .movie-panel__card > .movie-subtitle-download {
     max-width: 60%;
     margin-inline: auto;
   }
@@ -1763,6 +1767,8 @@ img {
 .books-library__type-switch button { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; }
 .books-library__type-switch button.active { background: rgba(255,212,41,.16); box-shadow: inset 0 0 0 1px #ffd429; }
 .books-library__type-switch img { width: 1.9rem; height: 1.9rem; object-fit: contain; }
+.books-library__type-switch button:not(.active) img { filter: grayscale(1); opacity: .7; }
+.books-library__type-switch button:is(:hover, :focus-visible) img { filter: none; opacity: 1; }
 .books-library__type-switch button:focus-visible { outline: 2px solid #ffd429; outline-offset: 2px; }
 .books-library__browse-tools select:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
 .book-type-field .book-metadata__cover-choice { margin-top: 0; }
@@ -3121,10 +3127,35 @@ img {
 }
 
 .raspberry-upload-summary--tmdb {
+  display: grid;
+  gap: 1rem;
+}
+
+.raspberry-upload-summary__torrent-body {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: clamp(1rem, 3vw, 2rem);
+}
+
+.raspberry-upload-summary__pirate {
+  flex: 0 0 auto;
+  width: clamp(64px, 10vw, 104px);
+  height: auto;
+  color: #fff;
+}
+
+.raspberry-upload-summary__torrent-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
   gap: 1rem;
+}
+
+.raspberry-upload-summary__torrent-content p {
+  flex: 1 1 260px;
+  margin: 0;
 }
 
 .raspberry-upload-summary--tmdb strong {
@@ -5282,8 +5313,9 @@ img {
 }
 
 .tmdb-browser-movie .movie-panel__card {
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: 1.5rem 1.75rem;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  grid-template-areas: "gallery details" "synopsis synopsis";
+  gap: 1.5rem;
   padding: clamp(1rem, 2.5vw, 1.5rem);
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -5298,17 +5330,23 @@ img {
 }
 
 .tmdb-browser-movie .movie-panel__gallery {
-  gap: 0.65rem;
+  grid-area: gallery;
+  gap: 0.85rem;
 }
 
 .tmdb-browser-movie .movie-panel__hero-media,
 .tmdb-browser-movie .movie-panel__gallery-empty {
   border-radius: 16px;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   min-height: 0;
 }
 
+.tmdb-browser-movie .movie-panel__gallery-empty {
+  grid-area: gallery;
+}
+
 .tmdb-browser-movie .movie-panel__gallery-controls {
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
   margin-top: 0;
   gap: 0.65rem;
 }
@@ -5316,26 +5354,59 @@ img {
 .tmdb-browser-movie .movie-panel__gallery-button {
   width: 40px;
   height: 40px;
+  padding: 0;
+  color: #ffd429;
+  border: 1px solid rgba(255, 212, 41, 0.25);
+  background: rgba(34, 59, 73, 0.8);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.tmdb-browser-movie .movie-panel__gallery-button:hover {
+  background: rgba(255, 212, 41, 0.12);
+  border-color: #ffd429;
 }
 
 .tmdb-browser-movie .movie-panel__gallery-status {
-  display: flex;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem 0.7rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(34, 59, 73, 0.65);
+}
+
+.tmdb-browser-movie .movie-panel__dots {
+  min-width: 0;
+  max-width: 100%;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
-  gap: 0.45rem 0.85rem;
-  padding: 0.65rem;
-  border: 0;
-  background: transparent;
+  gap: 0.55rem;
 }
 
 .tmdb-browser-movie .movie-panel__dot {
+  flex: 0 0 auto;
   width: 9px;
   height: 9px;
+  padding: 0;
+}
+
+.tmdb-browser-movie .movie-panel__dot.active {
+  width: 22px;
+  transform: none;
+  background: #ffd429;
+}
+
+.tmdb-browser-movie .movie-panel__gallery-button:focus-visible,
+.tmdb-browser-movie .movie-panel__dot:focus-visible {
+  outline: 2px solid #ffd429;
+  outline-offset: 3px;
 }
 
 .tmdb-browser-movie .movie-panel__content {
-  gap: 1.1rem;
+  grid-area: details;
+  gap: 1.25rem;
   align-content: start;
 }
 
@@ -5393,19 +5464,34 @@ img {
 
 .tmdb-browser-movie__facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
-  gap: 0.85rem 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
   margin: 0;
-  padding-block: 1rem;
-  border-block: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tmdb-browser-movie__facts > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.9rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(34, 59, 73, 0.65);
+}
+
+.tmdb-browser-movie__facts > .tmdb-browser-movie__score {
+  border-color: rgba(255, 212, 41, 0.3);
+  background: rgba(255, 212, 41, 0.06);
 }
 
 .tmdb-browser-movie__facts dt {
-  margin-bottom: 0.4rem;
+  margin: 0;
   color: rgba(236, 243, 250, 0.68);
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -5414,6 +5500,11 @@ img {
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.4;
+}
+
+.tmdb-browser-movie__facts .tmdb-browser-movie__rating {
+  color: #ffd429;
+  font-size: 1.15rem;
 }
 
 .tmdb-browser-movie__rating span {
@@ -5438,24 +5529,49 @@ img {
 .tmdb-browser-movie__genres li {
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: #e0e9ef;
+  border: 1px solid rgba(255, 212, 41, 0.18);
+  background: rgba(255, 212, 41, 0.06);
+  color: #ffe58b;
   font-size: 0.85rem;
   line-height: 1.35;
 }
 
 .tmdb-browser-movie .movie-panel__overview {
+  grid-area: synopsis;
   grid-column: 1 / -1;
-  padding: 1.25rem 0 0;
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0;
-  background: transparent;
+  min-width: 0;
+  width: 100%;
+  padding: 1.2rem 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(34, 59, 73, 0.4);
+}
+
+.tmdb-browser-movie .movie-panel__overview strong {
+  color: #ffd429;
 }
 
 .tmdb-browser-movie .movie-panel__overview p {
   margin-top: 0.6rem;
   line-height: 1.65;
+}
+
+@media (max-width: 480px), (min-width: 761px) and (max-width: 900px) {
+  .tmdb-browser-movie__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tmdb-browser-movie__facts > .tmdb-browser-movie__score {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .tmdb-browser-movie .movie-panel__overview {
+    padding: 1rem;
+  }
 }
 
 .tmdb-browser-episode {
@@ -5809,6 +5925,7 @@ img {
 
   .tmdb-browser-movie .movie-panel__card {
     grid-template-columns: 1fr;
+    grid-template-areas: "gallery" "details" "synopsis";
   }
 
   .game-browser-profile {
@@ -6148,20 +6265,6 @@ img {
 .book-upload-report ul { max-height: 220px; overflow-y: auto; padding-left: 1.4rem; }
 .book-upload-report li { margin: .5rem 0; }
 
-.console-browser { max-width: 1400px; margin: 0 auto 24px; overflow: hidden; border-radius: 22px; background: #101219; color: white; box-shadow: 0 18px 50px #14222c50; }
-.console-scene { position: relative; min-height: 490px; background-size: cover; background-position: center; isolation: isolate; }
-.console-scene__shade { position: absolute; inset: 0; background: linear-gradient(90deg,#090c14e8 0%,#090c1499 30%,transparent 65%),linear-gradient(0deg,#101219,transparent 28%); z-index: -1; }
-.console-scene__info { position: relative; width: 35%; min-width: 280px; padding: 30px 36px 64px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
-.console-eyebrow { text-transform: uppercase; letter-spacing: .16em; font-size: 12px; color: #d7dce6; margin: 0; }
-.console-hardware { height: 175px; width: 100%; object-fit: contain; filter: drop-shadow(0 12px 12px #0008); margin: 12px 0; }
-.console-scene h1 { font-size: clamp(26px,3vw,44px); line-height: 1.05; margin: 0; }
-.console-total { color: #ffd900; margin: 0; font-size: 20px; font-weight: bold; }
-.console-scene small { color: #c6cbd4; }
-.console-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; z-index: 1; }
-.console-art-actions { position: absolute; bottom: 18px; right: 22px; display: flex; gap: 8px; z-index: 3; }
-.console-art-actions label,.console-art-actions button { cursor: pointer; border-radius: 18px; background: #101219dc; padding: 9px 14px; color: #fff; font-size: 12px; }
-.console-art-actions input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.console-art-actions label:focus-within { outline: 3px solid #ffe000; }
 .console-navigation { display: flex; align-items: stretch; padding: 4px 12px 12px; gap: 8px; }
 .console-navigation > button { background: transparent; color: #ffde00; font-size: 40px; cursor: pointer; }
 .console-rail { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; flex: 1; padding: 8px 2px; }
@@ -6169,57 +6272,92 @@ img {
 .console-rail button.active { border-color: #ffe000; background: #ffe00016; color: white; }
 .console-rail img { height: 46px; width: 100%; object-fit: cover; margin: 0 auto 10px; }
 .console-rail span { font-size: 11px; }
-.console-games { display: flex; gap: 16px; overflow-x: auto; padding: 20px 28px; background: #171b25; }
-.console-games button { flex: 0 0 132px; color: #e5e7ec; background: transparent; border-radius: 8px; padding: 8px; border: 2px solid transparent; cursor: pointer; text-align: left; }
-.console-games button.active { border-color: #ffe000; }
-.console-games img,.console-game-placeholder { height: 145px; width: 100%; object-fit: contain; margin-bottom: 12px; }
-.console-games button span { display: block; font-size: 12px; }
-.console-status { padding: 0 24px; }
-.console-credits { display: block; padding: 10px 28px; color: #a4aabb; font-size: 10px; }
-.console-browser button:focus-visible { outline: 3px solid white; outline-offset: -3px; }
-@media(max-width: 640px) {
- .console-scene { min-height: 440px; background-position: 62% center; }
- .console-scene__info { width: 58%; min-width: 0; padding: 24px 18px 70px; }
- .console-hardware { height: 130px; }
- .console-scene__shade { background: linear-gradient(90deg,#090c14ed,#090c1444),linear-gradient(0deg,#101219,transparent 40%); }
- .console-scene h1 { font-size: 27px; }
- .console-overlay { display: none; }
- .console-art-actions { bottom: 15px; right: 14px; }
- .console-rail button { flex-basis: 118px; }
-}
-
-.console-filter { margin: 0 28px 12px; padding: 9px 14px; color: #fff; border-radius: 18px; background: #ffffff18; cursor: pointer; }
+.console-credits { display: block; width: min(1360px, 100%); margin: 1rem auto; color: #263f50; font-size: 10px; }
 @media (max-width: 480px) {
   .media-switch__option { flex-direction: column; gap: 5px; padding: 8px 4px; font-size: 11px; }
   .media-switch__icon { width: 20px; height: 20px; }
 }
 
-/* Place library controls above the DonkiCode lettering. */
+/* Align the controls with the left edge of DonkiCode inside the artwork. */
 .movie-library__browse-tools {
   position: absolute;
-  left: 26.5%;
+  left: 27.2%;
   top: 8%;
-  max-width: 44%;
+  width: 50%;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: min(0.65rem, 1cqw);
   pointer-events: auto;
   z-index: 3;
 }
+.movie-library__browse-tools .movie-library__view-switch {
+  flex-shrink: 0;
+  padding: min(.28rem, .5cqw);
+  border-radius: min(14px, 1.8cqw);
+}
+.movie-library__browse-tools .movie-library__view-switch button {
+  width: min(2.2rem, 4cqw);
+  height: min(2.2rem, 4cqw);
+  font-size: min(1.2rem, 2.4cqw);
+  border-radius: min(10px, 1.3cqw);
+}
+.movie-library__browse-tools .movie-library__sort {
+  flex-shrink: 0;
+  gap: min(.5rem, .7cqw);
+  padding: min(.5rem, .8cqw) min(.7rem, 1cqw);
+  font-size: min(.78rem, 1.65cqw);
+  border-radius: min(14px, 1.8cqw);
+}
+.movie-library__browse-tools .oscar-view-button svg {
+  width: min(21px, 3cqw);
+  height: min(21px, 3cqw);
+}
+.movie-library__browse-tools .books-library__type-switch img {
+  width: min(1.9rem, 3.3cqw);
+  height: min(1.9rem, 3.3cqw);
+}
 
-@media (max-width: 900px) {
-  .series-hero:has(.movie-library__browse-tools) {
-    margin-top: 3.75rem;
-  }
-
-  .movie-library__browse-tools {
-    left: 0;
-    top: auto;
-    bottom: calc(100% + 0.5rem);
-    max-width: 100%;
-  }
-  .books-library__browse-tools { width: 100%; }
+.books-library__grid--list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: .5rem;
+}
+.books-library__grid--list .books-library__card {
+  display: grid;
+  grid-template-columns: 44.8px minmax(0, 1fr) auto;
+  align-items: center;
+  border-radius: 12px;
+}
+.books-library__grid--list .books-library__cover-button {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  width: 44.8px;
+  height: 67.2px;
+}
+.books-library__grid--list .books-library__cover-image { object-fit: contain; }
+.books-library__grid--list .books-library__card-copy {
+  grid-column: 2;
+  padding: 6px 10px;
+  gap: 2px;
+  align-content: center;
+  font-size: .9rem;
+}
+.books-library__grid--list .books-library__card-copy strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.books-library__grid--list .books-library__actions-reveal {
+  grid-column: 3;
+  max-width: 100%;
+}
+@media (max-width: 600px) {
+  .books-library__grid--list .books-library__card { grid-template-columns: 39.2px minmax(0, 1fr); }
+  .books-library__grid--list .books-library__cover-button { width: 39.2px; height: 58.8px; }
+  .books-library__grid--list .books-library__actions-reveal { grid-column: 1 / -1; justify-self: end; }
 }
 .series-hero__settings-slot {
   display: contents;
@@ -6270,7 +6408,7 @@ img {
     font-size: 0.75rem;
   }
 }
-.console-library.seasons-section { margin-top: 1.5rem; }
+
 
 .tmdb-cache-panel {
   border-top: 1px solid rgba(255, 255, 255, 0.16);
@@ -6712,3 +6850,34 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
 .library-back-to-top:hover { background: #ffe574; }
 .library-back-to-top:focus-visible { outline: 3px solid #142b39; outline-offset: 3px; }
 .library-back-to-top span { font-size: 1.2em; }
+
+/* Games share the library header and card layouts. Only the hardware changes. */
+.series-hero__banner:has(.console-navigation) { --series-controls-band-height: 30cqh; --series-controls-item-size: 24cqh; }
+.series-hero__art--games, .series-hero__art--books { background: #000; }
+.series-hero__art--games .series-hero__full-mask-image,
+.series-hero__art--books .series-hero__full-mask-image { mask-image: linear-gradient(to right, transparent 20%, #000 27%); -webkit-mask-image: linear-gradient(to right, transparent 20%, #000 27%); }
+.series-hero__art .series-hero__console { position: absolute; z-index: 2; left: 3%; top: 12%; width: 21%; height: 55%; object-fit: contain; filter: drop-shadow(0 10px 12px #0008); }
+.series-hero__art .series-hero__book-type { position: absolute; z-index: 2; left: 2%; top: 7%; width: 23%; height: 67%; object-fit: contain; filter: drop-shadow(0 8px 10px #0008); }
+.series-hero__controls-row .console-navigation { width: 92%; min-width: 0; height: var(--series-controls-item-size); padding: 0; gap: .6%; }
+.series-hero__controls-row .console-navigation > button { flex: 0 0 4%; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: clamp(20px, 3cqw, 40px); }
+.series-hero__controls-row .console-rail { min-width: 0; gap: .6%; padding: 0; scrollbar-width: none; }
+.series-hero__controls-row .console-rail::-webkit-scrollbar { display: none; }
+.series-hero__controls-row .console-rail button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3%; flex: 0 0 17%; min-width: 0; padding: 3px 6px; border-radius: 12px; background: rgba(42,71,88,.65); }
+.series-hero__controls-row .console-rail button.active { background: #ffd42922; border-color: #ffd429; }
+/* Square logo assets have transparent vertical margins; fill the slot to make the artwork readable. */
+.series-hero__controls-row .console-rail img { flex-shrink: 0; height: 68%; width: 100%; object-fit: cover; object-position: center; margin: 0; }
+.series-hero__controls-row .console-rail span { max-width: 100%; font-size: clamp(7px, .8cqw, 12px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.console-navigation button:focus-visible { outline: 2px solid #ffd429; outline-offset: -3px; }
+.games-library__title { padding: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.games-library__title:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
+.games-library .movie-library__poster img { object-fit: contain; }
+.games-library__empty { color: #fff; text-align: center; padding: 2rem; }
+@media (max-width: 600px) {
+  .series-hero__banner:has(.console-navigation) { --series-controls-band-height: 30cqh; --series-controls-item-size: 25cqh; }
+  .series-hero__controls-row .console-rail button { flex-basis: 31%; border-radius: 6px; }
+  .series-hero__controls-row .console-rail img { display: none; }
+  .series-hero__controls-row .console-rail span { font-size: 9px; }
+  .series-hero__controls-row .console-navigation > button { flex-basis: 7%; }
+}
+
+.books-library__grid--list .movie-library__actions--icons { padding: 4px; }

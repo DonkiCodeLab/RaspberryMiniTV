@@ -1,5 +1,7 @@
 const strings = {
   es: {
+    settingsTitle: "Configuración de OpenSubtitles", settingsLoading: "Cargando configuración…",
+    settingsLoadFailed: "No se pudo cargar la configuración de OpenSubtitles.", settingsSaveFailed: "No se pudo guardar la configuración de OpenSubtitles.", retry: "Reintentar",
     title: "Obtener subtítulo", language: "Idioma del subtítulo", searching: "Buscando y guardando subtítulo…",
     hint: "Busca en OpenSubtitles y guarda el SRT junto al vídeo en la Raspberry. Sustituye el SRT existente.",
     saved: "Subtítulo guardado", exact: "Coincidencia con el fichero de vídeo.", fallback: "Elegido por la película y la versión disponible. Comprueba la sincronización.",
@@ -23,6 +25,8 @@ const strings = {
     SUBTITLE_DEMO: "Conecta con la Raspberry para configurar OpenSubtitles y descargar subtítulos.",
   },
   ca: {
+    settingsTitle: "Configuració d’OpenSubtitles", settingsLoading: "Carregant la configuració…",
+    settingsLoadFailed: "No s’ha pogut carregar la configuració d’OpenSubtitles.", settingsSaveFailed: "No s’ha pogut desar la configuració d’OpenSubtitles.", retry: "Torna-ho a provar",
     title: "Obtenir subtítol", language: "Idioma del subtítol", searching: "Cercant i desant el subtítol…",
     hint: "Cerca a OpenSubtitles i desa el SRT al costat del vídeo a la Raspberry. Substitueix el SRT existent.",
     saved: "Subtítol desat", exact: "Coincidència amb el fitxer de vídeo.", fallback: "Triat segons la pel·lícula i la versió disponible. Comprova la sincronització.",
@@ -46,6 +50,8 @@ const strings = {
     SUBTITLE_DEMO: "Connecta amb la Raspberry per configurar OpenSubtitles i descarregar subtítols.",
   },
   en: {
+    settingsTitle: "OpenSubtitles settings", settingsLoading: "Loading settings…",
+    settingsLoadFailed: "Could not load the OpenSubtitles settings.", settingsSaveFailed: "Could not save the OpenSubtitles settings.", retry: "Retry",
     title: "Get subtitle", language: "Subtitle language", searching: "Finding and saving subtitle…",
     hint: "Searches OpenSubtitles and saves the SRT beside the video on the Raspberry. Replaces the existing SRT.",
     saved: "Subtitle saved", exact: "Matched to the video file.", fallback: "Selected by movie and available release. Check the timing.",

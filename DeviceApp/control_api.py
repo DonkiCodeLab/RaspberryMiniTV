@@ -1,11 +1,13 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
 from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
+from video_formats import is_video_file
 import movie_subtitles
 from oscar_catalog import OscarCatalog
 from background_stats import BackgroundStats
 import catalog_store
 import book_metadata
+from game_metadata import GameMetadata, MetadataError, title_key
 from epub_cover import extract_epub_cover
 from comic_reader import ComicError, comic_pdf, comic_cover
 from functools import wraps
@@ -13,6 +15,7 @@ import json
 import gzip
 import io
 import os
+from pathlib import Path
 import re
 import shutil
 from playback_process import player_is_running
@@ -564,11 +567,6 @@ def ensure_default_game_cover():
         )
 
 
-def normalize_cover_filename(relative_path):
-    slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game")
-    return f"{slug}.jpg"
-
-
 def is_game_cover_file(filename):
     return os.path.splitext(str(filename or "").strip())[1].lower() in GAME_COVER_EXTENSIONS
 
@@ -581,7 +579,7 @@ def save_uploaded_game_image(uploaded_image, relative_path, suffix="cover"):
     image_extension = os.path.splitext(uploaded_image.filename)[1].lower()
     if image_extension == ".jpeg":
         image_extension = ".jpg"
-    image_slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game")
+    image_slug = slugify(os.path.splitext(os.path.basename(relative_path))[0], "game") + "-" + hashlib.sha256(relative_path.encode()).hexdigest()[:12]
     safe_suffix = slugify(suffix, "image")
     target_filename = f"{image_slug}-{safe_suffix}{image_extension}"
     target_path = os.path.join(GAME_COVERS_DIR, target_filename)
@@ -666,6 +664,15 @@ def upsert_game_metadata(relative_path, updates):
         item["imageOptions"] = unique_ordered_urls(updates.get("imageOptions"))
     if "source" in updates:
         item["source"] = str(updates.get("source") or "").strip()
+    for key in ("gameMetadata", "metadataSource", "metadataId", "metadataStatus", "metadataFailedImages", "metadataWarnings", "screenshots"):
+        if key in updates:
+            item[key] = updates[key]
+    if "imageOptions" in updates and item.get("gameMetadata"):
+        # Keep normalized media references consistent after a user removes an image.
+        item["gameMetadata"] = dict(item["gameMetadata"])
+        for key in ("media", "covers", "screenshots"):
+            item["gameMetadata"][key] = [entry for entry in item["gameMetadata"].get(key, [])
+                                         if entry.get("url") in item["imageOptions"]]
 
     game_items[safe_relative_path] = item
     save_media_library(library)
@@ -863,7 +870,7 @@ def is_public_frontend_request():
 
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
-    if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content"} and not submitted_pin:
+    if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content", "/games/metadata/image"} and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     if (request.path.startswith(("/tmdb/images/", "/tmdb/import/images/", "/oscars/images/")) or
             re.fullmatch(r"/awards/(palme|goya|oscars)/images/[^/]+", request.path)) and not submitted_pin:
@@ -938,10 +945,6 @@ def get_local_ip():
         return "127.0.0.1"
     finally:
         sock.close()
-
-
-def is_video_file(filename):
-    return filename.lower().endswith((".mp4", ".m4v", ".mov", ".mkv"))
 
 
 def is_supported_upload_file(filename):
@@ -1219,6 +1222,13 @@ def list_game_entries():
                 "description": str(metadata.get("description") or "").strip(),
                 "coverImage": cover_image,
                 "imageOptions": image_options,
+                "screenshots": metadata.get("screenshots", []),
+                "metadataSource": metadata.get("metadataSource", ""),
+                "metadataId": metadata.get("metadataId", 0),
+                "metadataStatus": metadata.get("metadataStatus", ""),
+                "metadataFailedImages": metadata.get("metadataFailedImages", 0),
+                "gameMetadata": {key: value for key, value in (metadata.get("gameMetadata") or {}).items()
+                                 if key not in {"raw", "media", "covers", "screenshots"}},
                 "sizeBytes": os.path.getsize(full_entry),
             }
         )
@@ -1245,124 +1255,36 @@ def get_config_value(key, default=""):
     return os.environ.get(key, "").strip() or read_env_file_value(key) or default
 
 
-def screen_scraper_credentials():
-    dev_id = get_config_value("SCREENSCRAPER_DEV_ID")
-    dev_password = get_config_value("SCREENSCRAPER_DEV_PASSWORD")
-    softname = get_config_value("SCREENSCRAPER_SOFTNAME", "MiniTV")
-    username = get_config_value("SCREENSCRAPER_USER")
-    password = get_config_value("SCREENSCRAPER_PASSWORD")
-    if not dev_id or not dev_password:
-        return None
-    credentials = {
-        "devid": dev_id,
-        "devpassword": dev_password,
-        "softname": softname,
-        "output": "json",
-    }
-    if username and password:
-        credentials["ssid"] = username
-        credentials["sspassword"] = password
-    return credentials
+def game_metadata_service():
+    return GameMetadata(MULTIMEDIA_DIR, GAME_COVERS_DIR, get_config_value, current_language())
 
 
-def pick_localized_value(values, language=None):
-    if not isinstance(values, list):
-        return ""
-    language = language or current_language()
-    preferred = [language, "es", "en", "fr"]
-    for preferred_language in preferred:
-        for entry in values:
-            if not isinstance(entry, dict):
-                continue
-            if str(entry.get("region") or entry.get("langue") or "").lower() == preferred_language:
-                return str(entry.get("text") or "").strip()
-    for entry in values:
-        if isinstance(entry, dict) and entry.get("text"):
-            return str(entry.get("text") or "").strip()
-    return ""
-
-
-def extract_screen_scraper_media(medias):
-    covers = []
-    if not isinstance(medias, list):
-        return covers
-    preferred_types = {"box-2D", "box-2d", "box-texture", "mixrbv2", "screenshot"}
-    for media in medias:
-        if not isinstance(media, dict):
-            continue
-        media_type = str(media.get("type") or "").strip()
-        url = str(media.get("url") or media.get("url2") or "").strip()
-        if not url:
-            continue
-        if preferred_types and media_type not in preferred_types:
-            continue
-        covers.append(
-            {
-                "id": f"{media_type}:{len(covers)}",
-                "type": media_type or "image",
-                "url": url,
-                "label": media_type or "Cover",
-            }
-        )
-    return covers[:8]
-
-
-def normalize_screen_scraper_game(raw_game):
-    if not isinstance(raw_game, dict):
-        return None
-    game_id = raw_game.get("id") or raw_game.get("idjeu") or 0
-    names = raw_game.get("noms") if isinstance(raw_game.get("noms"), list) else []
-    name = pick_localized_value(names) or str(raw_game.get("nom") or raw_game.get("name") or "").strip()
-    if not name:
-        return None
-    description = pick_localized_value(raw_game.get("synopsis"))
-    covers = extract_screen_scraper_media(raw_game.get("medias"))
-    return {
-        "id": int(game_id or 0),
-        "name": name,
-        "description": description,
-        "covers": covers,
-        "source": "screenscraper",
-    }
-
-
-def search_screen_scraper_games(query, platform):
-    credentials = screen_scraper_credentials()
-    if not credentials:
-        return [], False
-    params = dict(credentials)
-    params.update(
-        {
-            "recherche": query,
-            "systemeid": str(platform.get("screenScraperSystemId")),
-        }
-    )
-    url = "https://api.screenscraper.fr/api2/jeuRecherche.php?" + urllib.parse.urlencode(params)
-    with urllib.request.urlopen(url, timeout=12) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    raw_games = payload.get("response", {}).get("jeux", [])
-    if isinstance(raw_games, dict):
-        raw_games = [raw_games]
-    games = [normalize_screen_scraper_game(game) for game in raw_games if isinstance(game, dict)]
-    return [game for game in games if game], True
+def enrich_game_metadata(relative_path, name, platform, source="", game_id=0):
+    service = game_metadata_service()
+    identity = {"metadataSource": source, "metadataId": game_id}
+    try:
+        if not source or not game_id:
+            search = service.search(name, platform)
+            if not search["configured"]:
+                return {"metadataStatus": "not_configured"}
+            # A direct upload may identify an exact title; ambiguous names need a user selection.
+            matches = [item for item in search["results"] if title_key(item["name"]) == title_key(name)]
+            preferred = [item for item in matches if item["source"] == "screenscraper"] or matches
+            if len(preferred) != 1:
+                return {"metadataStatus": "needs_selection" if search["results"] else "error" if search["warnings"] else "not_found",
+                        "metadataWarnings": search["warnings"]}
+            source, game_id = preferred[0]["source"], preferred[0]["id"]
+            identity = {"metadataSource": source, "metadataId": game_id}
+        details = service.details(source, game_id, platform)
+        return service.localize(details, relative_path)
+    except (MetadataError, OSError, ValueError, TypeError, KeyError):
+        return {**identity, "metadataStatus": "error"}
 
 
 def download_game_cover(cover_url, relative_path):
-    if not cover_url:
-        return ""
-    ensure_media_directories()
-    target_filename = normalize_cover_filename(relative_path)
-    target_path = os.path.join(GAME_COVERS_DIR, target_filename)
     try:
-        request_object = urllib.request.Request(cover_url, headers={"User-Agent": "MiniTV/1.0"})
-        with urllib.request.urlopen(request_object, timeout=20) as response:
-            data = response.read()
-        if not data:
-            return ""
-        with open(target_path, "wb") as handle:
-            handle.write(data)
-        return game_cover_url(target_filename)
-    except Exception:
+        return game_metadata_service().download_image(cover_url, relative_path) if cover_url else ""
+    except (MetadataError, OSError, ValueError):
         return ""
 
 
@@ -2331,32 +2253,74 @@ def search_games():
     query = str(request.args.get("query") or "").strip()
     extension = str(request.args.get("extension") or "").strip().lower()
     platform = resolve_platform(extension if extension.startswith(".") else f".{extension}", request.args.get("platform"))
+    service = game_metadata_service()
     if not query:
-        return jsonify({"ok": True, "configured": bool(screen_scraper_credentials()), "results": []})
+        return jsonify({"ok": True, "configured": any(service.providers().values()), "providers": service.providers(), "results": []})
     if not platform:
         return jsonify({"error": "Unsupported game platform"}), 400
+    return jsonify({**service.search(query, platform), "platform": platform,
+                    "defaultCover": game_cover_url(DEFAULT_GAME_COVER_FILENAME)})
 
+
+@app.route("/games/metadata", methods=["GET", "POST"])
+def game_metadata_profile():
+    data = request.args if request.method == "GET" else request.get_json(silent=True) or {}
+    relative_path = str(data.get("relativePath") or "")
+    if relative_path:
+        path = resolve_game_path(relative_path)
+        if not path or not os.path.isfile(path) or not is_game_rom_file(path):
+            return jsonify({"error": "Game not found"}), 404
+        relative_path = game_relative_path(os.path.basename(path))
+        current_item = (load_media_library().get("games") or {}).get(relative_path, {})
+        if request.method == "GET":
+            return jsonify({"ok": True, "item": current_item})
+        platform = resolve_platform(os.path.basename(path), current_item.get("platform"))
+        if not platform:
+            return jsonify({"error": "Select a compatible console"}), 400
+        try:
+            game_id = int(data.get("id") or current_item.get("metadataId") or 0)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid game identifier"}), 400
+        updates = enrich_game_metadata(relative_path, current_item.get("name") or os.path.basename(path), platform,
+                                       data.get("source") or current_item.get("metadataSource", ""), game_id)
+        # Retrying downloads must keep custom text, artwork and any previously saved provider data.
+        for key in ("name", "description"):
+            if current_item.get(key):
+                updates[key] = current_item[key]
+        if updates.get("imageOptions"):
+            previous_cover = current_item.get("coverImage")
+            if previous_cover and previous_cover != game_cover_url(DEFAULT_GAME_COVER_FILENAME):
+                updates["coverImage"] = previous_cover
+            elif not updates.get("coverImage"):
+                updates["coverImage"] = previous_cover or game_cover_url(DEFAULT_GAME_COVER_FILENAME)
+            updates["imageOptions"] = unique_ordered_urls([updates["coverImage"], *updates["imageOptions"],
+                *[url for url in current_item.get("imageOptions", []) if url != game_cover_url(DEFAULT_GAME_COVER_FILENAME)]])
+        elif "coverImage" in updates:
+            updates.pop("coverImage")
+            updates.pop("imageOptions", None)
+        return jsonify({"ok": True, "item": upsert_game_metadata(relative_path, updates)})
+    if request.method == "POST":
+        return jsonify({"error": "Missing relativePath"}), 400
+    extension = str(data.get("extension") or "").lstrip(".")
+    platform = resolve_platform("." + extension, data.get("platform"))
+    if not platform:
+        return jsonify({"error": "Unsupported game platform"}), 400
     try:
-        results, configured = search_screen_scraper_games(query, platform)
-    except Exception as exc:
-        return jsonify(
-            {
-                "ok": False,
-                "configured": bool(screen_scraper_credentials()),
-                "results": [],
-                "error": str(exc),
-            }
-        ), 502
+        item = game_metadata_service().details(str(data.get("source") or ""), int(data.get("id") or 0), platform)
+        return jsonify({"ok": True, "item": {key: value for key, value in item.items() if key != "raw"}})
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid game identifier"}), 400
+    except (MetadataError, OSError, KeyError):
+        return jsonify({"error": "Could not load game metadata"}), 502
 
-    return jsonify(
-        {
-            "ok": True,
-            "configured": configured,
-            "platform": platform,
-            "results": results,
-            "defaultCover": game_cover_url(DEFAULT_GAME_COVER_FILENAME),
-        }
-    )
+
+@app.route("/games/metadata/image", methods=["GET"])
+def game_metadata_image():
+    try:
+        local_url = game_metadata_service().download_image(str(request.args.get("url") or ""), "preview")
+        return send_from_directory(GAME_COVERS_DIR, os.path.basename(local_url), conditional=True)
+    except (MetadataError, OSError, ValueError):
+        return jsonify({"error": "Game image unavailable"}), 502
 
 
 @app.route("/series", methods=["POST"])
@@ -2548,6 +2512,66 @@ def import_torrent_movie(job, source):
     return item
 
 
+def import_torrent_series(job, episodes):
+    """Import each identified episode, keeping existing videos and rolling back failed publication."""
+    ensure_media_directories()
+    series = job["series"]
+    root = Path(TVSHOWS_DIR).resolve()
+    published = []
+    imported_ids, skipped_ids = [], []
+    try:
+        with catalog_store.transaction(MEDIA_LIBRARY_PATH, LEGACY_MOVIE_LIBRARY_PATH):
+            library = load_media_library()
+            previous = next((entry for entry in library["series"].values()
+                             if int(entry.get("tmdbId") or 0) == series["id"]), {})
+            if previous:
+                directory = resolve_relative_video_path(previous.get("relativePath"), TVSHOWS_DIR)
+                if not directory:
+                    raise ValueError("La carpeta de la serie no es válida.")
+                target_dir = Path(directory)
+            else:
+                target_dir = root / f"{slugify(series['name'], 'serie')[:120]}-{series['id']}"
+                relative = os.path.relpath(target_dir, VIDEOS_DIR).replace("\\", "/")
+                # Preserve any unassociated profile in this same directory; never take another series' folder.
+                previous = library["series"].get(relative, {})
+                if previous.get("tmdbId") and int(previous["tmdbId"]) != series["id"]:
+                    raise ValueError("La carpeta de destino pertenece a otra serie.")
+            if not target_dir.resolve().is_relative_to(root) or target_dir.resolve() == root:
+                raise ValueError("La carpeta de la serie no es segura.")
+            if any(path.is_symlink() for path in [target_dir, *target_dir.parents] if path != root and root in path.parents):
+                raise ValueError("La carpeta de la serie no es segura.")
+            target_dir.mkdir(parents=True, exist_ok=True)
+            existing = {video["id"]: video for video in get_series_directory_videos(str(target_dir))}
+            for episode in episodes:
+                source, episode_id = episode["source"], episode["id"]
+                if episode_id in existing:
+                    current = target_dir / existing[episode_id]["file"]
+                    if current.is_symlink():
+                        raise ValueError("El capítulo existente no es un fichero seguro.")
+                    # Recognize our own hard links when recovering an interrupted import.
+                    (imported_ids if os.path.samefile(source, current) else skipped_ids).append(episode_id)
+                    continue
+                target = target_dir / f"{episode_id}-{job['id'][:12]}{source.suffix.lower()}"
+                if os.path.lexists(target):
+                    raise ValueError("Ya existe otro fichero con el nombre del capítulo.")
+                os.link(source, target)
+                published.append(target)
+                imported_ids.append(episode_id)
+                existing[episode_id] = {"id": episode_id, "file": target.name}
+            videos = get_series_directory_videos(str(target_dir))
+            relative = os.path.relpath(target_dir, VIDEOS_DIR).replace("\\", "/")
+            item = {**previous, "relativePath": relative, "name": previous.get("name") or series["name"],
+                    "tmdbId": series["id"], "episodes": videos, "episodeIds": [video["id"] for video in videos]}
+            library["series"][relative] = item
+            save_media_library(library)
+    except Exception:
+        for target in reversed(published):
+            target.unlink()
+        raise
+    queue_tmdb_artwork("tv", item, refresh=True)
+    return {**item, "importedEpisodeIds": imported_ids, "skippedEpisodeIds": skipped_ids}
+
+
 movie_torrents = None
 movie_torrents_lock = threading.Lock()
 
@@ -2560,6 +2584,9 @@ def get_movie_torrents():
                 os.path.join(MULTIMEDIA_DIR, "Torrents"), import_torrent_movie,
                 lambda tmdb_id: tmdb_artwork.status().get("jobs", {}).get(f"movie/{tmdb_id}"),
                 lambda tmdb_id: tmdb_artwork.enqueue("movie", tmdb_id),
+                import_series=import_torrent_series,
+                series_artwork_status=lambda tmdb_id: tmdb_artwork.status().get("jobs", {}).get(f"tv/{tmdb_id}"),
+                prepare_series_artwork=lambda tmdb_id: tmdb_artwork.enqueue("tv", tmdb_id, refresh=True),
             )
         movie_torrents.start()
         return movie_torrents
@@ -2573,7 +2600,9 @@ def torrent_error(error):
 @app.route("/torrents/search", methods=["GET"])
 def find_movie_torrents():
     try:
-        return jsonify({"results": search_torrents(request.args.get("q"))})
+        return jsonify(search_torrents(request.args.get("q"), media_type=request.args.get("mediaType", "movies"),
+                                       imdb_id=request.args.get("imdbId"), season=request.args.get("seasonNumber"),
+                                       episode=request.args.get("episodeNumber"), eztv_page=request.args.get("eztvPage", 1)))
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -2587,7 +2616,7 @@ def movie_torrent_jobs():
     if not isinstance(data, dict):
         return jsonify({"error": "Solicitud de descarga no válida."}), 400
     movie = data.get("movie")
-    if isinstance(movie, dict) and data.get("overwriteExisting") is not True:
+    if data.get("mediaType", "movies") == "movies" and isinstance(movie, dict) and data.get("overwriteExisting") is not True:
         for entry in load_movie_library().values():
             if str(entry.get("tmdbId")) == str(movie.get("id")):
                 path = resolve_relative_video_path(entry.get("relativePath"), MOVIES_DIR)
@@ -2938,6 +2967,13 @@ def upload_game():
         screen_scraper_id = int(request.form.get("screenScraperId") or 0)
     except Exception:
         screen_scraper_id = 0
+    metadata_source = str(request.form.get("metadataSource") or ("screenscraper" if screen_scraper_id else ""))
+    try:
+        metadata_id = int(request.form.get("metadataId") or screen_scraper_id or 0)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid game identifier"}), 400
+    if metadata_source and metadata_source not in {"screenscraper", "igdb"}:
+        return jsonify({"error": "Unsupported metadata source"}), 400
 
     if not uploaded_file or not uploaded_file.filename:
         return jsonify({"error": "Missing file"}), 400
@@ -2962,26 +2998,35 @@ def upload_game():
     uploaded_file.save(target_path)
 
     relative_path = game_relative_path(target_filename)
+    # Save the ROM profile before network work so a failed provider never loses the upload.
+    upsert_game_metadata(relative_path, {"name": name or os.path.splitext(original_filename)[0],
+        "platform": platform["id"], "description": description, "source": source,
+        "coverImage": game_cover_url(DEFAULT_GAME_COVER_FILENAME), "metadataStatus": "pending"})
+    metadata = enrich_game_metadata(relative_path, name or os.path.splitext(original_filename)[0],
+                                   platform, metadata_source, metadata_id)
     cover_image = save_uploaded_game_cover(uploaded_cover, relative_path)
     if not cover_image:
         cover_image = download_game_cover(cover_url, relative_path) if cover_url else ""
+    if not cover_image:
+        cover_image = metadata.get("coverImage", "")
     if not cover_image:
         cover_image = game_cover_url(DEFAULT_GAME_COVER_FILENAME)
     extra_images = [
         save_uploaded_game_image(uploaded_image, relative_path, f"image-{index + 1}")
         for index, uploaded_image in enumerate(uploaded_images)
     ]
-    image_options = unique_ordered_urls([cover_image, *extra_images])
+    image_options = unique_ordered_urls([cover_image, *metadata.get("imageOptions", []), *extra_images])
     item = upsert_game_metadata(
         relative_path,
         {
+            **metadata,
             "name": name or os.path.splitext(original_filename)[0],
             "platform": platform["id"],
-            "description": description,
+            "description": description or metadata.get("description", ""),
             "coverImage": cover_image,
             "imageOptions": image_options,
             "screenScraperId": screen_scraper_id,
-            "source": source,
+            "source": metadata.get("source") or source,
         },
     )
     return jsonify({"ok": True, "item": item, "libraryCounts": get_library_counts()})
@@ -3048,7 +3093,7 @@ def save_game_profile():
             "description": description,
             "coverImage": cover_image,
             "imageOptions": final_image_options,
-            "source": "local",
+            "screenshots": [url for url in current_item.get("screenshots", []) if url in final_image_options],
         },
     )
 
