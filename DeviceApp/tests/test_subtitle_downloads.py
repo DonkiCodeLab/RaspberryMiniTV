@@ -73,6 +73,27 @@ class SubtitleProviderTests(unittest.TestCase):
         self.assertIsNone(subtitles.best_candidate([candidate()], 'es', 'Unrelated.mkv', {}))
         self.assertIsNone(subtitles.best_candidate([candidate()], 'es', self.video.name, {}, hash_only=True))
 
+    def test_api_key_and_username_download_without_login_or_cached_token(self):
+        credentials = {**CREDENTIALS, 'password': ''}
+        self.provider.session = (dict(CREDENTIALS), float('inf'), 'https://vip-api.opensubtitles.com/api/v1', 'old-token')
+        with patch.object(self.provider, '_request', side_effect=[
+            {'data': [candidate(moviehash_match=True)]},
+            {'link': 'https://dl.opensubtitles.com/file.srt'}, SRT,
+        ]) as request:
+            content, _ = self.provider.obtain(self.video, {'tmdbId': 348}, 'es', credentials)
+        self.assertEqual(content, SRT.replace(b'\r\n', b'\n'))
+        self.assertEqual(request.call_count, 3)
+        for call in request.call_args_list[:2]:
+            self.assertTrue(call.args[0].startswith('https://api.opensubtitles.com/api/v1/'))
+            self.assertEqual(call.args[2], '')
+        self.assertTrue(subtitles.credentials_status(credentials)['configured'])
+
+    def test_explicit_empty_password_overrides_environment(self):
+        path = self.video.parent / 'anonymous-settings.json'
+        with patch.dict(os.environ, {'OPENSUBTITLES_PASSWORD': 'environment-password'}):
+            subtitles.save_credentials(path, {**CREDENTIALS, 'password': ''})
+            self.assertEqual(subtitles.load_credentials(path)['password'], '')
+
     def test_complete_hash_download_and_session_reuse(self):
         login = {'token': 'test-token', 'base_url': 'vip-api.opensubtitles.com'}
         search = {'data': [candidate(moviehash_match=True)]}

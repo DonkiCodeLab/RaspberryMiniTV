@@ -7,6 +7,7 @@ export default function OpenSubtitlesSettings({ language, sectionRef }) {
   const s = movieSubtitleStrings(language);
   const [settings, setSettings] = useState(null);
   const [credentials, setCredentials] = useState({ apiKey: "", username: "", password: "" });
+  const [withoutPassword, setWithoutPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -27,6 +28,7 @@ export default function OpenSubtitlesSettings({ language, sectionRef }) {
     getSubtitleSettings(controller.signal).then(data => {
       if (controller.signal.aborted) return;
       setSettings(data);
+      setWithoutPassword(!data.hasPassword);
       // Only the username and presence of secrets are returned by the API.
       setCredentials({ apiKey: "", username: data.username || "", password: "" });
     }).catch(() => {
@@ -52,10 +54,12 @@ export default function OpenSubtitlesSettings({ language, sectionRef }) {
       const updates = { username: credentials.username };
       // Empty secret fields retain the values already stored on the Raspberry.
       if (credentials.apiKey) updates.apiKey = credentials.apiKey;
-      if (credentials.password) updates.password = credentials.password;
+      if (withoutPassword) updates.password = "";
+      else if (credentials.password) updates.password = credentials.password;
       const data = await saveSubtitleSettings(updates);
       if (mounted.current) {
         setSettings(data);
+        setWithoutPassword(!data.hasPassword);
         setCredentials({ apiKey: "", username: data.username || "", password: "" });
         setSaved(true);
       }
@@ -78,11 +82,13 @@ export default function OpenSubtitlesSettings({ language, sectionRef }) {
       <label><span>{s.apiKey}</span><input type="password" value={credentials.apiKey} disabled={disabled} maxLength={1024}
         required={!settings?.hasApiKey} autoComplete="off" placeholder={settings?.hasApiKey ? s.keep : ""}
         onChange={event => updateCredential("apiKey", event.target.value)} /></label>
-      <label><span>{s.username}</span><input value={credentials.username} disabled={disabled} maxLength={1024} required autoComplete="username"
+      <label><span>{s.username}</span><input value={credentials.username} disabled={disabled} maxLength={1024} autoComplete="username"
         onChange={event => updateCredential("username", event.target.value)} /></label>
-      <label><span>{s.password}</span><input type="password" value={credentials.password} disabled={disabled} maxLength={1024}
-        required={!settings?.hasPassword} autoComplete="current-password" placeholder={settings?.hasPassword ? s.keep : ""}
+      <label><span>{s.password}</span><input type="password" value={credentials.password} disabled={disabled || withoutPassword} maxLength={1024}
+        autoComplete="current-password" placeholder={settings?.hasPassword ? s.keep : ""}
         onChange={event => updateCredential("password", event.target.value)} /></label>
+      <label><input type="checkbox" checked={withoutPassword} disabled={disabled}
+        onChange={event => { setWithoutPassword(event.target.checked); setSaved(false); }} />{s.withoutPassword}</label>
       <button disabled={disabled} type="submit">{saving ? s.saving : s.save}</button>
     </form>
     {loading && <span role="status">{s.settingsLoading}</span>}

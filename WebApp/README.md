@@ -148,3 +148,5 @@ La migracion mas natural seria:
 El formulario de añadir juegos busca automáticamente por nombre y consola en ScreenScraper e IGDB. Permite elegir la ficha antes de subir, ver su carátula y capturas y conservar texto o imágenes propios. El servidor guarda la ficha completa y todas las imágenes disponibles en la Raspberry; la biblioteca funciona después sin conexión y muestra fechas, géneros, desarrollador, distribuidor, jugadores/modos y puntuación cuando la fuente los ofrece.
 
 Si faltan imágenes o metadatos, **Completar ficha e imágenes** permite reintentar o elegir una coincidencia sin volver a subir el juego. Configura las credenciales exclusivamente en la Raspberry siguiendo [DeviceApp/README.md](../DeviceApp/README.md#fichas-de-videojuegos-e-imágenes-sin-conexión).
+
+OpenSubtitles admite clave de API y usuario sin contraseña. La contraseña es opcional; sin ella se omite el inicio de sesión. «Sin contraseña» también elimina una contraseña guardada. La cuota depende del acceso concedido por OpenSubtitles.

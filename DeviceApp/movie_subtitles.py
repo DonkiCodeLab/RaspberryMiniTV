@@ -203,9 +203,10 @@ class OpenSubtitles:
             return base, token
 
     def obtain(self, path, metadata, language, credentials):
-        if not all(credentials.get(key) for key in ("apiKey", "username", "password")):
+        if not credentials.get("apiKey"):
             raise SubtitleError("SUBTITLE_NOT_CONFIGURED", 503)
-        base, token = self._login(credentials)
+        base, token = (self._login(credentials) if credentials.get("username") and credentials.get("password")
+                       else ("https://api.opensubtitles.com/api/v1", ""))
         file_hash = movie_hash(path)
         filename = os.path.basename(path)
         params = {"languages": language, "type": "movie", "machine_translated": "exclude", "ai_translated": "exclude",
@@ -249,11 +250,11 @@ def load_credentials(path):
     except (OSError, ValueError):
         stored = {}
     fields = {"apiKey": "OPENSUBTITLES_API_KEY", "username": "OPENSUBTITLES_USERNAME", "password": "OPENSUBTITLES_PASSWORD"}
-    return {key: str(stored.get(key) or os.environ.get(env, "")) for key, env in fields.items()}
+    return {key: str(stored.get(key, os.environ.get(env, ""))) for key, env in fields.items()}
 
 
 def credentials_status(credentials):
-    return {"configured": all(credentials.values()), "hasApiKey": bool(credentials["apiKey"]),
+    return {"configured": bool(credentials["apiKey"]), "hasApiKey": bool(credentials["apiKey"]),
             "hasPassword": bool(credentials["password"]), "username": credentials["username"]}
 
 
