@@ -7,6 +7,13 @@ import { build } from "esbuild";
 
 const require = createRequire(import.meta.url);
 
+test("dashboard system update renders without a global React", async () => {
+  const SystemUpdate = await loadComponent("SystemUpdate");
+  const html = renderToStaticMarkup(React.createElement(SystemUpdate, { language: "es" }));
+  assert.match(html, /Actualizar Raspberry y web/);
+  assert.match(html, /Actualizar desde Git/);
+});
+
 async function loadComponent(name) {
   const result = await build({
     entryPoints: [new URL(`../src/${name}.jsx`, import.meta.url).pathname],
