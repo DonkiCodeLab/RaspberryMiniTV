@@ -3,6 +3,7 @@ from tmdb_cache import TmdbCache, TmdbError
 from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
 from video_formats import is_video_file
 import movie_subtitles
+import system_update
 from oscar_catalog import OscarCatalog
 from background_stats import BackgroundStats
 import catalog_store
@@ -934,6 +935,17 @@ def require_web_pin():
 @app.route("/favicon.ico", methods=["GET"])
 def favicon():
     return ("", 204)
+
+
+@app.route("/system/update", methods=["GET", "POST"])
+def system_update_route():
+    try:
+        payload = system_update.start_update() if request.method == "POST" else system_update.update_status()
+        response = jsonify(payload)
+        response.headers["Cache-Control"] = "no-store"
+        return response, 202 if request.method == "POST" else 200
+    except (OSError, subprocess.SubprocessError, RuntimeError):
+        return jsonify({"error": "No se pudo acceder al servicio de actualización. Revisa su instalación en la Raspberry."}), 503
 
 
 def get_local_ip():
@@ -3245,6 +3257,18 @@ def play_game():
     )
 
 
+@app.route("/media/subtitles", methods=["GET"])
+def media_subtitle_info():
+    target = resolve_relative_video_path(request.args.get("relativePath"), VIDEOS_DIR)
+    root = os.path.realpath(VIDEOS_DIR)
+    if (not target or not os.path.isfile(target) or not is_video_file(target)
+            or os.path.commonpath([root, os.path.realpath(target)]) != root):
+        return jsonify({"error": "Video not found"}), 404
+    response = jsonify(movie_subtitles.inspect_subtitles(target, root))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/movies/subtitles", methods=["POST"])
 def upload_movie_subtitles():
     relative_path = str(request.form.get("relativePath") or "").strip()
@@ -3496,6 +3520,21 @@ def stream_media():
     target_path = resolve_relative_video_path(relative_path, VIDEOS_DIR)
     if not target_path or not os.path.isfile(target_path) or not is_video_file(target_path):
         return jsonify({"error": "Video not found"}), 404
+
+    if request.args.get("subtitles") == "1":
+        subtitle_path = os.path.splitext(target_path)[0] + ".srt"
+        root = os.path.realpath(VIDEOS_DIR)
+        if os.path.commonpath([root, os.path.realpath(subtitle_path)]) != root:
+            return jsonify({"error": "Subtitle not found"}), 404
+        try:
+            with open(subtitle_path, "rb") as subtitle:
+                content = subtitle.read(movie_subtitles.MAX_SUBTITLE_BYTES + 1)
+            vtt = movie_subtitles.srt_to_vtt(content)
+        except FileNotFoundError:
+            return jsonify({"error": "Subtitle not found"}), 404
+        except (movie_subtitles.SubtitleError, UnicodeError):
+            return jsonify({"error": "Invalid subtitle"}), 422
+        return Response(vtt, content_type="text/vtt; charset=utf-8", headers={"Cache-Control": "no-store"})
 
     # conditional=True enables HTTP range requests, which browsers need for seeking.
     download = str(request.args.get("download") or "").strip().lower() in {"1", "true", "yes"}

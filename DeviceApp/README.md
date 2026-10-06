@@ -90,6 +90,34 @@ asocian a la ficha que has abierto; comprueba el nombre del torrent antes de
 seleccionarlo. La previsualización de la ficha consulta TMDB, pero no encola la
 preparación completa del título hasta que el vídeo está guardado.
 
+### Añadir fuentes con Jackett o Prowlarr
+
+La API admite hasta ocho fuentes adicionales mediante Torznab. Requiere una
+instancia de [Jackett](https://github.com/Jackett/Jackett) o Prowlarr accesible desde
+la Raspberry, con los indexadores públicos configurados. Copia la URL Torznab de
+cada indexador y la clave API; define en el entorno de `minitv-api.service`:
+
+```ini
+[Service]
+Environment='MINITV_TORZNAB_SOURCES=[{"name":"Mi indexador","url":"http://127.0.0.1:9117/api/v2.0/indexers/INDEXADOR/results/torznab/api","apiKey":"TU_CLAVE"}]'
+```
+
+Puedes añadir este bloque con `sudo systemctl edit minitv-api.service`. Sustituye
+la URL y la clave por las de tu instalación, ejecuta `sudo systemctl daemon-reload`
+y `sudo systemctl restart minitv-api.service`. `127.0.0.1` solo sirve si Jackett
+está en la propia Raspberry. No guardes claves reales en el repositorio.
+
+Cada objeto del array añade una fuente que aparece en **Fuentes consultadas** y
+en los resultados. Se consulta en paralelo con las fuentes existentes, aplica
+categorías de películas/TV y combina hashes duplicados. Un fallo se muestra como
+fuente no disponible sin ocultar los demás resultados. Las claves se quedan en
+el servidor. Sin esta variable, la búsqueda conserva las fuentes predeterminadas.
+
+Esta integración admite hashes y magnets públicos, incluidos hashes base32.
+Omite resultados marcados como privados, sin categoría compatible o que solo
+ofrecen una URL de archivo `.torrent`; esos necesitan otro flujo de descarga.
+Añadir una fuente no garantiza que una película concreta esté disponible.
+
 ## Archivos
 
 - `control_api.py`: API Flask para listar y reproducir vídeos con `omxplayer`.
@@ -163,10 +191,42 @@ Desde la raíz de `RaspberryMiniTV`, ejecuta:
 
 El script descarga la última versión de `main`, instala las dependencias web si faltan,
 compila la web y reinicia los servicios ya instalados `minitv-api.service` y
-`minitv-menu.service`, sin modificar sus archivos de configuración de `systemd`.
+`minitv-menu.service`. También instala o actualiza el servicio independiente
+`minitv-update.service`, conservando la configuración de la API y el menú.
 Los cambios locales de código se guardan automáticamente en un `stash` recuperable
 antes de actualizar. La biblioteca multimedia y los sonidos de alarma locales se
 conservan en su sitio y no bloquean las actualizaciones.
+
+### Actualizar desde el dashboard
+
+Antes de **Cerrar sesión**, **Actualizar desde Git** ejecuta el mismo proceso en
+`minitv-update.service`: descarga `origin/main`, instala dependencias, compila la
+web y reinicia la API y el menú. Solo incluye cambios publicados en Git; los
+cambios que todavía están en tu ordenador deben subirse primero. La reproducción
+se interrumpe al reiniciar el menú. La página consulta el estado y permite recargar
+la web cuando termina. El proceso continúa aunque cierres el navegador o se
+reinicie la API. El modo demo no permite iniciarlo.
+
+Para habilitar el botón por primera vez, después de copiar esta versión y compilar
+la web en la Raspberry:
+
+```bash
+sudo bash DeviceApp/install_update_service.sh
+sudo systemctl restart minitv-api.service
+```
+
+Los instaladores habituales y `update_minitv.sh` también instalan este servicio.
+Se ejecuta con el propietario de `.git` (configurable mediante
+`MINITV_UPDATE_USER` durante la instalación), con su acceso SSH a Git y su permiso
+habitual de `sudo` sin contraseña para instalar dependencias y reiniciar servicios.
+La API existente se ejecuta como root y solo permite iniciar esta unidad fija;
+ambos endpoints, `GET` y `POST /system/update`, requieren el PIN de la web.
+Systemd conserva el resultado al reiniciar la API y limita la ejecución a 30 minutos.
+Un bloqueo compartido impide solapar actualizaciones manuales y desde la web.
+
+Si falla, consulta `journalctl -u minitv-update.service -n 100 --no-pager`.
+No se revierte automáticamente el código tras un fallo. El éxito se comunica
+solo después de compilar y comprobar que la API y el menú están activos.
 
 ## Reproductor Kodi sin escritorio
 

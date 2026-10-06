@@ -46,6 +46,11 @@ install_service() {
 
 require_root
 
+if ! command -v ffprobe >/dev/null 2>&1; then
+  apt-get update
+  apt-get install -y ffmpeg
+fi
+
 MINITV_REPO_DIR="${REPO_DIR}" bash "${SCRIPT_DIR}/install_torrent_support.sh"
 
 if [[ -z "${KODI_HOME}" ]]; then
@@ -71,6 +76,7 @@ systemctl stop "${NEW_SERVICES[@]}" 2>/dev/null || true
 
 install_service "minitv-api.service"
 install_service "minitv-menu.service"
+MINITV_REPO_DIR="${REPO_DIR}" bash "${SCRIPT_DIR}/install_update_service.sh"
 
 systemctl daemon-reload
 systemctl enable "${NEW_SERVICES[@]}"

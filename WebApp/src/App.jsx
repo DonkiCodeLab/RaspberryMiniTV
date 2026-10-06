@@ -4,6 +4,8 @@ import LibraryScrollRail from "./LibraryScrollRail.jsx";
 import BackToTop from "./BackToTop.jsx";
 import MovieLibraryItems from "./MovieLibraryItems.jsx";
 import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
+import BrowserVideo from "./BrowserVideo.jsx";
+import SystemUpdate from "./SystemUpdate.jsx";
 import OpenSubtitlesSettings from "./OpenSubtitlesSettings.jsx";
 import { libraryScrollLabel, compareLibraryItems } from "./libraryScroll.js";
 import EpubReader from "./EpubReader";
@@ -513,6 +515,8 @@ const UI_STRINGS = {
     next_episode: "Siguiente capítulo",
     volume_down: "Volumen -",
     volume_up: "Volumen +",
+    subtitle_loading: "Cargando subtítulos…",
+    subtitle_load_failed: "No se pudieron cargar los subtítulos. Cierra el reproductor y vuelve a intentarlo.",
     subtitle_toggle: "Activar/desactivar subtítulos",
     subtitle_next: "Siguiente pista de subtítulos",
     subtitle_on: "Subtítulos activados",
@@ -924,6 +928,8 @@ const UI_STRINGS = {
     next_episode: "Capítol següent",
     volume_down: "Volum -",
     volume_up: "Volum +",
+    subtitle_loading: "Carregant subtítols…",
+    subtitle_load_failed: "No s’han pogut carregar els subtítols. Tanca el reproductor i torna-ho a provar.",
     subtitle_toggle: "Activar/desactivar subtítols",
     subtitle_next: "Pista de subtítols següent",
     subtitle_on: "Subtítols activats",
@@ -1335,6 +1341,8 @@ const UI_STRINGS = {
     next_episode: "Next episode",
     volume_down: "Volume -",
     volume_up: "Volume +",
+    subtitle_loading: "Loading subtitles…",
+    subtitle_load_failed: "Could not load subtitles. Close the player and try again.",
     subtitle_toggle: "Toggle subtitles",
     subtitle_next: "Next subtitle track",
     subtitle_on: "Subtitles on",
@@ -2823,7 +2831,7 @@ function BrowserPlayerModal({ playback, onClose, t }) {
           </div>
           <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
         </header>
-        <video src={playback.url} controls autoPlay playsInline />
+        <BrowserVideo key={playback.url} url={playback.url} t={t} />
       </div>
     </div>,
     document.body
@@ -5570,6 +5578,7 @@ function RaspberryPage({
             </article>
             <OpenSubtitlesSettings language={raspberryLanguage} sectionRef={subtitleSettingsRef} />
           </section>
+          <SystemUpdate language={raspberryLanguage} />
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
             <article className="raspberry-tmdb-card">

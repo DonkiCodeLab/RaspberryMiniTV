@@ -1,6 +1,9 @@
 import React from "react";
 import { bookStrings } from "./bookStrings.js";
-import { bookTypeArtwork } from "./bookTypeArtwork.js";
+import novelYellow from "./assets/libro_amarillo.png";
+import novelWhite from "./assets/libro_blanco.png";
+import graphicYellow from "./assets/speec_buble_amarillo.png";
+import graphicWhite from "./assets/speec_buble_blanco.png";
 
 export function BookTypeField({ checked, onChange, language, batch = false, collection = false, mixed = false }) {
   const t = bookStrings(language);
@@ -25,11 +28,11 @@ export default function BookLibraryControls({ language, view, onViewChange, view
     </div>
     <div className="movie-library__view-switch books-library__type-switch" role="group" aria-label={t.bookType}>
       {[
-        { value: "novel", label: t.novels },
-        { value: "graphic", label: t.graphicNovels },
+        { value: "novel", label: t.novels, active: novelYellow, inactive: novelWhite },
+        { value: "graphic", label: t.graphicNovels, active: graphicYellow, inactive: graphicWhite },
       ].map(option => <button key={option.value} type="button" className={type === option.value ? "active" : ""}
         aria-pressed={type === option.value} aria-label={option.label} title={option.label} onClick={() => onTypeChange(option.value)}>
-        <img src={bookTypeArtwork[option.value]} alt="" />
+        <img src={type === option.value ? option.active : option.inactive} alt="" />
       </button>)}
     </div>
     <label className="movie-library__sort">

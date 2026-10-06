@@ -678,6 +678,11 @@ export async function getSubtitleSettings(signal) {
   return request("/settings/subtitles", { signal });
 }
 
+export async function getMediaSubtitles(relativePath, signal) {
+  if (isMockModeEnabled()) return { external: null, embedded: [], embeddedStatus: "unknown" };
+  return request(`/media/subtitles?${new URLSearchParams({ relativePath })}`, { signal });
+}
+
 export async function saveSubtitleSettings(settings) {
   if (isMockModeEnabled()) throw new Error("OpenSubtitles: conecta con la Raspberry para configurar la cuenta.");
   return request("/settings/subtitles", { method: "POST", body: JSON.stringify(settings) });
@@ -1698,4 +1703,14 @@ export function localTmdbImageUrl(value) {
 
 export function cancelTmdbCacheDownload() {
   return request("/tmdb/cache", { method: "DELETE" });
+}
+
+export function getSystemUpdate(signal) {
+  if (isMockModeEnabled()) return Promise.resolve({ state: "unavailable" });
+  return request("/system/update", { signal, cache: "no-store" });
+}
+
+export function startSystemUpdate(signal) {
+  if (isMockModeEnabled()) return Promise.reject(new Error("Actualización no disponible en modo demo."));
+  return request("/system/update", { method: "POST", signal });
 }

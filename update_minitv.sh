@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="${MINITV_UPDATE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 WEB_DIR="${SCRIPT_DIR}/WebApp"
 NEOCD_CORE_DIR="/usr/lib/arm-linux-gnueabihf/libretro"
 NEOCD_CORE_PATH="${NEOCD_CORE_DIR}/neocd_libretro.so"
@@ -18,6 +18,8 @@ fail() {
 
 command -v git >/dev/null 2>&1 || fail "git no está instalado."
 [[ -d "${SCRIPT_DIR}/.git" ]] || fail "El script debe estar dentro del repositorio RaspberryMiniTV."
+exec 9>"${SCRIPT_DIR}/.git/minitv-update.lock"
+flock -n 9 || fail "Ya hay una actualización en curso."
 
 # MuPDF distributed by Raspberry Pi OS uses an X11/OpenGL window and exits
 # immediately in MiniTV's dedicated Wayland session. Evince has a native GTK
@@ -62,6 +64,12 @@ if ! command -v unrar >/dev/null 2>&1 || ! command -v bsdtar >/dev/null 2>&1 || 
   bash "${SCRIPT_DIR}/DeviceApp/install_comic_support.sh"
 fi
 
+if ! command -v ffprobe >/dev/null 2>&1; then
+  log "Instalando la detección de pistas de subtítulos"
+  sudo apt-get update
+  sudo apt-get install -y ffmpeg
+fi
+
 log "Preparando el motor de descargas torrent"
 bash "${SCRIPT_DIR}/DeviceApp/install_torrent_support.sh"
 
@@ -78,7 +86,12 @@ if [[ -f "${WEB_DIR}/package.json" ]]; then
 fi
 
 log "Reiniciando los servicios existentes de la web y el menú"
+sudo bash "${SCRIPT_DIR}/DeviceApp/install_update_service.sh"
 sudo systemctl restart minitv-api.service minitv-menu.service
+
+sleep 3
+systemctl is-active --quiet minitv-api.service || fail "La API no ha arrancado correctamente."
+systemctl is-active --quiet minitv-menu.service || fail "El menú no ha arrancado correctamente."
 
 log "Estado de los servicios"
 sudo systemctl --no-pager --full status minitv-api.service minitv-menu.service || true

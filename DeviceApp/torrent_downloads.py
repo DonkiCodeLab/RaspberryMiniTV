@@ -12,6 +12,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 
 from tmdb_cache import atomic_write
 from video_formats import VIDEO_EXTENSIONS
@@ -20,7 +21,7 @@ HASH_RE = re.compile(r"[a-fA-F0-9]{40}")
 TERMINAL = {"complete", "cancelled", "failed"}
 SEARCH_TIMEOUT = 15
 SEARCH_CACHE_SECONDS = 120
-SEARCH_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix="torrent-search")
+SEARCH_POOL = ThreadPoolExecutor(max_workers=12, thread_name_prefix="torrent-search")
 SEARCH_CACHE = OrderedDict()
 SEARCH_CACHE_LOCK = threading.Lock()
 EPISODE_RE = re.compile(r"(?<![a-z0-9])(?:s(\d{1,2})[ ._-]*e(\d{1,3})|(\d{1,2})x(\d{1,3}))(?!\d)", re.I)
@@ -168,6 +169,91 @@ def search_eztv(imdb_id, season=None, episode=None, page=1):
     return {"results": results, "nextEztvPage": page + 1 if page < 100 and page * 100 < positive_int(payload.get("torrents_count")) else None}
 
 
+def torznab_sources():
+    """Server-owned configuration only; URLs and API keys never enter responses."""
+    try:
+        sources = json.loads(os.environ.get("MINITV_TORZNAB_SOURCES", "[]"))
+        if not isinstance(sources, list) or len(sources) > 8:
+            raise ValueError()
+        for source in sources:
+            if not isinstance(source, dict):
+                raise ValueError()
+            if not isinstance(source.get("name"), str) or not source["name"].strip() or len(source["name"]) > 80:
+                raise ValueError()
+            url = urllib.parse.urlsplit(source.get("url", ""))
+            if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password or url.fragment:
+                raise ValueError()
+            if not isinstance(source.get("apiKey", ""), str):
+                raise ValueError()
+        return sources
+    except (ValueError, TypeError, AttributeError):
+        raise ValueError("MINITV_TORZNAB_SOURCES debe contener hasta 8 fuentes con name, url HTTP(S) y apiKey.") from None
+
+
+def normalize_torznab_results(raw, source, media_type="movies"):
+    # No DTDs/entities: external indexers only need a plain RSS document.
+    if b"<!DOCTYPE" in raw.upper() or b"<!ENTITY" in raw.upper():
+        raise TorrentError("Respuesta Torznab no válida.")
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError:
+        raise TorrentError("Respuesta Torznab no válida.") from None
+    if root.tag != "rss" or root.find("channel") is None:
+        raise TorrentError("Respuesta Torznab no válida.")
+    results = []
+    category_base = 5000 if media_type == "series" else 2000
+    for item in root.findall("./channel/item"):
+        attributes = [node for node in item if node.tag.rsplit("}", 1)[-1] == "attr"]
+        attrs = {node.get("name"): node.get("value", "") for node in attributes}
+        categories = [positive_int(node.get("value")) for node in attributes if node.get("name") == "category"]
+        categories += [positive_int(node.text) for node in item.findall("category")]
+        if not any(category_base <= cat < category_base + 1000 for cat in categories):
+            continue
+        if attrs.get("private", "0") != "0":
+            continue  # Private trackers require their original torrent and passkey.
+        info_hash = attrs.get("infohash", "").lower()
+        if not HASH_RE.fullmatch(info_hash):
+            enclosure = item.find("enclosure")
+            magnet = attrs.get("magneturl") or item.findtext("link") or (enclosure.get("url", "") if enclosure is not None else "")
+            parsed = urllib.parse.urlsplit(magnet)
+            for xt in urllib.parse.parse_qs(parsed.query).get("xt", []) if parsed.scheme == "magnet" else []:
+                if xt.lower().startswith("urn:btih:"):
+                    candidate = xt[9:]
+                    if re.fullmatch(r"[A-Za-z2-7]{32}", candidate):
+                        candidate = base64.b32decode(candidate.upper()).hex()
+                    if HASH_RE.fullmatch(candidate):
+                        info_hash = candidate.lower()
+                        break
+        name = (item.findtext("title") or "").strip()
+        enclosure = item.find("enclosure")
+        size = positive_int(item.findtext("size") or attrs.get("size") or (enclosure.get("length") if enclosure is not None else 0))
+        if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or not name or not size:
+            continue
+        seeds = positive_int(attrs.get("seeders"))
+        results.append({"infoHash": info_hash, "name": name[:500], "sizeBytes": size,
+                        "seeds": seeds, "leechers": positive_int(attrs.get("leechers")) if "leechers" in attrs else max(0, positive_int(attrs.get("peers")) - seeds),
+                        "sources": [source]})
+    return results
+
+
+def search_torznab(query, media_type, source):
+    url = urllib.parse.urlsplit(source["url"])
+    params = dict(urllib.parse.parse_qsl(url.query))
+    params.update(t="search", q=query, cat="5000" if media_type == "series" else "2000", limit="100")
+    if source.get("apiKey"):
+        params["apikey"] = source["apiKey"]
+    endpoint = urllib.parse.urlunsplit(url._replace(query=urllib.parse.urlencode(params)))
+    try:
+        request = urllib.request.Request(endpoint, headers={"User-Agent": "MiniTV/1.0", "Accept": "application/rss+xml, application/xml"})
+        with urllib.request.urlopen(request, timeout=12) as response:
+            raw = response.read(4 * 1024 * 1024 + 1)
+        if len(raw) > 4 * 1024 * 1024:
+            raise ValueError()
+        return normalize_torznab_results(raw, source["name"], media_type)
+    except (OSError, ValueError):
+        raise TorrentError("No se pudo consultar la fuente Torznab.") from None
+
+
 def merge_torrent_results(rows):
     results = {}
     for row in rows:
@@ -198,7 +284,8 @@ def search_torrents(query, media_type="movies", imdb_id=None, season=None, episo
         raise ValueError("Identificador IMDb no válido.")
     if eztv_page > 1 and not imdb_id:
         raise ValueError("Falta el identificador IMDb para consultar más resultados de EZTV.")
-    key = (query, media_type, imdb_id, season, episode, eztv_page)
+    extra_sources = torznab_sources() if eztv_page == 1 else []
+    key = (query, media_type, imdb_id, season, episode, eztv_page, json.dumps(extra_sources, sort_keys=True))
     with SEARCH_CACHE_LOCK:
         cached = SEARCH_CACHE.get(key)
         if cached and time.monotonic() - cached[0] < SEARCH_CACHE_SECONDS:
@@ -209,6 +296,8 @@ def search_torrents(query, media_type="movies", imdb_id=None, season=None, episo
     # Keep the movie provider call compatible with existing callers.
     args = (scoped_query, media_type) if media_type == "series" else (query,)
     providers = [("piratebay", "The Pirate Bay", search_pirate_bay, args), ("knaben", "Knaben", search_knaben, args)] if eztv_page == 1 else []
+    providers.extend((f"torznab_{i}", source["name"], search_torznab, (scoped_query, media_type, source))
+                     for i, source in enumerate(extra_sources))
     if media_type == "series" and imdb_id:
         providers.append(("eztv", "EZTV", search_eztv, (imdb_id, season, episode, eztv_page)))
     futures = [(provider_id, name, SEARCH_POOL.submit(search, *params)) for provider_id, name, search, params in providers]

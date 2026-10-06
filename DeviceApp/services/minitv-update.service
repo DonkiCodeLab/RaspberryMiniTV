@@ -1,0 +1,17 @@
+[Unit]
+Description=Update MiniTV from Git and build the web dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=__UPDATE_USER__
+WorkingDirectory=__REPO_DIR__
+Environment=MINITV_REPO_DIR=__REPO_DIR__
+Environment=HOME=__UPDATE_HOME__
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 __DEVICE_APP_DIR__/run_system_update.py
+TimeoutStartSec=30min
+StandardOutput=journal
+StandardError=journal

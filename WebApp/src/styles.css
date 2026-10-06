@@ -1767,8 +1767,6 @@ img {
 .books-library__type-switch button { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; }
 .books-library__type-switch button.active { background: rgba(255,212,41,.16); box-shadow: inset 0 0 0 1px #ffd429; }
 .books-library__type-switch img { width: 1.9rem; height: 1.9rem; object-fit: contain; }
-.books-library__type-switch button:not(.active) img { filter: grayscale(1); opacity: .7; }
-.books-library__type-switch button:is(:hover, :focus-visible) img { filter: none; opacity: 1; }
 .books-library__type-switch button:focus-visible { outline: 2px solid #ffd429; outline-offset: 2px; }
 .books-library__browse-tools select:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
 .book-type-field .book-metadata__cover-choice { margin-top: 0; }
@@ -6857,7 +6855,8 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
 .series-hero__art--games .series-hero__full-mask-image,
 .series-hero__art--books .series-hero__full-mask-image { mask-image: linear-gradient(to right, transparent 20%, #000 27%); -webkit-mask-image: linear-gradient(to right, transparent 20%, #000 27%); }
 .series-hero__art .series-hero__console { position: absolute; z-index: 2; left: 3%; top: 12%; width: 21%; height: 55%; object-fit: contain; filter: drop-shadow(0 10px 12px #0008); }
-.series-hero__art .series-hero__book-type { position: absolute; z-index: 2; left: 2%; top: 7%; width: 23%; height: 67%; object-fit: contain; filter: drop-shadow(0 8px 10px #0008); }
+/* The supplied artwork is black on transparent; display it white on the dark banner. */
+.series-hero__art .series-hero__book-type { position: absolute; z-index: 2; left: 2%; top: 7%; width: 23%; height: 67%; object-fit: contain; filter: brightness(0) invert(1) drop-shadow(0 8px 10px #0008); }
 .series-hero__controls-row .console-navigation { width: 92%; min-width: 0; height: var(--series-controls-item-size); padding: 0; gap: .6%; }
 .series-hero__controls-row .console-navigation > button { flex: 0 0 4%; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: clamp(20px, 3cqw, 40px); }
 .series-hero__controls-row .console-rail { min-width: 0; gap: .6%; padding: 0; scrollbar-width: none; }

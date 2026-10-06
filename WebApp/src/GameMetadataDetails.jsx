@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { retryGameMetadata } from "./api/raspberryApi";
 import GameMetadataPicker from "./GameMetadataPicker.jsx";
 import "./GameMetadata.css";

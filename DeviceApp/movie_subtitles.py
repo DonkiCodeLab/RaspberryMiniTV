@@ -5,6 +5,8 @@ import math
 import os
 import re
 import struct
+import shutil
+import subprocess
 import tempfile
 import threading
 import time
@@ -16,6 +18,30 @@ import urllib.request
 MAX_SUBTITLE_BYTES = 5 * 1024 * 1024
 API_HOSTS = {"api.opensubtitles.com", "vip-api.opensubtitles.com"}
 LANGUAGES = {"es", "ca", "en"}
+
+
+def inspect_subtitles(video_path, root):
+    sidecar = os.path.splitext(video_path)[0] + ".srt"
+    external = (os.path.commonpath([os.path.realpath(root), os.path.realpath(sidecar)]) == os.path.realpath(root)
+                and os.path.isfile(sidecar))
+    result = {"external": os.path.basename(sidecar) if external else None,
+              "embedded": [], "embeddedStatus": "unknown"}
+    probe = shutil.which("ffprobe")
+    if not probe:
+        return result
+    try:
+        process = subprocess.run([
+            probe, "-v", "error", "-select_streams", "s", "-show_entries",
+            "stream=index,codec_name:stream_tags=language,title", "-of", "json", video_path,
+        ], capture_output=True, text=True, timeout=10, check=True)
+        streams = json.loads(process.stdout)["streams"]
+        result["embedded"] = [{"index": stream["index"], "codec": stream.get("codec_name", ""),
+                               "language": (stream.get("tags") or {}).get("language", ""),
+                               "title": (stream.get("tags") or {}).get("title", "")} for stream in streams]
+        result["embeddedStatus"] = "known"
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError):
+        pass
+    return result
 
 
 class SubtitleError(Exception):
@@ -65,6 +91,20 @@ def validate_srt(content):
     if not re.search(r"(?m)^\d+\s*\n\d{2,}:\d{2}:\d{2}[,.]\d{3} --> \d{2,}:\d{2}:\d{2}[,.]\d{3}[^\n]*\n\S", text):
         raise SubtitleError("SUBTITLE_INVALID_DOWNLOAD")
     return text.encode("utf-8")
+
+
+def srt_to_vtt(content):
+    """Serve sidecar SRT cues in the format understood by HTML video tracks."""
+    try:
+        content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        content = content.decode("cp1252").encode("utf-8")
+    text = validate_srt(content).decode("utf-8")
+    text = re.sub(
+        r"(?m)^(\d{2,}:\d{2}:\d{2})[,.](\d{3})(\s+-->\s+)(\d{2,}:\d{2}:\d{2})[,.](\d{3})[^\n]*$",
+        r"\1.\2\3\4.\5", text,
+    )
+    return "WEBVTT\n\n" + text.strip() + "\n\n"
 
 
 def allowed_url(url, api=False):
