@@ -6265,6 +6265,7 @@ export default function App() {
   const [unlocked, setUnlocked] = useState(mockMode || Boolean(getStoredWebPin()));
   const [videos, setVideos] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
+  const [preparedLibrary, setPreparedLibrary] = useState(null);
   const [coverProgress, setCoverProgress] = useState(null);
   const [coverWarning, setCoverWarning] = useState("");
   const [libraryStage, setLibraryStage] = useState("Conectando con la Raspberry");
@@ -6822,8 +6823,15 @@ export default function App() {
     setSelectedGameImageIndex(1);
   }, [selectedGame?.relativePath]);
 
+  // Readiness belongs to the exact inputs that finished loading. Effects run
+  // after rendering, so a loading flag alone briefly exposes the previous page.
+  const libraryRequest = useMemo(() => ({ videos, tmdbLanguage, seriesProfiles,
+    movies: mockMode ? movieLibrary : null }),
+  [videos, tmdbLanguage, seriesProfiles, mockMode ? movieLibrary : null]);
+  const libraryPending = !videos || loading || tmdbLoading || preparedLibrary !== libraryRequest;
+
   useEffect(() => {
-    if (!videos) return;
+    if (!unlocked || loading || !videos) return;
     const libraryMovies = mockMode ? movieLibrary : getRaspberryMovieLibraryItems(videos);
     let cancelled = false;
     const controller = new AbortController();
@@ -6859,6 +6867,7 @@ export default function App() {
         const detail = current[String(movie.id)];
         return [String(movie.id), { ...card, ...(detail?._detailsLanguage === tmdbLanguage ? detail : {}) }];
       })));
+      setPreparedLibrary(libraryRequest);
     }).catch(nextError => {
       console.error("[Biblioteca] Error al preparar biblioteca", { ms: Date.now() - summaryStarted, status: nextError?.status });
       if (!cancelled) setError(nextError.message || "No se pudo cargar la biblioteca.");
@@ -6866,7 +6875,7 @@ export default function App() {
       if (!cancelled) setTmdbLoading(false);
     });
     return () => { cancelled = true; controller.abort(); };
-  }, [videos, mockMode ? movieLibrary : null, directories, tmdbLanguage, seriesProfiles]);
+  }, [libraryRequest, unlocked, loading]);
 
   const detailSelectionKey = JSON.stringify([activeMediaType, selectedMovieId, selectedDirectoryPath, tmdbLanguage, detailRetry]);
 
@@ -7224,6 +7233,8 @@ export default function App() {
     try {
       await authWebPin(webPinInput);
       setStoredWebPin(webPinInput);
+      setLoading(true);
+      setPreparedLibrary(null);
       setUnlocked(true);
       setWebPinInput("");
     } catch (nextError) {
@@ -8976,12 +8987,12 @@ export default function App() {
           </div>
         ) : (
           <>
-            {!loading && !tmdbLoading && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
-            {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !loading && !tmdbLoading && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
+            {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
+            {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
-            {!error && (!videos || loading || tmdbLoading) ? (
-              <LibraryLoading label={t(!videos || loading || tmdbLoading ? "loading_library" : "loading_details")} stage={!videos || loading || tmdbLoading ? libraryStage : null} progress={tmdbLoading ? coverProgress : null} />
+            {!error && libraryPending ? (
+              <LibraryLoading label={t("loading_library")} stage={libraryStage} progress={tmdbLoading ? coverProgress : null} />
             ) : error ? (
               <section className="empty-state">
                 <div className="empty-state__card">
