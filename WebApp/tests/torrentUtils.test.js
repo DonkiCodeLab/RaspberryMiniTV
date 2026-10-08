@@ -61,3 +61,10 @@ test("removing history does not reload the movie library, but a simultaneous com
   assert.equal(hasTorrentLibraryUpdates("a:ready|b:imported", "b:ready"), true);
   assert.equal(hasTorrentLibraryUpdates("", "a:imported"), true);
 });
+
+test("award movie searches use the English title even when the original is not English", () => {
+  const movie = { name: "Parásitos", originalName: "기생충", englishName: "Parasite", releaseDate: "2019-05-30" };
+  assert.equal(torrentQuery(movie), "Parasite 2019");
+  assert.equal(torrentQuery({ ...movie, englishName: "" }), "기생충 2019");
+  assert.equal(torrentQuery(movie, "series"), "기생충");
+});

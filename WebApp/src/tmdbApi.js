@@ -479,6 +479,7 @@ export async function getMovieById(movieId, language, importPreview = false) {
     genres: (Array.isArray(movie?.genres) ? movie.genres : [])
       .map((genre) => String(genre?.name || "").trim())
       .filter(Boolean),
+    imdbId,
     imdbUrl: imdbId ? `https://www.imdb.com/title/${imdbId}/` : "",
     rottenTomatoesUrl,
   };

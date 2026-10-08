@@ -9,7 +9,7 @@ export function OscarIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M8 3h8v5a4 4 0 0 1-8 0V3ZM8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 12v6m-4 3h8m-9 0v-3h10v3" /></svg>;
 }
 
-export default function OscarLibrary({ award = 'oscars', movies, language, edition, onEditionChange, onOpenMovie }) {
+export default function OscarLibrary({ award = 'oscars', movies, language, edition, onEditionChange, onOpenMovie, onUploadMovie, onSearchTorrent }) {
   const words = awardStrings(language, award);
   const seed = awardCatalogs[award];
   const mock = isMockMode();
@@ -113,9 +113,14 @@ export default function OscarLibrary({ award = 'oscars', movies, language, editi
       <span className="oscar-library__award">{words.award} · {selected.ceremonyYear} <span> / {words.edition} {selected.edition}</span></span>
       <h3>{selectedName}</h3>
       <div className="oscar-library__facts"><span>{selected.releaseYear}</span>{selected.runtime > 0 && <span>{selected.runtime} min</span>}{selected.voteAverage > 0 && <span>★ {selected.voteAverage.toFixed(1)}</span>}</div>
-      <button type="button" className="oscar-library__open" disabled={!selected.movie} onClick={() => selected.movie && onOpenMovie(selected.movie.id)}>
-        <span aria-hidden="true">{selected.movie ? '▶' : '○'}</span> {selected.movie ? words.open : words.unavailable}
-      </button>
+      <div className="oscar-library__actions">
+        {selected.movie ? <button type="button" className="oscar-library__open" onClick={() => onOpenMovie(selected.movie.id)}>
+          <span aria-hidden="true">▶</span> {words.open}
+        </button> : <>
+          <button type="button" className="oscar-library__open" onClick={() => onUploadMovie(selected)}>{words.upload}</button>
+          <button type="button" className="oscar-library__open" onClick={() => onSearchTorrent(selected)}>{words.searchTorrent}</button>
+        </>}
+      </div>
     </div>
     <div className="oscar-library__navigation">
       <button type="button" onClick={() => choose(index - 1)} disabled={index === 0} aria-label={words.previous}>←</button>

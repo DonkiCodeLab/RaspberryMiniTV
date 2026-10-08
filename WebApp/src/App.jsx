@@ -4439,7 +4439,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
   );
 }
 
-function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType = "series", onTorrentStarted, onTorrentDashboard }) {
+function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType = "series", initialMovie = null, onTorrentStarted, onTorrentDashboard }) {
   const [mediaType, setMediaType] = useState(initialMediaType);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -4468,6 +4468,26 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
       setError("");
     }
   }, [visible, initialMediaType]);
+
+  useEffect(() => {
+    if (!visible || !initialMovie) return;
+    let cancelled = false;
+    setMediaType("movies");
+    setBrowserView("movie");
+    setSelectedItem(null);
+    setLoadingDetails(true);
+    setError("");
+    const localized = getMovieById(initialMovie.tmdbId, tmdbLanguage, true);
+    const english = tmdbLanguage === "en-US" ? localized : getMovieById(initialMovie.tmdbId, "en-US", true);
+    Promise.all([localized, english]).then(([details, englishDetails]) => {
+      if (!cancelled) setSelectedItem({ ...details, englishName: englishDetails.name });
+    }).catch(nextError => {
+      if (!cancelled) setError(nextError.message || t("tmdb_browser_load_failed"));
+    }).finally(() => {
+      if (!cancelled) setLoadingDetails(false);
+    });
+    return () => { cancelled = true; };
+  }, [visible, initialMovie, tmdbLanguage]);
 
   useEffect(() => {
     if (!visible) return () => {};
@@ -6372,6 +6392,7 @@ export default function App() {
   const [gameUploadFile, setGameUploadFile] = useState(null);
   const [gameUploadQuery, setGameUploadQuery] = useState("");
   const [tmdbBrowserOpen, setTmdbBrowserOpen] = useState(false);
+  const [torrentInitialMovie, setTorrentInitialMovie] = useState(null);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [episodeDialogOpen, setEpisodeDialogOpen] = useState(false);
   const [episodePlaying, setEpisodePlaying] = useState(false);
@@ -9127,7 +9148,7 @@ export default function App() {
                 onUploadDragStateChange={handleUploadDragStateChange}
                 uploadSummary={uploadSummary}
                 torrentDownloads={torrentDownloads}
-                onOpenTmdbBrowser={() => setTmdbBrowserOpen(true)}
+                onOpenTmdbBrowser={() => { setTorrentInitialMovie(null); setTmdbBrowserOpen(true); }}
               />
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
               <section className="season-page">
@@ -9433,7 +9454,13 @@ export default function App() {
                 ) : null}
 
                 {isOscarView ? (
-                  <OscarLibrary key={awardType} award={awardType} movies={movieOptions} language={tmdbLanguage} edition={awardEditions[awardType]} onEditionChange={edition => setAwardEditions(current => ({ ...current, [awardType]: edition }))} onOpenMovie={handleOpenMovieDetails} />
+                  <OscarLibrary key={awardType} award={awardType} movies={movieOptions} language={tmdbLanguage} edition={awardEditions[awardType]} onEditionChange={edition => setAwardEditions(current => ({ ...current, [awardType]: edition }))} onOpenMovie={handleOpenMovieDetails}
+                    onUploadMovie={() => handleOpenUploadsForMedia("movies")}
+                    onSearchTorrent={movie => {
+                      handleOpenUploadsForMedia("movies");
+                      setTorrentInitialMovie(movie);
+                      setTmdbBrowserOpen(true);
+                    }} />
                 ) : isPicturesMode ? (
                   <PicturesLibrary key={profiles.activeId} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
                 ) : !isGamesMode && mediaFiltersActive && !filterVisible ? (
@@ -9958,6 +9985,7 @@ export default function App() {
               t={t}
               tmdbLanguage={tmdbLanguage}
               initialMediaType={uploadMediaType === "movies" ? "movies" : "series"}
+              initialMovie={torrentInitialMovie}
               onTorrentStarted={torrentDownloads.refresh}
               onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); }}
             />

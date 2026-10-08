@@ -1,5 +1,5 @@
 export function torrentQuery(media, mediaType = "movies") {
-  return [media?.originalName || media?.name, mediaType === "movies" ? media?.releaseDate?.slice(0, 4) : null].filter(Boolean).join(" ");
+  return [(mediaType === "movies" && media?.englishName) || media?.originalName || media?.name, mediaType === "movies" ? media?.releaseDate?.slice(0, 4) : null].filter(Boolean).join(" ");
 }
 
 export function mergeTorrentResults(previous, next) {

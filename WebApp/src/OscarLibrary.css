@@ -25,6 +25,7 @@
 .oscar-library__award > span { color: #a6aaa7; letter-spacing: .04em; }
 .oscar-library h3 { margin: .5rem auto; max-width: 720px; font: 400 clamp(1.2rem, 2.3vw, 1.85rem)/1.25 Georgia, serif; color: #fff4df; }
 .oscar-library__facts { display: flex; justify-content: center; gap: 1rem; color: #b5bab7; font-size: .75rem; margin: .65rem 0 .85rem; }
+.oscar-library__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .65rem; margin-bottom: .75rem; }
 .oscar-library__open { display: inline-flex; align-items: center; justify-content: center; gap: .65rem; min-width: 170px; min-height: 39px; border: 1px solid #ddc27e; border-radius: 8px; background: #ddc27e; color: #1c2322; padding: .55rem 1rem; font-size: .8rem; font-weight: 600; cursor: pointer; }
 .oscar-library__open:disabled { color: #bec1ba; border-color: #c4c8bd30; background: #fff00004; cursor: default; }
 .oscar-library__navigation { display: flex; align-items: center; gap: 1.4rem; padding: 1rem 5% 2.5rem; margin: 0 auto; max-width: 1000px; }
