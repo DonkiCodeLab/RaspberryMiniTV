@@ -7,9 +7,13 @@ import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
 import BrowserVideo from "./BrowserVideo.jsx";
 import SystemUpdate from "./SystemUpdate.jsx";
 import OpenSubtitlesSettings from "./OpenSubtitlesSettings.jsx";
+import GameProviderSettings from "./GameProviderSettings.jsx";
+import ServiceCredentialTest from "./ServiceCredentialTest.jsx";
 import { libraryScrollLabel, compareLibraryItems } from "./libraryScroll.js";
 import EpubReader from "./EpubReader";
-import BookPageSelector from "./BookPageSelector.jsx";
+import BookReader from "./BookReader.jsx";
+import useUserProfiles from "./useUserProfiles.js";
+import { ProfileMenu, UsersPanel, ResumeDialog, userStrings } from "./UserProfiles.jsx";
 import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
 import BookLibraryControls, { BookTypeField } from "./BookLibraryControls.jsx";
 import { bookTypeArtwork } from "./bookTypeArtwork.js";
@@ -29,14 +33,12 @@ import { localTmdbImageUrl } from "./api/raspberryApi";
 import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
 import GameMetadataPicker from "./GameMetadataPicker.jsx";
-import GameMetadataDetails from "./GameMetadataDetails.jsx";
+import GameDetails from "./GameDetails.jsx";
 import { gameMetadataImageUrl } from "./api/raspberryApi";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
-import { MEDIA_MARKS_KEY, mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason, loadMediaMarks } from "./mediaMarks.js";
+import { mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason } from "./mediaMarks.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
 import cloudsBackground from "./assets/cloud.gif";
@@ -87,7 +89,6 @@ import uploadDropzoneYellow from "./assets/upload_drag&drop_zone_yellow.png";
 import raspberryIntroVideo from "../../DeviceApp/menu/video_intro.mp4";
 import donkicodeLogo from "../../DeviceApp/menu/miniLogo_donkicodeLab.png";
 
-GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 const WEB_EMULATOR_SYSTEMS = new Set([
   "gb", "gbc", "gba", "nes", "snes", "mastersystem", "megadrive", "gamegear",
   "segacd", "pcengine", "pcenginecd", "neogeo", "ngp", "ngpc", "wonderswan",
@@ -260,6 +261,7 @@ const RASPBERRY_TABS = [
     activeIcon: uploadsIconBlack,
     inactiveIcon: uploadsIconYellow,
   },
+  { id: "users", labelKey: "users_title", activeIcon: "/avatars/users.svg", inactiveIcon: "/avatars/users.svg" },
 ];
 const UPLOAD_MEDIA_OPTIONS = [
   { key: "series", value: "series", labelKey: "upload_series" },
@@ -333,6 +335,7 @@ const UI_STRINGS = {
     book_open_raspberry_busy: "Abriendo en Raspberry…",
     book_open_raspberry_failed: "No se pudo abrir el libro en la Raspberry.",
     raspberry_dashboard: "Dashboard",
+    users_title: "Users",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
     upload_series: "Serie",
@@ -438,6 +441,7 @@ const UI_STRINGS = {
     used_percent: "{percent} utilizado",
     language_title: "Idioma",
     language_microtv: "Selecciona el idioma de la mini tele.",
+    language_cover_notice: "Al cambiar el idioma, también cambiarán las portadas de todas las películas y series guardadas, ya que están localizadas según el idioma seleccionado.",
     language_updating: "Actualizando idioma...",
     language_update_failed: "No se pudo actualizar el idioma de la Raspberry.",
     microsd_capacity: "Capacidad de la SSD",
@@ -570,7 +574,30 @@ const UI_STRINGS = {
     games_set_cover: "Usar como carátula",
     games_remove_image: "Quitar imagen",
     games_cover_selected: "Carátula seleccionada",
-    games_no_results: "No se han encontrado juegos para esa búsqueda.",
+    games_no_results: "No se ha encontrado ningún juego con ese nombre para la consola seleccionada. Prueba con otro nombre o revisa la consola.",
+    games_search_choose_platform: "Selecciona una consola para buscar la ficha del juego.",
+    games_search_enter_name: "Escribe el nombre del juego para buscar su ficha.",
+    games_info_title: "Información del juego",
+    games_storyline: "Argumento",
+    games_media_title: "Multimedia",
+    games_gallery_title: "Imágenes",
+    games_image_number: "Imagen {number}",
+    games_file_details: "Archivo y fuente de la ficha",
+    games_videos_label: "Vídeos",
+    games_video_title: "Vídeos del juego",
+    games_video_choose: "Elegir vídeo",
+    games_video_open: "Ver en YouTube",
+    games_video_online: "Requiere conexión a Internet. Si el vídeo no se puede reproducir aquí, ábrelo en YouTube.",
+    games_video_missing: "Esta ficha no tiene vídeos de YouTube asociados. Puedes buscar un gameplay por nombre y consola.",
+    games_video_search: "Buscar gameplay en YouTube",
+    youtube_title: "Más gameplays en YouTube",
+    youtube_query: "Buscar vídeos por nombre y consola",
+    youtube_setup: "Configura YouTube Data API v3 en Dashboard → Servicios auxiliares → YouTube Data API v3 para buscar vídeos aquí. La clave de IGDB no sirve para YouTube.",
+    youtube_empty: "No se han encontrado vídeos. Prueba otro nombre o consola.",
+    youtube_quota: "Se ha agotado la cuota de búsqueda de YouTube. Inténtalo más tarde.",
+    youtube_config_error: "Revisa la clave de YouTube y que YouTube Data API v3 esté habilitada en tu proyecto de Google Cloud.",
+    youtube_error: "No se pudo buscar en YouTube. Puedes reintentar la búsqueda.",
+    youtube_results: "Resultados de YouTube. Comprueba que el vídeo corresponde a tu juego y consola.",
     games_search_empty: "Escribe un juego para buscar.",
     games_search_failed: "No se pudo buscar la ficha del juego.",
     games_api_not_configured: "Configura ScreenScraper o IGDB en la Raspberry para descargar la ficha, carátulas y capturas.",
@@ -746,6 +773,7 @@ const UI_STRINGS = {
     book_open_raspberry_busy: "Obrint a la Raspberry…",
     book_open_raspberry_failed: "No s'ha pogut obrir el llibre a la Raspberry.",
     raspberry_dashboard: "Dashboard",
+    users_title: "Users",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
     upload_series: "Sèrie",
@@ -851,6 +879,7 @@ const UI_STRINGS = {
     used_percent: "{percent} utilitzat",
     language_title: "Idioma",
     language_microtv: "Selecciona l'idioma de la mini tele.",
+    language_cover_notice: "En canviar l’idioma, també canviaran les portades de totes les pel·lícules i sèries desades, ja que estan localitzades segons l’idioma seleccionat.",
     language_updating: "S'està actualitzant l'idioma...",
     language_update_failed: "No s'ha pogut actualitzar l'idioma de la Raspberry.",
     microsd_capacity: "Capacitat de l'SSD",
@@ -983,7 +1012,30 @@ const UI_STRINGS = {
     games_set_cover: "Fer servir com a caràtula",
     games_remove_image: "Treure imatge",
     games_cover_selected: "Caràtula seleccionada",
-    games_no_results: "No s'han trobat jocs per a aquesta cerca.",
+    games_no_results: "No s'ha trobat cap joc amb aquest nom per a la consola seleccionada. Prova un altre nom o revisa la consola.",
+    games_search_choose_platform: "Selecciona una consola per cercar la fitxa del joc.",
+    games_search_enter_name: "Escriu el nom del joc per cercar-ne la fitxa.",
+    games_info_title: "Informació del joc",
+    games_storyline: "Argument",
+    games_media_title: "Multimèdia",
+    games_gallery_title: "Imatges",
+    games_image_number: "Imatge {number}",
+    games_file_details: "Arxiu i font de la fitxa",
+    games_videos_label: "Vídeos",
+    games_video_title: "Vídeos del joc",
+    games_video_choose: "Tria un vídeo",
+    games_video_open: "Veure a YouTube",
+    games_video_online: "Cal connexió a Internet. Si el vídeo no es pot reproduir aquí, obre'l a YouTube.",
+    games_video_missing: "Aquesta fitxa no té vídeos de YouTube associats. Pots cercar un gameplay per nom i consola.",
+    games_video_search: "Cercar gameplay a YouTube",
+    youtube_title: "Més gameplays a YouTube",
+    youtube_query: "Cerca vídeos per nom i consola",
+    youtube_setup: "Configura YouTube Data API v3 a Dashboard → Serveis auxiliars → YouTube Data API v3 per cercar vídeos aquí. La clau d’IGDB no serveix per a YouTube.",
+    youtube_empty: "No s’han trobat vídeos. Prova un altre nom o consola.",
+    youtube_quota: "S’ha esgotat la quota de cerca de YouTube. Torna-ho a provar més tard.",
+    youtube_config_error: "Revisa la clau de YouTube i que YouTube Data API v3 estigui habilitada al projecte de Google Cloud.",
+    youtube_error: "No s’ha pogut cercar a YouTube. Pots tornar-ho a provar.",
+    youtube_results: "Resultats de YouTube. Comprova que el vídeo correspon al joc i la consola.",
     games_search_empty: "Escriu un joc per cercar.",
     games_search_failed: "No s'ha pogut buscar la fitxa del joc.",
     games_api_not_configured: "Configura ScreenScraper o IGDB a la Raspberry per descarregar la fitxa, caràtules i captures.",
@@ -1159,6 +1211,7 @@ const UI_STRINGS = {
     book_open_raspberry_busy: "Opening on Raspberry…",
     book_open_raspberry_failed: "The book could not be opened on the Raspberry.",
     raspberry_dashboard: "Dashboard",
+    users_title: "Users",
     raspberry_controls: "Controls",
     raspberry_uploads: "Uploads",
     upload_series: "Series",
@@ -1264,6 +1317,7 @@ const UI_STRINGS = {
     used_percent: "{percent} used",
     language_title: "Language",
     language_microtv: "Choose the mini TV language.",
+    language_cover_notice: "Changing the language also changes the posters of all saved movies and TV series, as posters are localized for the selected language.",
     language_updating: "Updating language...",
     language_update_failed: "Could not update the Raspberry language.",
     microsd_capacity: "SSD capacity",
@@ -1396,7 +1450,30 @@ const UI_STRINGS = {
     games_set_cover: "Use as cover",
     games_remove_image: "Remove image",
     games_cover_selected: "Selected cover",
-    games_no_results: "No games were found for that search.",
+    games_no_results: "No games were found with that name for the selected console. Try another name or check the console.",
+    games_search_choose_platform: "Select a console to search for game details.",
+    games_search_enter_name: "Enter the game's name to search for its details.",
+    games_info_title: "Game information",
+    games_storyline: "Storyline",
+    games_media_title: "Media",
+    games_gallery_title: "Images",
+    games_image_number: "Image {number}",
+    games_file_details: "File and metadata source",
+    games_videos_label: "Videos",
+    games_video_title: "Game videos",
+    games_video_choose: "Choose video",
+    games_video_open: "Watch on YouTube",
+    games_video_online: "Internet connection required. If the video cannot play here, open it on YouTube.",
+    games_video_missing: "This profile has no linked YouTube videos. You can search for gameplay by game name and console.",
+    games_video_search: "Search gameplay on YouTube",
+    youtube_title: "More gameplay on YouTube",
+    youtube_query: "Search videos by game name and console",
+    youtube_setup: "Configure YouTube Data API v3 in Dashboard → Auxiliary services → YouTube Data API v3 to search here. Your IGDB credentials do not work for YouTube.",
+    youtube_empty: "No videos found. Try another game name or console.",
+    youtube_quota: "YouTube search quota exceeded. Try again later.",
+    youtube_config_error: "Check your YouTube key and enable YouTube Data API v3 in your Google Cloud project.",
+    youtube_error: "Could not search YouTube. You can retry the search.",
+    youtube_results: "YouTube results. Check that the video matches your game and console.",
     games_search_empty: "Type a game to search.",
     games_search_failed: "Could not search the game profile.",
     games_api_not_configured: "Configure ScreenScraper or IGDB on the Raspberry to download game details, covers and screenshots.",
@@ -2620,6 +2697,8 @@ function EpisodeDetailsModal({
   showPlayButton = true,
   watched,
   onWatched,
+  favorite,
+  onFavorite,
   onClose,
   onPlay,
   onPlayBrowser,
@@ -2687,7 +2766,7 @@ function EpisodeDetailsModal({
         <div className="episode-dialog__body">
           {loading && <p role="status"><span className="tmdb-cache-spinner" /> Cargando información del episodio…</p>}
           {error && <p role="alert">{error} <button type="button" onClick={onRetry}>Reintentar</button></p>}
-          <MediaMarkButtons watched={watched} onWatched={onWatched} t={t} />
+          <MediaMarkButtons watched={watched} onWatched={onWatched} favorite={favorite} onFavorite={onFavorite} t={t} />
           <div className="episode-dialog__overview">
             {episode.image ? (
               <div className="episode-dialog__media">
@@ -2831,7 +2910,7 @@ function BrowserPlayerModal({ playback, onClose, t }) {
           </div>
           <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
         </header>
-        <BrowserVideo key={playback.url} url={playback.url} t={t} />
+        <BrowserVideo key={`${playback.context?.userId}:${playback.url}`} url={playback.url} t={t} initialProgress={playback.context?.initialProgress} onProgress={playback.context?.onProgress} />
       </div>
     </div>,
     document.body
@@ -5120,6 +5199,7 @@ function RaspberryBirthdaysCard({ birthdays, saving, status, onSaveList, t }) {
 }
 
 function RaspberryPage({
+  profiles, userEditorId, onUserEditorChange, onManageUsers,
   raspberryTab,
   onChangeTab,
   dashboardSection,
@@ -5292,6 +5372,8 @@ function RaspberryPage({
         </div>
       </div>
 
+      {raspberryTab === "users" ? <div className="raspberry-page__content"><UsersPanel profiles={profiles} editorId={userEditorId} onEditorChange={onUserEditorChange} language={raspberryLanguage} /></div> : null}
+
       {raspberryTab === "dashboard" ? (
         <div className="raspberry-page__content">
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-general-title">
@@ -5336,6 +5418,7 @@ function RaspberryPage({
                   {raspberryLanguageError}
                 </p>
               ) : null}
+              <p className="raspberry-language-card__notice">{t("language_cover_notice")}</p>
             </article>
             <RaspberryStatCard
               calculating={statsCalculating}
@@ -5574,10 +5657,15 @@ function RaspberryPage({
               {tmdbSettingsStatus ? (
                 <span className="raspberry-tmdb-card__status">{tmdbSettingsStatus}</span>
               ) : null}
+              <ServiceCredentialTest provider="tmdb" language={raspberryLanguage} credentials={tmdbSettings}
+                configured={!!(tmdbSettings.apiKey?.trim() || tmdbSettings.bearerToken?.trim())} disabled={tmdbSettingsSaving} />
               <TmdbCachePanel language={raspberryLanguage} />
             </article>
             <OpenSubtitlesSettings language={raspberryLanguage} sectionRef={subtitleSettingsRef} />
+            <GameProviderSettings language={raspberryLanguage} />
+            <GameProviderSettings language={raspberryLanguage} youtube />
           </section>
+          <section className="raspberry-dashboard-section"><h2 className="raspberry-dashboard-section__title">Users</h2><button type="button" className="dialog-button dialog-button--accent" onClick={() => onManageUsers(profiles.activeId)}>{userStrings(raspberryLanguage).edit}</button></section>
           <SystemUpdate language={raspberryLanguage} />
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
@@ -6094,115 +6182,8 @@ function BookOpenModal({ book, busy, onClose, onOpenBrowser, onOpenRaspberry, t 
   );
 }
 
-function BookReader({ book, onClose }) {
-  const canvasRef = useRef(null);
-  const pageContainerRef = useRef(null);
-  const renderTaskRef = useRef(null);
-  const [pdf, setPdf] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [zoom, setZoom] = useState(1);
-  const [readerError, setReaderError] = useState("");
-  const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
-  const source = book ? getBookContentUrl(book.relativePath) : "";
-  const changeZoom = (delta) => setZoom((value) => Math.min(3, Math.max(.6, Number((value + delta).toFixed(1)))));
 
-  useEffect(() => {
-    if (!book || !["pdf", "cbr", "cbz"].includes(book.format)) { setPdf(null); return undefined; }
-    let cancelled = false;
-    const controller = new AbortController();
-    let task = null;
-    setPageNumber(1); setZoom(1); setReaderError("");
-    setPdf(null);
-    getBookContent(book.relativePath, { signal: controller.signal })
-      .then((data) => {
-        if (cancelled) return null;
-        task = getDocument({ data });
-        return task.promise;
-      })
-      .then((document) => { if (!cancelled && document) setPdf(document); })
-      .catch((error) => {
-        if (cancelled || error?.name === "AbortError") return;
-        const detail = error?.status === 401
-          ? "La sesión ha caducado. Vuelve a introducir el PIN."
-          : error?.status === 404
-            ? "El archivo ya no existe en la biblioteca."
-            : error?.message || "No se pudo cargar este PDF.";
-        setReaderError(detail);
-      });
-    return () => { cancelled = true; controller.abort(); task?.destroy(); };
-  }, [book?.relativePath, book?.format]);
-
-  useEffect(() => {
-    pageContainerRef.current?.scrollTo({ top: 0, left: 0 });
-    setReaderError("");
-  }, [pageNumber]);
-
-  useEffect(() => {
-    if (!pdf || !canvasRef.current) return undefined;
-    let cancelled = false;
-    pdf.getPage(pageNumber).then((page) => {
-      if (cancelled || !canvasRef.current) return;
-      const viewport = page.getViewport({ scale: 1.45 * zoom });
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
-      canvas.width = viewport.width; canvas.height = viewport.height;
-      renderTaskRef.current?.cancel();
-      renderTaskRef.current = page.render({ canvasContext: context, viewport });
-      return renderTaskRef.current.promise;
-    }).catch((error) => { if (!cancelled && error?.name !== "RenderingCancelledException") setReaderError("No se pudo mostrar esta página."); });
-    return () => { cancelled = true; renderTaskRef.current?.cancel(); };
-  }, [pdf, pageNumber, zoom]);
-
-  if (!book) return null;
-  return createPortal(
-    <div className="book-reader" role="dialog" aria-modal="true" aria-label={book.name}>
-      <header className="book-reader__header">
-        <div className="book-reader__file">
-          <img src={donkicodeLogo} alt="" />
-          <strong><span>Fichero:</span> {book.name}</strong>
-        </div>
-        <div className="book-reader__pagination" aria-label="Navegación de páginas">
-          <button onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={!pdf || pageNumber <= 1} type="button" aria-label="Página anterior">‹</button>
-          <BookPageSelector key={book.relativePath} page={pageNumber} total={pdf?.numPages} onSelect={setPageNumber} />
-          <button onClick={() => setPageNumber((page) => Math.min(pdf?.numPages || page, page + 1))} disabled={!pdf || pageNumber >= pdf.numPages} type="button" aria-label="Página siguiente">›</button>
-        </div>
-        <div className="book-reader__controls">
-          <div className="book-reader__zoom" aria-label="Control de zoom">
-            <button onClick={() => changeZoom(-.1)} disabled={zoom <= .6} type="button" aria-label="Reducir zoom un 10 %">−</button>
-            <input type="range" min="0.6" max="3" step="0.1" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} aria-label="Zoom" />
-            <output>{Math.round(zoom * 100)}%</output>
-            <button onClick={() => changeZoom(.1)} disabled={zoom >= 3} type="button" aria-label="Aumentar zoom un 10 %">+</button>
-          </div>
-          <button className="book-reader__close" onClick={() => setCloseConfirmationOpen(true)} type="button" aria-label="Cerrar lector">×</button>
-        </div>
-      </header>
-      {["pdf", "cbr", "cbz"].includes(book.format) ? (
-        <div ref={pageContainerRef} className="book-reader__page">{readerError ? <p className="book-reader__error">{readerError}</p> : !pdf ? <p role="status">Preparando las páginas…</p> : null}<canvas ref={canvasRef} aria-label={`Página ${pageNumber}`} /></div>
-      ) : (
-        <div className="book-reader__fallback">
-          <span>📚</span><h2>{book.name}</h2>
-          <p>Este formato se abrirá con el lector compatible del navegador o del dispositivo.</p>
-          <a className="dialog-button dialog-button--accent" href={source} target="_blank" rel="noreferrer">Abrir {book.format.toUpperCase()}</a>
-        </div>
-      )}
-      {closeConfirmationOpen ? (
-        <div className="book-reader__confirm-backdrop" onClick={() => setCloseConfirmationOpen(false)}>
-          <div className="book-reader__confirm" role="alertdialog" aria-modal="true" aria-labelledby="book-reader-close-title" onClick={(event) => event.stopPropagation()}>
-            <h2 id="book-reader-close-title">¿Realmente quieres abandonar la visualización?</h2>
-            <p>Se cerrará el fichero <strong>{book.name}</strong>.</p>
-            <div>
-              <button className="dialog-button dialog-button--ghost" onClick={() => setCloseConfirmationOpen(false)} type="button">Seguir leyendo</button>
-              <button className="dialog-button dialog-button--danger" onClick={onClose} type="button">Abandonar</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>,
-    document.body
-  );
-}
-
-function PicturesLibrary({ pictures, onUpload, t, countLabel }) {
+function PicturesLibrary({ pictures, onUpload, t, countLabel, renderMarks, onViewed }) {
   const [openPicture, setOpenPicture] = useState(null);
   return (
     <section className="pictures-library seasons-section" aria-label={t("media_pictures")}>
@@ -6216,10 +6197,10 @@ function PicturesLibrary({ pictures, onUpload, t, countLabel }) {
       {pictures.length ? (
         <div className="pictures-grid">
           {pictures.map((picture) => (
-            <button className="picture-tile" type="button" key={picture.relativePath} onClick={() => setOpenPicture(picture)}>
+            <div className="picture-profile-tile" key={picture.relativePath}><button className="picture-tile" type="button" onClick={() => setOpenPicture(picture)}>
               <img src={getPictureContentUrl(picture.relativePath)} alt={picture.name} loading="lazy" />
               <span>{picture.name}</span>
-            </button>
+            </button>{renderMarks("picture", picture.relativePath)}</div>
           ))}
         </div>
       ) : (
@@ -6233,7 +6214,7 @@ function PicturesLibrary({ pictures, onUpload, t, countLabel }) {
       {openPicture ? createPortal(
         <div className="modal-backdrop picture-lightbox" onClick={() => setOpenPicture(null)}>
           <button className="dialog-card__close" type="button" onClick={() => setOpenPicture(null)} aria-label={t("close")}>×</button>
-          <img src={getPictureContentUrl(openPicture.relativePath)} alt={openPicture.name} onClick={(event) => event.stopPropagation()} />
+          <img src={getPictureContentUrl(openPicture.relativePath)} alt={openPicture.name} onLoad={() => onViewed(openPicture)} onClick={(event) => event.stopPropagation()} />
           <span>{openPicture.name}</span>
         </div>, document.body
       ) : null}
@@ -6263,7 +6244,6 @@ function LibraryLoading({ label, progress, stage }) {
 }
 
 export default function App() {
-  const [mediaMarks, setMediaMarks] = useState(loadMediaMarks);
   const mockMode = isMockMode();
   const [activeMediaType, setActiveMediaType] = useState("series");
   const [webPinInput, setWebPinInput] = useState("");
@@ -6272,6 +6252,12 @@ export default function App() {
   const [pinSubmitting, setPinSubmitting] = useState(false);
   const [introVideoFinished, setIntroVideoFinished] = useState(false);
   const [unlocked, setUnlocked] = useState(mockMode || Boolean(getStoredWebPin()));
+  const profiles = useUserProfiles(unlocked);
+  const mediaMarks = profiles.state.marks;
+  const [userEditorId, setUserEditorId] = useState(null);
+  const [resumeRequest, setResumeRequest] = useState(null);
+  const resumeResolver = useRef(null);
+  const openingContent = useRef(false);
   const [videos, setVideos] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
   const [preparedLibrary, setPreparedLibrary] = useState(null);
@@ -6315,7 +6301,6 @@ export default function App() {
   const [bookOpenBusy, setBookOpenBusy] = useState(false);
   const [bookMetadataTarget, setBookMetadataTarget] = useState(null);
   const [bookCollectionTarget, setBookCollectionTarget] = useState(null);
-  const [selectedGameImageIndex, setSelectedGameImageIndex] = useState(1);
   const [selectedSeasonId, setSelectedSeasonId] = useState(null);
   const [currentView, setCurrentView] = useState("series");
   const [raspberryReturnView, setRaspberryReturnView] = useState("series");
@@ -6419,15 +6404,53 @@ export default function App() {
   const seriesDuplicateResolverRef = useRef(null);
   const t = (key, variables) => translate(raspberryLanguage, key, variables);
 
-  function saveMarks(next) {
+  function saveMarks(next) { return profiles.saveMarks(next); }
+
+  function handleManageUsers(id) {
+    setRaspberryReturnView(currentView === "season" ? "season" : "series");
+    setUserEditorId(id); setCurrentView("raspberry"); setRaspberryTab("users");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function chooseResume(choice) {
+    setResumeRequest(null);
+    resumeResolver.current?.(choice);
+    resumeResolver.current = null;
+  }
+
+  async function prepareContent(title, descriptor) {
+    if (!profiles.ready || openingContent.current) return null;
+    openingContent.current = true;
+    const user = profiles.activeUser;
     try {
-      window.localStorage.setItem(MEDIA_MARKS_KEY, JSON.stringify(next));
-      setMediaMarks(next);
-      return true;
-    } catch {
-      window.alert(t("mark_save_error"));
-      return false;
-    }
+      const state = await profiles.refreshState(user.id);
+      const progress = state.progress[descriptor.key];
+      const resume = progress?.opened ? await new Promise(resolve => {
+        resumeResolver.current = resolve;
+        setResumeRequest({ title, progress, user });
+      }) : false;
+      if (resume === null) return null;
+      return { userId: user.id, descriptor, initialProgress: resume ? progress : null, resume,
+        onProgress: value => profiles.saveProgress(user.id, descriptor, value) };
+    } catch (failure) {
+      window.alert(failure.message || "No se pudo recuperar el progreso del usuario.");
+      return null;
+    } finally { openingContent.current = false; }
+  }
+
+  function episodeDescriptor(relativePath) {
+    return { key: mediaMarkKey("video", relativePath), markKey: selectedSeasonMarkKey(), episodeNumber: selectedEpisode?.episodeNumber };
+  }
+
+  function bookDescriptor(book) {
+    return { key: mediaMarkKey("book", book.relativePath), markKey: mediaMarkKey("book", book.relativePath) };
+  }
+
+  async function handleOpenBookInBrowser() {
+    if (!bookOpenTarget) return;
+    const context = await prepareContent(bookOpenTarget.name, bookDescriptor(bookOpenTarget));
+    if (!context) return;
+    setOpenBook({ ...bookOpenTarget, context }); setBookOpenTarget(null);
   }
 
   function confirmMovieFavorite() {
@@ -6827,10 +6850,6 @@ export default function App() {
       setSelectedGamePath("");
     }
   }, [gameLibrary, selectedGamePath]);
-
-  useEffect(() => {
-    setSelectedGameImageIndex(1);
-  }, [selectedGame?.relativePath]);
 
   // Readiness belongs to the exact inputs that finished loading. Effects run
   // after rendering, so a loading flag alone briefly exposes the previous page.
@@ -7680,12 +7699,15 @@ export default function App() {
       return;
     }
 
+    const context = await prepareContent(`${selectedSeries.name} · ${selectedEpisode.title}`, episodeDescriptor(resolveUploadedEpisodePath(selectedSeason, selectedEpisode)));
+    if (!context) return;
     try {
       setEpisodePlaying(true);
       await playEpisode({
         id: raspberryEpisodeId,
         directory: selectedSeries.directoryPath,
-        output,
+        output, userId: context.userId, startSeconds: context.initialProgress?.seconds || 0,
+        markKey: context.descriptor.markKey, episodeNumber: context.descriptor.episodeNumber,
       });
       const playbackInfo = createEpisodePlaybackInfo({
         series: selectedSeries,
@@ -7711,10 +7733,13 @@ export default function App() {
     }
   }
 
-  function handlePlayEpisodeInBrowser() {
+  async function handlePlayEpisodeInBrowser() {
     const relativePath = resolveUploadedEpisodePath(selectedSeason, selectedEpisode);
     if (!relativePath) return;
+    const context = await prepareContent(`${selectedSeries?.name} · ${selectedEpisode?.title}`, episodeDescriptor(relativePath));
+    if (!context) return;
     setBrowserPlayback({
+      context,
       title: `${selectedSeries?.name || ""} · ${selectedEpisode?.title || ""}`,
       url: getMediaStreamUrl(relativePath),
     });
@@ -7812,12 +7837,14 @@ export default function App() {
       return;
     }
 
+    const context = await prepareContent(selectedMovie.name, { key: mediaMarkKey("video", movieEntry.relativePath), markKey: mediaMarkKey("movie", selectedMovie.id) });
+    if (!context) return;
     try {
       setMoviePlaying(true);
       await playEpisode({
         id: movieEntry.id,
         directory: movieEntry.directory || undefined,
-        output,
+        output, userId: context.userId, startSeconds: context.initialProgress?.seconds || 0, markKey: context.descriptor.markKey,
       });
       const playbackInfo = createMoviePlaybackInfo({
         movie: selectedMovie,
@@ -7839,13 +7866,16 @@ export default function App() {
     }
   }
 
-  function handlePlayMovieInBrowser() {
+  async function handlePlayMovieInBrowser() {
     const movieEntry = resolvePlayableMovieEntry(selectedMovie);
     if (!movieEntry?.relativePath) {
       window.alert("No he encontrado el archivo de vídeo de esta película.");
       return;
     }
+    const context = await prepareContent(selectedMovie.name, { key: mediaMarkKey("video", movieEntry.relativePath), markKey: mediaMarkKey("movie", selectedMovie.id) });
+    if (!context) return;
     setBrowserPlayback({
+      context,
       title: selectedMovie?.name || movieEntry.id,
       url: getMediaStreamUrl(movieEntry.relativePath),
     });
@@ -8400,15 +8430,19 @@ export default function App() {
       return;
     }
 
-    await runRaspberryControl(() =>
-      playEpisode({
-        id: nextEpisodeId,
-        directory: nextTarget.directory,
-      })
-    );
-
     const parsedNextEpisode = parseRaspberryEpisodeId(nextEpisodeId);
     const activeSeries = nextTarget.series;
+    const entry = directories.find(item => item.relativePath === nextTarget.directory)?.videos?.find(item => item.id === nextEpisodeId);
+    const path = entry?.relativePath || `${nextTarget.directory}/${nextEpisodeId}.mp4`;
+    const descriptor = { key: mediaMarkKey("video", path),
+      markKey: seasonMarkKey(activeSeries?.id || nextTarget.directory, parsedNextEpisode?.seasonNumber),
+      episodeNumber: parsedNextEpisode?.episodeNumber };
+    const context = await prepareContent(`${activeSeries?.name || ""} · ${nextEpisodeId}`, descriptor);
+    if (!context) return;
+    await runRaspberryControl(() =>
+      playEpisode({ id: nextEpisodeId, directory: nextTarget.directory, userId: context.userId,
+        startSeconds: context.initialProgress?.seconds || 0, markKey: descriptor.markKey, episodeNumber: descriptor.episodeNumber })
+    );
 
     if (!parsedNextEpisode || !activeSeries) {
       return;
@@ -8487,9 +8521,11 @@ export default function App() {
 
   async function handleOpenBookOnRaspberry() {
     if (!bookOpenTarget) return;
+    const context = await prepareContent(bookOpenTarget.name, bookDescriptor(bookOpenTarget));
+    if (!context) return;
     try {
       setBookOpenBusy(true);
-      await openBookOnRaspberry(bookOpenTarget.relativePath);
+      await openBookOnRaspberry(bookOpenTarget.relativePath, { userId: context.userId, resume: context.resume });
       setBookOpenTarget(null);
     } catch (nextError) {
       window.alert(nextError.message || t("book_open_raspberry_failed"));
@@ -8860,15 +8896,6 @@ export default function App() {
   const safeMovieFrameIndex = movieImages.length
     ? Math.min(movieFrameIndex, movieImages.length - 1)
     : 0;
-  const gameImages = selectedGame?.imageOptions?.length
-    ? selectedGame.imageOptions
-    : [selectedGame?.coverImage].filter(Boolean);
-  const safeGameImageIndex = gameImages.length
-    ? Math.min(selectedGameImageIndex, gameImages.length - 1)
-    : 0;
-  const selectedGamePlatformExtension = getFileExtension(selectedGame?.file || selectedGame?.relativePath);
-  const selectedGamePlatformIcon = systemForGame(selectedGame)?.assets.console || GAME_PLATFORM_ICONS[selectedGamePlatformExtension] || null;
-  const selectedGamePlatformLabel = selectedGame?.platformName || GAME_PLATFORM_LABELS[selectedGamePlatformExtension] || t("media_games_singular");
   const raspberryLibraryCounts = normalizeLibraryCounts(raspberryHealth?.ok ? raspberryHealth.libraryCounts : videos?.libraryCounts);
   const installedSeriesCount = raspberryLibraryCounts.series.count;
   const installedMovieCount = raspberryLibraryCounts.movies.count;
@@ -8996,6 +9023,7 @@ export default function App() {
           </div>
         ) : (
           <>
+            {profiles.error ? <div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div> : !profiles.ready ? <div className="profile-status" role="status">{t("loading")} · Users</div> : null}
             {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
             {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
@@ -9011,6 +9039,7 @@ export default function App() {
               </section>
             ) : currentView === "raspberry" ? (
               <RaspberryPage
+                profiles={profiles} userEditorId={userEditorId} onUserEditorChange={setUserEditorId} onManageUsers={handleManageUsers}
                 raspberryTab={raspberryTab}
                 onChangeTab={setRaspberryTab}
                 dashboardSection={dashboardSection}
@@ -9196,6 +9225,7 @@ export default function App() {
                         );
                       })}
                     </div>
+                    <ProfileMenu profiles={profiles} onManage={handleManageUsers} language={raspberryLanguage} />
                   </div>
                 </section>
 
@@ -9405,7 +9435,7 @@ export default function App() {
                 {isOscarView ? (
                   <OscarLibrary key={awardType} award={awardType} movies={movieOptions} language={tmdbLanguage} edition={awardEditions[awardType]} onEditionChange={edition => setAwardEditions(current => ({ ...current, [awardType]: edition }))} onOpenMovie={handleOpenMovieDetails} />
                 ) : isPicturesMode ? (
-                  <PicturesLibrary countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
+                  <PicturesLibrary key={profiles.activeId} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
                 ) : !isGamesMode && mediaFiltersActive && !filterVisible ? (
                   <section className="empty-state seasons-section">
                     {!isMediaDetail && !isGamesMode ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}
@@ -9463,131 +9493,14 @@ export default function App() {
                       {!filteredGameOptions.length && <p className="games-library__empty">{t("games_empty_title")}</p>}
                     </section>}
                   {selectedGame && filteredGameOptions.some(game => game.relativePath === selectedGame.relativePath) ? (
-                    <section className="game-panel seasons-section">
-                      <div className="seasons-section__label">{t("game_file_label")}</div>
-                      <button type="button" className="back-button" onClick={() => setSelectedGamePath("")}>← {t("media_games")}</button>
-                      <div className="game-panel__card">
-                        <button
-                          className="media-delete-button media-delete-button--game"
-                          onClick={() => handleDeleteGame(selectedGame)}
-                          type="button"
-                          aria-label={t("delete_media", { media: t("media_games_singular") })}
-                          title={t("delete_media", { media: t("media_games_singular") })}
-                        >
-                          <img src={deleteIcon} alt="" aria-hidden="true" />
-                        </button>
-
-                        <div className="game-panel__play-actions">
-                          <button
-                            className="movie-panel__play game-panel__play"
-                            onClick={handlePlayGame}
-                            type="button"
-                            disabled={raspberryControlsBusy}
-                          >
-                            <img src={tvGreen} alt="" aria-hidden="true" />
-                            <span>{raspberryControlsBusy ? t("playing_game") : t("play_game_on_raspberry")}</span>
-                          </button>
-                          <button
-                            className="movie-panel__play movie-panel__play--browser game-panel__play"
-                            onClick={handlePlayGameInBrowser}
-                            type="button"
-                            disabled={!WEB_EMULATOR_SYSTEMS.has(systemForGame(selectedGame)?.id || selectedSystemId)}
-                            title={!WEB_EMULATOR_SYSTEMS.has(systemForGame(selectedGame)?.id || selectedSystemId) ? t("browser_game_unsupported") : undefined}
-                          >
-                            <span className="game-panel__browser-icon" aria-hidden="true">▶</span>
-                            <span>{t("play_game_in_browser")}</span>
-                          </button>
-                        </div>
-
-                        <div className="game-panel__layout">
-                          <div className="game-panel__gallery">
-                            <div className="game-panel__cover">
-                              {gameImages[safeGameImageIndex] ? (
-                                <img src={gameImages[safeGameImageIndex]} alt={selectedGame.name || selectedGame.file} />
-                              ) : (
-                                <img src={emptyStateIcon} alt="" aria-hidden="true" />
-                              )}
-                            </div>
-                            {gameImages.length > 1 ? (
-                              <div className="movie-panel__gallery-controls game-panel__gallery-controls">
-                                <button
-                                  className="movie-panel__gallery-arrow"
-                                  onClick={() =>
-                                    setSelectedGameImageIndex((current) =>
-                                      current === 0 ? gameImages.length - 1 : current - 1
-                                    )
-                                  }
-                                  type="button"
-                                  aria-label={t("prev_image")}
-                                >
-                                  ‹
-                                </button>
-                                <div className="movie-panel__gallery-status">
-                                  <div className="movie-panel__dots" aria-hidden="true">
-                                    {gameImages.map((image, index) => (
-                                      <button
-                                        key={`${image}-${index}`}
-                                        className={`movie-panel__dot${index === safeGameImageIndex ? " active" : ""}`}
-                                        onClick={() => setSelectedGameImageIndex(index)}
-                                        type="button"
-                                        aria-label={`${index + 1} / ${gameImages.length}`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span>{`${safeGameImageIndex + 1} / ${gameImages.length}`}</span>
-                                </div>
-                                <button
-                                  className="movie-panel__gallery-arrow"
-                                  onClick={() =>
-                                    setSelectedGameImageIndex((current) =>
-                                      current === gameImages.length - 1 ? 0 : current + 1
-                                    )
-                                  }
-                                  type="button"
-                                  aria-label={t("next_image")}
-                                >
-                                  ›
-                                </button>
-                              </div>
-                            ) : (
-                              null
-                            )}
-                          </div>
-
-                          <div className="game-panel__content">
-                            <button className="dialog-button" type="button" onClick={handleOpenCustomization}>{t("games_cover_file_field")} / {t("games_description_field")}</button>
-                            <h2>{selectedGame.name || selectedGame.file}</h2>
-                            {renderMarks("game", selectedGame.relativePath, false)}
-                            <div className="movie-panel__facts game-panel__facts">
-                              <div className="movie-panel__fact">
-                                <strong>{t("game_platform_label")}</strong>
-                                <span className="game-panel__platform">
-                                  {selectedGamePlatformIcon ? (
-                                    <img
-                                      className="game-panel__platform-icon"
-                                      src={selectedGamePlatformIcon}
-                                      alt=""
-                                      aria-hidden="true"
-                                    />
-                                  ) : null}
-                                  <span>{selectedGamePlatformLabel}</span>
-                                </span>
-                              </div>
-                              <div className="movie-panel__fact">
-                                <strong>{t("file_label")}</strong>
-                                <span>{selectedGame.file || selectedGame.relativePath}</span>
-                              </div>
-                            </div>
-
-                            <GameMetadataDetails key={selectedGame.relativePath} game={selectedGame} t={t} onRefresh={async () => setVideos(await getVideos())} />
-                            <div className="movie-panel__overview game-panel__overview">
-                              <strong>{t("synopsis")}</strong>
-                              <p>{selectedGame.description || t("synopsis_unavailable")}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
+                    <GameDetails key={selectedGame.relativePath} game={selectedGame} t={t} language={raspberryLanguage}
+                      marks={renderMarks("game", selectedGame.relativePath, false)}
+                      onBack={() => setSelectedGamePath("")} onEdit={handleOpenCustomization}
+                      onDelete={() => handleDeleteGame(selectedGame)}
+                      onPlay={handlePlayGame} onPlayInBrowser={handlePlayGameInBrowser}
+                      playing={raspberryControlsBusy}
+                      browserSupported={WEB_EMULATOR_SYSTEMS.has(systemForGame(selectedGame)?.id || selectedSystemId)}
+                      onRefresh={async () => setVideos(await getVideos())} />
                   ) : null}
                     <a className="console-credits" href="https://github.com/Siddy212/iconic-es-de#acknowledgments" target="_blank" rel="noreferrer">Iconic · Siddy212 &amp; artists · CC BY-NC-SA · Credits</a>
                   </>
@@ -10001,12 +9914,13 @@ export default function App() {
               onClose={() => setUploadValidationError(null)}
               t={t}
             />
-            {openBook?.format === "epub" ? <EpubReader book={openBook} onClose={() => setOpenBook(null)} /> : <BookReader book={openBook} onClose={() => setOpenBook(null)} />}
+            {openBook ? (openBook.format === "epub" ? <EpubReader key={`${openBook.context.userId}:${openBook.relativePath}`} book={openBook} initialProgress={openBook.context.initialProgress} onProgress={openBook.context.onProgress} onClose={() => setOpenBook(null)} /> : <BookReader key={`${openBook.context.userId}:${openBook.relativePath}`} book={openBook} initialProgress={openBook.context.initialProgress} onProgress={openBook.context.onProgress} onClose={() => setOpenBook(null)} />) : null}
+            <ResumeDialog request={resumeRequest} onChoose={chooseResume} language={raspberryLanguage} />
             <BookOpenModal
               book={bookOpenTarget}
               busy={bookOpenBusy}
               onClose={() => setBookOpenTarget(null)}
-              onOpenBrowser={() => { setOpenBook(bookOpenTarget); setBookOpenTarget(null); }}
+              onOpenBrowser={handleOpenBookInBrowser}
               onOpenRaspberry={handleOpenBookOnRaspberry}
               t={t}
             />
@@ -10051,6 +9965,8 @@ export default function App() {
               loading={episodeLoading}
               error={episodeError}
               onRetry={() => setEpisodeRetry(value => value + 1)}
+              favorite={mediaMarks[mediaMarkKey("video", resolveUploadedEpisodePath(selectedSeason, selectedEpisode))]?.favorite}
+              onFavorite={value => { const key = mediaMarkKey("video", resolveUploadedEpisodePath(selectedSeason, selectedEpisode)); saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], favorite: value } }); }}
               watched={episodeWatched(mediaMarks, selectedSeasonMarkKey(), selectedEpisode?.episodeNumber)}
               onWatched={(value) => saveMarks(markEpisode(mediaMarks, selectedSeasonMarkKey(), selectedEpisode.episodeNumber, value))}
               visible={episodeDialogOpen}

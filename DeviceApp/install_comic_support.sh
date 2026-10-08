@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 sudo apt-get update
-sudo apt-get install -y libarchive-tools python3-fitz evince
+sudo apt-get install -y libarchive-tools python3-fitz evince chromium python3-pil
 if ! command -v unrar >/dev/null 2>&1; then
   # Raspberry Pi OS armhf may not provide the non-free UnRAR package.
   # Build the official decoder: libarchive cannot decode all RAR filters.

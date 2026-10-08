@@ -1,6 +1,7 @@
 import { requestWithTimeout } from '../requestWithTimeout.js';
 import { GAME_SYSTEMS } from "../gameSystems";
 import { uploadBookBatch } from "./bookUploadBatch.js";
+import { DEFAULT_USER, EMPTY_STATE, mergeProfileState } from "../profileState.js";
 const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").trim();
 const WEB_PIN_STORAGE_KEY = "minitv-web-pin";
 const MOCK_SERIES_LIBRARY_STORAGE_KEY = "minitv-web-mock-series-library-v1";
@@ -678,6 +679,21 @@ export async function getSubtitleSettings(signal) {
   return request("/settings/subtitles", { signal });
 }
 
+export async function getGameSettings(signal) {
+  if (isMockModeEnabled()) return { demo: true, present: {}, igdb: false, screenscraper: false };
+  return request("/settings/games", { signal });
+}
+
+export async function searchYoutubeGameplay(query, signal) {
+  if (isMockModeEnabled()) return { configured: false, results: [], demo: true };
+  return request(`/games/youtube?${new URLSearchParams({ query })}`, { signal });
+}
+
+export async function saveGameSettings(settings) {
+  if (isMockModeEnabled()) throw new Error("Game settings require a backend.");
+  return request("/settings/games", { method: "POST", body: JSON.stringify(settings) });
+}
+
 export async function getMediaSubtitles(relativePath, signal) {
   if (isMockModeEnabled()) return { external: null, embedded: [], embeddedStatus: "unknown" };
   return request(`/media/subtitles?${new URLSearchParams({ relativePath })}`, { signal });
@@ -1273,7 +1289,7 @@ export function getBrowserGameUrl(relativePath, systemId) {
   return `${getBaseUrl()}/games/browser?${params.toString()}`;
 }
 
-export function playEpisode({ id, directory, output = "minitv" }) {
+export function playEpisode({ id, directory, output = "minitv", userId, startSeconds = 0, markKey, episodeNumber }) {
   if (isMockModeEnabled()) {
     mockPlayback = id;
     mockPlaybackDirectory = directory || "";
@@ -1294,6 +1310,7 @@ export function playEpisode({ id, directory, output = "minitv" }) {
       id,
       directory,
       output,
+      userId, startSeconds, markKey, episodeNumber,
     }),
   });
 }
@@ -1391,13 +1408,13 @@ export async function getBookContent(relativePath, { signal, format = "pdf" } = 
   return data;
 }
 
-export function openBookOnRaspberry(relativePath) {
+export function openBookOnRaspberry(relativePath, { userId, resume = false } = {}) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) return Promise.reject(new Error("Missing book path"));
   if (isMockModeEnabled()) return Promise.resolve({ ok: true, mock: true });
   return request("/books/open", {
     method: "POST",
-    body: JSON.stringify({ relativePath: safeRelativePath }),
+    body: JSON.stringify({ relativePath: safeRelativePath, userId, resume }),
   });
 }
 
@@ -1713,4 +1730,55 @@ export function getSystemUpdate(signal) {
 export function startSystemUpdate(signal) {
   if (isMockModeEnabled()) return Promise.reject(new Error("Actualización no disponible en modo demo."));
   return request("/system/update", { method: "POST", signal });
+}
+
+const MOCK_USERS_KEY = "minitv-user-profiles-v1";
+function mockUsers() {
+  const raw = window.localStorage.getItem(MOCK_USERS_KEY);
+  return raw ? JSON.parse(raw) : { users: [{ ...DEFAULT_USER }], states: {} };
+}
+function saveMockUsers(data) { window.localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(data)); }
+
+export async function getUsers() {
+  if (isMockModeEnabled()) return { users: mockUsers().users };
+  return request("/users");
+}
+export async function createUser(data) {
+  if (!isMockModeEnabled()) return request("/users", { method: "POST", body: JSON.stringify(data) });
+  const store = mockUsers();
+  const user = { ...data, id: crypto.randomUUID() };
+  store.users.push(user); saveMockUsers(store);
+  return { user };
+}
+export async function editUser(id, data) {
+  if (!isMockModeEnabled()) return request(`/users/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(data) });
+  const store = mockUsers();
+  const user = { ...data, id };
+  store.users = store.users.map(item => item.id === id ? user : item); saveMockUsers(store);
+  return { user };
+}
+export async function deleteUser(id) {
+  if (id === "default") throw new Error("El perfil default se conserva para iniciar la app.");
+  if (!isMockModeEnabled()) return request(`/users/${encodeURIComponent(id)}`, { method: "DELETE" });
+  const store = mockUsers();
+  store.users = store.users.filter(item => item.id !== id); delete store.states[id]; saveMockUsers(store);
+  return { ok: true };
+}
+export async function getUserState(id) {
+  if (!isMockModeEnabled()) return request(`/users/${encodeURIComponent(id)}/state`);
+  const store = mockUsers();
+  if (!store.users.some(user => user.id === id)) throw Object.assign(new Error("El usuario ya no existe."), { status: 404 });
+  return store.states[id] || { ...EMPTY_STATE };
+}
+export async function patchUserState(id, patch) {
+  if (!isMockModeEnabled()) return request(`/users/${encodeURIComponent(id)}/state`, { method: "PATCH", body: JSON.stringify(patch), keepalive: true });
+  const store = mockUsers();
+  if (!store.users.some(user => user.id === id)) throw Object.assign(new Error("El usuario ya no existe."), { status: 404 });
+  store.states[id] = mergeProfileState(store.states[id], patch); saveMockUsers(store);
+  return { ok: true };
+}
+
+export function testServiceCredentials(provider, credentials) {
+  if (isMockModeEnabled()) return Promise.reject(new Error("Demo mode"));
+  return request(`/settings/services/${provider}/test`, { method: "POST", body: JSON.stringify(credentials) });
 }

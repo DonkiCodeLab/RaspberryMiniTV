@@ -165,7 +165,7 @@ export async function initializeTmdbCredentials(serverCredentials = {}) {
     await updateRaspberryTmdbSettings(credentials);
   }
   setTmdbCredentials(credentials);
-  return credentials;
+  return readTmdbCredentials();
 }
 
 export function readTmdbCredentials() {

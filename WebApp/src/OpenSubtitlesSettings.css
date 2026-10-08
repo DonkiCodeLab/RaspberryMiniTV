@@ -4,6 +4,7 @@
 .opensubtitles-settings a { color: inherit; text-decoration: underline; }
 .opensubtitles-settings .opensubtitles-settings__form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .opensubtitles-settings__form button { grid-column: 1 / -1; justify-self: start; }
+.game-provider-settings .service-credential-test { margin-block: 1rem; }
 @media (max-width: 760px) {
   .opensubtitles-settings .opensubtitles-settings__form { grid-template-columns: minmax(0, 1fr); }
   .opensubtitles-settings__form button { justify-self: stretch; }

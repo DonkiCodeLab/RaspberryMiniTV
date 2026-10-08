@@ -1,4 +1,5 @@
 from playback_process import process_identity
+from profile_playback import ProfilePlayback
 from video_formats import is_video_file
 from game_platforms import EXTENSIONS, stored_platform
 import json
@@ -613,7 +614,7 @@ def parse_video_entry(filename):
     return match.group(1).upper() if match else os.path.splitext(filename)[0].upper()
 
 
-def write_playback_state(filepath, player_pid=None, backend=None):
+def write_playback_state(filepath, player_pid=None, backend=None, profile=None):
     try:
         relative_path = os.path.relpath(filepath, VIDEOS_DIR).replace(os.sep, "/")
     except ValueError:
@@ -627,6 +628,7 @@ def write_playback_state(filepath, player_pid=None, backend=None):
         "playerPid": player_pid,
         "backend": backend,
         "playerStart": process_identity(player_pid),
+        "profile": profile,
     }
     try:
         temp_path = f"{PLAYBACK_STATE_PATH}.{os.getpid()}.tmp"
@@ -1377,6 +1379,7 @@ class DeviceAppMenu:
         self.game_current_path = ""
         self.book_proc = None
         self.book_current_path = ""
+        self.profile_playback = None
         self.camera_proc = None
         self.camera_log_handle = None
         self.refresh_translated_state_texts()
@@ -2706,13 +2709,14 @@ class DeviceAppMenu:
             self.reset_external_touch_sequence()
             self.state = self.game_return_state
 
-    def play_video_path(self, full_path, output="minitv"):
+    def play_video_path(self, full_path, output="minitv", start_seconds=0, profile=None):
         relative_path = os.path.relpath(full_path, VIDEOS_DIR).replace(os.sep, "/")
         log_debug(f"PLAY file={relative_path}")
         self.stop_video_playback(silent=True)
         self.loading_video_path = full_path
         self.loading_video_output = output if output == "external" else "minitv"
-        self.loading_video_start_seconds = 0.0
+        self.loading_video_start_seconds = max(0.0, float(start_seconds))
+        self.profile_playback = ProfilePlayback(os.path.join(MULTIMEDIA_DIR, "user_profiles.sqlite3"), profile) if profile else None
         self.loading_started_at = pygame.time.get_ticks()
         self.video_current_path = full_path
         self.video_now_playing = os.path.basename(full_path)
@@ -2730,7 +2734,7 @@ class DeviceAppMenu:
             log_debug(f"MENU command play file={full_path} output={output}")
             self.loading_return_state = "play"
             self.stop_game_playback(silent=True)
-            self.play_video_path(full_path, output=output)
+            self.play_video_path(full_path, output=output, start_seconds=command.get("startSeconds", 0), profile=command.get("profile"))
             return
         if action == "play_game":
             full_path = str(command.get("path") or "").strip()
@@ -2766,7 +2770,7 @@ class DeviceAppMenu:
             self.stop_game_playback(silent=True)
             self.browser_mode = "books"
             self.browser_path = os.path.dirname(safe_path)
-            self.open_book_path(safe_path)
+            self.open_book_path(safe_path, reader_url=command.get("readerUrl"), browser=command.get("browser"))
             return
         if action == "stop":
             log_debug("MENU command stop")
@@ -2811,10 +2815,10 @@ class DeviceAppMenu:
             self.loading_return_state = "browse"
             self.play_video_path(videos[0])
 
-    def open_book_path(self, full_path):
+    def open_book_path(self, full_path, reader_url=None, browser=None):
         extension = os.path.splitext(full_path)[1].lower()
         original_path = full_path
-        if extension in {".cbr", ".cbz"}:
+        if not reader_url and extension in {".cbr", ".cbz"}:
             from comic_reader import ComicError, comic_pdf
             try:
                 full_path = comic_pdf(full_path, os.path.join(MULTIMEDIA_DIR, "BookCovers", "comics"))
@@ -2824,7 +2828,11 @@ class DeviceAppMenu:
                 self.browser_status = str(error)
                 return
         using_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
-        if DESKTOP_PREVIEW and sys.platform == "darwin":
+        if reader_url and browser:
+            commands = [[browser, "--new-window", "--no-first-run", "--disable-session-crashed-bubble",
+                         f"--user-data-dir={os.path.join(tempfile.gettempdir(), 'minitv-profile-reader')}",
+                         f"--app={reader_url}", "--start-fullscreen"]]
+        elif DESKTOP_PREVIEW and sys.platform == "darwin":
             commands = [["open", full_path]]
         elif extension == ".epub":
             commands = [["foliate", full_path], ["ebook-viewer", full_path], ["calibre", full_path]]
@@ -2837,7 +2845,7 @@ class DeviceAppMenu:
                 ["mupdf-gl", full_path],
                 ["mupdf", full_path],
             ]
-        if not using_wayland:
+        if not using_wayland and not reader_url:
             commands.append(["xdg-open", full_path])
         append_debug_log(
             BOOK_DEBUG_LOG_PATH,
@@ -2853,7 +2861,8 @@ class DeviceAppMenu:
                     if using_wayland:
                         book_env.setdefault("GDK_BACKEND", "wayland")
                         book_env.setdefault("QT_QPA_PLATFORM", "wayland")
-                    append_debug_log(BOOK_DEBUG_LOG_PATH, f"Launching: {' '.join(command)}")
+                    log_command = [part.split("#", 1)[0] if part.startswith("--app=") else part for part in command]
+                    append_debug_log(BOOK_DEBUG_LOG_PATH, f"Launching: {' '.join(log_command)}")
                     with open(BOOK_DEBUG_LOG_PATH, "a", encoding="utf-8") as book_log:
                         candidate_proc = subprocess.Popen(
                             command,
@@ -3164,6 +3173,7 @@ class DeviceAppMenu:
             return
         if not self.video_proc or self.video_proc.poll() is not None:
             return
+        self.save_profile_playback(force=True)
         preview_seconds = self.get_mpv_time_pos()
         screenshot_ok = self.request_mpv_screenshot()
         self.send_mpv_command("quit")
@@ -3199,6 +3209,8 @@ class DeviceAppMenu:
         self.state = "loading_video"
 
     def stop_video_playback(self, silent=False):
+        self.save_profile_playback(force=True)
+        self.profile_playback = None
         proc = self.video_proc
         if proc and proc.poll() is None:
             if self.video_backend == "kodi":
@@ -3239,6 +3251,7 @@ class DeviceAppMenu:
         using_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
         use_kodi = (
             self.loading_video_output != "external"
+            and not self.profile_playback
             and not using_wayland
             and not DESKTOP_PREVIEW
             and self.kodi_is_available()
@@ -3314,20 +3327,32 @@ class DeviceAppMenu:
         self.loading_video_path = None
         self.loading_video_output = "minitv"
         self.loading_video_start_seconds = 0.0
-        write_playback_state(self.video_current_path, self.video_proc.pid, self.video_backend)
+        write_playback_state(self.video_current_path, self.video_proc.pid, self.video_backend,
+                             self.profile_playback.context if self.profile_playback else None)
         self.reset_external_touch_sequence()
         self.state = "external_video" if self.video_output == "external" else "video"
+
+    def save_profile_playback(self, force=False, ended=False):
+        if not self.profile_playback or self.video_backend != "mpv":
+            return
+        try:
+            self.profile_playback.sample(self.send_mpv_command, force=force, ended=ended)
+        except Exception as error:
+            log_debug(f"Profile playback could not be saved: {error}")
 
     def update_video_state(self):
         if self.state == "loading_video":
             self.maybe_start_pending_video()
             return
+        if self.state in ("video", "external_video") and self.video_proc:
+            self.save_profile_playback(ended=self.video_proc.poll() == 0, force=self.video_proc.poll() is not None)
         if self.state in ("video", "external_video") and self.video_proc and self.video_proc.poll() is not None:
             return_code = self.video_proc.returncode
             debug_log_path = KODI_DEBUG_LOG_PATH if self.video_backend == "kodi" else MPV_DEBUG_LOG_PATH
             append_debug_log(debug_log_path, f"{self.video_backend} exited with return code {return_code}")
             log_debug(f"VIDEO {self.video_backend} exited returncode={return_code}")
             self.video_proc = None
+            self.profile_playback = None
             self.video_backend = ""
             self.close_video_log_handle()
             self.resume_display_after_video()

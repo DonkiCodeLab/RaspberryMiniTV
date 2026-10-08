@@ -54,8 +54,13 @@ test('legacy web credentials migrate once and server credentials remain authorit
     assert.equal(calls[0].options.method, 'POST');
     assert.equal(calls[0].options.headers['X-Web-Pin'], '1234');
     assert.equal(JSON.parse(calls[0].options.body).bearerToken, 'legacy-test-token');
-    await tmdb.initializeTmdbCredentials({ apiKey: 'server-test-key', bearerToken: '' });
+    const settings = await tmdb.initializeTmdbCredentials({ ok: true, apiKey: 'server-test-key', bearerToken: '' });
     assert.equal(calls.length, 1);
+    assert.deepEqual(settings, { apiKey: 'server-test-key', bearerToken: '' });
+    const api = await loadBrowserModule('../src/api/raspberryApi.js');
+    await api.testServiceCredentials('tmdb', settings);
+    assert.equal(calls[1].url, 'http://raspberry:5050/settings/services/tmdb/test');
+    assert.deepEqual(JSON.parse(calls[1].options.body), { apiKey: 'server-test-key', bearerToken: '' });
     assert.deepEqual(tmdb.readTmdbCredentials(), { apiKey: 'server-test-key', bearerToken: '' });
     tmdb.setTmdbCredentials({ bearerToken: 'legacy-test-token' });
     globalThis.fetch = async () => ({ ok: false, status: 500, text: async () => '{"error":"save failed"}' });

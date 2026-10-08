@@ -216,9 +216,15 @@ sudo systemctl restart minitv-api.service
 ```
 
 Los instaladores habituales y `update_minitv.sh` también instalan este servicio.
-Se ejecuta con el propietario de `.git` (configurable mediante
-`MINITV_UPDATE_USER` durante la instalación), con su acceso SSH a Git y su permiso
-habitual de `sudo` sin contraseña para instalar dependencias y reiniciar servicios.
+El servicio se ejecuta como root para instalar dependencias y reiniciar servicios
+sin pedir una contraseña. Git y npm se ejecutan con el propietario de `.git`
+(configurable mediante `MINITV_UPDATE_USER` durante la instalación), conservando
+su acceso a Git y la propiedad de los archivos de código y compilación. No hace
+falta conceder `sudo` sin contraseña al usuario. Tras actualizar una instalación
+antigua, vuelve a ejecutar `sudo bash DeviceApp/install_update_service.sh` para
+aplicar este cambio a la unidad instalada. Los archivos locales `user_settings.json`,
+`subtitle_settings.json` y `game_settings.json` quedan fuera del backup de Git,
+incluso cuando el `.gitignore` de la versión instalada todavía no los incluye.
 La API existente se ejecuta como root y solo permite iniciar esta unidad fija;
 ambos endpoints, `GET` y `POST /system/update`, requieren el PIN de la web.
 Systemd conserva el resultado al reiniciar la API y limita la ejecución a 30 minutos.
@@ -744,3 +750,18 @@ La biblioteca muestra los datos guardados sin consultar APIs. No se limita la ga
 Rutas autenticadas: `GET /games/search`, `GET /games/metadata?source=…&id=…&platform=…&extension=…`, `GET /games/metadata?relativePath=Games/…` (ficha local completa), `POST /games/metadata` (`relativePath`, opcionalmente `source` e `id`, para completar/reintentar). `POST /games/upload` admite `metadataSource` y `metadataId`; conserva compatibilidad con `screenScraperId`. La vista previa usa `/games/metadata/image` como proxy de imágenes de los proveedores para mantener las credenciales fuera del navegador. Las imágenes elegidas manualmente y el texto personalizado prevalecen sobre la descarga automática.
 
 Comprobación local sin credenciales: `PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s DeviceApp/tests -p 'test_game*.py'` (requiere Flask).
+
+Las fuentes de juegos se pueden configurar desde **Dashboard → Servicios
+auxiliares → Fichas de videojuegos**, mediante `GET/POST /settings/games` con PIN.
+El servidor guarda las claves en `DeviceApp/game_settings.json` (permisos 0600,
+excluido de Git); las respuestas solo indican presencia, nunca devuelven claves.
+Los valores guardados tienen prioridad sobre `.env`; los campos omitidos se
+conservan y una cadena vacía desactiva ese valor incluso si existe en `.env`.
+Guardar no valida las credenciales contra el proveedor; la búsqueda utiliza
+los cambios inmediatamente.
+
+`GET /games/youtube?query=...` requiere PIN y busca hasta seis vídeos mediante
+YouTube Data API v3, con filtros `videoEmbeddable=true` y `videoSyndicated=true`.
+Usa `YOUTUBE_API_KEY` del entorno/`.env` o de la configuración de juegos del
+dashboard. La clave permanece en el servidor; no se devuelven errores crudos del
+proveedor. La caché en memoria dura 15 minutos y tiene un máximo de 128 búsquedas.

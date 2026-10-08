@@ -1,4 +1,6 @@
 :root {
+  --tv-circle-background: rgba(255, 255, 255, 0.36);
+  --tv-circle-border: rgba(83, 180, 111, 0.95);
   color-scheme: dark;
   font-family: "Trebuchet MS", "Avenir Next Condensed", "Segoe UI", sans-serif;
   color: #f5f8ff;
@@ -527,8 +529,8 @@ img {
   position: absolute;
   inset: 5%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.36);
-  border: 5px solid rgba(83, 180, 111, 0.95);
+  background: var(--tv-circle-background);
+  border: 5px solid var(--tv-circle-border);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
@@ -1861,7 +1863,7 @@ img {
   z-index: 2;
   padding: 0.7rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--tv-circle-background);
   box-shadow: 0 20px 38px rgba(18, 30, 40, 0.16);
 }
 
@@ -1876,8 +1878,8 @@ img {
   height: clamp(260px, 24vw, 320px);
   padding: 1.1rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 8px solid rgba(255, 255, 255, 0.88);
+  background: var(--tv-circle-background);
+  border: 5px solid var(--tv-circle-border);
   box-shadow: 0 24px 52px rgba(18, 30, 40, 0.2);
   display: grid;
   place-items: center;
@@ -1892,7 +1894,7 @@ img {
 
 .raspberry-page__switch {
   box-shadow: none;
-  background: #4d6072;
+  background: transparent;
 }
 
 .raspberry-page__content {
@@ -2072,7 +2074,8 @@ img {
   outline-offset: 1px;
 }
 
-.raspberry-tmdb-card__form button {
+.raspberry-tmdb-card__form button,
+.raspberry-tmdb-card__save {
   padding: 0.82rem 1.1rem;
   border: 0;
   border-radius: 14px;
@@ -2082,7 +2085,8 @@ img {
   cursor: pointer;
 }
 
-.raspberry-tmdb-card__form button:disabled {
+.raspberry-tmdb-card__form button:disabled,
+.raspberry-tmdb-card__save:disabled {
   cursor: wait;
   opacity: 0.7;
 }
@@ -2156,6 +2160,14 @@ img {
   width: 2.8rem;
   height: 2.8rem;
   object-fit: contain;
+}
+
+.raspberry-language-card__notice {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: rgba(233, 242, 252, 0.8);
+  font-size: 0.84rem;
+  line-height: 1.5;
 }
 
 .raspberry-language-card__status {
@@ -6855,8 +6867,8 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
 .series-hero__art--games .series-hero__full-mask-image,
 .series-hero__art--books .series-hero__full-mask-image { mask-image: linear-gradient(to right, transparent 20%, #000 27%); -webkit-mask-image: linear-gradient(to right, transparent 20%, #000 27%); }
 .series-hero__art .series-hero__console { position: absolute; z-index: 2; left: 3%; top: 12%; width: 21%; height: 55%; object-fit: contain; filter: drop-shadow(0 10px 12px #0008); }
-/* The supplied artwork is black on transparent; display it white on the dark banner. */
-.series-hero__art .series-hero__book-type { position: absolute; z-index: 2; left: 2%; top: 7%; width: 23%; height: 67%; object-fit: contain; filter: brightness(0) invert(1) drop-shadow(0 8px 10px #0008); }
+/* Keep the supplied white/yellow artwork centered in the original monkey logo slot. */
+.series-hero__art .series-hero__book-type { position: absolute; z-index: 2; left: 5.2%; top: 19%; width: 16%; height: 50%; object-fit: contain; filter: drop-shadow(0 8px 10px #0008); }
 .series-hero__controls-row .console-navigation { width: 92%; min-width: 0; height: var(--series-controls-item-size); padding: 0; gap: .6%; }
 .series-hero__controls-row .console-navigation > button { flex: 0 0 4%; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: clamp(20px, 3cqw, 40px); }
 .series-hero__controls-row .console-rail { min-width: 0; gap: .6%; padding: 0; scrollbar-width: none; }

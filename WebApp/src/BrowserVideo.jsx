@@ -1,10 +1,46 @@
 import React, { useEffect, useRef, useState } from "react";
 
-export default function BrowserVideo({ url, t }) {
+export default function BrowserVideo({ url, t, initialProgress, onProgress }) {
   const videoRef = useRef(null);
+  const progressRef = useRef(onProgress);
+  progressRef.current = onProgress;
   const [subtitleUrl, setSubtitleUrl] = useState("");
   const [status, setStatus] = useState("loading");
   const [enabled, setEnabled] = useState(true);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    let initialized = false;
+    let lastSave = 0;
+    const save = (force = false) => {
+      if (!initialized || video.seeking || !Number.isFinite(video.currentTime)) return;
+      if (!force && Date.now() - lastSave < 5000) return;
+      lastSave = Date.now();
+      progressRef.current?.({ kind: "video", seconds: video.currentTime,
+        duration: Number.isFinite(video.duration) ? video.duration : 0, completed: video.ended });
+    };
+    const loaded = () => {
+      const seconds = Math.max(0, Number(initialProgress?.seconds) || 0);
+      if (seconds) video.currentTime = Math.min(seconds, Number.isFinite(video.duration) ? Math.max(0, video.duration - .1) : seconds);
+      initialized = true;
+      save(true);
+    };
+    const tick = () => save();
+    const flush = () => save(true);
+    video.addEventListener("loadedmetadata", loaded);
+    video.addEventListener("timeupdate", tick);
+    for (const event of ["pause", "ended", "seeked"]) video.addEventListener(event, flush);
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", flush);
+    return () => {
+      flush();
+      video.removeEventListener("loadedmetadata", loaded);
+      video.removeEventListener("timeupdate", tick);
+      for (const event of ["pause", "ended", "seeked"]) video.removeEventListener(event, flush);
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", flush);
+    };
+  }, [url]);
 
   useEffect(() => {
     const controller = new AbortController();

@@ -147,6 +147,37 @@ La migracion mas natural seria:
 
 El formulario de añadir juegos busca automáticamente por nombre y consola en ScreenScraper e IGDB. Permite elegir la ficha antes de subir, ver su carátula y capturas y conservar texto o imágenes propios. El servidor guarda la ficha completa y todas las imágenes disponibles en la Raspberry; la biblioteca funciona después sin conexión y muestra fechas, géneros, desarrollador, distribuidor, jugadores/modos y puntuación cuando la fuente los ofrece.
 
+La ficha guardada sigue el estilo de la biblioteca: carátula fija, consola, título,
+géneros y botones de jugar juntos, seguidos de la sinopsis y los datos del juego.
+El archivo y la fuente se pueden desplegar. **Multimedia** permite alternar entre
+imágenes con miniaturas y vídeos con un único reproductor y una lista de selección.
+La distribución se adapta al móvil y respeta las imágenes guardadas en el editor.
+
 Si faltan imágenes o metadatos, **Completar ficha e imágenes** permite reintentar o elegir una coincidencia sin volver a subir el juego. Configura las credenciales exclusivamente en la Raspberry siguiendo [DeviceApp/README.md](../DeviceApp/README.md#fichas-de-videojuegos-e-imágenes-sin-conexión).
 
 OpenSubtitles admite clave de API y usuario sin contraseña. La contraseña es opcional; sin ella se omite el inicio de sesión. «Sin contraseña» también elimina una contraseña guardada. La cuota depende del acceso concedido por OpenSubtitles.
+
+Las credenciales de IGDB y ScreenScraper también se pueden introducir en
+**Dashboard → Servicios auxiliares → Fichas de videojuegos**. Basta con configurar
+una fuente. Los campos vacíos conservan los valores existentes; la opción de
+borrar desactiva esa fuente, incluidas sus credenciales del entorno. El estado
+indica si están configuradas, sin validar todavía el acceso al proveedor.
+En modo maqueta los controles están deshabilitados: para buscar fichas reales
+hace falta el backend, que también puede ejecutarse en el Mac sin contenido.
+
+Al seleccionar una ficha de juego se muestran sus vídeos de YouTube asociados
+por IGDB, priorizando los titulados gameplay, walkthrough, longplay o playthrough.
+El reproductor también aparece en la ficha guardada; los enlaces se conservan con
+los metadatos, pero reproducirlos requiere Internet. No se descargan vídeos ni se
+reproducen automáticamente. Si no hay vídeo asociado, se muestra un aviso y una
+búsqueda en YouTube por nombre y consola. Los vídeos de IGDB pertenecen al juego
+y pueden mostrar otra plataforma si el título se publicó en varias.
+
+La sección **Más gameplays en YouTube** realiza una búsqueda adicional al desplegarla.
+Muestra hasta seis vídeos incrustables con miniatura, título y canal, y permite
+editar la búsqueda. Al elegir un resultado, se muestra en el mismo reproductor.
+Configura una clave de **YouTube Data API v3** en Dashboard → Servicios auxiliares
+→ YouTube Data API v3 (habilita la API en el proyecto de Google Cloud).
+La búsqueda se hace desde el servidor y conserva resultados en memoria durante
+15 minutos para evitar repetir consultas. Los errores de clave, cuota, conexión
+y las búsquedas vacías se indican en pantalla; no impiden usar los vídeos de IGDB.

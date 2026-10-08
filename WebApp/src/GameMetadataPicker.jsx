@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { gameMetadataImageUrl, getGameMetadata, searchGameMetadata } from "./api/raspberryApi";
 import "./GameMetadata.css";
+import GameVideo from "./GameVideo.jsx";
 
 export default function GameMetadataPicker({ initialQuery = "", platform, extension, disabled, onSelect, onBusy, t }) {
   const [query, setQuery] = useState(initialQuery.replace(/\([^)]*\)|\[[^\]]*\]/g, " ").replace(/_/g, " ").trim());
@@ -8,6 +9,7 @@ export default function GameMetadataPicker({ initialQuery = "", platform, extens
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [videoMetadata, setVideoMetadata] = useState(null);
   const sequence = useRef(0);
   const callbacks = useRef({ onSelect, onBusy });
   callbacks.current = { onSelect, onBusy };
@@ -18,6 +20,7 @@ export default function GameMetadataPicker({ initialQuery = "", platform, extens
     const current = ++sequence.current;
     callbacks.current.onSelect(null);
     setSelected(""); setResults([]); setMessage("");
+    setVideoMetadata(null);
     if (!query.trim() || !platform) { setLoading(false); return; }
     setLoading(true);
     try {
@@ -43,11 +46,13 @@ export default function GameMetadataPicker({ initialQuery = "", platform, extens
     const current = ++sequence.current;
     setLoading(true); setMessage("");
     setSelected(""); callbacks.current.onSelect(null);
+    setVideoMetadata(null);
     try {
       const data = result.source === "mock" ? { item: result }
         : await getGameMetadata({ source: result.source, id: result.id, platform, extension });
       if (current !== sequence.current) return;
       setSelected(`${result.source}:${result.id}`);
+      setVideoMetadata(data.item);
       callbacks.current.onSelect(data.item);
     } catch {
       if (current === sequence.current) setMessage(t("games_search_failed"));
@@ -66,7 +71,10 @@ export default function GameMetadataPicker({ initialQuery = "", platform, extens
         {busy ? t("searching_button") : t("search_button")}
       </button>
     </div>
-    {message && <p role="status">{message}</p>}
+    <div className="game-metadata-picker__status" role="status" aria-live="polite" aria-atomic="true">
+      {busy ? t("searching_button") : !platform ? t("games_search_choose_platform")
+        : !query.trim() ? t("games_search_enter_name") : message}
+    </div>
     <div className="game-metadata-picker__results">
       {results.map(result => <button type="button" key={`${result.source}:${result.id}`} disabled={disabled || busy}
         aria-pressed={selected === `${result.source}:${result.id}`} onClick={() => select(result)}
@@ -76,5 +84,6 @@ export default function GameMetadataPicker({ initialQuery = "", platform, extens
       </button>)}
     </div>
     {selected && <p role="status">{t("games_metadata_selected")}</p>}
+    {videoMetadata && <GameVideo key={`${selected}:${platform}`} metadata={videoMetadata} platform={platform} t={t} />}
   </section>;
 }

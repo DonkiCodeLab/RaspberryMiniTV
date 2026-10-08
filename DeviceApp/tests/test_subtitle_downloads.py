@@ -242,14 +242,14 @@ class SubtitleDownloadApiTests(unittest.TestCase):
             self.assertEqual(self.obtain().json['code'], 'SUBTITLE_BUSY')
         self.provider.obtain.assert_not_called()
 
-    def test_configuration_is_private_persistent_and_not_returned(self):
+    def test_configuration_is_persistent_and_visible_after_auth(self):
         with patch.dict(os.environ, {}, clear=True):
             response = self.client.post('/settings/subtitles', json=CREDENTIALS)
             self.assertTrue(response.json['configured'])
             self.assertEqual(self.settings.stat().st_mode & 0o777, 0o600)
             for payload in (response.json, self.client.get('/settings/subtitles').json):
-                self.assertNotIn('test-key', json.dumps(payload))
-                self.assertNotIn('test-password', json.dumps(payload))
+                self.assertEqual(payload['apiKey'], 'test-key')
+                self.assertEqual(payload['password'], 'test-password')
             self.client.post('/settings/subtitles', json={'username': 'another-user'})
             stored = subtitles.load_credentials(self.settings)
             self.assertEqual(stored['apiKey'], CREDENTIALS['apiKey'])

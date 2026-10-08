@@ -8,7 +8,9 @@ const flattenToc = (items, depth = 0) => items.flatMap((item) => [
   ...flattenToc(item.subitems || [], depth + 1),
 ]);
 
-export default function EpubReader({ book, onClose }) {
+export default function EpubReader({ book, onClose, initialProgress, onProgress }) {
+  const progressRef = useRef(onProgress);
+  progressRef.current = onProgress;
   const host = useRef(null);
   const renditionRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,6 @@ export default function EpubReader({ book, onClose }) {
     let rendition;
     let resizeObserver;
     const controller = new AbortController();
-    const storageKey = `minitv-epub-position:${book.relativePath}:${book.sizeBytes || ""}`;
     const fail = (failure) => {
       if (disposed || failure?.name === "AbortError") return;
       setLoading(false);
@@ -70,13 +71,13 @@ export default function EpubReader({ book, onClose }) {
       rendition.on("relocated", (next) => {
         if (disposed) return;
         setLocation({ ...next, chapters: epub.spine.length });
-        try { window.localStorage.setItem(storageKey, next.start.cfi); } catch { /* Reading still works without storage. */ }
+        progressRef.current?.({ kind: "book", cfi: next.start.cfi, page: next.start.displayed.page,
+          total: next.start.displayed.total, section: next.start.index + 1, completed: next.atEnd });
       });
       const navigation = await epub.loaded.navigation;
       if (disposed) return;
       setToc(flattenToc(navigation.toc || []));
-      let saved;
-      try { saved = window.localStorage.getItem(storageKey); } catch { /* Start at the beginning. */ }
+      const saved = initialProgress?.cfi;
       try { await rendition.display(saved || undefined); }
       catch (failure) { if (saved && !disposed) await rendition.display(); else throw failure; }
       if (disposed) return;
@@ -165,11 +166,11 @@ export default function EpubReader({ book, onClose }) {
           {error ? <button className="dialog-button dialog-button--accent" type="button" onClick={() => setRetry(value => value + 1)}>Reintentar</button> : null}
         </div> : null}
       </div>
-      <small className="epub-reader__hint">Tu posición se guarda en este navegador. Las páginas de cada sección se ajustan a la pantalla y al tamaño de letra.</small>
+      <small className="epub-reader__hint">Tu posición se guarda en tu perfil. Las páginas de cada sección se ajustan a la pantalla y al tamaño de letra.</small>
     </div>
     {confirmClose ? <div className="book-reader__confirm-backdrop">
       <div className="book-reader__confirm" role="alertdialog" aria-modal="true" aria-labelledby="epub-close-title">
-        <h2 id="epub-close-title">¿Cerrar el libro?</h2><p>Podrás continuar desde la última posición en este navegador.</p>
+        <h2 id="epub-close-title">¿Cerrar el libro?</h2><p>Podrás continuar desde la última posición con tu usuario.</p>
         <div><button className="dialog-button dialog-button--ghost" type="button" onClick={() => setConfirmClose(false)}>Seguir leyendo</button>
           <button className="dialog-button dialog-button--accent" type="button" onClick={onClose}>Cerrar libro</button></div>
       </div>

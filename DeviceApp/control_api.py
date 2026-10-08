@@ -8,6 +8,9 @@ from oscar_catalog import OscarCatalog
 from background_stats import BackgroundStats
 import catalog_store
 import book_metadata
+import youtube_search
+from user_profiles import ProfileStore, ProfileError
+from profile_playback import ProfilePlayback
 from game_metadata import GameMetadata, MetadataError, title_key
 from epub_cover import extract_epub_cover
 from comic_reader import ComicError, comic_pdf, comic_cover
@@ -69,6 +72,7 @@ EMULATORJS_PACKAGES_DIR = os.path.join(REPO_DIR, "WebApp", "node_modules", "@emu
 # Legacy path anchors the one-time import; catalog_store uses media_library.sqlite3.
 MEDIA_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "media_library.json")
 LEGACY_MOVIE_LIBRARY_PATH = os.path.join(MULTIMEDIA_DIR, "movie_library.json")
+USER_PROFILES_PATH = os.path.join(MULTIMEDIA_DIR, "user_profiles.sqlite3")
 EP_RE = re.compile(r"(S(\d{2})E(\d{2,}))", re.IGNORECASE)
 PORT = 5050
 QR_PNG = "/tmp/minitv_qr.png"
@@ -149,6 +153,56 @@ scanned_media_paths = {}
 subtitle_provider = movie_subtitles.OpenSubtitles()
 subtitle_download_lock = threading.Lock()
 SUBTITLE_SETTINGS_PATH = os.path.join(BASE_DIR, "subtitle_settings.json")
+GAME_SETTINGS_PATH = os.path.join(BASE_DIR, "game_settings.json")
+GAME_SETTING_KEYS = (
+    "IGDB_CLIENT_ID", "IGDB_CLIENT_SECRET", "SCREENSCRAPER_DEV_ID",
+    "SCREENSCRAPER_DEV_PASSWORD", "SCREENSCRAPER_SOFTNAME",
+    "SCREENSCRAPER_USER", "SCREENSCRAPER_PASSWORD", "YOUTUBE_API_KEY",
+)
+game_settings_lock = threading.Lock()
+
+
+def load_game_settings():
+    try:
+        with open(GAME_SETTINGS_PATH, encoding="utf-8") as handle:
+            data = json.load(handle)
+        return {key: value for key, value in data.items()
+                if key in GAME_SETTING_KEYS and isinstance(value, str)}
+    except FileNotFoundError:
+        return {}
+
+
+def game_config_value(key):
+    saved = load_game_settings()
+    return saved[key] if key in saved else get_config_value(key)
+
+
+@app.route("/settings/games", methods=["GET", "POST"])
+def game_settings():
+    try:
+        with game_settings_lock:
+            if request.method == "POST":
+                data = request.get_json(silent=True)
+                if (not isinstance(data, dict) or any(
+                    key not in GAME_SETTING_KEYS or not isinstance(value, str) or len(value) > 1024
+                    for key, value in data.items()
+                )):
+                    return jsonify({"error": "Invalid game settings"}), 400
+                saved = load_game_settings()
+                saved.update({key: value.strip() for key, value in data.items()})
+                movie_subtitles.atomic_write(GAME_SETTINGS_PATH, json.dumps(saved).encode())
+            values = {key: game_config_value(key) for key in GAME_SETTING_KEYS}
+            response = jsonify({"ok": True,
+                "values": values,
+                "present": {key: bool(value) for key, value in values.items()},
+                "igdb": bool(values["IGDB_CLIENT_ID"] and values["IGDB_CLIENT_SECRET"]),
+                "youtube": bool(values["YOUTUBE_API_KEY"]),
+                "screenscraper": bool(values["SCREENSCRAPER_DEV_ID"] and values["SCREENSCRAPER_DEV_PASSWORD"]),
+            })
+            response.headers["Cache-Control"] = "no-store"
+            return response
+    except (OSError, ValueError, AttributeError):
+        return jsonify({"error": "Cannot read or save game settings"}), 500
 
 
 def normalize_language_code(language):
@@ -937,6 +991,53 @@ def favicon():
     return ("", 204)
 
 
+@app.errorhandler(ProfileError)
+def profile_error(error):
+    return jsonify({"error": str(error)}), error.status
+
+
+@app.route("/users", methods=["GET", "POST"])
+def users_route():
+    store = ProfileStore(USER_PROFILES_PATH)
+    payload = ({"users": store.users()} if request.method == "GET" else
+               {"user": store.save_user(request.get_json(silent=True))})
+    response = jsonify({"ok": True, **payload})
+    response.headers["Cache-Control"] = "no-store"
+    return response, 201 if request.method == "POST" else 200
+
+
+@app.route("/users/<user_id>", methods=["PATCH", "DELETE"])
+def user_route(user_id):
+    store = ProfileStore(USER_PROFILES_PATH)
+    if request.method == "DELETE":
+        store.delete_user(user_id)
+        return jsonify({"ok": True})
+    return jsonify({"ok": True, "user": store.save_user(request.get_json(silent=True), user_id)})
+
+
+@app.route("/users/<user_id>/state", methods=["GET", "PATCH"])
+def user_state_route(user_id):
+    store = ProfileStore(USER_PROFILES_PATH)
+    payload = store.state(user_id) if request.method == "GET" else store.patch(user_id, request.get_json(silent=True))
+    response = jsonify(payload)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def playback_profile(data, relative_path, kind="video"):
+    """Bind a command to the user who launched it, regardless of later switches."""
+    user_id = str(data.get("userId") or "default")
+    ProfileStore(USER_PROFILES_PATH).state(user_id)
+    key = json.dumps([kind, relative_path], separators=(",", ":"), ensure_ascii=False)
+    mark_key = data.get("markKey")
+    if mark_key is not None and (not isinstance(mark_key, str) or len(mark_key) > 2048):
+        raise ProfileError("Contenido no válido.")
+    episode = data.get("episodeNumber")
+    if episode is not None and (not isinstance(episode, int) or not 0 <= episode <= 99999):
+        raise ProfileError("Episodio no válido.")
+    return {"userId": user_id, "key": key, "markKey": mark_key, "episodeNumber": episode}
+
+
 @app.route("/system/update", methods=["GET", "POST"])
 def system_update_route():
     try:
@@ -1268,7 +1369,7 @@ def get_config_value(key, default=""):
 
 
 def game_metadata_service():
-    return GameMetadata(MULTIMEDIA_DIR, GAME_COVERS_DIR, get_config_value, current_language())
+    return GameMetadata(MULTIMEDIA_DIR, GAME_COVERS_DIR, game_config_value, current_language())
 
 
 def enrich_game_metadata(relative_path, name, platform, source="", game_id=0):
@@ -1383,6 +1484,7 @@ def read_playback_state():
         "file": str(data.get("file") or "").strip(),
         "playerPid": data.get("playerPid"),
         "playerStart": data.get("playerStart"),
+        "profile": data.get("profile") if isinstance(data.get("profile"), dict) else None,
         "backend": data.get("backend"),
     }
 
@@ -1722,6 +1824,12 @@ def hide_qr():
 
 
 def stop_locked():
+    state = read_playback_state() or {}
+    if state.get("profile"):
+        try:
+            ProfilePlayback(USER_PROFILES_PATH, state["profile"]).sample(send_mpv_command, force=True)
+        except (ProfileError, OSError):
+            pass
     proc = current["proc"]
     if proc and proc.poll() is None:
         try:
@@ -2203,7 +2311,19 @@ def open_book():
     target_path = resolve_book_path(relative_path)
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
-    write_menu_command({"action": "open_book", "path": target_path})
+    if not data.get("userId"):
+        write_menu_command({"action": "open_book", "path": target_path})
+        return jsonify({"ok": True, "relativePath": relative_path})
+    profile = playback_profile(data, relative_path, "book")
+    # Use the same reader on the MiniTV to share EPUB CFIs and PDF page numbers.
+    browser = next((shutil.which(name) for name in ("chromium", "chromium-browser", "google-chrome") if shutil.which(name)), None)
+    if not browser:
+        return jsonify({"error": "Instala Chromium en la MiniTV para leer con progreso por usuario: sudo apt install chromium. Puedes leer en el navegador mientras tanto."}), 503
+    query = urllib.parse.urlencode({"readerBook": relative_path, "profile": profile["userId"],
+                                   "resume": "1" if data.get("resume") is True else "0"})
+    # PIN travels in the fragment, not the server's URL/access log.
+    url = f"http://127.0.0.1:{PORT}/?{query}#readerPin={urllib.parse.quote(current_web_pin())}"
+    write_menu_command({"action": "open_book", "path": target_path, "readerUrl": url, "browser": browser})
     return jsonify({"ok": True, "relativePath": relative_path})
 
 
@@ -2258,6 +2378,19 @@ def game_system_artwork(system_id):
                 pass
         previous = filename
     return jsonify({"image": game_cover_url(previous) if previous else ""})
+
+
+@app.route("/games/youtube", methods=["GET"])
+def game_youtube_search():
+    query = str(request.args.get("query") or "").strip()
+    if not query or len(query) > 200:
+        return jsonify({"error": "Invalid search query"}), 400
+    try:
+        return jsonify(youtube_search.search(query, game_config_value("YOUTUBE_API_KEY"), current_language()))
+    except youtube_search.SearchError as error:
+        return jsonify({"error": str(error), "code": str(error)}), 502
+    except (OSError, ValueError, AttributeError):
+        return jsonify({"error": "YOUTUBE_CONFIG_ERROR", "code": "YOUTUBE_CONFIG_ERROR"}), 500
 
 
 @app.route("/games/search", methods=["GET"])
@@ -3298,7 +3431,9 @@ def subtitle_settings():
             result = movie_subtitles.save_credentials(SUBTITLE_SETTINGS_PATH, data)
         else:
             result = movie_subtitles.credentials_status(movie_subtitles.load_credentials(SUBTITLE_SETTINGS_PATH))
-        return jsonify({"ok": True, **result})
+        response = jsonify({"ok": True, **result, **movie_subtitles.load_credentials(SUBTITLE_SETTINGS_PATH)})
+        response.headers["Cache-Control"] = "no-store"
+        return response
     except movie_subtitles.SubtitleError as error:
         return jsonify({"error": error.code, "code": error.code}), error.status
     except OSError:
@@ -3482,6 +3617,11 @@ def play():
             payload["directory"] = directory
         return jsonify(payload), 404
 
+    profile = playback_profile(data, match["relative_path"])
+    start_seconds = data.get("startSeconds", 0)
+    if isinstance(start_seconds, bool) or not isinstance(start_seconds, (int, float)) or not 0 <= start_seconds <= 100_000_000:
+        raise ProfileError("Posición de reproducción no válida.")
+
     with lock:
         hide_qr()
         stop_locked()
@@ -3493,6 +3633,8 @@ def play():
                 "directory": match["directory_path"],
                 "file": match["relative_path"],
                 "output": output,
+                "startSeconds": start_seconds,
+                "profile": profile,
             }
         )
         current["id"] = ep_id
@@ -3985,6 +4127,70 @@ def tmdb_cache_status():
                         queue_tmdb_artwork(kind, item)
         tmdb_artwork.start()
         return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids(), "storage": tmdb_artwork.storage_background()})
+
+
+@app.route("/settings/services/<provider>/test", methods=["POST"])
+def test_service_credentials(provider):
+    keys = {
+        "tmdb": ("apiKey", "bearerToken"),
+        "opensubtitles": ("apiKey", "username", "password"),
+        "igdb": ("IGDB_CLIENT_ID", "IGDB_CLIENT_SECRET"),
+        "screenscraper": tuple(key for key in GAME_SETTING_KEYS if key.startswith("SCREENSCRAPER_")),
+        "youtube": ("YOUTUBE_API_KEY",),
+    }
+    data = request.get_json(silent=True)
+    if provider not in keys or not isinstance(data, dict) or any(
+        key not in keys[provider] or not isinstance(value, str) or len(value) > 2048
+        for key, value in data.items()
+    ):
+        return jsonify({"error": "Invalid service credentials"}), 400
+    try:
+        if provider == "opensubtitles":
+            credentials = {**movie_subtitles.load_credentials(SUBTITLE_SETTINGS_PATH), **data}
+            if not credentials.get("apiKey") or (credentials.get("password") and not credentials.get("username")):
+                return jsonify({"error": "Incomplete credentials"}), 400
+            client = movie_subtitles.OpenSubtitles()
+            base, token = client._login(credentials) if credentials.get("password") else ("https://api.opensubtitles.com/api/v1", "")
+            payload = client._request(base + "/subtitles?tmdb_id=550&languages=en", credentials, token)
+            valid = isinstance(payload.get("data"), list)
+        elif provider == "tmdb":
+            credentials = {**tmdb_credentials(), **data}
+            if not any(credentials.values()):
+                return jsonify({"error": "Incomplete credentials"}), 400
+            headers = {"Accept": "application/json"}
+            url = "https://api.themoviedb.org/3/movie/550"
+            if credentials.get("bearerToken"):
+                headers["Authorization"] = "Bearer " + credentials["bearerToken"]
+            else:
+                url += "?" + urllib.parse.urlencode({"api_key": credentials["apiKey"]})
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=20) as response:
+                payload = json.load(response)
+            valid = isinstance(payload, dict) and payload.get("id") == 550
+        elif provider == "youtube":
+            key = data.get("YOUTUBE_API_KEY", game_config_value("YOUTUBE_API_KEY"))
+            if not key:
+                return jsonify({"error": "Incomplete credentials"}), 400
+            payload = youtube_search.search("The Simpsons official trailer", key, "en", use_cache=False)
+            valid = payload.get("configured") and isinstance(payload.get("results"), list)
+        else:
+            config = lambda key: data[key] if key in data else game_config_value(key)
+            service = GameMetadata(MULTIMEDIA_DIR, GAME_COVERS_DIR, config, "en")
+            if not service.providers().get(provider):
+                return jsonify({"error": "Incomplete credentials"}), 400
+            if provider == "igdb":
+                payload = service.request_json(provider, "games", 'search "Super Mario Bros"; fields id,name; limit 1;')
+                valid = isinstance(payload, list)
+            else:
+                payload = service.request_json(provider, "jeuRecherche", {"recherche": "Super Mario Bros", "systemeid": 3})
+                valid = isinstance(payload, dict) and isinstance(payload.get("response"), dict) and "jeux" in payload["response"]
+        if not valid:
+            return jsonify({"error": "Invalid service response"}), 502
+        response = jsonify({"ok": True})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+    except (OSError, ValueError, TypeError, KeyError, MetadataError, movie_subtitles.SubtitleError, youtube_search.SearchError):
+        # Never expose upstream URLs, which may contain API keys.
+        return jsonify({"error": "Service test failed"}), 502
 
 
 @app.route("/settings/tmdb", methods=["GET"])

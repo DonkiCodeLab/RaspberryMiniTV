@@ -1,0 +1,202 @@
+[
+  {
+    "id": "avatar-01",
+    "name": "Homer Simpson",
+    "title": "The Simpsons",
+    "src": "/avatars/avatar-01.jpg",
+    "source": "https://www.tvmaze.com/characters/16544/the-simpsons-homer-simpson",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/0/2107.jpg"
+  },
+  {
+    "id": "avatar-02",
+    "name": "Marge Simpson",
+    "title": "The Simpsons",
+    "src": "/avatars/avatar-02.jpg",
+    "source": "https://www.tvmaze.com/characters/16545/the-simpsons-marge-simpson",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/497/1243770.jpg"
+  },
+  {
+    "id": "avatar-03",
+    "name": "Bart Simpson",
+    "title": "The Simpsons",
+    "src": "/avatars/avatar-03.jpg",
+    "source": "https://www.tvmaze.com/characters/16546/the-simpsons-bart-simpson",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/0/2193.jpg"
+  },
+  {
+    "id": "avatar-04",
+    "name": "Lisa Simpson",
+    "title": "The Simpsons",
+    "src": "/avatars/avatar-04.jpg",
+    "source": "https://www.tvmaze.com/characters/16547/the-simpsons-lisa-simpson",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/497/1243772.jpg"
+  },
+  {
+    "id": "avatar-05",
+    "name": "Rick Sanchez",
+    "title": "Rick and Morty",
+    "src": "/avatars/avatar-05.jpg",
+    "source": "https://www.tvmaze.com/characters/56241/rick-and-morty-rick-sanchez",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/105/262781.jpg"
+  },
+  {
+    "id": "avatar-06",
+    "name": "Morty Smith",
+    "title": "Rick and Morty",
+    "src": "/avatars/avatar-06.jpg",
+    "source": "https://www.tvmaze.com/characters/56245/rick-and-morty-morty-smith",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/105/262782.jpg"
+  },
+  {
+    "id": "avatar-07",
+    "name": "Bender",
+    "title": "Futurama",
+    "src": "/avatars/avatar-07.jpg",
+    "source": "https://www.tvmaze.com/characters/85638/futurama-bender",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/482/1206191.jpg"
+  },
+  {
+    "id": "avatar-08",
+    "name": "Fry",
+    "title": "Futurama",
+    "src": "/avatars/avatar-08.jpg",
+    "source": "https://www.tvmaze.com/characters/85636/futurama-fry",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/482/1206192.jpg"
+  },
+  {
+    "id": "avatar-09",
+    "name": "SpongeBob SquarePants",
+    "title": "SpongeBob SquarePants",
+    "src": "/avatars/avatar-09.jpg",
+    "source": "https://www.tvmaze.com/characters/87436/spongebob-squarepants-spongebob-squarepants",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/485/1212605.jpg"
+  },
+  {
+    "id": "avatar-10",
+    "name": "Son Goku",
+    "title": "Dragon Ball Z",
+    "src": "/avatars/avatar-10.jpg",
+    "source": "https://www.tvmaze.com/characters/1369723/dragon-ball-z-son-goku",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/569/1423044.jpg"
+  },
+  {
+    "id": "avatar-11",
+    "name": "Monkey D. Luffy",
+    "title": "One Piece",
+    "src": "/avatars/avatar-11.jpg",
+    "source": "https://www.tvmaze.com/characters/926602/one-piece-monkey-d-luffy",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/616/1542130.jpg"
+  },
+  {
+    "id": "avatar-12",
+    "name": "Aang",
+    "title": "Avatar: The Last Airbender",
+    "src": "/avatars/avatar-12.jpg",
+    "source": "https://www.tvmaze.com/characters/899134/avatar-the-last-airbender-aang",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/510/1275862.jpg"
+  },
+  {
+    "id": "avatar-13",
+    "name": "Batman",
+    "title": "Batman: The Animated Series",
+    "src": "/avatars/avatar-13.jpg",
+    "source": "https://www.tvmaze.com/characters/87920/batman-the-animated-series-batman",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/298/745544.jpg"
+  },
+  {
+    "id": "avatar-14",
+    "name": "Mandalorian",
+    "title": "The Mandalorian",
+    "src": "/avatars/avatar-14.jpg",
+    "source": "https://www.tvmaze.com/characters/572164/the-mandalorian-mandalorian",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/450/1127373.jpg"
+  },
+  {
+    "id": "avatar-15",
+    "name": "Obi-Wan Kenobi",
+    "title": "Obi-Wan Kenobi",
+    "src": "/avatars/avatar-15.jpg",
+    "source": "https://www.tvmaze.com/characters/814166/obi-wan-kenobi-obi-wan-kenobi",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/410/1026823.jpg"
+  },
+  {
+    "id": "avatar-16",
+    "name": "Jane \"Eleven\" Hopper",
+    "title": "Stranger Things",
+    "src": "/avatars/avatar-16.jpg",
+    "source": "https://www.tvmaze.com/characters/285572/stranger-things-jane-eleven-hopper",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/602/1506071.jpg"
+  },
+  {
+    "id": "avatar-17",
+    "name": "Wednesday Addams",
+    "title": "Wednesday",
+    "src": "/avatars/avatar-17.jpg",
+    "source": "https://www.tvmaze.com/characters/872055/wednesday-wednesday-addams",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/432/1082139.jpg"
+  },
+  {
+    "id": "avatar-18",
+    "name": "Walter White",
+    "title": "Breaking Bad",
+    "src": "/avatars/avatar-18.jpg",
+    "source": "https://www.tvmaze.com/characters/45529/breaking-bad-walter-white",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/0/2404.jpg"
+  },
+  {
+    "id": "avatar-19",
+    "name": "Jesse Pinkman",
+    "title": "Breaking Bad",
+    "src": "/avatars/avatar-19.jpg",
+    "source": "https://www.tvmaze.com/characters/45531/breaking-bad-jesse-pinkman",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/0/2408.jpg"
+  },
+  {
+    "id": "avatar-20",
+    "name": "Jon Snow",
+    "title": "Game of Thrones",
+    "src": "/avatars/avatar-20.jpg",
+    "source": "https://www.tvmaze.com/characters/15607/game-of-thrones-jon-snow",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/63/158800.jpg"
+  },
+  {
+    "id": "avatar-21",
+    "name": "Daenerys Targaryen",
+    "title": "Game of Thrones",
+    "src": "/avatars/avatar-21.jpg",
+    "source": "https://www.tvmaze.com/characters/15611/game-of-thrones-daenerys-targaryen",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/567/1418483.jpg"
+  },
+  {
+    "id": "avatar-22",
+    "name": "Sherlock Holmes",
+    "title": "Sherlock",
+    "src": "/avatars/avatar-22.jpg",
+    "source": "https://www.tvmaze.com/characters/66736/sherlock-sherlock-holmes",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/91/228015.jpg"
+  },
+  {
+    "id": "avatar-23",
+    "name": "Sheldon Lee Cooper",
+    "title": "The Big Bang Theory",
+    "src": "/avatars/avatar-23.jpg",
+    "source": "https://www.tvmaze.com/characters/8868/the-big-bang-theory-sheldon-lee-cooper",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/175/439561.jpg"
+  },
+  {
+    "id": "avatar-24",
+    "name": "Rachel Green",
+    "title": "Friends",
+    "src": "/avatars/avatar-24.jpg",
+    "source": "https://www.tvmaze.com/characters/78218/friends-rachel-green",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/3/7875.jpg"
+  },
+  {
+    "id": "avatar-25",
+    "name": "Peter Parker / Spider-Man",
+    "title": "Spider-Man: The Animated Series",
+    "src": "/avatars/avatar-25.jpg",
+    "source": "https://www.tvmaze.com/characters/731675/spider-man-peter-parker-spider-man",
+    "imageSource": "https://static.tvmaze.com/uploads/images/medium_portrait/255/639050.jpg"
+  }
+]

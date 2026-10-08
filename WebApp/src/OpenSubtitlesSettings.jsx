@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { getSubtitleSettings, saveSubtitleSettings } from "./api/raspberryApi";
 import { movieSubtitleStrings } from "./movieSubtitleStrings.js";
 import "./OpenSubtitlesSettings.css";
+import ServiceCredentialTest from "./ServiceCredentialTest.jsx";
 
 export default function OpenSubtitlesSettings({ language, sectionRef }) {
   const s = movieSubtitleStrings(language);
@@ -29,8 +30,8 @@ export default function OpenSubtitlesSettings({ language, sectionRef }) {
       if (controller.signal.aborted) return;
       setSettings(data);
       setWithoutPassword(!data.hasPassword);
-      // Only the username and presence of secrets are returned by the API.
-      setCredentials({ apiKey: "", username: data.username || "", password: "" });
+      // Show the configured values to authenticated dashboard users.
+      setCredentials({ apiKey: data.apiKey || "", username: data.username || "", password: data.password || "" });
     }).catch(() => {
       if (!controller.signal.aborted) setError("settingsLoadFailed");
     }).finally(() => {
@@ -60,7 +61,7 @@ export default function OpenSubtitlesSettings({ language, sectionRef }) {
       if (mounted.current) {
         setSettings(data);
         setWithoutPassword(!data.hasPassword);
-        setCredentials({ apiKey: "", username: data.username || "", password: "" });
+        setCredentials({ apiKey: data.apiKey || "", username: data.username || "", password: data.password || "" });
         setSaved(true);
       }
     } catch (error) {
@@ -76,21 +77,23 @@ export default function OpenSubtitlesSettings({ language, sectionRef }) {
     className="raspberry-tmdb-card opensubtitles-settings" aria-labelledby="opensubtitles-settings-title" aria-busy={loading || saving}>
     <div className="raspberry-tmdb-card__header">
       <h3 id="opensubtitles-settings-title">{s.settingsTitle}</h3>
-      <span>{s.setup} <a href="https://opensubtitles.tawk.help/article/getting-started" target="_blank" rel="noreferrer">{s.help}</a></span>
+      <span>{s.setup}<br /><a href="https://opensubtitles.tawk.help/article/getting-started" target="_blank" rel="noreferrer">{s.help}</a></span>
     </div>
     <form className="raspberry-tmdb-card__form opensubtitles-settings__form" onSubmit={saveAccount}>
-      <label><span>{s.apiKey}</span><input type="password" value={credentials.apiKey} disabled={disabled} maxLength={1024}
+      <label><span>{s.apiKey}</span><input type="text" value={credentials.apiKey} disabled={disabled} maxLength={1024}
         required={!settings?.hasApiKey} autoComplete="off" placeholder={settings?.hasApiKey ? s.keep : ""}
         onChange={event => updateCredential("apiKey", event.target.value)} /></label>
       <label><span>{s.username}</span><input value={credentials.username} disabled={disabled} maxLength={1024} autoComplete="username"
         onChange={event => updateCredential("username", event.target.value)} /></label>
-      <label><span>{s.password}</span><input type="password" value={credentials.password} disabled={disabled || withoutPassword} maxLength={1024}
+      <label><span>{s.password}</span><input type="text" value={credentials.password} disabled={disabled || withoutPassword} maxLength={1024}
         autoComplete="current-password" placeholder={settings?.hasPassword ? s.keep : ""}
         onChange={event => updateCredential("password", event.target.value)} /></label>
       <label><input type="checkbox" checked={withoutPassword} disabled={disabled}
         onChange={event => { setWithoutPassword(event.target.checked); setSaved(false); }} />{s.withoutPassword}</label>
       <button disabled={disabled} type="submit">{saving ? s.saving : s.save}</button>
     </form>
+    <ServiceCredentialTest provider="opensubtitles" language={language} disabled={disabled}
+      credentials={{ ...credentials, password: withoutPassword ? "" : credentials.password }} configured={!!credentials.apiKey.trim()} />
     {loading && <span role="status">{s.settingsLoading}</span>}
     {settings?.demo && <span>{s.SUBTITLE_DEMO}</span>}
     {error && <span className="dialog-error" role="alert">{s[error] || s.settingsSaveFailed}</span>}
