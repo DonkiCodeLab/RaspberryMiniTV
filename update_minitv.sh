@@ -51,12 +51,17 @@ cd "${SCRIPT_DIR}"
 
 # Exclude runtime credentials even when upgrading a checkout whose .gitignore
 # predates these files. They belong to the device and must never enter a stash.
-UPDATE_PATHS=(. ':(exclude)DeviceApp/user_settings.json' ':(exclude)DeviceApp/subtitle_settings.json' ':(exclude)DeviceApp/game_settings.json')
-LOCAL_CHANGES="$(git status --porcelain -- "${UPDATE_PATHS[@]}")"
+UPDATE_EXCLUDE="$(git rev-parse --git-path info/exclude)"
+for settings_file in DeviceApp/user_settings.json DeviceApp/subtitle_settings.json DeviceApp/game_settings.json; do
+  if ! git check-ignore -q -- "${settings_file}"; then
+    printf '\n/%s\n' "${settings_file}" | repo_command tee -a "${UPDATE_EXCLUDE}" >/dev/null
+  fi
+done
+LOCAL_CHANGES="$(git status --porcelain)"
 if [[ -n "${LOCAL_CHANGES}" ]]; then
   STASH_NAME="minitv-local-backup-$(date +%Y%m%d-%H%M%S)"
   log "Guardando temporalmente los cambios locales (${STASH_NAME})"
-  git stash push --include-untracked -m "${STASH_NAME}" -- "${UPDATE_PATHS[@]}"
+  git stash push --include-untracked -m "${STASH_NAME}"
 fi
 
 if [[ ! -f "${NEOCD_CORE_PATH}" ]]; then

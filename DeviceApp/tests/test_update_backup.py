@@ -20,20 +20,23 @@ class UpdateBackupTests(unittest.TestCase):
             git('config', 'user.name', 'Updater Test')
             git('config', 'user.email', 'updater@example.invalid')
             (repo / 'code.txt').write_text('original')
-            git('add', 'code.txt')
+            (repo / '.gitignore').write_text('DeviceApp/user_settings.json\nDeviceApp/subtitle_settings.json\n')
+            git('add', 'code.txt', '.gitignore')
             git('commit', '-m', 'initial')
             (repo / 'code.txt').write_text('local change')
             (repo / 'new-code.txt').write_text('new code')
             (repo / 'DeviceApp').mkdir()
+            for name in ('user_settings.json', 'subtitle_settings.json'):
+                (repo / 'DeviceApp' / name).write_text('existing private settings')
             settings = repo / 'DeviceApp/game_settings.json'
             settings.write_text('private device credentials')
             settings.chmod(0)
-            # Run the actual backup section against an old checkout without any
-            # ignore rules. No installers, network access or service calls run.
+            # Reproduce an old checkout that ignores some settings but not games.
+            # No installers, network access or service calls run.
             script = (ROOT / 'update_minitv.sh').read_text()
-            backup = script[script.index('UPDATE_PATHS='):script.index('if [[ ! -f "${NEOCD_CORE_PATH}"')]
+            backup = script[script.index('UPDATE_EXCLUDE='):script.index('if [[ ! -f "${NEOCD_CORE_PATH}"')]
             try:
-                subprocess.run(['bash', '-euc', 'log() { :; }\n' + backup], cwd=repo,
+                subprocess.run(['bash', '-euc', 'log() { :; }\nrepo_command() { "$@"; }\n' + backup], cwd=repo,
                                check=True, capture_output=True, text=True)
                 self.assertTrue(settings.exists())
                 self.assertEqual(settings.stat().st_mode & 0o777, 0)
@@ -41,6 +44,8 @@ class UpdateBackupTests(unittest.TestCase):
                 self.assertFalse((repo / 'new-code.txt').exists())
                 self.assertEqual(git('show', 'stash:code.txt'), 'local change')
                 self.assertEqual(git('ls-tree', '-r', '--name-only', 'stash^3').strip(), 'new-code.txt')
+                for name in ('user_settings.json', 'subtitle_settings.json'):
+                    self.assertEqual((repo / 'DeviceApp' / name).read_text(), 'existing private settings')
             finally:
                 settings.chmod(0o600)
             self.assertEqual(settings.read_text(), 'private device credentials')
