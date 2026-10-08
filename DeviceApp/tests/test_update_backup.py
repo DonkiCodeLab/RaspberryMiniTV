@@ -36,7 +36,7 @@ class UpdateBackupTests(unittest.TestCase):
             script = (ROOT / 'update_minitv.sh').read_text()
             backup = script[script.index('UPDATE_EXCLUDE='):script.index('if [[ ! -f "${NEOCD_CORE_PATH}"')]
             try:
-                subprocess.run(['bash', '-euc', 'log() { :; }\nrepo_command() { "$@"; }\n' + backup], cwd=repo,
+                subprocess.run(['bash', '-euc', 'log() { :; }\nprogress() { :; }\nrepo_command() { "$@"; }\n' + backup], cwd=repo,
                                check=True, capture_output=True, text=True)
                 self.assertTrue(settings.exists())
                 self.assertEqual(settings.stat().st_mode & 0o777, 0)

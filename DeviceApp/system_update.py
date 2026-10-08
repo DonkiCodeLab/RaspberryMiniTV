@@ -1,9 +1,23 @@
 """Fixed systemd job for updates, independent of the API's lifetime."""
+import json
+from pathlib import Path
 import subprocess
 import threading
 
 UNIT = "minitv-update.service"
 _start_lock = threading.Lock()
+PROGRESS_PATH = Path("/run/minitv-update-progress.json")
+PHASES = {"preparing", "backup", "downloading", "dependencies", "building", "restarting", "verifying"}
+
+
+def update_phase(run_id):
+    try:
+        progress = json.loads(PROGRESS_PATH.read_text())
+        if isinstance(progress, dict) and run_id and progress.get("runId") == run_id and progress.get("phase") in PHASES:
+            return progress["phase"]
+    except (OSError, ValueError, TypeError):
+        pass
+    return None
 
 
 def update_status():
@@ -24,7 +38,9 @@ def update_status():
         state = "succeeded"
     else:
         state = "idle"
-    return {"state": state, "runId": properties.get("InvocationID", ""),
+    run_id = properties.get("InvocationID", "")
+    return {"state": state, "runId": run_id,
+            "phase": update_phase(run_id) if state in {"running", "failed"} else None,
             "startedAt": properties.get("ExecMainStartTimestamp", ""),
             "result": properties.get("Result", ""), "exitCode": properties.get("ExecMainStatus", "")}
 

@@ -11,6 +11,16 @@ log() {
   printf '\n==> %s\n' "$1"
 }
 
+progress() {
+  # Publish only fixed phase identifiers, scoped to this systemd invocation.
+  # Atomic replacement lets the API read progress safely during an update.
+  if [[ -n "${INVOCATION_ID:-}" && "${EUID}" -eq 0 ]]; then
+    printf '{"runId":"%s","phase":"%s"}\n' "${INVOCATION_ID}" "$1" > /run/minitv-update-progress.json.tmp
+    chmod 0644 /run/minitv-update-progress.json.tmp
+    mv -f /run/minitv-update-progress.json.tmp /run/minitv-update-progress.json
+  fi
+}
+
 fail() {
   printf '\nERROR: %s\n' "$1" >&2
   exit 1
@@ -37,6 +47,7 @@ type -P git >/dev/null 2>&1 || fail "git no está instalado."
 repo_command touch "${SCRIPT_DIR}/.git/minitv-update.lock"
 exec 9>"${SCRIPT_DIR}/.git/minitv-update.lock"
 flock -n 9 || fail "Ya hay una actualización en curso."
+progress preparing
 
 # MuPDF distributed by Raspberry Pi OS uses an X11/OpenGL window and exits
 # immediately in MiniTV's dedicated Wayland session. Evince has a native GTK
@@ -59,12 +70,14 @@ for settings_file in DeviceApp/user_settings.json DeviceApp/subtitle_settings.js
 done
 LOCAL_CHANGES="$(git status --porcelain)"
 if [[ -n "${LOCAL_CHANGES}" ]]; then
+  progress backup
   STASH_NAME="minitv-local-backup-$(date +%Y%m%d-%H%M%S)"
   log "Guardando temporalmente los cambios locales (${STASH_NAME})"
   git stash push --include-untracked -m "${STASH_NAME}"
 fi
 
 if [[ ! -f "${NEOCD_CORE_PATH}" ]]; then
+  progress preparing
   command -v curl >/dev/null 2>&1 || fail "curl no está instalado y no se puede instalar el núcleo NeoCD."
   command -v unzip >/dev/null 2>&1 || fail "unzip no está instalado y no se puede instalar el núcleo NeoCD."
   NEOCD_TEMP_DIR="$(mktemp -d)"
@@ -79,9 +92,11 @@ fi
 mkdir -p "${HOME}/.config/retroarch/system/neocd"
 
 log "Descargando la última versión de main"
+progress downloading
 git fetch origin main
 git switch main
 git pull --ff-only origin main
+progress dependencies
 
 # Shared CBR/CBZ rendering for browser previews, covers and the Wayland reader.
 if ! command -v unrar >/dev/null 2>&1 || ! command -v bsdtar >/dev/null 2>&1 || ! command -v chromium >/dev/null 2>&1 || ! /usr/bin/python3 -c 'import fitz; import PIL' >/dev/null 2>&1; then
@@ -106,14 +121,17 @@ if [[ -f "${WEB_DIR}/package.json" ]]; then
   # package-lock.json no forma parte del repositorio; sincronizar siempre las
   # dependencias declaradas para que las actualizaciones puedan añadir paquetes.
   npm install
+  progress building
   npm run build
   cd "${SCRIPT_DIR}"
 fi
 
 log "Reiniciando los servicios existentes de la web y el menú"
+progress restarting
 sudo bash "${SCRIPT_DIR}/DeviceApp/install_update_service.sh"
 sudo systemctl restart minitv-api.service minitv-menu.service
 
+progress verifying
 sleep 3
 systemctl is-active --quiet minitv-api.service || fail "La API no ha arrancado correctamente."
 systemctl is-active --quiet minitv-menu.service || fail "El menú no ha arrancado correctamente."

@@ -3,6 +3,7 @@ import { getSystemUpdate, startSystemUpdate, isMockMode } from "./api/raspberryA
 
 const strings = {
   es: {
+    phases: { preparing: "Preparando la Raspberry…", backup: "Guardando los cambios locales…", downloading: "Descargando la última versión…", dependencies: "Instalando las dependencias…", building: "Compilando y empaquetando la web…", restarting: "Reiniciando los servicios…", verifying: "Comprobando que los servicios funcionan…" },
     title: "Actualizar Raspberry y web", button: "Actualizar desde Git", busy: "Actualizando…",
     copy: "Descarga los cambios publicados en main, compila la web y reinicia los servicios. Puede tardar varios minutos y se interrumpirá la reproducción.",
     running: "Actualización en curso. Puedes dejar esta página abierta o volver más tarde.",
@@ -14,6 +15,7 @@ const strings = {
     error: "No se ha podido confirmar el inicio. Consultando el estado de la Raspberry…",
   },
   ca: {
+    phases: { preparing: "Preparant la Raspberry…", backup: "Desant els canvis locals…", downloading: "Descarregant l’última versió…", dependencies: "Instal·lant les dependències…", building: "Compilant i empaquetant la web…", restarting: "Reiniciant els serveis…", verifying: "Comprovant que els serveis funcionen…" },
     title: "Actualitzar Raspberry i web", button: "Actualitzar des de Git", busy: "Actualitzant…",
     copy: "Descarrega els canvis publicats a main, compila la web i reinicia els serveis. Pot trigar uns minuts i s’interromprà la reproducció.",
     running: "Actualització en curs. Pots deixar aquesta pàgina oberta o tornar més tard.",
@@ -25,6 +27,7 @@ const strings = {
     error: "No s’ha pogut confirmar l’inici. Consultant l’estat de la Raspberry…",
   },
   en: {
+    phases: { preparing: "Preparing the Raspberry…", backup: "Backing up local changes…", downloading: "Downloading the latest version…", dependencies: "Installing dependencies…", building: "Building and packaging the web app…", restarting: "Restarting services…", verifying: "Checking that services are running…" },
     title: "Update Raspberry and web", button: "Update from Git", busy: "Updating…",
     copy: "Downloads changes published to main, builds the web app and restarts the services. This may take several minutes and will interrupt playback.",
     running: "Update in progress. You can leave this page open or come back later.",
@@ -82,7 +85,8 @@ export default function SystemUpdate({ language }) {
     }
   }
   const busy = starting || status?.state === "running";
-  const message = demo ? t.demo : error ? t.error : !connected ? t.offline : t[status?.state];
+  const message = demo ? t.demo : starting ? t.phases.preparing : error ? t.error : !connected ? t.offline
+    : status?.state === "running" ? (t.phases[status.phase] || t.running) : t[status?.state];
   return (
     <section className="raspberry-dashboard-section" aria-labelledby="dashboard-update-title">
       <h2 className="raspberry-dashboard-section__title" id="dashboard-update-title">{t.title}</h2>

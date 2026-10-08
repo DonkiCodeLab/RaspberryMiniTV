@@ -1,4 +1,6 @@
 import subprocess
+import json
+import tempfile
 import sys
 import unittest
 from pathlib import Path
@@ -10,6 +12,21 @@ import control_api as api
 
 
 class UpdateTests(unittest.TestCase):
+    def test_progress_belongs_to_current_run_and_survives_api_restart(self):
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / 'progress.json'
+            output = 'LoadState=loaded\nActiveState=activating\nInvocationID=current'
+            with patch.object(system_update, 'PROGRESS_PATH', progress), patch.object(system_update.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, output)):
+                self.assertIsNone(system_update.update_status()['phase'])
+                progress.write_text(json.dumps({'runId': 'previous', 'phase': 'building'}))
+                self.assertIsNone(system_update.update_status()['phase'])
+                for phase in system_update.PHASES:
+                    progress.write_text(json.dumps({'runId': 'current', 'phase': phase}))
+                    self.assertEqual(system_update.update_status()['phase'], phase)
+                for data in ['broken JSON', '[]', '{"runId":"current","phase":"unknown"}']:
+                    progress.write_text(data)
+                    self.assertIsNone(system_update.update_status()['phase'])
+
     def test_systemd_states(self):
         cases = [
             ('LoadState=not-found\nActiveState=inactive', 'unavailable'),
