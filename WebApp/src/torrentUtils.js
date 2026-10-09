@@ -1,4 +1,5 @@
 export function torrentQuery(media, mediaType = "movies") {
+  if (mediaType === "books") return [media?.spanishTitle || media?.name, 'español'].filter(Boolean).join(' ');
   return [(mediaType === "movies" && media?.englishName) || media?.originalName || media?.name, mediaType === "movies" ? media?.releaseDate?.slice(0, 4) : null].filter(Boolean).join(" ");
 }
 
@@ -15,7 +16,7 @@ export function mergeTorrentResults(previous, next) {
 }
 
 export function torrentJobTitle(job) {
-  return job.series?.name || job.movie?.name || job.name;
+  return job.book?.name || job.series?.name || job.movie?.name || job.name;
 }
 
 export function torrentSize(bytes, language = "es") {

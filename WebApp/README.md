@@ -14,7 +14,22 @@ cubierta tipográfica de respaldo si faltan datos o conexión. En modo demo no
 se hacen consultas externas. Los palmarés están incluidos en la compilación;
 no se actualizan automáticamente.
 
-Pruebas: `cd WebApp && node --test tests/bookAwards.test.js`.
+Si falta una obra, **Buscar torrent** abre su ficha de Open Library y debajo el
+buscador de torrents. La ficha se consulta en castellano aunque la interfaz esté
+en catalán o inglés. La búsqueda inicial usa el título español y «español»;
+si la API no identifica una traducción, se puede elegir otra ficha e introducir
+el título antes de buscar. Los resultados muestran fuente, tamaño y seeds y se
+pueden ordenar como los de películas. El idioma del archivo depende del resultado
+elegido, no solo del título de búsqueda.
+
+Las descargas usan Transmission y el dashboard existentes. Se importa un EPUB o
+PDF con sus metadatos de obra y se conserva cualquier libro ya instalado. Los
+packs ambiguos, comprimidos y audiolibros producen un error recuperable. Los
+identificadores de edición, ISBN y número de páginas del catálogo no se atribuyen
+al archivo descargado sin comprobarlos. Requiere actualizar también DeviceApp.
+
+Pruebas: `cd WebApp && node --test tests/bookAwards.test.js tests/bookTorrent.test.js tests/torrentUtils.test.js`;
+backend: `python -m unittest discover -s DeviceApp/tests -p 'test_*torrent*.py'`.
 
 La ficha de una película guardada incluye **Obtener subtítulo**, con español,
 catalán e inglés. Busca y guarda automáticamente el SRT en la Raspberry, primero

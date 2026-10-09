@@ -26,6 +26,7 @@ import MovieAwardBadges from "./MovieAwardBadges.jsx";
 import AwardSelector from "./AwardSelector.jsx";
 import BookAwardLibrary, { BookAwardSelector } from "./BookAwardLibrary.jsx";
 import { bookAwardStrings } from "./bookAwardCatalog.js";
+import BookTorrentModal from "./BookTorrentModal.jsx";
 import { buildBookCollections, matchesBookQuery } from "./bookLibrary.js";
 import { bookLanguageName, isGraphicNovel } from "./bookMetadata.js";
 import { bookStrings } from "./bookStrings.js";
@@ -6317,6 +6318,7 @@ export default function App() {
   const [bookLibrarySort, setBookLibrarySort] = useState("name");
   const [bookLibraryView, setBookLibraryView] = useState("grid");
   const [bookAwardType, setBookAwardType] = useState("pulitzer");
+  const [bookTorrentTarget, setBookTorrentTarget] = useState(null);
   const [bookAwardEditions, setBookAwardEditions] = useState({});
   const [bookSortDirection, setBookSortDirection] = useState("asc");
   const [openBook, setOpenBook] = useState(null);
@@ -9486,7 +9488,7 @@ export default function App() {
                 {isBookAwardView ? (
                   <BookAwardLibrary key={bookAwardType} award={bookAwardType} books={videos?.books || []} language={raspberryLanguage}
                     edition={bookAwardEditions[bookAwardType]} onEditionChange={edition => setBookAwardEditions(current => ({ ...current, [bookAwardType]: edition }))}
-                    onRead={setBookOpenTarget} onUpload={() => { setBookLibraryType("novel"); handleOpenUploadsForMedia("books"); setUploadBookIsGraphicNovel(false); }} />
+                    onRead={setBookOpenTarget} onSearchTorrent={setBookTorrentTarget} onUpload={() => { setBookLibraryType("novel"); handleOpenUploadsForMedia("books"); setUploadBookIsGraphicNovel(false); }} />
                 ) : isOscarView ? (
                   <OscarLibrary key={awardType} award={awardType} movies={movieOptions} language={tmdbLanguage} edition={awardEditions[awardType]} onEditionChange={edition => setAwardEditions(current => ({ ...current, [awardType]: edition }))} onOpenMovie={handleOpenMovieDetails}
                     onUploadMovie={() => handleOpenUploadsForMedia("movies")}
@@ -10101,6 +10103,8 @@ export default function App() {
           </>
         )}
       </div>
+      {bookTorrentTarget && <BookTorrentModal key={bookTorrentTarget.key} winner={bookTorrentTarget} language={raspberryLanguage} onClose={() => setBookTorrentTarget(null)}
+        onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); }} />}
       {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
   );

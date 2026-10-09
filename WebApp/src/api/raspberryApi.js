@@ -308,7 +308,9 @@ export function startMediaTorrent(torrent, media, { mediaType = "movies", overwr
   return request("/torrents", { method: "POST", body: JSON.stringify({
     infoHash: torrent.infoHash, name: torrent.name, sizeBytes: torrent.sizeBytes, sources: torrent.sources, overwriteExisting,
     mediaType, seasonNumber, episodeNumber,
-    [mediaType === "series" ? "series" : "movie"]: { id: media.id, name: media.name },
+    [mediaType === "books" ? "book" : mediaType === "series" ? "series" : "movie"]: mediaType === "books"
+      ? { name: media.name, openLibraryKey: media.openLibraryKey, editionKey: media.editionKey }
+      : { id: media.id, name: media.name },
   }) });
 }
 

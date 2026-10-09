@@ -1,4 +1,4 @@
-"""Torrent search and persistent movie/series downloads with recoverable imports."""
+"""Torrent search and persistent movie/series/book downloads with recoverable imports."""
 import base64
 import copy
 from collections import OrderedDict
@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import threading
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -73,7 +74,7 @@ def normalize_results(rows, media_type="movies"):
         if not isinstance(row, dict):
             continue
         info_hash = str(row.get("info_hash") or "").lower()
-        categories = {"205", "208", "211"} if media_type == "series" else {"201", "207", "209"}
+        categories = {"601"} if media_type == "books" else {"205", "208", "211"} if media_type == "series" else {"201", "207", "209"}
         if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or str(row.get("category")) not in categories:
             continue
         size = positive_int(row.get("size"))
@@ -97,7 +98,7 @@ def _search_json(url, source):
 
 
 def search_pirate_bay(query, media_type="movies"):
-    url = "https://apibay.org/q.php?" + urllib.parse.urlencode({"q": query, "cat": "200"})
+    url = "https://apibay.org/q.php?" + urllib.parse.urlencode({"q": query, "cat": "601" if media_type == "books" else "200"})
     return normalize_results(_search_json(url, "The Pirate Bay"), media_type)
 
 
@@ -113,7 +114,8 @@ def normalize_knaben_results(payload, media_type="movies"):
         ids = [positive_int(cat) for cat in categories] if isinstance(categories, list) else []
         is_movie = any(3000000 <= cat < 4000000 for cat in ids)
         is_series = any(2000000 <= cat < 3000000 for cat in ids) and not is_movie
-        if not (is_series if media_type == "series" else is_movie):
+        is_book = any(cat in {9000000, 9001000} for cat in ids) and not any(cat in {9002000, 9003000, 9004000} for cat in ids)
+        if not (is_book if media_type == "books" else is_series if media_type == "series" else is_movie):
             continue
         info_hash = str(row.get("hash") or "").lower()
         name = row.get("title")
@@ -133,7 +135,7 @@ def normalize_knaben_results(payload, media_type="movies"):
 def search_knaben(query, media_type="movies"):
     # API v2: https://knaben.org/api/v2/ ; categories: https://knaben.org/rss/
     base = 2000000 if media_type == "series" else 3000000
-    categories = ",".join(str(cat) for cat in range(base, base + 8001, 1000))
+    categories = "9001000" if media_type == "books" else ",".join(str(cat) for cat in range(base, base + 8001, 1000))
     url = "https://api.knaben.org/v2/search?" + urllib.parse.urlencode({
         "q": query, "c": categories, "o": "seeders", "d": "desc", "s": 100,
     })
@@ -201,13 +203,13 @@ def normalize_torznab_results(raw, source, media_type="movies"):
     if root.tag != "rss" or root.find("channel") is None:
         raise TorrentError("Respuesta Torznab no válida.")
     results = []
-    category_base = 5000 if media_type == "series" else 2000
+    category_base = 7000 if media_type == "books" else 5000 if media_type == "series" else 2000
     for item in root.findall("./channel/item"):
         attributes = [node for node in item if node.tag.rsplit("}", 1)[-1] == "attr"]
         attrs = {node.get("name"): node.get("value", "") for node in attributes}
         categories = [positive_int(node.get("value")) for node in attributes if node.get("name") == "category"]
         categories += [positive_int(node.text) for node in item.findall("category")]
-        if not any(category_base <= cat < category_base + 1000 for cat in categories):
+        if not (any(cat in {7000, 7020} for cat in categories) and not any(cat in {7010, 7030, 7040} for cat in categories) if media_type == "books" else any(category_base <= cat < category_base + 1000 for cat in categories)):
             continue
         if attrs.get("private", "0") != "0":
             continue  # Private trackers require their original torrent and passkey.
@@ -239,7 +241,7 @@ def normalize_torznab_results(raw, source, media_type="movies"):
 def search_torznab(query, media_type, source):
     url = urllib.parse.urlsplit(source["url"])
     params = dict(urllib.parse.parse_qsl(url.query))
-    params.update(t="search", q=query, cat="5000" if media_type == "series" else "2000", limit="100")
+    params.update(t="search", q=query, cat="7020" if media_type == "books" else "5000" if media_type == "series" else "2000", limit="100")
     if source.get("apiKey"):
         params["apikey"] = source["apiKey"]
     endpoint = urllib.parse.urlunsplit(url._replace(query=urllib.parse.urlencode(params)))
@@ -273,11 +275,11 @@ def search_torrents(query, media_type="movies", imdb_id=None, season=None, episo
     query = str(query or "").strip()
     if not query or len(query) > 200:
         raise ValueError("Escribe un título de hasta 200 caracteres.")
-    if not isinstance(media_type, str) or media_type not in {"movies", "series"}:
+    if not isinstance(media_type, str) or media_type not in {"movies", "series", "books"}:
         raise ValueError("Tipo de contenido no válido.")
     season, episode = series_filters(season, episode)
     eztv_page = episode_filter(eztv_page, "Página de EZTV", 1, 100)
-    if eztv_page is None or (media_type == "movies" and (season is not None or episode is not None or eztv_page != 1)):
+    if eztv_page is None or (media_type != "series" and (season is not None or episode is not None or eztv_page != 1)):
         raise ValueError("Filtros de búsqueda no válidos.")
     imdb_id = str(imdb_id or "")
     if imdb_id and not re.fullmatch(r"(?:tt)?\d{5,10}", imdb_id):
@@ -294,7 +296,7 @@ def search_torrents(query, media_type="movies", imdb_id=None, season=None, episo
     if media_type == "series" and season is not None:
         scoped_query += f" S{season:02d}" + (f"E{episode:02d}" if episode is not None else "")
     # Keep the movie provider call compatible with existing callers.
-    args = (scoped_query, media_type) if media_type == "series" else (query,)
+    args = (scoped_query, media_type) if media_type != "movies" else (query,)
     providers = [("piratebay", "The Pirate Bay", search_pirate_bay, args), ("knaben", "Knaben", search_knaben, args)] if eztv_page == 1 else []
     providers.extend((f"torznab_{i}", source["name"], search_torznab, (scoped_query, media_type, source))
                      for i, source in enumerate(extra_sources))
@@ -415,9 +417,35 @@ def series_video_files(files, season=None, episode=None):
     return selected
 
 
+def book_file(files, book):
+    """Select one readable book; never silently import an unrelated anthology/pack."""
+    def normalized(value):
+        return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", str(value)).encode("ascii", "ignore").decode().lower())
+    candidates = []
+    for index, item in enumerate(files):
+        name = str(item.get("name", ""))
+        path = Path(name)
+        if path.suffix.lower() not in {".epub", ".pdf"} or not positive_int(item.get("length")):
+            continue
+        if path.is_absolute() or ".." in path.parts or "\\" in name:
+            raise TorrentError("El torrent contiene una ruta de libro no permitida.")
+        candidates.append((index, item))
+    if not candidates:
+        raise TorrentError("El torrent no contiene un libro EPUB o PDF. No se importan comprimidos ni audiolibros.")
+    if len(candidates) == 1:
+        return candidates[0]
+    title = normalized(book["name"])
+    matches = [entry for entry in candidates if len(title) >= 4 and title in normalized(Path(entry[1]["name"]).stem)]
+    if not matches:
+        raise TorrentError("El torrent contiene varios libros y no se puede identificar el seleccionado. Elige un torrent de ese libro.")
+    if len({normalized(Path(item["name"]).stem) for _, item in matches}) > 1:
+        raise TorrentError("Hay varias ediciones o libros coincidentes. Elige un torrent de un solo libro.")
+    return min(matches, key=lambda entry: (Path(entry[1]["name"]).suffix.lower() != ".epub", entry[0]))
+
+
 class TorrentDownloads:
     def __init__(self, root, import_movie, artwork_status, prepare_artwork, rpc=None,
-                 import_series=None, series_artwork_status=None, prepare_series_artwork=None):
+                 import_series=None, series_artwork_status=None, prepare_series_artwork=None, import_book=None):
         self.root = Path(root).resolve()
         self.state_path = self.root / "jobs.json"
         self.rpc = rpc or Transmission()
@@ -425,6 +453,7 @@ class TorrentDownloads:
         self.artwork_status = artwork_status
         self.prepare_artwork = prepare_artwork
         self.import_series = import_series
+        self.import_book = import_book
         self.series_artwork_status = series_artwork_status
         self.prepare_series_artwork = prepare_series_artwork
         self.lock = threading.RLock()
@@ -473,20 +502,25 @@ class TorrentDownloads:
     def add(self, data):
         info_hash = str(data.get("infoHash", "")).lower()
         media_type = data.get("mediaType", "movies")
-        if not isinstance(media_type, str) or media_type not in {"movies", "series"}:
+        if not isinstance(media_type, str) or media_type not in {"movies", "series", "books"}:
             raise ValueError("Tipo de contenido no válido.")
         is_series = media_type == "series"
-        media_key = "series" if is_series else "movie"
+        is_book = media_type == "books"
+        media_key = "book" if is_book else "series" if is_series else "movie"
         media = data.get(media_key)
         if not isinstance(media, dict) or not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40:
             raise ValueError("Selecciona un torrent y una ficha válidos.")
         if is_series and not all((self.import_series, self.series_artwork_status, self.prepare_series_artwork)):
             raise TorrentError("Las descargas de series no están configuradas.")
+        if is_book and not self.import_book:
+            raise TorrentError("Las descargas de libros no están configuradas.")
         season, episode = series_filters(data.get("seasonNumber"), data.get("episodeNumber"))
-        tmdb_id = positive_int(media.get("id"))
+        tmdb_id = str(media.get("openLibraryKey") or "") if is_book else positive_int(media.get("id"))
         name = str(media.get("name") or "").strip()[:250]
         if not tmdb_id or not name:
-            raise ValueError("Falta la ficha TMDB del contenido.")
+            raise ValueError("Falta la ficha de Open Library del libro." if is_book else "Falta la ficha TMDB del contenido.")
+        if is_book and (not re.fullmatch(r"/works/OL\d+W", tmdb_id) or season is not None or episode is not None):
+            raise ValueError("Falta una ficha de Open Library válida para el libro.")
         overwrite = data.get("overwriteExisting") is True
         with self.operation:
             archive = None
@@ -506,8 +540,8 @@ class TorrentDownloads:
                         if overwrite and not existing.get("overwriteExisting"):
                             self._update(existing, overwriteExisting=True)
                         return copy.deepcopy(existing)
-                if not is_series and existing.get("mediaType", "movies") == "movies" and existing["movie"]["id"] == tmdb_id and existing["state"] not in TERMINAL:
-                    raise ValueError("Esta película ya tiene una descarga en curso.")
+                if not is_series and existing.get("mediaType", "movies") == media_type and existing[media_key]["id"] == tmdb_id and existing["state"] not in TERMINAL:
+                    raise ValueError("Este contenido ya tiene una descarga en curso.")
             self.rpc.call("session-get")
             folder = self.root / "downloads" / info_hash
             folder.mkdir(parents=True, exist_ok=True)
@@ -516,6 +550,9 @@ class TorrentDownloads:
                    "sizeBytes": positive_int(data.get("sizeBytes")), "downloadedBytes": 0,
                    "progress": 0, "rateBytes": 0, "eta": -1, "createdAt": time.time()}
             job["overwriteExisting"] = overwrite
+            if is_book:
+                job["book"].update({key: copy.deepcopy(media[key]) for key in ("openLibraryKey", "author", "description", "localizedMetadata", "coverUrl", "originalTitle") if key in media})
+                job["overwriteExisting"] = False
             if is_series:
                 job.update(seasonNumber=season, episodeNumber=episode, overwriteExisting=False)
             sources = data.get("sources")
@@ -658,7 +695,8 @@ class TorrentDownloads:
         if job.get("mediaType") == "series":
             self._advance_series(job, row, folder)
             return
-        index, selected = video_file(row.get("files", []))
+        is_book = job.get("mediaType") == "books"
+        index, selected = book_file(row.get("files", []), job["book"]) if is_book else video_file(row.get("files", []))
         if job.get("videoIndex") != index:
             unwanted = [i for i in range(len(row["files"])) if i != index]
             args = {"ids": [job["id"]], "files-wanted": [index]}
@@ -679,12 +717,12 @@ class TorrentDownloads:
         source = folder / selected["name"]
         resolved = source.resolve()
         if not resolved.is_relative_to(folder) or any(p.is_symlink() for p in [source, *source.parents] if p != self.root.parent):
-            raise TorrentError("La ruta del vídeo descargado no es segura.")
+            raise TorrentError("La ruta del libro descargado no es segura." if is_book else "La ruta del vídeo descargado no es segura.")
         if not source.is_file() or source.stat().st_size != length:
-            raise TorrentError("El fichero de vídeo descargado está incompleto o no existe.")
+            raise TorrentError("El libro descargado está incompleto o no existe." if is_book else "El fichero de vídeo descargado está incompleto o no existe.")
         self.rpc.call("torrent-stop", {"ids": [job["id"]]})
         self._update(job, state="importing", rateBytes=0)
-        item = self.import_movie(job, source)
+        item = self.import_book(job, source) if is_book else self.import_movie(job, source)
         self._update(job, state="metadata", item=item, progress=100)
         self._finish_artwork(job)
 
@@ -727,6 +765,9 @@ class TorrentDownloads:
 
     def _finish_artwork(self, job):
         self._remove_transfer(job)
+        if job.get("mediaType") == "books":
+            self._update(job, state="complete", completedAt=time.time(), error="")
+            return
         try:
             status = (self.series_artwork_status(job["series"]["id"]) if job.get("mediaType") == "series"
                       else self.artwork_status(job["movie"]["id"]))

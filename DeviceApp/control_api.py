@@ -2601,6 +2601,46 @@ def upload_target(media_type, filename, title="", collection="", tmdb_id=0):
     return candidate
 
 
+def import_torrent_book(job, source):
+    """Publish one completed EPUB/PDF and its work metadata, preserving existing books."""
+    ensure_media_directories()
+    book = job["book"]
+    filename = f"{slugify(book['name'], 'book')[:120]}-{book['openLibraryKey'].rsplit('/', 1)[-1]}-{job['id'][:12]}{source.suffix.lower()}"
+    target = os.path.join(BOOKS_DIR, filename)
+    relative = f"Books/{filename}"
+    # A catalog edition describes the work; its ISBN/page count need not match the downloaded file.
+    profile = book_metadata.normalize_profile({**{key: book[key] for key in ("openLibraryKey", "author", "description", "localizedMetadata") if key in book}, "title": book["name"], "isGraphicNovel": False})
+    if book.get("coverUrl"):
+        try:
+            profile["coverUrl"] = book_metadata.cache_cover(book["coverUrl"], BOOK_COVERS_DIR, relative)
+        except (ValueError, OSError):
+            pass  # Embedded cover extraction remains available offline.
+    published = False
+    with tempfile.TemporaryDirectory(dir=BOOKS_DIR, prefix=".torrent-import-") as temporary:
+        try:
+            with catalog_store.transaction(MEDIA_LIBRARY_PATH, LEGACY_MOVIE_LIBRARY_PATH):
+                library = load_media_library()
+                for path, entry in library.setdefault("books", {}).items():
+                    if entry.get("openLibraryKey") == book["openLibraryKey"]:
+                        existing = resolve_book_path(path)
+                        if existing and os.path.isfile(existing):
+                            return {**entry, "relativePath": path}
+                if os.path.lexists(target) and not os.path.samefile(source, target):
+                    raise ValueError("Ya existe un archivo con el nombre del libro. Se conserva el archivo existente.")
+                if not os.path.exists(target):
+                    staged = os.path.join(temporary, "finished")
+                    os.link(source, staged)
+                    os.replace(staged, target)
+                    published = True
+                library["books"][relative] = profile
+                save_media_library(library)
+        except Exception:
+            if published:
+                os.unlink(target)
+            raise
+    return {**profile, "relativePath": relative, "name": book["name"], "file": filename, "format": source.suffix.lower()[1:]}
+
+
 def import_torrent_movie(job, source):
     """Publish the finished video atomically before adding its profile or queuing artwork."""
     ensure_media_directories()
@@ -2730,6 +2770,7 @@ def get_movie_torrents():
                 lambda tmdb_id: tmdb_artwork.status().get("jobs", {}).get(f"movie/{tmdb_id}"),
                 lambda tmdb_id: tmdb_artwork.enqueue("movie", tmdb_id),
                 import_series=import_torrent_series,
+                import_book=import_torrent_book,
                 series_artwork_status=lambda tmdb_id: tmdb_artwork.status().get("jobs", {}).get(f"tv/{tmdb_id}"),
                 prepare_series_artwork=lambda tmdb_id: tmdb_artwork.enqueue("tv", tmdb_id, refresh=True),
             )
@@ -2769,6 +2810,15 @@ def movie_torrent_jobs():
                     return jsonify({"error": "Esta película ya está descargada. ¿Quieres sobrescribirla o cancelar la descarga?",
                                     "code": "MOVIE_ALREADY_DOWNLOADED"}), 409
     try:
+        if data.get("mediaType") == "books":
+            selected = data.get("book")
+            if not isinstance(selected, dict):
+                raise ValueError("Selecciona una ficha de Open Library.")
+            detail = book_metadata.details(selected.get("openLibraryKey"), selected.get("editionKey"), language="es")
+            title = str(selected.get("name") or "").strip()[:250]
+            if not title:
+                raise ValueError("Indica el título del libro en castellano.")
+            data["book"] = {**detail, "name": title}
         return jsonify({"job": manager.add(data)}), 202
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400

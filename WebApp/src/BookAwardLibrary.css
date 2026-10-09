@@ -1,4 +1,6 @@
-.book-award-selector svg { width: 30px; height: 38px; }
+.book-award-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.book-award-icon { display: block; flex-shrink: 0; }
+.book-award-selector .book-award-icon { width: auto; height: min(13cqh, 48px); aspect-ratio: 1; }
 .book-award-library .oscar-cover { border-radius: 3px 9px 9px 3px; box-shadow: inset 5px 0 6px #0005, 0 12px 25px #0008; }
 .book-award-library .oscar-cover__fallback { padding-bottom: 3rem; }
 .book-award-library .oscar-cover__fallback strong { font-size: clamp(.9rem, 1.7vw, 1.35rem); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }

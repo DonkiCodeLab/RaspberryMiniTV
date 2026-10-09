@@ -61,11 +61,13 @@ test('each award renders upload for missing books and reading only for installed
     const render = books => renderToStaticMarkup(React.createElement(Library, { award, books, language: 'es', onEditionChange() {}, onRead() {}, onUpload() {} }));
     const missing = render([]);
     assert.match(missing, />Cargar libro<\/button>/);
+    assert.match(missing, />Buscar torrent<\/button>/);
     assert.doesNotMatch(missing, />Leer libro<\/button>/);
     assert.match(missing, new RegExp(winner.title));
     const installed = render([{ ...winner, relativePath: 'Books/winner.epub', format: 'epub', coverUrl: '/cover.jpg' }]);
     assert.match(installed, />Leer libro<\/button>/);
     assert.doesNotMatch(installed, />Cargar libro<\/button>/);
+    assert.doesNotMatch(installed, />Buscar torrent<\/button>/);
     assert.match(installed, /src="\/cover.jpg"/);
   }
 });

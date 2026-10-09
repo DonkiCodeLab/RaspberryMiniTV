@@ -1,0 +1,11 @@
+.book-torrent-modal { width: min(960px, 94vw); max-height: 92dvh; overflow-y: auto; }
+.book-torrent-modal__search { display: flex; align-items: end; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }
+.book-torrent-modal__search label { flex: 1 1 260px; }
+.book-torrent-modal__details { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 1.5rem; margin: 1.5rem 0; }
+.book-torrent-modal__details:not(:has(img)) { grid-template-columns: 1fr; }
+.book-torrent-modal__details img { width: 100%; border-radius: 8px; }
+.book-torrent-modal__details h3 { margin-top: 0; }
+.book-torrent-modal__synopsis { white-space: pre-line; line-height: 1.6; }
+.book-torrent-modal__results { display: grid; gap: .7rem; }
+.book-torrent-modal__results button { display: flex; flex-direction: column; align-items: start; gap: .4rem; text-align: start; }
+@media (max-width: 600px) { .book-torrent-modal__details { grid-template-columns: 90px minmax(0, 1fr); gap: .8rem; } }

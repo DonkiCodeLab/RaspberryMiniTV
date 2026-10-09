@@ -4,10 +4,13 @@ import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torren
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import "./TorrentDownloads.css";
+import { bookTorrentStrings } from './bookTorrentUtils.js';
 
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted }) {
   const s = torrentStrings(language);
   const isSeries = mediaType === "series";
+  const isBook = mediaType === "books";
+  const bs = bookTorrentStrings(language);
   const [query, setQuery] = useState(() => torrentQuery(media, mediaType));
   const [season, setSeason] = useState(seasonNumber ?? "");
   const [episode, setEpisode] = useState(episodeNumber ?? "");
@@ -71,7 +74,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const unavailableSources = sources.filter(source => source.status === "error").map(source => source.name);
   return <section className="movie-torrents" aria-label={s.searchTitle}>
     <h3>{s.searchTitle}</h3>
-    <p>{isSeries ? s.seriesHint : s.hint}</p>
+    <p>{isBook ? bs.hint : isSeries ? s.seriesHint : s.hint}</p>
     <form className={`movie-torrents__search${isSeries ? " movie-torrents__search--series" : ""}`} onSubmit={event => { event.preventDefault(); if (query.trim()) setSearchTerm({ query: query.trim(),
       seasonNumber: isSeries && season !== "" ? Number(season) : null, episodeNumber: isSeries && episode !== "" ? Number(episode) : null, eztvPage: 1 }); }}>
       <label className="dialog-field"><span>{s.search}</span><input value={query} maxLength={200} onChange={e => setQuery(e.target.value)} /></label>
@@ -97,7 +100,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
       </div>
     </div>}
     {started ? <div className="movie-torrents__success" role="status"><p>{s.started}</p><button className="dialog-button dialog-button--accent" onClick={onDashboard} type="button">{s.dashboard}</button></div> : <>
-      {loading ? <p role="status"><span className="tmdb-cache-spinner" /> {s.searching}</p> : demo ? <p>{s.demo}</p> : !results.length && !error ? <p>{isSeries ? s.seriesEmpty : s.empty}</p> : null}
+      {loading ? <p role="status"><span className="tmdb-cache-spinner" /> {s.searching}</p> : demo ? <p>{s.demo}</p> : !results.length && !error ? <p>{isBook ? bs.empty : isSeries ? s.seriesEmpty : s.empty}</p> : null}
       {results.length > 0 && <>
         <div className="movie-torrents__sort">
           <label className="dialog-field"><span>{s.sortBy}</span>
@@ -116,7 +119,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
         <tbody>{sortedResults.map(result => <tr key={result.infoHash}>
           <td>{result.name}</td>
           <td className="movie-torrents__source"><div className="movie-torrents__badges">{torrentSources(result).map(source => <span className="movie-torrents__badge" key={source}>{source}</span>)}</div></td>
-          <td>{torrentListSize(result.sizeBytes)}</td><td>{result.seeds}</td>
+          <td>{isBook ? torrentSize(result.sizeBytes, language) : torrentListSize(result.sizeBytes)}</td><td>{result.seeds}</td>
           <td><button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} onClick={() => start(result)} type="button">{busy === result.infoHash ? s.starting : s.download}</button></td>
         </tr>)}</tbody>
       </table></div></>}
@@ -190,9 +193,9 @@ export default function TorrentDownloads({ downloads, language }) {
       <h3 className="torrent-dashboard__group-title" id={`torrent-${group.key}-title`}>{group.title} <span>{group.jobs.length}</span></h3>
       {group.key === "history" && <p className="torrent-dashboard__hint">{s.historyHint}</p>}
       <div className="torrent-dashboard__jobs">{group.jobs.map(job => <article className="torrent-job" key={job.id}>
-      <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${job.state}`}>{s[job.state] || job.state}</span></div>
+      <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${job.state}`}>{job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[job.state] || job.state}</span></div>
       <p className="torrent-job__name">{job.name}</p>
-      <p className="torrent-job__sources">{job.mediaType === "series" ? s.series : s.movie}</p>
+      <p className="torrent-job__sources">{job.mediaType === 'books' ? bookTorrentStrings(language).book : job.mediaType === "series" ? s.series : s.movie}</p>
       <p className="torrent-job__sources">{s.source}: {torrentSources(job).join(" · ")}</p>
       <progress max={100} value={job.progress || 0} aria-label={`${torrentJobTitle(job)}: ${s[job.state]}`} />
       {job.item?.importedEpisodeIds?.length > 0 && <p className="torrent-job__stats">{s.episodesImported}: {job.item.importedEpisodeIds.length}</p>}
