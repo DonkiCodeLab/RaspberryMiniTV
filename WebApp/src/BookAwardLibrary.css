@@ -1,0 +1,6 @@
+.book-award-selector svg { width: 30px; height: 38px; }
+.book-award-library .oscar-cover { border-radius: 3px 9px 9px 3px; box-shadow: inset 5px 0 6px #0005, 0 12px 25px #0008; }
+.book-award-library .oscar-cover__fallback { padding-bottom: 3rem; }
+.book-award-library .oscar-cover__fallback strong { font-size: clamp(.9rem, 1.7vw, 1.35rem); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.book-award-library__description { max-width: 680px; margin: 1rem auto; color: #bdc1bc; font-size: .88rem; line-height: 1.65; white-space: pre-line; text-align: start; }
+.book-award-library__original { color: #a6aaa7; font-size: .75rem; }

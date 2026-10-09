@@ -1,0 +1,530 @@
+{
+  "id": "planeta",
+  "verifiedThrough": "2026-10-09",
+  "sources": [
+    "https://www.premioplaneta.es/historia/ganadores.html"
+  ],
+  "firstYear": 1952,
+  "lastYear": 2025,
+  "noAwardYears": [],
+  "winners": [
+    {
+      "key": "planeta-1952",
+      "awardYear": 1952,
+      "title": "En la noche no hay caminos",
+      "author": "Juan José Mira",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1952.html"
+    },
+    {
+      "key": "planeta-1953",
+      "awardYear": 1953,
+      "title": "Una casa con goteras",
+      "author": "Santiago Lorén",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1953.html"
+    },
+    {
+      "key": "planeta-1954",
+      "awardYear": 1954,
+      "title": "Pequeño teatro",
+      "author": "Ana María Matute",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1954.html"
+    },
+    {
+      "key": "planeta-1955",
+      "awardYear": 1955,
+      "title": "Tres pisadas de hombre",
+      "author": "Antonio Prieto",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1955.html"
+    },
+    {
+      "key": "planeta-1956",
+      "awardYear": 1956,
+      "title": "El desconocido",
+      "author": "Carmen Kurtz",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1956.html"
+    },
+    {
+      "key": "planeta-1957",
+      "awardYear": 1957,
+      "title": "La paz empieza nunca",
+      "author": "Emilio Romero",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1957.html"
+    },
+    {
+      "key": "planeta-1958",
+      "awardYear": 1958,
+      "title": "Pasos sin huellas",
+      "author": "Fernando Bermúdez de Castro",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1958.html"
+    },
+    {
+      "key": "planeta-1959",
+      "awardYear": 1959,
+      "title": "La noche",
+      "author": "Andrés Bosch",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1959.html"
+    },
+    {
+      "key": "planeta-1960",
+      "awardYear": 1960,
+      "title": "El atentado",
+      "author": "Tomás Salvador",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1960.html"
+    },
+    {
+      "key": "planeta-1961",
+      "awardYear": 1961,
+      "title": "La mujer de otro",
+      "author": "Torcuato Luca de Tena",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1961.html"
+    },
+    {
+      "key": "planeta-1962",
+      "awardYear": 1962,
+      "title": "Se enciende y se apaga una luz",
+      "author": "Ángel Vázquez",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1962.html"
+    },
+    {
+      "key": "planeta-1963",
+      "awardYear": 1963,
+      "title": "El cacique",
+      "author": "Luis Romero",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1963.html"
+    },
+    {
+      "key": "planeta-1964",
+      "awardYear": 1964,
+      "title": "Las hogueras",
+      "author": "Concha Alós",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1964.html"
+    },
+    {
+      "key": "planeta-1965",
+      "awardYear": 1965,
+      "title": "Equipaje de amor para la tierra",
+      "author": "Rodrigo Rubio",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1965.html"
+    },
+    {
+      "key": "planeta-1966",
+      "awardYear": 1966,
+      "title": "A tientas y a ciegas",
+      "author": "Marta Portal",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1966.html"
+    },
+    {
+      "key": "planeta-1967",
+      "awardYear": 1967,
+      "title": "Las últimas banderas",
+      "author": "Ángel María de Lera",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1967.html"
+    },
+    {
+      "key": "planeta-1968",
+      "awardYear": 1968,
+      "title": "Con la noche a cuestas",
+      "author": "Manuel Ferrand",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1968.html"
+    },
+    {
+      "key": "planeta-1969",
+      "awardYear": 1969,
+      "title": "En la vida de Ignacio Morel",
+      "author": "Ramón J. Sender",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1969.html"
+    },
+    {
+      "key": "planeta-1970",
+      "awardYear": 1970,
+      "title": "La cruz invertida",
+      "author": "Marcos Aguinis",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1970.html"
+    },
+    {
+      "key": "planeta-1971",
+      "awardYear": 1971,
+      "title": "Condenados a vivir",
+      "author": "José María Gironella",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1971.html"
+    },
+    {
+      "key": "planeta-1972",
+      "awardYear": 1972,
+      "title": "La cárcel",
+      "author": "Jesús Zárate",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1972.html"
+    },
+    {
+      "key": "planeta-1973",
+      "awardYear": 1973,
+      "title": "Azaña",
+      "author": "Carlos Rojas",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1973.html"
+    },
+    {
+      "key": "planeta-1974",
+      "awardYear": 1974,
+      "title": "Icaria, Icaria ...",
+      "author": "Xavier Benguerel",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1974.html"
+    },
+    {
+      "key": "planeta-1975",
+      "awardYear": 1975,
+      "title": "La gangrena",
+      "author": "Mercedes Salisachs",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1975.html"
+    },
+    {
+      "key": "planeta-1976",
+      "awardYear": 1976,
+      "title": "En el día de hoy",
+      "author": "Jesús Torbado",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1976.html"
+    },
+    {
+      "key": "planeta-1977",
+      "awardYear": 1977,
+      "title": "Autobiografía de Federico Sánchez",
+      "author": "Jorge Semprún",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1977.html"
+    },
+    {
+      "key": "planeta-1978",
+      "awardYear": 1978,
+      "title": "La muchacha de las bragas de oro",
+      "author": "Juan Marsé",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1978.html"
+    },
+    {
+      "key": "planeta-1979",
+      "awardYear": 1979,
+      "title": "Los mares del Sur",
+      "author": "Manuel Vázquez Montalbán",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1979.html"
+    },
+    {
+      "key": "planeta-1980",
+      "awardYear": 1980,
+      "title": "Volavérunt",
+      "author": "Antonio Larreta",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1980.html"
+    },
+    {
+      "key": "planeta-1981",
+      "awardYear": 1981,
+      "title": "Y Dios en la última playa",
+      "author": "Cristóbal Zaragoza",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1981.html"
+    },
+    {
+      "key": "planeta-1982",
+      "awardYear": 1982,
+      "title": "Jaque a la Dama",
+      "author": "Jesús Fernández Santos",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1982.html"
+    },
+    {
+      "key": "planeta-1983",
+      "awardYear": 1983,
+      "title": "La guerra del general Escobar",
+      "author": "José Luis Olaizola",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1983.html"
+    },
+    {
+      "key": "planeta-1984",
+      "awardYear": 1984,
+      "title": "Crónica sentimental en rojo",
+      "author": "Francisco González Ledesma",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1984.html"
+    },
+    {
+      "key": "planeta-1985",
+      "awardYear": 1985,
+      "title": "Yo, el rey",
+      "author": "Juan Antonio Vallejo-Nágera",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1985.html"
+    },
+    {
+      "key": "planeta-1986",
+      "awardYear": 1986,
+      "title": "No digas que fue un sueño",
+      "author": "Terenci Moix",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1986.html"
+    },
+    {
+      "key": "planeta-1987",
+      "awardYear": 1987,
+      "title": "En busca del unicornio",
+      "author": "Juan Eslava Galán",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1987.html"
+    },
+    {
+      "key": "planeta-1988",
+      "awardYear": 1988,
+      "title": "Filomeno, a mi pesar",
+      "author": "Gonzalo Torrente Ballester",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1988.html"
+    },
+    {
+      "key": "planeta-1989",
+      "awardYear": 1989,
+      "title": "Queda la noche",
+      "author": "Soledad Puértolas",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1989.html"
+    },
+    {
+      "key": "planeta-1990",
+      "awardYear": 1990,
+      "title": "El manuscrito carmesí",
+      "author": "Antonio Gala",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1990.html"
+    },
+    {
+      "key": "planeta-1991",
+      "awardYear": 1991,
+      "title": "El jinete polaco",
+      "author": "Antonio Muñoz Molina",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1991.html"
+    },
+    {
+      "key": "planeta-1992",
+      "awardYear": 1992,
+      "title": "La prueba del laberinto",
+      "author": "Fernando Sánchez Dragó",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1992.html"
+    },
+    {
+      "key": "planeta-1993",
+      "awardYear": 1993,
+      "title": "Lituma en los Andes",
+      "author": "Mario Vargas Llosa",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1993.html"
+    },
+    {
+      "key": "planeta-1994",
+      "awardYear": 1994,
+      "title": "La cruz de San Andrés",
+      "author": "Camilo José Cela",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1994.html"
+    },
+    {
+      "key": "planeta-1995",
+      "awardYear": 1995,
+      "title": "La mirada del otro",
+      "author": "Fernando G. Delgado",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1995.html"
+    },
+    {
+      "key": "planeta-1996",
+      "awardYear": 1996,
+      "title": "El desencuentro",
+      "author": "Fernando Schwartz",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1996.html"
+    },
+    {
+      "key": "planeta-1997",
+      "awardYear": 1997,
+      "title": "La tempestad",
+      "author": "Juan Manuel de Prada",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1997.html"
+    },
+    {
+      "key": "planeta-1998",
+      "awardYear": 1998,
+      "title": "Pequeñas infamias",
+      "author": "Carmen Posadas",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1998.html"
+    },
+    {
+      "key": "planeta-1999",
+      "awardYear": 1999,
+      "title": "Melocotones helados",
+      "author": "Espido Freire",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador1999.html"
+    },
+    {
+      "key": "planeta-2000",
+      "awardYear": 2000,
+      "title": "Mientras vivimos",
+      "author": "Maruja Torres",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2000.html"
+    },
+    {
+      "key": "planeta-2001",
+      "awardYear": 2001,
+      "title": "La canción de Dorotea",
+      "author": "Rosa Regàs",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2001.html"
+    },
+    {
+      "key": "planeta-2002",
+      "awardYear": 2002,
+      "title": "El huerto de mi amada",
+      "author": "Alfredo Bryce Echenique",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2002.html"
+    },
+    {
+      "key": "planeta-2003",
+      "awardYear": 2003,
+      "title": "El baile de la Victoria",
+      "author": "Antonio Skármeta",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2003.html"
+    },
+    {
+      "key": "planeta-2004",
+      "awardYear": 2004,
+      "title": "Un milagro en equilibrio",
+      "author": "Lucía Etxebarria",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2004.html"
+    },
+    {
+      "key": "planeta-2005",
+      "awardYear": 2005,
+      "title": "Pasiones romanas",
+      "author": "Maria de la Pau Janer",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2005.html"
+    },
+    {
+      "key": "planeta-2006",
+      "awardYear": 2006,
+      "title": "La fortuna de Matilda Turpin",
+      "author": "Álvaro Pombo",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2006.html"
+    },
+    {
+      "key": "planeta-2007",
+      "awardYear": 2007,
+      "title": "El mundo",
+      "author": "Juan José Millás",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2007.html"
+    },
+    {
+      "key": "planeta-2008",
+      "awardYear": 2008,
+      "title": "La Hermandad de la Buena Suerte",
+      "author": "Fernando Savater",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2008.html"
+    },
+    {
+      "key": "planeta-2009",
+      "awardYear": 2009,
+      "title": "Contra el viento",
+      "author": "Ángeles Caso",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2009.html"
+    },
+    {
+      "key": "planeta-2010",
+      "awardYear": 2010,
+      "title": "Riña de gatos. Madrid 1936",
+      "author": "Eduardo Mendoza",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2010.html"
+    },
+    {
+      "key": "planeta-2011",
+      "awardYear": 2011,
+      "title": "El Imperio eres tú",
+      "author": "Javier Moro",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2011.html"
+    },
+    {
+      "key": "planeta-2012",
+      "awardYear": 2012,
+      "title": "La marca del meridiano",
+      "author": "Lorenzo Silva",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2012.html"
+    },
+    {
+      "key": "planeta-2013",
+      "awardYear": 2013,
+      "title": "El cielo ha vuelto",
+      "author": "Clara Sánchez",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2013.html"
+    },
+    {
+      "key": "planeta-2014",
+      "awardYear": 2014,
+      "title": "Milena o el fémur más bello del mundo",
+      "author": "Jorge Zepeda Patterson",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2014.html"
+    },
+    {
+      "key": "planeta-2015",
+      "awardYear": 2015,
+      "title": "Hombres desnudos",
+      "author": "Alicia Giménez Bartlett",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2015.html"
+    },
+    {
+      "key": "planeta-2016",
+      "awardYear": 2016,
+      "title": "Todo esto te daré",
+      "author": "Dolores Redondo",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2016.html"
+    },
+    {
+      "key": "planeta-2017",
+      "awardYear": 2017,
+      "title": "El fuego invisible",
+      "author": "Javier Sierra",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2017.html"
+    },
+    {
+      "key": "planeta-2018",
+      "awardYear": 2018,
+      "title": "Yo, Julia",
+      "author": "Santiago Posteguillo",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2018.html"
+    },
+    {
+      "key": "planeta-2019",
+      "awardYear": 2019,
+      "title": "Terra Alta",
+      "author": "Javier Cercas",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2019.html"
+    },
+    {
+      "key": "planeta-2020",
+      "awardYear": 2020,
+      "title": "Aquitania",
+      "author": "Eva García Sáenz de Urturi",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2020.html"
+    },
+    {
+      "key": "planeta-2021",
+      "awardYear": 2021,
+      "title": "La Bestia",
+      "author": "Carmen Mola",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2021.html"
+    },
+    {
+      "key": "planeta-2022",
+      "awardYear": 2022,
+      "title": "Lejos de Luisiana",
+      "author": "Luz Gabás",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2022.html"
+    },
+    {
+      "key": "planeta-2023",
+      "awardYear": 2023,
+      "title": "Las hijas de la criada",
+      "author": "Sonsoles Ónega",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2023.html"
+    },
+    {
+      "key": "planeta-2024",
+      "awardYear": 2024,
+      "title": "Victoria",
+      "author": "Paloma Sánchez-Garnica",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2024.html"
+    },
+    {
+      "key": "planeta-2025",
+      "awardYear": 2025,
+      "title": "Vera, una historia de amor",
+      "author": "Juan del Val",
+      "sourceUrl": "https://www.premioplaneta.es/edicion/ganador2025.html"
+    }
+  ]
+}

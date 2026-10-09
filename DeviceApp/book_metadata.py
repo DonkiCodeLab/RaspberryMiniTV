@@ -112,6 +112,7 @@ def search(query, language="es", *, strict=False):
         items.append({"openLibraryKey": _key(doc.get("key"), "works"),
             "editionKey": _key(edition_key, "books"),
             "title": edition.get("title") or doc.get("title") or "",
+            "originalTitle": doc.get("title") or "",
             "author": ", ".join(doc.get("author_name") or []),
             "year": str(doc.get("first_publish_year") or ""),
             # ISBN and language must come from the selected edition, never another edition of the work.

@@ -1,0 +1,458 @@
+{
+  "id": "pulitzer",
+  "verifiedThrough": "2026-10-09",
+  "sources": [
+    "https://www.pulitzer.org/prize-winners-by-category/219"
+  ],
+  "firstYear": 1948,
+  "lastYear": 2026,
+  "noAwardYears": [
+    1954,
+    1957,
+    1964,
+    1971,
+    1974,
+    1977,
+    2012
+  ],
+  "winners": [
+    {
+      "key": "pulitzer-1948-1",
+      "awardYear": 1948,
+      "title": "Tales of the South Pacific",
+      "author": "James A. Michener"
+    },
+    {
+      "key": "pulitzer-1949-1",
+      "awardYear": 1949,
+      "title": "Guard of Honor",
+      "author": "James Gould Cozzens"
+    },
+    {
+      "key": "pulitzer-1950-1",
+      "awardYear": 1950,
+      "title": "The Way West",
+      "author": "A. B. Guthrie"
+    },
+    {
+      "key": "pulitzer-1951-1",
+      "awardYear": 1951,
+      "title": "The Town",
+      "author": "Conrad Richter"
+    },
+    {
+      "key": "pulitzer-1952-1",
+      "awardYear": 1952,
+      "title": "The Caine Mutiny",
+      "author": "Herman Wouk"
+    },
+    {
+      "key": "pulitzer-1953-1",
+      "awardYear": 1953,
+      "title": "The Old Man and the Sea",
+      "author": "Ernest Hemingway"
+    },
+    {
+      "key": "pulitzer-1955-1",
+      "awardYear": 1955,
+      "title": "A Fable",
+      "author": "William Faulkner"
+    },
+    {
+      "key": "pulitzer-1956-1",
+      "awardYear": 1956,
+      "title": "Andersonville",
+      "author": "MacKinlay Kantor"
+    },
+    {
+      "key": "pulitzer-1958-1",
+      "awardYear": 1958,
+      "title": "A Death In The Family",
+      "author": "James Agee"
+    },
+    {
+      "key": "pulitzer-1959-1",
+      "awardYear": 1959,
+      "title": "The Travels of Jaimie McPheeters",
+      "author": "Robert Lewis Taylor"
+    },
+    {
+      "key": "pulitzer-1960-1",
+      "awardYear": 1960,
+      "title": "Advise and Consent",
+      "author": "Allen Drury"
+    },
+    {
+      "key": "pulitzer-1961-1",
+      "awardYear": 1961,
+      "title": "To Kill A Mockingbird",
+      "author": "Harper Lee"
+    },
+    {
+      "key": "pulitzer-1962-1",
+      "awardYear": 1962,
+      "title": "The Edge of Sadness",
+      "author": "Edwin O'Connor"
+    },
+    {
+      "key": "pulitzer-1963-1",
+      "awardYear": 1963,
+      "title": "The Reivers",
+      "author": "William Faulkner"
+    },
+    {
+      "key": "pulitzer-1965-1",
+      "awardYear": 1965,
+      "title": "The Keepers Of The House",
+      "author": "Shirley Ann Grau"
+    },
+    {
+      "key": "pulitzer-1966-1",
+      "awardYear": 1966,
+      "title": "Collected Stories",
+      "author": "Katherine Anne Porter"
+    },
+    {
+      "key": "pulitzer-1967-1",
+      "awardYear": 1967,
+      "title": "The Fixer",
+      "author": "Bernard Malamud"
+    },
+    {
+      "key": "pulitzer-1968-1",
+      "awardYear": 1968,
+      "title": "The Confessions of Nat Turner",
+      "author": "William Styron"
+    },
+    {
+      "key": "pulitzer-1969-1",
+      "awardYear": 1969,
+      "title": "House Made of Dawn",
+      "author": "N. Scott Momaday"
+    },
+    {
+      "key": "pulitzer-1970-1",
+      "awardYear": 1970,
+      "title": "Collected Stories",
+      "author": "Jean Stafford"
+    },
+    {
+      "key": "pulitzer-1972-1",
+      "awardYear": 1972,
+      "title": "Angle of Repose",
+      "author": "Wallace Stegner"
+    },
+    {
+      "key": "pulitzer-1973-1",
+      "awardYear": 1973,
+      "title": "The Optimist's Daughter",
+      "author": "Eudora Welty"
+    },
+    {
+      "key": "pulitzer-1975-1",
+      "awardYear": 1975,
+      "title": "The Killer Angels",
+      "author": "Michael Shaara"
+    },
+    {
+      "key": "pulitzer-1976-1",
+      "awardYear": 1976,
+      "title": "Humboldt's Gift",
+      "author": "Saul Bellow"
+    },
+    {
+      "key": "pulitzer-1978-1",
+      "awardYear": 1978,
+      "title": "Elbow Room",
+      "author": "James Alan McPherson"
+    },
+    {
+      "key": "pulitzer-1979-1",
+      "awardYear": 1979,
+      "title": "The Stories of John Cheever",
+      "author": "John Cheever"
+    },
+    {
+      "key": "pulitzer-1980-1",
+      "awardYear": 1980,
+      "title": "The Executioner's Song",
+      "author": "Norman Mailer"
+    },
+    {
+      "key": "pulitzer-1981-1",
+      "awardYear": 1981,
+      "title": "A Confederacy of Dunces",
+      "author": "John Kennedy Toole"
+    },
+    {
+      "key": "pulitzer-1982-1",
+      "awardYear": 1982,
+      "title": "Rabbit Is Rich",
+      "author": "John Updike"
+    },
+    {
+      "key": "pulitzer-1983-1",
+      "awardYear": 1983,
+      "title": "The Color Purple",
+      "author": "Alice Walker"
+    },
+    {
+      "key": "pulitzer-1984-1",
+      "awardYear": 1984,
+      "title": "Ironweed",
+      "author": "William Kennedy"
+    },
+    {
+      "key": "pulitzer-1985-1",
+      "awardYear": 1985,
+      "title": "Foreign Affairs",
+      "author": "Alison Lurie"
+    },
+    {
+      "key": "pulitzer-1986-1",
+      "awardYear": 1986,
+      "title": "Lonesome Dove",
+      "author": "Larry McMurtry"
+    },
+    {
+      "key": "pulitzer-1987-1",
+      "awardYear": 1987,
+      "title": "A Summons to Memphis",
+      "author": "Peter Taylor"
+    },
+    {
+      "key": "pulitzer-1988-1",
+      "awardYear": 1988,
+      "title": "Beloved",
+      "author": "Toni Morrison"
+    },
+    {
+      "key": "pulitzer-1989-1",
+      "awardYear": 1989,
+      "title": "Breathing Lessons",
+      "author": "Anne Tyler"
+    },
+    {
+      "key": "pulitzer-1990-1",
+      "awardYear": 1990,
+      "title": "The Mambo Kings Play Songs of Love",
+      "author": "Oscar Hijuelos"
+    },
+    {
+      "key": "pulitzer-1991-1",
+      "awardYear": 1991,
+      "title": "Rabbit At Rest",
+      "author": "John Updike"
+    },
+    {
+      "key": "pulitzer-1992-1",
+      "awardYear": 1992,
+      "title": "A Thousand Acres",
+      "author": "Jane Smiley"
+    },
+    {
+      "key": "pulitzer-1993-1",
+      "awardYear": 1993,
+      "title": "A Good Scent from a Strange Mountain",
+      "author": "Robert Olen Butler"
+    },
+    {
+      "key": "pulitzer-1994-1",
+      "awardYear": 1994,
+      "title": "The Shipping News",
+      "author": "E. Annie Proulx"
+    },
+    {
+      "key": "pulitzer-1995-1",
+      "awardYear": 1995,
+      "title": "The Stone Diaries",
+      "author": "Carol Shields"
+    },
+    {
+      "key": "pulitzer-1996-1",
+      "awardYear": 1996,
+      "title": "Independence Day",
+      "author": "Richard Ford"
+    },
+    {
+      "key": "pulitzer-1997-1",
+      "awardYear": 1997,
+      "title": "Martin Dressler: The Tale of an American Dreamer",
+      "author": "Steven Millhauser"
+    },
+    {
+      "key": "pulitzer-1998-1",
+      "awardYear": 1998,
+      "title": "American Pastoral",
+      "author": "Philip Roth"
+    },
+    {
+      "key": "pulitzer-1999-1",
+      "awardYear": 1999,
+      "title": "The Hours",
+      "author": "Michael Cunningham"
+    },
+    {
+      "key": "pulitzer-2000-1",
+      "awardYear": 2000,
+      "title": "Interpreter of Maladies",
+      "author": "Jhumpa Lahiri"
+    },
+    {
+      "key": "pulitzer-2001-1",
+      "awardYear": 2001,
+      "title": "The Amazing Adventures of Kavalier & Clay",
+      "author": "Michael Chabon"
+    },
+    {
+      "key": "pulitzer-2002-1",
+      "awardYear": 2002,
+      "title": "Empire Falls",
+      "author": "Richard Russo"
+    },
+    {
+      "key": "pulitzer-2003-1",
+      "awardYear": 2003,
+      "title": "Middlesex",
+      "author": "Jeffrey Eugenides"
+    },
+    {
+      "key": "pulitzer-2004-1",
+      "awardYear": 2004,
+      "title": "The Known World",
+      "author": "Edward P. Jones"
+    },
+    {
+      "key": "pulitzer-2005-1",
+      "awardYear": 2005,
+      "title": "Gilead",
+      "author": "Marilynne Robinson"
+    },
+    {
+      "key": "pulitzer-2006-1",
+      "awardYear": 2006,
+      "title": "March",
+      "author": "Geraldine Brooks"
+    },
+    {
+      "key": "pulitzer-2007-1",
+      "awardYear": 2007,
+      "title": "The Road",
+      "author": "Cormac McCarthy"
+    },
+    {
+      "key": "pulitzer-2008-1",
+      "awardYear": 2008,
+      "title": "The Brief Wondrous Life of Oscar Wao",
+      "author": "Junot Diaz"
+    },
+    {
+      "key": "pulitzer-2009-1",
+      "awardYear": 2009,
+      "title": "Olive Kitteridge",
+      "author": "Elizabeth Strout"
+    },
+    {
+      "key": "pulitzer-2010-1",
+      "awardYear": 2010,
+      "title": "Tinkers",
+      "author": "Paul Harding"
+    },
+    {
+      "key": "pulitzer-2011-1",
+      "awardYear": 2011,
+      "title": "A Visit from the Goon Squad",
+      "author": "Jennifer Egan"
+    },
+    {
+      "key": "pulitzer-2013-1",
+      "awardYear": 2013,
+      "title": "The Orphan Master's Son",
+      "author": "Adam Johnson"
+    },
+    {
+      "key": "pulitzer-2014-1",
+      "awardYear": 2014,
+      "title": "The Goldfinch",
+      "author": "Donna Tartt"
+    },
+    {
+      "key": "pulitzer-2015-1",
+      "awardYear": 2015,
+      "title": "All the Light We Cannot See",
+      "author": "Anthony Doerr"
+    },
+    {
+      "key": "pulitzer-2016-1",
+      "awardYear": 2016,
+      "title": "The Sympathizer",
+      "author": "Viet Thanh Nguyen"
+    },
+    {
+      "key": "pulitzer-2017-1",
+      "awardYear": 2017,
+      "title": "The Underground Railroad",
+      "author": "Colson Whitehead"
+    },
+    {
+      "key": "pulitzer-2018-1",
+      "awardYear": 2018,
+      "title": "Less",
+      "author": "Andrew Sean Greer"
+    },
+    {
+      "key": "pulitzer-2019-1",
+      "awardYear": 2019,
+      "title": "The Overstory",
+      "author": "Richard Powers"
+    },
+    {
+      "key": "pulitzer-2020-1",
+      "awardYear": 2020,
+      "title": "The Nickel Boys",
+      "author": "Colson Whitehead"
+    },
+    {
+      "key": "pulitzer-2021-1",
+      "awardYear": 2021,
+      "title": "The Night Watchman",
+      "author": "Louise Erdrich"
+    },
+    {
+      "key": "pulitzer-2022-1",
+      "awardYear": 2022,
+      "title": "The Netanyahus: An Account of a Minor and Ultimately Even Negligible Episode in the History of a Very Famous Family",
+      "author": "Joshua Cohen"
+    },
+    {
+      "key": "pulitzer-2023-1",
+      "awardYear": 2023,
+      "title": "Trust",
+      "author": "Hernan Diaz"
+    },
+    {
+      "key": "pulitzer-2023-2",
+      "awardYear": 2023,
+      "title": "Demon Copperhead",
+      "author": "Barbara Kingsolver"
+    },
+    {
+      "key": "pulitzer-2024-1",
+      "awardYear": 2024,
+      "title": "Night Watch",
+      "author": "Jayne Anne Phillips"
+    },
+    {
+      "key": "pulitzer-2025-1",
+      "awardYear": 2025,
+      "title": "James",
+      "author": "Percival Everett"
+    },
+    {
+      "key": "pulitzer-2026-1",
+      "awardYear": 2026,
+      "title": "Angel Down",
+      "author": "Daniel Kraus"
+    }
+  ]
+}

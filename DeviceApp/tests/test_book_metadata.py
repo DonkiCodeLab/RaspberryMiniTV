@@ -37,6 +37,7 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(item['isbn'], 'RIGHT-EDITION')
         self.assertEqual(item['editionKey'], '/books/OL2M')
         self.assertEqual(item['title'], 'Título español')
+        self.assertEqual(item['originalTitle'], 'Work')
 
     def test_details_combines_edition_and_work_and_validates_keys(self):
         fixtures = {

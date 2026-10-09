@@ -1,5 +1,21 @@
 # WebApp
 
+Libros → **Libros premiados** permite recorrer por año el **Pulitzer de Ficción**
+(1948–2026, 73 obras) y el **Premio Planeta de Novela** (1952–2025, 74 obras).
+Los catálogos en `DeviceApp/data/pulitzer_fiction.json` y `planeta_novel.json`
+incluyen las fuentes oficiales y la fecha de comprobación. Al actualizar el
+palmarés, conserva una clave por obra: el Pulitzer 2023 tiene dos ganadoras.
+Los años sin premio se indican aparte; no se incluyen premios a trayectorias.
+Las obras presentes en la biblioteca se pueden leer y las ausentes ofrecen
+la carga habitual. La coincidencia exige título y autor o la misma obra de
+Open Library; excluye adaptaciones gráficas. Portadas y sinopsis se consultan
+al seleccionar una obra mediante el servicio de metadatos existente, con una
+cubierta tipográfica de respaldo si faltan datos o conexión. En modo demo no
+se hacen consultas externas. Los palmarés están incluidos en la compilación;
+no se actualizan automáticamente.
+
+Pruebas: `cd WebApp && node --test tests/bookAwards.test.js`.
+
 La ficha de una película guardada incluye **Obtener subtítulo**, con español,
 catalán e inglés. Busca y guarda automáticamente el SRT en la Raspberry, primero
 por la huella del fichero y después por su ficha y versión. **Configurar

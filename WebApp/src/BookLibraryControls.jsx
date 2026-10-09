@@ -1,5 +1,7 @@
 import React from "react";
 import { bookStrings } from "./bookStrings.js";
+import { bookAwardStrings } from "./bookAwardCatalog.js";
+import { BookAwardIcon } from "./BookAwardLibrary.jsx";
 import novelYellow from "./assets/libro_amarillo.png";
 import novelWhite from "./assets/libro_blanco.png";
 import graphicYellow from "./assets/speec_buble_amarillo.png";
@@ -25,8 +27,9 @@ export default function BookLibraryControls({ language, view, onViewChange, view
           aria-pressed={view === option.value} aria-label={viewLabels[option.value]} title={viewLabels[option.value]}
           onClick={() => onViewChange(option.value)}>{option.icon}</button>
       )}
+      <button type="button" className={`oscar-view-button${view === 'awards' ? ' active' : ''}`} aria-pressed={view === 'awards'} aria-label={bookAwardStrings(language).view} title={bookAwardStrings(language).view} onClick={() => onViewChange('awards')}><BookAwardIcon /></button>
     </div>
-    <div className="movie-library__view-switch books-library__type-switch" role="group" aria-label={t.bookType}>
+    {view !== 'awards' && <><div className="movie-library__view-switch books-library__type-switch" role="group" aria-label={t.bookType}>
       {[
         { value: "novel", label: t.novels, active: novelYellow, inactive: novelWhite },
         { value: "graphic", label: t.graphicNovels, active: graphicYellow, inactive: graphicWhite },
@@ -42,6 +45,6 @@ export default function BookLibraryControls({ language, view, onViewChange, view
         <option value="author">{t.sortAuthor}</option>
         <option value="year">{t.year}</option>
       </select>
-    </label>
+    </label></>}
   </div>;
 }

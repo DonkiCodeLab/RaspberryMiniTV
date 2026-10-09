@@ -24,6 +24,8 @@ import OscarLibrary, { OscarIcon } from "./OscarLibrary";
 import { awardStrings, movieAwards } from "./awardCatalog.js";
 import MovieAwardBadges from "./MovieAwardBadges.jsx";
 import AwardSelector from "./AwardSelector.jsx";
+import BookAwardLibrary, { BookAwardSelector } from "./BookAwardLibrary.jsx";
+import { bookAwardStrings } from "./bookAwardCatalog.js";
 import { buildBookCollections, matchesBookQuery } from "./bookLibrary.js";
 import { bookLanguageName, isGraphicNovel } from "./bookMetadata.js";
 import { bookStrings } from "./bookStrings.js";
@@ -36,6 +38,7 @@ import GameConsoleCarousel from "./GameConsoleCarousel";
 import GameMetadataPicker from "./GameMetadataPicker.jsx";
 import GameDetails from "./GameDetails.jsx";
 import GameLibraryCard from "./GameLibraryCard.jsx";
+import GameImagePreview from "./GameImagePreview.jsx";
 import { gameMetadataImageUrl } from "./api/raspberryApi";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
 import { mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason } from "./mediaMarks.js";
@@ -585,6 +588,7 @@ const UI_STRINGS = {
     games_media_title: "Multimedia",
     games_gallery_title: "Imágenes",
     games_image_number: "Imagen {number}",
+    games_enlarge_image: "Ampliar imagen",
     games_file_details: "Archivo y fuente de la ficha",
     games_videos_label: "Vídeos",
     games_video_title: "Vídeos del juego",
@@ -1030,6 +1034,7 @@ const UI_STRINGS = {
     games_media_title: "Multimèdia",
     games_gallery_title: "Imatges",
     games_image_number: "Imatge {number}",
+    games_enlarge_image: "Ampliar imatge",
     games_file_details: "Arxiu i font de la fitxa",
     games_videos_label: "Vídeos",
     games_video_title: "Vídeos del joc",
@@ -1475,6 +1480,7 @@ const UI_STRINGS = {
     games_media_title: "Media",
     games_gallery_title: "Images",
     games_image_number: "Image {number}",
+    games_enlarge_image: "Enlarge image",
     games_file_details: "File and metadata source",
     games_videos_label: "Videos",
     games_video_title: "Game videos",
@@ -4093,18 +4099,18 @@ function GameUploadModal({
               <strong>{t("games_cover_picker")}</strong>
               <div className="game-cover-preview">
                 {(coverPreviewUrl || metadataSelection?.covers?.[0]?.url) ? (
-                  <img src={coverPreviewUrl || gameMetadataImageUrl(metadataSelection?.covers?.[0]?.url)} alt={gameName || file.name} />
+                  <GameImagePreview src={coverPreviewUrl || gameMetadataImageUrl(metadataSelection?.covers?.[0]?.url)} alt={`${gameName || file.name} — ${t("games_cover_picker")}`} t={t} />
                 ) : (
                   <span>{t("games_default_cover")}</span>
                 )}
               </div>
               {metadataSelection?.screenshots?.length > 0 && <div className="game-extra-preview-grid">
-                {metadataSelection.screenshots.map((entry, index) => <img key={entry.url} src={gameMetadataImageUrl(entry.url)} loading="lazy" alt={`${gameName} ${index + 1}`} />)}
+                {metadataSelection.screenshots.map((entry, index) => <GameImagePreview key={entry.url} src={gameMetadataImageUrl(entry.url)} loading="lazy" alt={`${gameName || file.name} — ${t("games_image_number", { number: index + 1 })}`} t={t} />)}
               </div>}
               {imagePreviewUrls.length ? (
                 <div className="game-extra-preview-grid" aria-label={t("games_extra_images_field")}>
                   {imagePreviewUrls.map((previewUrl, index) => (
-                    <img key={previewUrl} src={previewUrl} alt={`${gameName || file.name} ${index + 1}`} />
+                    <GameImagePreview key={previewUrl} src={previewUrl} alt={`${gameName || file.name} — ${t("games_image_number", { number: index + 1 })}`} t={t} />
                   ))}
                 </div>
               ) : null}
@@ -6310,6 +6316,8 @@ export default function App() {
   const [bookLibraryType, setBookLibraryType] = useState("novel");
   const [bookLibrarySort, setBookLibrarySort] = useState("name");
   const [bookLibraryView, setBookLibraryView] = useState("grid");
+  const [bookAwardType, setBookAwardType] = useState("pulitzer");
+  const [bookAwardEditions, setBookAwardEditions] = useState({});
   const [bookSortDirection, setBookSortDirection] = useState("asc");
   const [openBook, setOpenBook] = useState(null);
   const [bookOpenTarget, setBookOpenTarget] = useState(null);
@@ -8814,6 +8822,7 @@ export default function App() {
   const isOscarView = isMoviesMode && movieLibraryView === "oscars" && !selectedMovie;
   const isGamesMode = activeMediaType === "games";
   const isBooksMode = activeMediaType === "books";
+  const isBookAwardView = isBooksMode && bookLibraryView === "awards" && !activeBookCollection;
   const isPicturesMode = activeMediaType === "pictures";
   const activeMediaSection = MEDIA_TYPES.find((mediaType) => mediaType.id === activeMediaType);
   const activeFilterQuery = mediaFilterQueries[activeMediaType] || "";
@@ -9274,7 +9283,7 @@ export default function App() {
                         <svg className="series-hero__section-icon" viewBox={activeMediaSection.headerIcon.viewBox} aria-hidden="true" focusable="false">
                           <image href={activeMediaSection.inactiveIcon} width={activeMediaSection.headerIcon.width} height={activeMediaSection.headerIcon.height} />
                         </svg>
-                        <span>{isBooksMode ? (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : t(activeMediaSection.labelKey)}</span>
+                        <span>{isBookAwardView ? bookAwardStrings(raspberryLanguage).view : isBooksMode ? (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : t(activeMediaSection.labelKey)}</span>
                       </h1>
                     ) : null}
 
@@ -9317,7 +9326,8 @@ export default function App() {
                         </div>
                       ) : null}
                       {isOscarView && <AwardSelector value={awardType} onChange={setAwardType} language={raspberryLanguage} />}
-                      {isGamesMode ? <div className="series-hero__controls-row series-hero__controls-row--selector-only"><GameConsoleCarousel systemId={selectedSystemId} onSystemChange={(id) => { setSelectedSystemId(id); setSelectedGamePath(""); }} language={raspberryLanguage} /></div> : !isOscarView && <div
+                      {isBookAwardView && <BookAwardSelector value={bookAwardType} onChange={setBookAwardType} language={raspberryLanguage} />}
+                      {isGamesMode ? <div className="series-hero__controls-row series-hero__controls-row--selector-only"><GameConsoleCarousel systemId={selectedSystemId} onSystemChange={(id) => { setSelectedSystemId(id); setSelectedGamePath(""); }} language={raspberryLanguage} /></div> : !isOscarView && !isBookAwardView && <div
                         className={`series-hero__controls-row${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
                         {filterTotal ? (
@@ -9433,7 +9443,7 @@ export default function App() {
                     disabled={!heroSelectorOptions.length} onChange={handleOpenGameDetails} />
                 </div>}
 
-                {!isOscarView && !isMediaDetail && (isGamesMode || filterTotal > 0) && mediaFilterOpen ? (
+                {!isOscarView && !isBookAwardView && !isMediaDetail && (isGamesMode || filterTotal > 0) && mediaFilterOpen ? (
                   <section id="library-filter-panel" className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
@@ -9473,7 +9483,11 @@ export default function App() {
                   </section>
                 ) : null}
 
-                {isOscarView ? (
+                {isBookAwardView ? (
+                  <BookAwardLibrary key={bookAwardType} award={bookAwardType} books={videos?.books || []} language={raspberryLanguage}
+                    edition={bookAwardEditions[bookAwardType]} onEditionChange={edition => setBookAwardEditions(current => ({ ...current, [bookAwardType]: edition }))}
+                    onRead={setBookOpenTarget} onUpload={() => { setBookLibraryType("novel"); handleOpenUploadsForMedia("books"); setUploadBookIsGraphicNovel(false); }} />
+                ) : isOscarView ? (
                   <OscarLibrary key={awardType} award={awardType} movies={movieOptions} language={tmdbLanguage} edition={awardEditions[awardType]} onEditionChange={edition => setAwardEditions(current => ({ ...current, [awardType]: edition }))} onOpenMovie={handleOpenMovieDetails}
                     onUploadMovie={() => handleOpenUploadsForMedia("movies")}
                     onSearchTorrent={movie => {
@@ -10087,7 +10101,7 @@ export default function App() {
           </>
         )}
       </div>
-      {unlocked && currentView !== "raspberry" && !isOscarView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
+      {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
   );
 }
