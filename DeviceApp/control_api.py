@@ -3317,7 +3317,7 @@ def browser_game_content():
     game_path = resolve_game_path(relative_path)
     if not game_path or not os.path.isfile(game_path) or not is_game_rom_file(game_path):
         return jsonify({"error": "Game not found"}), 404
-    return send_file(game_path, conditional=True, as_attachment=False)
+    return send_file(game_path, conditional=True, as_attachment=request.args.get("download") == "1")
 
 
 @app.route("/games/browser", methods=["GET"])

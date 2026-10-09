@@ -9,7 +9,7 @@ import tvGreen from "./assets/tele_green_2_fixed.png";
 import "./GameDetails.css";
 
 export default function GameDetails({ game, t, language, marks, onBack, onEdit, onDelete,
-  onPlay, onPlayInBrowser, playing, browserSupported, onRefresh }) {
+  onPlay, onPlayInBrowser, playing, browserSupported, onRefresh, headerControls = false }) {
   const metadata = game.gameMetadata || {};
   const name = game.name || game.file;
   const system = systemForGame(game);
@@ -35,9 +35,9 @@ export default function GameDetails({ game, t, language, marks, onBack, onEdit, 
   return <section className="game-details seasons-section" aria-label={t("game_file_label")}>
     <div className="seasons-section__label">{t("game_file_label")}</div>
     <div className="game-details__toolbar">
-      <button type="button" className="back-button" onClick={onBack}>← {t("media_games")}</button>
+      {!headerControls && <button type="button" className="back-button" onClick={onBack}>← {t("media_games")}</button>}
       <div className="game-details__tools">
-        <button className="dialog-button dialog-button--ghost" type="button" onClick={onEdit}>{t("games_edit_title")}</button>
+        {!headerControls && <button className="dialog-button dialog-button--ghost" type="button" onClick={onEdit}>{t("games_edit_title")}</button>}
         <button className="media-delete-button" type="button" onClick={onDelete}
           aria-label={t("delete_media", { media: t("media_games_singular") })}
           title={t("delete_media", { media: t("media_games_singular") })}>

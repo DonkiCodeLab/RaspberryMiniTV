@@ -1,3 +1,4 @@
+import { gameYear, gameRating } from "./gameCardMetadata.js";
 import { playbackArtwork, refreshCurrentPlayback } from "./currentPlayback.js";
 import { seriesArtwork } from "./seriesArtwork.js";
 import LibraryScrollRail from "./LibraryScrollRail.jsx";
@@ -101,6 +102,7 @@ import {
   getAlarmSoundUrl,
   getHealth,
   getBrowserGameUrl,
+  getGameDownloadUrl,
   getMediaStreamUrl,
   getBookContent,
   getBookContentUrl,
@@ -669,6 +671,13 @@ const UI_STRINGS = {
     upload_only_new: "Subir solo los nuevos",
     upload_button: "Upload",
     tmdb_browser_title: "Descargar torrent",
+    select_game: "Selecciona un juego",
+    games_filter: "Filtrar",
+    games_show_options: "Mostrar opciones de juegos",
+    games_hide_options: "Ocultar opciones de juegos",
+    tmdb_browser_search_label: "Búsqueda (utilizando la base de datos de TMDB)",
+    tmdb_browser_trailer: "Tráiler",
+    tmdb_browser_no_trailer: "No hay un tráiler de YouTube disponible.",
     tmdb_browser_copy:
       "Consulta las fichas de series y películas en TMDB, elige un torrent y sigue su descarga desde el dashboard. En series puedes buscar por temporada y capítulo.",
     tmdb_browser_open: "Buscar torrent",
@@ -1107,6 +1116,13 @@ const UI_STRINGS = {
     upload_only_new: "Pujar només els nous",
     upload_button: "Upload",
     tmdb_browser_title: "Descarregar torrent",
+    select_game: "Selecciona un joc",
+    games_filter: "Filtrar",
+    games_show_options: "Mostrar opcions de jocs",
+    games_hide_options: "Amagar opcions de jocs",
+    tmdb_browser_search_label: "Cerca (utilitzant la base de dades de TMDB)",
+    tmdb_browser_trailer: "Tràiler",
+    tmdb_browser_no_trailer: "No hi ha cap tràiler de YouTube disponible.",
     tmdb_browser_copy:
       "Consulta les fitxes de sèries i pel·lícules a TMDB, tria un torrent i segueix-ne la descàrrega al dashboard. A les sèries pots cercar per temporada i capítol.",
     tmdb_browser_open: "Cercar torrent",
@@ -1545,6 +1561,13 @@ const UI_STRINGS = {
     upload_only_new: "Upload only new videos",
     upload_button: "Upload",
     tmdb_browser_title: "Download torrent",
+    select_game: "Select a game",
+    games_filter: "Filter",
+    games_show_options: "Show game options",
+    games_hide_options: "Hide game options",
+    tmdb_browser_search_label: "Search (using the TMDB database)",
+    tmdb_browser_trailer: "Trailer",
+    tmdb_browser_no_trailer: "No YouTube trailer is available.",
     tmdb_browser_copy:
       "Browse series and movie details on TMDB, choose a torrent and follow its download on the dashboard. For series, you can search by season and episode.",
     tmdb_browser_open: "Search torrents",
@@ -4451,7 +4474,6 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [browserView, setBrowserView] = useState("results");
-  const [movieFrameIndex, setMovieFrameIndex] = useState(0);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -4464,7 +4486,6 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
       setSeasonEpisodes(null);
       setSelectedEpisode(null);
       setBrowserView("results");
-      setMovieFrameIndex(0);
       setError("");
     }
   }, [visible, initialMediaType]);
@@ -4492,19 +4513,11 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
   useEffect(() => {
     if (!visible) return () => {};
 
-    function handleKeyDown(event) {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    }
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [visible]);
 
@@ -4550,7 +4563,6 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
     setSeasonEpisodes(null);
     setSelectedEpisode(null);
     setBrowserView(mediaType === "movies" ? "movie" : "seasons");
-    setMovieFrameIndex(0);
 
     try {
       const details =
@@ -4613,12 +4625,6 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
   if (!visible) return null;
 
   const mediaLabel = mediaType === "movies" ? t("media_movies_singular") : t("media_series_singular");
-  const previewImages = selectedItem?.imageOptions?.length
-    ? selectedItem.imageOptions.slice(0, MAX_MOVIE_IMAGES)
-    : [selectedItem?.heroImage].filter(Boolean);
-  const safeMovieFrameIndex = previewImages.length
-    ? Math.min(movieFrameIndex, previewImages.length - 1)
-    : 0;
   const canShowSearch = browserView === "results";
   const releaseDate = selectedItem?.releaseDate;
   const releaseTimestamp = releaseDate ? Date.parse(`${releaseDate}T00:00:00Z`) : NaN;
@@ -4654,7 +4660,6 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
     setSelectedSeasonId(null);
     setSeasonEpisodes(null);
     setSelectedEpisode(null);
-    setMovieFrameIndex(0);
     setBrowserView("results");
   }
 
@@ -4666,17 +4671,24 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
   }
 
   return (
-    <div className="modal-backdrop modal-backdrop--tmdb-browser" onClick={onClose}>
+    <div className="modal-backdrop modal-backdrop--tmdb-browser">
       <div
         className="dialog-card dialog-card--tmdb-browser"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
+        {!canShowSearch && (
+          <div className="tmdb-browser__toolbar">
+            <button className="back-button season-page__back tmdb-browser__back" onClick={handleBack} type="button">
+              <span className="season-page__back-arrow" aria-hidden="true">←</span>
+              <span className="season-page__back-label">{t("back")}</span>
+            </button>
+          </div>
+        )}
         <div className="dialog-card__header">
           <div>
-            <p>TMDB</p>
-            <h2>{t("tmdb_browser_title")}</h2>
+            <h2>{t("tmdb_browser_title")}{mediaType === "movies" && selectedItem ? `: ${selectedItem.name}` : ""}</h2>
           </div>
           <button className="dialog-card__close" onClick={onClose} type="button" aria-label={t("close")}>
             ×
@@ -4710,7 +4722,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
           </div>
 
           <label className="dialog-field tmdb-browser__query">
-            <span>{t("search")}</span>
+            <span>{t("tmdb_browser_search_label")}</span>
             <div className="search-input-shell">
               <span className="search-input-shell__icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" role="presentation">
@@ -4731,14 +4743,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
             {searching ? t("searching_button") : t("search_button")}
           </button>
         </form>
-        ) : (
-          <div className="tmdb-browser__toolbar">
-            <button className="back-button season-page__back tmdb-browser__back" onClick={handleBack} type="button">
-              <span className="season-page__back-arrow" aria-hidden="true">←</span>
-              <span className="season-page__back-label">{t("back")}</span>
-            </button>
-          </div>
-        )}
+        ) : null}
 
         {error ? <p className="dialog-error">{error}</p> : null}
 
@@ -4879,32 +4884,23 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
             ) : (
               <div className="movie-panel tmdb-browser-movie">
                 <div className="movie-panel__card">
-                  <MovieImageCarousel
-                    title={selectedItem.name}
-                    images={previewImages}
-                    activeIndex={safeMovieFrameIndex}
-                    onSelect={setMovieFrameIndex}
-                    onPrevious={() =>
-                      setMovieFrameIndex((current) =>
-                        previewImages.length
-                          ? (current - 1 + previewImages.length) % previewImages.length
-                          : 0
-                      )
-                    }
-                    onNext={() =>
-                      setMovieFrameIndex((current) =>
-                        previewImages.length ? (current + 1) % previewImages.length : 0
-                      )
-                    }
-                    t={t}
-                  />
+                  <div className="tmdb-browser-movie__trailer">
+                    {selectedItem.trailer ? (
+                      <iframe
+                        key={selectedItem.trailer.key}
+                        src={`https://www.youtube-nocookie.com/embed/${selectedItem.trailer.key}`}
+                        title={`${t("tmdb_browser_trailer")}: ${selectedItem.name}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                      />
+                    ) : <p>{t("tmdb_browser_no_trailer")}</p>}
+                  </div>
 
                   <div className="movie-panel__content">
-                    <div className="movie-panel__header">
-                      <h2>{selectedItem.name}</h2>
-                      {selectedItem.originalName && selectedItem.originalName !== selectedItem.name ? (
-                        <p>{selectedItem.originalName}</p>
-                      ) : null}
+                    <div className="movie-panel__overview">
+                      <strong>{t("synopsis")}</strong>
+                      <p>{selectedItem.overview || t("synopsis_unavailable")}</p>
                     </div>
 
                     <div className="tmdb-browser-movie__links">
@@ -4944,10 +4940,6 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                     </ul>
                   </div>
 
-                  <div className="movie-panel__overview">
-                    <strong>{t("synopsis")}</strong>
-                    <p>{selectedItem.overview || t("synopsis_unavailable")}</p>
-                  </div>
                 </div>
               </div>
             )}
@@ -6310,6 +6302,8 @@ export default function App() {
   const [selectedGamePath, setSelectedGamePath] = useState("");
   const [selectedSystemId, setSelectedSystemId] = useState("gb");
   const [gameLibrarySort, setGameLibrarySort] = useState("name");
+  const [gameSortDirection, setGameSortDirection] = useState("asc");
+  const [gameActionsVisible, setGameActionsVisible] = useState(false);
   const [gameLibraryView, setGameLibraryView] = useState("grid");
   const [selectedBookCollection, setSelectedBookCollection] = useState("");
   const [bookLibraryType, setBookLibraryType] = useState("novel");
@@ -7055,7 +7049,7 @@ export default function App() {
 
   const seasons = selectedSeries?.seasons || [];
   const headerImage = activeMediaType === "games"
-    ? cartellLogo
+    ? selectedGame?.coverImage || cartellLogo
     : activeMediaType === "books"
       ? getBookDisplayCoverUrl(activeBookCollection?.coverBook) || cartellLogo
       : activeMediaType === "movies" && !selectedMovie
@@ -7908,6 +7902,18 @@ export default function App() {
     if (!relativePath) return "";
     const streamUrl = getMediaStreamUrl(relativePath);
     return `${streamUrl}${streamUrl.includes("?") ? "&" : "?"}download=1`;
+  }
+
+  function handleOpenGameDetails(relativePath) {
+    setSelectedGamePath(relativePath);
+    setMediaFilterOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleBackToGameLibrary() {
+    setSelectedGamePath("");
+    setSettingsOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleOpenMovieDetails(movieId) {
@@ -8826,9 +8832,10 @@ export default function App() {
     .sort((left, right) => seriesLibrarySort === "rating"
       ? (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right)
       : compareMediaNames(left, right));
-  const gameYear = (game) => String(game.releaseDate || game.releaseYear || game.year || "").match(/\b(?:19|20)\d{2}\b/)?.[0] || "";
-  const filteredGameOptions = [...consoleGames].sort((left, right) =>
-    (gameLibrarySort === "year" ? (Number(gameYear(right)) || 0) - (Number(gameYear(left)) || 0) : 0) || compareMediaNames(left, right));
+  const filteredGameOptions = consoleGames
+    .filter(game => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath))
+    .map(game => ({ ...game, year: gameYear(game) }))
+    .sort((left, right) => compareLibraryItems(left, right, gameLibrarySort, gameSortDirection, normalizeRaspberryLanguage(raspberryLanguage)));
   const filteredBookCollections = bookCollections.filter((collection) =>
     collection.books.some((book) =>
       matchesBookQuery(book, activeFilterQuery, `${collection.label} ${collection.author || ""}`) && matchesFavorite("book", book.relativePath)
@@ -8844,8 +8851,8 @@ export default function App() {
   useEffect(() => {
     if (!mediaFiltersActive || isBooksMode) return;
     if (isGamesMode) {
-      if (selectedGamePath && filteredGameOptions.length && !filteredGameOptions.some((game) => game.relativePath === selectedGame?.relativePath)) {
-        setSelectedGamePath(filteredGameOptions[0].relativePath);
+      if (selectedGamePath && !filteredGameOptions.some((game) => game.relativePath === selectedGame?.relativePath)) {
+        setSelectedGamePath("");
       }
     } else if (isMoviesMode && selectedMovieId != null) {
       if (filteredMovieOptions.length && !filteredMovieOptions.some((movie) => movie.id === selectedMovie?.id)) {
@@ -8869,7 +8876,7 @@ export default function App() {
   const selectorLabel = isBooksMode
     ? formatBookCollectionLabel(activeBookCollection)
     : isGamesMode
-    ? t("select_type")
+    ? t("select_game")
     : isMoviesMode
       ? t("select_movie")
       : t("select_series");
@@ -8895,7 +8902,7 @@ export default function App() {
         value: isMoviesMode ? String(item.id) : item.directoryPath,
         label: item.name,
       }));
-  const isMediaDetail = (isSeriesMode && Boolean(selectedSeries)) || (isMoviesMode && Boolean(selectedMovie)) || (isBooksMode && Boolean(activeBookCollection));
+  const isMediaDetail = (isGamesMode && Boolean(selectedGame)) || (isSeriesMode && Boolean(selectedSeries)) || (isMoviesMode && Boolean(selectedMovie)) || (isBooksMode && Boolean(activeBookCollection));
   const filterTotal = isPicturesMode ? pictureLibrary.length : isBooksMode
     ? activeBookCollection?.books.length ?? bookCollections.length
     : isGamesMode
@@ -9254,9 +9261,9 @@ export default function App() {
                   <div className="series-hero__banner">
                     <HeaderArt
                       image={headerImage}
-                      gameSystem={isGamesMode ? GAME_SYSTEMS.find(system => system.id === selectedSystemId) : null}
+                      gameSystem={isGamesMode && !selectedGame ? GAME_SYSTEMS.find(system => system.id === selectedSystemId) : null}
                       crop={headerImageCrop}
-                      bookCover={isBooksMode && Boolean(activeBookCollection)}
+                      bookCover={(isBooksMode && Boolean(activeBookCollection)) || (isGamesMode && Boolean(selectedGame?.coverImage))}
                       bookType={isBooksMode ? bookLibraryType : null}
                       alt={(isBooksMode ? activeBookCollection?.label || (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : selectedItem?.name) || "Cartell principal"}
                     />
@@ -9272,8 +9279,8 @@ export default function App() {
 
                     {isMediaDetail ? (
                       <div className="movie-library__hero-tools">
-                        <button type="button" className="back-button" onClick={isBooksMode ? handleBackToBookLibrary : isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
-                          <span aria-hidden="true">←</span> {t(isBooksMode ? "book_library" : isMoviesMode ? "movie_library" : "series_library")}
+                        <button type="button" className="back-button" onClick={isGamesMode ? handleBackToGameLibrary : isBooksMode ? handleBackToBookLibrary : isMoviesMode ? handleBackToMovieLibrary : handleBackToSeriesLibrary}>
+                          <span aria-hidden="true">←</span> {t(isGamesMode ? "media_games" : isBooksMode ? "book_library" : isMoviesMode ? "movie_library" : "series_library")}
                         </button>
                       </div>
                     ) : null}
@@ -9360,7 +9367,7 @@ export default function App() {
                             isBooksMode
                               ? handleOpenBookCollection(nextValue)
                               : isGamesMode
-                              ? setSelectedGamePath(nextValue)
+                              ? handleOpenGameDetails(nextValue)
                               : isMoviesMode
                               ? handleOpenMovieDetails(nextValue)
                               : handleOpenSeriesDetails(nextValue)
@@ -9377,7 +9384,7 @@ export default function App() {
                       } : undefined}
                     >
                     <div className={isMediaDetail ? "series-hero__detail-actions" : "series-hero__settings-slot"}>
-                    {hasSettingsButton && !isGamesMode ? (
+                    {hasSettingsButton ? (
                       <button
                         className={`series-icon-button series-icon-button--hero series-icon-button--hero-settings${isMediaDetail ? " series-icon-button--detail-settings" : ""}`}
                         onClick={handleOpenCustomization}
@@ -9396,7 +9403,7 @@ export default function App() {
                     ) : null}
 
                     {isMediaDetail && !isBooksMode ? (
-                      isMoviesMode
+                      isGamesMode ? renderMarks("game", selectedGame.relativePath) : isMoviesMode
                         ? renderMarks("movie", selectedMovie.id)
                         : renderMarks("series", selectedSeries.id || selectedSeries.directoryPath, false)
                     ) : null}
@@ -9413,8 +9420,20 @@ export default function App() {
                   </div>
                 </header>}
 
-                {!isGamesMode && !isOscarView && !isMediaDetail && filterTotal > 0 && mediaFilterOpen ? (
-                  <section className="movie-filter__panel" aria-label={t("movie_filter_title")}>
+                {isGamesMode && !isMediaDetail && <div className="games-library__controls">
+                  <button className={`dialog-button games-library__filter${mediaFilterOpen ? " is-open" : ""}`} type="button"
+                    onClick={() => setMediaFilterOpen(current => !current)} aria-expanded={mediaFilterOpen}
+                    aria-controls="library-filter-panel">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d={mediaFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} /></svg>
+                    {t("games_filter")}{mediaFiltersActive ? ` (${activeFilterCount})` : ""}
+                  </button>
+                  <HeroSelector options={heroSelectorOptions} value={selectorValue}
+                    placeholder={heroSelectorOptions.length ? selectorLabel : t("games_empty_title")}
+                    disabled={!heroSelectorOptions.length} onChange={handleOpenGameDetails} />
+                </div>}
+
+                {!isOscarView && !isMediaDetail && (isGamesMode || filterTotal > 0) && mediaFilterOpen ? (
+                  <section id="library-filter-panel" className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
                       {mediaFiltersActive ? <button type="button" onClick={() => { setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: "" })); setMediaFavoritesOnly((current) => ({ ...current, [activeMediaType]: false })); if (isMoviesMode) setMovieGenreFilters((current) => ({ ...current, [raspberryLanguage]: [] })); }}>{t("movie_filter_clear")}</button> : null}
@@ -9504,25 +9523,68 @@ export default function App() {
                   )
                 ) : isGamesMode ? (
                   <>
-                    {!selectedGame && <section className="movie-library seasons-section games-library">
+                    {!selectedGame && <section className="movie-library seasons-section games-library library-with-scroll-rail">
+                      <LibraryScrollRail labels={filteredGameOptions.map(game => libraryScrollLabel(game, gameLibrarySort, normalizeRaspberryLanguage(raspberryLanguage)))} language={raspberryLanguage} sort={gameLibrarySort} direction={gameSortDirection} onDirectionChange={setGameSortDirection} actionsVisible={gameActionsVisible} onActionsChange={gameLibraryView === "list" ? undefined : setGameActionsVisible} actionLabels={{ showActions: t("games_show_options"), hideActions: t("games_hide_options") }} />
                       <div className="seasons-section__label">{libraryCountLabel}</div>
-                      <MovieLibraryItems view={gameLibraryView}>
-                        {filteredGameOptions.map(game => <article className="movie-library__card" key={game.relativePath}>
-                          <button className="movie-library__poster" type="button" onClick={() => setSelectedGamePath(game.relativePath)} aria-label={`${t("movie_details")}: ${game.name || game.file}`}>
+                      <MovieLibraryItems view={gameLibraryView} actionsVisible={gameActionsVisible}>
+                        {filteredGameOptions.map(game => {
+                          const markKey = mediaMarkKey("game", game.relativePath);
+                          const gameMarks = mediaMarks[markKey] || {};
+                          const isWatched = Boolean(gameMarks.watched);
+                          const isFavorite = Boolean(gameMarks.favorite);
+                          return <article data-library-index className="movie-library__card" key={game.relativePath}>
+                          <button className="movie-library__poster" type="button" onClick={() => handleOpenGameDetails(game.relativePath)} aria-label={`${t("movie_details")}: ${game.name || game.file}`}>
                             <LibraryPoster src={game.coverImage || emptyStateIcon} name={game.name || game.file} />
                           </button>
                           <div className="movie-library__info">
-                            <h2><button className="games-library__title" type="button" onClick={() => setSelectedGamePath(game.relativePath)}>{game.name || game.file}</button></h2>
-                            <div className="movie-library__meta"><span>{gameYear(game) || t("not_available")}</span><span>{systemForGame(game)?.name}</span></div>
+                            <h2><button className="games-library__title" type="button" onClick={() => handleOpenGameDetails(game.relativePath)}>{game.name || game.file}</button></h2>
+                            <div className="movie-library__meta"><span>{gameYear(game) || "—"}</span><span>{gameRating(game) ? `★ ${gameRating(game)}` : "—"}</span></div>
+                              <div className="movie-library__actions-reveal" inert={gameLibraryView !== "list" && !gameActionsVisible} aria-hidden={gameLibraryView !== "list" && !gameActionsVisible}>
+                                <div className="movie-library__actions-clip">
+                                  <div className="movie-library__actions movie-library__actions--icons">
+                                    <button
+                                      className={`movie-watched${isWatched ? " is-watched" : ""}`}
+                                      type="button"
+                                      onClick={() => saveMarks({ ...mediaMarks, [markKey]: { ...gameMarks, watched: !isWatched } })}
+                                      aria-pressed={isWatched}
+                                      aria-label={`${t(isWatched ? "mark_watched" : "mark_unwatched")}: ${game.name || game.file}`}
+                                      title={t(isWatched ? "mark_watched" : "mark_unwatched")}
+                                    >
+                                      <MediaMarkIcon active={isWatched} />
+                                    </button>
+                                    <button
+                                      className={`movie-favorite${isFavorite ? " is-favorite" : ""}`}
+                                      type="button"
+                                      onClick={() => saveMarks({ ...mediaMarks, [markKey]: { ...gameMarks, favorite: !isFavorite } })}
+                                      aria-pressed={isFavorite}
+                                      aria-label={`${t(isFavorite ? "mark_favorite" : "mark_not_favorite")}: ${game.name || game.file}`}
+                                      title={t(isFavorite ? "movie_favorite_remove" : "movie_favorite_add")}
+                                    >
+                                      <MediaMarkIcon favorite active={isFavorite} />
+                                    </button>
+                                    <MovieDownload url={getGameDownloadUrl(game.relativePath)} name={game.file || game.name} label={t("movie_download")} />
+                                    <button
+                                      className="media-delete-button movie-library__delete"
+                                      type="button"
+                                      onClick={() => handleDeleteGame(game)}
+                                      aria-label={`${t("delete_media", { media: t("media_games_singular") })}: ${game.name || game.file}`}
+                                      title={t("delete_media", { media: t("media_games_singular") })}
+                                    >
+                                      <img src={deleteIcon} alt="" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
                           </div>
-                        </article>)}
+                        </article>;
+                        })}
                       </MovieLibraryItems>
                       {!filteredGameOptions.length && <p className="games-library__empty">{t("games_empty_title")}</p>}
                     </section>}
                   {selectedGame && filteredGameOptions.some(game => game.relativePath === selectedGame.relativePath) ? (
                     <GameDetails key={selectedGame.relativePath} game={selectedGame} t={t} language={raspberryLanguage}
-                      marks={renderMarks("game", selectedGame.relativePath, false)}
-                      onBack={() => setSelectedGamePath("")} onEdit={handleOpenCustomization}
+                      headerControls
+                      onBack={handleBackToGameLibrary} onEdit={handleOpenCustomization}
                       onDelete={() => handleDeleteGame(selectedGame)}
                       onPlay={handlePlayGame} onPlayInBrowser={handlePlayGameInBrowser}
                       playing={raspberryControlsBusy}

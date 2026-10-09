@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentQuery, torrentSize, torrentSources, torrentLibraryVersion, sortTorrents, torrentStrings } from "../src/torrentUtils.js";
+import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentLibraryVersion, sortTorrents, torrentStrings } from "../src/torrentUtils.js";
 
 test("movie search prefers original title and release year", () => {
   assert.equal(torrentQuery({ name: "Título", originalName: "Original", releaseDate: "1968-10-01" }), "Original 1968");
@@ -39,7 +39,7 @@ test("library refresh happens on import and TMDB completion, not on progress upd
 test("all UI states and controls are translated", () => {
   for (const language of ["es-ES", "ca-ES", "en-US"]) {
     const strings = torrentStrings(language);
-    for (const key of ["queued", "downloading", "paused", "importing", "metadata", "complete", "failed", "cancelled", "retry", "cancel", "pause", "resume", "remove", "history", "historyHint", "active", "list", "source", "sourcesSearched", "sourcesUnavailable", "seriesHint", "seriesEmpty", "season", "episode", "moreEztv", "eztvMissing", "eztvHint", "episodesImported", "episodesSkipped", "movie", "series"])
+    for (const key of ["sortBy", "sortDirection", "ascending", "descending", "queued", "downloading", "paused", "importing", "metadata", "complete", "failed", "cancelled", "retry", "cancel", "pause", "resume", "remove", "history", "historyHint", "active", "list", "source", "sourcesSearched", "sourcesUnavailable", "seriesHint", "seriesEmpty", "season", "episode", "moreEztv", "eztvMissing", "eztvHint", "episodesImported", "episodesSkipped", "movie", "series"])
       assert.ok(strings[key]);
   }
 });
@@ -67,4 +67,35 @@ test("award movie searches use the English title even when the original is not E
   assert.equal(torrentQuery(movie), "Parasite 2019");
   assert.equal(torrentQuery({ ...movie, englishName: "" }), "기생충 2019");
   assert.equal(torrentQuery(movie, "series"), "기생충");
+});
+
+test("torrent results sort numerically by size or seeds in both directions", () => {
+  const rows = Object.freeze([
+    { name: "A", sizeBytes: "100", seeds: "9" },
+    { name: "B", sizeBytes: "9", seeds: "100" },
+    { name: "C", sizeBytes: "20", seeds: "20" },
+  ]);
+  const names = (field, direction) => sortTorrents(rows, field, direction).map(row => row.name);
+  assert.deepEqual(names("sizeBytes", "asc"), ["B", "C", "A"]);
+  assert.deepEqual(names("sizeBytes", "desc"), ["A", "C", "B"]);
+  assert.deepEqual(names("seeds", "asc"), ["A", "C", "B"]);
+  assert.deepEqual(names("seeds", "desc"), ["B", "C", "A"]);
+});
+
+test("sorting handles missing values, ties and additional result pages", () => {
+  const rows = [{ infoHash: "a", name: "A", seeds: 9, sizeBytes: 100 }, { infoHash: "b", name: "B", seeds: 9, sizeBytes: 20 }];
+  assert.deepEqual(sortTorrents(rows, "seeds", "asc").map(row => row.name), ["A", "B"]);
+  assert.deepEqual(sortTorrents(rows, "seeds", "desc").map(row => row.name), ["A", "B"]);
+  const merged = mergeTorrentResults(rows, [{ infoHash: "c", name: "C", seeds: 100, sizeBytes: 50 }]);
+  assert.deepEqual(sortTorrents(merged, "sizeBytes", "asc").map(row => row.name), ["B", "C", "A"]);
+  assert.deepEqual(sortTorrents([{ name: "Missing" }, ...rows], "sizeBytes", "asc").map(row => row.name), ["Missing", "B", "A"]);
+  assert.deepEqual(sortTorrents(undefined, "sizeBytes", "asc"), []);
+});
+
+test("torrent list sizes use whole megabytes with dot thousands separators", () => {
+  assert.equal(torrentListSize(3_234_000_000), "3.234 MB");
+  assert.equal(torrentListSize(3_234_600_000), "3.235 MB");
+  assert.equal(torrentListSize(999_000_000), "999 MB");
+  assert.equal(torrentListSize(1_234_567_000_000), "1.234.567 MB");
+  assert.equal(torrentListSize(undefined), "0 MB");
 });

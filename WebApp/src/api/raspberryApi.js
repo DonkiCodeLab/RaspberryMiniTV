@@ -1279,6 +1279,15 @@ export function playGameFile(relativePath) {
   });
 }
 
+export function getGameDownloadUrl(relativePath) {
+  const path = String(relativePath || "").trim();
+  if (!path) return "";
+  const params = new URLSearchParams({ relativePath: path, download: "1" });
+  const storedPin = getStoredWebPin();
+  if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
+  return `${getBaseUrl()}/games/content?${params.toString()}`;
+}
+
 export function getBrowserGameUrl(relativePath, systemId) {
   const params = new URLSearchParams({
     relativePath: String(relativePath || "").trim(),

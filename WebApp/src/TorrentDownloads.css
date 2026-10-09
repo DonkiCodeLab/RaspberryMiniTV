@@ -50,3 +50,8 @@
 .torrent-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 @media (max-width: 600px) { .movie-torrents { padding: 16px; } .movie-torrents__search { align-items: stretch; flex-direction: column; } .torrent-job { padding: 16px; } }
 @media (max-width: 600px) { .movie-torrents__search--series > label, .movie-torrents__search .movie-torrents__filter { flex: 0 0 auto; } }
+
+.movie-torrents__sort { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.movie-torrents__sort .dialog-field { flex: 1 1 180px; min-width: 0; }
+.movie-torrents__sort select { width: 100%; padding: .8rem 1rem; border: 1px solid #ffffff29; border-radius: 16px; background: #23313b; color: #fff; font: inherit; color-scheme: dark; }
+.movie-torrents__sort select:focus-visible { outline: 2px solid #ffdc35; outline-offset: 2px; }

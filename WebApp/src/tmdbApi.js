@@ -1,3 +1,4 @@
+import { selectMovieTrailer } from "./movieTrailer.js";
 import { getCachedLibrarySummaries, getCachedTmdbJson, isMockMode, localTmdbImageUrl, updateRaspberryTmdbSettings } from "./api/raspberryApi";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
@@ -445,10 +446,19 @@ export async function getMovieById(movieId, language, importPreview = false) {
   const [movie, availableImages] = await Promise.all([
     fetchTmdbJsonWithEnglishOverview(`/movie/${movieId}`, {
       language, importPreview,
-      query: { append_to_response: "external_ids" },
+      query: { append_to_response: importPreview ? "external_ids,videos" : "external_ids" },
     }),
     getMovieImages(movieId, language, importPreview).catch(() => []),
   ]);
+
+  let trailer = selectMovieTrailer(movie?.videos?.results);
+  if (importPreview && !trailer && language !== TMDB_ENGLISH_FALLBACK_LANGUAGE) {
+    const fallback = await fetchTmdbJson(`/movie/${movieId}`, {
+      language: TMDB_ENGLISH_FALLBACK_LANGUAGE, importPreview,
+      query: { append_to_response: "videos" },
+    }).catch(() => null);
+    trailer = selectMovieTrailer(fallback?.videos?.results);
+  }
 
   const heroImage =
     buildTmdbImageUrl(movie?.backdrop_path, "w1280", importPreview) ||
@@ -472,6 +482,7 @@ export async function getMovieById(movieId, language, importPreview = false) {
     originalName: movie?.original_title || "",
     heroImage,
     imageOptions,
+    trailer,
     overview: movie?.overview || "",
     releaseDate: movie?.release_date || "",
     runtime: Number(movie?.runtime) || 0,

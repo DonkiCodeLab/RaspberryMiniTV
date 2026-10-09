@@ -22,8 +22,15 @@ export function torrentSize(bytes, language = "es") {
   return `${(Math.max(0, Number(bytes) || 0) / 1_000_000).toLocaleString(language, { maximumFractionDigits: 1 })} MB`;
 }
 
-export function sortTorrents(results) {
-  return [...(results || [])].sort((a, b) => (Number(b.seeds) || 0) - (Number(a.seeds) || 0) || a.name.localeCompare(b.name));
+export function torrentListSize(bytes) {
+  const megabytes = Math.round(Math.max(0, Number(bytes) || 0) / 1_000_000);
+  return `${String(megabytes).replace(/\B(?=(\d{3})+(?!\d))/g, ".")} MB`;
+}
+
+export function sortTorrents(results, field = "seeds", direction = "desc") {
+  const key = field === "sizeBytes" ? "sizeBytes" : "seeds";
+  const multiplier = direction === "asc" ? 1 : -1;
+  return [...(results || [])].sort((a, b) => multiplier * ((Number(a[key]) || 0) - (Number(b[key]) || 0)) || a.name.localeCompare(b.name));
 }
 
 export function torrentSources(torrent) {
@@ -54,8 +61,9 @@ const strings = {
     season: "Temporada", episode: "Capítulo", all: "Todos", moreEztv: "Más resultados de EZTV", eztvMissing: "EZTV no está disponible para esta serie porque su ficha no tiene identificador IMDb.",
     eztvHint: "EZTV busca la serie seleccionada y aplica los filtros de temporada y capítulo.",
     episodesImported: "Capítulos añadidos", episodesSkipped: "Capítulos que ya estaban en la biblioteca", movie: "Película", series: "Serie",
-    hint: "Ordenados por seeds. Se descarga el vídeo principal y, al finalizar, se añade a la biblioteca y se preparan los recursos de TMDB.",
+    hint: "Se descarga el vídeo principal y, al finalizar, se añade a la biblioteca y se preparan los recursos de TMDB.",
     empty: "No se han encontrado películas. Prueba con otro título o sin el año.", noJobs: "No hay descargas torrent.",
+    sortBy: "Ordenar por", sortDirection: "Orden", ascending: "De menor a mayor", descending: "De mayor a menor",
     name: "Torrent", size: "Tamaño", download: "Descargar", starting: "Iniciando…", started: "Descarga añadida. Puedes seguirla en el dashboard y cerrar esta ventana.",
     dashboard: "Ver descargas", refresh: "Actualizar", pause: "Pausar", resume: "Reanudar", cancel: "Cancelar descarga", retry: "Reintentar",
     active: "En curso", history: "Historial", list: "Lista de descargas e historial", remove: "Quitar del historial",
@@ -74,8 +82,9 @@ const strings = {
     season: "Temporada", episode: "Capítol", all: "Tots", moreEztv: "Més resultats d’EZTV", eztvMissing: "EZTV no està disponible per a aquesta sèrie perquè la fitxa no té identificador IMDb.",
     eztvHint: "EZTV cerca la sèrie seleccionada i aplica els filtres de temporada i capítol.",
     episodesImported: "Capítols afegits", episodesSkipped: "Capítols que ja eren a la biblioteca", movie: "Pel·lícula", series: "Sèrie",
-    hint: "Ordenats per seeds. Es descarrega el vídeo principal i, en acabar, s’afegeix a la biblioteca i es preparen els recursos de TMDB.",
+    hint: "Es descarrega el vídeo principal i, en acabar, s’afegeix a la biblioteca i es preparen els recursos de TMDB.",
     empty: "No s’han trobat pel·lícules. Prova un altre títol o sense l’any.", noJobs: "No hi ha descàrregues torrent.",
+    sortBy: "Ordena per", sortDirection: "Ordre", ascending: "De menor a major", descending: "De major a menor",
     name: "Torrent", size: "Mida", download: "Descarrega", starting: "Iniciant…", started: "Descàrrega afegida. Pots seguir-la al dashboard i tancar aquesta finestra.",
     dashboard: "Veure descàrregues", refresh: "Actualitza", pause: "Pausa", resume: "Reprèn", cancel: "Cancel·la la descàrrega", retry: "Torna-ho a provar",
     active: "En curs", history: "Historial", list: "Llista de descàrregues i historial", remove: "Treu de l’historial",
@@ -94,8 +103,9 @@ const strings = {
     season: "Season", episode: "Episode", all: "All", moreEztv: "More EZTV results", eztvMissing: "EZTV is unavailable for this series because its profile has no IMDb identifier.",
     eztvHint: "EZTV searches the selected series using the season and episode filters.",
     episodesImported: "Episodes added", episodesSkipped: "Episodes already in the library", movie: "Movie", series: "Series",
-    hint: "Sorted by seeds. The main video downloads first, then it is added to the library and TMDB resources are prepared.",
+    hint: "The main video downloads first, then it is added to the library and TMDB resources are prepared.",
     empty: "No movies found. Try another title or remove the year.", noJobs: "No torrent downloads.",
+    sortBy: "Sort by", sortDirection: "Order", ascending: "Lowest to highest", descending: "Highest to lowest",
     name: "Torrent", size: "Size", download: "Download", starting: "Starting…", started: "Download added. Follow it on the dashboard; you can close this window.",
     dashboard: "View downloads", refresh: "Refresh", pause: "Pause", resume: "Resume", cancel: "Cancel download", retry: "Retry",
     active: "In progress", history: "History", list: "Downloads and history list", remove: "Remove from history",

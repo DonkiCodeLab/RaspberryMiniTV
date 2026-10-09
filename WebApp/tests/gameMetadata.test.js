@@ -68,3 +68,17 @@ test("detail lookup and retries use the authenticated Raspberry API", async () =
     assert.equal(api.gameMetadataImageUrl("/game-covers/saved.png"), "http://raspberry:5050/game-covers/saved.png");
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
+
+test("game downloads target the ROM content endpoint with attachment and authentication", async () => {
+  const previousWindow = globalThis.window;
+  globalThis.window = { location: { origin: "http://raspberry:5050", hostname: "raspberry" }, sessionStorage: { getItem: () => "1234" } };
+  try {
+    const api = await loadApi();
+    const url = new URL(api.getGameDownloadUrl("Game Boy/Tetris & friends.gb"));
+    assert.equal(url.pathname, "/games/content");
+    assert.equal(url.searchParams.get("relativePath"), "Game Boy/Tetris & friends.gb");
+    assert.equal(url.searchParams.get("download"), "1");
+    assert.equal(url.searchParams.get("pin"), "1234");
+    assert.equal(api.getGameDownloadUrl(""), "");
+  } finally { globalThis.window = previousWindow; }
+});

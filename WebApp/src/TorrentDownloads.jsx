@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { controlMovieTorrent, getMovieTorrents, searchMediaTorrents, startMediaTorrent } from "./api/raspberryApi";
-import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentSize, torrentSources, torrentStrings, sortTorrents } from "./torrentUtils.js";
+import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents } from "./torrentUtils.js";
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import "./TorrentDownloads.css";
@@ -14,6 +14,8 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const [searchTerm, setSearchTerm] = useState(() => ({ query: torrentQuery(media, mediaType), seasonNumber, episodeNumber, eztvPage: 1 }));
   const [nextEztvPage, setNextEztvPage] = useState(null);
   const [results, setResults] = useState([]);
+  const [sortField, setSortField] = useState("seeds");
+  const [sortDirection, setSortDirection] = useState("desc");
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,6 +65,9 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
     finally { setBusy(""); }
   }
 
+  const sortedResults = sortTorrents(results, sortField, sortDirection);
+  const sortAria = sortDirection === "asc" ? "ascending" : "descending";
+  const sortArrow = sortDirection === "asc" ? "↑" : "↓";
   const unavailableSources = sources.filter(source => source.status === "error").map(source => source.name);
   return <section className="movie-torrents" aria-label={s.searchTitle}>
     <h3>{s.searchTitle}</h3>
@@ -93,15 +98,28 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
     </div>}
     {started ? <div className="movie-torrents__success" role="status"><p>{s.started}</p><button className="dialog-button dialog-button--accent" onClick={onDashboard} type="button">{s.dashboard}</button></div> : <>
       {loading ? <p role="status"><span className="tmdb-cache-spinner" /> {s.searching}</p> : demo ? <p>{s.demo}</p> : !results.length && !error ? <p>{isSeries ? s.seriesEmpty : s.empty}</p> : null}
-      {results.length > 0 && <div className="movie-torrents__table"><table>
-        <thead><tr><th>{s.name}</th><th>{s.source}</th><th>{s.size}</th><th aria-sort="descending">Seeds ↓</th><th><span className="torrent-visually-hidden">{s.download}</span></th></tr></thead>
-        <tbody>{results.map(result => <tr key={result.infoHash}>
+      {results.length > 0 && <>
+        <div className="movie-torrents__sort">
+          <label className="dialog-field"><span>{s.sortBy}</span>
+            <select value={sortField} onChange={event => setSortField(event.target.value)}>
+              <option value="sizeBytes">{s.size}</option><option value="seeds">Seeds</option>
+            </select>
+          </label>
+          <label className="dialog-field"><span>{s.sortDirection}</span>
+            <select value={sortDirection} onChange={event => setSortDirection(event.target.value)}>
+              <option value="asc">{s.ascending}</option><option value="desc">{s.descending}</option>
+            </select>
+          </label>
+        </div>
+        <div className="movie-torrents__table"><table>
+        <thead><tr><th>{s.name}</th><th>{s.source}</th><th aria-sort={sortField === "sizeBytes" ? sortAria : undefined}>{s.size}{sortField === "sizeBytes" ? ` ${sortArrow}` : ""}</th><th aria-sort={sortField === "seeds" ? sortAria : undefined}>Seeds{sortField === "seeds" ? ` ${sortArrow}` : ""}</th><th><span className="torrent-visually-hidden">{s.download}</span></th></tr></thead>
+        <tbody>{sortedResults.map(result => <tr key={result.infoHash}>
           <td>{result.name}</td>
           <td className="movie-torrents__source"><div className="movie-torrents__badges">{torrentSources(result).map(source => <span className="movie-torrents__badge" key={source}>{source}</span>)}</div></td>
-          <td>{torrentSize(result.sizeBytes, language)}</td><td>{result.seeds}</td>
+          <td>{torrentListSize(result.sizeBytes)}</td><td>{result.seeds}</td>
           <td><button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} onClick={() => start(result)} type="button">{busy === result.infoHash ? s.starting : s.download}</button></td>
         </tr>)}</tbody>
-      </table></div>}
+      </table></div></>}
       {nextEztvPage !== null && <button className="dialog-button movie-torrents__more" disabled={loading || Boolean(busy)} type="button" onClick={() => setSearchTerm(current => ({ ...current, eztvPage: nextEztvPage, append: true }))}>{s.moreEztv}</button>}
     </>}
   </section>;

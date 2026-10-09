@@ -188,3 +188,35 @@ test('online preview uses an explicit import route separate from library navigat
     assert.ok(local.heroImage.includes('/tmdb/images/'));
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
+
+test('torrent preview loads YouTube trailers with English fallback without affecting normal catalog requests', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: 'http://raspberry:5050', hostname: 'raspberry' }, sessionStorage: { getItem: () => '1234' } };
+  const requests = [];
+  let localizedTrailer = false;
+  let failFallback = false;
+  globalThis.fetch = async (url) => {
+    requests.push(url);
+    const parsed = new URL(url);
+    const english = parsed.searchParams.get('language') === 'en-US';
+    if (english && failFallback) throw new Error('Unavailable');
+    const trailer = { site: 'YouTube', type: 'Trailer', key: english ? 'abcdefghijk' : '12345678901', official: true };
+    const data = url.includes('/images') ? { posters: [] } : { id: 1, title: 'Movie', overview: 'Synopsis', videos: { results: english || localizedTrailer ? [trailer] : [] } };
+    return { ok: true, text: async () => JSON.stringify(data) };
+  };
+  try {
+    const tmdb = await loadBrowserModule('../src/tmdbApi.js');
+    assert.equal((await tmdb.getMovieById(1, 'es-ES', true)).trailer.key, 'abcdefghijk');
+    assert.ok(requests.some(url => new URL(url).searchParams.get('append_to_response') === 'external_ids,videos'));
+    requests.length = 0;
+    localizedTrailer = true;
+    assert.equal((await tmdb.getMovieById(2, 'es-ES', true)).trailer.key, '12345678901');
+    assert.ok(requests.every(url => new URL(url).searchParams.get('language') !== 'en-US'));
+    localizedTrailer = false;
+    failFallback = true;
+    assert.equal((await tmdb.getMovieById(3, 'es-ES', true)).trailer, null);
+    requests.length = 0;
+    await tmdb.getMovieById(1, 'es-ES');
+    assert.ok(requests.every(url => !String(new URL(url).searchParams.get('append_to_response')).includes('videos')));
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
