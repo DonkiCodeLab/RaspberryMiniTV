@@ -35,6 +35,7 @@ import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
 import GameMetadataPicker from "./GameMetadataPicker.jsx";
 import GameDetails from "./GameDetails.jsx";
+import GameLibraryCard from "./GameLibraryCard.jsx";
 import { gameMetadataImageUrl } from "./api/raspberryApi";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
 import { mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason } from "./mediaMarks.js";
@@ -9532,10 +9533,9 @@ export default function App() {
                           const gameMarks = mediaMarks[markKey] || {};
                           const isWatched = Boolean(gameMarks.watched);
                           const isFavorite = Boolean(gameMarks.favorite);
-                          return <article data-library-index className="movie-library__card" key={game.relativePath}>
-                          <button className="movie-library__poster" type="button" onClick={() => handleOpenGameDetails(game.relativePath)} aria-label={`${t("movie_details")}: ${game.name || game.file}`}>
-                            <LibraryPoster src={game.coverImage || emptyStateIcon} name={game.name || game.file} />
-                          </button>
+                          return <GameLibraryCard key={game.relativePath} game={game}
+                            onOpen={() => handleOpenGameDetails(game.relativePath)}
+                            label={`${t("movie_details")}: ${game.name || game.file}`}>
                           <div className="movie-library__info">
                             <h2><button className="games-library__title" type="button" onClick={() => handleOpenGameDetails(game.relativePath)}>{game.name || game.file}</button></h2>
                             <div className="movie-library__meta"><span>{gameYear(game) || "—"}</span><span>{gameRating(game) ? `★ ${gameRating(game)}` : "—"}</span></div>
@@ -9576,7 +9576,7 @@ export default function App() {
                                 </div>
                               </div>
                           </div>
-                        </article>;
+                        </GameLibraryCard>;
                         })}
                       </MovieLibraryItems>
                       {!filteredGameOptions.length && <p className="games-library__empty">{t("games_empty_title")}</p>}

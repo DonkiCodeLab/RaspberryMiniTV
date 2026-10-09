@@ -2,6 +2,7 @@ import React, { useId, useState } from "react";
 import GameMetadataDetails from "./GameMetadataDetails.jsx";
 import GameVideo from "./GameVideo.jsx";
 import { gameVideos } from "./gameVideos.js";
+import { gameScreenshots } from "./gameScreenshots.js";
 import { systemForGame } from "./gameSystems.js";
 import emptyStateIcon from "./assets/empty.png";
 import deleteIcon from "./assets/delete.png";
@@ -14,10 +15,7 @@ export default function GameDetails({ game, t, language, marks, onBack, onEdit, 
   const name = game.name || game.file;
   const system = systemForGame(game);
   const platform = game.platformName || system?.name || game.platform;
-  const artwork = Array.isArray(game.imageOptions) && game.imageOptions.length ? game.imageOptions
-    : Array.isArray(game.screenshots) ? game.screenshots : [];
-  const images = [...new Set(artwork.map(image => typeof image === "string" ? image : image?.url)
-    .filter(image => image && image !== game.coverImage))];
+  const images = gameScreenshots(game);
   const videos = gameVideos(metadata);
   const [media, setMedia] = useState(images.length ? "images" : "videos");
   const [imageIndex, setImageIndex] = useState(0);

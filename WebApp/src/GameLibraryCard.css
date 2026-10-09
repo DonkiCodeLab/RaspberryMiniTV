@@ -1,0 +1,15 @@
+.game-library-card .movie-library__poster { position: relative; }
+.game-library-card:is(:hover, :focus-within) .movie-library__poster img { transform: scale(1.035); }
+.game-card-preview { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.game-card-preview__slide { position: absolute; inset: 0; display: block; background: #111a21; }
+.game-card-preview__slide img { object-fit: contain; }
+.game-card-preview__slide--cover img { object-fit: cover; }
+.game-card-preview__slide--out { animation: game-preview-out 450ms ease-in-out both; }
+.game-card-preview__slide--in { animation: game-preview-in 450ms ease-in-out both; }
+@keyframes game-preview-out { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes game-preview-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .game-card-preview__slide { animation: none; }
+  .game-card-preview__slide--out { visibility: hidden; }
+  .game-library-card:is(:hover, :focus-within) .movie-library__poster img { transform: none; transition: none; }
+}
