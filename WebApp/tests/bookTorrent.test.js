@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { build } from 'esbuild';
-import { spanishBookTitle, bookTorrentStrings } from '../src/bookTorrentUtils.js';
+import { awardTorrentBook, spanishBookTitle, bookTorrentStrings } from '../src/bookTorrentUtils.js';
 import { torrentQuery, torrentJobTitle, hasTorrentLibraryUpdates, torrentLibraryVersion } from '../src/torrentUtils.js';
 
 test('Spanish book query never falls back to original English title or edition year', () => {
@@ -40,4 +40,21 @@ test('book torrent API posts Open Library identity without movie identifiers or 
     assert.equal(params.get('mediaType'), 'books');
     assert.equal(params.get('q'), 'La carretera español');
   } finally { globalThis.fetch = savedFetch; globalThis.window = savedWindow; }
+});
+
+
+test('award torrent search starts with cached Spanish title regardless of display language', () => {
+  const original = { title: 'The Road', language: 'eng', openLibraryKey: '/works/OL1W', localizedMetadata: { es: { title: 'La carretera' } } };
+  const winner = { title: 'The Road', author: 'Cormac McCarthy', award: 'pulitzer', metadata: { ...original, title: 'La carretera (català)', originalMetadata: original } };
+  const book = awardTorrentBook(winner);
+  assert.equal(book.spanishTitle, 'La carretera');
+  assert.equal(book.openLibraryKey, '/works/OL1W');
+  assert.equal(torrentQuery(book, 'books'), 'La carretera español');
+  assert.equal(awardTorrentBook({ ...winner, metadata: null }), null);
+});
+
+test('Planeta can search immediately without an Open Library record', () => {
+  const book = awardTorrentBook({ title: 'La hermandad', author: 'Example', award: 'planeta' });
+  assert.equal(book.spanishTitle, 'La hermandad');
+  assert.equal(torrentQuery(book, 'books'), 'La hermandad español');
 });

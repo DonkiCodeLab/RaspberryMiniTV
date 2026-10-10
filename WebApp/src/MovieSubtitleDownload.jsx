@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { obtainMovieSubtitles, getMediaSubtitles } from "./api/raspberryApi";
+import { obtainMovieSubtitles, getMediaSubtitles, getSubtitleSettings } from "./api/raspberryApi";
 import { movieSubtitleStrings } from "./movieSubtitleStrings.js";
 import "./MovieSubtitleDownload.css";
 
@@ -12,8 +12,21 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
   const [inventory, setInventory] = useState(null);
   const [inventoryFailed, setInventoryFailed] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [configured, setConfigured] = useState(null);
   const mounted = useRef(true);
   const inFlight = useRef(false);
+
+  useEffect(() => {
+    if (!relativePath) return;
+    const controller = new AbortController();
+    setConfigured(null);
+    getSubtitleSettings(controller.signal).then(data => {
+      if (!controller.signal.aborted) setConfigured(data.configured);
+    }).catch(() => {
+      // Keep the configuration action hidden until its state is known.
+    });
+    return () => controller.abort();
+  }, [relativePath, refresh]);
 
   useEffect(() => {
     if (!relativePath) return;
@@ -41,6 +54,7 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
     } catch (error) {
       if (mounted.current) {
         setError(error.code || "failed");
+        if (error.code === "SUBTITLE_NOT_CONFIGURED") setConfigured(false);
       }
     } finally {
       inFlight.current = false;
@@ -49,21 +63,22 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
   }
 
   if (!relativePath) return null;
-  return <section className="movie-subtitle-download" aria-label={s.title} aria-busy={busy}>
+  return <section className="movie-subtitle-download" aria-label={s.availableTitle} aria-busy={busy}>
     <div aria-live="polite">
       <p><strong>{s.availableTitle}</strong></p>
       {!inventory && <p>{inventoryFailed ? s.inventoryFailed : s.checking}</p>}
       {inventoryFailed && <button type="button" className="dialog-button dialog-button--ghost" onClick={() => setRefresh(value => value + 1)}>{s.retry}</button>}
       {inventory && <>
-        <p>{s.external}: {inventory.external || s.notFound}</p>
-        <p>{s.embedded}: {inventory.embeddedStatus === "unknown" ? s.unknown : inventory.embedded.length || s.notFound}</p>
+        <ul className="movie-subtitle-download__inventory">
+          <li>{s.external}: {inventory.external || s.notFound}</li>
+          <li>{s.embedded}: {inventory.embeddedStatus === "unknown" ? s.unknown : inventory.embedded.length || s.notFound}</li>
+        </ul>
         {inventory.embedded.length > 0 && <>
           <ul>{inventory.embedded.map(track => <li key={track.index}>{[track.language && track.language !== "und" ? track.language : s.unknownLanguage, track.title, track.codec].filter(Boolean).join(" · ")}</li>)}</ul>
           <p>{s.browserEmbedded}</p>
         </>}
       </>}
     </div>
-    <p>{s.hint}</p>
     <div className="movie-subtitle-download__actions">
       <label className="dialog-field"><span>{s.language}</span>
         <select value={subtitleLanguage} disabled={busy || disabled} onChange={event => { setSubtitleLanguage(event.target.value); setResult(null); setError(""); }}>
@@ -83,6 +98,6 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
       {result.release && <p>{result.release}</p>}
       <p>{s.restart}</p>
     </div>}
-    <button className="dialog-button dialog-button--ghost" type="button" disabled={busy} onClick={onConfigure}>{s.configure}</button>
+    {configured === false && <button className="dialog-button dialog-button--ghost" type="button" disabled={busy} onClick={onConfigure}>{s.configure}</button>}
   </section>;
 }

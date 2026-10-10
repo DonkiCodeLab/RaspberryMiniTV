@@ -2,18 +2,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getBookMetadataDetails, searchBookMetadata, isMockMode } from './api/raspberryApi';
 import { matchesAwardBook } from './bookAwardCatalog.js';
-import { bookTorrentStrings, spanishBookTitle } from './bookTorrentUtils.js';
+import { awardTorrentBook, bookTorrentStrings } from './bookTorrentUtils.js';
 import { MediaTorrentSearch } from './TorrentDownloads.jsx';
 import { bookLanguageName } from './bookMetadata.js';
 import './BookTorrentModal.css';
 
 export default function BookTorrentModal({ winner, language, onClose, onStarted, onDashboard }) {
   const t = bookTorrentStrings(language);
-  const [query, setQuery] = useState(`${winner.title} ${winner.author}`);
+  const [initialBook] = useState(() => awardTorrentBook(winner));
+  const [query, setQuery] = useState(() => initialBook?.spanishTitle || `${winner.title} ${winner.author}`);
   const [results, setResults] = useState([]);
-  const [detail, setDetail] = useState(null);
-  const [spanishTitle, setSpanishTitle] = useState('');
-  const [media, setMedia] = useState(null);
+  const [detail, setDetail] = useState(initialBook);
+  const [spanishTitle, setSpanishTitle] = useState(initialBook?.spanishTitle || '');
+  const [media, setMedia] = useState(initialBook);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const request = useRef(null);
@@ -31,12 +32,19 @@ export default function BookTorrentModal({ winner, language, onClose, onStarted,
   }
   async function select(result, controller = begin()) {
     try {
+      // A verified Spanish title is enough to start; do not wait for another metadata request.
+      const ready = awardTorrentBook(winner, result);
+      if (ready) {
+        setDetail(ready); setSpanishTitle(ready.spanishTitle); setQuery(ready.spanishTitle); setResults([]); setMedia(ready);
+        return;
+      }
       const response = await getBookMetadataDetails(result, { signal: controller.signal, language: 'es' });
       if (controller.signal.aborted) return;
-      const book = { ...result, ...response.item };
-      const title = spanishBookTitle(book) || (winner.award === 'planeta' ? winner.title : '');
+      const book = { ...(result.originalMetadata || result), ...response.item };
+      const readyBook = awardTorrentBook(winner, book);
+      const title = readyBook?.spanishTitle || '';
       setDetail(book); setSpanishTitle(title); setResults([]);
-      if (title) setMedia({ ...book, name: title, spanishTitle: title });
+      if (readyBook) { setQuery(title); setMedia(readyBook); }
     } catch (e) { if (!controller.signal.aborted) setError(e.message); }
     finally { if (!controller.signal.aborted) setLoading(false); }
   }
@@ -68,7 +76,7 @@ export default function BookTorrentModal({ winner, language, onClose, onStarted,
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     }
     document.addEventListener('keydown', keydown);
-    search(true);
+    if (!initialBook) search(true);
     return () => { request.current?.abort(); document.body.style.overflow = overflow; document.removeEventListener('keydown', keydown); previous?.focus(); };
   }, []);
 
@@ -89,7 +97,7 @@ export default function BookTorrentModal({ winner, language, onClose, onStarted,
           <div className="book-torrent-modal__details">
             {detail.coverUrl && <img src={detail.coverUrl} alt="" onError={event => { event.currentTarget.hidden = true; }} />}
             <div><h3>{spanishTitle || detail.title}</h3><p>{detail.author}</p><p>{[detail.publisher, detail.year, bookLanguageName(detail.language, language)].filter(Boolean).join(' · ')}</p><p className="book-torrent-modal__synopsis">{detail.localizedMetadata?.es?.description || detail.description || t.noSynopsis}</p>
-              <a href={`https://openlibrary.org${detail.editionKey || detail.openLibraryKey}`} target="_blank" rel="noreferrer">{t.source} ↗</a>
+              {(detail.editionKey || detail.openLibraryKey) && <a href={`https://openlibrary.org${detail.editionKey || detail.openLibraryKey}`} target="_blank" rel="noreferrer">{t.source} ↗</a>}
             </div>
           </div>
           <form className="book-torrent-modal__search" onSubmit={event => { event.preventDefault(); if (spanishTitle.trim()) setMedia({ ...detail, name: spanishTitle.trim(), spanishTitle: spanishTitle.trim() }); }}>

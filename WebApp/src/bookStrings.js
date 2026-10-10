@@ -2,6 +2,7 @@ import { bookLanguage } from "./bookMetadata.js";
 
 const strings = {
   es: {
+    previousPage: "Página anterior", nextPage: "Página siguiente", previewLoading: "Cargando páginas…", previewError: "No se pudo cargar la vista previa.",
     searchLibrary: "Buscar por título, autor o año", searchLibraryPlaceholder: "Título, autor o año",
     novels: "Novelas", graphicNovels: "Novelas gráficas", graphicNovel: "Novela gráfica", bookType: "Tipo de libro",
     typeHint: "Sin marcar: novela. Márcalo si es una novela gráfica o un cómic.", batchTypeHint: "Sin marcar: novela. Esta selección se aplica a todos los archivos de la subida; puedes cambiarla después en cada ficha.",
@@ -22,6 +23,7 @@ const strings = {
     noDescription: "Todavía no hay sinopsis. Busca el libro en Open Library o completa su ficha.", empty: "No hay libros", emptyHint: "Sube un archivo o una carpeta con una colección.", enter: "Entrar", customize: "Personalizar",
   },
   ca: {
+    previousPage: "Pàgina anterior", nextPage: "Pàgina següent", previewLoading: "Carregant pàgines…", previewError: "No s’ha pogut carregar la previsualització.",
     searchLibrary: "Cercar per títol, autor o any", searchLibraryPlaceholder: "Títol, autor o any",
     novels: "Novel·les", graphicNovels: "Novel·les gràfiques", graphicNovel: "Novel·la gràfica", bookType: "Tipus de llibre",
     typeHint: "Sense marcar: novel·la. Marca-ho si és una novel·la gràfica o un còmic.", batchTypeHint: "Sense marcar: novel·la. Aquesta selecció s'aplica a tots els fitxers de la pujada; pots canviar-la després a cada fitxa.",
@@ -42,6 +44,7 @@ const strings = {
     noDescription: "Encara no hi ha sinopsi. Cerca el llibre a Open Library o completa'n la fitxa.", empty: "No hi ha llibres", emptyHint: "Puja un fitxer o una carpeta amb una col·lecció.", enter: "Entrar", customize: "Personalitzar",
   },
   en: {
+    previousPage: "Previous page", nextPage: "Next page", previewLoading: "Loading pages…", previewError: "Could not load the preview.",
     searchLibrary: "Search by title, author or year", searchLibraryPlaceholder: "Title, author or year",
     novels: "Novels", graphicNovels: "Graphic novels", graphicNovel: "Graphic novel", bookType: "Book type",
     typeHint: "Unchecked: novel. Check this for a graphic novel or comic.", batchTypeHint: "Unchecked: novel. This selection applies to every file in the upload; you can change it later in each book's details.",

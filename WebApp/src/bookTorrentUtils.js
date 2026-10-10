@@ -11,3 +11,10 @@ export function spanishBookTitle(book) {
   if (String(book?.language || '').split(',').some(code => ['spa', 'es', 'es-ES'].includes(code.trim()))) return String(book.title || book.name || '').trim();
   return '';
 }
+
+// The award's original title is safe as a Spanish fallback only for Premio Planeta.
+export function awardTorrentBook(winner, metadata = winner.metadata) {
+  const book = metadata?.originalMetadata || metadata || {};
+  const title = spanishBookTitle(book) || (winner.award === 'planeta' ? String(winner.title || '').trim() : '');
+  return title ? { ...book, author: book.author || winner.author, title, name: title, spanishTitle: title } : null;
+}

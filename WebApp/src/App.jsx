@@ -13,6 +13,9 @@ import ServiceCredentialTest from "./ServiceCredentialTest.jsx";
 import { libraryScrollLabel, compareLibraryItems } from "./libraryScroll.js";
 import EpubReader from "./EpubReader";
 import BookReader from "./BookReader.jsx";
+import BookPreviewButton from "./BookPreviewButton.jsx";
+import BookHeaderPreview from "./BookHeaderPreview.jsx";
+import GameHeaderArtwork from "./GameHeaderArtwork.jsx";
 import useUserProfiles from "./useUserProfiles.js";
 import { ProfileMenu, UsersPanel, ResumeDialog, userStrings } from "./UserProfiles.jsx";
 import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
@@ -219,6 +222,7 @@ const MEDIA_TYPES = [
     labelKey: "media_pictures",
     activeIcon: picturesIconBlack,
     inactiveIcon: picturesIconYellow,
+    headerIcon: { viewBox: "0 0 411 323", width: 411, height: 323 },
   },
 ];
 
@@ -752,6 +756,11 @@ const UI_STRINGS = {
     movie_filter_search: "Buscar por nombre",
     movie_filter_search_placeholder: "Escribe un nombre",
     movie_filter_categories: "Categorías",
+    movie_filter_awards: "Películas premiadas",
+    movie_filter_awards_hint: "Muestra las ganadoras de cualquiera de los premios seleccionados.",
+    movie_filter_award_oscars: "Óscar a mejor película",
+    movie_filter_award_palme: "Palma de Oro",
+    movie_filter_award_goya: "Goya a mejor película",
     movie_filter_clear: "Limpiar filtros",
     media_filter_favorites: "Mostrar solo favoritos",
     movie_filter_genres_hint: "Muestra películas de cualquiera de las categorías seleccionadas.",
@@ -1198,6 +1207,11 @@ const UI_STRINGS = {
     movie_filter_search: "Cercar per nom",
     movie_filter_search_placeholder: "Escriu un nom",
     movie_filter_categories: "Categories",
+    movie_filter_awards: "Pel·lícules premiades",
+    movie_filter_awards_hint: "Mostra les guanyadores de qualsevol dels premis seleccionats.",
+    movie_filter_award_oscars: "Òscar a millor pel·lícula",
+    movie_filter_award_palme: "Palma d’Or",
+    movie_filter_award_goya: "Goya a millor pel·lícula",
     movie_filter_clear: "Netejar filtres",
     media_filter_favorites: "Mostrar només favorits",
     movie_filter_genres_hint: "Mostra pel·lícules de qualsevol de les categories seleccionades.",
@@ -1644,6 +1658,11 @@ const UI_STRINGS = {
     movie_filter_search: "Search by name",
     movie_filter_search_placeholder: "Type a name",
     movie_filter_categories: "Categories",
+    movie_filter_awards: "Award-winning films",
+    movie_filter_awards_hint: "Shows winners of any of the selected awards.",
+    movie_filter_award_oscars: "Oscar for Best Picture",
+    movie_filter_award_palme: "Palme d’Or",
+    movie_filter_award_goya: "Goya for Best Film",
     movie_filter_clear: "Clear filters",
     media_filter_favorites: "Show favorites only",
     movie_filter_genres_hint: "Shows movies in any of the selected categories.",
@@ -2122,7 +2141,7 @@ function MovieDownload({ url, name, label }) {
   );
 }
 
-function HeaderArt({ image, crop, alt, bookCover = false, bookType = null, gameSystem = null }) {
+function HeaderArt({ image, crop, alt, bookCover = false, bookType = null, gameSystem = null, game = null }) {
   const usesFullMaskArtwork = image === cartellLogo;
   const bookArtwork = usesFullMaskArtwork ? bookTypeArtwork[bookType] : null;
 
@@ -2136,7 +2155,7 @@ function HeaderArt({ image, crop, alt, bookCover = false, bookType = null, gameS
       role="img"
       aria-label={gameSystem ? `DonkiCode LAB · ${gameSystem.name}` : alt}
     >
-      {usesFullMaskArtwork ? (
+      {game ? <GameHeaderArtwork key={game.relativePath} game={game} /> : usesFullMaskArtwork ? (
         <>
           <img
             className="series-hero__full-mask-image"
@@ -6052,9 +6071,9 @@ function BookCollectionLibrary({ view, collections, countLabel, onSelect, t, lan
         <div className={`books-library__grid books-library__grid--${view}${view === "list" ? " movie-library__items--list" : " movie-library__items--reveal-actions"}${actionsVisible ? " is-actions-visible" : ""}`}>
           {collections.map((collection) => (
             <article data-library-index key={collection.key} className="books-library__card">
-              <button className="books-library__cover-button" onClick={() => onSelect(collection.key)} type="button" aria-label={`${t("book_enter")}: ${collection.label}`}>
+              <BookPreviewButton book={collection.coverBook} enabled={view === "grid"} className="books-library__cover-button" onClick={() => onSelect(collection.key)} type="button" aria-label={`${t("book_enter")}: ${collection.label}`}>
                 <BookCover book={collection.coverBook} />
-              </button>
+              </BookPreviewButton>
               <div className="books-library__card-copy books-library__collection-copy">
                 <strong title={collection.label}>{collection.label}</strong>
                 <small className="books-library__author">{collection.author || bt.unknownAuthor}</small>
@@ -6077,6 +6096,10 @@ function BookDetails({ book, language, onRead, onEdit, onDelete, onBack, renderM
   const details = [[t.publisher, book.publisher], [t.publishDate, book.publishDate || book.year], [t.isbn, book.isbn], [t.language, bookLanguageName(book.language, language)], [t.pageCount, book.pageCount], [t.format, book.format.toUpperCase()]];
   return <section className="book-details seasons-section" aria-label={`${t.infoTitle}: ${book.name}`}>
     {onBack ? <button className="back-button" type="button" onClick={onBack}>← {t.collection}</button> : null}
+    <div className="book-details__file-actions">
+      <MovieDownload url={getBookContentUrl(book.relativePath)} name={book.file || book.name} label={t.download} />
+      <button className="media-delete-button" type="button" onClick={() => onDelete(book)} aria-label={`${t.remove}: ${book.name}`} title={t.remove}><img src={deleteIcon} alt="" /></button>
+    </div>
     <div className="book-details__layout">
       <div className="book-details__cover"><BookCover book={book} /></div>
       <div className="book-details__copy">
@@ -6088,7 +6111,6 @@ function BookDetails({ book, language, onRead, onEdit, onDelete, onBack, renderM
         <div className="book-details__actions">
           <button className="dialog-button dialog-button--accent" type="button" onClick={() => onRead(book)}>{t.read}</button>
           <button className="dialog-button dialog-button--ghost" type="button" onClick={() => onEdit(book)}>{book.openLibraryKey ? t.edit : t.lookup}</button>
-          <button className="books-library__delete" type="button" onClick={() => onDelete(book)} aria-label={`${t.remove} ${book.name}`}><img src={deleteIcon} alt="" /></button>
         </div>
         {renderMarks(book)}
         <dl className="book-details__facts">{details.filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
@@ -6104,9 +6126,8 @@ function BookDetails({ book, language, onRead, onEdit, onDelete, onBack, renderM
   </section>;
 }
 
-function BooksLibrary({ view, books, title, author, language, sort, direction, onDirectionChange, countLabel, onOpen, onEdit, onDelete, renderMarks, actionsVisible, onActionsChange, renderActions }) {
+function BooksLibrary({ detailPath, setDetailPath, view, books, title, author, language, sort, direction, onDirectionChange, countLabel, onOpen, onEdit, onDelete, renderMarks, actionsVisible, onActionsChange, renderActions }) {
   const t = bookStrings(language);
-  const [detailPath, setDetailPath] = useState("");
   const detail = books.length === 1 ? books[0] : books.find(book => book.relativePath === detailPath);
   if (detail) return <BookDetails book={detail} language={language} onRead={onOpen} onEdit={onEdit} onDelete={onDelete} renderMarks={renderMarks} onBack={books.length > 1 ? () => setDetailPath("") : null} />;
   return (
@@ -6126,9 +6147,9 @@ function BooksLibrary({ view, books, title, author, language, sort, direction, o
                 data-library-index
                 className="books-library__card"
               >
-                <button className="books-library__cover-button" onClick={() => setDetailPath(book.relativePath)} type="button" aria-label={`${t.enter}: ${book.name}`}>
+                <BookPreviewButton book={book} enabled={view === "grid"} className="books-library__cover-button" onClick={() => setDetailPath(book.relativePath)} type="button" aria-label={`${t.enter}: ${book.name}`}>
                   <BookCover book={book} />
-                </button>
+                </BookPreviewButton>
                 <div className="books-library__card-copy">
                   <strong>{book.name}</strong>
                   <small className="books-library__author">{book.author || t.unknownAuthor}</small>
@@ -6209,9 +6230,6 @@ function PicturesLibrary({ pictures, onUpload, t, countLabel, renderMarks, onVie
     <section className="pictures-library seasons-section" aria-label={t("media_pictures")}>
       <div className="seasons-section__label">{countLabel}</div>
       <div className="pictures-library__header">
-        <div>
-          <h1>{t("media_pictures")}</h1>
-        </div>
         <button className="dialog-button dialog-button--accent" type="button" onClick={onUpload}>+ {t("upload_pictures")}</button>
       </div>
       {pictures.length ? (
@@ -6314,6 +6332,7 @@ export default function App() {
   const [gameActionsVisible, setGameActionsVisible] = useState(false);
   const [gameLibraryView, setGameLibraryView] = useState("grid");
   const [selectedBookCollection, setSelectedBookCollection] = useState("");
+  const [bookDetailPath, setBookDetailPath] = useState("");
   const [bookLibraryType, setBookLibraryType] = useState("novel");
   const [bookLibrarySort, setBookLibrarySort] = useState("name");
   const [bookLibraryView, setBookLibraryView] = useState("grid");
@@ -6415,6 +6434,7 @@ export default function App() {
   const [mediaFilterOpen, setMediaFilterOpen] = useState(false);
   const [mediaFavoritesOnly, setMediaFavoritesOnly] = useState({});
   const [movieGenreFilters, setMovieGenreFilters] = useState({});
+  const [movieAwardFilters, setMovieAwardFilters] = useState([]);
   const [mediaFilterQueries, setMediaFilterQueries] = useState({
     series: "",
     movies: "",
@@ -6861,7 +6881,7 @@ export default function App() {
     { type: bookLibraryType, sort: bookLibrarySort, direction: bookSortDirection }
   ), [videos?.books, videos?.bookCollections, raspberryLanguage, bookLibraryType, bookLibrarySort, bookSortDirection]);
   const activeBookCollection = bookCollections.find((collection) => collection.key === selectedBookCollection);
-  const selectedBook = activeBookCollection?.books[0] || null;
+  const selectedBook = activeBookCollection?.books.find(book => book.relativePath === bookDetailPath) || activeBookCollection?.books[0] || null;
 
   useEffect(() => {
     if (selectedBookCollection && !activeBookCollection) setSelectedBookCollection("");
@@ -7952,6 +7972,7 @@ export default function App() {
   }
 
   function handleOpenBookCollection(collectionKey) {
+    setBookDetailPath("");
     setSelectedBookCollection(collectionKey);
     setMediaFilterOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -8837,7 +8858,8 @@ export default function App() {
     .sort((a, b) => a.localeCompare(b, normalizeRaspberryLanguage(raspberryLanguage)));
   const filteredMovieOptions = movieOptions.filter((movie) =>
     matchesName(movie.name) && matchesFavorite("movie", movie.id) &&
-    (!selectedMovieGenres.length || (movie.genres || []).some((genre) => selectedMovieGenres.includes(genre)))
+    (!selectedMovieGenres.length || (movie.genres || []).some((genre) => selectedMovieGenres.includes(genre))) &&
+    (!movieAwardFilters.length || movieAwards(getMovieTmdbId(movie)).some(({ award }) => movieAwardFilters.includes(award)))
   ).sort((left, right) => compareLibraryItems(left, right, movieLibrarySort, movieSortDirection, normalizeRaspberryLanguage(raspberryLanguage)));
   const filteredSeriesOptions = seriesOptions
     .filter((series) => matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath))
@@ -8857,7 +8879,7 @@ export default function App() {
     matchesBookQuery(book, activeFilterQuery, `${activeBookCollection.label} ${activeBookCollection.author || ""}`) && matchesFavorite("book", book.relativePath)
   );
   const selectorOptions = isGamesMode ? filteredGameOptions : isMoviesMode ? filteredMovieOptions : filteredSeriesOptions;
-  const activeFilterCount = Number(Boolean(activeFilterQuery.trim())) + Number(favoritesOnly) + (isMoviesMode ? selectedMovieGenres.length : 0);
+  const activeFilterCount = Number(Boolean(activeFilterQuery.trim())) + Number(favoritesOnly) + (isMoviesMode ? selectedMovieGenres.length + movieAwardFilters.length : 0);
   const mediaFiltersActive = activeFilterCount > 0 && !(isMoviesMode && movieLibraryView === "oscars");
 
   useEffect(() => {
@@ -8914,6 +8936,7 @@ export default function App() {
         value: isMoviesMode ? String(item.id) : item.directoryPath,
         label: item.name,
       }));
+  const bookHeaderBook = filteredActiveBooks?.length === 1 ? filteredActiveBooks[0] : activeBookCollection?.books.find(book => book.relativePath === bookDetailPath);
   const isMediaDetail = (isGamesMode && Boolean(selectedGame)) || (isSeriesMode && Boolean(selectedSeries)) || (isMoviesMode && Boolean(selectedMovie)) || (isBooksMode && Boolean(activeBookCollection));
   const filterTotal = isPicturesMode ? pictureLibrary.length : isBooksMode
     ? activeBookCollection?.books.length ?? bookCollections.length
@@ -9269,16 +9292,17 @@ export default function App() {
                   </div>
                 </section>
 
-                {isPicturesMode ? null : <header className="series-hero">
+                <header className="series-hero">
                   <div className="series-hero__banner">
-                    <HeaderArt
-                      image={headerImage}
+                    {isBooksMode && bookHeaderBook ? <BookHeaderPreview key={bookHeaderBook.relativePath} book={bookHeaderBook} cover={getBookDisplayCoverUrl(bookHeaderBook) || headerImage} language={raspberryLanguage} /> : <HeaderArt
+                      image={isPicturesMode ? cartellLogo : headerImage}
                       gameSystem={isGamesMode && !selectedGame ? GAME_SYSTEMS.find(system => system.id === selectedSystemId) : null}
+                      game={isGamesMode ? selectedGame : null}
                       crop={headerImageCrop}
                       bookCover={(isBooksMode && Boolean(activeBookCollection)) || (isGamesMode && Boolean(selectedGame?.coverImage))}
                       bookType={isBooksMode ? bookLibraryType : null}
                       alt={(isBooksMode ? activeBookCollection?.label || (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : selectedItem?.name) || "Cartell principal"}
-                    />
+                    />}
 
                     {!isMediaDetail ? (
                       <h1 className={`series-hero__section-title${isBooksMode ? " series-hero__section-title--books" : ""}`} key={activeMediaType}>
@@ -9297,7 +9321,7 @@ export default function App() {
                       </div>
                     ) : null}
 
-                    {!isMediaDetail ? <div className="series-hero__controls-layer">
+                    {!isMediaDetail && !isPicturesMode ? <div className="series-hero__controls-layer">
                       <div
                         className="series-hero__controls-backdrop"
                         aria-hidden="true"
@@ -9425,13 +9449,17 @@ export default function App() {
 
                     <button
                       className="series-hero__tv-button"
-                      onClick={handleOpenRaspberryPage}
+                      onClick={() => {
+                        if (isPicturesMode) setRaspberryTab("dashboard");
+                        handleOpenRaspberryPage();
+                      }}
                       type="button"
+                      aria-label={t("raspberry_dashboard")}
                     >
                       <img className="series-hero__tv" src={tvGreen} alt={t("mini_tv_title")} />
                     </button>
                   </div>
-                </header>}
+                </header>
 
                 {isGamesMode && !isMediaDetail && <div className="games-library__controls">
                   <button className={`dialog-button games-library__filter${mediaFilterOpen ? " is-open" : ""}`} type="button"
@@ -9449,7 +9477,7 @@ export default function App() {
                   <section id="library-filter-panel" className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
-                      {mediaFiltersActive ? <button type="button" onClick={() => { setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: "" })); setMediaFavoritesOnly((current) => ({ ...current, [activeMediaType]: false })); if (isMoviesMode) setMovieGenreFilters((current) => ({ ...current, [raspberryLanguage]: [] })); }}>{t("movie_filter_clear")}</button> : null}
+                      {mediaFiltersActive ? <button type="button" onClick={() => { setMediaFilterQueries((current) => ({ ...current, [activeMediaType]: "" })); setMediaFavoritesOnly((current) => ({ ...current, [activeMediaType]: false })); if (isMoviesMode) { setMovieGenreFilters((current) => ({ ...current, [raspberryLanguage]: [] })); setMovieAwardFilters([]); } }}>{t("movie_filter_clear")}</button> : null}
                     </div>
                     <label className="movie-filter__search">
                       <span>{isBooksMode ? bookStrings(raspberryLanguage).searchLibrary : t("movie_filter_search")}</span>
@@ -9460,6 +9488,23 @@ export default function App() {
                       <MediaMarkIcon favorite active={favoritesOnly} />
                       <span>{t("media_filter_favorites")}</span>
                     </label>
+                    {isMoviesMode ? (
+                      <fieldset className="movie-filter__genres">
+                        <legend>{t("movie_filter_awards")}</legend>
+                        <p>{t("movie_filter_awards_hint")}</p>
+                        <div className="movie-filter__genre-options">
+                          {["oscars", "palme", "goya"].map((award) => (
+                            <label key={award} className={`movie-filter__genre${movieAwardFilters.includes(award) ? " is-selected" : ""}`}>
+                              <input type="checkbox" checked={movieAwardFilters.includes(award)} onChange={(event) => {
+                                const checked = event.target.checked;
+                                setMovieAwardFilters((current) => checked ? [...current, award] : current.filter((value) => value !== award));
+                              }} />
+                              <span>{t(`movie_filter_award_${award}`)}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    ) : null}
                     {isMoviesMode ? (
                       <fieldset className="movie-filter__genres">
                         <legend>{t("genres")}</legend>
@@ -9507,6 +9552,7 @@ export default function App() {
                 ) : isBooksMode ? (
                   activeBookCollection ? (
                   <BooksLibrary
+                    detailPath={bookDetailPath} setDetailPath={setBookDetailPath}
                     view={bookLibraryView}
                     actionsVisible={bookActionsVisible} onActionsChange={setBookActionsVisible} renderActions={renderBookActions}
                     direction={bookSortDirection}

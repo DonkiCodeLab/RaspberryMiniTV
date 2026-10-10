@@ -170,6 +170,7 @@ export function useTorrentDownloads(enabled, onLibraryChanged) {
 
 export default function TorrentDownloads({ downloads, language }) {
   const s = torrentStrings(language);
+  const [selectedGroup, setSelectedGroup] = useState("active");
   const { jobs = [], serviceError, error, busy, action, refresh, loaded, demo } = downloads;
   const groups = [
     { key: "active", title: s.active, jobs: jobs.filter(job => !isTorrentHistory(job)) },
@@ -186,12 +187,34 @@ export default function TorrentDownloads({ downloads, language }) {
       </button>
     </div>
     <div className="raspberry-torrents-card">
+    <div className="torrent-dashboard__tabs" role="tablist" aria-label={s.list}>
+      {groups.map((group, index) => <button
+        className="torrent-dashboard__tab"
+        key={group.key}
+        id={`torrent-${group.key}-tab`}
+        type="button"
+        role="tab"
+        aria-selected={selectedGroup === group.key}
+        aria-controls={`torrent-${group.key}-panel`}
+        tabIndex={selectedGroup === group.key ? 0 : -1}
+        onClick={() => setSelectedGroup(group.key)}
+        onKeyDown={event => {
+          const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? groups.length - 1
+            : event.key === "ArrowRight" ? (index + 1) % groups.length
+            : event.key === "ArrowLeft" ? (index + groups.length - 1) % groups.length : null;
+          if (nextIndex === null) return;
+          event.preventDefault();
+          setSelectedGroup(groups[nextIndex].key);
+          event.currentTarget.parentElement.children[nextIndex].focus();
+        }}
+      >{group.title} <span className="torrent-dashboard__count">{group.jobs.length}</span></button>)}
+    </div>
     {(error || serviceError) && <p className="dialog-error" role="alert">{error || serviceError}</p>}
-    {!jobs.length && <p>{demo ? s.demo : !loaded && !error ? s.pending : s.noJobs}</p>}
-    {jobs.length > 0 && <div className="torrent-dashboard__scroll" role="region" aria-label={s.list} tabIndex={0}>
-    {groups.filter(group => group.jobs.length).map(group => <section className="torrent-dashboard__group" key={group.key} aria-labelledby={`torrent-${group.key}-title`}>
-      <h3 className="torrent-dashboard__group-title" id={`torrent-${group.key}-title`}>{group.title} <span>{group.jobs.length}</span></h3>
+    {groups.map(group => <section className="torrent-dashboard__scroll" key={group.key}
+      id={`torrent-${group.key}-panel`} role="tabpanel" aria-labelledby={`torrent-${group.key}-tab`}
+      hidden={selectedGroup !== group.key} tabIndex={0}>
       {group.key === "history" && <p className="torrent-dashboard__hint">{s.historyHint}</p>}
+      {!group.jobs.length && <p>{demo ? s.demo : !loaded && !error ? s.pending : s.noJobs}</p>}
       <div className="torrent-dashboard__jobs">{group.jobs.map(job => <article className="torrent-job" key={job.id}>
       <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${job.state}`}>{job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[job.state] || job.state}</span></div>
       <p className="torrent-job__name">{job.name}</p>
@@ -211,7 +234,6 @@ export default function TorrentDownloads({ downloads, language }) {
       </div>
     </article>)}</div>
     </section>)}
-    </div>}
     </div>
   </section>;
 }

@@ -1,0 +1,18 @@
+.book-header-preview { position:absolute; inset:0 auto 0 0; width:var(--series-visible-width); background:#14212a; display:flex; gap:2cqw; padding:3cqh 6cqw 3cqh 2cqw; overflow:hidden; }
+.book-header-preview__cover { height:100%; width:auto; max-width:34%; object-fit:contain; flex-shrink:0; }
+.book-header-preview__reader { flex:1; min-width:0; display:flex; align-items:center; gap:8px; }
+.book-header-preview__reader > button { z-index:6; flex-shrink:0; display:grid; place-items:center; width:clamp(24px,3cqw,42px); height:clamp(32px,8cqh,52px); padding:0; border:1px solid #ffffff55; border-radius:50%; background:#fff; color:#172b37; font-size:clamp(24px,4cqw,36px); cursor:pointer; }
+.book-header-preview__reader > button:disabled { opacity:.35; cursor:default; }
+.book-header-preview__reader > button:focus-visible { outline:3px solid #ffd429; outline-offset:3px; }
+.book-header-preview__viewport { position:relative; flex:1; min-width:0; height:100%; }
+.book-header-preview__pages { height:100%; width:100%; display:flex; gap:12px; align-items:center; overflow:hidden; }
+.book-header-preview__page { height:100%; flex-shrink:0; overflow:hidden; display:grid; place-items:center; background:#fffdf5; }
+.book-header-preview__page[hidden] { display:none; }
+.book-header-preview__page canvas { display:block; max-width:100%; max-height:100%; object-fit:contain; }
+.book-header-preview__message { position:absolute; inset:0; display:grid; place-items:center; padding:8px; background:#14212ad9; color:#fff; text-align:center; font-size:clamp(10px,1.2cqw,16px); }
+.series-hero__banner:has(.book-header-preview) .series-hero__detail-actions { width:auto; background:transparent; }
+.book-details { position:relative; }
+.book-details__file-actions { display:flex; justify-content:flex-end; gap:.65rem; margin-bottom:18px; }
+.book-details__file-actions .media-delete-button { position:static; width:50px; height:50px; background:#fff; }
+.book-details__file-actions .media-delete-button:is(:hover,:focus-visible) { background:#fff; border-color:#dc4034; }
+.book-details__file-actions .media-delete-button img { width:22px; height:22px; }

@@ -99,7 +99,6 @@ export default function BookAwardLibrary({ award = 'pulitzer', books = [], langu
       <span className="oscar-library__award">{t[award]} · {selected.awardYear}{shared ? ` · ${t.shared}` : ''}</span><h3>{title}</h3>
       <div className="oscar-library__facts">{selected.author}</div>
       {title !== selected.title && <p className="book-award-library__original">{t.original}: {selected.title}</p>}
-      {details?.description && <p className="book-award-library__description">{details.description}</p>}
       {!selected.book && <p className="book-award-library__original">{t.unavailable}</p>}
       <div className="oscar-library__actions">{selected.book ? <button type="button" className="oscar-library__open" onClick={() => onRead(selected.book)}>{t.open}</button> : <>
         <button type="button" className="oscar-library__open" onClick={() => onUpload(selected)}>{t.upload}</button>
