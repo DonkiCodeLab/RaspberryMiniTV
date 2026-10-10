@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-nombre-de-la-rosa.epub",
+  "title": "El nombre de la rosa",
+  "year": "1980",
+  "description": "En una abadía italiana del siglo XIV, Guillermo de Baskerville y su discípulo Adso investigan una sucesión de muertes. La búsqueda entre manuscritos y pasadizos se entrelaza con disputas religiosas y con el temor a lo que puede revelar el conocimiento.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "El Nom De La Rosa",
+      "description": "En una abadia italiana del segle XIV, Guillem de Baskerville i el seu deixeble Adso investiguen una successió de morts. La recerca entre manuscrits i passadissos s’entrellaça amb disputes religioses i amb la por d’allò que pot revelar el coneixement."
+    },
+    "en": {
+      "description": "In a fourteenth-century Italian abbey, William of Baskerville and his apprentice Adso investigate a succession of deaths. Their search through manuscripts and hidden passages becomes entangled with religious disputes and fears about the power of knowledge.",
+      "title": "The Name of the Rose (including author's postscript)"
+    },
+    "es": {
+      "description": "En una abadía italiana del siglo XIV, Guillermo de Baskerville y su discípulo Adso investigan una sucesión de muertes. La búsqueda entre manuscritos y pasadizos se entrelaza con disputas religiosas y con el temor a lo que puede revelar el conocimiento.",
+      "title": "El nombre de la rosa"
+    }
+  }
+}

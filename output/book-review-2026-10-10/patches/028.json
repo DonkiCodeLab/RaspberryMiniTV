@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/boulder.epub",
+  "title": "Boulder",
+  "year": "2020",
+  "description": "Una cocinera acostumbrada a la soledad de los barcos se instala en Islandia con Samsa, la mujer de la que se ha enamorado. El deseo de maternidad de su pareja enfrenta a la narradora con los límites de su independencia y de su compromiso afectivo.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Boulder",
+      "description": "Una cuinera acostumada a la solitud dels vaixells s’instal·la a Islàndia amb la Samsa, la dona de qui s’ha enamorat. El desig de maternitat de la parella enfronta la narradora amb els límits de la seva independència i del compromís afectiu."
+    },
+    "en": {
+      "title": "Boulder",
+      "description": "A cook accustomed to solitude at sea settles in Iceland with Samsa, the woman she loves. When her partner decides she wants a child, the narrator must confront the uneasy boundaries between emotional commitment and personal independence."
+    },
+    "es": {
+      "description": "Una cocinera acostumbrada a la soledad de los barcos se instala en Islandia con Samsa, la mujer de la que se ha enamorado. El deseo de maternidad de su pareja enfrenta a la narradora con los límites de su independencia y de su compromiso afectivo.",
+      "title": "Boulder"
+    }
+  }
+}

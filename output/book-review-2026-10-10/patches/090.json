@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-mundo-perdido.epub",
+  "title": "El Mundo Perdido",
+  "year": "1995",
+  "description": "Ian Malcolm participa en una expedición a una isla donde los dinosaurios de InGen han seguido viviendo sin control humano. El rescate de un paleontólogo se convierte en una lucha por sobrevivir y comprender un ecosistema que desafía las previsiones de sus creadores.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Ian Malcolm participa en una expedició a una illa on els dinosaures d’InGen han continuat vivint sense control humà. El rescat d’un paleontòleg es converteix en una lluita per sobreviure i comprendre un ecosistema que desafia les previsions dels seus creadors.",
+      "title": "El Mundo Perdido"
+    },
+    "en": {
+      "title": "The Lost World",
+      "description": "Ian Malcolm joins an expedition to an island where InGen's dinosaurs have continued living without human control. A palaeontologist's rescue becomes a struggle to survive and understand an ecosystem that defies its creators' expectations."
+    },
+    "es": {
+      "description": "Ian Malcolm participa en una expedición a una isla donde los dinosaurios de InGen han seguido viviendo sin control humano. El rescate de un paleontólogo se convierte en una lucha por sobrevivir y comprender un ecosistema que desafía las previsiones de sus creadores.",
+      "title": "El Mundo Perdido"
+    }
+  }
+}

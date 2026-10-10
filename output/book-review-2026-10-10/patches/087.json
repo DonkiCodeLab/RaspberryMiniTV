@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-marciano.epub",
+  "title": "El Marciano",
+  "year": "2011",
+  "description": "Una tormenta obliga a evacuar una misión a Marte y deja al astronauta Mark Watney aislado, dado por muerto. Con provisiones limitadas, deberá aplicar sus conocimientos científicos y mantener el ingenio mientras en la Tierra se intenta organizar un rescate.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Una tempesta obliga a evacuar una missió a Mart i deixa l’astronauta Mark Watney aïllat, donat per mort. Amb provisions limitades, haurà d’aplicar els coneixements científics i mantenir l’enginy mentre a la Terra s’intenta organitzar un rescat.",
+      "title": "El Marciano"
+    },
+    "en": {
+      "description": "A storm forces a Mars mission to evacuate, leaving astronaut Mark Watney stranded and presumed dead. With limited supplies, he must use science and ingenuity to survive while people on Earth attempt to organise a rescue.",
+      "title": "The Martian"
+    },
+    "es": {
+      "title": "El Marciano",
+      "description": "Una tormenta obliga a evacuar una misión a Marte y deja al astronauta Mark Watney aislado, dado por muerto. Con provisiones limitadas, deberá aplicar sus conocimientos científicos y mantener el ingenio mientras en la Tierra se intenta organizar un rescate."
+    }
+  }
+}

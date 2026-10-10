@@ -1,0 +1,42 @@
+{
+  "index": 6,
+  "path": "Books/a-ngeles-y-demonios.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Ángeles y demonios"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Robert Langdon es convocado a un centro de investigación suizo para analizar un misterioso símbolo marcado a fuego en el pecho de un físico asesinado. El experto en simbología descubre el resurgimiento de una antigua hermandad secreta: los Illuminati, que han emergido de las sombras para llevar a cabo la fase final de su legendaria venganza contra su enemigo más odiado… la Iglesia católica.</p><p>Los peores temores de Langdon se confirman cuando los Illuminati anuncian que han escondido una bomba en el corazón de la Ciudad del Vaticano. Con la cuenta atrás en marcha, Langdon viaja a Roma para unir fuerzas con Vittoria Vetra, una científica bella y misteriosa. Los dos se embarcarán en una carrera contrarreloj en una búsqueda desesperada por los rincones menos conocidos del Vaticano.</p><p>El arma más poderosa creada por el hombre, una organización secreta sedienta de venganza… y apenas unas horas para evitar el desastre. La eterna pugna entre ciencia y religión se ha convertido en una guerra muy real.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1999-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-06-28"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:85fe2768-4765-4f45-8741-bfe94aa992b0"
+    },
+    {
+      "tag": "identifier",
+      "value": "3a4b2ea1-bab1-452a-a8c2-34abf275a437"
+    },
+    {
+      "tag": "identifier",
+      "value": "1634"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.3"
+    }
+  ]
+}

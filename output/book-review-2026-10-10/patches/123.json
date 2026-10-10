@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/guerra-y-paz.epub",
+  "title": "Guerra y paz",
+  "year": "1869",
+  "description": "Las vidas de varias familias rusas se entrecruzan durante las guerras napoleónicas. A través de Pierre, Andréi y Natasha, Tolstói contrapone la intimidad de los afectos con la violencia de la historia y reflexiona sobre la libertad, el azar y la búsqueda de sentido.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Les vides de diverses famílies russes s’entrecreuen durant les guerres napoleòniques. A través de Pierre, Andrei i Nataixa, Tolstoi contraposa la intimitat dels afectes amb la violència de la història i reflexiona sobre la llibertat, l’atzar i la recerca de sentit.",
+      "title": "Guerra y paz"
+    },
+    "en": {
+      "description": "The lives of several Russian families intertwine during the Napoleonic wars. Through Pierre, Andrei and Natasha, Tolstoy places intimate relationships alongside the violence of history, reflecting on freedom, chance and the search for meaning.",
+      "title": "Guerra y paz"
+    },
+    "es": {
+      "description": "Las vidas de varias familias rusas se entrecruzan durante las guerras napoleónicas. A través de Pierre, Andréi y Natasha, Tolstói contrapone la intimidad de los afectos con la violencia de la historia y reflexiona sobre la libertad, el azar y la búsqueda de sentido.",
+      "title": "Guerra y paz"
+    }
+  }
+}

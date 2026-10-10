@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/alpha-centauri-la-estrella-m-s-pr-xima.epub",
+  "title": "Alpha Centauri, la estrella más próxima",
+  "year": "1976",
+  "description": "Asimov explica cómo se miden las distancias estelares y qué se sabía del sistema de Alfa Centauri en la década de 1970. El libro combina historia de la astronomía, descripción de nuestras estrellas vecinas y preguntas sobre la exploración de otros sistemas planetarios.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Asimov explica cómo se miden las distancias estelares y qué se sabía del sistema de Alfa Centauri en la década de 1970. El libro combina historia de la astronomía, descripción de nuestras estrellas vecinas y preguntas sobre la exploración de otros sistemas planetarios.",
+      "title": "Alpha Centauri, la estrella más próxima"
+    },
+    "ca": {
+      "description": "Asimov explica com es mesuren les distàncies estel·lars i què se sabia del sistema d’Alfa Centauri als anys setanta. El llibre combina història de l’astronomia, descripció de les estrelles veïnes i preguntes sobre l’exploració d’altres sistemes planetaris.",
+      "title": "Alpha Centauri, la estrella más próxima"
+    },
+    "en": {
+      "description": "Asimov explains how stellar distances are measured and what was known about Alpha Centauri in the 1970s. This introductory astronomy book combines the history of discovery, an account of our stellar neighbours and questions about exploring other planetary systems.",
+      "title": "Alpha Centauri, la estrella más próxima"
+    }
+  }
+}

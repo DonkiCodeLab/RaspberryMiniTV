@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/harry-potter-y-la-c-mara-secreta.epub",
+  "title": "Harry Potter y la cámara secreta",
+  "year": "1998",
+  "description": "En su segundo año en Hogwarts, Harry escucha una voz que nadie más parece oír y presencia una sucesión de ataques misteriosos. Junto a Ron y Hermione, investiga la leyenda de la Cámara Secreta y los prejuicios que dividen al mundo mágico.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Harry Potter i la cambra secreta",
+      "description": "Durant el segon any a Hogwarts, en Harry sent una veu que ningú més sembla sentir i presencia una successió d’atacs misteriosos. Amb en Ron i l’Hermione, investiga la llegenda de la cambra secreta i els prejudicis que divideixen el món màgic."
+    },
+    "en": {
+      "title": "Harry Potter and the Chamber of Secrets",
+      "description": "In his second year at Hogwarts, Harry hears a voice no one else seems to hear as mysterious attacks begin. With Ron and Hermione, he investigates the Chamber of Secrets and the prejudices dividing the magical world."
+    },
+    "es": {
+      "description": "En su segundo año en Hogwarts, Harry escucha una voz que nadie más parece oír y presencia una sucesión de ataques misteriosos. Junto a Ron y Hermione, investiga la leyenda de la Cámara Secreta y los prejuicios que dividen al mundo mágico.",
+      "subtitle": "Harry Potter 2",
+      "title": "Harry Potter y la cámara secreta"
+    }
+  }
+}

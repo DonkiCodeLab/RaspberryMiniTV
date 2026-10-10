@@ -1,0 +1,42 @@
+{
+  "index": 142,
+  "path": "Books/juego-de-tronos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Juego de tronos"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:f0118248-9521-44eb-b66d-0f7034cb310f"
+    },
+    {
+      "tag": "description",
+      "value": "Tras el largo verano, el invierno se acerca a los Siete Reinos. Lord Eddard Stark, señor de Invernalia, deja sus dominios para unirse a la corte del rey Robert Baratheon el Usurpador, hombre díscolo y otrora guerrero audaz cuyas mayores aficiones son comer, beber y engendrar bastardos. Eddard Stark desempeñará el cargo de mano del rey e intentará desentrañar una maraña de intrigas que pondrá en peligro su vida… y la de los suyos. En un mundo cuyas estaciones duran décadas y en el que retazos de una magia inmemorial y olvidada surgen en los rincones más sombríos y maravillosos, la traición y la lealtad, la compasión y la sed de venganza, el amor y el poder hacen del juego de tronos una poderosa trampa que atrapa en sus fauces a los personajes… y al lector."
+    },
+    {
+      "tag": "date",
+      "value": "1996-08-05T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-02-13"
+    },
+    {
+      "tag": "identifier",
+      "value": "1ab0f4e2-8b03-48fb-b6f3-c057a96c3f4c"
+    },
+    {
+      "tag": "identifier",
+      "value": "1689"
+    },
+    {
+      "tag": "identifier",
+      "value": "4.1"
+    }
+  ]
+}

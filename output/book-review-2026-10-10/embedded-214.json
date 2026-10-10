@@ -1,0 +1,42 @@
+{
+  "index": 214,
+  "path": "Books/sombras-de-identidad.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Sombras de identidad"
+    },
+    {
+      "tag": "creator",
+      "value": "Brandon Sanderson"
+    },
+    {
+      "tag": "description",
+      "value": "<p>La sociedad de Nacidos de la Bruma ha evolucionado en una fusión de magia y tecnología en la que la economía se expande, la democracia se enfrenta a la corrupción y la religión se convierte en una potencia cultural cada vez más influyente, con cuatro fes distintas enfrentadas por la captación de conversos.</p><p>Esta sociedad tan animada y optimista, aunque todavía tambaleante, se enfrenta ahora a su primera amenaza de terrorismo, crímenes cuyo objetivo es fomentar el descontento de la clase trabajadora y avivar las llamas de los conflictos religiosos. Wax y Wayne, con la asistencia de la adorable y brillante Marasi, deberán dar al traste con la conspiración antes de que las revueltas civiles frenen por completo el progreso de Scadrial.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2015-10-07T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-05-12"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:99b51a03-0e74-4e2e-b54c-a90e09da7cb8"
+    },
+    {
+      "tag": "identifier",
+      "value": "102e5566-7b29-4826-b31f-61ac3769a26b"
+    },
+    {
+      "tag": "identifier",
+      "value": "30950"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    }
+  ]
+}

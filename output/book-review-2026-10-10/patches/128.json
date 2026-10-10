@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/harry-potter-y-el-prisionero-de-azkaban.epub",
+  "title": "Harry Potter y el prisionero de Azkaban",
+  "year": "1999",
+  "description": "La fuga de Sirius Black de Azkaban lleva a los dementores a vigilar Hogwarts. Durante su tercer curso, Harry descubre versiones contradictorias del pasado de sus padres y debe aprender a distinguir entre las apariencias, los recuerdos y la lealtad.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La fugida de Sirius Black d’Azkaban porta els demèntors a vigilar Hogwarts. Durant el tercer curs, en Harry descobreix versions contradictòries del passat dels pares i ha d’aprendre a distingir entre les aparences, els records i la lleialtat.",
+      "title": "Harry Potter i el pres d'Azkaban"
+    },
+    "en": {
+      "title": "Harry Potter and the Prisoner of Azkaban",
+      "description": "Sirius Black's escape from Azkaban brings Dementors to guard Hogwarts. In his third year, Harry discovers conflicting accounts of his parents' past and must learn to distinguish appearances and memories from genuine loyalty."
+    },
+    "es": {
+      "description": "La fuga de Sirius Black de Azkaban lleva a los dementores a vigilar Hogwarts. Durante su tercer curso, Harry descubre versiones contradictorias del pasado de sus padres y debe aprender a distinguir entre las apariencias, los recuerdos y la lealtad.",
+      "subtitle": "Harry Potter 3",
+      "title": "Harry Potter y el prisionero de Azkaban"
+    }
+  }
+}

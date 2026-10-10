@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/patria.epub",
+  "title": "Patria",
+  "year": "2016",
+  "description": "Tras el anuncio del fin de la violencia de ETA, Bittori vuelve al pueblo donde fue asesinado su marido. Su regreso reabre la historia de dos familias antes unidas y después enfrentadas, marcada por el miedo, los silencios y la dificultad de reconocer el daño causado.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Després de l’anunci de la fi de la violència d’ETA, Bittori torna al poble on van assassinar el marit. El retorn reobre la història de dues famílies abans unides i després enfrontades, marcada per la por, els silencis i la dificultat de reconèixer el mal causat.",
+      "title": "Patria"
+    },
+    "en": {
+      "subtitle": "A Novel",
+      "title": "Homeland",
+      "description": "After ETA announces an end to its violence, Bittori returns to the village where her husband was murdered. Her return reopens the history of two once-close families divided by fear, silence and the difficulty of acknowledging harm."
+    },
+    "es": {
+      "title": "Patria",
+      "description": "Tras el anuncio del fin de la violencia de ETA, Bittori vuelve al pueblo donde fue asesinado su marido. Su regreso reabre la historia de dos familias antes unidas y después enfrentadas, marcada por el miedo, los silencios y la dificultad de reconocer el daño causado."
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/bajo-siete-mares.epub",
+  "title": "Bajo siete mares",
+  "year": "1962",
+  "description": "Vázquez-Figueroa relata experiencias de navegación y submarinismo en una obra de fuerte componente autobiográfico. Los lugares visitados y los personajes encontrados durante sus viajes componen una crónica de aprendizaje, riesgo y curiosidad por la vida en el mar.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Vázquez-Figueroa relata experiencias de navegación y submarinismo en una obra de fuerte componente autobiográfico. Los lugares visitados y los personajes encontrados durante sus viajes componen una crónica de aprendizaje, riesgo y curiosidad por la vida en el mar.",
+      "title": "Bajo siete mares"
+    },
+    "ca": {
+      "description": "Vázquez-Figueroa relata experiències de navegació i submarinisme en una obra de fort component autobiogràfic. Els llocs visitats i els personatges trobats durant els viatges componen una crònica d’aprenentatge, risc i curiositat per la vida al mar.",
+      "title": "Bajo siete mares"
+    },
+    "en": {
+      "description": "Vázquez-Figueroa draws on his experiences of sailing and diving in this largely autobiographical work. Places visited and people encountered during his travels form a chronicle of learning, danger and enduring curiosity about life at sea.",
+      "title": "Bajo siete mares"
+    }
+  }
+}

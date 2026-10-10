@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/manaos-the-manaos.epub",
+  "title": "Manaos",
+  "year": "1973",
+  "description": "En una explotación de caucho amazónica, varios trabajadores son sometidos a una esclavitud sostenida por deudas y violencia. La llegada de Claudia precipita un plan de fuga que los enfrenta tanto a sus perseguidores como a las dificultades de atravesar la selva.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "En una explotació de cautxú amazònica, diversos treballadors pateixen una esclavitud sostinguda per deutes i violència. L’arribada de Claudia precipita un pla de fugida que els enfronta tant als perseguidors com a les dificultats de travessar la selva.",
+      "title": "Manaos"
+    },
+    "en": {
+      "description": "On an Amazonian rubber plantation, workers are trapped in slavery enforced through debt and violence. Claudia's arrival brings an escape plan to a head, forcing them to face their pursuers and the dangers of crossing the rainforest.",
+      "title": "Manaos"
+    },
+    "es": {
+      "title": "Manaos",
+      "description": "En una explotación de caucho amazónica, varios trabajadores son sometidos a una esclavitud sostenida por deudas y violencia. La llegada de Claudia precipita un plan de fuga que los enfrenta tanto a sus perseguidores como a las dificultades de atravesar la selva."
+    }
+  }
+}

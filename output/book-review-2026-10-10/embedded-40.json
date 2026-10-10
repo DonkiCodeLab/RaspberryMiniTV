@@ -1,0 +1,34 @@
+{
+  "index": 40,
+  "path": "Books/coltan.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Coltán"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d835840c-6ec4-4db1-bc6a-4669a2e05531"
+    },
+    {
+      "tag": "description",
+      "value": "«A la vista de que el Gobierno de los Estados Unidos piensa retirarse de Irak dejando tras de sí un rastro de muerte y destrucción que ha arrasado el país, hemos decidido que la empresa culpable de tan cruel y nefasto desastre —la Dall&Houston, de la que ustedes son los principales dirigentes y accionistas— reintegre los beneficios que ha obtenido de tan bárbara e injustificada agresión. Nos consta que no es posible resucitar a los muertos, pero sí lo es reponer en parte los daños causados, y por ello exigimos que devuelvan dichos beneficios, que hemos calculado en torno a los cien mil millones de dólares. De no aceptar nuestra justa demanda, cada dos semanas uno de ustedes será ejecutado; no importa lo que aleguen en su defensa, dónde se oculten o cómo intenten protegerse. La mejor prueba de que hablamos en serio reside en el hecho de que el cadáver del único compañero del Consejo de Administración que en estos momentos falta a la cita y cuyo sillón aparece vacío, Richard Marzan, se encuentra actualmente en el interior de una de las tinajas que adornan el jardín de su fastuosa mansión, a orillas del río. Si deciden colaborar les enviaremos una lista de los hospitales, escuelas, edificios, puentes y carreteras que deberán comenzar a construir inmediatamente. De no ser así, antes de que finalice el verano tan sólo dos de ustedes habrán sobrevivido, pero será por un muy breve espacio de tiempo. El dinero sucio de sangre, con sangre se limpia. Aarohum Al Rashid»."
+    },
+    {
+      "tag": "date",
+      "value": "2008-06-24T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2013-03-22"
+    },
+    {
+      "tag": "identifier",
+      "value": "b6c8c9a5-dc30-42b6-a2c2-20c8dda7ea6d"
+    }
+  ]
+}

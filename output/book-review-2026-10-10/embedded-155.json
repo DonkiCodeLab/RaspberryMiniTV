@@ -1,0 +1,42 @@
+{
+  "index": 155,
+  "path": "Books/la-insoportable-levedad-del-ser.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La insoportable levedad del ser"
+    },
+    {
+      "tag": "creator",
+      "value": "Milan Kundera"
+    },
+    {
+      "tag": "description",
+      "value": "Ésta es una extraordinaria historia de amor, o sea de celos, de sexo, de traiciones, de muerte y también de las debilidades y paradojas de la vida cotidiana de dos parejas cuyos destinos se entrelazan irremediablemente. Guiado por la asombrosa capacidad de Milan Kundera de contar con cristalina claridad, el lector penetra fascinado en la trama compleja de actos y pensamientos que el autor va tejiendo con diabólica sabiduría en torno a sus personajes. Y el lector no puede sino terminar siendo el mismo personaje, cuando no todos a la vez. Y es que esta novela va dirigida al corazón, pero también a la cabeza del lector. En efecto, los celos de Teresa por Tomás, el terco amor de éste por ella opuesto a su irrefrenable deseo de otras mujeres, el idealismo lírico y cursi de Franz, amante de Sabina, y la necesidad de ésta, amante también de Tomás, de perseguir incansable, una libertad que tan sólo la conduce a la insoportable levedad del ser, se convierten de simple anécdota en reflexión sobre problemas filosóficos que, afectan a cada uno directamente, cada día."
+    },
+    {
+      "tag": "date",
+      "value": "1983-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-10-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:b588e215-c72d-4820-8fc9-103f4bb05e70"
+    },
+    {
+      "tag": "identifier",
+      "value": "ef148d1f-9ba7-438b-9b4b-ee9d2817f062"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.9"
+    },
+    {
+      "tag": "identifier",
+      "value": "1186"
+    }
+  ]
+}

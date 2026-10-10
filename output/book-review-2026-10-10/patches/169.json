@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-sombra-del-viento.epub",
+  "title": "La sombra del viento",
+  "year": "2001",
+  "description": "En la Barcelona de posguerra, Daniel Sempere elige una novela en el Cementerio de los Libros Olvidados. La búsqueda de su enigmático autor, Julián Carax, lo introduce en una historia de amores, venganzas y secretos que empieza a entrelazarse con su propia vida.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "A la Barcelona de postguerra, Daniel Sempere tria una novel·la al Cementiri dels Llibres Oblidats. La recerca de l’enigmàtic autor, Julián Carax, l’endinsa en una història d’amors, venjances i secrets que comença a entrellaçar-se amb la seva pròpia vida.",
+      "title": "La sombra del viento"
+    },
+    "en": {
+      "description": "In postwar Barcelona, Daniel Sempere chooses a novel from the Cemetery of Forgotten Books. His search for its mysterious author, Julián Carax, draws him into a history of love, revenge and secrets that begins to intertwine with his own life.",
+      "title": "The Shadow of the Wind"
+    },
+    "es": {
+      "title": "La sombra del viento",
+      "description": "En la Barcelona de posguerra, Daniel Sempere elige una novela en el Cementerio de los Libros Olvidados. La búsqueda de su enigmático autor, Julián Carax, lo introduce en una historia de amores, venganzas y secretos que empieza a entrelazarse con su propia vida."
+    }
+  }
+}

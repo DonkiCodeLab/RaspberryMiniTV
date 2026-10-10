@@ -1,0 +1,42 @@
+{
+  "index": 189,
+  "path": "Books/meditaciones.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Meditaciones"
+    },
+    {
+      "tag": "creator",
+      "value": "Marco Aurelio Antonino Augusto"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:81c0ee3d-7d6d-42c9-872e-4fb2d718778d"
+    },
+    {
+      "tag": "description",
+      "value": "Marco Aurelio nace el 26 de abril del año 121 d. C. en el seno de una familia aristocrática que cuenta con la confianza del emperador. Desde su primera infancia parece destinado a ocupar puestos relevantes en el Imperio y muy temprano comienza a integrarse en lo más alto de la vida ciudadana. Adoptado como hijo por su tío, el emperador Antonino que había sucedido a Adriano al mando del Imperio, en el 161, tras la muerte de Antonino, se reparte con su hermano adoptivo Lucio Vera la sucesión imperial. Marco Aurelio era frugal en su vida y su tiempo libre lo dedicaba al estudio. Las «Meditaciones» no nos ilustran sobre los acontecimientos acaecidos en su época de emperador, sino que son breves pinceladas dispersas sobre sus gustos y anhelos, soliloquio espiritual y filosófico de un emperador preocupado por construir una «ciudadela interior» que corriera mejor fortuna que su Imperio."
+    },
+    {
+      "tag": "date",
+      "value": "0178-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-12-13"
+    },
+    {
+      "tag": "identifier",
+      "value": "8f2f1186-b06e-451c-be2a-be74e5ce8688"
+    },
+    {
+      "tag": "identifier",
+      "value": "2581"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    }
+  ]
+}

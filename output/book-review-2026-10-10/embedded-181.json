@@ -1,0 +1,42 @@
+{
+  "index": 181,
+  "path": "Books/los-pilares-de-la-tierra.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Los pilares de la Tierra (Edición ilustrada)"
+    },
+    {
+      "tag": "creator",
+      "value": "Ken Follett"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Hace treinta años, Ken Follett publicó en español su novela más popular, <cite>Los pilares de la Tierra</cite>, que ha vendido más de veintisiete millones de ejemplares en todo el mundo. Ahora, por primera vez en una edición ilustrada, el gran maestro de la narrativa de acción y suspense nos transporta de nuevo a la Edad Media, a un fascinante mundo de reyes, damas, caballeros, pugnas feudales, castillos y ciudades amuralladas. El amor y la muerte se entrecruzan vibrantemente en este magistral tapiz cuyo centro es la construcción de una catedral gótica.</p><p>Esta edición contiene un prólogo del autor y más de cien ilustraciones del artista Markus Weber.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1989-10-20T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-04-06"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:dc84c3a1-c0ad-4fdf-8dd4-3317b04f1f76"
+    },
+    {
+      "tag": "identifier",
+      "value": "3a58421f-fb3b-4ca8-b987-ea3923f1243f"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "60360"
+    }
+  ]
+}

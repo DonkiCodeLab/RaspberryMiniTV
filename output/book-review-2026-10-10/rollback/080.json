@@ -1,0 +1,17 @@
+{
+  "relativePath": "Books/el-hombre-terminal.epub",
+  "title": "El hombre terminal",
+  "year": "2008",
+  "description": "The classic thriller and \"New York Times\" bestseller is reissued with a new look. Prone to violent seizures, Harry Benson undergoes an experimental procedure that implants electrodes in his brain, sending soothing pulses to the brain's pleasure canyon. However, Harry learns how to control the pulses and increase their frequency. Harry then escapes--a homicidal maniac loose in the city--and nothing will stop his murderous rampage. Reissue.",
+  "localizedMetadata": {
+    "ca": {},
+    "en": {
+      "description": "Harry Benson is a brilliant computer expert, who is also an epileptic given to increasingly severe black-outs in which he attacks the nearest person at hand. A team of doctors, including surgeons and an attractive woman psychiatrist, will implant in Harry, literally, a miniature computer aimed at controlling his seizures. There is only one major problem. Harry is also slipping further and further into insanity, convinced that \"machines are taking over the world.\"",
+      "title": "The terminal man"
+    },
+    "es": {
+      "description": "Harry Benson, propenso a ataques incontrolables de violencia, es vigilado por la policía después de que atacó a dos personas. El Dr. Roger McPherson, jefe de la investigación del hospital neuropsiquiátrico prestigiosa unidad en Los Ángeles, está convencido de que puede curar Benson con una terapia llamada etapa 3: una cirugía experimental que implica la implantación de electrodos en el cerebro del paciente que rigen su voluntad a través de pequeñas descargas. La operación es una contraindicación relativa éxito, porque un mensaje inesperado: Benson ha aprendido a controlar las descargas, aumento de la frecuencia y escapado del hospital. Es un maníaco homicida perdido en la ciudad; nada puede detener sus impulsos asesinos y prevenir su agenda mortal.",
+      "title": "El hombre terminal"
+    }
+  }
+}

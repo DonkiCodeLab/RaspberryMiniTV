@@ -1,5 +1,5 @@
 export function libraryScrollLabel(item, sort = "name", language = "es") {
-  if (sort === "year") return String(item.year || item.releaseDate || item.publishDate || "").match(/\b\d{4}\b/)?.[0] || "—";
+  if (sort === "year") return String(item.year || item.releaseDate || "").match(/\b\d{4}\b/)?.[0] || "—";
   if (sort === "rating") {
     const rating = Number(item.voteAverage);
     return rating > 0 ? `★ ${new Intl.NumberFormat(language, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(rating / 2)}` : "—";
@@ -31,7 +31,7 @@ export function compareLibraryItems(left, right, sort = "name", direction = "asc
     return sign * a.localeCompare(b, language, { sensitivity: "base", numeric: true }) || names;
   }
   const value = item => sort === "year"
-    ? Number(String(item.year || item.releaseDate || item.publishDate || "").match(/\b\d{4}\b/)?.[0]) || 0
+    ? Number(String(item.year || item.releaseDate || "").match(/\b\d{4}\b/)?.[0]) || 0
     : Number(item.voteAverage) || 0;
   const a = value(left), b = value(right);
   if (a <= 0 || b <= 0) return (a <= 0) - (b <= 0) || names;

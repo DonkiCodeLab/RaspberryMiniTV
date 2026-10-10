@@ -1,0 +1,34 @@
+{
+  "index": 135,
+  "path": "Books/hombres-de-honor.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Hombres de honor"
+    },
+    {
+      "tag": "creator",
+      "value": "Xavier Bosch"
+    },
+    {
+      "tag": "description",
+      "value": "Tras abandonar la dirección del diario Crónica, Dani Santana vuelve a la televisión como presentador de un programa de reportajes con el que pronto se anota un tanto: entrevistar a Tuzza Talese, la mujer de un miembro encarcelado de la mafia siciliana. Amenazada de muerte por divulgar en un libro los secretos de la organización, Tuzza, una mujer estoica y endurecida, vive escondiéndose de todos y de todo, aunque puede que en Santana encuentre un aliado.Por si la carismática Tuzza no fuera suficiente, la aparición inesperada de un testigo del incendio del Liceo, que sostiene una versión de lo ocurrido radicalmente distinta a la oficial, viene a complicar la vida del periodista. Quince años después del trágico suceso, que Santana escarbe en lo ocurrido incomoda al alcalde de Barcelona, Antoni Negrier, aunque no tanto como la idea de que salgan a la luz ciertos descubrimientos del programa sobre la mítica figura de su padre, un héroe del exilio catalán que podría tener los pies de barro…"
+    },
+    {
+      "tag": "date",
+      "value": "2012-02-23T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-04-29"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:bdcc28d6-9d92-4c7d-a7bb-e42840a5a38d"
+    },
+    {
+      "tag": "identifier",
+      "value": "5ac013a9-2298-4d9e-af57-b366675ba362"
+    }
+  ]
+}

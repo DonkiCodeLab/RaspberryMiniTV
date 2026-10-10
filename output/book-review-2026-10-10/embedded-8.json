@@ -1,0 +1,42 @@
+{
+  "index": 8,
+  "path": "Books/adi-s-mister-trump.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Adiós, Mister Trump"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "description",
+      "value": "Alberto Vázquez-Figueroa nos sorprende una vez más con una novela que se adelanta a la actualidad. Estados Unidos, México y el controvertido presidente Trump están en el foco de un tinglado de negocios, intrigas e intereses creados que sumerge al lector en una trama de acción en la que solo se plantea una duda: ¿Ficción o realidad? Un grupo de narcos decide blanquear el dinero de la droga con una obra de ingeniería de proporciones faraónicas inspirada en un antiguo proyecto español: la construcción de un canal interoceánico entre el Atlántico y el Pacífico cruzando… México. Tienen en contra no solo las dificultades técnicas que tal empresa conlleva sino, sobre todo, los intereses panameños y norteamericanos con su presidente Donald Trump a la cabeza. Y a favor cantidades inagotables de dinero y el trabajo de miles de espaldas mojadas que deciden cruzar la frontera de vuelta a México, orgullosos de participar en una obra que devolverá su antiguo esplendor a su país."
+    },
+    {
+      "tag": "date",
+      "value": "2017-09-30T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-09-14"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:3ca350f8-d785-70f5-ebf3-6b8b7aa04cbc"
+    },
+    {
+      "tag": "identifier",
+      "value": "e206ae6c-a87a-425d-9bcc-7eb62f5ce2a7"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "41309"
+    }
+  ]
+}

@@ -5,6 +5,13 @@ import LibraryScrollRail from "./LibraryScrollRail.jsx";
 import BackToTop from "./BackToTop.jsx";
 import MovieLibraryItems from "./MovieLibraryItems.jsx";
 import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
+import MediaCredits from "./MediaCredits.jsx";
+import CatalogAI, { CatalogAIButton, CatalogAIResult } from "./CatalogAI.jsx";
+import OpenAISettings from "./OpenAISettings.jsx";
+import OmdbSettings from "./OmdbSettings.jsx";
+import ImdbRating from "./ImdbRating.jsx";
+import { catalogAIIds, filterAICollections, matchesCatalogAI } from "./catalogAI.js";
+import { recommendationLibraryTarget, recommendationTorrentTarget } from "./recommendations.js";
 import BrowserVideo from "./BrowserVideo.jsx";
 import SystemUpdate from "./SystemUpdate.jsx";
 import OpenSubtitlesSettings from "./OpenSubtitlesSettings.jsx";
@@ -35,6 +42,7 @@ import { bookLanguageName, isGraphicNovel } from "./bookMetadata.js";
 import { bookStrings } from "./bookStrings.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
+import TmdbCreditsCompletion from "./TmdbCreditsCompletion.jsx";
 import TorrentDownloads, { MediaTorrentSearch, useTorrentDownloads } from "./TorrentDownloads.jsx";
 import { localTmdbImageUrl } from "./api/raspberryApi";
 import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
@@ -4520,13 +4528,18 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
   useEffect(() => {
     if (!visible || !initialMovie) return;
     let cancelled = false;
-    setMediaType("movies");
-    setBrowserView("movie");
+    const isSeries = initialMovie.mediaType === "tv";
+    setMediaType(isSeries ? "series" : "movies");
+    setBrowserView(isSeries ? "seasons" : "movie");
     setSelectedItem(null);
+    setSelectedSeasonId(null);
+    setSeasonEpisodes(null);
+    setSelectedEpisode(null);
     setLoadingDetails(true);
     setError("");
-    const localized = getMovieById(initialMovie.tmdbId, tmdbLanguage, true);
-    const english = tmdbLanguage === "en-US" ? localized : getMovieById(initialMovie.tmdbId, "en-US", true);
+    const getDetails = isSeries ? getTvSeriesById : getMovieById;
+    const localized = getDetails(initialMovie.tmdbId, tmdbLanguage, true);
+    const english = isSeries || tmdbLanguage === "en-US" ? localized : getDetails(initialMovie.tmdbId, "en-US", true);
     Promise.all([localized, english]).then(([details, englishDetails]) => {
       if (!cancelled) setSelectedItem({ ...details, englishName: englishDetails.name });
     }).catch(nextError => {
@@ -4842,6 +4855,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                   <p>{`${selectedItem.seasonCount || selectedItem.seasons?.length || 0} ${t("seasons_label")} · ${selectedItem.totalEpisodeCount || 0} ${t("episodes")}`}</p>
                 </header>
 
+                <ImdbRating kind="tv" tmdbId={selectedItem.id} imdbId={selectedItem.imdbId} language={tmdbLanguage} />
                 <div className="tmdb-browser-series__seasons">
                   {(selectedItem.seasons || []).map((season) => (
                     <SeasonCard
@@ -4960,6 +4974,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                       </div>
                     </dl>
 
+                    <ImdbRating kind="movie" tmdbId={selectedItem.id} imdbId={selectedItem.imdbId} language={tmdbLanguage} />
                     <ul className="tmdb-browser-movie__genres" aria-label={t("genres")}>
                       {(selectedItem.genres?.length ? selectedItem.genres : [t("not_available")]).map((genre) => (
                         <li key={genre}>{genre}</li>
@@ -5699,7 +5714,10 @@ function RaspberryPage({
               <ServiceCredentialTest provider="tmdb" language={raspberryLanguage} credentials={tmdbSettings}
                 configured={!!(tmdbSettings.apiKey?.trim() || tmdbSettings.bearerToken?.trim())} disabled={tmdbSettingsSaving} />
               <TmdbCachePanel language={raspberryLanguage} />
+              <TmdbCreditsCompletion language={raspberryLanguage} />
             </article>
+            <OpenAISettings language={raspberryLanguage} />
+            <OmdbSettings language={raspberryLanguage} />
             <OpenSubtitlesSettings language={raspberryLanguage} sectionRef={subtitleSettingsRef} />
             <GameProviderSettings language={raspberryLanguage} />
             <GameProviderSettings language={raspberryLanguage} youtube />
@@ -6093,7 +6111,7 @@ function BookCollectionLibrary({ view, collections, countLabel, onSelect, t, lan
 function BookDetails({ book, language, onRead, onEdit, onDelete, onBack, renderMarks }) {
   const t = bookStrings(language);
   const sourceKey = /^\/(books\/OL\d+M|works\/OL\d+W)$/.test(book.editionKey || book.openLibraryKey || "") ? book.editionKey || book.openLibraryKey : "";
-  const details = [[t.publisher, book.publisher], [t.publishDate, book.publishDate || book.year], [t.isbn, book.isbn], [t.language, bookLanguageName(book.language, language)], [t.pageCount, book.pageCount], [t.format, book.format.toUpperCase()]];
+  const details = [[t.year, book.year], [t.publisher, book.publisher], [t.publishDate, book.publishDate], [t.isbn, book.isbn], [t.language, bookLanguageName(book.language, language)], [t.pageCount, book.pageCount], [t.format, book.format.toUpperCase()]];
   return <section className="book-details seasons-section" aria-label={`${t.infoTitle}: ${book.name}`}>
     {onBack ? <button className="back-button" type="button" onClick={onBack}>← {t.collection}</button> : null}
     <div className="book-details__file-actions">
@@ -6432,6 +6450,8 @@ export default function App() {
   const [seriesLibraryView, setSeriesLibraryView] = useState("grid");
   const [seriesLibrarySort, setSeriesLibrarySort] = useState("name");
   const [mediaFilterOpen, setMediaFilterOpen] = useState(false);
+  const [catalogAIOpen, setCatalogAIOpen] = useState(false);
+  const [catalogAIResults, setCatalogAIResults] = useState({});
   const [mediaFavoritesOnly, setMediaFavoritesOnly] = useState({});
   const [movieGenreFilters, setMovieGenreFilters] = useState({});
   const [movieAwardFilters, setMovieAwardFilters] = useState([]);
@@ -7003,6 +7023,7 @@ export default function App() {
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
         imageOptions: tmdbSeries?.imageOptions || [],
         firstAirDate: tmdbSeries?.firstAirDate || "",
+        creators: tmdbSeries?.creators || [],
         voteAverage: tmdbSeries?.voteAverage || 0,
         seasons: tmdbSeries?.seasons || [],
         seasonCount: tmdbSeries?.seasonCount ?? null,
@@ -7953,6 +7974,31 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function handleOpenRecommendedLibrary(item) {
+    const target = recommendationLibraryTarget(item, movieOptions, seriesOptions);
+    if (!target) return false;
+    setActiveMediaType(target.section); setCurrentView("series"); setCatalogAIOpen(false);
+    setCatalogAIResults(current => ({ ...current, [target.section]: null }));
+    setMediaFilterQueries(current => ({ ...current, [target.section]: "" }));
+    setMediaFavoritesOnly(current => ({ ...current, [target.section]: false }));
+    if (target.section === "movies") {
+      setMovieGenreFilters(current => ({ ...current, [raspberryLanguage]: [] })); setMovieAwardFilters([]);
+      if (movieLibraryView === "oscars") setMovieLibraryView("grid");
+      handleOpenMovieDetails(target.id);
+    } else handleOpenSeriesDetails(target.id);
+    return true;
+  }
+
+  function handleRecommendedTorrent(item) {
+    const target = recommendationTorrentTarget(item);
+    if (!target) return;
+    setUploadMediaType(target.mediaType === "tv" ? "series" : "movies");
+    setTorrentInitialMovie(target);
+    // Loading the exact TMDB profile mounts MediaTorrentSearch, which runs its
+    // search immediately. Downloads still require choosing a torrent explicitly.
+    setTmdbBrowserOpen(true);
+  }
+
   function handleBackToMovieLibrary() {
     setSelectedMovieId(null);
     setSettingsOpen(false);
@@ -8848,6 +8894,27 @@ export default function App() {
   const isBookAwardView = isBooksMode && bookLibraryView === "awards" && !activeBookCollection;
   const isPicturesMode = activeMediaType === "pictures";
   const activeMediaSection = MEDIA_TYPES.find((mediaType) => mediaType.id === activeMediaType);
+  const activeAIResult = catalogAIResults[activeMediaType] || null;
+  const activeAIIds = catalogAIIds(activeAIResult);
+  const matchesAI = item => matchesCatalogAI(activeMediaType, item, activeAIIds);
+  const applyCatalogAI = result => {
+    setCatalogAIResults(current => ({ ...current, [result.section]: result }));
+    if (result.section === "movies") { setSelectedMovieId(null); if (movieLibraryView === "oscars") setMovieLibraryView("grid"); }
+    if (result.section === "series") setSelectedDirectoryPath("");
+    if (result.section === "games") {
+      setSelectedGamePath("");
+      const ids = catalogAIIds(result);
+      const systems = new Set(gameLibrary.filter(game => matchesCatalogAI("games", game, ids)).map(game => systemForGame(game)?.id).filter(Boolean));
+      if (systems.size === 1) setSelectedSystemId([...systems][0]);
+    }
+    if (result.section === "books") {
+      setBookDetailPath(""); setSelectedBookCollection("");
+      if (bookLibraryView === "awards") setBookLibraryView("grid");
+      const ids = catalogAIIds(result);
+      const types = new Set((videos?.books || []).filter(book => matchesCatalogAI("books", book, ids)).map(book => isGraphicNovel(book) ? "graphic" : "novel"));
+      if (types.size === 1) setBookLibraryType([...types][0]);
+    }
+  };
   const activeFilterQuery = mediaFilterQueries[activeMediaType] || "";
   const normalizedFilterQuery = normalizeMediaLabel(activeFilterQuery);
   const favoritesOnly = Boolean(mediaFavoritesOnly[activeMediaType]);
@@ -8857,30 +8924,32 @@ export default function App() {
   const movieGenreOptions = [...new Set(movieOptions.flatMap((movie) => movie.genres || []))]
     .sort((a, b) => a.localeCompare(b, normalizeRaspberryLanguage(raspberryLanguage)));
   const filteredMovieOptions = movieOptions.filter((movie) =>
-    matchesName(movie.name) && matchesFavorite("movie", movie.id) &&
+    matchesAI(movie) && matchesName(movie.name) && matchesFavorite("movie", movie.id) &&
     (!selectedMovieGenres.length || (movie.genres || []).some((genre) => selectedMovieGenres.includes(genre))) &&
     (!movieAwardFilters.length || movieAwards(getMovieTmdbId(movie)).some(({ award }) => movieAwardFilters.includes(award)))
   ).sort((left, right) => compareLibraryItems(left, right, movieLibrarySort, movieSortDirection, normalizeRaspberryLanguage(raspberryLanguage)));
   const filteredSeriesOptions = seriesOptions
-    .filter((series) => matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath))
+    .filter((series) => matchesAI(series) && matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath))
     .sort((left, right) => seriesLibrarySort === "rating"
       ? (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right)
       : compareMediaNames(left, right));
   const filteredGameOptions = consoleGames
-    .filter(game => matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath))
+    .filter(game => matchesAI(game) && matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath))
     .map(game => ({ ...game, year: gameYear(game) }))
     .sort((left, right) => compareLibraryItems(left, right, gameLibrarySort, gameSortDirection, normalizeRaspberryLanguage(raspberryLanguage)));
-  const filteredBookCollections = bookCollections.filter((collection) =>
+  const filteredBookCollections = filterAICollections(bookCollections, isBooksMode ? activeAIIds : null).filter((collection) =>
     collection.books.some((book) =>
       matchesBookQuery(book, activeFilterQuery, `${collection.label} ${collection.author || ""}`) && matchesFavorite("book", book.relativePath)
     )
   );
   const filteredActiveBooks = activeBookCollection?.books.filter(book =>
-    matchesBookQuery(book, activeFilterQuery, `${activeBookCollection.label} ${activeBookCollection.author || ""}`) && matchesFavorite("book", book.relativePath)
+    matchesAI(book) && matchesBookQuery(book, activeFilterQuery, `${activeBookCollection.label} ${activeBookCollection.author || ""}`) && matchesFavorite("book", book.relativePath)
   );
+  const filteredPictures = pictureLibrary.filter(picture => matchesAI(picture) && matchesName(picture.name || picture.file) && matchesFavorite("picture", picture.relativePath));
   const selectorOptions = isGamesMode ? filteredGameOptions : isMoviesMode ? filteredMovieOptions : filteredSeriesOptions;
   const activeFilterCount = Number(Boolean(activeFilterQuery.trim())) + Number(favoritesOnly) + (isMoviesMode ? selectedMovieGenres.length + movieAwardFilters.length : 0);
   const mediaFiltersActive = activeFilterCount > 0 && !(isMoviesMode && movieLibraryView === "oscars");
+  const libraryFiltersActive = mediaFiltersActive || activeAIIds !== null;
 
   useEffect(() => {
     if (!mediaFiltersActive || isBooksMode) return;
@@ -8945,7 +9014,7 @@ export default function App() {
       : isMoviesMode
         ? movieOptions.length
         : seriesOptions.length;
-  const filterVisible = isPicturesMode ? pictureLibrary.length : isBooksMode
+  const filterVisible = isPicturesMode ? filteredPictures.length : isBooksMode
     ? filteredActiveBooks?.length ?? filteredBookCollections.length
     : selectorOptions.length;
   const libraryCountLabel = `${t("movie_filter_count", { shown: filterVisible, total: filterTotal })} ${t(isBooksMode && !activeBookCollection ? "book_library_items" : `media_${activeMediaType}`).toLocaleLowerCase(normalizeRaspberryLanguage(raspberryLanguage))}`;
@@ -9086,7 +9155,7 @@ export default function App() {
           </div>
         ) : (
           <>
-            {profiles.error ? <div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div> : !profiles.ready ? <div className="profile-status" role="status">{t("loading")} · Users</div> : null}
+            {profiles.error ? createPortal(<div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div>, document.body) : !profiles.ready ? <div className="profile-status" role="status">Users…</div> : null}
             {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
             {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
@@ -9354,7 +9423,7 @@ export default function App() {
                       {isOscarView && <AwardSelector value={awardType} onChange={setAwardType} language={raspberryLanguage} />}
                       {isBookAwardView && <BookAwardSelector value={bookAwardType} onChange={setBookAwardType} language={raspberryLanguage} />}
                       {isGamesMode ? <div className="series-hero__controls-row series-hero__controls-row--selector-only"><GameConsoleCarousel systemId={selectedSystemId} onSystemChange={(id) => { setSelectedSystemId(id); setSelectedGamePath(""); }} language={raspberryLanguage} /></div> : !isOscarView && !isBookAwardView && <div
-                        className={`series-hero__controls-row${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
+                        className={`series-hero__controls-row series-hero__controls-row--ai${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
                         {filterTotal ? (
                           <button
@@ -9389,6 +9458,7 @@ export default function App() {
                           </button>
                         ) : null}
 
+                        <CatalogAIButton compact language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
                         <HeroSelector
                           options={heroSelectorOptions}
                           value={selectorValue}
@@ -9468,10 +9538,21 @@ export default function App() {
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d={mediaFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} /></svg>
                     {t("games_filter")}{mediaFiltersActive ? ` (${activeFilterCount})` : ""}
                   </button>
+                  <CatalogAIButton language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
                   <HeroSelector options={heroSelectorOptions} value={selectorValue}
                     placeholder={heroSelectorOptions.length ? selectorLabel : t("games_empty_title")}
                     disabled={!heroSelectorOptions.length} onChange={handleOpenGameDetails} />
                 </div>}
+
+                {(isPicturesMode || isMediaDetail || isOscarView || isBookAwardView) && <div className="catalog-ai-extra-tools">
+                  {isPicturesMode && <button className="dialog-button" type="button" onClick={() => setMediaFilterOpen(value => !value)} aria-expanded={mediaFilterOpen} aria-controls="library-filter-panel">{t("movie_filter")}</button>}
+                  <CatalogAIButton language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
+                </div>}
+                {catalogAIOpen && <CatalogAI key={`${profiles.activeId}:${activeMediaType}:${raspberryLanguage}`} section={activeMediaType} language={raspberryLanguage}
+                  user={profiles.ready ? profiles.activeUser : null} onOpenLibrary={handleOpenRecommendedLibrary} onSearchTorrent={handleRecommendedTorrent}
+                  initialPrompt={activeAIResult?.prompt || ""} onResult={applyCatalogAI} onClose={() => setCatalogAIOpen(false)} />}
+                {!isOscarView && !isBookAwardView && <CatalogAIResult result={activeAIResult} visible={filterVisible} language={raspberryLanguage}
+                  onClear={() => setCatalogAIResults(current => ({ ...current, [activeMediaType]: null }))} />}
 
                 {!isOscarView && !isBookAwardView && !isMediaDetail && (isGamesMode || filterTotal > 0) && mediaFilterOpen ? (
                   <section id="library-filter-panel" className="movie-filter__panel" aria-label={t("movie_filter_title")}>
@@ -9542,9 +9623,9 @@ export default function App() {
                       setTorrentInitialMovie(movie);
                       setTmdbBrowserOpen(true);
                     }} />
-                ) : isPicturesMode ? (
-                  <PicturesLibrary key={profiles.activeId} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} countLabel={libraryCountLabel} pictures={pictureLibrary} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
-                ) : !isGamesMode && mediaFiltersActive && !filterVisible ? (
+                ) : isPicturesMode && !(libraryFiltersActive && !filterVisible) ? (
+                  <PicturesLibrary key={profiles.activeId} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} countLabel={libraryCountLabel} pictures={filteredPictures} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
+                ) : !isGamesMode && libraryFiltersActive && !filterVisible ? (
                   <section className="empty-state seasons-section">
                     {!isMediaDetail && !isGamesMode ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}
                     <div className="empty-state__card"><p>{t("movie_filter_no_results")}</p></div>
@@ -9739,13 +9820,16 @@ export default function App() {
                   </section>
                 ) : isSeriesMode && !seasons.length ? (
                   <section className="empty-state">
+                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} />
                     <div className="empty-state__card">
                       <h2>{emptyTitle}</h2>
                       <p>{emptyDescription}</p>
                     </div>
+                    <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
                   </section>
                 ) : isSeriesMode ? (
                   <section className="seasons-section">
+                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} />
                     <div className="seasons-section__label">
                       {`${seasons.length} ${t("seasons_label")} (${selectedSeries?.episodeCount || 0} ${t("chapters_summary")})`}
                     </div>
@@ -9763,6 +9847,7 @@ export default function App() {
                         />
                       ))}
                     </div>
+                    <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
                   </section>
                 ) : isMoviesMode && !selectedMovie ? (
                   <section className="movie-library seasons-section library-with-scroll-rail">
@@ -9971,10 +10056,12 @@ export default function App() {
                           </div>
                         </div>
 
+                        <ImdbRating kind="movie" tmdbId={selectedMovie.tmdbId} imdbUrl={selectedMovie.imdbUrl} language={raspberryLanguage} />
                         <div className="movie-panel__overview">
                           <strong>{t("synopsis")}</strong>
                           <p>{selectedMovie.overview || t("synopsis_unavailable")}</p>
                         </div>
+                        <MediaCredits mediaType="movie" tmdbId={selectedMovie.tmdbId} language={raspberryLanguage} />
                       </div>
                     </div>
                   </section>

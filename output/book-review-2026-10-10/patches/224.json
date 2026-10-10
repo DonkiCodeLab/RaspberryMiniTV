@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/un-mundo-feliz.epub",
+  "title": "Un mundo feliz",
+  "year": "1932",
+  "description": "Una sociedad fabrica y condiciona a sus habitantes para mantener la estabilidad mediante el consumo y la satisfacción inmediata. La llegada de alguien criado fuera de ese sistema revela el precio de una felicidad programada y enfrenta el orden colectivo con la libertad individual.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Un Món feliç",
+      "description": "Una societat fabrica i condiciona els habitants per mantenir l’estabilitat mitjançant el consum i la satisfacció immediata. L’arribada d’algú criat fora del sistema revela el preu d’una felicitat programada i enfronta l’ordre col·lectiu amb la llibertat individual."
+    },
+    "en": {
+      "title": "Brave New World",
+      "description": "A society manufactures and conditions its inhabitants to preserve stability through consumption and immediate satisfaction. The arrival of someone raised outside the system exposes the cost of programmed happiness and sets collective order against individual freedom."
+    },
+    "es": {
+      "title": "Un mundo feliz",
+      "description": "Una sociedad fabrica y condiciona a sus habitantes para mantener la estabilidad mediante el consumo y la satisfacción inmediata. La llegada de alguien criado fuera de ese sistema revela el precio de una felicidad programada y enfrenta el orden colectivo con la libertad individual."
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/pan-negro.epub",
+  "title": "Pan Negro",
+  "year": "2003",
+  "description": "Andreu crece en la Cataluña rural de posguerra, separado de su padre encarcelado y acogido por unos familiares. Entre juegos, descubrimientos y silencios de los adultos, aprende cómo la derrota, el miedo y las diferencias sociales condicionan la vida de quienes lo rodean.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "L’Andreu creix a la Catalunya rural de postguerra, separat del pare empresonat i acollit per uns familiars. Entre jocs, descobertes i silencis dels adults, aprèn com la derrota, la por i les diferències socials condicionen la vida dels qui l’envolten.",
+      "title": "Pan Negro"
+    },
+    "en": {
+      "description": "Andreu grows up in rural postwar Catalonia, living with relatives while his father is imprisoned. Through games, discoveries and adult silences, he learns how defeat, fear and social divisions shape the lives around him.",
+      "title": "Pan Negro"
+    },
+    "es": {
+      "title": "Pan Negro",
+      "description": "Andreu crece en la Cataluña rural de posguerra, separado de su padre encarcelado y acogido por unos familiares. Entre juegos, descubrimientos y silencios de los adultos, aprende cómo la derrota, el miedo y las diferencias sociales condicionan la vida de quienes lo rodean."
+    }
+  }
+}

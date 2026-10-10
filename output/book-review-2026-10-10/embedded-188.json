@@ -1,0 +1,42 @@
+{
+  "index": 188,
+  "path": "Books/mecanoscrito-del-segundo-origen.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Mecanoscrito del segundo origen"
+    },
+    {
+      "tag": "creator",
+      "value": "Manuel de Pedrolo"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:920495a0-ce6c-11e2-8b8b-0800200c9a66"
+    },
+    {
+      "tag": "description",
+      "value": "Con el título de «Mecanoscrito del segundo origen» se conoce, en el año 7138 de la nueva era, el libro que se rescató del olvido más de cuatro mil años atrás y que provocó serias discusiones entre los entendidos de la época. ¿Obra de ciencia-ficción, tal como defiende el erudito Eli Raures o auténticas memorias de uno de los pocos supervivientes de la catástrofe que destruyó la civilización, tal como opina el anticuario Olguen Dalmasas? ¿Es Alba, la protagonista, un personaje de novela o bien la madre de la humanidad que ha logrado resurgir casi de la nada? Esta niña de catorce años, «virgen y morena», se erige del texto con un poder de sugestión tan extraordinario que cuesta creer que alguien, ni siquiera Manuel de Pedrolo, haya podido inventarla. ¿De dónde la ha sacado? ¿De dónde procede el mecanoscrito?"
+    },
+    {
+      "tag": "date",
+      "value": "1973-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-02-22"
+    },
+    {
+      "tag": "identifier",
+      "value": "916e7202-7a05-4d59-b6c3-eb60f8ecb437"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "3969"
+    }
+  ]
+}

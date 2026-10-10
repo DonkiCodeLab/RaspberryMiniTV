@@ -1,0 +1,42 @@
+{
+  "index": 180,
+  "path": "Books/los-miserables.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Los miserables"
+    },
+    {
+      "tag": "creator",
+      "value": "Victor Hugo"
+    },
+    {
+      "tag": "description",
+      "value": "Jean Valjean ha cumplido una condena de casi veinte años por robar comida para su familia. Fuera de la cárcel, marginado por la sociedad, no le queda más remedio que seguir robando. Un inesperado encuentro con el obispo Myriel le hará cambiar de actitud y redimirse. Tras adoptar una nueva identidad, logra hacerse con una posición acomodada que le permite ayudar a los vecinos de Montreuil y a Cosette, la hija de Fantine, una mujer obligada a prostituirse para subsistir. Pero la justicia le sigue los pasos por haber reincidido tras salir de la cárcel. La implacable persecución del policía Javert, un hombre de estricta moral, le obliga a emprender una huida permanente que le llevará a esconderse en conventos y cloacas, y a pasar por los campos de batalla de Waterloo y por las barricadas del París revolucionario de 1832. Siempre buscando para sí y para los demás una justicia que le es negada. «Los miserables» es una de las obras clásicas de la literatura universal. Fue escrita en cinco volúmenes, en 1862, por Victor Hugo, uno de los autores más importantes de la historia de la literatura francesa. Es una obra fundamental, no sólo por sus valores literarios, sino también por su denuncia de la miseria, la pobreza y la explotación; su reflexión sobre el bien y el mal; y su defensa de la justicia, la ética y la solidaridad humana en momentos adversos. Ha sido llevada al cine en numerosas ocasiones y es la base del mundialmente conocido musical homónimo. La presente traducción de «Los miserables», a cargo de María Teresa Gallego Urrutia, es la primera totalmente íntegra y fidedigna que se pone a disposición del lector en lengua castellana de esta obra maestra de Victor Hugo."
+    },
+    {
+      "tag": "date",
+      "value": "1861-12-31T23:50:39+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-06-14"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4c3eb27e-df4b-4b0e-b66b-7602df00cffd"
+    },
+    {
+      "tag": "identifier",
+      "value": "388bd8a1-775a-438b-bb3b-a8a245e0eecd"
+    },
+    {
+      "tag": "identifier",
+      "value": "28626"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.1"
+    }
+  ]
+}

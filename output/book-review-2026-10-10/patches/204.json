@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/permafrost.epub",
+  "title": "Permafrost",
+  "year": "2018",
+  "description": "Una mujer narra con ironía su relación con una familia asfixiante y su búsqueda de refugio en el sexo, el arte y la lectura. Su deseo de independencia convive con una profunda vulnerabilidad, en una exploración del cuerpo, los vínculos y el impulso de seguir viviendo.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Permagel",
+      "description": "Una dona narra amb ironia la relació amb una família asfixiant i la recerca de refugi en el sexe, l’art i la lectura. El desig d’independència conviu amb una vulnerabilitat profunda, en una exploració del cos, els vincles i l’impuls de continuar vivint."
+    },
+    "en": {
+      "title": "Permafrost",
+      "description": "A woman wryly recounts her relationship with a suffocating family and her search for refuge in sex, art and reading. Her desire for independence coexists with deep vulnerability in an exploration of the body, relationships and the impulse to keep living."
+    },
+    "es": {
+      "title": "Permafrost",
+      "description": "Una mujer narra con ironía su relación con una familia asfixiante y su búsqueda de refugio en el sexo, el arte y la lectura. Su deseo de independencia convive con una profunda vulnerabilidad, en una exploración del cuerpo, los vínculos y el impulso de seguir viviendo."
+    }
+  }
+}

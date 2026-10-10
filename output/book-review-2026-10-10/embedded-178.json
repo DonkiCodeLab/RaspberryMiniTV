@@ -1,0 +1,42 @@
+{
+  "index": 178,
+  "path": "Books/los-extra-os.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Los extraños"
+    },
+    {
+      "tag": "creator",
+      "value": "Vicente Valero"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Ya sean desdichadas o felices, es decir, diferentes o parecidas, según la célebre definición de Tolstói, todas las familias tienen sus extraños: aquellos individuos de quienes tal vez sólo se conserva un puñado de noticias dispersas y a los que, sin embargo, se alude con cierta frecuencia por algún enigmático suceso, por su peculiar oficio o por la fuerza misma de su singular personalidad, que los obligó a permanecer alejados del devenir corriente de la familia. Rostros, por tanto, huidizos, muchas veces en la frontera del olvido definitivo.</p>\n\n    <p>Para rescatarlos de esta frontera última y para saciar una antigua curiosidad, la que proviene, pura e ingenua, de los relatos inconexos escuchados durante la infancia, el narrador reúne en este extraordinario libro a cuatro de sus extraños para intentar reconstruir, sirviéndose de los pocos recuerdos heredados pero también aventurándose en investigaciones personales (viajes, documentos, etcétera), la trayectoria vital de cada uno de ellos, sus ambiciones y fracasos, así como para determinar cuál fue el motivo principal de su extrañeza y, por tanto, de su alejamiento. Y en esta aproximación, el narrador, tal vez el auténtico protagonista de este libro, no sólo descubre hechos y confluencias sorprendentes, sino que consigue también conocer mejor la identidad y el transcurso de una familia común, con sus olvidos y sus afectos, sus temores y sus esperanzas.</p>\n\n    <p>Una historia de militares africanistas, comandantes de la Segunda República, ajedrecistas profesionales y bailarines. Y como telón de fondo el África colonial, la guerra civil española, el exilio en Francia, la Ibiza de los años setenta.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2014-05-14T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-09-14"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e76137d6-e7ed-4148-b94d-4d50bc73ca07"
+    },
+    {
+      "tag": "identifier",
+      "value": "381d48da-504d-45ae-bbb9-63b3ea9094e0"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "57257"
+    }
+  ]
+}

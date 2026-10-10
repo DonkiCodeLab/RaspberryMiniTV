@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/euf-ria.epub",
+  "title": "Eufòria",
+  "year": "2014",
+  "description": "Mientras se recupera en un hospital, el periodista Dani Santana entabla amistad con un joven que lo anima a investigar el sistema sanitario. Al mismo tiempo, un gran proyecto empresarial sacude Barcelona y revela los vínculos entre intereses económicos, política y medios de comunicación.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Mentre es recupera en un hospital, el periodista Dani Santana fa amistat amb un jove que l’anima a investigar el sistema sanitari. Alhora, un gran projecte empresarial sacseja Barcelona i revela els vincles entre interessos econòmics, política i mitjans de comunicació.",
+      "title": "Eufòria"
+    },
+    "en": {
+      "description": "While recovering in hospital, journalist Dani Santana befriends a young man who draws him into investigating the healthcare system. Meanwhile, a major business project unsettles Barcelona, exposing connections between economic interests, politics and the media.",
+      "title": "Eufòria"
+    },
+    "es": {
+      "description": "Mientras se recupera en un hospital, el periodista Dani Santana entabla amistad con un joven que lo anima a investigar el sistema sanitario. Al mismo tiempo, un gran proyecto empresarial sacude Barcelona y revela los vínculos entre intereses económicos, política y medios de comunicación.",
+      "title": "Eufòria"
+    }
+  }
+}

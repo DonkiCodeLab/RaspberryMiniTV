@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-profesora.epub",
+  "title": "La profesora",
+  "year": "2024",
+  "description": "Eve y su marido Nate enseñan en un instituto aún sacudido por un escándalo entre un profesor y una alumna. La presencia de Addie, la estudiante señalada por los rumores, desestabiliza las certezas de Eve y revela cuánto pueden ocultar las apariencias dentro y fuera del aula.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Eve y su marido Nate enseñan en un instituto aún sacudido por un escándalo entre un profesor y una alumna. La presencia de Addie, la estudiante señalada por los rumores, desestabiliza las certezas de Eve y revela cuánto pueden ocultar las apariencias dentro y fuera del aula.",
+      "title": "La profesora"
+    },
+    "ca": {
+      "description": "L’Eve i el marit Nate ensenyen en un institut encara sacsejat per un escàndol entre un professor i una alumna. La presència de l’Addie, assenyalada pels rumors, desestabilitza les certeses de l’Eve i revela què poden amagar les aparences dins i fora de l’aula.",
+      "title": "La profesora"
+    },
+    "en": {
+      "description": "Eve and her husband Nate teach at a school still shaken by a scandal involving a teacher and a student. The presence of Addie, the girl at the centre of the rumours, unsettles Eve's certainties and exposes deceptive appearances inside and outside the classroom.",
+      "title": "La profesora"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-caballero-de-los-siete-reinos.epub",
+  "title": "El caballero de los Siete Reinos",
+  "year": "2013",
+  "description": "Estas tres novelas cortas siguen al caballero errante Dunk y a su joven escudero Egg casi un siglo antes de Juego de tronos. Torneos, disputas entre nobles y conspiraciones ponen a prueba su amistad y su idea del honor en los Siete Reinos.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Aquestes tres novel·les curtes segueixen el cavaller errant Dunk i el seu jove escuder Egg gairebé un segle abans de Joc de trons. Tornejos, disputes entre nobles i conspiracions posen a prova la seva amistat i la seva idea de l’honor als Set Regnes.",
+      "title": "El caballero de los Siete Reinos"
+    },
+    "en": {
+      "description": "These three novellas follow hedge knight Dunk and his young squire Egg almost a century before A Game of Thrones. Tournaments, feuding nobles and conspiracies test their friendship and their understanding of honour across the Seven Kingdoms.",
+      "title": "A Knight of the Seven Kingdoms"
+    },
+    "es": {
+      "description": "Estas tres novelas cortas siguen al caballero errante Dunk y a su joven escudero Egg casi un siglo antes de Juego de tronos. Torneos, disputas entre nobles y conspiraciones ponen a prueba su amistad y su idea del honor en los Siete Reinos.",
+      "title": "El caballero de los Siete Reinos"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/la-mujer-de-su-vida.epub",
+  "title": "La mujer de su vida",
+  "year": "2021",
+  "description": "Los hermanos Estrada mantienen una relación estrecha pese a vivir lejos unos de otros. Cuando Joel, documentalista, emprende una investigación, aparecen revelaciones capaces de alterar la memoria familiar y de enfrentar el amor que los une con la necesidad de conocer la verdad.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Los hermanos Estrada mantienen una relación estrecha pese a vivir lejos unos de otros. Cuando Joel, documentalista, emprende una investigación, aparecen revelaciones capaces de alterar la memoria familiar y de enfrentar el amor que los une con la necesidad de conocer la verdad.",
+      "subtitle": "",
+      "title": "La mujer de su vida"
+    },
+    "ca": {
+      "description": "Els germans Estrada mantenen una relació estreta tot i viure lluny els uns dels altres. Quan en Joel, documentalista, emprèn una investigació, apareixen revelacions capaces d’alterar la memòria familiar i d’enfrontar l’amor que els uneix amb la necessitat de saber la veritat.",
+      "title": "La mujer de su vida"
+    },
+    "en": {
+      "description": "The Estrada siblings remain close despite living far apart. When documentary filmmaker Joel begins an investigation, revelations threaten to reshape their family history and set the love connecting them against the need to uncover the truth.",
+      "title": "La mujer de su vida"
+    }
+  }
+}

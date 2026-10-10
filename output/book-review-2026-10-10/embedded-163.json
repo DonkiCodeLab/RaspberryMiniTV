@@ -1,0 +1,42 @@
+{
+  "index": 163,
+  "path": "Books/la-novia-gitana.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La novia gitana"
+    },
+    {
+      "tag": "creator",
+      "value": "Carmen Mola"
+    },
+    {
+      "tag": "description",
+      "value": "«En Madrid se mata poco», le decía al joven subinspector Ángel Zárate su mentor en la policía; «pero cuando se mata, no tiene nada que envidiarle a ninguna ciudad del mundo», podría añadir la inspectora Elena Blanco, jefa de la Brigada de Análisis de Casos, un departamento creado para resolver los crímenes más complicados y abyectos. Susana Macaya, de padre gitano pero educada como paya, desaparece tras su fiesta de despedida de soltera. El cadáver es encontrado dos días después en la Quinta de Vista Alegre del madrileño barrio de Carabanchel. Podría tratarse de un asesinato más, si no fuera por el hecho de que la victima ha sido torturada siguiendo un ritual insólito y atroz, y de que su hermana Lara sufrió idéntica suerte siete años atrás, también en vísperas de su boda. El asesino de Lara cumple condena desde entonces, por lo que solo caben dos posibilidades: o alguien ha imitado sus métodos para matar a la hermana pequeña, o hay un inocente encarcelado. Por eso el comisario Rentero ha decidido apartar a Zárate del caso y encargárselo a la veterana Blanco, una mujer peculiar y solitaria, amante de la grappa, el karaoke, los coches de coleccionista y las relaciones sexuales en todoterrenos. Una policía vulnerable, que se mantiene en el cuerpo para no olvidar que en su vida existe un caso pendiente, que no ha podido cerrar. Investigar a una persona implica conocerla, descubrir sus secretos y contradicciones, su historia. En el caso de Lara y Susana, Elena Blanco debe asomarse a la vida de unos gitanos que han renunciado a sus costumbres para integrarse en la sociedad y a la de otros que no se lo perdonan, y levantar cada velo para descubrir quién pudo vengarse con tanta saña de ambas novias gitanas."
+    },
+    {
+      "tag": "date",
+      "value": "2018-05-16T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-03-29"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:bcffe8d8-84bc-4818-a4a2-7d3e3aecaa5b"
+    },
+    {
+      "tag": "identifier",
+      "value": "39905cc6-c29a-42c1-aa79-972f5e1ffce8"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "44510"
+    }
+  ]
+}

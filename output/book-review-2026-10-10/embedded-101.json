@@ -1,0 +1,42 @@
+{
+  "index": 101,
+  "path": "Books/el-resplandor.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El resplandor"
+    },
+    {
+      "tag": "creator",
+      "value": "Stephen King"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a96ca69b-30ed-4168-b8f8-209995ea15e7"
+    },
+    {
+      "tag": "description",
+      "value": "REDRUM. Esa es la palabra que Danny había visto en el espejo. Y aunque no sabía leer, entendió que era un mensaje de horror. Danny tenía cinco años. Y a esa edad pocos niños saben que los espejos invierten las imágenes y menos aún saben diferenciar entre realidad y fantasía. Pero Danny tenía pruebas de que sus fantasías relacionadas con el resplandor del espejo acabarían cumpliéndose: REDRUM… MURDER, asesinato. Pero su padre necesitaba aquel trabajo en el hotel. Danny sabía que su madre pensaba en el divorcio y que su padre se obsesionaba con algo muy malo, tan malo como la muerte y el suicidio. Sí, su padre necesitaba aceptar la propuesta de cuidar de aquel hotel de lujo de más de cien habitaciones, aislado por la nieve durante seis meses. Hasta el deshielo iban a estar solos. ¿Solos?…"
+    },
+    {
+      "tag": "date",
+      "value": "1976-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-11-20"
+    },
+    {
+      "tag": "identifier",
+      "value": "7e9f96ab-f99f-47ce-862e-c59c3ea00558"
+    },
+    {
+      "tag": "identifier",
+      "value": "4945"
+    },
+    {
+      "tag": "identifier",
+      "value": "3.3"
+    }
+  ]
+}

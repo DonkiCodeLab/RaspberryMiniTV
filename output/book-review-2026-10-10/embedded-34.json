@@ -1,0 +1,42 @@
+{
+  "index": 34,
+  "path": "Books/carl-sagan-una-vida-en-el-cosmos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Carl Sagan. Una vida en el cosmos"
+    },
+    {
+      "tag": "creator",
+      "value": "William Poundstone"
+    },
+    {
+      "tag": "description",
+      "value": "<p>En esta cautivadora biografía de Carl Sagan, William Poundstone detalla cómo un joven astrónomo, apasionado por la ciencia y obsesionado con la búsqueda de vida en otros mundos, se transforma en una auténtica superestrella mediática. El Sagan inmediatamente reconocible, invitado imprescindible en la televisión y escritor de extraordinario éxito, abrió a los legos la puerta de entrada a los misterios tanto del cosmos como de la ciencia en general. Buena parte de la comunidad científica vio en él, sin embargo, a un paria, a un descarado buscador de publicidad que se preocupaba más de su imagen y de su fortuna que del avance de la ciencia. Poundstone revela y documenta con rigor los aspectos rara vez tratados de la vida de Sagan: el legítimo e importante trabajo al comienzo de su carrera científica, su capacidad casi obsesiva para embarcarse en proyectos infinitos –como la búsqueda de vida extraterrestre–, pasando por sus aventuras y desventuras matrimoniales, los avatares de su ambición académica y sus conexiones con otros personajes famosos como Isaac Asimov, Arthur C. Clarke o Steven Spielberg.</p><p><i>Carl Sagan. Una vida en el cosmos</i> constituye una biografía personal y científica del que es, sin duda, el astrónomo contemporáneo más conocido, que ha ejercido una enorme influencia sobre multitud de personas a través de sus obras de divulgación científica. El texto de Poundstone ofrece una síntesis, cualificada y documentada con rigor, de la producción científica y divulgativa de este personaje, y además recopila toda una serie de datos personales y vitales de un personaje público conocido y un científico respetable, siempre dispuesto a defender posturas progresistas en el contexto sociopolítico conservador que le tocó vivir.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1999-11-27T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2018-11-23"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e373a7ef-1765-f65f-ed14-89524e9103d3"
+    },
+    {
+      "tag": "identifier",
+      "value": "e7538338-aa26-4f74-a9d5-bed96822adf0"
+    },
+    {
+      "tag": "identifier",
+      "value": "47105"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "index": 92,
+  "path": "Books/el-ni-o-con-el-pijama-de-rayas.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El niño con el pijama de rayas"
+    },
+    {
+      "tag": "creator",
+      "value": "John Boyne"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:40c8f199-0733-4434-bccd-374ff76d764b"
+    },
+    {
+      "tag": "description",
+      "value": "Aunque el uso habitual de un texto como éste es describir las características de la obra, por una vez nos tomaremos la libertad de hacer una excepción a la norma establecida. No sólo porque el libro que tienes en tus manos es muy difícil de definir, sino porque estamos convencidos de que explicar su contenido estropearía la experiencia de la lectura. Creemos que es importante empezar esta novela sin saber de qué trata. No obstante, si decides embarcarte en la aventura, debes saber que acompañarás a Bruno, un niño de nueve años, cuando se muda con su familia a una casa junto a una cerca. Cercas como ésa existen en muchos sitios del mundo, sólo deseamos que no te encuentres nunca con una. Por último, cabe aclarar que este libro no es sólo para adultos; también lo pueden leer, y sería recomendable que lo hicieran, niños a partir de los trece años de edad."
+    },
+    {
+      "tag": "date",
+      "value": "2006-02-14T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2017-05-23"
+    },
+    {
+      "tag": "identifier",
+      "value": "1e82e6cc-090c-48e3-8a6e-c3b8c2408959"
+    }
+  ]
+}

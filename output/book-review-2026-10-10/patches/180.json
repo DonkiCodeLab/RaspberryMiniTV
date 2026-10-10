@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/los-miserables.epub",
+  "title": "Los miserables",
+  "year": "1862",
+  "description": "El antiguo presidiario Jean Valjean intenta reconstruir su vida y proteger a Cosette mientras el inspector Javert lo persigue. Sus destinos atraviesan la pobreza y las revueltas de la Francia del siglo XIX, en una novela que enfrenta la rigidez de la ley con la compasión.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "L’antic presidiari Jean Valjean intenta refer la vida i protegir Cosette mentre l’inspector Javert el persegueix. Els seus destins travessen la pobresa i les revoltes de la França del segle XIX, en una novel·la que enfronta la rigidesa de la llei amb la compassió.",
+      "title": "Los miserables"
+    },
+    "en": {
+      "title": "Les misérables",
+      "description": "Former convict Jean Valjean tries to rebuild his life and protect Cosette while Inspector Javert pursues him. Their paths cross the poverty and uprisings of nineteenth-century France in a novel that sets rigid law against compassion."
+    },
+    "es": {
+      "title": "Los miserables",
+      "description": "El antiguo presidiario Jean Valjean intenta reconstruir su vida y proteger a Cosette mientras el inspector Javert lo persigue. Sus destinos atraviesan la pobreza y las revueltas de la Francia del siglo XIX, en una novela que enfrenta la rigidez de la ley con la compasión."
+    }
+  }
+}

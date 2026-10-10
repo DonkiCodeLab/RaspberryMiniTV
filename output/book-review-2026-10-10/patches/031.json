@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/cabo-trafalgar.epub",
+  "title": "Cabo Trafalgar",
+  "year": "2004",
+  "description": "La batalla de Trafalgar se reconstruye desde la experiencia de los hombres que combaten a bordo de los navíos. Marineros, soldados y oficiales afrontan el miedo y la violencia del enfrentamiento entre las flotas británica e hispanofrancesa en octubre de 1805.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La batalla de Trafalgar es reconstrueix des de l’experiència dels homes que combaten a bord dels vaixells. Mariners, soldats i oficials afronten la por i la violència de l’enfrontament entre les flotes britànica i hispanofrancesa l’octubre de 1805.",
+      "title": "Cabo Trafalgar"
+    },
+    "en": {
+      "description": "The Battle of Trafalgar unfolds through the experiences of men fighting aboard its ships. Sailors, soldiers and officers face the fear and violence of the October 1805 clash between the British fleet and the combined Spanish and French forces.",
+      "title": "Cabo Trafalgar"
+    },
+    "es": {
+      "description": "La batalla de Trafalgar se reconstruye desde la experiencia de los hombres que combaten a bordo de los navíos. Marineros, soldados y oficiales afrontan el miedo y la violencia del enfrentamiento entre las flotas británica e hispanofrancesa en octubre de 1805.",
+      "title": "Cabo Trafalgar"
+    }
+  }
+}

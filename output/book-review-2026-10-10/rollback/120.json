@@ -1,0 +1,24 @@
+{
+  "relativePath": "Books/frank-herbert-s-dune-saga-collection.epub",
+  "title": "Frank Herbert's Dune Saga Collection",
+  "year": "2020",
+  "description": "",
+  "localizedMetadata": {
+    "ca": {},
+    "en": {
+      "subtitle": "Books 1 - 6",
+      "title": "Frank Herbert's Dune Saga Collection"
+    },
+    "es": {}
+  },
+  "openLibraryKey": "/works/OL893407W",
+  "editionKey": "/books/OL62417726M",
+  "isbn": "‎9780593333020",
+  "publisher": "Ace",
+  "publishDate": "2020-06-02",
+  "pageCount": "3688",
+  "pageCountSource": "openlibrary",
+  "subjects": "Fiction, science fiction, general, Dune (imaginary place), fiction, Fiction, general",
+  "subtitle": "Books 1 - 6",
+  "language": "eng"
+}

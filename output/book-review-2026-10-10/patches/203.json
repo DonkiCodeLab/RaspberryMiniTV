@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/perdida.epub",
+  "title": "Perdida",
+  "year": "2012",
+  "description": "Amy Dunne desaparece el día de su quinto aniversario de boda y las sospechas se concentran en su marido Nick. Las versiones de su relación, la investigación policial y la presión mediática revelan un matrimonio donde la imagen pública y la intimidad no coinciden.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Amy Dunne desapareix el dia del cinquè aniversari de casament i les sospites es concentren en el marit, Nick. Les versions de la relació, la investigació policial i la pressió mediàtica revelen un matrimoni on la imatge pública i la intimitat no coincideixen.",
+      "title": "Perdida"
+    },
+    "en": {
+      "description": "Amy Dunne disappears on her fifth wedding anniversary, and suspicion falls on her husband Nick. Accounts of their relationship, the police investigation and media pressure expose a marriage whose public image does not match its private reality.",
+      "title": "Gone Girl"
+    },
+    "es": {
+      "subtitle": "[Gone Girl]",
+      "title": "Perdida",
+      "description": "Amy Dunne desaparece el día de su quinto aniversario de boda y las sospechas se concentran en su marido Nick. Las versiones de su relación, la investigación policial y la presión mediática revelan un matrimonio donde la imagen pública y la intimidad no coinciden."
+    }
+  }
+}

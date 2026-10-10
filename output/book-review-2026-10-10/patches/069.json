@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-clan.epub",
+  "title": "El clan",
+  "year": "2024",
+  "description": "La desaparición de Zárate empuja a Elena Blanco a enfrentarse a una organización que protege a personas poderosas. Perseguida y separada de sus apoyos, deberá decidir hasta dónde puede llegar para salvar a su compañero y destapar la corrupción que amenaza a la BAC.",
+  "localizedMetadata": {
+    "es": {
+      "description": "La desaparición de Zárate empuja a Elena Blanco a enfrentarse a una organización que protege a personas poderosas. Perseguida y separada de sus apoyos, deberá decidir hasta dónde puede llegar para salvar a su compañero y destapar la corrupción que amenaza a la BAC.",
+      "subtitle": "Inspectora Elena Blanco 5",
+      "title": "El clan"
+    },
+    "ca": {
+      "description": "La desaparició de Zárate empeny Elena Blanco a enfrontar-se a una organització que protegeix persones poderoses. Perseguida i allunyada dels seus suports, haurà de decidir fins on pot arribar per salvar el company i destapar la corrupció que amenaça la BAC.",
+      "title": "El clan"
+    },
+    "en": {
+      "description": "Zárate's disappearance drives Elena Blanco into conflict with an organisation that shields the powerful. Hunted and cut off from her support, she must decide how far she can go to save her colleague and expose the corruption threatening her investigative unit.",
+      "title": "El clan"
+    }
+  }
+}

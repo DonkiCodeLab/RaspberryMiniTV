@@ -1,0 +1,42 @@
+{
+  "index": 102,
+  "path": "Books/el-retrato-de-dorian-gray.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El retrato de Dorian Gray"
+    },
+    {
+      "tag": "creator",
+      "value": "Oscar Wilde"
+    },
+    {
+      "tag": "description",
+      "value": "Basil Hallward es un artista que queda enormemente impresionado por la belleza estética de un joven llamado Dorian Gray y comienza a encapricharse con él, creyendo que esta belleza es la responsable de la nueva forma de su arte. Basil pinta un retrato del joven. Charlando en el jardín de Basil, Dorian conoce a Lord Henry Wotton, un amigo de Basil, y empieza a cautivarse por la visión del mundo de Lord Henry. Exponiendo un nuevo tipo de hedonismo, Lord Henry indica que «lo único que vale la pena en la vida es la belleza, y la satisfacción de los sentidos». Al darse cuenta de que un día su belleza se desvanecerá, Dorian desea tener siempre la edad de cuando le pintó en el cuadro Basil. El deseo de Dorian se cumple, mientras él mantiene para siempre la misma apariencia del cuadro, la figura retratada envejece por él. Su búsqueda del placer lo lleva a una serie de actos de libertinaje y perversión; pero el retrato sirve como un recordatorio de los efectos de cada uno de los actos cometidos sobre su alma, con cada pecado la figura se va desfigurando y envejeciendo."
+    },
+    {
+      "tag": "date",
+      "value": "1890-06-19T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-08-16"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:69d87ff0-6863-4f63-96ee-cde2db09c7fe"
+    },
+    {
+      "tag": "identifier",
+      "value": "32aeb460-c98e-460a-b1db-86c2c50bef6d"
+    },
+    {
+      "tag": "identifier",
+      "value": "6810"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.6"
+    }
+  ]
+}

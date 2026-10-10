@@ -1,0 +1,42 @@
+{
+  "index": 124,
+  "path": "Books/h-bitos-at-micos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Hábitos atómicos"
+    },
+    {
+      "tag": "creator",
+      "value": "James Clear"
+    },
+    {
+      "tag": "description",
+      "value": "<p><i>Hábitos atómicos</i> parte de una simple pero poderosa pregunta: ¿Cómo podemos vivir mejor? Sabemos que unos buenos hábitos nos permiten mejorar significativamente nuestra vida, pero con frecuencia nos desviamos del camino: dejamos de hacer ejercicio, comemos mal, dormimos poco, despilfarramos. ¿Por qué es tan fácil caer en los malos hábitos y tan complicado seguir los buenos?</p>\n\n    <p>James Clear nos brinda fantásticas ideas basadas en investigaciones científicas, que le permiten revelarnos cómo podemos transformar pequeños hábitos cotidianos para cambiar nuestra vida y mejorarla. Esta guía pone al descubierto las fuerzas ocultas que moldean nuestro comportamiento —desde nuestra mentalidad, pasando por el ambiente y hasta la genética— y nos demuestra cómo aplicar cada cambio a nuestra vida y a nuestro trabajo. Después de leer este libro, tendrás un método sencillo para desarrollar un sistema eficaz que te conducirá al éxito.</p>\n\n    <p>Aprende cómo…</p>\n\n    <ol>\n      <li>Darte tiempo para desarrollar nuevos hábitos.</li>\n\n      <li>Superar la falta de motivación y de fuerza de voluntad.</li>\n\n      <li>Diseñar un ambiente para que el éxito sea fácil de alcanzar.</li>\n\n      <li>Regresar al buen camino cuando te hayas desviado un poco.</li>\n    </ol>"
+    },
+    {
+      "tag": "date",
+      "value": "2017-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-05-07"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:dee31541-345f-9094-2b0e-7558c943f70e"
+    },
+    {
+      "tag": "identifier",
+      "value": "cc3d5610-2fdd-407f-99cd-e967da351180"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "60775"
+    }
+  ]
+}

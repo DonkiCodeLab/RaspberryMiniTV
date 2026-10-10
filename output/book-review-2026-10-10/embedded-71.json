@@ -1,0 +1,42 @@
+{
+  "index": 71,
+  "path": "Books/el-conde-de-montecristo-1.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El conde de Montecristo"
+    },
+    {
+      "tag": "creator",
+      "value": "Alexandre Dumas"
+    },
+    {
+      "tag": "description",
+      "value": "Edmundo Dantés, un joven marinero, honrado y cándido, que lleva una existencia tranquila, solo desea casarse con la hermosa Mercedes. Pero su vida se verá arruinada cuando su mejor amigo, Fernando, deseoso de conquistar a su prometida, le traicione vilmente. Condenado a cumplir una condena injusta en la siniestra prisión del castillo de If, Edmundo vivirá una larga pesadilla de trece años. Obsesionado por su inesperado destino, dejará de lado sus convicciones para urdir la venganza perfecta. Historia transida de densidad moral y cívica, El conde de Montecristo es uno de los clásicos más populares de todos los tiempos. Esta edición contiene las dos partes de las que se compone y a las que precede la sapiencial introducción de Jean-Yves Tadié, catedrático emérito en la Universidad de La Sorbona."
+    },
+    {
+      "tag": "date",
+      "value": "1844-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-02-29"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:9ddfab77-547e-47e4-be2f-d8256d543b31"
+    },
+    {
+      "tag": "identifier",
+      "value": "ef2b9ee4-1eb1-4a2c-b31b-3995c4de7507"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "424"
+    }
+  ]
+}

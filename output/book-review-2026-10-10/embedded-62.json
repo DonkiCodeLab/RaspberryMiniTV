@@ -1,0 +1,42 @@
+{
+  "index": 62,
+  "path": "Books/el-atlas-furtivo.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El atlas furtivo"
+    },
+    {
+      "tag": "creator",
+      "value": "Alfred Bosch"
+    },
+    {
+      "tag": "description",
+      "value": "Corren malos tiempos para las comunidades judías de la Corona de Aragón. El infante Juan le encarga al mallorquín Cresques de Abraham la confección de un atlas ante el que maravillarse del mundo conocido por los hombres. En ese clima de intolerancia religiosa, el cartógrafo judío emprende la ardua tarea de documentación, proyección y representación que tan prestigioso trabajo implica. Ante ese hecho tan significativo en su vida, el cartógrafo decide dibujar dos atlas de forma paralela. Un Atlas Real, fiel reflejo de aquello que los hombres y la ciencia han podido ratificar hasta el tumultuoso siglo XIV. El segundo llevará por nombre el Atlas Furtivo y, al margen de la veracidad, incluirá, además de los hechos geográficos, todos aquellos lugares míticos y legendarios que maese Cresques ha escuchado en boca de hombres provenientes de otras latitudes. Un atlas concebido como un espacio para dar rienda suelta a la imaginación. Una vez concluida la tarea, Jafudá, el hijo menor de Cresques, emprende el viaje que le conducirá a Barcelona para hacer entrega de las extraordinarias obras. Pero la Corte se halla sacudida por un torbellino de intrigas y conspiraciones, propios de un período de decadencia en el que el joven descubrirá que los hombres han construido un mundo en donde la libertad y la tolerancia no tienen cabida puesto que éstos así lo han querido."
+    },
+    {
+      "tag": "date",
+      "value": "1997-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-05-25"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:294dcfc8-6b39-45ac-a01a-879a422e8d89"
+    },
+    {
+      "tag": "identifier",
+      "value": "ad7a5548-5deb-4f65-93eb-0c9b2c03416c"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "43655"
+    }
+  ]
+}

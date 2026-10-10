@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/harry-potter-y-la-piedra-filosofal.epub",
+  "title": "Harry Potter y la piedra filosofal",
+  "year": "1997",
+  "description": "Harry Potter descubre a los once años que es un mago y recibe una plaza en Hogwarts. Entre nuevas amistades, clases y secretos sobre sus padres, encuentra por primera vez un hogar y un misterio que amenaza algo más que su primer curso.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Harry Potter descobreix als onze anys que és un mag i rep una plaça a Hogwarts. Entre noves amistats, classes i secrets sobre els pares, troba per primera vegada una llar i un misteri que amenaça alguna cosa més que el primer curs.",
+      "title": "Harry Potter i la pedra filosofal"
+    },
+    "en": {
+      "title": "Harry Potter and the Philosopher's Stone",
+      "description": "At eleven, Harry Potter discovers that he is a wizard and gains a place at Hogwarts. Amid new friendships, lessons and secrets about his parents, he finds a home for the first time and a mystery that threatens far more than his first school year."
+    },
+    "es": {
+      "description": "Harry Potter descubre a los once años que es un mago y recibe una plaza en Hogwarts. Entre nuevas amistades, clases y secretos sobre sus padres, encuentra por primera vez un hogar y un misterio que amenaza algo más que su primer curso.",
+      "subtitle": "Harry Potter 1",
+      "title": "Harry Potter y la piedra filosofal"
+    }
+  }
+}

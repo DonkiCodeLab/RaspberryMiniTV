@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-resplandor.epub",
+  "title": "El resplandor",
+  "year": "1977",
+  "description": "Jack Torrance acepta cuidar el hotel Overlook durante el invierno y se instala allí con su esposa y su hijo Danny. Aislados por la nieve, afrontan las tensiones familiares y una presencia inquietante que el don de Danny le permite percibir antes que a los demás.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Jack Torrance accepta cuidar l’hotel Overlook durant l’hivern i s’hi instal·la amb la dona i el fill Danny. Aïllats per la neu, afronten les tensions familiars i una presència inquietant que el do de Danny li permet percebre abans que als altres.",
+      "title": "El resplandor"
+    },
+    "en": {
+      "title": "The Shining",
+      "description": "Jack Torrance takes a winter caretaking job at the Overlook Hotel and moves in with his wife and son Danny. Snowbound, the family faces mounting tensions and a disturbing presence that Danny's unusual gift allows him to sense before the others."
+    },
+    "es": {
+      "description": "Jack Torrance acepta cuidar el hotel Overlook durante el invierno y se instala allí con su esposa y su hijo Danny. Aislados por la nieve, afrontan las tensiones familiares y una presencia inquietante que el don de Danny le permite percibir antes que a los demás.",
+      "title": "El resplandor"
+    }
+  }
+}

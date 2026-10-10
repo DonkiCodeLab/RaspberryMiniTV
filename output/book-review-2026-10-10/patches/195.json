@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/nuestras-madres.epub",
+  "title": "Nuestras madres",
+  "year": "2023",
+  "description": "Las vidas de varias mujeres nacidas durante la dictadura muestran el talento y los deseos que debieron abrirse camino entre obligaciones y prohibiciones. La novela retrata amistades, luchas vecinales y descubrimientos del feminismo como parte de una memoria que suele quedar fuera de los grandes relatos.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Las vidas de varias mujeres nacidas durante la dictadura muestran el talento y los deseos que debieron abrirse camino entre obligaciones y prohibiciones. La novela retrata amistades, luchas vecinales y descubrimientos del feminismo como parte de una memoria que suele quedar fuera de los grandes relatos.",
+      "title": "Nuestras madres"
+    },
+    "ca": {
+      "description": "Les vides de diverses dones nascudes durant la dictadura mostren el talent i els desitjos que van haver d’obrir-se camí entre obligacions i prohibicions. La novel·la retrata amistats, lluites veïnals i descobertes del feminisme com a part d’una memòria sovint exclosa dels grans relats.",
+      "title": "Nuestras madres"
+    },
+    "en": {
+      "description": "The lives of women born under the dictatorship reveal talents and desires struggling against duties and restrictions. The novel portrays friendships, neighbourhood activism and encounters with feminism as parts of a history often left out of larger public narratives.",
+      "title": "Nuestras madres"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "index": 215,
+  "path": "Books/sonr-e.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "¡Sonríe! (7906)"
+    },
+    {
+      "tag": "creator",
+      "value": "Raina Telgemeier"
+    },
+    {
+      "tag": "date",
+      "value": "2021-07-12T14:07:43Z"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:isbn:9788418184611"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:C5CF206D-9689-4EA6-8A37-E39430C1F838"
+    },
+    {
+      "tag": "description",
+      "value": "¡Sonríe! (7906)"
+    }
+  ]
+}

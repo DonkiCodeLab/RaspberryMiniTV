@@ -1,0 +1,42 @@
+{
+  "index": 230,
+  "path": "Books/yo-robot.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Yo, robot"
+    },
+    {
+      "tag": "creator",
+      "value": "Isaac Asimov"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Una investigación llevada a cabo por un periodista acerca de la trayectoria de la robopsicóloga Susan Calvin da pie a los nueve relatos que componen esta novela.</p><p>Las tres leyes de la robótica, a las que en obras posteriores Asimov añadiría alguna más, constituyen las normas que rigen el comportamiento en los diferentes conflictos que se presentan entre humanos y robots.</p><p>Si bien admiten una lectura independiente, la modernidad y éxito de este libro se explica por la audacia en la composición y por la aplastante lógica en las reflexiones que aparecen acerca de la robótica.</p><p><cite>Yo, robot</cite> es uno de los pocos títulos de ciencia ficción que han superado con amplitud el círculo de lectores especialmente aficionados, entre los que a menudo se considera una obra cumbre. Su influencia y la de las tres leyes de la robótica en ella enunciadas es muy notable en las novelas aparecidas posteriormente acerca de robótica, y eso mismo es lo que explica que se haya tomado como base para la película que se estrena a finales de 2004 dirigida por Alex Proyas y protagonizada por Will Smith.</p><p>Isaac Asimov (1920-1992), conocido también como el Buen Doctor, es junto a Robert Heinlein y Arthur C. Clarke uno de los tres grandes maestros de la ciencia ficción y a lo largo de la vida fue investido doctor honoris causa por veinte universidades, además de obtener todos los premios importantes del género (Locus, Nebula, Hugos, etc.).</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1949-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-06-12"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:3b83ca90-5589-41fb-b716-ae47a2bf7234"
+    },
+    {
+      "tag": "identifier",
+      "value": "56d59ebf-3f3e-4e9c-bc65-7a58b38b7e8e"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.8"
+    },
+    {
+      "tag": "identifier",
+      "value": "2026"
+    }
+  ]
+}

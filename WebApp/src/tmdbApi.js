@@ -1,4 +1,5 @@
 import { selectMovieTrailer } from "./movieTrailer.js";
+import { normalizeMediaCredits } from "./mediaCredits.js";
 import { getCachedLibrarySummaries, getCachedTmdbJson, isMockMode, localTmdbImageUrl, updateRaspberryTmdbSettings } from "./api/raspberryApi";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
@@ -229,6 +230,20 @@ async function fetchTmdbJson(path, { language, query, importPreview = false } = 
   return response.json();
 }
 
+export async function getMediaCredits(mediaType, tmdbId, importPreview = false) {
+  const id = Number(tmdbId);
+  if (!["movie", "tv"].includes(mediaType) || !Number.isSafeInteger(id) || id <= 0) {
+    throw new Error("Invalid TMDB credits request");
+  }
+  // Credits are shared across UI languages. Connected catalog navigation only
+  // reads the local cache; external fetching belongs to explicit import previews.
+  const data = await fetchTmdbJson(`/${mediaType}/${id}/${mediaType === "tv" ? "aggregate_credits" : "credits"}`, { importPreview });
+  if (!Array.isArray(data?.cast) || !Array.isArray(data?.crew)) {
+    throw new Error("Invalid TMDB credits response");
+  }
+  return normalizeMediaCredits(data);
+}
+
 export function buildTmdbImageUrl(path, size = "w500", importPreview = false) {
   if (!path) return null;
   const url = localTmdbImageUrl(`${TMDB_IMAGE_BASE_URL}/${size}${path}`);
@@ -430,6 +445,7 @@ export async function getTvSeriesById(seriesId, language, importPreview = false)
     id: Number(show?.id) || Number(seriesId),
     name: show?.name || "Unknown show",
     originalName: show?.original_name || "",
+    creators: Array.isArray(show?.created_by) ? show.created_by : [],
     imdbId: show?.external_ids?.imdb_id || "",
     posterImage: buildTmdbImageUrl(show?.poster_path, "w500", importPreview),
     firstAirDate: show?.first_air_date || "",

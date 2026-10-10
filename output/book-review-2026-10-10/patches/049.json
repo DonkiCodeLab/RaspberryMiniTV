@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/cumbres-borrascosas.epub",
+  "title": "Cumbres borrascosas",
+  "year": "1847",
+  "description": "La relación entre Catherine Earnshaw y Heathcliff desencadena una cadena de resentimientos que alcanza a dos familias y a la siguiente generación. En los páramos de Yorkshire, el amor, las diferencias sociales y la venganza quedan unidos a dos casas vecinas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La relació entre Catherine Earnshaw i Heathcliff desencadena una cadena de ressentiments que arriba a dues famílies i a la generació següent. Als erms de Yorkshire, l’amor, les diferències socials i la venjança queden lligats a dues cases veïnes.",
+      "title": "Cumbres borrascosas"
+    },
+    "en": {
+      "title": "Wuthering Heights",
+      "description": "Catherine Earnshaw and Heathcliff's relationship unleashes resentments that spread through two families and into the next generation. On the Yorkshire moors, love, social divisions and revenge bind the histories of two neighbouring households."
+    },
+    "es": {
+      "description": "La relación entre Catherine Earnshaw y Heathcliff desencadena una cadena de resentimientos que alcanza a dos familias y a la siguiente generación. En los páramos de Yorkshire, el amor, las diferencias sociales y la venganza quedan unidos a dos casas vecinas.",
+      "title": "Cumbres borrascosas"
+    }
+  }
+}

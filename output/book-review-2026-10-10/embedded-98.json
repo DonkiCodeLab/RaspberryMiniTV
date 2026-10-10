@@ -1,0 +1,42 @@
+{
+  "index": 98,
+  "path": "Books/el-psicoanalista.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El psicoanalista"
+    },
+    {
+      "tag": "creator",
+      "value": "John Katzenbach"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4f2dd15b-a484-46bf-960f-0ea087ae4a87"
+    },
+    {
+      "tag": "description",
+      "value": "«Feliz aniversario, doctor. Bienvenido al primer día de su muerte». Así comienza el anónimo que recibe el psicoanalista Frederick Starks, y que le obliga a emplear toda su astucia y rapidez para, en quince días, averiguar quién es el autor de esa amenazadora misiva que promete hacerle la vida imposible. De no conseguir su objetivo, deberá elegir entre suicidarse o ser testigo de cómo, uno tras otro, sus familiares y conocidos mueren por obra de un psicópata decidido a llevar hasta el final su sed de venganza. Dando un inesperado giro a la relación entre médico y paciente, John Katzenbach nos ofrece una novela emblemática del mejor suspense psicológico."
+    },
+    {
+      "tag": "date",
+      "value": "2002-12-14T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-07-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "65811176-37a8-4f74-a363-0c2c0c3ea651"
+    },
+    {
+      "tag": "identifier",
+      "value": "3.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "333"
+    }
+  ]
+}

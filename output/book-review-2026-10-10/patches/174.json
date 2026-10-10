@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/las-uvas-de-la-ira.epub",
+  "title": "Las uvas de la ira",
+  "year": "1939",
+  "description": "Expulsada de sus tierras durante la Gran Depresión, la familia Joad viaja de Oklahoma a California en busca de trabajo. El camino y las condiciones de los jornaleros revelan la explotación y la desigualdad, pero también la solidaridad que permite resistirlas.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "El Raïm de la ira",
+      "description": "Expulsada de les seves terres durant la Gran Depressió, la família Joad viatja d’Oklahoma a Califòrnia buscant feina. El camí i les condicions dels jornalers revelen l’explotació i la desigualtat, però també la solidaritat que permet resistir-les."
+    },
+    "en": {
+      "title": "The Grapes of Wrath",
+      "description": "Driven from their land during the Great Depression, the Joad family travels from Oklahoma to California seeking work. The journey and migrant labour conditions expose exploitation and inequality, as well as the solidarity that helps people endure them."
+    },
+    "es": {
+      "title": "Las uvas de la ira",
+      "description": "Expulsada de sus tierras durante la Gran Depresión, la familia Joad viaja de Oklahoma a California en busca de trabajo. El camino y las condiciones de los jornaleros revelan la explotación y la desigualdad, pero también la solidaridad que permite resistirlas."
+    }
+  }
+}

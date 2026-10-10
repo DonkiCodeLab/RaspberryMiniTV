@@ -1,0 +1,42 @@
+{
+  "index": 85,
+  "path": "Books/el-ltimo-secreto.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El último secreto"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Robert Langdon, el célebre profesor de simbología, viaja a Praga para asistir a una conferencia revolucionaria impartida por Katherine Solomon, una brillante científica noética con quien ha iniciado una relación.</p><p>Katherine está a punto de publicar un libro cuyos asombrosos descubrimientos sobre la naturaleza de la conciencia humana prometen desafiar siglos de creencias consolidadas. Pero un brutal asesinato desata el caos, y Katherine desaparece sin dejar rastro junto con su valioso manuscrito.</p><p>Desesperado por encontrar a la mujer que ama, Langdon se embarca en una carrera contrarreloj por el paisaje místico de Praga, mientras es perseguido por una poderosa organización y por una figura inquietante surgida de antiguas leyendas.</p><p>En la Ciudad de las Cien Torres, un escenario fascinante donde la ciencia más avanzada convive con la tradición, Langdon deberá desentrañar símbolos y códigos para desvelar una verdad sorprendente sobre un proyecto secreto que podría transformar para siempre nuestra comprensión de la mente humana.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2025-09-24T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-04-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:83df3ae9-09ed-4e87-90d8-97f1d7ee63fb"
+    },
+    {
+      "tag": "identifier",
+      "value": "37576273-8dd8-45b7-8319-adcf8c4823fc"
+    },
+    {
+      "tag": "identifier",
+      "value": "81289"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

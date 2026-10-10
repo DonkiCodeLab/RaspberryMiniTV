@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/alas-de-hierro.epub",
+  "title": "Alas de Hierro",
+  "year": "2023",
+  "description": "Violet Sorrengail inicia un nuevo curso en Basgiath, donde el entrenamiento de los jinetes de dragón se vuelve todavía más cruel. Los secretos que ha descubierto ponen en conflicto su lealtad, su relación con Xaden y la versión oficial de la guerra.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Violet Sorrengail comença un nou curs a Basgiath, on l’entrenament dels genets de drac es torna encara més cruel. Els secrets que ha descobert posen en conflicte la seva lleialtat, la relació amb en Xaden i la versió oficial de la guerra.",
+      "title": "Alas de Hierro"
+    },
+    "en": {
+      "title": "Iron Flame",
+      "description": "Violet Sorrengail begins another year at Basgiath, where training for dragon riders grows even more brutal. What she has learned forces her to question her loyalties, her relationship with Xaden and the official account of the war."
+    },
+    "es": {
+      "description": "Violet Sorrengail inicia un nuevo curso en Basgiath, donde el entrenamiento de los jinetes de dragón se vuelve todavía más cruel. Los secretos que ha descubierto ponen en conflicto su lealtad, su relación con Xaden y la versión oficial de la guerra.",
+      "subtitle": "Empíreo 2",
+      "title": "Alas de Hierro"
+    }
+  }
+}

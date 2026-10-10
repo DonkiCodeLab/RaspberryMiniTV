@@ -1,0 +1,42 @@
+{
+  "index": 77,
+  "path": "Books/el-h-roe-de-las-eras.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El Héroe de las Eras"
+    },
+    {
+      "tag": "creator",
+      "value": "Brandon Sanderson"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Durante mil años los skaa han vivido esclavizados y sumidos en el miedo al Lord Legislador, que ha reinado con un poder absoluto gracias al terror y a la poderosa magia de la «alomancia».</p><p>Kelsier, el Superviviente, el único que ha logrado huir de los Pozos de Hathsin, encuentra a Vin, una pobre chica skaa con mucha suerte. Los dos se unen a la rebelión que los skaa intentan desde hace un milenio y vencen al Lord Legislador. Pero acabar con el Lord Legislador es la parte sencilla. El verdadero desafío consistirá en sobrevivir a las consecuencias de su caída.</p><p>En <cite>El Héroe de las Eras</cite> se comprende el porqué de la niebla y las cenizas, las tenebrosas acciones del Lord Legislador y la naturaleza de <cite>El Pozo de la Ascensión</cite>. Vin y el Rey Elend buscan en los últimos escondites de recursos del Lord Legislador y descubren el peligro que acecha a la humanidad. ¿Conseguirán detenerlo a tiempo?</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2007-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-03-11"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:f26b5586-8f9f-9129-cec9-00c1d63a45c7"
+    },
+    {
+      "tag": "identifier",
+      "value": "84c3d3ee-df7e-4a89-b518-cf02de97edb7"
+    },
+    {
+      "tag": "identifier",
+      "value": "280"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.3"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "index": 199,
+  "path": "Books/pan-negro.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Pan negro"
+    },
+    {
+      "tag": "creator",
+      "value": "Emili Teixidor"
+    },
+    {
+      "tag": "identifier",
+      "value": "revision:1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "epl:35664"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:26875"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:def1a1d3-917b-4fd8-93b2-d6d41d108f57"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a54ba5e9-ce53-8c06-ca33-068b48845122"
+    },
+    {
+      "tag": "date",
+      "value": "2003-01-02T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "A medio camino entre la memoria y la ficción, «Pan negro» gira en torno a Andrés, un muchacho que crece en los años más crudos de la posguerra. Él pertenece al bando de los perdedores: su padre, hombre de firmes ideales republicanos, ha sido encarcelado por «rojo»; su madre se ha visto obligada a trabajar en la fábrica y confía a su hijo a unos parientes que viven en el campo. Poco a poco se produce un cambio sustancial en Andrés, que de perdedor pasa a sentirse ganador, en una metáfora del país que asimila la derrota y acepta, con pasividad, una victoria que no es la suya. A pesar de vivir lejos de sus padres, en un clima de miedo palpable, el tiempo en la masía está lleno de sentimientos y descubrimientos: el misterioso mundo de los adultos y los primeros pasos en las sendas del sexo. Es también un tiempo de amistades valientes, de cuentos explicados a la vera del fuego, de juegos al aire libre, de pan con vino y azúcar… de pan negro."
+    }
+  ]
+}

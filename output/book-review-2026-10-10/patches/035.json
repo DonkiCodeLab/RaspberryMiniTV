@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/chafterhouse-dune.epub",
+  "title": "Casa Capitular Dune/ Chafterhouse Dune",
+  "year": "1985",
+  "description": "Amenazadas por las Honoradas Matres, las Bene Gesserit intentan asegurar su supervivencia desde Casa Capitular. Darwi Odrade dirige una estrategia que combina la transformación del planeta, el control de la especia y una arriesgada negociación con sus enemigas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Amenaçades per les Honorades Matres, les Bene Gesserit intenten assegurar la seva supervivència des de Casa Capitular. Darwi Odrade dirigeix una estratègia que combina la transformació del planeta, el control de l’espècia i una negociació arriscada amb les seves enemigues.",
+      "title": "Casa Capitular Dune/ Chafterhouse Dune"
+    },
+    "en": {
+      "description": "Threatened by the Honored Matres, the Bene Gesserit struggle to survive from their Chapterhouse stronghold. Darwi Odrade's strategy combines planetary transformation, control of the spice and a dangerous attempt to understand and negotiate with their enemies.",
+      "title": "Chapter house, Dune"
+    },
+    "es": {
+      "description": "Amenazadas por las Honoradas Matres, las Bene Gesserit intentan asegurar su supervivencia desde Casa Capitular. Darwi Odrade dirige una estrategia que combina la transformación del planeta, el control de la especia y una arriesgada negociación con sus enemigas.",
+      "subtitle": "(Las crónicas de Dune 6)",
+      "title": "Casa Capitular Dune"
+    }
+  }
+}

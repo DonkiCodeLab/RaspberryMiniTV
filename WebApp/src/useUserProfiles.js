@@ -118,7 +118,7 @@ export default function useUserProfiles(enabled, initialId = "default") {
   return {
     users, activeId, activeUser: users.find(user => user.id === activeId) || DEFAULT_USER,
     state: states[activeId] || EMPTY_STATE, ready, error, select, reload, refreshState, flush,
-    saveMarks(next) { return ready && update(activeId, { marks: marksPatch(cache.current[activeId].marks, next) }); },
+    saveMarks(next) { return ready && update(activeId, { marks: marksPatch((states[activeId] || EMPTY_STATE).marks, next) }); },
     saveProgress(id, descriptor, progress) {
       return update(id, { progress: { [descriptor.key]: { ...progress, opened: true, updatedAt: Date.now() } }, marks: completionMarks(descriptor, progress) });
     },

@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/corsarios-de-levante.epub",
+  "title": "Corsarios de Levante",
+  "year": "2006",
+  "description": "Diego Alatriste e Íñigo Balboa sirven en las galeras de Nápoles y recorren un Mediterráneo marcado por la guerra y el cautiverio. Abordajes y expediciones costeras ponen a prueba sus lealtades en la sexta aventura del capitán.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Diego Alatriste e Íñigo Balboa sirven en las galeras de Nápoles y recorren un Mediterráneo marcado por la guerra y el cautiverio. Abordajes y expediciones costeras ponen a prueba sus lealtades en la sexta aventura del capitán.",
+      "subtitle": "Las aventuras del capitán Alatriste 6",
+      "title": "Corsarios de Levante"
+    },
+    "ca": {
+      "description": "Diego Alatriste i Íñigo Balboa serveixen a les galeres de Nàpols i recorren un Mediterrani marcat per la guerra i el captiveri. Abordatges i expedicions costaneres posen a prova les seves lleialtats en la sisena aventura del capità.",
+      "title": "Corsarios de Levante"
+    },
+    "en": {
+      "description": "Diego Alatriste and Íñigo Balboa serve aboard the Naples galleys in a Mediterranean shaped by warfare and captivity. Boarding actions and coastal expeditions test their loyalties in the captain's sixth adventure.",
+      "title": "Corsarios de Levante"
+    }
+  }
+}

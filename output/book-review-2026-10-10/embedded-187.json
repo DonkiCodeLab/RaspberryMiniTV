@@ -1,0 +1,42 @@
+{
+  "index": 187,
+  "path": "Books/materia-oscura.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Materia oscura"
+    },
+    {
+      "tag": "creator",
+      "value": "Blake Crouch"
+    },
+    {
+      "tag": "description",
+      "value": "Cualquier decisión se ramifica en un nuevo mundo. Jason Dessen vive en Chicago, donde ha renunciado a sus grandes aspiraciones científicas para dar clases y centrarse en su familia. Una noche, tras asistir a la celebración en honor de un antiguo compañero galardonado con un importante premio de astrofísica, Jason se dirige a casa… y nunca llega. Un hombre oculto tras una máscara de «geisha» lo conduce a punta de pistola a una central eléctrica abandonada, donde le inyecta algo. Cuando recobra la conciencia, unos desconocidos con trajes especiales lo reciben con las palabras «bienvenido de nuevo». Pero esta realidad no es la que conoce: su mujer no es la misma, su hijo no ha nacido y él ni siquiera es profesor. ¿Es este mundo un sueño? ¿O acaso lo era su vida anterior?"
+    },
+    {
+      "tag": "date",
+      "value": "2015-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-05-07"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d5b4701d-b64c-464f-93d0-e717179420e7"
+    },
+    {
+      "tag": "identifier",
+      "value": "713b05d3-060d-449f-ba24-46f333450e54"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.3"
+    },
+    {
+      "tag": "identifier",
+      "value": "45434"
+    }
+  ]
+}

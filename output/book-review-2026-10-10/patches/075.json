@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-gran-gatsby.epub",
+  "title": "El gran Gatsby",
+  "year": "1925",
+  "description": "Nick Carraway observa la vida de su vecino Jay Gatsby, un hombre rico cuyas fiestas deslumbrantes esconden una obsesión por el pasado. Su deseo de recuperar a Daisy Buchanan revela las fracturas entre amor, dinero y aspiraciones sociales en los Estados Unidos de los años veinte.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Nick Carraway observa la vida de su vecino Jay Gatsby, un hombre rico cuyas fiestas deslumbrantes esconden una obsesión por el pasado. Su deseo de recuperar a Daisy Buchanan revela las fracturas entre amor, dinero y aspiraciones sociales en los Estados Unidos de los años veinte.",
+      "title": "El gran Gatsby"
+    },
+    "ca": {
+      "description": "Nick Carraway observa la vida del seu veí Jay Gatsby, un home ric que amaga una obsessió pel passat rere festes enlluernadores. El desig de recuperar Daisy Buchanan revela les fractures entre amor, diners i aspiracions socials als Estats Units dels anys vint.",
+      "title": "El gran Gatsby"
+    },
+    "en": {
+      "description": "Nick Carraway watches his wealthy neighbour Jay Gatsby, whose dazzling parties conceal an obsession with the past. Gatsby's longing for Daisy Buchanan exposes the divisions between love, money and social ambition in 1920s America.",
+      "title": "El gran Gatsby"
+    }
+  }
+}

@@ -1,0 +1,3055 @@
+{
+  "total": 338,
+  "validated": 338,
+  "errors": [],
+  "incompleteSource": [],
+  "titles": [
+    {
+      "kind": "movie",
+      "id": 668,
+      "name": "James Bond 007: Al servicio secreto de su Majestad",
+      "sub": "credits",
+      "cast": 32,
+      "crew": 28,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 708,
+      "name": "James Bond 007: Alta tensión",
+      "sub": "credits",
+      "cast": 51,
+      "crew": 28,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12208,
+      "name": "James Bond 007: Casino Royale",
+      "sub": "credits",
+      "cast": 63,
+      "crew": 52,
+      "directors": 5
+    },
+    {
+      "kind": "movie",
+      "id": 646,
+      "name": "James Bond 007: contra el Dr. No",
+      "sub": "credits",
+      "cast": 30,
+      "crew": 45,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 657,
+      "name": "James Bond 007: Desde Rusia con amor",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 46,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 681,
+      "name": "James Bond 007: Diamantes para la eternidad",
+      "sub": "credits",
+      "cast": 76,
+      "crew": 51,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 682,
+      "name": "James Bond 007: El hombre de la pistola de oro",
+      "sub": "credits",
+      "cast": 28,
+      "crew": 28,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 714,
+      "name": "James Bond 007: El mañana nunca muere",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 76,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 36643,
+      "name": "James Bond 007: El mundo nunca es suficiente",
+      "sub": "credits",
+      "cast": 40,
+      "crew": 89,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 658,
+      "name": "James Bond 007: James Bond contra Goldfinger",
+      "sub": "credits",
+      "cast": 49,
+      "crew": 40,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 691,
+      "name": "James Bond 007: La espía que me amó",
+      "sub": "credits",
+      "cast": 74,
+      "crew": 33,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 709,
+      "name": "James Bond 007: Licencia para matar",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 46,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 36669,
+      "name": "James Bond 007: Muere otro día",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 89,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 36670,
+      "name": "James Bond 007: Nunca digas nunca jamás",
+      "sub": "credits",
+      "cast": 37,
+      "crew": 44,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 660,
+      "name": "James Bond 007: Operación Trueno",
+      "sub": "credits",
+      "cast": 38,
+      "crew": 50,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 707,
+      "name": "James Bond 007: Panorama para matar",
+      "sub": "credits",
+      "cast": 39,
+      "crew": 73,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 10764,
+      "name": "James Bond 007: Quantum of Solace",
+      "sub": "credits",
+      "cast": 75,
+      "crew": 482,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 699,
+      "name": "James Bond 007: Sólo para sus ojos",
+      "sub": "credits",
+      "cast": 45,
+      "crew": 27,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 667,
+      "name": "James Bond 007: Sólo se vive dos veces",
+      "sub": "credits",
+      "cast": 41,
+      "crew": 28,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 37724,
+      "name": "James Bond 007: Skyfall",
+      "sub": "credits",
+      "cast": 69,
+      "crew": 312,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 206647,
+      "name": "James Bond 007: Spectre",
+      "sub": "credits",
+      "cast": 83,
+      "crew": 267,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 253,
+      "name": "James Bond 007: Vive y deja morir",
+      "sub": "credits",
+      "cast": 43,
+      "crew": 40,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 63,
+      "name": "Doce monos",
+      "sub": "credits",
+      "cast": 68,
+      "crew": 183,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 76203,
+      "name": "12 Years a Slave",
+      "sub": "credits",
+      "cast": 84,
+      "crew": 111,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 2009,
+      "name": "4 meses, 3 semanas, 2 días",
+      "sub": "credits",
+      "cast": 31,
+      "crew": 23,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 755,
+      "name": "Abierto hasta el amanecer",
+      "sub": "credits",
+      "cast": 45,
+      "crew": 193,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1368,
+      "name": "Acorralado",
+      "sub": "credits",
+      "cast": 39,
+      "crew": 89,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 21700,
+      "name": "Airbag",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 73,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 28966,
+      "name": "Alas",
+      "sub": "credits",
+      "cast": 33,
+      "crew": 14,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 510,
+      "name": "Alguien voló sobre el nido del cuco",
+      "sub": "credits",
+      "cast": 34,
+      "crew": 42,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 440,
+      "name": "Alien contra predator II",
+      "sub": "credits",
+      "cast": 51,
+      "crew": 235,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 395,
+      "name": "Alien contra predator",
+      "sub": "credits",
+      "cast": 27,
+      "crew": 213,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 126889,
+      "name": "Alien 6: Covenant",
+      "sub": "credits",
+      "cast": 21,
+      "crew": 341,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 348,
+      "name": "Alien 1: El octavo pasajero",
+      "sub": "credits",
+      "cast": 9,
+      "crew": 89,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 8077,
+      "name": "Alien 3",
+      "sub": "credits",
+      "cast": 24,
+      "crew": 165,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 8078,
+      "name": "Alien 4: Resurrección",
+      "sub": "credits",
+      "cast": 38,
+      "crew": 182,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 679,
+      "name": "Alien 2: El regreso",
+      "sub": "credits",
+      "cast": 27,
+      "crew": 84,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 279,
+      "name": "Amadeus",
+      "sub": "credits",
+      "cast": 115,
+      "crew": 143,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 20607,
+      "name": "Amanece, que no es poco",
+      "sub": "credits",
+      "cast": 130,
+      "crew": 36,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 194,
+      "name": "Amelie",
+      "sub": "credits",
+      "cast": 74,
+      "crew": 121,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 14,
+      "name": "American Beauty",
+      "sub": "credits",
+      "cast": 41,
+      "crew": 148,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 2105,
+      "name": "American Pie",
+      "sub": "credits",
+      "cast": 102,
+      "crew": 116,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 86837,
+      "name": "Amor",
+      "sub": "credits",
+      "cast": 14,
+      "crew": 32,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 915935,
+      "name": "Anatomía de una caída",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 97,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 703,
+      "name": "Annie Hall",
+      "sub": "credits",
+      "cast": 84,
+      "crew": 66,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1064213,
+      "name": "Anora",
+      "sub": "credits",
+      "cast": 33,
+      "crew": 115,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 68734,
+      "name": "Argo",
+      "sub": "credits",
+      "cast": 120,
+      "crew": 175,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 942,
+      "name": "Arma letal II",
+      "sub": "credits",
+      "cast": 58,
+      "crew": 197,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 943,
+      "name": "Arma letal III",
+      "sub": "credits",
+      "cast": 67,
+      "crew": 127,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 941,
+      "name": "Arma letal",
+      "sub": "credits",
+      "cast": 61,
+      "crew": 100,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 848685,
+      "name": "As bestas",
+      "sub": "credits",
+      "cast": 40,
+      "crew": 38,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 137,
+      "name": "Atrapado en el tiempo",
+      "sub": "credits",
+      "cast": 50,
+      "crew": 63,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 13633,
+      "name": "Bad Boys",
+      "sub": "credits",
+      "cast": 41,
+      "crew": 84,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 581,
+      "name": "Bailando con lobos",
+      "sub": "credits",
+      "cast": 52,
+      "crew": 152,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 16,
+      "name": "Bailar en la oscuridad",
+      "sub": "credits",
+      "cast": 69,
+      "crew": 137,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 268,
+      "name": "Batman",
+      "sub": "credits",
+      "cast": 62,
+      "crew": 136,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 665,
+      "name": "Ben-Hur",
+      "sub": "credits",
+      "cast": 69,
+      "crew": 25,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 587,
+      "name": "Big Fish",
+      "sub": "credits",
+      "cast": 62,
+      "crew": 209,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 194662,
+      "name": "Birdman or (The Unexpected Virtue of Ignorance)",
+      "sub": "credits",
+      "cast": 55,
+      "crew": 174,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 36586,
+      "name": "Blade II",
+      "sub": "credits",
+      "cast": 47,
+      "crew": 221,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 335984,
+      "name": "Blade Runner 2049",
+      "sub": "credits",
+      "cast": 39,
+      "crew": 830,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 78,
+      "name": "Blade Runner",
+      "sub": "credits",
+      "cast": 32,
+      "crew": 127,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 36647,
+      "name": "Blade",
+      "sub": "credits",
+      "cast": 60,
+      "crew": 276,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 197,
+      "name": "Braveheart",
+      "sub": "credits",
+      "cast": 61,
+      "crew": 248,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 278,
+      "name": "Cadena perpetua",
+      "sub": "credits",
+      "cast": 59,
+      "crew": 144,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9354,
+      "name": "Cariño, he encogido a los niños",
+      "sub": "credits",
+      "cast": 21,
+      "crew": 56,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9443,
+      "name": "Carros de fuego",
+      "sub": "credits",
+      "cast": 50,
+      "crew": 87,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 289,
+      "name": "Casablanca",
+      "sub": "credits",
+      "cast": 114,
+      "crew": 53,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1574,
+      "name": "Chicago",
+      "sub": "credits",
+      "cast": 119,
+      "crew": 81,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 42861,
+      "name": "Cimarrón",
+      "sub": "credits",
+      "cast": 25,
+      "crew": 18,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 2292,
+      "name": "Clerks",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 22,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9396,
+      "name": "Cocodrilo Dundee II",
+      "sub": "credits",
+      "cast": 58,
+      "crew": 38,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9290,
+      "name": "Cocodrilo Dundee III. En Los Ángeles",
+      "sub": "credits",
+      "cast": 35,
+      "crew": 46,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9671,
+      "name": "Cocodrilo Dundee",
+      "sub": "credits",
+      "cast": 40,
+      "crew": 18,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 776503,
+      "name": "CODA: Los sonidos del silencio",
+      "sub": "credits",
+      "cast": 51,
+      "crew": 298,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11966,
+      "name": "Cortocircuito 2",
+      "sub": "credits",
+      "cast": 41,
+      "crew": 14,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 2605,
+      "name": "Cortocircuito",
+      "sub": "credits",
+      "cast": 27,
+      "crew": 83,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 3116,
+      "name": "Cowboy de medianoche",
+      "sub": "credits",
+      "cast": 62,
+      "crew": 37,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11423,
+      "name": "Crónica de un asesino en serie",
+      "sub": "credits",
+      "cast": 55,
+      "crew": 52,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1640,
+      "name": "Crash (Colisión)",
+      "sub": "credits",
+      "cast": 50,
+      "crew": 143,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 3980,
+      "name": "Critters",
+      "sub": "credits",
+      "cast": 20,
+      "crew": 120,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 712,
+      "name": "Cuatro bodas y un funeral",
+      "sub": "credits",
+      "cast": 49,
+      "crew": 27,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 431,
+      "name": "Cube",
+      "sub": "credits",
+      "cast": 7,
+      "crew": 115,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 28580,
+      "name": "Días sin huella",
+      "sub": "credits",
+      "cast": 60,
+      "crew": 27,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11426,
+      "name": "De aquí a la eternidad",
+      "sub": "credits",
+      "cast": 66,
+      "crew": 30,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 13597,
+      "name": "Dentro del laberinto",
+      "sub": "credits",
+      "cast": 88,
+      "crew": 20,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 169,
+      "name": "Predator 2",
+      "sub": "credits",
+      "cast": 71,
+      "crew": 251,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 106,
+      "name": "Predator 1",
+      "sub": "credits",
+      "cast": 17,
+      "crew": 148,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 164,
+      "name": "Desayuno con diamantes",
+      "sub": "credits",
+      "cast": 74,
+      "crew": 27,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 88,
+      "name": "Dirty dancing",
+      "sub": "credits",
+      "cast": 40,
+      "crew": 146,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 68718,
+      "name": "Django desencadenat",
+      "sub": "credits",
+      "cast": 136,
+      "crew": 122,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 519010,
+      "name": "Dolor y gloria",
+      "sub": "credits",
+      "cast": 31,
+      "crew": 78,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 601,
+      "name": "E.T., l'extraterrestre",
+      "sub": "credits",
+      "cast": 38,
+      "crew": 70,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 162,
+      "name": "Eduardo Manostijeras",
+      "sub": "credits",
+      "cast": 69,
+      "crew": 103,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1174481,
+      "name": "El 47",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 22,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 284,
+      "name": "El apartamento",
+      "sub": "credits",
+      "cast": 38,
+      "crew": 20,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 429,
+      "name": "El bueno, el feo y el malo",
+      "sub": "credits",
+      "cast": 57,
+      "crew": 81,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 155,
+      "name": "El caballero oscuro",
+      "sub": "credits",
+      "cast": 138,
+      "crew": 149,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 559969,
+      "name": "El Camino: Una película de Breaking Bad",
+      "sub": "credits",
+      "cast": 31,
+      "crew": 190,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11778,
+      "name": "El cazador",
+      "sub": "credits",
+      "cast": 51,
+      "crew": 59,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 207,
+      "name": "El club de los poetas muertos",
+      "sub": "credits",
+      "cast": 52,
+      "crew": 47,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 45269,
+      "name": "El discurso del rey",
+      "sub": "credits",
+      "cast": 42,
+      "crew": 105,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9277,
+      "name": "El golpe",
+      "sub": "credits",
+      "cast": 62,
+      "crew": 70,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 914,
+      "name": "El gran dictador",
+      "sub": "credits",
+      "cast": 65,
+      "crew": 26,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 115,
+      "name": "El gran Lebowski",
+      "sub": "credits",
+      "cast": 43,
+      "crew": 130,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 122917,
+      "name": "El hobbit: La batalla de los cinco ejércitos",
+      "sub": "credits",
+      "cast": 64,
+      "crew": 164,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 57158,
+      "name": "El hobbit: La desolación de Smaug",
+      "sub": "credits",
+      "cast": 66,
+      "crew": 149,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 49051,
+      "name": "El hobbit: Un viaje inesperado",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 551,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 746,
+      "name": "El último emperador",
+      "sub": "credits",
+      "cast": 57,
+      "crew": 38,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9361,
+      "name": "El último mohicano",
+      "sub": "credits",
+      "cast": 51,
+      "crew": 275,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 27191,
+      "name": "El mayor espectáculo del mundo",
+      "sub": "credits",
+      "cast": 51,
+      "crew": 28,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11490,
+      "name": "El niño",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 32,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 409,
+      "name": "El paciente inglés",
+      "sub": "credits",
+      "cast": 40,
+      "crew": 69,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 240,
+      "name": "El padrino II",
+      "sub": "credits",
+      "cast": 112,
+      "crew": 145,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 242,
+      "name": "El padrino III",
+      "sub": "credits",
+      "cast": 111,
+      "crew": 289,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 238,
+      "name": "El padrino",
+      "sub": "credits",
+      "cast": 81,
+      "crew": 106,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 423,
+      "name": "El pianista",
+      "sub": "credits",
+      "cast": 79,
+      "crew": 57,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 871,
+      "name": "El planeta de los simios",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 70,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 111,
+      "name": "El precio del poder",
+      "sub": "credits",
+      "cast": 104,
+      "crew": 117,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 101,
+      "name": "El profesional (Léon)",
+      "sub": "credits",
+      "cast": 55,
+      "crew": 50,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 826,
+      "name": "El puente sobre el río Kwai",
+      "sub": "credits",
+      "cast": 20,
+      "crew": 26,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 18,
+      "name": "El quinto elemento",
+      "sub": "credits",
+      "cast": 120,
+      "crew": 350,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 8967,
+      "name": "El árbol de la vida",
+      "sub": "credits",
+      "cast": 57,
+      "crew": 68,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 281957,
+      "name": "El renacido",
+      "sub": "credits",
+      "cast": 69,
+      "crew": 243,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 694,
+      "name": "El resplandor",
+      "sub": "credits",
+      "cast": 30,
+      "crew": 77,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1892,
+      "name": "Star Wars: Episodio 6 - El retorno del Jedi",
+      "sub": "credits",
+      "cast": 177,
+      "crew": 109,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 122,
+      "name": "El señor de los anillos: El retorno del rey",
+      "sub": "credits",
+      "cast": 74,
+      "crew": 172,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 120,
+      "name": "El señor de los anillos: La comunidad del anillo",
+      "sub": "credits",
+      "cast": 117,
+      "crew": 183,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 121,
+      "name": "El señor de los anillos: Las dos torres",
+      "sub": "credits",
+      "cast": 104,
+      "crew": 182,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 274,
+      "name": "El silencio de los corderos",
+      "sub": "credits",
+      "cast": 66,
+      "crew": 142,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 497828,
+      "name": "El triángulo de la tristeza",
+      "sub": "credits",
+      "cast": 146,
+      "crew": 107,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1116,
+      "name": "El viento que agita la cebada",
+      "sub": "credits",
+      "cast": 84,
+      "crew": 36,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1807,
+      "name": "Elephant",
+      "sub": "credits",
+      "cast": 52,
+      "crew": 64,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 85,
+      "name": "En busca del arca perdida",
+      "sub": "credits",
+      "cast": 50,
+      "crew": 195,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 10633,
+      "name": "En el calor de la noche",
+      "sub": "credits",
+      "cast": 31,
+      "crew": 39,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 7984,
+      "name": "En el nombre del padre",
+      "sub": "credits",
+      "cast": 102,
+      "crew": 61,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12162,
+      "name": "En tierra hostil",
+      "sub": "credits",
+      "cast": 34,
+      "crew": 102,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11864,
+      "name": "Enemigo mío",
+      "sub": "credits",
+      "cast": 28,
+      "crew": 80,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 628,
+      "name": "Entrevista con el vampiro",
+      "sub": "credits",
+      "cast": 36,
+      "crew": 104,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 705,
+      "name": "Eva al desnudo",
+      "sub": "credits",
+      "cast": 47,
+      "crew": 25,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1777,
+      "name": "Fahrenheit 9/11",
+      "sub": "credits",
+      "cast": 52,
+      "crew": 17,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 13,
+      "name": "Forrest Gump",
+      "sub": "credits",
+      "cast": 145,
+      "crew": 177,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1051,
+      "name": "French Connection. Contra el imperio de la droga",
+      "sub": "credits",
+      "cast": 21,
+      "crew": 46,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 783,
+      "name": "Gandhi",
+      "sub": "credits",
+      "cast": 151,
+      "crew": 159,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 16619,
+      "name": "Gente corriente",
+      "sub": "credits",
+      "cast": 46,
+      "crew": 59,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 251,
+      "name": "Ghost (Más allá del amor)",
+      "sub": "credits",
+      "cast": 38,
+      "crew": 121,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 17281,
+      "name": "Gigi",
+      "sub": "credits",
+      "cast": 34,
+      "crew": 19,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 558449,
+      "name": "Gladiator II",
+      "sub": "credits",
+      "cast": 50,
+      "crew": 327,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 98,
+      "name": "Gladiator",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 212,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 710,
+      "name": "James Bond 007: Goldeneye",
+      "sub": "credits",
+      "cast": 27,
+      "crew": 90,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 6978,
+      "name": "Golpe en la pequeña China",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 86,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 33680,
+      "name": "Gran Hotel",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 26,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 490132,
+      "name": "Green Book",
+      "sub": "credits",
+      "cast": 68,
+      "crew": 141,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 93456,
+      "name": "Gru 2. Mi villano favorito",
+      "sub": "credits",
+      "cast": 39,
+      "crew": 224,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 324852,
+      "name": "Gru 3. Mi villano favorito",
+      "sub": "credits",
+      "cast": 40,
+      "crew": 176,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 519182,
+      "name": "Gru 4. Mi villano favorito",
+      "sub": "credits",
+      "cast": 37,
+      "crew": 72,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 20352,
+      "name": "Gru 1. Mi villano favorito",
+      "sub": "credits",
+      "cast": 32,
+      "crew": 221,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 72190,
+      "name": "Guerra Mundial Z",
+      "sub": "credits",
+      "cast": 82,
+      "crew": 129,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 23383,
+      "name": "Hamlet",
+      "sub": "credits",
+      "cast": 25,
+      "crew": 26,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 348350,
+      "name": "Star Wars: Episodio 3.1 - Han Solo (Una historia de Star Wars)",
+      "sub": "credits",
+      "cast": 103,
+      "crew": 295,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 674,
+      "name": "Harry Potter (4) y el cáliz de fuego",
+      "sub": "credits",
+      "cast": 78,
+      "crew": 225,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 767,
+      "name": "Harry Potter y el misterio del príncipe",
+      "sub": "credits",
+      "cast": 60,
+      "crew": 123,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 673,
+      "name": "Harry Potter (3) y el prisionero de Azkaban",
+      "sub": "credits",
+      "cast": 59,
+      "crew": 246,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 672,
+      "name": "Harry Potter (2) y la cámara secreta",
+      "sub": "credits",
+      "cast": 77,
+      "crew": 198,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 675,
+      "name": "Harry Potter y la Orden del Fénix",
+      "sub": "credits",
+      "cast": 87,
+      "crew": 123,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 671,
+      "name": "Harry Potter (1) y la piedra filosofal",
+      "sub": "credits",
+      "cast": 64,
+      "crew": 225,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12444,
+      "name": "Harry Potter y las Reliquias de la Muerte - Parte 1",
+      "sub": "credits",
+      "cast": 106,
+      "crew": 157,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12445,
+      "name": "Harry Potter y las Reliquias de la Muerte - Parte 2",
+      "sub": "credits",
+      "cast": 107,
+      "crew": 167,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 608,
+      "name": "Hombres de negro II",
+      "sub": "credits",
+      "cast": 89,
+      "crew": 471,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 607,
+      "name": "Hombres de negro",
+      "sub": "credits",
+      "cast": 65,
+      "crew": 337,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 325789,
+      "name": "Infiltrado",
+      "sub": "credits",
+      "cast": 45,
+      "crew": 73,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1422,
+      "name": "Infiltrados",
+      "sub": "credits",
+      "cast": 102,
+      "crew": 91,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 157336,
+      "name": "Interstellar",
+      "sub": "credits",
+      "cast": 35,
+      "crew": 511,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 331,
+      "name": "Jurassic Park III (Parque Jurásico III)",
+      "sub": "credits",
+      "cast": 25,
+      "crew": 185,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 329,
+      "name": "Jurassic Park (Parque Jurásico)",
+      "sub": "credits",
+      "cast": 22,
+      "crew": 184,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 507086,
+      "name": "Jurassic World: Dominion",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 313,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 351286,
+      "name": "Jurassic World: El reino caído",
+      "sub": "credits",
+      "cast": 41,
+      "crew": 393,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 135397,
+      "name": "Jurassic World",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 420,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 24,
+      "name": "Kill Bill: Volumen 1",
+      "sub": "credits",
+      "cast": 38,
+      "crew": 230,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 393,
+      "name": "Kill Bill: Volumen 2",
+      "sub": "credits",
+      "cast": 64,
+      "crew": 181,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12102,
+      "name": "Kramer contra Kramer",
+      "sub": "credits",
+      "cast": 24,
+      "crew": 39,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1891,
+      "name": "Star Wars: Episodio 5 - El Imperio contraataca",
+      "sub": "credits",
+      "cast": 79,
+      "crew": 86,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 33667,
+      "name": "La barrera invisible",
+      "sub": "credits",
+      "cast": 18,
+      "crew": 15,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 37903,
+      "name": "La cinta blanca",
+      "sub": "credits",
+      "cast": 84,
+      "crew": 25,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 8841,
+      "name": "La clase",
+      "sub": "credits",
+      "cast": 37,
+      "crew": 16,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11050,
+      "name": "La fuerza del cariño",
+      "sub": "credits",
+      "cast": 43,
+      "crew": 55,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1894,
+      "name": "Star Wars: Episodio 2 - El ataque de los clones",
+      "sub": "credits",
+      "cast": 101,
+      "crew": 190,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11,
+      "name": "Star Wars: Episodio 4 - La guerra de las galaxias",
+      "sub": "credits",
+      "cast": 105,
+      "crew": 95,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 34584,
+      "name": "La historia interminable",
+      "sub": "credits",
+      "cast": 22,
+      "crew": 81,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1215185,
+      "name": "La infiltrada",
+      "sub": "credits",
+      "cast": 11,
+      "crew": 31,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 654,
+      "name": "La ley del silencio",
+      "sub": "credits",
+      "cast": 28,
+      "crew": 20,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 424,
+      "name": "La lista de Schindler",
+      "sub": "credits",
+      "cast": 134,
+      "crew": 74,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 10156,
+      "name": "La loca historia del mundo",
+      "sub": "credits",
+      "cast": 126,
+      "crew": 117,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 65203,
+      "name": "La melodía de Broadway",
+      "sub": "credits",
+      "cast": 35,
+      "crew": 22,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9426,
+      "name": "La mosca",
+      "sub": "credits",
+      "cast": 12,
+      "crew": 108,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 27367,
+      "name": "La señora Miniver",
+      "sub": "credits",
+      "cast": 89,
+      "crew": 22,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 906126,
+      "name": "La sociedad de la nieve",
+      "sub": "credits",
+      "cast": 109,
+      "crew": 136,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12311,
+      "name": "La tragedia de la Bounty",
+      "sub": "credits",
+      "cast": 72,
+      "crew": 45,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 152584,
+      "name": "La vida de Adèle",
+      "sub": "credits",
+      "cast": 66,
+      "crew": 63,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 43278,
+      "name": "La vida de Emile Zola",
+      "sub": "credits",
+      "cast": 28,
+      "crew": 17,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 637,
+      "name": "La vida es bella",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 55,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 2897,
+      "name": "La vuelta al mundo en 80 días",
+      "sub": "credits",
+      "cast": 319,
+      "crew": 77,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 526,
+      "name": "Lady Halcón",
+      "sub": "credits",
+      "cast": 29,
+      "crew": 95,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1995,
+      "name": "Lara Croft. Tomb Raider",
+      "sub": "credits",
+      "cast": 32,
+      "crew": 675,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1996,
+      "name": "Lara Croft. Tomb Raider II. La cuna de la vida",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 748,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 619443,
+      "name": "Las niñas",
+      "sub": "credits",
+      "cast": 10,
+      "crew": 13,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 947,
+      "name": "Lawrence de Arabia",
+      "sub": "credits",
+      "cast": 58,
+      "crew": 54,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 770,
+      "name": "Lo que el viento se llevó",
+      "sub": "credits",
+      "cast": 136,
+      "crew": 22,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 10157,
+      "name": "Loca academia de policía 2: Su primera misión",
+      "sub": "credits",
+      "cast": 47,
+      "crew": 131,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12118,
+      "name": "Loca academia de policía 3: De vuelta a la escuela",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 151,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 10587,
+      "name": "Loca academia de policía 4: Los ciudadanos se defienden",
+      "sub": "credits",
+      "cast": 67,
+      "crew": 57,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11825,
+      "name": "Loca academia de policía 5: Operación Miami Beach",
+      "sub": "credits",
+      "cast": 39,
+      "crew": 99,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11895,
+      "name": "Loca academia de policía 6: Ciudad sitiada",
+      "sub": "credits",
+      "cast": 50,
+      "crew": 64,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11546,
+      "name": "Loca academia de policía 7: Misión en Moscú",
+      "sub": "credits",
+      "cast": 61,
+      "crew": 80,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9336,
+      "name": "Loca academia de policía 1",
+      "sub": "credits",
+      "cast": 67,
+      "crew": 174,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 100,
+      "name": "Lock & Stock",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 23,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1443576,
+      "name": "Los domingos",
+      "sub": "credits",
+      "cast": 46,
+      "crew": 101,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9340,
+      "name": "Los Goonies",
+      "sub": "credits",
+      "cast": 38,
+      "crew": 135,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 8009,
+      "name": "Los inmortales",
+      "sub": "credits",
+      "cast": 43,
+      "crew": 82,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 117,
+      "name": "Los intocables de Eliot Ness",
+      "sub": "credits",
+      "cast": 61,
+      "crew": 87,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 887,
+      "name": "Los mejores años de nuestra vida",
+      "sub": "credits",
+      "cast": 103,
+      "crew": 21,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 211672,
+      "name": "Los minions",
+      "sub": "credits",
+      "cast": 51,
+      "crew": 79,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 334,
+      "name": "Magnolia",
+      "sub": "credits",
+      "cast": 113,
+      "crew": 374,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 15919,
+      "name": "Marty",
+      "sub": "credits",
+      "cast": 30,
+      "crew": 24,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 603,
+      "name": "Matrix",
+      "sub": "credits",
+      "cast": 37,
+      "crew": 177,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 606,
+      "name": "Memorias de África",
+      "sub": "credits",
+      "cast": 32,
+      "crew": 38,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 70,
+      "name": "Million Dollar Baby",
+      "sub": "credits",
+      "cast": 61,
+      "crew": 108,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 438148,
+      "name": "Minions: El origen de Gru",
+      "sub": "credits",
+      "cast": 55,
+      "crew": 94,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 376867,
+      "name": "Moonlight",
+      "sub": "credits",
+      "cast": 26,
+      "crew": 90,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 698,
+      "name": "James Bond 007: Moonraker",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 32,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11113,
+      "name": "My Fair Lady (Mi bella dama)",
+      "sub": "credits",
+      "cast": 37,
+      "crew": 32,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 6977,
+      "name": "No es país para viejos",
+      "sub": "credits",
+      "cast": 52,
+      "crew": 120,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 11185,
+      "name": "No me chilles, que no te veo",
+      "sub": "credits",
+      "cast": 33,
+      "crew": 123,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 581734,
+      "name": "Nomadland",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 81,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 700,
+      "name": "James Bond 007: Octopussy",
+      "sub": "credits",
+      "cast": 69,
+      "crew": 28,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 2623,
+      "name": "Oficial y caballero",
+      "sub": "credits",
+      "cast": 34,
+      "crew": 47,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 38,
+      "name": "Olvídate de mí!",
+      "sub": "credits",
+      "cast": 19,
+      "crew": 115,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1054867,
+      "name": "One Battle After Another",
+      "sub": "credits",
+      "cast": 104,
+      "crew": 396,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 872585,
+      "name": "Oppenheimer",
+      "sub": "credits",
+      "cast": 80,
+      "crew": 225,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 433498,
+      "name": "Papillon",
+      "sub": "credits",
+      "cast": 33,
+      "crew": 120,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 496243,
+      "name": "Parásitos",
+      "sub": "credits",
+      "cast": 54,
+      "crew": 170,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 403,
+      "name": "Paseando a Miss Daisy",
+      "sub": "credits",
+      "cast": 24,
+      "crew": 48,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11202,
+      "name": "Patton",
+      "sub": "credits",
+      "cast": 49,
+      "crew": 102,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9800,
+      "name": "Philadelphia",
+      "sub": "credits",
+      "cast": 86,
+      "crew": 68,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 792,
+      "name": "Platoon",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 94,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1376434,
+      "name": "Predator 6: Asesino de asesinos",
+      "sub": "credits",
+      "cast": 35,
+      "crew": 48,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1242898,
+      "name": "Predator 5: Badlands",
+      "sub": "credits",
+      "cast": 11,
+      "crew": 105,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 766507,
+      "name": "Predator 4: La presa",
+      "sub": "credits",
+      "cast": 31,
+      "crew": 165,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 34851,
+      "name": "Predator 3",
+      "sub": "credits",
+      "cast": 13,
+      "crew": 94,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 114,
+      "name": "Pretty Woman",
+      "sub": "credits",
+      "cast": 75,
+      "crew": 86,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 70981,
+      "name": "Alien 5: Prometheus",
+      "sub": "credits",
+      "cast": 45,
+      "crew": 123,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 539,
+      "name": "Psicosis",
+      "sub": "credits",
+      "cast": 34,
+      "crew": 20,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 680,
+      "name": "Pulp fiction",
+      "sub": "credits",
+      "cast": 52,
+      "crew": 129,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 43266,
+      "name": "Qué verde era mi valle!",
+      "sub": "credits",
+      "cast": 27,
+      "crew": 30,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 380,
+      "name": "Rain Man",
+      "sub": "credits",
+      "cast": 66,
+      "crew": 58,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11645,
+      "name": "Ran",
+      "sub": "credits",
+      "cast": 31,
+      "crew": 83,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 223,
+      "name": "Rebeca",
+      "sub": "credits",
+      "cast": 26,
+      "crew": 14,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 165,
+      "name": "Regreso al futuro II",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 133,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 196,
+      "name": "Regreso al futuro III",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 148,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 105,
+      "name": "Regreso al futuro",
+      "sub": "credits",
+      "cast": 53,
+      "crew": 110,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1367,
+      "name": "Rocky II",
+      "sub": "credits",
+      "cast": 58,
+      "crew": 38,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1371,
+      "name": "Rocky III",
+      "sub": "credits",
+      "cast": 58,
+      "crew": 72,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1374,
+      "name": "Rocky IV",
+      "sub": "credits",
+      "cast": 50,
+      "crew": 97,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1366,
+      "name": "Rocky",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 35,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 330459,
+      "name": "Star Wars: Episodio 3.2 - Rogue One (Una història de Star Wars)",
+      "sub": "credits",
+      "cast": 172,
+      "crew": 191,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11489,
+      "name": "Rosetta",
+      "sub": "credits",
+      "cast": 19,
+      "crew": 14,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 807,
+      "name": "Seven",
+      "sub": "credits",
+      "cast": 60,
+      "crew": 182,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1934,
+      "name": "Shakespeare enamorado",
+      "sub": "credits",
+      "cast": 49,
+      "crew": 51,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11770,
+      "name": "Shaolin Soccer",
+      "sub": "credits",
+      "cast": 39,
+      "crew": 64,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 17661,
+      "name": "Siguiendo mi camino",
+      "sub": "credits",
+      "cast": 42,
+      "crew": 21,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 143,
+      "name": "Sin novedad en el frente",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 20,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 49046,
+      "name": "Sin novedad en el frente",
+      "sub": "credits",
+      "cast": 56,
+      "crew": 77,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 33,
+      "name": "Sin perdón",
+      "sub": "credits",
+      "cast": 42,
+      "crew": 114,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 12405,
+      "name": "Slumdog Millionaire",
+      "sub": "credits",
+      "cast": 89,
+      "crew": 68,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 107,
+      "name": "Snatch. Cerdos y diamantes",
+      "sub": "credits",
+      "cast": 71,
+      "crew": 153,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 10366,
+      "name": "Soldado universal II. El retorno",
+      "sub": "credits",
+      "cast": 29,
+      "crew": 60,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 27847,
+      "name": "Soldado universal III. Desafío final",
+      "sub": "credits",
+      "cast": 11,
+      "crew": 19,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9349,
+      "name": "Soldado universal",
+      "sub": "credits",
+      "cast": 63,
+      "crew": 102,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 771,
+      "name": "Solo en casa",
+      "sub": "credits",
+      "cast": 62,
+      "crew": 128,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 15121,
+      "name": "Sonrisas y lágrimas",
+      "sub": "credits",
+      "cast": 30,
+      "crew": 42,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 314365,
+      "name": "Spotlight",
+      "sub": "credits",
+      "cast": 81,
+      "crew": 101,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 140607,
+      "name": "Star Wars: Episodio 7 - El despertar de la fuerza",
+      "sub": "credits",
+      "cast": 99,
+      "crew": 270,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1893,
+      "name": "Star Wars: Episodio 1 - La amenaza fantasma",
+      "sub": "credits",
+      "cast": 121,
+      "crew": 188,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1895,
+      "name": "Star Wars: Episodio 3: La venganza de los Sith",
+      "sub": "credits",
+      "cast": 110,
+      "crew": 166,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 181812,
+      "name": "Star Wars: Episodio 9 - El ascenso de Skywalker",
+      "sub": "credits",
+      "cast": 113,
+      "crew": 399,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 181808,
+      "name": "Star Wars: Episodio 8 - Los últimos Jedi",
+      "sub": "credits",
+      "cast": 112,
+      "crew": 203,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 563,
+      "name": "Starship Troopers: Las brigadas del espacio",
+      "sub": "credits",
+      "cast": 90,
+      "crew": 454,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 3078,
+      "name": "Sucedió una noche",
+      "sub": "credits",
+      "cast": 86,
+      "crew": 16,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 265169,
+      "name": "Sueño de invierno",
+      "sub": "credits",
+      "cast": 29,
+      "crew": 22,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 8536,
+      "name": "Superman II. La aventura continúa",
+      "sub": "credits",
+      "cast": 58,
+      "crew": 137,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9531,
+      "name": "Superman III",
+      "sub": "credits",
+      "cast": 46,
+      "crew": 25,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 11411,
+      "name": "Superman IV. En busca de la paz",
+      "sub": "credits",
+      "cast": 56,
+      "crew": 28,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1924,
+      "name": "Superman",
+      "sub": "credits",
+      "cast": 90,
+      "crew": 252,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 13885,
+      "name": "Sweeney Todd: El barbero diabólico de la calle Fleet",
+      "sub": "credits",
+      "cast": 52,
+      "crew": 83,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 38368,
+      "name": "Tío Boonmee recuerda sus vidas pasadas",
+      "sub": "credits",
+      "cast": 25,
+      "crew": 78,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9362,
+      "name": "Temblores",
+      "sub": "credits",
+      "cast": 19,
+      "crew": 164,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 280,
+      "name": "Terminator 2",
+      "sub": "credits",
+      "cast": 69,
+      "crew": 547,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 296,
+      "name": "Terminator 3",
+      "sub": "credits",
+      "cast": 36,
+      "crew": 269,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 87101,
+      "name": "Terminator 5",
+      "sub": "credits",
+      "cast": 76,
+      "crew": 250,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 534,
+      "name": "Terminator 4",
+      "sub": "credits",
+      "cast": 61,
+      "crew": 125,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 218,
+      "name": "Terminator 1",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 104,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 9299,
+      "name": "Tesis",
+      "sub": "credits",
+      "cast": 20,
+      "crew": 31,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 74643,
+      "name": "The Artist",
+      "sub": "credits",
+      "cast": 80,
+      "crew": 137,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 3053,
+      "name": "The Fearless Vampire Killers",
+      "sub": "credits",
+      "cast": 18,
+      "crew": 16,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 330,
+      "name": "The lost world: Jurassic Park",
+      "sub": "credits",
+      "cast": 76,
+      "crew": 209,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1228710,
+      "name": "Star Wars: Episodio 6.1 - The Mandalorian and Grogu",
+      "sub": "credits",
+      "cast": 30,
+      "crew": 120,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 399055,
+      "name": "The Shape of Water",
+      "sub": "credits",
+      "cast": 39,
+      "crew": 122,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 401246,
+      "name": "The Square",
+      "sub": "credits",
+      "cast": 83,
+      "crew": 55,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 630240,
+      "name": "Titane",
+      "sub": "credits",
+      "cast": 20,
+      "crew": 57,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 597,
+      "name": "Titanic",
+      "sub": "credits",
+      "cast": 116,
+      "crew": 270,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 545611,
+      "name": "Todo a la vez en todas partes",
+      "sub": "credits",
+      "cast": 37,
+      "crew": 169,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 338970,
+      "name": "Tomb Raider",
+      "sub": "credits",
+      "cast": 36,
+      "crew": 313,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 744,
+      "name": "Top Gun: Ídolos del aire",
+      "sub": "credits",
+      "cast": 24,
+      "crew": 182,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 361743,
+      "name": "Top Gun: Maverick",
+      "sub": "credits",
+      "cast": 44,
+      "crew": 454,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 863,
+      "name": "Toy Story 2",
+      "sub": "credits",
+      "cast": 45,
+      "crew": 328,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 10193,
+      "name": "Toy Story 3",
+      "sub": "credits",
+      "cast": 59,
+      "crew": 226,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 301528,
+      "name": "Toy Story 4",
+      "sub": "credits",
+      "cast": 42,
+      "crew": 72,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1084244,
+      "name": "Toy Story 5",
+      "sub": "credits",
+      "cast": 48,
+      "crew": 77,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 862,
+      "name": "Toy Story 1",
+      "sub": "credits",
+      "cast": 37,
+      "crew": 208,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 2769,
+      "name": "Un americano en París",
+      "sub": "credits",
+      "cast": 159,
+      "crew": 78,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 505192,
+      "name": "Un asunto de familia",
+      "sub": "credits",
+      "cast": 19,
+      "crew": 25,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 874,
+      "name": "Un hombre para la eternidad",
+      "sub": "credits",
+      "cast": 33,
+      "crew": 33,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 520763,
+      "name": "Un lugar tranquilo 2",
+      "sub": "credits",
+      "cast": 30,
+      "crew": 111,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 447332,
+      "name": "Un lugar tranquilo",
+      "sub": "credits",
+      "cast": 7,
+      "crew": 180,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 623,
+      "name": "Un pez llamado Wanda",
+      "sub": "credits",
+      "cast": 31,
+      "crew": 56,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1456349,
+      "name": "Un simple accidente",
+      "sub": "credits",
+      "cast": 24,
+      "crew": 42,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 453,
+      "name": "Una mente maravillosa",
+      "sub": "credits",
+      "cast": 101,
+      "crew": 237,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 34106,
+      "name": "Vive como quieras",
+      "sub": "credits",
+      "cast": 164,
+      "crew": 22,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 1725,
+      "name": "West Side Story (Amor sin barreras)",
+      "sub": "credits",
+      "cast": 49,
+      "crew": 43,
+      "directors": 2
+    },
+    {
+      "kind": "movie",
+      "id": 847,
+      "name": "Willow",
+      "sub": "credits",
+      "cast": 63,
+      "crew": 74,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 374473,
+      "name": "Yo, Daniel Blake",
+      "sub": "credits",
+      "cast": 49,
+      "crew": 61,
+      "directors": 1
+    },
+    {
+      "kind": "movie",
+      "id": 747,
+      "name": "Zombies Party",
+      "sub": "credits",
+      "cast": 63,
+      "crew": 77,
+      "directors": 1
+    },
+    {
+      "kind": "tv",
+      "id": 1396,
+      "name": "Breaking Bad",
+      "sub": "aggregate_credits",
+      "cast": 348,
+      "crew": 91,
+      "directors": 25
+    },
+    {
+      "kind": "tv",
+      "id": 12609,
+      "name": "Dragon Ball",
+      "sub": "aggregate_credits",
+      "cast": 32,
+      "crew": 75,
+      "directors": 8
+    },
+    {
+      "kind": "tv",
+      "id": 12971,
+      "name": "Dragon Ball Z",
+      "sub": "aggregate_credits",
+      "cast": 56,
+      "crew": 137,
+      "directors": 14
+    },
+    {
+      "kind": "tv",
+      "id": 615,
+      "name": "Futurama",
+      "sub": "aggregate_credits",
+      "cast": 111,
+      "crew": 148,
+      "directors": 32
+    },
+    {
+      "kind": "tv",
+      "id": 4613,
+      "name": "Hermanos de sangre",
+      "sub": "aggregate_credits",
+      "cast": 160,
+      "crew": 56,
+      "directors": 8
+    },
+    {
+      "kind": "tv",
+      "id": 456,
+      "name": "Los Simpson",
+      "sub": "aggregate_credits",
+      "cast": 996,
+      "crew": 297,
+      "directors": 43
+    }
+  ],
+  "offlineCompatibilityVerified": 338,
+  "verifiedFromRaspberryLocalCache": 338,
+  "profileChanges": false,
+  "verificationDate": "2026-10-10",
+  "deployedInterface": false
+}

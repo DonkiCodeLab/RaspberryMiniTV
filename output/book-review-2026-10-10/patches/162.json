@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/la-nena.epub",
+  "title": "La Nena",
+  "year": "2020",
+  "description": "Chesca desaparece después de una noche de fiesta y sus compañeros de la BAC inician una búsqueda urgente. Elena Blanco vuelve a colaborar con ellos para encontrarla, siguiendo un rastro que conduce a un entorno aislado donde se esconden secretos y una violencia extrema.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La Chesca desapareix després d’una nit de festa i els companys de la BAC inicien una recerca urgent. Elena Blanco torna a col·laborar-hi per trobar-la, seguint un rastre que porta a un entorn aïllat on s’amaguen secrets i una violència extrema.",
+      "title": "La Nena"
+    },
+    "en": {
+      "description": "Chesca disappears after a night out, prompting an urgent search by her colleagues in the BAC. Elena Blanco returns to help them follow a trail into an isolated setting marked by concealed secrets and extreme violence.",
+      "title": "La Nena"
+    },
+    "es": {
+      "description": "Chesca desaparece después de una noche de fiesta y sus compañeros de la BAC inician una búsqueda urgente. Elena Blanco vuelve a colaborar con ellos para encontrarla, siguiendo un rastro que conduce a un entorno aislado donde se esconden secretos y una violencia extrema.",
+      "title": "La Nena"
+    }
+  },
+  "author": "Carmen Mola"
+}

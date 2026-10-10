@@ -1,0 +1,38 @@
+{
+  "index": 10,
+  "path": "Books/al-este-del-eden.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Al este del Edén"
+    },
+    {
+      "tag": "creator",
+      "value": "John Steinbeck"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:8db36b36-2a04-9b4f-bb97-0161379f9056"
+    },
+    {
+      "tag": "date",
+      "value": "1951-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p><i>Al este del Edén</i>, epopeya de resonancia bíblicas que aborda aspectos de la condición humana como el bien y el mal o la vida como una lucha incesante, narra las vicisitudes de dos familias a lo largo de tres generaciones, entre la guerra de secesión y la primera guerra mundial, en el lejano valle Salinas, en la California septentrional.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2016-08-02"
+    },
+    {
+      "tag": "identifier",
+      "value": "29166f41-ad57-4765-a09e-69198cb089e7"
+    },
+    {
+      "tag": "identifier",
+      "value": "3391"
+    }
+  ]
+}

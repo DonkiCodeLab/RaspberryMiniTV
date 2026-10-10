@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/kafka-en-la-orilla.epub",
+  "title": "Kafka en la orilla",
+  "year": "2002",
+  "description": "Kafka Tamura huye de casa a los quince años y encuentra refugio en una biblioteca. Su recorrido se entrelaza con el de Nakata, un anciano capaz de hablar con los gatos, en una historia donde los sueños, la memoria y lo inexplicable alteran los límites de la realidad.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Kafka Tamura fuig de casa als quinze anys i troba refugi en una biblioteca. El recorregut s’entrellaça amb el de Nakata, un ancià capaç de parlar amb els gats, en una història on els somnis, la memòria i allò inexplicable alteren els límits de la realitat.",
+      "title": "Kafka a la platja"
+    },
+    "en": {
+      "title": "Kafka on the Shore",
+      "description": "Fifteen-year-old Kafka Tamura runs away from home and finds refuge in a library. His journey intertwines with that of Nakata, an elderly man who can speak to cats, in a story where dreams, memory and inexplicable events blur reality's boundaries."
+    },
+    "es": {
+      "description": "Kafka Tamura huye de casa a los quince años y encuentra refugio en una biblioteca. Su recorrido se entrelaza con el de Nakata, un anciano capaz de hablar con los gatos, en una historia donde los sueños, la memoria y lo inexplicable alteran los límites de la realidad.",
+      "title": "Kafka en la orilla"
+    }
+  },
+  "author": "Haruki Murakami"
+}

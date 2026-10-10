@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-gen-egoista.epub",
+  "title": "El gen egoista",
+  "year": "1976",
+  "description": "Richard Dawkins explica la evolución desde la perspectiva de los genes y examina cómo la selección natural puede favorecer tanto la competencia como la cooperación. El libro propone una forma de entender el comportamiento biológico; su título no presenta el egoísmo como una norma moral.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Richard Dawkins explica l’evolució des de la perspectiva dels gens i examina com la selecció natural pot afavorir tant la competència com la cooperació. El llibre proposa una manera d’entendre el comportament biològic; el títol no presenta l’egoisme com una norma moral.",
+      "title": "El gen egoista"
+    },
+    "en": {
+      "title": "The Selfish Gene",
+      "description": "Richard Dawkins explains evolution from the perspective of genes, examining how natural selection can favour cooperation as well as competition. The book offers a framework for understanding biological behaviour; its title does not advocate selfishness as a moral principle."
+    },
+    "es": {
+      "description": "Richard Dawkins explica la evolución desde la perspectiva de los genes y examina cómo la selección natural puede favorecer tanto la competencia como la cooperación. El libro propone una forma de entender el comportamiento biológico; su título no presenta el egoísmo como una norma moral.",
+      "subtitle": "Las bases biológicas de nuestra conducta",
+      "title": "El gen egoista"
+    }
+  }
+}

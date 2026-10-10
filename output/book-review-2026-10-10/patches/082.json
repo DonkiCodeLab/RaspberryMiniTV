@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-infierno.epub",
+  "title": "El infierno",
+  "year": "2023",
+  "description": "Una revuelta en el Madrid de Isabel II cruza los destinos de la bailarina Leonor y el estudiante Mauro. La violencia los conduce hasta Cuba, donde las plantaciones esclavistas y una serie de crímenes convierten la búsqueda de libertad en una lucha por sobrevivir.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Una revuelta en el Madrid de Isabel II cruza los destinos de la bailarina Leonor y el estudiante Mauro. La violencia los conduce hasta Cuba, donde las plantaciones esclavistas y una serie de crímenes convierten la búsqueda de libertad en una lucha por sobrevivir.",
+      "title": "El infierno"
+    },
+    "ca": {
+      "description": "Una revolta al Madrid d’Isabel II encreua els destins de la ballarina Leonor i l’estudiant Mauro. La violència els condueix fins a Cuba, on les plantacions esclavistes i una sèrie de crims converteixen la recerca de llibertat en una lluita per sobreviure.",
+      "title": "El infierno"
+    },
+    "en": {
+      "description": "An uprising in Isabel II's Madrid brings dancer Leonor and student Mauro together. Violence carries their story to Cuba, where slavery on the plantations and a series of crimes turn the search for freedom into a struggle to survive.",
+      "title": "El infierno"
+    }
+  }
+}

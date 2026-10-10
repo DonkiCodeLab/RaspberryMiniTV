@@ -1,0 +1,42 @@
+{
+  "index": 32,
+  "path": "Books/camino-de-los-reyes-el-archivo-de-las-tormentas-1.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El camino de los reyes"
+    },
+    {
+      "tag": "creator",
+      "value": "Brandon Sanderson"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Anhelo los días previos a la Última Desolación.</p><p>Los días en que los Heraldos nos abandonaron y los Caballeros Radiantes se giraron en nuestra contra. Un tiempo en que aún había magia en el mundo y honor en el corazón de los hombres.</p><p>El mundo fue nuestro, pero lo perdimos. Probablemente no hay nada más estimulante para las almas de los hombres que la victoria.</p><p>¿O tal vez fue la victoria una ilusión durante todo ese tiempo? ¿Comprendieron nuestros enemigos que cuanto más duramente luchaban, más resistíamos nosotros? Quizá vieron que el fuego y el martillo tan solo producían mejores espadas. Pero ignoraron el acero durante el tiempo suficiente para oxidarse.</p><p>Hay cuatro personas a las que observamos. La primera es el médico, quien dejó de curar para convertirse en soldado durante la guerra más brutal de nuestro tiempo. La segunda es el asesino, un homicida que llora siempre que mata. La tercera es la mentirosa, una joven que viste un manto de erudita sobre un corazón de ladrona. Por último está el alto príncipe, un guerrero que mira al pasado mientras languidece su sed de guerra.</p><p>El mundo puede cambiar. La potenciación y el uso de las esquirlas pueden aparecer de nuevo, la magia de los días pasados puede volver a ser nuestra. Esas cuatro personas son la clave.</p><p>Una de ellas nos redimirá. Y una de ellas nos destruirá.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2010-08-30T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-11-20"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:7dbc53ff-97b1-4f66-ac4d-6c486a3e5d58"
+    },
+    {
+      "tag": "identifier",
+      "value": "7d3c5d7f-db82-47f5-8056-0fe0fc21d778"
+    },
+    {
+      "tag": "identifier",
+      "value": "5.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "3459"
+    }
+  ]
+}

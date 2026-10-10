@@ -1,0 +1,23 @@
+{
+  "relativePath": "Books/el-mundo-de-hielo-y-fuego.epub",
+  "title": "El mundo de hielo y fuego",
+  "year": "2014",
+  "description": "Esta crónica ilustrada recorre la historia, las leyendas y las culturas de Poniente y las tierras que lo rodean. Desde las edades antiguas hasta la caída de los Targaryen, ofrece el contexto del mundo en el que transcurre Canción de hielo y fuego.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Aquesta crònica il·lustrada recorre la història, les llegendes i les cultures de Ponent i les terres que l’envolten. Des de les edats antigues fins a la caiguda dels Targaryen, ofereix el context del món on transcorre Cançó de gel i foc.",
+      "title": "El mundo de hielo y fuego"
+    },
+    "en": {
+      "description": "This illustrated chronicle explores the history, legends and cultures of Westeros and the lands beyond it. From ancient ages to the fall of the Targaryens, it provides the background to the world of A Song of Ice and Fire.",
+      "subtitle": "the untold history of Westeros and the Game of Thrones",
+      "title": "The world of ice & fire"
+    },
+    "es": {
+      "description": "Esta crónica ilustrada recorre la historia, las leyendas y las culturas de Poniente y las tierras que lo rodean. Desde las edades antiguas hasta la caída de los Targaryen, ofrece el contexto del mundo en el que transcurre Canción de hielo y fuego.",
+      "subtitle": "la historia no contada de Poniente y El juego de tronos",
+      "title": "El mundo de hielo y fuego"
+    }
+  },
+  "author": "George R. R. Martin, Elio M. García Jr. y Linda Antonsson"
+}

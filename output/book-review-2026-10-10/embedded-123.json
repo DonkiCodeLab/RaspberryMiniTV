@@ -1,0 +1,42 @@
+{
+  "index": 123,
+  "path": "Books/guerra-y-paz.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Guerra y paz"
+    },
+    {
+      "tag": "creator",
+      "value": "Lev Nikoláievich Tolstói"
+    },
+    {
+      "tag": "description",
+      "value": "Mientras la aristocracia de Moscú y San Petersburgo mantiene una vida opulenta, pero ajena a todo aquello que acontece fuera de su reducido ámbito, las tropas napoléonicas, que con su triunfo en Austerlitz dominan Europa, se disponen a conquistar Rusia. «Guerra y paz» es un clásico de la literatura universal. Tolstói es, con Dostoievski, el autor más grande que ha dado la literatura rusa. «Guerra y paz» se ha traducido pocas veces al español y la edición que presentamos es la mejor traducida y mejor anotada. Reeditamos aquí en un formato más grande y legible la traducción de Lydia Kúper, la única traducción auténtica y fiable del ruso que existe en el mercado español. La traducción de Laín Entralgo se publicó hace más de treinta años y presenta deficiencias de traducción. La traducción de Mondadori se hizo en base a una edición de «Guerra y paz» publicada hace unos años para revender la novela, pero es una edición que no se hizo a partir del texto canónico, incluso tiene otro final. La edición de Mario Muchnik contiene unos anexos con un índice de todos los personajes que aparecen en la novela, y otro índice que desglosa el contenido de cada capítulo."
+    },
+    {
+      "tag": "date",
+      "value": "1868-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-03-23"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:430708ff-f90a-47e0-9dc4-46948cbcba85"
+    },
+    {
+      "tag": "identifier",
+      "value": "8b590c01-b9ed-4e5a-a8b3-07cdcbf9a4dd"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "1763"
+    }
+  ]
+}

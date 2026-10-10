@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-hobbit.epub",
+  "title": "El Hobbit",
+  "year": "1937",
+  "description": "La tranquila vida de Bilbo Bolsón cambia cuando Gandalf y trece enanos lo reclutan para recuperar un tesoro custodiado por el dragón Smaug. El viaje lo lleva por territorios peligrosos y le descubre un valor y una astucia que nunca creyó poseer.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Hobbit (T. D)",
+      "description": "La vida tranquil·la de Bilbo Saquet canvia quan Gandalf i tretze nans el recluten per recuperar un tresor custodiat pel drac Smaug. El viatge el porta per territoris perillosos i li descobreix un coratge i una astúcia que mai no havia imaginat."
+    },
+    "en": {
+      "title": "The Hobbit",
+      "description": "Bilbo Baggins's quiet life changes when Gandalf and thirteen dwarves recruit him to recover a treasure guarded by the dragon Smaug. Their journey takes him through dangerous lands and reveals courage and resourcefulness he never knew he possessed."
+    },
+    "es": {
+      "description": "La tranquila vida de Bilbo Bolsón cambia cuando Gandalf y trece enanos lo reclutan para recuperar un tesoro custodiado por el dragón Smaug. El viaje lo lleva por territorios peligrosos y le descubre un valor y una astucia que nunca creyó poseer.",
+      "title": "El Hobbit"
+    }
+  }
+}

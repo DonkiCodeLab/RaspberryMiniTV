@@ -1,0 +1,15 @@
+{
+  "relativePath": "Books/el-m-dico.epub",
+  "title": "El médico",
+  "year": "2007",
+  "description": "Esta fascinante novela describe la pasión de un hombre del siglo XI por vencer la enfermedad y la muerte, aliviar el dolor de sus semejantes e impartir el don casi místico de sanar que le ha sido otorgado. Esa pasión le llevará desde la brutalidad y la ignorancia de la Inglaterra de su época a la sensual turbulencia y el esplendor de la remota Persia, donde conocerá al legendario maestro Avicena, que está experimentando con las primeras armas de la medicina moderna",
+  "localizedMetadata": {
+    "ca": {},
+    "en": {
+      "title": "The Physician"
+    },
+    "es": {
+      "title": "El médico"
+    }
+  }
+}

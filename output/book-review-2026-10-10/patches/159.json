@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-mitad-del-alma.epub",
+  "title": "La mitad del alma",
+  "year": "2004",
+  "description": "Una escritora recibe documentos que ponen en duda lo que sabe sobre su madre y sus propios orígenes. La investigación de una desaparición en Portbou la lleva a interrogar los silencios familiares y las versiones del pasado, implicando al lector en la búsqueda.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Una escriptora rep documents que posen en dubte allò que sap de la mare i dels propis orígens. La investigació d’una desaparició a Portbou la porta a interrogar els silencis familiars i les versions del passat, implicant el lector en la recerca.",
+      "title": "La mitad del alma"
+    },
+    "en": {
+      "description": "A writer receives documents that challenge what she knows about her mother and her own origins. Investigating a disappearance in Portbou, she questions family silences and competing versions of the past, drawing the reader into her search.",
+      "title": "La mitad del alma"
+    },
+    "es": {
+      "title": "La mitad del alma",
+      "description": "Una escritora recibe documentos que ponen en duda lo que sabe sobre su madre y sus propios orígenes. La investigación de una desaparición en Portbou la lleva a interrogar los silencios familiares y las versiones del pasado, implicando al lector en la búsqueda."
+    }
+  }
+}

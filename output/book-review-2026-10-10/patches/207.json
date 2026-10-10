@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/ready-player-one.epub",
+  "title": "Ready player one",
+  "year": "2011",
+  "description": "En un futuro deteriorado, Wade Watts busca refugio en OASIS, un universo virtual que esconde el legado de su creador. Al resolver una primera pista, entra en una competición donde el conocimiento de la cultura popular se enfrenta al poder de una corporación dispuesta a controlar el juego.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Ready Player One",
+      "description": "En un futur deteriorat, Wade Watts busca refugi a OASIS, un univers virtual que amaga el llegat del creador. En resoldre una primera pista, entra en una competició on el coneixement de la cultura popular s’enfronta al poder d’una corporació que vol controlar el joc."
+    },
+    "en": {
+      "title": "Ready Player One",
+      "description": "In a troubled future, Wade Watts takes refuge in OASIS, a virtual universe hiding its creator's legacy. Solving the first clue draws him into a contest where knowledge of popular culture competes with a corporation determined to control the game."
+    },
+    "es": {
+      "description": "En un futuro deteriorado, Wade Watts busca refugio en OASIS, un universo virtual que esconde el legado de su creador. Al resolver una primera pista, entra en una competición donde el conocimiento de la cultura popular se enfrenta al poder de una corporación dispuesta a controlar el juego.",
+      "title": "Ready player one"
+    }
+  }
+}

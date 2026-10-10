@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-verdad-est-en-el-agua.epub",
+  "title": "La verdad está en el agua",
+  "year": "2023",
+  "description": "Un terremoto y un tsunami devastan Tohoku mientras el inspector Taro Takahashi persigue a un asesino de mujeres. Un nuevo hallazgo conecta la investigación con Aiko Grant, que busca a su marido desaparecido, entre la desolación y los secretos que el agua ha removido.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Un terremoto y un tsunami devastan Tohoku mientras el inspector Taro Takahashi persigue a un asesino de mujeres. Un nuevo hallazgo conecta la investigación con Aiko Grant, que busca a su marido desaparecido, entre la desolación y los secretos que el agua ha removido.",
+      "title": "La verdad está en el agua"
+    },
+    "ca": {
+      "description": "Un terratrèmol i un tsunami devasten Tohoku mentre l’inspector Taro Takahashi persegueix un assassí de dones. Una nova troballa connecta la investigació amb Aiko Grant, que busca el marit desaparegut, entre la desolació i els secrets que l’aigua ha remogut.",
+      "title": "La verdad está en el agua"
+    },
+    "en": {
+      "description": "An earthquake and tsunami devastate Tohoku as Inspector Taro Takahashi pursues a killer targeting women. A new discovery connects the investigation with Aiko Grant's search for her missing husband, amid the destruction and secrets uncovered by the water.",
+      "title": "La verdad está en el agua"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "index": 183,
+  "path": "Books/madame-bovary.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Madame Bovary"
+    },
+    {
+      "tag": "creator",
+      "value": "Gustave Flaubert"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a9592bc0-550f-11e2-bcfd-0800200c9a66"
+    },
+    {
+      "tag": "description",
+      "value": "Considerada unánimemente una de las mejores novelas de todos los tiempos, «Madame Bovary» narra la oscura tragedia de Emma Bovary, mujer infelizmente casada, cuyos sueños chocan cruelmente con la realidad. Al hechizo que ejerce la figura de la protagonista hay que añadir la sabia combinación argumental de rebeldía, violencia, melodrama y sexo, «los cuatro grandes ríos», como afirmó en su día Mario Vargas Llosa, que alimentan esta historia inigualable. La publicación de esta obra en 1857 fue recibida con gran polémica y se procesó a Flaubert por atentar contra la moral. A través del personaje de Madame Bovary, el autor rompe con todas las convenciones morales y literarias de la Burguesía del siglo XIX, tal vez porque nadie antes se había atrevido a presentar un prototipo de heroína de ficción rebelde y tan poco resignada al destino. Hoy existe el término «bovarismo» para aludir aquel cambio del prototipo de la mujer idealizada que difundió el romanticismo, negándole sus derechos a la pasión. Ella actúa de acuerdo a la pasión y necesidad que siente su corazón de avanzar en la búsqueda de su felicidad, pasando por los ideales establecidos para la mujer en esa época. Rompe con el denominado encasillamiento en que la mayoría de las mujeres estaban sometidas."
+    },
+    {
+      "tag": "date",
+      "value": "1856-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-07-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "10dc3904-5474-4768-8ea8-1f1949649407"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "1323"
+    }
+  ]
+}

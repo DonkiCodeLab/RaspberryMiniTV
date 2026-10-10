@@ -1,0 +1,42 @@
+{
+  "index": 61,
+  "path": "Books/el-asedio.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El asedio"
+    },
+    {
+      "tag": "creator",
+      "value": "Arturo Pérez-Reverte"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Cádiz, 1811</b>. España lucha por su independencia mientras América lo hace por la suya. En las calles de la ciudad más liberal de Europa se libran batallas de otra índole. Mujeres jóvenes aparecen desolladas a latigazos. En cada lugar, antes del hallazgo del cadáver, ha caído una bomba francesa. Eso traza sobre la ciudad un mapa superpuesto y siniestro: un complejo tablero de ajedrez donde la mano de un jugador oculto —un asesino despiadado, el azar, las curvas de artillería, la dirección de los vientos, el cálculo de probabilidades— mueve piezas que deciden el destino de los protagonistas: un policía corrupto y brutal, la heredera de una importante casa comercial gaditana, un capitán corsario de pocos escrúpulos, un taxidermista misántropo y espía, un enternecedor guerrillero de las salinas y un excéntrico artillero a quien las guerras importan menos que resolver el problema técnico del corto alcance de sus obuses.</p><p><cite>El asedio</cite> narra el pulso asombroso de un mundo que pudo ser y no fue. El fin de una época y unos personajes condenados por la Historia, sentenciados a una vida que, como la ciudad que los alberga —una Cádiz equívoca, enigmática, solo en apariencia luminosa y blanca—, nunca volverá a ser la misma.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2009-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-12-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:0d62f876-c435-4e02-b649-02eba44c7fa4"
+    },
+    {
+      "tag": "identifier",
+      "value": "15657e51-9da4-472e-9854-d37564635d15"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "2114"
+    }
+  ]
+}

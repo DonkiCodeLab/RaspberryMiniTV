@@ -1,0 +1,42 @@
+{
+  "index": 30,
+  "path": "Books/breves-respuestas-a-las-grandes-preguntas.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Breves respuestas a las grandes preguntas"
+    },
+    {
+      "tag": "creator",
+      "value": "Stephen Hawking"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:fd79e32d-0c31-41c7-adb6-88b30a049b1d"
+    },
+    {
+      "tag": "description",
+      "value": "Stephen Hawking fue reconocido como una de las mentes más brillantes de nuestro tiempo y una figura de inspiración después de desafiar su diagnóstico de ELA a la edad de veintiún años. Es conocido tanto por sus avances en física teórica como por su capacidad para hacer accesibles para todos conceptos complejos y destacó por su travieso sentido del humor. En el momento de su muerte, Hawking estaba trabajando en un proyecto final: un libro que compilaba sus respuestas a las «grandes» preguntas que a menudo se le planteaban: preguntas que iban más allá del campo académico. Dentro de estas páginas, ofrece su punto de vista personal sobre nuestros mayores desafíos como raza humana, y hacia dónde, como planeta, nos dirigimos después. Cada sección será presentada por un pensador líder que ofrecerá su propia visión de la contribución del profesor Hawking a nuestro entendimiento."
+    },
+    {
+      "tag": "date",
+      "value": "2018-11-14T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-12-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "4b4a81f5-0b6d-476f-9411-efc779d7c947"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "46807"
+    }
+  ]
+}

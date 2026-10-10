@@ -1,0 +1,42 @@
+{
+  "index": 50,
+  "path": "Books/danza-de-dragones-2.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Festín de dragones"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:101e5b62-b18d-4637-b934-1221962e131f"
+    },
+    {
+      "tag": "description",
+      "value": "Versión combinada de «Festín de cuervos» y «Danza de dragones», siguiendo el orden de lectura recomendado. Mientras los vientos del otoño desnudan los árboles, las últimas cosechas se pudren en los pocos campos que no han sido devastados por la guerra, y por los ríos teñidos de rojo bajan cadáveres de todos los blasones y estirpes. Y aunque casi todo Poniente yace extenuado, en diversos rincones florecen nuevas e inquietantes intrigas que ansían nutrirse de los despojos de un reino moribundo. Tras un largo e infructuoso peregrinaje por las Ciudades Libres para recabar recursos que le permitan reclamar el Trono de Hierro, Daenerys de la Tormenta decide asentarse en Meereen y gobernar la ciudad. Pero esa labor tampoco está exenta de peligros: sus enemigos proliferan, y en los Siete Reinos se tejen redes de conspiraciones de variada índole, todas atraídas por el inmenso poder de los dragones. Mientras tanto, en el Norte, asolado tras la guerra y abandonado a los salvajes que cruzaron el Muro, Jon Nieve se ve obligado a ejercer una delicada diplomacia para preservar la vigilia de la Guardia de la Noche frente a la amenaza que se aproxima implacable y ominosa hacia Poniente."
+    },
+    {
+      "tag": "date",
+      "value": "2011-07-11T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-02-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "9b0b1ace-f9d0-4f28-9d3d-449519bf6977"
+    },
+    {
+      "tag": "identifier",
+      "value": "3.7"
+    },
+    {
+      "tag": "identifier",
+      "value": "1688"
+    }
+  ]
+}

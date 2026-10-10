@@ -1,0 +1,42 @@
+{
+  "index": 46,
+  "path": "Books/crimen-y-castigo.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Crimen y castigo"
+    },
+    {
+      "tag": "creator",
+      "value": "Fiódor Dostoyevski"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Escrita en 1866, conserva todo su valor. Es una de las más grandes novelas de la literatura universal. Narra la experiencia del joven Rodion Raskolnicov luego de enfermar por el recuerdo de un crimen.</p><p>Los sucesivos conflictos que se plantea Raskolnicov hacen de esta novela una historia atrapante y revelan la capacidad de Dostoyevski para adentrarse en los entresijos de la mente humana.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1865-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-12-27"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a66f24cf-847b-4d13-9dcf-35c4d22647ee"
+    },
+    {
+      "tag": "identifier",
+      "value": "32cb3e07-2779-4b2e-8532-27905cb35a06"
+    },
+    {
+      "tag": "identifier",
+      "value": "3.6"
+    },
+    {
+      "tag": "identifier",
+      "value": "4646"
+    }
+  ]
+}

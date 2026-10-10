@@ -1,0 +1,42 @@
+{
+  "index": 122,
+  "path": "Books/frica-llora.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "África llora"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "description",
+      "value": "Alberto Vázquez-Figueroa vuelve al África en la que transcurrió gran parte de su vida, y sobre la que ha escrito algunos de sus mejores libros: Tuareg, Ébano y Marfil. Pero no ha vuelto por capricho, sino porque tuvo conocimiento de que un grupo de niños etíopes habían vivido una de las mayores odiseas de que se tiene memoria, y quería ser testigo y notario de tan fabulosa aventura. Por desgracia, cuando este relato estaba concluido, los atroces hechos de Ruanda vinieron a corroborar que, demasiado a menudo, la realidad supera a la fantasía más desbordante, y, hoy por hoy, África no sólo llora: también sufre, grita, se desangra y muy pronto morirá. África llora no es sólo un relato trepidante inspirado en un hecho real: es, sobre todo, un detallado estudio de las razones humanas, sociales y políticas por las que el más hermoso de los continentes agoniza."
+    },
+    {
+      "tag": "date",
+      "value": "1993-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-10-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d8cafd86-f88b-45b3-acb1-5c6f6458b0e9"
+    },
+    {
+      "tag": "identifier",
+      "value": "56a72d5e-3cf2-4efd-9943-a75892d8b47a"
+    },
+    {
+      "tag": "identifier",
+      "value": "13547"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    }
+  ]
+}

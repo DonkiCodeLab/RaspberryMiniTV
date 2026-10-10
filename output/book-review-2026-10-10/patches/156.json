@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-ladrona-de-libros.epub",
+  "title": "La ladrona de libros",
+  "year": "2005",
+  "description": "En la Alemania nazi, Liesel encuentra refugio en las palabras y en los libros que aprende a leer y a robar. Narrada por la Muerte, su historia reúne la vida de una familia de acogida, un joven judío escondido y la resistencia cotidiana frente a la violencia.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "A l’Alemanya nazi, la Liesel troba refugi en les paraules i en els llibres que aprèn a llegir i a robar. Narrada per la Mort, la història reuneix una família d’acollida, un jove jueu amagat i la resistència quotidiana davant la violència.",
+      "title": "La ladrona de libros"
+    },
+    "en": {
+      "description": "In Nazi Germany, Liesel finds refuge in words and in the books she learns to read and steal. Narrated by Death, her story brings together a foster family, a Jewish man in hiding and everyday acts of resistance to violence.",
+      "title": "The Book Thief"
+    },
+    "es": {
+      "title": "La ladrona de libros",
+      "description": "En la Alemania nazi, Liesel encuentra refugio en las palabras y en los libros que aprende a leer y a robar. Narrada por la Muerte, su historia reúne la vida de una familia de acogida, un joven judío escondido y la resistencia cotidiana frente a la violencia."
+    }
+  }
+}

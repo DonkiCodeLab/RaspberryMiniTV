@@ -1,4 +1,7 @@
 import { requestWithTimeout } from '../requestWithTimeout.js';
+import { aiRequestWithTimeout } from '../catalogAI.js';
+import { isImdbId, normalizeOmdbRating, omdbRequestWithTimeout, omdbSettingsPayload } from '../omdbRatings.js';
+import { normalizeOmdbLibrary } from '../omdbLibrary.js';
 import { GAME_SYSTEMS } from "../gameSystems";
 import { uploadBookBatch } from "./bookUploadBatch.js";
 import { DEFAULT_USER, EMPTY_STATE, mergeProfileState } from "../profileState.js";
@@ -1690,6 +1693,110 @@ export function getTmdbCacheStatus(start = false) {
   return requestWithTimeout(signal => request("/tmdb/cache", { ...(start ? { method: "POST" } : {}), signal }));
 }
 
+export function getTmdbCreditsStatus(start = false) {
+  if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para completar las fichas."));
+  if (start) clearLocalMetadataCache();
+  return requestWithTimeout(signal => request("/tmdb/credits", {
+    ...(start ? { method: "POST" } : {}), signal, cache: "no-store",
+  }));
+}
+
+function requestAI(path, options, signal, timeoutMs = 50000) {
+  if (isMockModeEnabled()) return Promise.reject(Object.assign(new Error("Connect to Raspberry to use AI"), { code: "AI_DEMO" }));
+  return aiRequestWithTimeout(activeSignal => request(path, { ...options, signal: activeSignal, cache: "no-store" }), signal, timeoutMs);
+}
+
+export function getAISettings(signal) { return requestAI("/settings/ai", {}, signal); }
+export function saveAISettings(settings, signal) {
+  return requestAI("/settings/ai", { method: "POST", body: JSON.stringify(settings) }, signal);
+}
+export function testAISettings(signal) { return requestAI("/settings/ai/test", { method: "POST" }, signal); }
+
+function requestOmdb(path, options, signal) {
+  if (isMockModeEnabled()) return Promise.reject(Object.assign(new Error("Connect to Raspberry to use OMDb"), { code: "OMDB_DEMO" }));
+  return omdbRequestWithTimeout(activeSignal => request(path, { ...options, signal: activeSignal, cache: "no-store" }), signal)
+    .catch(error => {
+      if (error instanceof TypeError && !error.code) error.code = "OMDB_CONNECTION_ERROR";
+      throw error;
+    });
+}
+
+function validateOmdbSettings(data) {
+  if (data?.ok !== true || typeof data.settings?.configured !== "boolean") {
+    throw Object.assign(new Error("Invalid OMDb settings response"), { code: "OMDB_INVALID_RESPONSE" });
+  }
+  return { ok: true, settings: { configured: data.settings.configured } };
+}
+
+export function getOmdbSettings(signal) {
+  return requestOmdb("/settings/omdb", {}, signal).then(validateOmdbSettings);
+}
+
+export function saveOmdbSettings(changes = {}, signal) {
+  return requestOmdb("/settings/omdb", {
+    method: "POST", body: JSON.stringify(omdbSettingsPayload(changes.apiKey, changes.clearApiKey === true)),
+  }, signal).then(validateOmdbSettings);
+}
+
+export function testOmdbSettings(signal) {
+  return requestOmdb("/settings/omdb/test", { method: "POST" }, signal).then(data => {
+    if (data?.ok !== true) throw Object.assign(new Error("Invalid OMDb test response"), { code: "OMDB_INVALID_RESPONSE" });
+    return { ok: true };
+  });
+}
+
+export async function getOmdbRating({ imdbId, kind, tmdbId } = {}, signal) {
+  const safeImdbId = typeof imdbId === "string" ? imdbId.trim() : "";
+  const params = new URLSearchParams();
+  if (safeImdbId) {
+    if (!isImdbId(safeImdbId)) throw Object.assign(new Error("Invalid IMDb ID"), { code: "OMDB_INVALID_ID" });
+    params.set("imdbId", safeImdbId);
+  } else {
+    const id = typeof tmdbId === "string" && /^\d+$/.test(tmdbId) ? Number(tmdbId) : tmdbId;
+    if (!["movie", "tv"].includes(kind) || typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) {
+      throw Object.assign(new Error("Missing or invalid media ID"), { code: "OMDB_ID_MISSING" });
+    }
+    params.set("kind", kind);
+    params.set("tmdbId", String(id));
+  }
+  return normalizeOmdbRating(await requestOmdb(`/omdb/ratings?${params}`, {}, signal));
+}
+
+function requestOmdbLibrary(options, signal) {
+  return requestOmdb("/omdb/library", options, signal).then(normalizeOmdbLibrary).catch(error => {
+    if (error.status === 404) error.code = "OMDB_LIBRARY_UNAVAILABLE";
+    throw error;
+  });
+}
+
+export function getOmdbLibrary(signal) {
+  return requestOmdbLibrary({}, signal);
+}
+
+export async function updateOmdbLibrary(action, signal) {
+  if (!["start", "pause"].includes(action)) {
+    throw Object.assign(new Error("Invalid OMDb library action"), { code: "OMDB_INVALID_ACTION" });
+  }
+  return requestOmdbLibrary({ method: "POST", body: JSON.stringify({ action }) }, signal);
+}
+
+export function searchCatalogAI(query, signal) {
+  return requestAI("/ai/search", { method: "POST", body: JSON.stringify(query) }, signal);
+}
+
+export function getAIRecommendations(userId, section, signal) {
+  return requestAI(`/ai/recommendations?${new URLSearchParams({ userId, section })}`, {}, signal, 120000);
+}
+export function requestAIRecommendations(query, signal) {
+  return requestAI("/ai/recommendations", { method: "POST", body: JSON.stringify(query) }, signal, 120000);
+}
+export function saveAIRecommendationTastes(query, signal) {
+  return requestAI("/ai/recommendations", { method: "PATCH", body: JSON.stringify(query) }, signal, 120000);
+}
+export function deleteAIRecommendations(query, signal) {
+  return requestAI("/ai/recommendations", { method: "DELETE", body: JSON.stringify(query) }, signal, 120000);
+}
+
 export function getOscarCatalog(language) {
   return requestWithTimeout(signal => request(`/oscars?${new URLSearchParams({ language })}`, { signal }));
 }
@@ -1752,7 +1859,7 @@ function saveMockUsers(data) { window.localStorage.setItem(MOCK_USERS_KEY, JSON.
 
 export async function getUsers() {
   if (isMockModeEnabled()) return { users: mockUsers().users };
-  return request("/users");
+  return requestWithTimeout(signal => request("/users", { signal }));
 }
 export async function createUser(data) {
   if (!isMockModeEnabled()) return request("/users", { method: "POST", body: JSON.stringify(data) });
@@ -1776,13 +1883,18 @@ export async function deleteUser(id) {
   return { ok: true };
 }
 export async function getUserState(id) {
-  if (!isMockModeEnabled()) return request(`/users/${encodeURIComponent(id)}/state`);
+  if (!isMockModeEnabled()) return requestWithTimeout(signal => request(`/users/${encodeURIComponent(id)}/state`, { signal }));
   const store = mockUsers();
   if (!store.users.some(user => user.id === id)) throw Object.assign(new Error("El usuario ya no existe."), { status: 404 });
   return store.states[id] || { ...EMPTY_STATE };
 }
 export async function patchUserState(id, patch) {
-  if (!isMockModeEnabled()) return request(`/users/${encodeURIComponent(id)}/state`, { method: "PATCH", body: JSON.stringify(patch), keepalive: true });
+  if (!isMockModeEnabled()) {
+    const body = JSON.stringify(patch);
+    return requestWithTimeout(signal => request(`/users/${encodeURIComponent(id)}/state`, {
+      method: "PATCH", body, signal, keepalive: new TextEncoder().encode(body).byteLength < 60000,
+    }));
+  }
   const store = mockUsers();
   if (!store.users.some(user => user.id === id)) throw Object.assign(new Error("El usuario ya no existe."), { status: 404 });
   store.states[id] = mergeProfileState(store.states[id], patch); saveMockUsers(store);

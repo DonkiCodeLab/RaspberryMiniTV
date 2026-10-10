@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/anaconda.epub",
+  "title": "Anaconda",
+  "year": "1975",
+  "description": "Vázquez-Figueroa reconstruye su infancia, su juventud y su formación como periodista. Las experiencias africanas, los viajes y el trabajo de reportero componen un relato autobiográfico sobre las vivencias que alimentaron su posterior literatura de aventuras.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Vázquez-Figueroa reconstrueix la seva infantesa, la joventut i la formació com a periodista. Les experiències africanes, els viatges i la feina de reporter componen un relat autobiogràfic sobre les vivències que van alimentar la seva literatura d’aventures.",
+      "title": "Anaconda"
+    },
+    "en": {
+      "description": "Vázquez-Figueroa recounts his childhood, youth and training as a journalist. Experiences in Africa, extensive travel and work as a reporter form an autobiographical account of the encounters that would later shape his adventure writing.",
+      "title": "Anaconda"
+    },
+    "es": {
+      "description": "Vázquez-Figueroa reconstruye su infancia, su juventud y su formación como periodista. Las experiencias africanas, los viajes y el trabajo de reportero componen un relato autobiográfico sobre las vivencias que alimentaron su posterior literatura de aventuras.",
+      "title": "Anaconda"
+    }
+  }
+}

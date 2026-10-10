@@ -1,0 +1,42 @@
+{
+  "index": 38,
+  "path": "Books/choque-de-reyes.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Choque de reyes (ed. ilustrada)"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:2fc09769-c2d7-4dfb-b858-20c1a6440a72"
+    },
+    {
+      "tag": "description",
+      "value": "<p>«Llegará un día en el que te sientas segura y feliz, y de repente tu alegría se te convertirá en cenizas en la boca, y ese día sabrás que la deuda ha quedado saldada».</p><p>En el cielo sobre los Siete Reinos, que se hallan asolados por una guerra devastadora, aparece un siniestro cometa color sangre. ¿Acaso se trata de otro augurio terrible sobre las catástrofes que están por llegar?</p><p>El verano ha terminado, y cuatro líderes se disputan el Trono de Hierro.</p><p>Mientras tanto, al otro lado del mar, la orgullosa princesa exiliada Daenerys Targaryen está dispuesta a arriesgarlo todo con tal de recuperar la corona que le pertenece por derecho. Puede que, para ella, el cometa de sangre no sea un mal presagio, sino el heraldo de la venganza.</p><p>Y mientras la batalla continúa, al norte, más allá del Muro, las fuerzas oscuras se vuelven cada vez más poderosas.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1998-11-05T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-02-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "3ff164fd-a041-4d77-857a-83c6a9eefef6"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "71860"
+    }
+  ]
+}

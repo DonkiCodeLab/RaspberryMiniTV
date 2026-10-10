@@ -1,0 +1,42 @@
+{
+  "index": 19,
+  "path": "Books/aprender-a-hablar-con-las-plantas.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Aprender a hablar con las plantas"
+    },
+    {
+      "tag": "creator",
+      "value": "Marta Orriols"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:65b0e200-1e0e-4397-8cf2-6228b7761c6f"
+    },
+    {
+      "tag": "description",
+      "value": "Paula Cid es una neonatóloga de cuarenta y dos años con una vida ordenada. Apasionada por su trabajo e inmersa en la rutina de una relación sentimental que se resquebraja, pierde a su pareja en un accidente de tráfico pocas horas después de que él la invite a almorzar para comunicarle que, tras quince años de matrimonio, hay otra mujer en su vida y ha decidido marcharse de casa. Junto al desgarro de una muerte a destiempo, Paula deberá hacer frente a la desdicha de sentirse abandonada y sobrellevar no solo el duelo, sino también el rencor. Una figura femenina que aparece en el hospital la tarde del fallecimiento de Mauro es la única que puede dar fe de que este hombre tenía ya otra vida… y tarde o temprano las dos mujeres tendrán que encontrarse."
+    },
+    {
+      "tag": "date",
+      "value": "2018-09-30T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-11-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "25fc276d-294a-43a1-a05f-4afd7728788a"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "52137"
+    }
+  ]
+}

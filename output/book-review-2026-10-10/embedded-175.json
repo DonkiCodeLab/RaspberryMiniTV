@@ -1,0 +1,34 @@
+{
+  "index": 175,
+  "path": "Books/las-voces-del-pamano.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Las voces del Pamano"
+    },
+    {
+      "tag": "creator",
+      "value": "Jaume Cabré"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:b3ad3f1a-3531-a471-9545-8a8c79c694ab"
+    },
+    {
+      "tag": "description",
+      "value": "Las voces del Pamano es una novela sobre las luces y las sombras de la guerra, de los vencedores y los vencidos, y los héroes y los villanos; sobre la fuerza de la vivencia y la fragilidad del recuerdo histórico. Es una novela coral acerca de las complejas historias que se ocultan tras la gran historia en mayúscula de la Guerra Civil, cuyo eco perdura a lo largo de toda la posguerra y la transición hasta nuestros días.Tina, una pacífica maestra, fotografía al azar una escuela de un pequeño pueblo de un valle del Pallars que está a punto de ser demolida. Tras la pizarra, se encuentra una cajita que contiene una larga carta escrita en un cuaderno escolar que jamás llegó a su destinatario. Poco a poco, Tina se irá adentrando en la memoria de esos valles e irá desvelando las piezas de una historia de maquis, falangistas y héroes anónimos envuelta en la bruma del olvido y la tergiversación, que se mezcla con los vuelcos de su propia vida."
+    },
+    {
+      "tag": "date",
+      "value": "2003-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2014-11-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "e319adea-73fa-46cc-a547-8d625f2a393f"
+    }
+  ]
+}

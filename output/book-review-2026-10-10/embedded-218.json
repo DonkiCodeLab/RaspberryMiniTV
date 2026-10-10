@@ -1,0 +1,42 @@
+{
+  "index": 218,
+  "path": "Books/the-purple-network.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La red púrpura"
+    },
+    {
+      "tag": "creator",
+      "value": "Carmen Mola"
+    },
+    {
+      "tag": "description",
+      "value": "Un día tórrido de verano la inspectora Elena Blanco, al frente de la Brigada de Análisis de Casos, irrumpe en la vivienda de una familia de clase media y llega hasta la habitación del hijo adolescente. En la pantalla de su ordenador se confirma lo que temían: el chico está viendo una sesión «snuff» en directo en la que dos encapuchados torturan a una chica. Impotentes, presencian cómo el sádico espectáculo continúa hasta la muerte de la víctima de la que, de momento, no conocen el nombre. ¿Cuántas antes que ella habrán caído en manos de la Red Púrpura? La BAC ha estado investigando a esta siniestra organización desde que salió a relucir en el caso de «la novia gitana». Durante meses ha recopilado información de este grupo que trafica con vídeos de violencia extrema en la Deep Web, la cara oculta de la Red. Y a lo largo de todo este tiempo, Elena Blanco ha mantenido en secreto, incluso para su compañero el subinspector Zárate, su mayor descubrimiento y temor: que la desaparición de su hijo Lucas cuando no era más que un niño pueda estar relacionada con esa trama macabra. ¿Dónde está? ¿Quién es realmente ahora? ¿Y cuáles son los límites que está dispuesta a transgredir para llegar a la verdad?"
+    },
+    {
+      "tag": "date",
+      "value": "2019-04-03T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-08-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:1541ff12-4ac3-4c3d-8f73-a3db634fa8a2"
+    },
+    {
+      "tag": "identifier",
+      "value": "c1f317a0-270c-4305-a1db-d0bd3acabc75"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    },
+    {
+      "tag": "identifier",
+      "value": "47006"
+    }
+  ]
+}

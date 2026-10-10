@@ -1,0 +1,34 @@
+{
+  "index": 210,
+  "path": "Books/se-sabr-todo.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Se sabrá todo"
+    },
+    {
+      "tag": "creator",
+      "value": "Xavier Bosch"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:095c7dcf-7db0-8953-c18a-0fff07516dab"
+    },
+    {
+      "tag": "description",
+      "value": "«El cargo me ha durado unos zapatos», confiesa Dani Santana. ¿Qué circunstancias obligaron al director del Crónica a dejar el puesto precipitadamente? ¿Qué se esconde tras las seductoras bambalinas del mundo del periodismo? Cuando el jefe de Sociedad del Crónica, se implica a fondo en una investigación sobre el terrorismo islamista, los hechos se precipitan y los dos periodistas empiezan a perder el control de su destino."
+    },
+    {
+      "tag": "date",
+      "value": "2017-07-26"
+    },
+    {
+      "tag": "date",
+      "value": "2008-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "identifier",
+      "value": "2153bc46-7de5-49fc-8555-e284c68c258b"
+    }
+  ]
+}

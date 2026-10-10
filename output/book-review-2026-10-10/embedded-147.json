@@ -1,0 +1,42 @@
+{
+  "index": 147,
+  "path": "Books/la-bestia.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La Bestia"
+    },
+    {
+      "tag": "creator",
+      "value": "Carmen Mola"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:b5ebefb6-5a3b-4f4c-8b93-50a0f63b5eb3"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Corre el año 1834 y Madrid, una pequeña ciudad que trata de abrirse paso más allá de las murallas que la rodean, sufre una terrible epidemia de cólera. Pero la peste no es lo único que aterroriza a sus habitantes: en los arrabales aparecen cadáveres desmembrados de niñas que nadie reclama. Todos los rumores apuntan a la Bestia, un ser a quien nadie ha visto pero al que todos temen. Cuando la pequeña Clara desaparece, su hermana Lucía, junto con Donoso, un policía tuerto, y Diego, un periodista buscavidas, inician una frenética cuenta atrás para encontrar a la niña con vida. En su camino tropiezan con fray Braulio, un monje guerrillero, y con un misterioso anillo de oro con dos mazas cruzadas que todo el mundo codicia y por el que algunos están dispuestos a matar.</p><p>De manera magistral, Carmen Mola teje, con los hilos del mejor <i>thriller</i>, esta novela impactante, frenética e implacable, de infierno y oscuridad.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2021-11-03T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-12-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "a133af43-85db-4b90-a901-8abb8a0d4a2b"
+    },
+    {
+      "tag": "identifier",
+      "value": "63505"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

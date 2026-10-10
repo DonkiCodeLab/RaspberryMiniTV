@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/euforia.epub",
+  "title": "Euforia",
+  "year": "2014",
+  "description": "En Nueva Guinea, tres antropólogos establecen una relación en la que se mezclan la investigación, la rivalidad y el deseo. Inspirada libremente en un episodio de la vida de Margaret Mead, la novela cuestiona la mirada de quienes estudian otras culturas y sus propias certezas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "A Nova Guinea, tres antropòlegs estableixen una relació on es barregen la investigació, la rivalitat i el desig. Inspirada lliurement en un episodi de la vida de Margaret Mead, la novel·la qüestiona la mirada de qui estudia altres cultures i les seves pròpies certeses.",
+      "title": "Euforia"
+    },
+    "en": {
+      "title": "Euphoria",
+      "description": "In New Guinea, three anthropologists become entangled in a relationship shaped by research, rivalry and desire. Loosely inspired by an episode in Margaret Mead's life, the novel questions how observers interpret other cultures and the certainty of their own assumptions."
+    },
+    "es": {
+      "description": "En Nueva Guinea, tres antropólogos establecen una relación en la que se mezclan la investigación, la rivalidad y el deseo. Inspirada libremente en un episodio de la vida de Margaret Mead, la novela cuestiona la mirada de quienes estudian otras culturas y sus propias certezas.",
+      "title": "Euforia"
+    }
+  }
+}

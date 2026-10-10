@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/a-la-deriva.epub",
+  "title": "A la deriva",
+  "year": "2005",
+  "description": "Una pareja de científicos anuncia un descubrimiento sobre el origen de la vida y poco después aparece asesinada en Lanzarote. Los seis expertos convocados para examinar sus hallazgos quedan bajo sospecha y deben convivir mientras se intenta identificar al culpable.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Una pareja de científicos anuncia un descubrimiento sobre el origen de la vida y poco después aparece asesinada en Lanzarote. Los seis expertos convocados para examinar sus hallazgos quedan bajo sospecha y deben convivir mientras se intenta identificar al culpable.",
+      "subjects": "Literary, Fiction, Spanish: Adult Fiction",
+      "title": "A la deriva"
+    },
+    "ca": {
+      "description": "Una parella de científics anuncia un descobriment sobre l’origen de la vida i poc després apareix assassinada a Lanzarote. Els sis experts convocats per examinar les seves troballes queden sota sospita i han de conviure mentre s’intenta identificar el culpable.",
+      "title": "A la deriva"
+    },
+    "en": {
+      "description": "Two scientists announce a discovery concerning the origins of life, then are murdered on Lanzarote. The six experts invited to assess their findings become suspects and must remain together while the killer's identity is investigated.",
+      "title": "A la deriva"
+    }
+  }
+}

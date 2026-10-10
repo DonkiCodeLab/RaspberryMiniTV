@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/espejo-roto.epub",
+  "title": "Espejo roto",
+  "year": "1974",
+  "description": "Tres generaciones de una familia acomodada de Barcelona construyen y ven desmoronarse su mundo alrededor de una casa y su jardín. A través de recuerdos, secretos y distintas voces, Mercè Rodoreda explora el deseo, las diferencias sociales y la destrucción que impone el tiempo.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Mirall trencat",
+      "description": "Tres generacions d’una família benestant de Barcelona construeixen i veuen esfondrar-se el seu món al voltant d’una casa i el jardí. A través de records, secrets i veus diverses, Mercè Rodoreda explora el desig, les diferències socials i la destrucció que imposa el temps."
+    },
+    "en": {
+      "title": "A broken mirror",
+      "description": "Three generations of a prosperous Barcelona family build their lives around a house and garden, then watch their world unravel. Through memories, secrets and shifting perspectives, Mercè Rodoreda explores desire, social divisions and the losses imposed by time."
+    },
+    "es": {
+      "description": "Tres generaciones de una familia acomodada de Barcelona construyen y ven desmoronarse su mundo alrededor de una casa y su jardín. A través de recuerdos, secretos y distintas voces, Mercè Rodoreda explora el deseo, las diferencias sociales y la destrucción que impone el tiempo.",
+      "title": "Espejo roto"
+    }
+  }
+}

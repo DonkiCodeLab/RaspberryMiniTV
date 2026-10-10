@@ -1,0 +1,42 @@
+{
+  "index": 64,
+  "path": "Books/el-caballero-de-los-siete-reinos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El caballero de los Siete Reinos"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d78bc306-f94f-43bc-924a-de04be151d1f"
+    },
+    {
+      "tag": "description",
+      "value": "Doscientos años después de la Conquista, la dinastía Targaryen vive su apogeo. Los Siete Reinos de Poniente atraviesan un momento de relativa paz en los últimos años del gobierno del rey Daeron. Es en este escenario que Dunk, un muchacho pobre del Lecho de Pulgas, tiene la oportunidad única de dejar su vida miserable y convertirse en el escudero de un auténtico caballero. Pronto, el caballero muere y Dunk decide tomar su lugar y hacer historia en el torneo de Vado Ceniza. Ahí conoce a Egg, un niño de 10 años, tímido y enjuto, quien es mucho más de lo que aparenta. Dunk lo acepta como su escudero y mientras viajan juntos por Poniente en busca de trabajo y aventuras, una amistad duradera nace entre ellos. Años más tarde, ambos tendrán un papel fundamental en la estructura de poder de los Siete Reinos."
+    },
+    {
+      "tag": "date",
+      "value": "1997-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-12-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "988d4e55-e12d-4cbc-b1aa-4c9ca43fcbbe"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "22469"
+    }
+  ]
+}

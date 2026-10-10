@@ -1,0 +1,42 @@
+{
+  "index": 139,
+  "path": "Books/inferno.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Inferno"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:17bbca15-9a35-4b6a-a432-a0abf1a86205"
+    },
+    {
+      "tag": "description",
+      "value": "En el corazón de Italia, el catedrático de Simbología de Harvard Robert Langdon se ve arrastrado a un mundo terrorífico centrado en una de las obras maestras de la Literatura más imperecederas y misteriosas de la Historia: el «Infierno» de Dante. Con este telón de fondo, Langdon se enfrenta a un adversario escalofriante y lidia con un acertijo ingenioso en un escenario de arte clásico, pasadizos secretos y ciencia futurista. Apoyándose en el oscuro poema épico de Dante, Langdon, en una carrera contrarreloj, busca respuestas y personas de confianza antes de que el mundo cambie irrevocablemente."
+    },
+    {
+      "tag": "date",
+      "value": "2013-05-14T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-10-07"
+    },
+    {
+      "tag": "identifier",
+      "value": "3452285b-ebe2-4c11-a1c0-a9a59a20c558"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.3"
+    },
+    {
+      "tag": "identifier",
+      "value": "2814"
+    }
+  ]
+}

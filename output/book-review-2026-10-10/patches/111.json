@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-tiempo-entre-costuras.epub",
+  "title": "El tiempo entre costuras",
+  "year": "2009",
+  "description": "La modista Sira Quiroga abandona Madrid por amor y debe reconstruir su vida en el Protectorado español de Marruecos. Su taller de alta costura la acerca a personajes influyentes y termina conectándola con las redes de espionaje de una Europa al borde de la guerra.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La modista Sira Quiroga abandona Madrid per amor i ha de refer la vida al Protectorat espanyol del Marroc. El taller d’alta costura l’acosta a personatges influents i acaba connectant-la amb les xarxes d’espionatge d’una Europa a punt d’entrar en guerra.",
+      "title": "El tiempo entre costuras"
+    },
+    "en": {
+      "description": "Seamstress Sira Quiroga leaves Madrid for love and must rebuild her life in Spanish Morocco. Her couture workshop brings her into contact with influential people and eventually with espionage networks operating as Europe approaches war.",
+      "title": "El tiempo entre costuras"
+    },
+    "es": {
+      "description": "La modista Sira Quiroga abandona Madrid por amor y debe reconstruir su vida en el Protectorado español de Marruecos. Su taller de alta costura la acerca a personajes influyentes y termina conectándola con las redes de espionaje de una Europa al borde de la guerra.",
+      "title": "El tiempo entre costuras"
+    }
+  }
+}

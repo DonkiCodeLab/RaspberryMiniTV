@@ -63,7 +63,7 @@ cd "${SCRIPT_DIR}"
 # Exclude runtime credentials even when upgrading a checkout whose .gitignore
 # predates these files. They belong to the device and must never enter a stash.
 UPDATE_EXCLUDE="$(git rev-parse --git-path info/exclude)"
-for settings_file in DeviceApp/user_settings.json DeviceApp/subtitle_settings.json DeviceApp/game_settings.json; do
+for settings_file in DeviceApp/user_settings.json DeviceApp/subtitle_settings.json DeviceApp/game_settings.json DeviceApp/ai_settings.json DeviceApp/omdb_settings.json; do
   if ! git check-ignore -q -- "${settings_file}"; then
     printf '\n/%s\n' "${settings_file}" | repo_command tee -a "${UPDATE_EXCLUDE}" >/dev/null
   fi

@@ -1,0 +1,42 @@
+{
+  "index": 86,
+  "path": "Books/el-m-dico.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El médico"
+    },
+    {
+      "tag": "creator",
+      "value": "Noah Gordon"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Esta arrebatadora novela describe la pasión de un hombre del siglo&nbsp;<small>XI</small> por vencer la enfermedad y la muerte, aliviar el dolor ajeno e impartir el don casi místico de sanar que le ha sido otorgado. Arrastrado por esa pasión, recorrerá un largo camino que le conducirá, desde una Inglaterra en que domina la brutalidad y la ignorancia, a la sensual turbulencia y el esplendor de la remota Persia, donde conocerá al legendario maestro Avicena, que está experimentado con las primeras armas de la medicina moderna.</p><p>Diez siglos han transcurrido desde aquel entonces, pero el talento narrativo de Noah Gordon, autor de <cite>El último judío</cite>, <cite>El rabino</cite> y otras muchas novelas inolvidables, hace de este viaje iniciático una experiencia única que convierte la historia en vida real.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1985-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-02-09"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:5b8cf352-8515-4de1-87a3-e2bae56684b7"
+    },
+    {
+      "tag": "identifier",
+      "value": "ff339771-1bd9-449d-90e7-635748266c6b"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.8"
+    },
+    {
+      "tag": "identifier",
+      "value": "2621"
+    }
+  ]
+}

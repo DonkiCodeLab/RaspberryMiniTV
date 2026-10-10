@@ -1,0 +1,34 @@
+{
+  "index": 87,
+  "path": "Books/el-marciano.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El marciano"
+    },
+    {
+      "tag": "creator",
+      "value": "Andy Weir"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:07f7faba-0481-4294-a384-0af53bf070ff"
+    },
+    {
+      "tag": "description",
+      "value": "Seis días atrás el astronauta Mark Watney se convirtió en uno de los primeros hombres en caminar por la superficie de Marte. Ahora está seguro de que será el primer hombre en morir allí. La tripulación de la nave en que viajaba se ve obligada a evacuar el planeta a causa de una tormenta de polvo, dejando atrás a Mark tras darlo por muerto. Pero él está vivo, y atrapado a millones de kilómetros de cualquier ser humano, sin posibilidad de enviar señales a la Tierra. De todos modos, si lograra establecer conexión, moriría mucho antes de que el rescate llegara.Sin embargo, Mark no se da por vencido; armado con su ingenio, sus habilidades y sus conocimientos sobre botánica, se enfrentará a obstáculos aparentemente insuperables.Por suerte, el sentido del humor resultará ser su mayor fuente de fuerza. Obstinado en seguir con vida, incubará un plan absolutamente demencial para ponerse en contacto con la NASA.Con un final sorprendente, El marciano es una novela brillantemente construida, un delirio ingenioso, con una mecánica del suspense que sorprenderá al lector una y otra vez y le hará perderse en el cosmos de la naturaleza humana y la lucha por la supervivencia.Una experiencia literaria excepcional en gravedad cero."
+    },
+    {
+      "tag": "date",
+      "value": "2011-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2017-02-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "e70aef46-1bb5-431a-ad37-8cda172c922f"
+    }
+  ]
+}

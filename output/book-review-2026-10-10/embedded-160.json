@@ -1,0 +1,42 @@
+{
+  "index": 160,
+  "path": "Books/la-mujer-de-arriba.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La mujer de arriba"
+    },
+    {
+      "tag": "creator",
+      "value": "Freida McFadden"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d928773d-4834-4d71-a29c-2f5d4496a1a8"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>De la autora superventas de <i>La asistenta</i>, llega un nuevo y adictivo <i>thriller</i> lleno de giros imprevistos y ecos de <i>Rebeca</i></b>.</p><p>Victoria Barnett lo tiene todo. Una brillante carrera como enfermera. Un marido guapo y cariñoso. Un bonito hogar en las afueras y el sueño de llenarlo de niños.</p><p>La vida es perfecta… o eso parece.</p><p>Hasta el día en que se ve envuelta en un terrible accidente y todo se desmorona.</p><p>Ahora Victoria ya no puede caminar, alimentarse o vestirse por su cuenta. Ni siquiera puede hablar. Está atrapada en el piso más alto de su casa y necesita cuidados las veinticuatro horas del día.</p><p>Su marido contrata a Sylvia Robinson para ayudarle. Pero parece que Victoria no tiene tantas limitaciones como le han contado. Y está desesperada por contar una historia… si tan solo pudiera articular las palabras.</p><p>Entonces, Sylvia encuentra el diario de Victoria escondido en un cajón.</p><p><b>Y lo que contiene es aterrador</b>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2020-03-22T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-11-28"
+    },
+    {
+      "tag": "identifier",
+      "value": "2696b3f4-81f1-4efd-a90e-c47a7d06f908"
+    },
+    {
+      "tag": "identifier",
+      "value": "76985"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

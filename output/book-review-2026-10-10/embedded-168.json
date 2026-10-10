@@ -1,0 +1,42 @@
+{
+  "index": 168,
+  "path": "Books/la-sangre-del-az-car.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La sangre del azúcar"
+    },
+    {
+      "tag": "creator",
+      "value": "Rosa Moreno Matellanes"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:ff52d614-6739-4766-9758-84c4743a982e"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Hawái, 1909. Un cadáver aparece en una plantación de azúcar. Un jornalero coreano ha desaparecido y su hermana, Haneul, se teme lo peor. Los plantadores han querido «blanquear» las islas llenas de emigrantes japoneses, coreanos y chinos, y la lucha entre clanes no se ha hecho esperar.</p><p>El detective Patrick Sinclair y el sargento Simon Palmer se encargarán de la investigación. Los agentes, junto al inspector Wollmer, tendrán que enfrentarse a un cuerpo de policía corrupto y en manos de las cinco grandes empresas azucareras de Hawái para conocer la verdad.</p><p>El escenario idílico de la plantación de Waipahu encierra un misterio que se irá desgranando entre la brutalidad de los capataces, las mentiras de los trabajadores, la lucha de etnias y las relaciones encubiertas. En medio de una red de engaños, el detective Sinclair, que oculta su propio secreto, tendrá que buscar la verdad y enfrentarse a sus demonios para poder solventar el caso.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2022-07-15T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-11-17"
+    },
+    {
+      "tag": "identifier",
+      "value": "6b94c246-67c6-46b0-989e-1ea8db273552"
+    },
+    {
+      "tag": "identifier",
+      "value": "73245"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

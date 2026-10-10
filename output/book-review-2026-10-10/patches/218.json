@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/the-purple-network.epub",
+  "title": "La red púrpura",
+  "year": "2019",
+  "description": "Elena Blanco y la BAC investigan una organización que distribuye imágenes de violencia real por internet. La búsqueda de las víctimas y de sus responsables adquiere una dimensión personal para Elena cuando aparecen indicios relacionados con la desaparición de su hijo.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Elena Blanco i la BAC investiguen una organització que distribueix imatges de violència real per internet. La recerca de les víctimes i dels responsables adquireix una dimensió personal per a Elena quan apareixen indicis relacionats amb la desaparició del fill.",
+      "title": "La red púrpura"
+    },
+    "en": {
+      "description": "Elena Blanco and the BAC investigate an organisation distributing footage of real violence online. The search for victims and perpetrators becomes deeply personal for Elena when evidence emerges connected to her son's disappearance.",
+      "title": "La red púrpura"
+    },
+    "es": {
+      "description": "Elena Blanco y la BAC investigan una organización que distribuye imágenes de violencia real por internet. La búsqueda de las víctimas y de sus responsables adquiere una dimensión personal para Elena cuando aparecen indicios relacionados con la desaparición de su hijo.",
+      "title": "La red púrpura"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "index": 156,
+  "path": "Books/la-ladrona-de-libros.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La ladrona de libros"
+    },
+    {
+      "tag": "creator",
+      "value": "Markus Zusak"
+    },
+    {
+      "tag": "description",
+      "value": "Érase una vez un pueblo donde las noches eran largas y la muerte contaba su propia historia. En el pueblo vivía una niña que quería leer, un hombre que tocaba el acordeón y un joven judío que escribía cuentos hermosos para escapar del horror de la guerra. Al cabo de un tiempo, la niña se convirtió en una ladrona que robaba libros y regalaba palabras. Con estas palabras se escribió una historia hermosa y cruel que ahora ya es una novela inolvidable."
+    },
+    {
+      "tag": "date",
+      "value": "2005-08-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-07-30"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e56fa013-3161-4d72-9abc-479808587aa9"
+    },
+    {
+      "tag": "identifier",
+      "value": "0e1de6d9-f46c-4f7f-a6e8-506831c5950e"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "5364"
+    }
+  ]
+}

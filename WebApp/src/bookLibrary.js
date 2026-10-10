@@ -4,7 +4,7 @@ import { compareLibraryItems } from "./libraryScroll.js";
 export function buildBookCollections(books = [], profiles = {}, language = "es", { type, sort = "name", direction = sort === "year" ? "desc" : "asc" } = {}) {
   const groups = new Map();
   const compare = (left, right) => String(left).localeCompare(String(right), language, { sensitivity: "base", numeric: true });
-  const year = book => Number(String(book.year || book.publishDate || "").match(/\b\d{4}\b/)?.[0]) || 0;
+  const year = book => Number(String(book.year || "").match(/\b\d{4}\b/)?.[0]) || 0;
   const compareBooks = (left, right) => compareLibraryItems(left, right, sort, direction, language);
 
   // Use file order so editing a title never changes which volume represents a collection.
@@ -39,7 +39,7 @@ export function buildBookCollections(books = [], profiles = {}, language = "es",
 export function matchesBookQuery(book, query, collectionTitle = "") {
   const normalize = value => String(value || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
   const words = normalize(query).split(/\s+/).filter(Boolean);
-  const year = String(book.year || book.publishDate || "").match(/\b\d{4}\b/)?.[0] || "";
+  const year = String(book.year || "").match(/\b\d{4}\b/)?.[0] || "";
   const text = normalize([collectionTitle, book.name, book.title, book.subtitle, book.author, year].filter(Boolean).join(" "));
   return words.every(word => text.includes(word));
 }

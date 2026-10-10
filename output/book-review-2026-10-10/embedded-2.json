@@ -1,0 +1,42 @@
+{
+  "index": 2,
+  "path": "Books/4-relatos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "4 Relatos"
+    },
+    {
+      "tag": "creator",
+      "value": "Arturo Pérez-Reverte"
+    },
+    {
+      "tag": "description",
+      "value": "<p>«<i>Compadezco a los hombres cómodos, resignados y razonables que nunca leyeron libros que estremecieran su corazón. Compadezco a quienes nunca se dejaron seducir y arrastrar por una moneda de oro, una mujer hermosa, un amigo fiel, una aventura descubierta en un libro</i>».</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2005-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-01-21"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:72283620-58a9-4445-8c65-f8683bdb443c"
+    },
+    {
+      "tag": "identifier",
+      "value": "89587cab-e9f8-448c-8d3f-60dcee569cc9"
+    },
+    {
+      "tag": "identifier",
+      "value": "66849"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

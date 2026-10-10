@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-guardi-n-entre-el-centeno.epub",
+  "title": "El guardián entre el centeno",
+  "year": "1951",
+  "description": "Tras ser expulsado del colegio, Holden Caulfield pasa varios días deambulando por Nueva York antes de volver a casa. Su voz irónica y vulnerable explora el duelo, la soledad y el miedo a crecer en un mundo adulto que le resulta difícil comprender.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Després de ser expulsat de l’escola, Holden Caulfield passa uns dies voltant per Nova York abans de tornar a casa. La seva veu irònica i vulnerable explora el dol, la solitud i la por de créixer en un món adult que li costa comprendre.",
+      "title": "El guardián entre el centeno"
+    },
+    "en": {
+      "title": "The Catcher in the Rye",
+      "description": "After being expelled from school, Holden Caulfield spends several days wandering New York before returning home. His ironic, vulnerable voice explores grief, loneliness and the fear of growing up in an adult world he struggles to understand."
+    },
+    "es": {
+      "title": "El guardián entre el centeno",
+      "description": "Tras ser expulsado del colegio, Holden Caulfield pasa varios días deambulando por Nueva York antes de volver a casa. Su voz irónica y vulnerable explora el duelo, la soledad y el miedo a crecer en un mundo adulto que le resulta difícil comprender."
+    }
+  }
+}

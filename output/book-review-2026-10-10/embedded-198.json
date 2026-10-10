@@ -1,0 +1,42 @@
+{
+  "index": 198,
+  "path": "Books/origen.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Origen"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "description",
+      "value": "<p>¿<small>DE DÓNDE VENIMOS</small>? ¿<small>ADÓNDE VAMOS</small>?</p><p>Robert Langdon, profesor de simbología e iconografía religiosa de la universidad de Harvard, acude al Museo Guggenheim Bilbao para asistir a un trascendental anuncio que «cambiará la faz de la ciencia para siempre». El anfitrión de la velada es Edmond Kirsch, un joven multimillonario cuyos visionarios inventos tecnológicos y audaces predicciones lo han convertido en una figura de renombre mundial. Kirsch, uno de los alumnos más brillantes de Langdon años atrás, se dispone a revelar un extraordinario descubrimiento que dará respuesta a las dos preguntas que han obsesionado a la humanidad desde el principio de los tiempos.</p><p>Al poco tiempo de comenzar la presentación, meticulosamente orquestada por Edmond Kirsch y la directora del museo Ambra Vidal, estalla el caos para asombro de cientos de invitados y millones de espectadores en todo el mundo. Ante la inminente amenaza de que el valioso hallazgo se pierda para siempre, Langdon y Ambra deben huir desesperadamente a Barcelona e iniciar una carrera contrarreloj para localizar la críptica contraseña que les dará acceso al revolucionario secreto de Kirsch.</p><p>Siguiendo un rastro de pistas compuesto por símbolos ocultos en obras literarias y de arte moderno, tendrán pocas horas para intentar desvelar la fascinante investigación de Kirsch… y su sobrecogedora revelación sobre el origen y el destino de la Humanidad.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2016-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-01-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:dc0170aa-d5f7-210b-4eb6-e143a614e8ed"
+    },
+    {
+      "tag": "identifier",
+      "value": "156ce3af-01cd-44dd-9660-240c4d231b34"
+    },
+    {
+      "tag": "identifier",
+      "value": "38239"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-novia-gitana.epub",
+  "title": "La novia gitana",
+  "year": "2018",
+  "description": "Una joven es asesinada después de su despedida de soltera mediante un ritual parecido al que mató a su hermana años atrás. Elena Blanco y la BAC investigan la conexión, mientras el hombre condenado por el primer crimen continúa en prisión.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Una jove és assassinada després del comiat de soltera amb un ritual semblant al que va matar la seva germana anys enrere. Elena Blanco i la BAC investiguen la connexió, mentre l’home condemnat pel primer crim continua a la presó.",
+      "title": "La novia gitana"
+    },
+    "en": {
+      "description": "A young woman is murdered after her hen party in a ritual resembling her sister's killing years earlier. Elena Blanco and the BAC investigate the connection while the man convicted of the first crime remains in prison.",
+      "title": "La novia gitana"
+    },
+    "es": {
+      "description": "Una joven es asesinada después de su despedida de soltera mediante un ritual parecido al que mató a su hermana años atrás. Elena Blanco y la BAC investigan la conexión, mientras el hombre condenado por el primer crimen continúa en prisión.",
+      "title": "La novia gitana"
+    }
+  }
+}

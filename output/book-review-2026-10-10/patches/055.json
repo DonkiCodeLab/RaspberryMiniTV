@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/diez-negritos.epub",
+  "title": "Diez negritos",
+  "year": "1939",
+  "description": "Diez personas llegan a una isla invitadas por un anfitrión ausente. Una grabación las acusa de antiguos crímenes y, cuando comienzan las muertes, descubren que están incomunicadas y que el asesino podría ser uno de los presentes.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Deu persones arriben a una illa convidades per un amfitrió absent. Una gravació les acusa de crims antics i, quan comencen les morts, descobreixen que estan incomunicades i que l’assassí podria ser un dels presents.",
+      "title": "Diez negritos"
+    },
+    "en": {
+      "title": "Ten Little Indians",
+      "description": "Ten people accept invitations to an island whose host is missing. A recording accuses them of past crimes; when deaths begin, the guests realize they are cut off from help and that the killer may be among them."
+    },
+    "es": {
+      "title": "Diez negritos",
+      "description": "Diez personas llegan a una isla invitadas por un anfitrión ausente. Una grabación las acusa de antiguos crímenes y, cuando comienzan las muertes, descubren que están incomunicadas y que el asesino podría ser uno de los presentes."
+    }
+  }
+}

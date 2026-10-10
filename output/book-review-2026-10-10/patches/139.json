@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/inferno.epub",
+  "title": "Inferno",
+  "year": "2013",
+  "description": "Robert Langdon despierta en un hospital de Florencia sin recordar cómo ha llegado allí. Con ayuda de Sienna Brooks, sigue pistas vinculadas al Infierno de Dante para desentrañar una amenaza que conecta el arte renacentista con los límites de la ciencia contemporánea.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Robert Langdon es desperta en un hospital de Florència sense recordar com hi ha arribat. Amb l’ajuda de Sienna Brooks, segueix pistes vinculades a l’Infern de Dante per desentrellar una amenaça que connecta l’art renaixentista amb els límits de la ciència contemporània.",
+      "title": "Inferno"
+    },
+    "en": {
+      "title": "Inferno",
+      "description": "Robert Langdon wakes in a Florence hospital with no memory of how he arrived. With Sienna Brooks's help, he follows clues tied to Dante's Inferno to uncover a threat connecting Renaissance art with the boundaries of contemporary science."
+    },
+    "es": {
+      "title": "Inferno",
+      "description": "Robert Langdon despierta en un hospital de Florencia sin recordar cómo ha llegado allí. Con ayuda de Sienna Brooks, sigue pistas vinculadas al Infierno de Dante para desentrañar una amenaza que conecta el arte renacentista con los límites de la ciencia contemporánea."
+    }
+  }
+}

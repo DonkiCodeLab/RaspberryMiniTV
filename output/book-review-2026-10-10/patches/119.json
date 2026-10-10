@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/flores-para-algernon.epub",
+  "title": "Flores Para Algernon",
+  "year": "1966",
+  "description": "Charlie Gordon participa en un experimento destinado a aumentar su capacidad intelectual, probado antes en el ratón Algernon. Sus informes personales muestran cómo cambia su comprensión del mundo, de sus relaciones y de la manera en que los demás lo han tratado.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Charlie Gordon participa en un experiment destinat a augmentar la capacitat intel·lectual, provat abans en el ratolí Algernon. Els informes personals mostren com canvia la comprensió del món, de les relacions i de la manera com els altres l’han tractat.",
+      "title": "Flores Para Algernon"
+    },
+    "en": {
+      "description": "Charlie Gordon takes part in an experiment designed to increase his intellectual ability, previously tested on a mouse named Algernon. His personal reports reveal changes in his understanding of the world, his relationships and the way others have treated him.",
+      "title": "Flowers for Algernon"
+    },
+    "es": {
+      "description": "Charlie Gordon participa en un experimento destinado a aumentar su capacidad intelectual, probado antes en el ratón Algernon. Sus informes personales muestran cómo cambia su comprensión del mundo, de sus relaciones y de la manera en que los demás lo han tratado.",
+      "subtitle": "Ilustraciones De Etienne Delessert",
+      "title": "Flores Para Algernon"
+    }
+  }
+}

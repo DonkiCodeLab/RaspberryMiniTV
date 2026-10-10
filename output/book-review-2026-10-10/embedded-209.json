@@ -1,0 +1,42 @@
+{
+  "index": 209,
+  "path": "Books/sapiens.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Sapiens"
+    },
+    {
+      "tag": "creator",
+      "value": "Yuval Noah Harari"
+    },
+    {
+      "tag": "description",
+      "value": "Hace 100.000 años al menos seis especies de humanos habitaban la Tierra. Hoy solo queda una, la nuestra: Homo sapiens. ¿Cómo logró nuestra especie imponerse en la lucha por la existencia? ¿Por qué nuestros ancestros recolectores se unieron para crear ciudades y reinos? ¿Cómo llegamos a creer en dioses, en naciones o en los derechos humanos; a confiar en el dinero, en los libros o en las leyes? ¿Cómo acabamos sometidos a la burocracia, a los horarios y al consumismo? ¿Y cómo será el mundo en los milenios venideros? En «Sapiens» Yuval Noah Harari traza una breve historia de la humanidad, desde los primeros humanos que caminaron sobre la Tierra hasta los radicales y a veces devastadores avances de las tres grandes revoluciones que nuestra especie ha protagonizado: la cognitiva, la agrícola y la científica. A partir de hallazgos de disciplinas tan diversas como la biología, la antropología, la paleontología o la economía, Harari explora cómo las grandes corrientes de la historia han modelado nuestra sociedad, los animales y las plantas que nos rodean e incluso nuestras personalidades. ¿Hemos ganado en felicidad a medida que ha avanzado la historia? ¿Seremos capaces de liberar alguna vez nuestra conducta de la herencia del pasado? ¿Podemos hacer algo para influir en los siglos futuros? Audaz, ambicioso y provocador, este libro cuestiona todo lo que creíamos saber sobre el ser humano: nuestros orígenes, nuestras ideas, nuestras acciones, nuestro poder… y nuestro futuro."
+    },
+    {
+      "tag": "date",
+      "value": "2013-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-10-30"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:ca209288-b3f2-4033-8161-0782531094c9"
+    },
+    {
+      "tag": "identifier",
+      "value": "b060300c-673c-4a52-981d-bc3fddf299c3"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "22852"
+    }
+  ]
+}

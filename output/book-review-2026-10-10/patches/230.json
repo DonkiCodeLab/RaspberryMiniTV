@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/yo-robot.epub",
+  "title": "Yo, Robot",
+  "year": "1950",
+  "description": "Los recuerdos de la robopsicóloga Susan Calvin enlazan nueve relatos sobre las relaciones entre humanos y robots. Las tres leyes de la robótica dan lugar a dilemas y aparentes paradojas que cuestionan la obediencia, la inteligencia y la confianza en las máquinas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Els records de la robopsicòloga Susan Calvin connecten nou relats sobre les relacions entre humans i robots. Les tres lleis de la robòtica originen dilemes i paradoxes aparents que qüestionen l’obediència, la intel·ligència i la confiança en les màquines.",
+      "title": "Yo, Robot"
+    },
+    "en": {
+      "title": "I, Robot",
+      "description": "Robopsychologist Susan Calvin's memories connect nine stories about relationships between humans and robots. The Three Laws of Robotics generate dilemmas and apparent paradoxes that challenge ideas about obedience, intelligence and trust in machines."
+    },
+    "es": {
+      "title": "Yo, Robot",
+      "description": "Los recuerdos de la robopsicóloga Susan Calvin enlazan nueve relatos sobre las relaciones entre humanos y robots. Las tres leyes de la robótica dan lugar a dilemas y aparentes paradojas que cuestionan la obediencia, la inteligencia y la confianza en las máquinas."
+    }
+  }
+}

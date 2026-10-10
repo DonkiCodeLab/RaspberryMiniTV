@@ -1,0 +1,42 @@
+{
+  "index": 35,
+  "path": "Books/chafterhouse-dune.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Casa Capitular Dune"
+    },
+    {
+      "tag": "creator",
+      "value": "Frank Herbert"
+    },
+    {
+      "tag": "description",
+      "value": "Las Honoradas Matres llegadas de vuelta de la Dispersión se enfrentan, con sus terribles poderes, a la secular Bene Gesserit. Lentamente, planeta tras planeta, van ganando su batalla. Mientras, las Reverendas Madres, ocultas y fortificadas en su planeta Casa Capitular, intentan revivir el viejo orden que les dio su antigua predominancia en todo el universo. Un ghola de Miles Teg está siendo educado y adiestrado cuidadosamente, con la esperanza de revivir en él los extraordinarios poderes de su antecesor; la unión de Duncan Idaho y Murbella, la Honorada Matre, cautivos ambos en la no-nave, puede dar sus frutos en una comprensión del traumático fenómeno de la dispersión. Y mientras tanto, liberadas del gusano de arena original, las truchas de arena están ganando desierto lentamente en el planeta, prosiguiendo su inexorable ciclo. En unos años, la Casa Capitular puede convertirse en un nuevo Dune, compensando así la terrible destrucción del Arrakis original. Y Sheeana espera la aparición del primer gusano para cabalgarlo…"
+    },
+    {
+      "tag": "date",
+      "value": "1985-03-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-06-19"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:AF13AE00-B9C3-11E2-9E96-0800200C9A66"
+    },
+    {
+      "tag": "identifier",
+      "value": "36b3901b-8fba-4f22-8cc0-abaef3fe77cc"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.9"
+    },
+    {
+      "tag": "identifier",
+      "value": "3154"
+    }
+  ]
+}

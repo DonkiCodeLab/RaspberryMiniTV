@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-piel-fr-a.epub",
+  "title": "La piel fría",
+  "year": "2002",
+  "description": "Un hombre llega a una isla del Atlántico Sur para trabajar como observador meteorológico y encuentra un único vecino, el guardián del faro. Por la noche, criaturas del mar asedian el lugar, obligándolos a convivir y a cuestionar qué significa reconocer al otro como humano.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "La pell freda",
+      "description": "Un home arriba a una illa de l’Atlàntic Sud per treballar d’observador meteorològic i hi troba un únic veí, el faroner. De nit, criatures del mar assetgen l’indret, obligant-los a conviure i a qüestionar què significa reconèixer l’altre com a humà."
+    },
+    "en": {
+      "description": "A man arrives on a South Atlantic island to work as a weather observer and finds only one neighbour, the lighthouse keeper. At night, sea creatures besiege them, forcing coexistence and questions about who is recognised as human.",
+      "title": "Cold skin"
+    },
+    "es": {
+      "description": "Un hombre llega a una isla del Atlántico Sur para trabajar como observador meteorológico y encuentra un único vecino, el guardián del faro. Por la noche, criaturas del mar asedian el lugar, obligándolos a convivir y a cuestionar qué significa reconocer al otro como humano.",
+      "title": "La piel fría"
+    }
+  }
+}

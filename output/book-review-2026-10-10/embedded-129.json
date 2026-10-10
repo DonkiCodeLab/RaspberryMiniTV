@@ -1,0 +1,42 @@
+{
+  "index": 129,
+  "path": "Books/harry-potter-y-la-c-mara-secreta.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "epl:2682"
+    },
+    {
+      "tag": "identifier",
+      "value": "revision:1.8"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:2333"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:34d8d4a1-72bc-46b3-93e1-84da2febf2ab"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:bf087d31-06b5-f0d2-abd5-78fa2e480d3c"
+    },
+    {
+      "tag": "title",
+      "value": "Harry Potter y la cámara secreta"
+    },
+    {
+      "tag": "date",
+      "value": "1998-07-02T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Tras derrotar una vez más a lord Voldemort, su siniestro enemigo en <i>Harry Potter y la piedra filosofal</i>, Harry espera impaciente en casa de sus insoportables tíos el inicio del segundo curso del Colegio Hogwarts de Magia y hechicería. Sin embargo, la espera dura poco, pues un elfo aparece en su habitación y le advierte que una amenaza mortal se cierne sobre la escuela. Así pues, Harry no se lo piensa dos veces y, acompañado de Ron, su mejor amigo, se dirige a Hogwarts en un coche volador. Pero ¿puede un aprendiz de mago defender la escuela de los malvados que pretenden destruirla? Sin saber que alguien ha abierto la Cámara de los Secretos, dejando escapar una serie de monstruos peligrosos, Harry y sus amigos Ron y Hermione tendrán que enfrentarse con arañas gigantes, serpientes encantadas, fantasmas enfurecidos y, sobre todo, con la mismísima reencarnación de su más temible adversario.</p>"
+    },
+    {
+      "tag": "creator",
+      "value": "J. K. Rowling"
+    }
+  ]
+}

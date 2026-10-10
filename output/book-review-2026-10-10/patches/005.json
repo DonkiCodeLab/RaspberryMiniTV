@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/a-lo-marciano.epub",
+  "title": "A lo marciano",
+  "year": "1955",
+  "description": "Esta colección de cuatro relatos explora la expansión humana por el espacio y los límites del conocimiento. En la narración que da título al volumen, una colonia marciana debe buscar una solución propia cuando la política terrestre amenaza su suministro de agua.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Esta colección de cuatro relatos explora la expansión humana por el espacio y los límites del conocimiento. En la narración que da título al volumen, una colonia marciana debe buscar una solución propia cuando la política terrestre amenaza su suministro de agua.",
+      "title": "A lo marciano"
+    },
+    "ca": {
+      "description": "Aquest recull de quatre relats explora l’expansió humana per l’espai i els límits del coneixement. A la narració que dona títol al volum, una colònia marciana ha de buscar una solució pròpia quan la política terrestre amenaça el seu subministrament d’aigua.",
+      "title": "A lo marciano"
+    },
+    "en": {
+      "description": "Four stories explore humanity's expansion into space and the limits of knowledge. In the title novella, a Martian colony must devise its own solution when political hostility on Earth threatens the water supply on which its survival depends.",
+      "title": "A lo marciano"
+    }
+  }
+}

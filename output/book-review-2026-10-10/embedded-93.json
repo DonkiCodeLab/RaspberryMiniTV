@@ -1,0 +1,42 @@
+{
+  "index": 93,
+  "path": "Books/el-nombre-de-la-rosa.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El nombre de la rosa"
+    },
+    {
+      "tag": "creator",
+      "value": "Umberto Eco"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:fb25ff47-a017-4168-af31-9f2764aecde5"
+    },
+    {
+      "tag": "description",
+      "value": "Participando de características propias de la novela gótica, la crónica medieval, la novela policíaca, el relato ideológico en clave, y la alegoría narrativa, «El nombre de la rosa» ofrece distintos puntos de interés: primero, una trama apasionante y constelada de golpes de efecto, que narra las actividades detectivescas de Guillermo de Baskerville para esclarecer los crímenes de una abadía benedictina; segundo, la reconstrucción portentosa de una época especialmente conflictiva, reconstrucción que no se para en lo exterior, sino que se centra en las formas de pensar y sentir del siglo XIV; y tercero, el modo en que Umberto Eco el teórico, Umberto Eco el ensayista, ha construido su primera novela, escrita —nos dice— por haber descubierto, en edad madura, «aquello» sobre lo cual no se puede teorizar, aquello que hay que narrar."
+    },
+    {
+      "tag": "date",
+      "value": "1979-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-10-11"
+    },
+    {
+      "tag": "identifier",
+      "value": "9217c5b3-2eb8-4d82-86f9-a544b6ba3682"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.3"
+    },
+    {
+      "tag": "identifier",
+      "value": "3484"
+    }
+  ]
+}

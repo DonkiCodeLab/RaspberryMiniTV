@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-cuaderno-gris.epub",
+  "title": "El cuaderno gris",
+  "year": "1922",
+  "description": "La amistad entre los adolescentes Jacques Thibault y Daniel de Fontanin provoca un conflicto con sus familias cuando se descubre el cuaderno que comparten. Su huida abre el ciclo de Los Thibault y enfrenta la rebeldía juvenil con la autoridad, la religión y las convenciones burguesas.",
+  "localizedMetadata": {
+    "es": {
+      "description": "La amistad entre los adolescentes Jacques Thibault y Daniel de Fontanin provoca un conflicto con sus familias cuando se descubre el cuaderno que comparten. Su huida abre el ciclo de Los Thibault y enfrenta la rebeldía juvenil con la autoridad, la religión y las convenciones burguesas.",
+      "title": "El cuaderno gris"
+    },
+    "ca": {
+      "description": "L’amistat entre els adolescents Jacques Thibault i Daniel de Fontanin provoca un conflicte amb les famílies quan es descobreix el quadern que comparteixen. La seva fugida obre el cicle dels Thibault i enfronta la rebel·lia juvenil amb l’autoritat, la religió i les convencions burgeses.",
+      "title": "El cuaderno gris"
+    },
+    "en": {
+      "description": "The friendship between teenagers Jacques Thibault and Daniel de Fontanin sparks a family conflict when their shared notebook is discovered. Their flight opens the Thibault sequence, bringing youthful rebellion into conflict with authority, religion and middle-class conventions.",
+      "title": "El cuaderno gris"
+    }
+  }
+}

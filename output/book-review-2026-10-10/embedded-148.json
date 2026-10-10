@@ -1,0 +1,42 @@
+{
+  "index": 148,
+  "path": "Books/la-boda-de-la-asistenta.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La boda de la asistenta"
+    },
+    {
+      "tag": "creator",
+      "value": "Freida McFadden"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:98bf8691-9ad7-481f-b79e-79630b2ab65e"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Un trepidante relato que completa la serie <i>best seller</i> «La Asistenta». Para los lectores que se quedaron con ganas de saber más sobre la historia de Millie y Enzo, llega una emocionante sorpresa…</b></p><p>Hoy debería ser el día más feliz de mi vida.</p><p>Estoy prometida con el hombre de mis sueños y, en unas pocas horas, vamos a vernos delante de un juez que nos declarará marido y mujer hasta que la muerte nos separe. Pese a que el camino no ha sido fácil, este día es todo lo que siempre he anhelado.</p><p>Solo hay un problema.</p><p>Ahí fuera hay alguien que no quiere que viva lo suficiente para dar el «sí, quiero».</p><p>Y, si no tengo cuidado, podría salirse con la suya.</p><p><small><b>Nota del editor</b>: La boda de la asistenta es una historia corta que puede leerse entre la segunda parte (<i>El secreto de la asistenta</i>) y la tercera (<i>La asistenta te vigila</i>) o al acabar la serie</small>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-11-21T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-12-01"
+    },
+    {
+      "tag": "identifier",
+      "value": "40d4ccb7-baad-4a86-b134-2d8bba6dbb38"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "79801"
+    }
+  ]
+}

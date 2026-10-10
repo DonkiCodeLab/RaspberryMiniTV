@@ -1,0 +1,61 @@
+{
+  "index": 153,
+  "path": "Books/la-espada-leal.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La espada leal"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "description",
+      "value": "Tras los fabulosos sucesos del torneo de Vado Ceniza, Dunk se consolidó como caballero y Egg obtuvo permiso para ver mundo. Ahora la errancia ha llevado a la extraña pareja a Tiesa, un lugar empobrecido que sufre una grave sequía. Además, la violencia atenaza el territorio, pues hace años que su gobernante, Ser Eustace, está enemistado con la señora de la región vecina, Fosafría. Se trata de la bella y temible Lady Rohanne, a quien los lugareños atribuyen crímenes infames y llaman, entre susurros, la Viuda Escarlata. El pleito pondrá a prueba la lealtad de Dunk y Egg hasta extremos que jamás habrían sospechado. La espada leal (The Sworn Sword) es una historia corta escrita por George R. R. Martin que apareció por primera vez en 2003 y fue publicado en la antología, Leyendas II. Es el segundo de los Cuentos de Dunk y Egg y sirve como precuela a los eventos de Canción de Hielo y Fuego. Posteriormente, sale a la venta la novela gráfica en 2008."
+    },
+    {
+      "tag": "date",
+      "value": "2002-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-02-27"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:6e5df828-ce5b-7b8c-2c41-b40715112db6"
+    },
+    {
+      "tag": "identifier",
+      "value": "c4422d8c-5a3b-4582-aef1-159048fc8e55"
+    }
+  ],
+  "contents": [
+    "La espada leal",
+    "Cubierta",
+    "La espada leal",
+    "Capítulo 1",
+    "Capítulo 2",
+    "Capítulo 3",
+    "Capítulo 4",
+    "Capítulo 5",
+    "Capítulo 6",
+    "Capítulo 7",
+    "Capítulo 8",
+    "Capítulo 9",
+    "Capítulo 10",
+    "Capítulo 11",
+    "Capítulo 12",
+    "Capítulo 13",
+    "Capítulo 14",
+    "Capítulo 15",
+    "Capítulo 16",
+    "Capítulo 17",
+    "Capítulo 18",
+    "Capítulo 19",
+    "Capítulo 20",
+    "Capítulo 21",
+    "Sobre el autor"
+  ]
+}

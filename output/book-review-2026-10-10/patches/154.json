@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-fortaleza-digital.epub",
+  "title": "La fortaleza digital",
+  "year": "1998",
+  "description": "La criptógrafa Susan Fletcher investiga un código que los sistemas de la NSA no consiguen descifrar. Mientras su prometido busca una pista en Sevilla, la amenaza desencadena una crisis donde la seguridad nacional, la privacidad y la confianza entran en conflicto.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La criptògrafa Susan Fletcher investiga un codi que els sistemes de la NSA no aconsegueixen desxifrar. Mentre el promès busca una pista a Sevilla, l’amenaça desencadena una crisi on la seguretat nacional, la privacitat i la confiança entren en conflicte.",
+      "title": "La fortaleza digital"
+    },
+    "en": {
+      "title": "Digital Fortress",
+      "description": "Cryptographer Susan Fletcher investigates a code that the NSA's systems cannot break. As her fiancé pursues a clue in Seville, the threat triggers a crisis that brings national security, privacy and personal trust into conflict."
+    },
+    "es": {
+      "title": "La fortaleza digital",
+      "description": "La criptógrafa Susan Fletcher investiga un código que los sistemas de la NSA no consiguen descifrar. Mientras su prometido busca una pista en Sevilla, la amenaza desencadena una crisis donde la seguridad nacional, la privacidad y la confianza entran en conflicto."
+    }
+  }
+}

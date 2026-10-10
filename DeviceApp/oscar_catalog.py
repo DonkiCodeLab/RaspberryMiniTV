@@ -11,7 +11,7 @@ SEED_PATH = Path(__file__).parent / "data" / "oscar_best_picture.json"
 
 class OscarCatalog(TmdbCache):
     def __init__(self, root, credentials, seed_path=SEED_PATH, cards_only=False):
-        super().__init__(root, credentials)
+        super().__init__(root, credentials, include_credits=not cards_only)
         self.catalog_lock = threading.RLock()
         self.cards_primed = False
         self.seed = json.loads(Path(seed_path).read_text())

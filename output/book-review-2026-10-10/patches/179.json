@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/los-hermanos-karam-zov.epub",
+  "title": "Los hermanos Karamázov",
+  "year": "1880",
+  "description": "La tensa relación de los hermanos Dmitri, Iván y Aliosha con su padre desemboca en una crisis familiar y judicial. Dostoievski enfrenta sus distintas visiones de la vida en una novela sobre la fe, la libertad, la culpa y la responsabilidad hacia los demás.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La relació tensa dels germans Dmitri, Ivan i Alioixa amb el pare desemboca en una crisi familiar i judicial. Dostoievski enfronta les seves visions de la vida en una novel·la sobre la fe, la llibertat, la culpa i la responsabilitat envers els altres.",
+      "title": "Los hermanos Karamázov"
+    },
+    "en": {
+      "description": "Dmitri, Ivan and Alyosha's troubled relationship with their father leads to a family and legal crisis. Dostoevsky sets their differing views of life against one another in a novel about faith, freedom, guilt and responsibility for others.",
+      "title": "The Brothers Karamazov"
+    },
+    "es": {
+      "description": "La tensa relación de los hermanos Dmitri, Iván y Aliosha con su padre desemboca en una crisis familiar y judicial. Dostoievski enfrenta sus distintas visiones de la vida en una novela sobre la fe, la libertad, la culpa y la responsabilidad hacia los demás.",
+      "title": "Los hermanos Karamázov"
+    }
+  }
+}

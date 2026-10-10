@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/harry-potter-y-el-misterio-del-pr-ncipe.epub",
+  "title": "Harry Potter y el misterio del príncipe",
+  "year": "2005",
+  "description": "Harry recibe lecciones privadas de Dumbledore que exploran el pasado de Voldemort, mientras un antiguo manual de pociones le ofrece una ayuda inesperada. En Hogwarts, las relaciones cambian y la amenaza exterior se acerca cada vez más al colegio.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "En Harry rep lliçons privades de Dumbledore que exploren el passat de Voldemort, mentre un antic manual de pocions li ofereix una ajuda inesperada. A Hogwarts, les relacions canvien i l’amenaça exterior s’acosta cada vegada més a l’escola.",
+      "title": "Harry Potter y el misterio del príncipe"
+    },
+    "en": {
+      "title": "Harry Potter and the Half-Blood Prince",
+      "description": "Harry takes private lessons with Dumbledore to explore Voldemort's past, while an old potions textbook provides unexpected assistance. Relationships change at Hogwarts as the danger beyond the school draws ever closer."
+    },
+    "es": {
+      "subtitle": "Harry Potter 6",
+      "title": "Harry Potter y el misterio del príncipe",
+      "description": "Harry recibe lecciones privadas de Dumbledore que exploran el pasado de Voldemort, mientras un antiguo manual de pociones le ofrece una ayuda inesperada. En Hogwarts, las relaciones cambian y la amenaza exterior se acerca cada vez más al colegio."
+    }
+  }
+}

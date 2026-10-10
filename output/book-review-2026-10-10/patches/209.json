@@ -1,0 +1,22 @@
+{
+  "relativePath": "Books/sapiens.epub",
+  "title": "Sapiens",
+  "year": "2011",
+  "description": "Yuval Noah Harari recorre la historia de Homo sapiens desde las sociedades recolectoras hasta el mundo contemporáneo. El ensayo relaciona cambios cognitivos, agricultura, imperios y ciencia para plantear cómo las creencias compartidas y las formas de cooperación han transformado la vida humana.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Yuval Noah Harari recorre la història d’Homo sapiens des de les societats recol·lectores fins al món contemporani. L’assaig relaciona canvis cognitius, agricultura, imperis i ciència per plantejar com les creences compartides i les formes de cooperació han transformat la vida humana.",
+      "title": "Sapiens"
+    },
+    "en": {
+      "subtitle": "A Brief History of Humankind",
+      "title": "Sapiens",
+      "description": "Yuval Noah Harari traces Homo sapiens from foraging societies to the contemporary world. The essay connects cognitive changes, agriculture, empires and science to explore how shared beliefs and forms of cooperation have transformed human life."
+    },
+    "es": {
+      "subtitle": "De animales a dioses",
+      "title": "Sapiens",
+      "description": "Yuval Noah Harari recorre la historia de Homo sapiens desde las sociedades recolectoras hasta el mundo contemporáneo. El ensayo relaciona cambios cognitivos, agricultura, imperios y ciencia para plantear cómo las creencias compartidas y las formas de cooperación han transformado la vida humana."
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "index": 182,
+  "path": "Books/los-tres-mosqueteros.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Los tres mosqueteros"
+    },
+    {
+      "tag": "creator",
+      "value": "Alexandre Dumas"
+    },
+    {
+      "tag": "description",
+      "value": "La acción se sitúa durante el reinado de Luis&#160;XIII, en Francia. D’Artagnan es un joven de 18 años, hijo de un noble gascón, antiguo mosquetero, de escasos recursos económicos. Se dirige a París con una carta de su padre para el señor de Treville, jefe de los Mosqueteros del Rey. En una posada, durante su ruta, D’Artagnan desafía a un caballero que acompaña a una bella y misteriosa dama."
+    },
+    {
+      "tag": "date",
+      "value": "1843-12-31T23:50:39+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-01-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:21771210-7DCF-11E2-9E96-0800200C9A66"
+    },
+    {
+      "tag": "identifier",
+      "value": "17a47e5a-d282-4b3f-acbe-cf98f90c7401"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.9"
+    },
+    {
+      "tag": "identifier",
+      "value": "423"
+    }
+  ]
+}

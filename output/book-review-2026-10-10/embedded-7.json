@@ -1,0 +1,34 @@
+{
+  "index": 7,
+  "path": "Books/acoso.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Acoso"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:807D7D20-9EF5-11E2-9E96-0800200C9A66"
+    },
+    {
+      "tag": "description",
+      "value": "Tom Sanders, alto cargo de una poderosa empresa de informática de Seattle, sufre un lascivo y descarado asedio por parte de Meredith Johnson, la nueva directiva, una mujer sensual y de extraña belleza. Tom intuye que bajo la agresividad sexual de Meredith se oculta un secreto inconfesable y promueve una investigación que a la postre pondrá al descubierto las verdaderas motivaciones de la mujer, así como una sórdida trama urdida en detrimento de la empresa… Basada en un hecho real, esta vigorosa novela describe crudamente las relaciones personales en el despiadado mundo empresarial y las actitudes de quienes, valiéndose de sus cuerpos y sus atractivos, buscan el poder y la riqueza a cualquier precio."
+    },
+    {
+      "tag": "date",
+      "value": "1993-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2014-11-02"
+    },
+    {
+      "tag": "identifier",
+      "value": "53bd5b13-e65b-4774-b029-b8103f170ab5"
+    }
+  ]
+}

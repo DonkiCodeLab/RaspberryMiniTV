@@ -1,0 +1,42 @@
+{
+  "index": 179,
+  "path": "Books/los-hermanos-karam-zov.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Los hermanos Karamázov"
+    },
+    {
+      "tag": "creator",
+      "value": "Fiódor Dostoyevski"
+    },
+    {
+      "tag": "date",
+      "value": "1879-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Con una traducción impecable directa del ruso, presentamos una nueva edición de la novela emblemática del célebre autor ruso.</p><p>Los hijos legítimos de Fiódor Pávlovich Karamázov —un «bufón», un «filisteo», un «déspota», solo en última instancia un padre— se reúnen después de haber sido educados, lejos unos de otros, en distintas partes de Rusia: Dmitri es soldado y —como su padre— puro «ímpetu», bebedor, derrochador, lujurioso; Iván se ha convertido en un escéptico que duda de la ley, de la conciencia y de la fe (el primer existencialista, según Sartre); Aliosha ha abrazado la religión, todo el mundo lo llama «ángel» y vive en un monasterio. Ineluctablemente, la reunión familiar precipita la disolución y la tragedia.</p><p><cite>Los hermanos Karamázov</cite> (1878-1880) fue la última novela de Dostoievski y sin duda una de esas obras decisivas cuya influencia ha perdurado hasta nuestros días. En ella se encuentra —diría un personaje de Kurt Vonnegut— «todo cuanto hay que saber en la vida»; también —añadiríamos— todo cuanto hay que saber del género narrativo. Con un narrador experto en tender lazos al lector y en crear con él una de las redes más fascinantes y comunicativas de la historia de la literatura, lo que Dostoievski construye no es solo una monumental visión del mundo moral humano (incertidumbre, crimen, perdón) sino un arriesgado y espléndido ensayo sobre la forma de reproducirlo.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-03-13"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:c9873887-9000-37ba-adb3-a770cf38490a"
+    },
+    {
+      "tag": "identifier",
+      "value": "06c3b732-2a90-48df-9436-2c6e279a2f7d"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "2675"
+    }
+  ]
+}

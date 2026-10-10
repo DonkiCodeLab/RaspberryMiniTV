@@ -1,0 +1,42 @@
+{
+  "index": 130,
+  "path": "Books/harry-potter-y-la-orden-del-f-nix.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "revision:1.6"
+    },
+    {
+      "tag": "identifier",
+      "value": "epl:2685"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:2336"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:d9f6f96b-e4af-4104-ac21-72cb3dc84b11"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:ea7a0fe8-7f1f-d5fd-57c4-5c2cbbef01cd"
+    },
+    {
+      "tag": "title",
+      "value": "Harry Potter y la Orden del Fénix"
+    },
+    {
+      "tag": "date",
+      "value": "2003-06-21T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Las tediosas vacaciones de verano en casa de sus tíos todavía no han acabado y Harry se encuentra más inquieto que nunca. Apenas ha tenido noticias de Ron y Hermione, y presiente que algo extraño está sucediendo en Hogwarts. En efecto, cuando por fin comienza otro curso en el famoso colegio de magia y hechicería, sus temores se vuelven realidad. El Ministerio de Magia niega que Voldemort haya regresado y ha iniciado una campaña de desprestigio contra Harry y Dumbledore, para lo cual ha asignado a la horrible profesora Dolores Umbridge la tarea de vigilar todos sus movimientos. Así pues, además de sentirse solo e incomprendido, Harry sospecha que Voldemort puede adivinar sus pensamientos, e intuye que el temible mago trata de apoderarse de un objeto secreto que le permitiría recuperar su poder destructivo.</p>"
+    },
+    {
+      "tag": "creator",
+      "value": "J. K. Rowling"
+    }
+  ]
+}

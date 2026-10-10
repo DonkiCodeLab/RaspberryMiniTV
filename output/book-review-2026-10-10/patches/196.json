@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/nunca-mientas.epub",
+  "title": "Nunca mientas",
+  "year": "2022",
+  "description": "Tricia y Ethan visitan una casa aislada que perteneció a una psiquiatra desaparecida y quedan atrapados por la nieve. Al encontrar grabaciones de sus pacientes, Tricia empieza a reconstruir una historia de secretos que vuelve cada vez más inquietante su estancia.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Tricia i Ethan visiten una casa aïllada que va pertànyer a una psiquiatra desapareguda i hi queden atrapats per la neu. En trobar gravacions dels pacients, Tricia comença a reconstruir una història de secrets que fa l’estada cada vegada més inquietant.",
+      "title": "Nunca mientas"
+    },
+    "en": {
+      "title": "Never Lie",
+      "description": "Tricia and Ethan visit an isolated house once owned by a missing psychiatrist and become trapped by snow. Discovering recordings of her patients, Tricia begins piecing together a history of secrets that makes their stay increasingly unsettling."
+    },
+    "es": {
+      "description": "Tricia y Ethan visitan una casa aislada que perteneció a una psiquiatra desaparecida y quedan atrapados por la nieve. Al encontrar grabaciones de sus pacientes, Tricia empieza a reconstruir una historia de secretos que vuelve cada vez más inquietante su estancia.",
+      "title": "Nunca mientas"
+    }
+  }
+}

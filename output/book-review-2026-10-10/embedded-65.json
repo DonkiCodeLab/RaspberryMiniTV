@@ -1,0 +1,42 @@
+{
+  "index": 65,
+  "path": "Books/el-caballero-del-jub-n-amarillo.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El caballero del jubón amarillo"
+    },
+    {
+      "tag": "creator",
+      "value": "Arturo Pérez-Reverte"
+    },
+    {
+      "tag": "description",
+      "value": "<p><cite>El caballero del jubón amarillo</cite> se desarrolla en el mundo de los corrales de comedias del Madrid del siglo&nbsp;<small>XVII</small>. En esta ocasión Diego Alatriste volverá a cruzarse con viejos amigos y viejos enemigos, y con los personajes famosos de la época como Lope de Vega, Calderón de la Barca y el capitán Alonso Contreras.</p>\n\n    <p>Lances, estocadas, intrigas palaciegas y aventuras amorosas salpican un relato de acción trepidante.</p>\n\n    <p>«Don Francisco de Quevedo me dirigió una mirada que interpreté como era debido, pues fui detrás del capitán Alatriste. Avísame si hay problemas, habían dicho sus ojos tras los lentes quevedescos. Dos aceros hacen más papel que uno. Y así, consciente de mi responsabilidad, acomodé la daga de misericordia que llevaba atravesada al cinto y fui en pos de mi amo, discreto como un ratón, confiando en que esta vez pudiéramos terminar la comedia sin estocadas y en paz, pues habría sido bellaca afrenta estropearle el estreno a Tirso de Molina. Yo estaba lejos de imaginar hasta qué punto la bellísima actriz María de Castro iba a complicar mi vida y la del capitán, poniéndonos a ambos en gravísimo peligro; por no hablar de la corona del rey Felipe&nbsp;IV, que esos días anduvo literalmente al filo de una espada. Todo lo cual me propongo contar en esta nueva aventura, probando así que no hay locura a la que el hombre no llegue, abismo al que no se asome, y lance que el diablo no aproveche cuando hay mujer hermosa de por medio».</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2003-05-23T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-08-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:95ad3762-4b41-4dde-b5bf-19a42188c172"
+    },
+    {
+      "tag": "identifier",
+      "value": "4b5b1283-f2d8-4d5d-bd47-394e01106b45"
+    },
+    {
+      "tag": "identifier",
+      "value": "1199"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.0"
+    }
+  ]
+}

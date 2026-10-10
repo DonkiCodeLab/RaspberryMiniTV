@@ -1,0 +1,30 @@
+{
+  "index": 115,
+  "path": "Books/espejo-roto.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Espejo roto"
+    },
+    {
+      "tag": "creator",
+      "value": "Mercè Rodoreda"
+    },
+    {
+      "tag": "description",
+      "value": "<div>\n<p>Teresa cree tenerlo todo: dinero, amor, poder... Sin embargo, la riqueza se encarga de mostrarle con una claridad insoportable la irremediable caducidad del ser humano, y los años se harán cargo de destruir cada uno de sus sueños. La autora nos presenta personajes inolvidables, que nacen y se destruyen. Una historia épica, tan desoladora como grandiosa, donde el lector descubrirá por qué el tiempo es un espejo que se triza. En Espejo roto se narra la historia de tres generaciones de una familia barcelonesa acomodada, desde principios del siglo XX hasta los años inmediatamente posteriores a la guerra civil. En algunos pasajes la obra se torna insoportablemente cruel, pero dolorosamente conmovedora en otros. Esta crónica familiar, transfigurada por el esplendor del lujo y por las claridades oxidadas de la decadencia y la depredación, es sin lugar a dudas una de las mejores novelas de la narrativa hispánica contemporánea.</p></div>"
+    },
+    {
+      "tag": "date",
+      "value": "2002-06-14T22:00:00+00:00"
+    },
+    {
+      "tag": "identifier",
+      "value": "71475e5d-1cd8-4682-bf42-3f148fd337b1"
+    },
+    {
+      "tag": "identifier",
+      "value": "28386f23-9bae-46a9-a049-ff6bb2710152"
+    }
+  ]
+}

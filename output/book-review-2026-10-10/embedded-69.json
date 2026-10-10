@@ -1,0 +1,42 @@
+{
+  "index": 69,
+  "path": "Books/el-clan.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El clan"
+    },
+    {
+      "tag": "creator",
+      "value": "Carmen Mola"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:c2352a69-5cd8-4527-8b59-c19bcfc8b7f5"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Magnífica, brutal y enormemente adictiva, Carmen Mola se supera en el esperado desenlace de la serie Inspectora Elena Blanco</b>.</p><p>Cuando morir no importa, todo está permitido. Elena Blanco, inspectora de la Brigada de Análisis de Casos (BAC) se enfrenta a su peor enemigo, una poderosa organización integrada por personalidades del mundo de la empresa, la política, la judicatura y la policía. El Clan. Enfrentarse a él es acabar muerto. Aun así, la BAC afronta el desafío. Pero cuando Elena recibe unas imágenes en las que Zárate aparece tendido sobre un charco de sangre, comete un error imperdonable.</p><p>Con la inspectora en busca y captura, acusada del asesinato de un policía, y Zárate desaparecido, Mariajo, Reyes, Orduño y Buendía hacen la guerra por su cuenta. La llegada de una nueva inspectora en sustitución de Elena empeora la situación: parece enviada por el Clan con la misión de acabar con la BAC y llevar a Blanco a la cárcel.</p><p>Sin embargo, el hallazgo de unos cadáveres que han sido eviscerados lleva la investigación de Elena a cruzar todos los límites para salvar a su Brigada y encontrar a Zárate, sin saber si está vivo o muerto. Es el principio del fin de la BAC.</p><p>Ninguno de sus miembros se había enfrentado a un asesino tan despiadado como el Clan.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-09-09T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-09-13"
+    },
+    {
+      "tag": "identifier",
+      "value": "35b4a0e6-29b6-4365-8e68-33cb220bc308"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "75873"
+    }
+  ]
+}

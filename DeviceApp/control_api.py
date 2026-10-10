@@ -1,5 +1,7 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
+from omdb_ratings import OmdbSettings, OmdbRatings, OmdbError
+from omdb_backfill import OmdbBackfill
 from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
 from video_formats import is_video_file
 import movie_subtitles
@@ -9,6 +11,13 @@ from background_stats import BackgroundStats
 import catalog_store
 import book_metadata
 import youtube_search
+from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan
+from ai_catalog import build_catalog, execute_plan, SECTION_FIELDS
+from ai_recommender import recommend
+from recommendation_catalog import augment_catalog, resolve_tmdb_title
+from recommendation_profiles import RecommendationProfiles, PREFERENCE_FIELDS, MAX_HISTORY, empty_preferences, validate_history
+from collections import deque
+from contextlib import contextmanager
 from user_profiles import ProfileStore, ProfileError
 from profile_playback import ProfilePlayback
 from game_metadata import GameMetadata, MetadataError, title_key
@@ -22,6 +31,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sqlite3
 from playback_process import player_is_running
 
 import socket
@@ -154,6 +164,13 @@ subtitle_provider = movie_subtitles.OpenSubtitles()
 subtitle_download_lock = threading.Lock()
 SUBTITLE_SETTINGS_PATH = os.path.join(BASE_DIR, "subtitle_settings.json")
 GAME_SETTINGS_PATH = os.path.join(BASE_DIR, "game_settings.json")
+AI_SETTINGS_PATH = os.path.join(BASE_DIR, "ai_settings.json")
+ai_settings_store = AISettings(AI_SETTINGS_PATH)
+OMDB_SETTINGS_PATH = os.path.join(BASE_DIR, "omdb_settings.json")
+omdb_settings_store = OmdbSettings(OMDB_SETTINGS_PATH)
+ai_request_lock = threading.Lock()
+ai_request_times = deque()
+ai_request_active = False
 GAME_SETTING_KEYS = (
     "IGDB_CLIENT_ID", "IGDB_CLIENT_SECRET", "SCREENSCRAPER_DEV_ID",
     "SCREENSCRAPER_DEV_PASSWORD", "SCREENSCRAPER_SOFTNAME",
@@ -3976,12 +3993,59 @@ def tmdb_credentials():
 
 
 tmdb_artwork = TmdbCache(os.path.join(MULTIMEDIA_DIR, "TmdbCache"), tmdb_credentials)
+omdb_ratings = OmdbRatings(os.path.join(MULTIMEDIA_DIR, "OmdbCache"),
+                           lambda: omdb_settings_store.credentials(), tmdb_artwork, tmdb_credentials)
+omdb_backfill = OmdbBackfill(os.path.join(MULTIMEDIA_DIR, "OmdbCache", "backfill.json"),
+                             omdb_ratings, lambda: load_media_library())
 oscar_artwork = OscarCatalog(os.path.join(MULTIMEDIA_DIR, "TmdbCache", "Oscars"), tmdb_credentials)
 award_artwork = {
     name: OscarCatalog(os.path.join(MULTIMEDIA_DIR, "TmdbCache", "Awards", name), tmdb_credentials,
                        os.path.join(BASE_DIR, "data", filename), cards_only=True)
     for name, filename in (("palme", "palme_dor.json"), ("goya", "goya_best_picture.json"))
 }
+
+
+@app.after_request
+def no_store_omdb(response):
+    if request.path.startswith(("/settings/omdb", "/omdb/")):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.errorhandler(OmdbError)
+def omdb_error(error):
+    return jsonify({"ok": False, "error": str(error), "code": error.code}), error.status
+
+
+@app.route("/settings/omdb", methods=["GET", "POST"])
+def omdb_settings():
+    settings = (omdb_settings_store.update(request.get_json(silent=True)) if request.method == "POST"
+                else omdb_settings_store.public())
+    return jsonify({"ok": True, "settings": settings})
+
+
+@app.route("/settings/omdb/test", methods=["POST"])
+def omdb_test():
+    return jsonify(omdb_ratings.test_connection())
+
+
+@app.route("/omdb/ratings", methods=["GET"])
+def omdb_title_rating():
+    return jsonify(omdb_ratings.get(imdb_id=request.args.get("imdbId"),
+                                   kind=request.args.get("kind"), tmdb_id=request.args.get("tmdbId")))
+
+
+@app.route("/omdb/library", methods=["GET", "POST"])
+def omdb_library():
+    if request.method == "POST":
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or set(data) != {"action"} or data["action"] not in ("start", "pause"):
+            raise OmdbError("OMDB_INVALID_ACTION")
+        if data["action"] == "start":
+            omdb_backfill.start()
+        else:
+            omdb_backfill.pause()
+    return jsonify(omdb_backfill.status())
 
 
 def award_catalog(name):
@@ -4163,6 +4227,72 @@ def prepare_tmdb_title():
     return jsonify(tmdb_artwork.status())
 
 
+def tmdb_credits_inventory():
+    """Identify saved movie/TV profiles without guessing matches from filenames."""
+    library = load_media_library()
+    titles = {}
+    missing = []
+    profiles = 0
+    scanned = scanned_media_paths if scanned_media_paths.get("catalog") == MEDIA_LIBRARY_PATH else {}
+    for collection, kind in (("movies", "movie"), ("series", "tv")):
+        saved = library.get(collection, {})
+        for relative_path in sorted(set(saved) | set(scanned.get(collection, ()))):
+            item = saved.get(relative_path, {})
+            profiles += 1
+            tmdb_id = item.get("tmdbId")
+            if not str(tmdb_id).isdigit() or int(tmdb_id) <= 0:
+                missing.append(relative_path)
+                continue
+            key = f"{kind}/{int(tmdb_id)}"
+            titles[key] = {"kind": kind, "id": int(tmdb_id),
+                           "name": item.get("name") or relative_path}
+    return titles, profiles, sorted(missing)
+
+
+def tmdb_credits_snapshot(titles, profiles, missing):
+    jobs = tmdb_artwork.status()["jobs"]
+    result = {"total": len(titles), "profiles": profiles, "ready": 0,
+              "pending": 0, "running": 0, "failed": 0,
+              "movies": sum(item["kind"] == "movie" for item in titles.values()),
+              "series": sum(item["kind"] == "tv" for item in titles.values()),
+              "missingIds": missing, "errors": []}
+    for key, item in titles.items():
+        if tmdb_artwork.credits_ready(item["kind"], item["id"]):
+            result["ready"] += 1
+            continue
+        job = jobs.get(key, {})
+        state = job.get("state")
+        if state in ("pending", "running", "failed"):
+            result[state] += 1
+        if state == "failed":
+            result["errors"].append({"media": key, "name": item["name"],
+                                     "error": job.get("error") or "No se pudieron completar los créditos."})
+    result["remaining"] = result["total"] - result["ready"]
+    return result
+
+
+@app.route("/tmdb/credits", methods=["GET", "POST"])
+def complete_tmdb_credits():
+    try:
+        with tmdb_cache_action_lock:
+            titles, profiles, missing = tmdb_credits_inventory()
+            if request.method == "POST":
+                incomplete = [item for item in titles.values()
+                              if not tmdb_artwork.credits_ready(item["kind"], item["id"])]
+                if incomplete and not any(tmdb_credentials().values()):
+                    return jsonify({"error": "Guarda las credenciales de TMDB para completar las fichas.",
+                                    "code": "TMDB_CREDENTIALS_MISSING"}), 503
+                for item in incomplete:
+                    tmdb_artwork.enqueue_credits(item["kind"], item["id"])
+                tmdb_artwork.start()
+            response = jsonify(tmdb_credits_snapshot(titles, profiles, missing))
+            response.headers["Cache-Control"] = "no-store"
+            return response
+    except (OSError, ValueError):
+        return jsonify({"error": "No se pudo leer o guardar la preparación de reparto y equipo.",
+                        "code": "TMDB_STORAGE_ERROR"}), 500
+
+
 @app.route("/tmdb/cache", methods=["GET", "POST", "DELETE"])
 def tmdb_cache_status():
     with tmdb_cache_action_lock:
@@ -4177,6 +4307,176 @@ def tmdb_cache_status():
                         queue_tmdb_artwork(kind, item)
         tmdb_artwork.start()
         return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids(), "storage": tmdb_artwork.storage_background()})
+
+
+@contextmanager
+def ai_request_slot(limit):
+    """One paid request at a time, with a shared rolling per-minute limit."""
+    global ai_request_active
+    with ai_request_lock:
+        now = time.monotonic()
+        while ai_request_times and ai_request_times[0] <= now - 60:
+            ai_request_times.popleft()
+        if ai_request_active:
+            raise AIError("Ya hay una consulta de IA en curso. Espera a que termine.", code="AI_BUSY", status=429)
+        if len(ai_request_times) >= limit:
+            raise AIError("Se ha alcanzado el límite de consultas por minuto. Espera un momento.", code="AI_RATE_LIMIT", status=429)
+        ai_request_times.append(now)
+        ai_request_active = True
+    try:
+        yield
+    finally:
+        with ai_request_lock:
+            ai_request_active = False
+
+
+def ai_json(payload, status=200):
+    response = jsonify(payload)
+    response.status_code = status
+    response.headers["Cache-Control"] = "no-store"
+    if status == 429:
+        response.headers["Retry-After"] = "60"
+    return response
+
+
+def ai_error_response(error):
+    return ai_json({"ok": False, "error": str(error), "code": error.code}, error.status)
+
+
+@app.route("/settings/ai", methods=["GET", "POST"])
+def ai_settings():
+    try:
+        if request.method == "POST":
+            if request.content_length and request.content_length > 16384:
+                return ai_json({"ok": False, "error": "Configuración demasiado larga.", "code": "AI_INVALID_SETTINGS"}, 400)
+            settings = ai_settings_store.update(request.get_json(silent=True))
+        else:
+            settings = ai_settings_store.public()
+        return ai_json({"ok": True, "settings": settings})
+    except AIError as error:
+        return ai_error_response(error)
+    except (OSError, ValueError):
+        return ai_json({"ok": False, "error": "No se puede leer o guardar la configuración de OpenAI.", "code": "AI_SETTINGS_UNAVAILABLE"}, 503)
+
+
+@app.route("/settings/ai/test", methods=["POST"])
+def ai_test():
+    try:
+        settings = ai_settings_store.credentials()
+        if not settings.get("apiKey"):
+            return ai_json({"ok": False, "error": "Guarda primero una clave de OpenAI en el dashboard.", "code": "AI_NOT_CONFIGURED"}, 503)
+        with ai_request_slot(settings["requestsPerMinute"]):
+            test_connection(settings)
+        return ai_json({"ok": True, "message": "Conexión con OpenAI verificada."})
+    except AIError as error:
+        return ai_error_response(error)
+    except (OSError, ValueError):
+        return ai_json({"ok": False, "error": "No se puede leer la configuración de OpenAI.", "code": "AI_SETTINGS_UNAVAILABLE"}, 503)
+
+
+@app.route("/ai/search", methods=["POST"])
+def ai_search():
+    if request.content_length and request.content_length > 16384:
+        return ai_json({"ok": False, "error": "La consulta es demasiado larga.", "code": "AI_INVALID_QUERY"}, 400)
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or set(data) - {"section", "prompt", "language"}:
+        return ai_json({"ok": False, "error": "Consulta no válida.", "code": "AI_INVALID_QUERY"}, 400)
+    section, prompt, language = data.get("section"), data.get("prompt"), data.get("language", "es")
+    if (not isinstance(section, str) or section not in SECTION_FIELDS
+            or not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 2000
+            or not isinstance(language, str) or language not in SUPPORTED_LANGUAGES):
+        return ai_json({"ok": False, "error": "Indica una sección, una consulta de hasta 2000 caracteres y un idioma válido.", "code": "AI_INVALID_QUERY"}, 400)
+    try:
+        settings = ai_settings_store.credentials()
+        if not settings.get("enabled"):
+            return ai_json({"ok": False, "error": "Activa la búsqueda con IA en el dashboard.", "code": "AI_DISABLED"}, 503)
+        if not settings.get("apiKey"):
+            return ai_json({"ok": False, "error": "Configura la clave de OpenAI en el dashboard.", "code": "AI_NOT_CONFIGURED"}, 503)
+        with ai_request_slot(settings["requestsPerMinute"]):
+            catalogue = build_catalog(section, list_video_directories(), tmdb_artwork, language)
+            records = catalogue["records"]
+            if not records:
+                message = {"es": "Esta sección no tiene contenido guardado.", "ca": "Aquesta secció no té contingut desat.", "en": "This section has no saved content."}[language]
+                return ai_json({"ok": True, "section": section, "intent": "filter", "message": message,
+                                "ids": [], "count": 0, "total": 0, "missingMetadata": 0})
+            plan = validate_plan(plan_query(prompt.strip(), section, language, settings), section)
+            ids = execute_plan(records, plan) if plan["intent"] in {"filter", "count"} else []
+        return ai_json({"ok": True, "section": section, "intent": plan["intent"], "message": plan["message"],
+                        "ids": ids, "count": len(ids), "total": len(records),
+                        "missingMetadata": catalogue["missingMetadata"]})
+    except AIError as error:
+        return ai_error_response(error)
+    except (OSError, ValueError, TypeError):
+        return ai_json({"ok": False, "error": "No se ha podido consultar el catálogo local. Inténtalo de nuevo.", "code": "AI_CATALOG_UNAVAILABLE"}, 503)
+
+
+@app.route("/ai/recommendations", methods=["GET", "POST", "PATCH", "DELETE"])
+def ai_recommendations():
+    """Profile-scoped tastes and read-only recommendations; no download side effects."""
+    try:
+        if request.content_length and request.content_length > 32768:
+            raise ProfileError("La petición de recomendaciones es demasiado larga.")
+        data = request.args.to_dict() if request.method == "GET" else request.get_json(silent=True)
+        fields = {"GET": {"userId", "section"},
+                  "POST": {"userId", "section", "prompt", "language", "revision"},
+                  "PATCH": {"userId", "section", "preferences", "revision"},
+                  "DELETE": {"userId", "section", "revision"}}[request.method]
+        if not isinstance(data, dict) or set(data) != fields:
+            raise ProfileError("La petición de recomendaciones no es válida.")
+        user_id, section = data["userId"], data["section"]
+        store = RecommendationProfiles(USER_PROFILES_PATH)
+        memory = store.get(user_id, section)
+        if request.method == "GET":
+            return ai_json({"ok": True, "userId": user_id, "section": section, **memory})
+        revision = data["revision"]
+        if type(revision) is not int or not 0 <= revision < 9_223_372_036_854_775_807:
+            raise ProfileError("La versión de los gustos no es válida.")
+        # Reject stale tabs before spending a provider request; save checks again
+        # atomically so clearing memory while a request runs cannot resurrect it.
+        if revision != memory["revision"]:
+            raise ProfileError("Los gustos han cambiado. Actualiza e inténtalo de nuevo.", 409)
+        if request.method in {"PATCH", "DELETE"}:
+            preferences = empty_preferences() if request.method == "DELETE" else data["preferences"]
+            if not isinstance(preferences, dict) or set(preferences) != set(PREFERENCE_FIELDS):
+                raise ProfileError("Envía todas las categorías de gustos para guardar los cambios.")
+            saved = store.update_preferences(user_id, section, preferences, revision,
+                                             clear_history=request.method == "DELETE")
+            return ai_json({"ok": True, "userId": user_id, "section": section, **saved})
+        language = data["language"]
+        if not isinstance(language, str) or language not in SUPPORTED_LANGUAGES:
+            raise ProfileError("El idioma no es válido.")
+        prompt = validate_history([{"role": "user", "text": data["prompt"]}])[0]["text"]
+        settings = ai_settings_store.credentials()
+        if not settings.get("enabled"):
+            raise AIError("Activa la IA en el dashboard.", "AI_DISABLED", 503)
+        if not settings.get("apiKey"):
+            raise AIError("Configura la clave de OpenAI en el dashboard.", "AI_NOT_CONFIGURED", 503)
+        with ai_request_slot(settings["requestsPerMinute"]):
+            snapshot = list_video_directories()
+            catalog = build_catalog(section, snapshot, tmdb_artwork, language)
+            records = augment_catalog(catalog["records"], snapshot, section, ProfileStore(USER_PROFILES_PATH).state(user_id))
+            credentials = tmdb_credentials()
+            def resolve_title(title, media_type, year):
+                return resolve_tmdb_title(title, media_type, year, language, credentials)
+            result = recommend(prompt, section, language, settings, memory, records, resolve_title)
+            assistant_text = "\n\n".join(text for text in (result["message"], result["question"]) if text)
+            if result["recommendations"]:
+                # Keep verified titles in the bounded conversation so a later
+                # "the first one" refers to actual suggestions, not model guesses.
+                titles = "\n".join(f"{index + 1}. {item['title'][:160]}" for index, item in enumerate(result["recommendations"]))
+                assistant_text += "\n\n" + titles
+            history = (memory["history"] + [{"role": "user", "text": prompt},
+                                           {"role": "assistant", "text": assistant_text}])[-MAX_HISTORY:]
+            saved = store.save(user_id, section, result["preferences"], history, revision)
+        return ai_json({"ok": True, "userId": user_id, "section": section, **result, **saved})
+    except ProfileError as error:
+        code = {409: "AI_PROFILE_CHANGED", 404: "AI_PROFILE_NOT_FOUND", 500: "AI_MEMORY_UNAVAILABLE"}.get(error.status, "AI_INVALID_MEMORY")
+        return ai_json({"ok": False, "error": str(error), "code": code}, error.status)
+    except AIError as error:
+        return ai_error_response(error)
+    except (sqlite3.Error, OSError, ValueError, TypeError, KeyError):
+        return ai_json({"ok": False, "error": "No se pudo consultar o guardar la recomendación. Inténtalo de nuevo.",
+                        "code": "AI_MEMORY_UNAVAILABLE"}, 503)
 
 
 @app.route("/settings/services/<provider>/test", methods=["POST"])

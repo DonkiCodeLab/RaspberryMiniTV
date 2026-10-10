@@ -1,0 +1,16 @@
+{
+  "relativePath": "Books/patria.epub",
+  "title": "Patria",
+  "year": "2016",
+  "description": "A small Basque village is irreparably changed and broken by political fanaticism. Childhood friends, Bittori and Mirren, wounded by their craters of grief find it impossible to forget and forgive.",
+  "localizedMetadata": {
+    "ca": {},
+    "en": {
+      "subtitle": "A Novel",
+      "title": "Homeland"
+    },
+    "es": {
+      "title": "Patria"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/de-ratones-y-hombres.epub",
+  "title": "De ratones y hombres",
+  "year": "1937",
+  "description": "George y Lennie recorren California buscando trabajo y soñando con una pequeña granja propia. Al llegar a un rancho, su amistad se enfrenta a la soledad, la precariedad y los prejuicios de un mundo que deja poco espacio a los más vulnerables.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "George i Lennie recorren Califòrnia buscant feina i somiant en una petita granja pròpia. Quan arriben a un ranxo, la seva amistat s’enfronta a la solitud, la precarietat i els prejudicis d’un món que deixa poc espai als més vulnerables.",
+      "title": "Homes I Ratolins."
+    },
+    "en": {
+      "title": "Of Mice and Men",
+      "description": "George and Lennie travel through California looking for work and dreaming of a small farm of their own. On a ranch, their friendship confronts loneliness, insecurity and the prejudices of a world offering little protection to its most vulnerable people."
+    },
+    "es": {
+      "description": "George y Lennie recorren California buscando trabajo y soñando con una pequeña granja propia. Al llegar a un rancho, su amistad se enfrenta a la soledad, la precariedad y los prejuicios de un mundo que deja poco espacio a los más vulnerables.",
+      "title": "De ratones y hombres"
+    }
+  }
+}

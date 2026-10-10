@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/tokio-blues.epub",
+  "title": "Tokio blues",
+  "year": "1987",
+  "description": "Una canción devuelve a Tōru Watanabe al Tokio de su juventud y a sus relaciones con Naoko y Midori. Los recuerdos del amor, la amistad y una pérdida decisiva componen una historia sobre el duelo y la dificultad de encontrar el propio camino hacia la vida adulta.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Una canción devuelve a Tōru Watanabe al Tokio de su juventud y a sus relaciones con Naoko y Midori. Los recuerdos del amor, la amistad y una pérdida decisiva componen una historia sobre el duelo y la dificultad de encontrar el propio camino hacia la vida adulta.",
+      "title": "Tokio blues"
+    },
+    "ca": {
+      "description": "Una cançó retorna Tōru Watanabe al Tòquio de la joventut i a les relacions amb Naoko i Midori. Els records de l’amor, l’amistat i una pèrdua decisiva componen una història sobre el dol i la dificultat de trobar el camí cap a la vida adulta.",
+      "title": "Tokio blues"
+    },
+    "en": {
+      "description": "A song takes Tōru Watanabe back to his youth in Tokyo and his relationships with Naoko and Midori. Memories of love, friendship and a defining loss form a story about grief and the difficulty of finding a path into adulthood.",
+      "title": "Tokio blues"
+    }
+  }
+}

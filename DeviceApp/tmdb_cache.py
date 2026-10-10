@@ -15,8 +15,9 @@ import urllib.parse
 import urllib.request
 
 IMAGE_RE = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg)")
-DETAIL_RE = re.compile(r"/(?:movie/\d+(?:/images)?|tv/\d+(?:/images|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
+DETAIL_RE = re.compile(r"/(?:movie/\d+(?:/images|/credits)?|tv/\d+(?:/images|/aggregate_credits|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
 LANGUAGES = ("es-ES", "ca-ES", "en-US")
+CREDITS_VERSION = 1
 
 
 class TmdbError(RuntimeError):
@@ -39,9 +40,11 @@ def atomic_write(path, data):
 
 
 class TmdbCache:
-    def __init__(self, root, credentials):
+    def __init__(self, root, credentials, *, include_credits=True):
         self.root = Path(root)
         self.credentials = credentials
+        self.include_credits = include_credits
+        self.credits_snapshots = {}
         self.io_locks = [threading.RLock() for _ in range(64)]
         self.link_locks = [threading.RLock() for _ in range(64)]
         self.thumbnail_slots = threading.BoundedSemaphore(2)
@@ -103,6 +106,7 @@ class TmdbCache:
 
     def library_summary(self, kind, tmdb_id, language):
         """Read only local metadata and return the fields needed by library cards."""
+        credits_ready = self.credits_ready(kind, tmdb_id)
         params = {"language": language}
         if kind == "movie":
             params["append_to_response"] = "external_ids"
@@ -111,11 +115,12 @@ class TmdbCache:
         try:
             data = json.loads((self.root / "metadata" / (key + ".json")).read_text())
         except (OSError, ValueError):
-            return {"id": int(tmdb_id)}
+            return {"id": int(tmdb_id), "creditsReady": credits_ready}
         summary = {"id": int(tmdb_id), "name": data.get("title") or data.get("name") or "",
                 "posterPath": data.get("poster_path") or "", "voteAverage": data.get("vote_average") or 0,
                 "releaseDate": data.get("release_date") or "", "firstAirDate": data.get("first_air_date") or "",
-                "genres": [genre.get("name", "") for genre in data.get("genres", [])]}
+                "genres": [genre.get("name", "") for genre in data.get("genres", [])],
+                "creditsReady": credits_ready}
         if kind == "tv":
             summary.update(self._series_totals(tmdb_id, language, data))
         return summary
@@ -161,15 +166,24 @@ class TmdbCache:
             raise ValueError("Ruta TMDB no permitida")
         params = {k: str(v) for k, v in (params or {}).items()
                   if k in {"language", "query", "page", "include_adult", "append_to_response", "include_image_language"} and v is not None}
-        if path.endswith("/images"):
-            # One complete image inventory across all languages, shared by every UI language.
+        is_credits = path.endswith(("/credits", "/aggregate_credits"))
+        if path.endswith("/images") or is_credits:
+            # Image inventories and original person names/roles are language independent.
             params = {}
         cache_key = hashlib.sha256((path + "?" + urllib.parse.urlencode(sorted(params.items()))).encode()).hexdigest()
         target = self.root / "metadata" / (cache_key + ".json")
         if local_only:
             try:
-                return self._with_movie_links(path, json.loads(target.read_text()))
+                data = json.loads(target.read_text())
+                if is_credits:
+                    self._validate_credits(path, data)
+                return self._with_movie_links(path, data)
             except (OSError, ValueError):
+                if is_credits:
+                    try:
+                        return self._appended_credits(path)
+                    except (OSError, ValueError):
+                        pass
                 # Episode details already exist inside locally saved season metadata.
                 episode = re.fullmatch(r"(.*/season/\d+)/episode/(\d+)", path)
                 if episode:
@@ -186,6 +200,8 @@ class TmdbCache:
             try:
                 if not refresh:
                     data = json.loads(target.read_text())
+                    if is_credits:
+                        self._validate_credits(path, data)
                     with self.state_lock:
                         self._check_worker()
                         if generation != self.generations.get(owner, 0):
@@ -194,6 +210,21 @@ class TmdbCache:
                     return self._with_movie_links(path, data)
             except (OSError, ValueError):
                 pass
+            if is_credits and not refresh:
+                try:
+                    data = self._appended_credits(path)
+                except (OSError, ValueError):
+                    pass
+                else:
+                    # Older devices can import credits appended to the base
+                    # detail. Promote them without fetching the same data again.
+                    with self.state_lock:
+                        self._check_worker()
+                        if generation != self.generations.get(owner, 0):
+                            raise RuntimeError("Descarga cancelada por borrado del catálogo")
+                        self._index_metadata(target.name, owner, data)
+                        atomic_write(target, json.dumps(data, ensure_ascii=False).encode())
+                    return data
             credentials = self.credentials()
             headers = {"Accept": "application/json"}
             if credentials.get("bearerToken"):
@@ -207,6 +238,8 @@ class TmdbCache:
             data = json.loads(raw)
             if not isinstance(data, dict) or data.get("success") is False:
                 raise RuntimeError("Respuesta TMDB inválida")
+            if is_credits:
+                self._validate_credits(path, data)
             with self.state_lock:
                 self._check_worker()
                 if generation != self.generations.get(owner, 0):
@@ -214,6 +247,94 @@ class TmdbCache:
                 self._index_metadata(target.name, owner, data)
                 atomic_write(target, raw)
             return self._with_movie_links(path, data)
+
+    @staticmethod
+    def _credits_path(kind, tmdb_id):
+        if kind not in ("movie", "tv") or not str(tmdb_id).isdigit() or int(tmdb_id) <= 0:
+            raise ValueError("Película o serie TMDB no válida")
+        return f"/{kind}/{int(tmdb_id)}/" + ("credits" if kind == "movie" else "aggregate_credits")
+
+    @staticmethod
+    def _validate_credits(path, data):
+        """Reject partial/error payloads before they can become an offline cache hit."""
+        if (not isinstance(data, dict) or data.get("success") is False
+                or data.get("id") != int(path.split("/")[2])):
+            raise ValueError("Créditos TMDB inválidos: identificador incorrecto")
+        aggregate = path.endswith("/aggregate_credits")
+        for section, role, roles in (("cast", "character", "roles"), ("crew", "job", "jobs")):
+            people = data.get(section)
+            if not isinstance(people, list):
+                raise ValueError("Créditos TMDB inválidos: faltan reparto o equipo")
+            for person in people:
+                if (not isinstance(person, dict) or type(person.get("id")) is not int
+                        or person["id"] <= 0 or not isinstance(person.get("name"), str)
+                        or not person["name"].strip()):
+                    raise ValueError("Créditos TMDB inválidos: persona sin identificador o nombre")
+                entries = person.get(roles) if aggregate else [person]
+                if not isinstance(entries, list) or any(
+                        not isinstance(entry, dict) or not isinstance(entry.get(role), str) for entry in entries):
+                    raise ValueError("Créditos TMDB inválidos: faltan personajes o funciones")
+
+    def _appended_credits_target(self, path):
+        base, section = path.rsplit("/", 1)
+        query = urllib.parse.urlencode({"append_to_response": section})
+        filename = hashlib.sha256((base + "?" + query).encode()).hexdigest() + ".json"
+        return self.root / "metadata" / filename
+
+    def _appended_credits(self, path):
+        """Read credits imported by older devices through the allowed detail route."""
+        parent = json.loads(self._appended_credits_target(path).read_text())
+        tmdb_id = int(path.split("/")[2])
+        if (not isinstance(parent, dict) or parent.get("success") is False
+                or parent.get("id") != tmdb_id):
+            raise ValueError("Créditos TMDB inválidos: ficha incorrecta")
+        nested = parent.get(path.rsplit("/", 1)[1])
+        if not isinstance(nested, dict) or ("id" in nested and nested["id"] != tmdb_id):
+            raise ValueError("Créditos TMDB inválidos: contenido anidado incorrecto")
+        data = {**nested, "id": tmdb_id}
+        self._validate_credits(path, data)
+        return data
+
+    def credits_ready(self, kind, tmdb_id):
+        """Check local validated credits without network requests or cache writes."""
+        try:
+            path = self._credits_path(kind, tmdb_id)
+            filename = hashlib.sha256((path + "?").encode()).hexdigest() + ".json"
+            target = self.root / "metadata" / filename
+        except ValueError:
+            return False
+        signatures = []
+        for source in (target, self._appended_credits_target(path)):
+            try:
+                info = source.stat()
+                signatures.append((info.st_ino, info.st_mtime_ns, info.st_size))
+            except OSError:
+                signatures.append(None)
+        if not any(signatures):
+            return False
+        signature = tuple(signatures)
+        saved = self.credits_snapshots.get(filename)
+        if saved and saved[0] == signature:
+            return saved[1]
+        try:
+            self.json(path, local_only=True)
+            ready = True
+        except (TmdbError, ValueError):
+            ready = False
+        # Atomic cache replacement changes the signature. No additional lock is
+        # needed: concurrent readers may harmlessly validate the same file twice.
+        self.credits_snapshots[filename] = (signature, ready)
+        return ready
+
+    def warm_credits(self, kind, tmdb_id, refresh=False):
+        """Persist full cast/crew JSON; person portraits are never downloaded here."""
+        path = self._credits_path(kind, tmdb_id)
+        self._check_worker()
+        self._progress("credits", 0, 1, path)
+        data = self.json(path, refresh=refresh)
+        self._validate_credits(path, data)
+        self._progress("credits", 1, 1, path)
+        return data
 
     def _with_movie_links(self, path, data, refresh=False, lookup=False, lookup_results=None):
         """Persist movie links once, shared by languages, browsers and restarts."""
@@ -360,17 +481,19 @@ class TmdbCache:
             self.index[filename] = entry
             atomic_write(self.root / "index.json", json.dumps(self.index).encode())
 
-    def _images_in(self, data):
+    def _images_in(self, data, include_profiles=True):
         paths = set()
         if isinstance(data, dict):
             for key, value in data.items():
+                if key == "profile_path" and not include_profiles:
+                    continue
                 if key in {"poster_path", "backdrop_path", "still_path", "profile_path", "file_path", "logo_path"} and isinstance(value, str) and IMAGE_RE.fullmatch(value):
                     paths.add(value)
                 else:
-                    paths.update(self._images_in(value))
+                    paths.update(self._images_in(value, include_profiles=include_profiles))
         elif isinstance(data, list):
             for value in data:
-                paths.update(self._images_in(value))
+                paths.update(self._images_in(value, include_profiles=include_profiles))
         return paths
 
     def warm(self, kind, tmdb_id, extra_images=(), refresh=False):
@@ -409,7 +532,7 @@ class TmdbCache:
                 data = self.json(path, params, refresh=refresh)
                 collected[key] = data
                 self._progress("metadata", len(collected), 0, path)
-                images.update(self._images_in(data))
+                images.update(self._images_in(data, include_profiles=False))
                 collect_thumbnails(data)
                 return data
             except Exception as exc:
@@ -436,6 +559,11 @@ class TmdbCache:
                             collect(season_path + f"/episode/{episode_number}/images")
                     collect(season_path + "/images")
         errors.extend(self._warm_images(images, thumbnails))
+        if self.include_credits:
+            try:
+                self.warm_credits(kind, tmdb_id, refresh=refresh)
+            except Exception as exc:
+                errors.append(f"Créditos {base}: {exc}")
         if errors:
             raise RuntimeError("; ".join(errors)[:4000])
 
@@ -481,16 +609,47 @@ class TmdbCache:
         with self.jobs_lock:
             previous = self.jobs.get(key, {})
             images = sorted(set(previous.get("images", [])) | set(extra))
-            prepared = previous.get("state") in ("pending", "running") or (previous.get("state") == "complete" and previous.get("thumbnailsReady"))
-            if prepared and images == previous.get("images", []) and not refresh:
+            same_images = images == previous.get("images", [])
+            active = previous.get("state") in ("pending", "running")
+            if active and not previous.get("creditsOnly") and same_images and not refresh:
                 return
-            self.jobs[key] = {"kind": kind, "id": int(tmdb_id), "state": "pending", "error": "", "images": images, "refresh": refresh}
+            credits_ready = self.credits_ready(kind, tmdb_id)
+            artwork_ready = bool(previous.get("thumbnailsReady"))
+            credits_only = artwork_ready and same_images and not refresh
+            if credits_only and ((active and previous.get("creditsOnly")) or credits_ready or not self.include_credits):
+                return
+            self.jobs[key] = {"kind": kind, "id": int(tmdb_id), "state": "pending", "error": "", "images": images,
+                              "refresh": refresh, "creditsOnly": credits_only, "thumbnailsReady": artwork_ready,
+                              "creditsReady": credits_ready, "creditsVersion": CREDITS_VERSION if credits_ready else 0}
             try:
                 self._save_jobs()
             except OSError as exc:
                 self.jobs[key].update(state="failed", error=f"No se pudo guardar la cola: {exc}")
                 raise
         self.start()
+
+    def enqueue_credits(self, kind, tmdb_id, refresh=False):
+        """Queue metadata only, preserving prepared artwork and deduplicating active work."""
+        self._credits_path(kind, tmdb_id)
+        key = f"{kind}/{int(tmdb_id)}"
+        with self.jobs_lock:
+            previous = self.jobs.get(key, {})
+            if previous.get("state") in ("pending", "running"):
+                return False  # Full preparation also includes credits.
+            ready = self.credits_ready(kind, tmdb_id)
+            if ready and not refresh:
+                return False
+            self.jobs[key] = {"kind": kind, "id": int(tmdb_id), "state": "pending", "error": "",
+                              "images": list(previous.get("images", [])), "refresh": refresh,
+                              "creditsOnly": True, "thumbnailsReady": bool(previous.get("thumbnailsReady")),
+                              "creditsReady": ready, "creditsVersion": CREDITS_VERSION if ready else 0}
+            try:
+                self._save_jobs()
+            except OSError as exc:
+                self.jobs[key].update(state="failed", error=f"No se pudo guardar la cola: {exc}")
+                raise
+        self.start()
+        return True
 
     def cancel(self):
         # Invalidate in-flight writes; already published cache files remain reusable.
@@ -526,7 +685,10 @@ class TmdbCache:
                     continue
             try:
                 self.worker_context.job = (key, generation)
-                self.warm(job["kind"], job["id"], job["images"], job.get("refresh", False))
+                if job.get("creditsOnly"):
+                    self.warm_credits(job["kind"], job["id"], job.get("refresh", False))
+                else:
+                    self.warm(job["kind"], job["id"], job["images"], job.get("refresh", False))
                 state, error = "complete", ""
             except Exception as exc:
                 state, error = "failed", str(exc)
@@ -535,7 +697,10 @@ class TmdbCache:
             with self.jobs_lock:
                 if self.jobs.get(key) is job and job["state"] == "running":
                     job.update(state=state, error=error)
-                    job["thumbnailsReady"] = state == "complete"
+                    if not job.get("creditsOnly"):
+                        job["thumbnailsReady"] = state == "complete"
+                    job["creditsReady"] = self.credits_ready(job["kind"], job["id"])
+                    job["creditsVersion"] = CREDITS_VERSION if job["creditsReady"] else 0
                 try:
                     self._save_jobs()
                 except OSError as exc:
@@ -549,15 +714,17 @@ class TmdbCache:
     def _legacy_metadata(self, owner):
         """Discover the original hash-only cache without contacting TMDB."""
         base = "/" + owner
-        paths = [base, base + "/images"]
+        paths = [base, base + "/images", self._credits_path(*owner.split("/"))]
         seen = set()
         for path in paths:
             if path in seen:
                 continue
             seen.add(path)
-            variants = [{}] if path.endswith("/images") else [{}, *({"language": lang} for lang in LANGUAGES)]
+            variants = [{}] if path.endswith(("/images", "/credits", "/aggregate_credits")) else [{}, *({"language": lang} for lang in LANGUAGES)]
             if owner.startswith("movie/") and path == base:
                 variants += [{**params, "append_to_response": "external_ids"} for params in list(variants)]
+            if path == base:
+                variants.append({"append_to_response": "credits" if owner.startswith("movie/") else "aggregate_credits"})
             for params in variants:
                 digest = hashlib.sha256((path + "?" + urllib.parse.urlencode(sorted(params.items()))).encode()).hexdigest()
                 target = self.root / "metadata" / (digest + ".json")
@@ -684,6 +851,6 @@ class TmdbCache:
         with self.jobs_lock:
             jobs = [dict(job) for job in self.jobs.values()]
         return {"total": len(jobs), **{state: sum(j["state"] == state for j in jobs) for state in ("pending", "running", "complete", "failed", "cancelled")},
-                "jobs": {f'{j["kind"]}/{j["id"]}': {key: j.get(key) for key in ("state", "progress", "error")} for j in jobs},
+                "jobs": {f'{j["kind"]}/{j["id"]}': {key: j.get(key) for key in ("state", "progress", "error", "creditsOnly", "creditsReady", "creditsVersion", "thumbnailsReady")} for j in jobs},
                 "errors": [{"media": f'{j["kind"]}/{j["id"]}', "error": j["error"]} for j in jobs if j["state"] == "failed"],
                 "current": next((f'{j["kind"]}/{j["id"]}' for j in jobs if j["state"] == "running"), "")}

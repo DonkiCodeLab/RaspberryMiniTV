@@ -1,0 +1,42 @@
+{
+  "index": 192,
+  "path": "Books/mystic-river.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Mystic River"
+    },
+    {
+      "tag": "creator",
+      "value": "Dennis Lehane"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Cuando eran niños, Sean Devine, Jimmy Marcus y Dave Boyle eran amigos, amigos de correrías. Hasta que un día ocurrió algo terrible, Dave fue secuestrado mientras jugaban en la calle. Desde ese día sus vidas cambiarían para siempre.</p><p>Veinticinco años más tarde, Sean trabaja en el Departamenteo de Homicidios; Jimmy —ex convicto— tiene una tienda en el barrio; y Dave intenta salvar su matrimonio y mantener sus demonios a raya, demonios que le incitan a hacer cosas terribles.</p><p>Cuando la hija de Jimmy Marcus muere asesinada, Sean Devine se hace cargo del caso y esta muerte lo obliga a volver a un mundo que pensaba haber dejado atrás, a enfrentarse no sólo con la violencia del presente, sino también con las pesadillas de su pasado. Sus investigaciones le llevan a enemistarse con Jimmy Marcus, cuyos impulsos criminales le tientan a tomarse la justicia por su mano, y también a Dave Boyle, que aparece cubierto de sangre la noche en que murió la hija de Jimmy.</p><p><cite>Mystic River</cite> no es sólo una novela psicológica de misterio, tensa y desconcertante, sino también una novela épica sobre el amor y la lealtad, la fe y la familia, en la que los protagonistas deberán enfrentarse con las verdades más oscuras de su pasado.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2001-01-29T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-06-01"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:f4debf35-973d-469a-beda-5dfafb881837"
+    },
+    {
+      "tag": "identifier",
+      "value": "8c530bd3-c7cb-41cc-997c-69e218a5c3b4"
+    },
+    {
+      "tag": "identifier",
+      "value": "5446"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    }
+  ]
+}

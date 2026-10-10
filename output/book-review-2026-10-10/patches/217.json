@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/the-great-train-robbery.epub",
+  "title": "El gran robo del tren",
+  "year": "1975",
+  "description": "En la Inglaterra victoriana, Edward Pierce organiza el robo de un cargamento de oro transportado por ferrocarril. El plan exige obtener varias llaves y coordinar a un grupo de especialistas, en una reconstrucción novelada que observa tanto el ingenio criminal como las desigualdades de la época.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "A l’Anglaterra victoriana, Edward Pierce organitza el robatori d’un carregament d’or transportat per ferrocarril. El pla exigeix obtenir diverses claus i coordinar especialistes, en una reconstrucció novel·lada que observa tant l’enginy criminal com les desigualtats de l’època.",
+      "title": "El gran robo del tren"
+    },
+    "en": {
+      "title": "El gran robo del tren",
+      "description": "In Victorian England, Edward Pierce organises the theft of a gold shipment carried by rail. The plan requires acquiring several keys and coordinating skilled accomplices, in a fictionalised reconstruction examining both criminal ingenuity and the era's inequalities."
+    },
+    "es": {
+      "title": "El gran robo del tren",
+      "description": "En la Inglaterra victoriana, Edward Pierce organiza el robo de un cargamento de oro transportado por ferrocarril. El plan exige obtener varias llaves y coordinar a un grupo de especialistas, en una reconstrucción novelada que observa tanto el ingenio criminal como las desigualdades de la época."
+    }
+  }
+}

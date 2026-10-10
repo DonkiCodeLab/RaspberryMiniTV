@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/las-voces-del-pamano.epub",
+  "title": "Las voces del Pamano",
+  "year": "2004",
+  "description": "Una maestra encuentra unos cuadernos ocultos en una escuela del Pallars a punto de desaparecer. Su lectura abre una investigación sobre la Guerra Civil y la posguerra, donde la memoria de los vencedores y vencidos se entrecruza con lealtades, silencios y manipulaciones posteriores.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Una mestra troba uns quaderns amagats en una escola del Pallars a punt de desaparèixer. La lectura obre una investigació sobre la Guerra Civil i la postguerra, on la memòria dels vencedors i vençuts s’entrecreua amb lleialtats, silencis i manipulacions posteriors.",
+      "title": "Las voces del Pamano"
+    },
+    "en": {
+      "description": "A teacher discovers notebooks hidden in a Pallars school awaiting demolition. Reading them opens an investigation into the Spanish Civil War and its aftermath, where memories of victors and defeated intertwine with loyalties, silence and later distortions.",
+      "title": "Las voces del Pamano"
+    },
+    "es": {
+      "title": "Las voces del Pamano",
+      "description": "Una maestra encuentra unos cuadernos ocultos en una escuela del Pallars a punto de desaparecer. Su lectura abre una investigación sobre la Guerra Civil y la posguerra, donde la memoria de los vencedores y vencidos se entrecruza con lealtades, silencios y manipulaciones posteriores."
+    }
+  },
+  "author": "Jaume Cabré"
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-recluso.epub",
+  "title": "El recluso",
+  "year": "2022",
+  "description": "Brooke Sullivan empieza a trabajar como enfermera en una prisión donde cumple condena Shane Nelson, su antiguo novio. Nadie conoce su vínculo ni el papel de Brooke en el juicio, pero el reencuentro pone en duda sus recuerdos de aquella noche y lo que cree saber.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Brooke Sullivan comença a treballar d’infermera en una presó on compleix condemna Shane Nelson, el seu antic xicot. Ningú no coneix el vincle ni el paper de Brooke en el judici, però el retrobament posa en dubte els records d’aquella nit i tot el que creu saber.",
+      "title": "El recluso"
+    },
+    "en": {
+      "title": "The Inmate",
+      "description": "Brooke Sullivan takes a nursing job in the prison where her former boyfriend Shane Nelson is serving his sentence. No one knows their connection or her role in his trial, but their reunion challenges her memories of the night that changed their lives."
+    },
+    "es": {
+      "description": "Brooke Sullivan empieza a trabajar como enfermera en una prisión donde cumple condena Shane Nelson, su antiguo novio. Nadie conoce su vínculo ni el papel de Brooke en el juicio, pero el reencuentro pone en duda sus recuerdos de aquella noche y lo que cree saber.",
+      "title": "El recluso"
+    }
+  }
+}

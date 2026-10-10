@@ -1,0 +1,42 @@
+{
+  "index": 55,
+  "path": "Books/diez-negritos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Diez negritos vs. Y no quedó ninguno"
+    },
+    {
+      "tag": "creator",
+      "value": "Agatha Christie"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:6509e6f0-373e-4b18-ae78-7e0b3fef69c2"
+    },
+    {
+      "tag": "description",
+      "value": "Diez personas que no se han visto nunca son invitadas por un huésped desconocido a pasar unos días de vacaciones en una lujosa mansión, situada en una isla de la costa inglesa. Después de la primera cena, una misteriosa grabación desvelará que cada uno de los presentes tiene algo que esconder y un crimen por el que pagar. Cuando el cuerpo de uno de los invitados aparezca con signos de haber sido asesinado, la tensión estallará: el criminal está entre ellos, preparándose para actuar de nuevo, y sólo una vieja canción infantil parece encerrar el misterio de la creciente pesadilla. Se presenta en esta edición una versión comparada de la versión original del libro «Diez negritos», con la versión censurada, reescrita y modificada de la misma, titulada «Y no quedó ninguno», ambas en español."
+    },
+    {
+      "tag": "date",
+      "value": "1939-11-05T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-04-27"
+    },
+    {
+      "tag": "identifier",
+      "value": "460684e4-4e16-4179-9458-8d647cb36fa0"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "44853"
+    }
+  ]
+}

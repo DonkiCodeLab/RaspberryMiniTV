@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/1984.epub",
+  "title": "1984",
+  "year": "1949",
+  "description": "Winston Smith altera documentos para un Partido que vigila incluso los pensamientos. Su relación con Julia y su deseo de conocer la verdad lo enfrentan a un régimen que pretende controlar la memoria, el lenguaje y la intimidad.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "1984",
+      "description": "Winston Smith altera documents per a un Partit que vigila fins i tot els pensaments. La seva relació amb la Julia i el desig de conèixer la veritat l’enfronten a un règim que vol controlar la memòria, el llenguatge i la intimitat."
+    },
+    "en": {
+      "title": "Nineteen Eighty-Four",
+      "description": "Winston Smith rewrites records for a Party that polices even people's thoughts. His relationship with Julia and his search for truth bring him into conflict with a regime determined to control memory, language and private life."
+    },
+    "es": {
+      "description": "Winston Smith altera documentos para un Partido que vigila incluso los pensamientos. Su relación con Julia y su deseo de conocer la verdad lo enfrentan a un régimen que pretende controlar la memoria, el lenguaje y la intimidad.",
+      "subtitle": "",
+      "title": "Año 1984"
+    }
+  }
+}

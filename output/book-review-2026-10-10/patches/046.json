@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/crimen-y-castigo.epub",
+  "title": "Crimen y castigo",
+  "year": "1866",
+  "description": "Raskólnikov, un estudiante empobrecido de San Petersburgo, comete un asesinato amparándose en una teoría sobre los hombres excepcionales. La culpa, la investigación policial y su relación con Sonia lo obligan a enfrentarse a las consecuencias morales de su decisión.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Raskólnikov, un estudiante empobrecido de San Petersburgo, comete un asesinato amparándose en una teoría sobre los hombres excepcionales. La culpa, la investigación policial y su relación con Sonia lo obligan a enfrentarse a las consecuencias morales de su decisión.",
+      "title": "Crimen y castigo"
+    },
+    "ca": {
+      "description": "Raskólnikov, un estudiant empobrit de Sant Petersburg, comet un assassinat emparant-se en una teoria sobre els homes excepcionals. La culpa, la investigació policial i la relació amb la Sònia l’obliguen a afrontar les conseqüències morals de la seva decisió.",
+      "title": "Crimen y castigo"
+    },
+    "en": {
+      "description": "Impoverished St Petersburg student Raskolnikov commits murder to test a theory about exceptional individuals. Guilt, a persistent investigation and his relationship with Sonya force him to confront the moral consequences of what he has done.",
+      "title": "Crimen y castigo"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "index": 107,
+  "path": "Books/el-silencio-de-los-corderos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El silencio de los corderos"
+    },
+    {
+      "tag": "creator",
+      "value": "Thomas Harris"
+    },
+    {
+      "tag": "description",
+      "value": "A Clarice Starling, joven y ambiciosa estudiante de la academia del FBI, le encomiendan que entreviste a Hannibal Lecter, brillante psiquiatra y despiadado asesino, para conseguir su colaboración en la resolución de un caso de asesinatos en serie. El asombroso conocimiento de Lecter del comportamiento humano y su poderosa personalidad cautivarán de inmediato a Clarice, quien, incapaz de dominarla, establecerá con él una ambigua, inquietante y peligrosa relación."
+    },
+    {
+      "tag": "date",
+      "value": "1987-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-12-07"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:2ADC9F00-A219-11E2-9E96-0800200C9A66"
+    },
+    {
+      "tag": "identifier",
+      "value": "4028d763-b69a-46d6-9754-11cbc7ec0cbc"
+    },
+    {
+      "tag": "identifier",
+      "value": "2391"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.7"
+    }
+  ]
+}

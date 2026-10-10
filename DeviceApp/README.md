@@ -1,5 +1,28 @@
 # DeviceApp
 
+## Perfiles de usuario y reanudación
+
+Los perfiles y sus estados viven en `MultimediaContent/user_profiles.sqlite3`.
+La API aplica el PIN de la web a `GET/POST /users`, `PATCH/DELETE /users/<id>` y
+`GET/PATCH /users/<id>/state`. Los parches modifican solo los campos enviados;
+dos navegadores pueden editar favoritos o episodios distintos sin sobrescribir
+el resto. Borrar un perfil elimina también sus marcas y progreso. Incluye este
+SQLite en las copias de seguridad de MultimediaContent.
+
+Los comandos de vídeo enviados desde la web incluyen el perfil que los inició y
+los segundos de reanudación. El menú utiliza mpv para estas sesiones y guarda
+la posición cada tres segundos, al detener y al terminar; continúa guardando
+aunque se cierre la web. El vídeo sigue perteneciendo al usuario que lo abrió.
+
+La lectura con perfil en la MiniTV abre el lector web incluido en Chromium para
+compartir páginas PDF/CBZ/CBR y posiciones EPUB con el móvil u ordenador. Requiere
+`chromium` y `python3-pil` (ambos incluidos en `install_comic_support.sh`). Si no
+hay Chromium, la web indica cómo instalarlo y permite usar **Leer en navegador**.
+Los comandos antiguos sin perfil mantienen el lector externo configurado.
+
+La subida de avatares valida la imagen y guarda una copia JPEG de 256×256. Los
+25 avatares precargados se distribuyen con la web y funcionan sin conexión.
+
 Scripts para ejecutar la TV en la Raspberry Pi.
 
 ## Descargas de películas y series por torrent
@@ -524,6 +547,120 @@ navegación normal las fichas no caducan. Las búsquedas nuevas necesitan conexi
 las fichas e imágenes ya almacenadas se sirven sin conexión a TMDB. Enlaces externos
 como IMDb, Rotten Tomatoes o su resolución mediante Wikidata conservan su comportamiento.
 
+### Puntuaciones IMDb, Rotten Tomatoes y Metacritic con OMDb
+
+Las fichas de películas y series pueden mostrar la puntuación de IMDb y su número
+de votos, el porcentaje de Rotten Tomatoes y la nota de Metacritic sobre 100,
+cuando [OMDb](https://www.omdbapi.com/) proporciona cada dato. Las fuentes que
+faltan se muestran como **No disponible**. Solicita una clave en
+[OMDb API Key](https://www.omdbapi.com/apikey.aspx), actívala desde el correo recibido
+y guárdala en **Dashboard → Servicios auxiliares → Puntuaciones · OMDb**. **Probar conexión** verifica la
+clave guardada y consume una consulta. La integración necesita también el backend
+actualizado en la Raspberry; el modo demo no consulta OMDb.
+
+La clave permanece en `DeviceApp/omdb_settings.json`, con permisos `0600`, excluida
+de Git y conservada por el actualizador. La API solo devuelve si existe una clave;
+un campo vacío al guardar conserva la actual y **Eliminar clave** la borra. No se
+debe poner la clave en variables `VITE_*`, en el código web ni en URLs del navegador.
+
+Las consultas se hacen al abrir una ficha. Una misma respuesta de OMDb puede incluir
+las tres fuentes, sin consultas adicionales por cada nota.
+`MultimediaContent/OmdbCache/` conserva las notas durante siete días si existe
+alguna y los títulos sin ninguna puntuación durante un día. Una nota
+caducada sigue disponible si falla la conexión o se agota la cuota, indicando que
+está pendiente de actualización. Los errores tienen una pausa antes de reintentar:
+una hora si se agota la cuota, cinco minutos si se rechaza la clave y un minuto para
+otros fallos de OMDb. No se programa una tarea periódica.
+La caché anterior, que solo contenía IMDb, se renueva al abrir cada ficha por primera
+vez con esta versión. Si falla la renovación se conserva la nota IMDb anterior.
+Los valores ausentes se guardan como `null` y respetan la misma caducidad, evitando
+consultas repetidas por notas que el proveedor no tiene.
+
+Rotten Tomatoes procede de `Ratings` con la fuente exacta `Rotten Tomatoes` y un
+valor porcentual. Metacritic procede de `Ratings` con la fuente `Metacritic` y un
+valor sobre 100, usando `Metascore` como alternativa cuando ese dato falta o es
+inválido. Solo se aceptan enteros entre 0 y 100; el cero es una nota válida.
+Una nota opcional malformada queda ausente sin invalidar la puntuación IMDb.
+No se utiliza `tomatoUserMeter`, que representa una puntuación de audiencia distinta.
+
+Para preparar las fichas que ya están en el catálogo, abre
+**Dashboard → Servicios auxiliares → Puntuaciones · OMDb** y pulsa el botón de
+actualizar las fichas. La Raspberry crea un trabajo explícito en segundo plano
+con las películas y series guardadas. Se deduplican los ID TMDB y los enlaces IMDb;
+las fichas sin identificador aparecen aparte para poder completarlas.
+
+La actualización reutiliza las notas vigentes y las respuestas sin puntuaciones
+que ya están guardadas. Solo consulta las fichas que faltan, han caducado o tienen
+la versión antigua de caché. Procesa un título cada vez con una pausa de medio
+segundo entre títulos. Se puede cerrar el navegador o pulsar **Pausar**; la pausa
+termina la consulta en curso y conserva el avance en
+`MultimediaContent/OmdbCache/backfill.json`.
+
+Al agotar la cuota, rechazar la clave o fallar la conexión, el trabajo queda pausado
+con el título pendiente. Una respuesta antigua sirve para ver la ficha, pero no
+marca ese título como actualizado. Después de resolver el problema, se puede
+reanudar desde el mismo punto. Un reinicio de la API deja el trabajo pausado hasta
+que se reanude manualmente. Las fichas sin correspondencia IMDb se cuentan como
+fallidas y el resto del trabajo continúa.
+
+Al reanudar se compara el trabajo con el catálogo actual: las fichas eliminadas se
+descartan y las añadidas o con identificadores corregidos se incorporan pendientes.
+Se conservan los resultados ya procesados de fichas con los mismos identificadores
+y caché vigente, por lo que corregir una ficha problemática permite continuar.
+
+El contador general de preparadas incluye las fichas con caché vigente aunque
+OMDb no tenga notas para ellas. El resumen del trabajo distingue fichas con alguna
+nota, sin notas y fallidas; una ficha reutilizada de la caché cuenta como procesada,
+sin afirmar que se haya hecho una consulta nueva. Iniciar otro trabajo tras acabar
+permite incluir fichas añadidas posteriormente.
+
+Cuando falta el ID IMDb, se busca primero en la ficha TMDB local y después en
+`/movie/<id>/external_ids` o `/tv/<id>/external_ids`, usando las credenciales TMDB
+de la Raspberry. El resultado se guarda por ID TMDB, por lo que también funciona
+con series preparadas antes de incorporar estos identificadores. La puntuación
+IMDb se presenta separada de la puntuación TMDB; un título sin nota nunca recibe
+una puntuación inventada.
+
+Rutas protegidas por el PIN y con `Cache-Control: no-store`:
+
+- `GET/POST /settings/omdb`: estado `{settings: {configured}}`; guardar
+  `{apiKey: "..."}` o eliminar `{clearApiKey: true}`.
+- `POST /settings/omdb/test`: verifica la clave guardada con una consulta.
+- `GET /omdb/library`: inventario y progreso local, sin consultar los proveedores
+  ni arrancar trabajos. `total` incluye los títulos identificables deduplicados;
+  `ready` cuenta los que tienen caché vigente y `missingIds` enumera el resto.
+- `POST /omdb/library` con `{action: "start"}` inicia o reanuda el trabajo y con
+  `{action: "pause"}` solicita una pausa. Ambos devuelven el mismo estado que GET.
+  `job` incluye `state`, `total`, `processed`, `ready`, `unavailable`, `failed`,
+  `currentTitle`, `code`, `startedAt` y `finishedAt`. `processed` es la suma de
+  `ready`, `unavailable` y `failed`; las fechas usan segundos Unix o `null`.
+- `GET /omdb/ratings?imdbId=tt0111161`, o `?kind=movie&tmdbId=278`
+  (`kind=tv` para series): devuelve `imdbId`, `rating`, `votes`, `updatedAt`
+  (segundos Unix), `stale`, `rottenTomatoes` y `metacritic`. `rating` (1–10) y
+  `votes` corresponden a IMDb; `rottenTomatoes` es un porcentaje entero y
+  `metacritic` un entero sobre 100. Cada puntuación y `votes` pueden ser `null`.
+
+Pruebas sin acceso a Internet:
+`python -m unittest discover -s DeviceApp/tests -p 'test_omdb*.py'`.
+
+Las fichas de películas y series también conservan el reparto completo disponible
+en TMDB (identificadores, nombres y personajes) y el equipo, con sus funciones.
+En series se usan los créditos agregados de todos los episodios. La preparación de
+nuevas incorporaciones descarga estos datos automáticamente, sin descargar retratos.
+Las fichas existentes se completan desde **Dashboard → Servicios auxiliares → TMDB
+→ Reparto y equipo → Completar todas las fichas**. Esta acción descarga únicamente
+los créditos que faltan; conserva los vídeos, imágenes y ajustes de cada ficha.
+La cola continúa al cerrar la web, se reanuda tras reiniciar la API y permite
+reintentar fallos. Las fichas sin identificador requieren una coincidencia manual.
+
+`GET /tmdb/credits` informa de la cobertura del catálogo instalado sin acceder a
+Internet; `POST /tmdb/credits` encola los créditos pendientes. Ambos requieren PIN.
+También se puede ejecutar `python3 DeviceApp/complete_media_credits.py` en la
+Raspberry, con la API actualizada y en marcha; `--check` solo comprueba el estado.
+El comando termina con código 1 si quedan títulos pendientes o sin identificar.
+Las variantes ya guardadas con `append_to_response=credits` o
+`append_to_response=aggregate_credits` se reutilizan sin volver a descargarlas.
+
 API autenticada con el PIN habitual:
 
 - `GET /tmdb/cache`: progreso, errores e identificadores pendientes de asignar.
@@ -765,3 +902,91 @@ YouTube Data API v3, con filtros `videoEmbeddable=true` y `videoSyndicated=true`
 Usa `YOUTUBE_API_KEY` del entorno/`.env` o de la configuración de juegos del
 dashboard. La clave permanece en el servidor; no se devuelven errores crudos del
 proveedor. La caché en memoria dura 15 minutos y tiene un máximo de 128 búsquedas.
+
+### Búsqueda del catálogo con OpenAI
+
+Configura la clave en **Dashboard → Servicios auxiliares → OpenAI**. Se guarda
+en `DeviceApp/ai_settings.json`, con permisos 0600 y excluida de Git y de las
+copias temporales del actualizador. La API de configuración devuelve únicamente
+si existe una clave; un campo vacío conserva la anterior y **Eliminar clave**
+la borra. No hay que introducirla en `.env` del frontend ni en variables `VITE_*`.
+Guardar y probar son acciones separadas. La prueba realiza una petición pequeña
+al modelo guardado, incluso si la búsqueda está desactivada.
+
+El modelo predeterminado es `gpt-4.1-mini`; se puede cambiar por un modelo
+compatible con Responses y Structured Outputs. La integración usa la
+[API Responses de OpenAI](https://developers.openai.com/api/reference/resources/responses/methods/create)
+con `store: false` y un esquema JSON estricto. En el modo **Buscar**, OpenAI recibe la consulta escrita,
+la sección, el idioma y las instrucciones para interpretarla. Los archivos,
+el catálogo completo, las marcas de usuario y los créditos permanecen en la
+Raspberry. La llamada requiere Internet y consume uso de la API de OpenAI.
+
+El servidor valida el plan y filtra las fichas locales por título, personas,
+género, año y otros campos de cada sección. Películas y series consultan los
+créditos TMDB ya descargados; las búsquedas no descargan más fichas. Fotos admite
+nombres de archivo, sin analizar imágenes ni deducir la fecha de captura.
+Las consultas sobre escenas, similitud o valoraciones subjetivas piden concretar
+la búsqueda. Los resultados son rutas de elementos presentes en el catálogo;
+el modelo no genera títulos ni identificadores de resultados. Los recuentos
+se calculan en el servidor. Si faltan metadatos, se informa en la web y un campo
+desconocido nunca satisface un filtro negativo.
+
+En películas y series, el modo **Recomiéndame** mantiene una conversación por
+perfil. Si faltan gustos, pregunta por géneros, actores o títulos; una petición
+concreta puede producir recomendaciones directamente. Los gustos explícitos se
+guardan en `recommendation_profiles`, una tabla de `user_profiles.sqlite3`, con
+seis listas editables (géneros, actores, directores, títulos favoritos, géneros
+y títulos que no gustan). Cada lista admite 12 entradas de hasta 100 caracteres.
+Se comparten entre películas y series; cada sección conserva sus últimos 12
+mensajes. El contexto también incluye los títulos verificados sugeridos para
+entender referencias en las siguientes consultas. Los estados pasajeros no se
+convierten automáticamente en gustos permanentes.
+
+Para recomendar, OpenAI recibe esos gustos, la conversación reciente y hasta
+80 candidatos con metadatos abreviados y marcas de visto/favorito del perfil
+activo. No recibe nombres ni identificadores de usuario, rutas, archivos ni
+credenciales de otros servicios. La memoria se conserva en el dispositivo;
+`store: false` controla el almacenamiento de Responses, sin sustituir las
+políticas de tratamiento de datos de la API. El PIN compartido de la casa sigue
+permitiendo cambiar entre perfiles; no son cuentas con autenticación separada.
+
+El servidor devuelve hasta cinco recomendaciones. La pertenencia a la biblioteca
+se comprueba con rutas reales e identificadores TMDB. Hasta dos sugerencias
+externas se verifican con las búsquedas oficiales de
+[películas](https://developer.themoviedb.org/reference/search-movie) o
+[series](https://developer.themoviedb.org/reference/search-tv): coincidencia exacta
+de título y año cuando se conoce, sin elegir resultados ambiguos. Cada consulta
+TMDB espera como máximo 12 segundos y no se reintenta. Si falla, se conservan las
+recomendaciones locales verificadas y se avisa. No se descargan torrents desde
+esta API: la web abre la ficha y la búsqueda existente para que el usuario elija.
+
+**Olvidar mis gustos y conversación** limpia ambas secciones sin afectar a marcas
+ni progreso. El borrado de un usuario elimina también su memoria. Las escrituras
+usan una revisión atómica: una consulta pendiente no puede deshacer un borrado
+ni sobrescribir gustos modificados en otra pestaña.
+
+Rutas protegidas por el PIN de la web:
+
+- `GET/POST /settings/ai`: estado y configuración (`enabled`, `model`,
+  `requestsPerMinute`, `apiKey` y `clearApiKey`).
+- `POST /settings/ai/test`: comprueba la clave y el modelo guardados.
+- `POST /ai/search`: recibe `section` (`movies`, `series`, `books`, `games` o
+  `pictures`), `prompt` (hasta 2000 caracteres) y `language` (`es`, `ca`, `en`).
+  Devuelve intención, explicación, rutas, recuento y cobertura de metadatos.
+- `GET /ai/recommendations?userId=…&section=movies|series`: gustos, historial y
+  `revision` del perfil existente; funciona con la IA desactivada.
+- `POST /ai/recommendations`: recibe `userId`, `section`, `revision`, `prompt`
+  y `language`. Devuelve memoria actualizada, pregunta, tarjetas y avisos.
+- `PATCH /ai/recommendations`: recibe `userId`, `section`, `revision` y las seis
+  listas completas en `preferences`. `DELETE` recibe los tres primeros campos
+  en JSON y borra gustos e historiales. Una revisión antigua devuelve 409.
+
+Se permite una petición simultánea y, por defecto, diez por minuto entre todos
+los navegadores, incluidas las recomendaciones y pruebas de conexión. El límite es configurable
+entre 1 y 30; se reinicia al arrancar el servidor y no sustituye un presupuesto
+de gasto configurado en OpenAI. Las llamadas tienen 30 segundos de espera,
+salida limitada y no se reintentan automáticamente.
+
+Pruebas sin usar una clave real:
+`python -m unittest discover -s DeviceApp/tests -p 'test_*ai*.py'` (requiere Flask).
+Hay pruebas adicionales de proyección/filtrado en `tests/test_ai_catalog.py`.

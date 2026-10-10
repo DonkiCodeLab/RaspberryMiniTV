@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/h-bitos-at-micos.epub",
+  "title": "Hábitos atómicos",
+  "year": "2018",
+  "description": "James Clear explica cómo los cambios pequeños y repetidos pueden transformar las rutinas. El libro propone diseñar el entorno, reducir obstáculos y observar los procesos cotidianos para facilitar hábitos útiles y debilitar los que dificultan nuestros objetivos.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "James Clear explica com els canvis petits i repetits poden transformar les rutines. El llibre proposa dissenyar l’entorn, reduir obstacles i observar els processos quotidians per facilitar hàbits útils i afeblir els que dificulten els nostres objectius.",
+      "title": "Hábitos atómicos"
+    },
+    "en": {
+      "subtitle": "An Easy & Proven Way to Build Good Habits & Break Bad Ones",
+      "title": "Atomic Habits",
+      "description": "James Clear explains how small, repeated changes can reshape everyday routines. The book proposes adjusting environments, reducing friction and focusing on daily processes to make useful habits easier and weaken those that obstruct our goals."
+    },
+    "es": {
+      "description": "James Clear explica cómo los cambios pequeños y repetidos pueden transformar las rutinas. El libro propone diseñar el entorno, reducir obstáculos y observar los procesos cotidianos para facilitar hábitos útiles y debilitar los que dificultan nuestros objetivos.",
+      "title": "Hábitos atómicos"
+    }
+  }
+}

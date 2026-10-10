@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/pensar-r-pido-pensar-despacio.epub",
+  "title": "Pensar rápido, pensar despacio",
+  "year": "2011",
+  "description": "Daniel Kahneman examina la relación entre el pensamiento intuitivo y el razonamiento deliberado. A través de experimentos y ejemplos, explica sesgos que influyen en los juicios y las decisiones, así como los límites de nuestra confianza al interpretar probabilidades, pérdidas y recuerdos.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Daniel Kahneman examina la relació entre el pensament intuïtiu i el raonament deliberat. Amb experiments i exemples, explica biaixos que influeixen en els judicis i les decisions, així com els límits de la confiança quan interpretem probabilitats, pèrdues i records.",
+      "title": "Pensar rápido, pensar despacio"
+    },
+    "en": {
+      "description": "Daniel Kahneman examines the relationship between intuitive thinking and deliberate reasoning. Through experiments and examples, he explains biases affecting judgement and decisions, alongside the limits of our confidence when interpreting probabilities, losses and memories.",
+      "title": "Thinking, fast and slow"
+    },
+    "es": {
+      "description": "Daniel Kahneman examina la relación entre el pensamiento intuitivo y el razonamiento deliberado. A través de experimentos y ejemplos, explica sesgos que influyen en los juicios y las decisiones, así como los límites de nuestra confianza al interpretar probabilidades, pérdidas y recuerdos.",
+      "title": "Pensar rápido, pensar despacio"
+    }
+  }
+}

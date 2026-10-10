@@ -1,0 +1,34 @@
+{
+  "index": 96,
+  "path": "Books/el-perfume-historia-de-un-asesino.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El Perfume - Historia de un asesino"
+    },
+    {
+      "tag": "creator",
+      "value": "Patrick Süskind"
+    },
+    {
+      "tag": "description",
+      "value": "Quizá los olores evoquen el privilegio de la invisibilidad. Antes del tacto, sucede el olor, como mensajero de una esencia que sabe desaparecer en el aire y ser agente de un gran poder. La seducción que despliega el olor es implacable: se instala en nosotros y sella su poderío en los tejidos de la memoria. Jean-Baptiste Grenouille tiene su marca de nacimiento: no despide ningún olor y por ello hace temer la presencia de algún demonio. Al mismo tiempo posee un don excepcional: un olfato prodigioso que le permite percibir todos los olores del mundo. Desde la miseria en que nace, abandonado al cuidado de unos monjes, Jean-Baptiste Grenouille lucha contra su condición y escala posiciones sociales convirtiéndose en un afamado perfumista. Crea perfumes capaces de hacerle pasar inadvertido o inspirar simpatía, amor, compasión... Para obtener estas fórmulas magistrales debe asesinar a jóvenes muchachas vírgenes, obtener sus fluidos corporales y licuar sus olores íntimos. Su arte se convierte en una suprema e inquietante prestidigitación. Patrick Süskind, convertido en maestro del naturalismo irónico, nos transmite una visión ácida y desengañada del hombre en un libro repleto de sabiduría olfativa, imaginación y enorme amenidad. Su persuasión iguala la de su personaje y nos propone una inmersión literaria en el arcoíris natural de los olores y en los turbadores abismos del espíritu humano."
+    },
+    {
+      "tag": "date",
+      "value": "1984-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-10-20"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:72d52b9d-e549-4009-8453-528de0030077"
+    },
+    {
+      "tag": "identifier",
+      "value": "557e162c-91d7-42ca-bc4f-b620abb71908"
+    }
+  ]
+}

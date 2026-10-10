@@ -1,0 +1,22 @@
+{
+  "relativePath": "Books/el-se-or-de-los-anillos.epub",
+  "title": "El Señor de los Anillos",
+  "year": "1954",
+  "description": "Frodo Bolsón recibe un anillo cuyo poder amenaza toda la Tierra Media y emprende el viaje para destruirlo. Mientras sus compañeros se enfrentan al avance de Sauron, la amistad, la resistencia a la tentación y el valor de los más pequeños sostienen una esperanza cada vez más frágil.",
+  "localizedMetadata": {
+    "ca": {
+      "subtitle": "La Germandat De L'anell",
+      "title": "El Senyor Dels Anells I",
+      "description": "Frodo Saquet rep un anell amb un poder que amenaça tota la Terra Mitjana i emprèn el viatge per destruir-lo. Mentre els companys s’enfronten a l’avenç de Sauron, l’amistat, la resistència a la temptació i el valor dels més petits sostenen una esperança cada vegada més fràgil."
+    },
+    "en": {
+      "description": "Frodo Baggins inherits a ring whose power threatens all Middle-earth and sets out to destroy it. As his companions confront Sauron's advance, friendship, resistance to temptation and the courage of seemingly insignificant people sustain a fragile hope.",
+      "title": "The Fellowship of the Ring"
+    },
+    "es": {
+      "subtitle": "los tres libros",
+      "title": "El Señor de los Anillos",
+      "description": "Frodo Bolsón recibe un anillo cuyo poder amenaza toda la Tierra Media y emprende el viaje para destruirlo. Mientras sus compañeros se enfrentan al avance de Sauron, la amistad, la resistencia a la tentación y el valor de los más pequeños sostienen una esperanza cada vez más frágil."
+    }
+  }
+}

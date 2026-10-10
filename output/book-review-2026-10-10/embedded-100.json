@@ -1,0 +1,42 @@
+{
+  "index": 100,
+  "path": "Books/el-recluso.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El recluso"
+    },
+    {
+      "tag": "creator",
+      "value": "Freida McFadden"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4dc65e26-a6d4-47c8-a35c-a66cb7056127"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Los peores culpables no están siempre entre rejas</b>…</p><p>Al comenzar su trabajo como enfermera en una prisión de máxima seguridad, Brooke Sullivan enseguida aprende que hay tres normas cruciales:</p><p>1. Trata a los prisioneros con respeto.</p><p>2. Nunca reveles información personal.</p><p>3. Nunca jamás intimes demasiado con los reclusos.</p><p>Lo que nadie sabe es que Brooke ya ha roto las reglas. Nadie conoce su estrecha conexión con Shane Nelson, uno de los presos más famosos y peligrosos de la cárcel.</p><p>Desde luego no saben que Shane fue el novio de Brooke en el instituto, la estrella del equipo de fútbol americano, el chico perfecto que ahora cumple cadena perpetua por una serie de cruentos asesinatos.</p><p>O que fue el testimonio de Brooke lo que le llevó allí.</p><p><b>Pero Shane lo sabe. Sabe más que nadie. Y nunca lo va a olvidar</b>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2022-01-12T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-01-20"
+    },
+    {
+      "tag": "identifier",
+      "value": "aab51814-02b0-4258-8c99-76edc4086935"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "77246"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-puente-de-los-judi-os.epub",
+  "title": "El puente de los judíos",
+  "year": "2007",
+  "description": "En el siglo XIV, un maestro de obras llega a Besalú para reconstruir su puente. El encargo lo sitúa en medio de rivalidades políticas e intrigas locales, mientras la convivencia entre cristianos y judíos resulta decisiva para el futuro de la villa.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Al segle XIV, un mestre d’obres arriba a Besalú per reconstruir-ne el pont. L’encàrrec el situa enmig de rivalitats polítiques i intrigues locals, mentre la convivència entre cristians i jueus resulta decisiva per al futur de la vila.",
+      "title": "El puente de los judíos"
+    },
+    "en": {
+      "description": "In the fourteenth century, a master builder arrives in Besalú to reconstruct its bridge. The commission places him amid political rivalries and local intrigue, while relations between Christians and Jews become crucial to the town's future.",
+      "title": "El puente de los judíos"
+    },
+    "es": {
+      "description": "En el siglo XIV, un maestro de obras llega a Besalú para reconstruir su puente. El encargo lo sitúa en medio de rivalidades políticas e intrigas locales, mientras la convivencia entre cristianos y judíos resulta decisiva para el futuro de la villa.",
+      "title": "El puente de los judíos"
+    }
+  }
+}

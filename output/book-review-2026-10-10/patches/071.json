@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-conde-de-montecristo-1.epub",
+  "title": "El conde de Montecristo",
+  "year": "1844",
+  "description": "Edmond Dantès ve truncada su vida por una acusación falsa que lo condena a prisión. Tras descubrir quiénes lo traicionaron, emprende un elaborado plan de venganza que lo obligará a enfrentarse al precio de la justicia y a sus propios límites.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Una acusació falsa condemna Edmond Dantès a la presó i li destrueix la vida. Després de descobrir qui el va trair, emprèn un elaborat pla de venjança que l’obligarà a afrontar el preu de la justícia i els seus propis límits.",
+      "title": "El conde de Montecristo"
+    },
+    "en": {
+      "description": "A false accusation destroys Edmond Dantès's future and sends him to prison. After learning who betrayed him, he sets in motion an elaborate revenge that forces him to confront the cost of justice and the limits of his own power.",
+      "title": "El conde de Montecristo"
+    },
+    "es": {
+      "description": "Edmond Dantès ve truncada su vida por una acusación falsa que lo condena a prisión. Tras descubrir quiénes lo traicionaron, emprende un elaborado plan de venganza que lo obligará a enfrentarse al precio de la justicia y a sus propios límites.",
+      "title": "El conde de Montecristo"
+    }
+  }
+}

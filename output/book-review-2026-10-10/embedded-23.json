@@ -1,0 +1,42 @@
+{
+  "index": 23,
+  "path": "Books/asesinato-en-la-convenci-n.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Asesinato en la convención"
+    },
+    {
+      "tag": "creator",
+      "value": "Isaac Asimov"
+    },
+    {
+      "tag": "description",
+      "value": "<p>La imaginación exuberante de Asimov atraviesa ahora una nueva frontera y penetra en el género de la novela policíaca. El resultado es <cite>Asesinato en la convención</cite>.</p><p>Un escritor de primera línea muere en circunstancias misteriosas, durante una Convención de Libreros Americanos. Guiado por la diestra mano de Asimov, el lector atravesará el complejo laberinto de intereses creados, envidias profesionales, trucos publicitarios… hasta llegar al sorprendente e impecable final.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1975-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-06-12"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:f1cc90bb-1551-376a-d2ca-9b205e44061e"
+    },
+    {
+      "tag": "identifier",
+      "value": "0b0f84aa-bc28-4e14-84b4-27d99f39aa95"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.7"
+    },
+    {
+      "tag": "identifier",
+      "value": "25266"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "index": 41,
+  "path": "Books/con-a-nimo-de-ofender.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Con ánimo de ofender"
+    },
+    {
+      "tag": "creator",
+      "value": "Arturo Pérez-Reverte"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Después de <i>Patente de corso</i>, este <i>Con ánimo de ofender</i> continúa recopilando la polémica, original y personalísima página de opinión de Arturo Pérez-Reverte en el suplemento dominical <i>El Semanal</i>, que llega a más de cuatro millones de lectores. Su compromiso personal, su honestidad y su coherencia quedan recogidos en esta selección apasionante de textos que miran tanto a la literatura como a las más variadas caras de la sociedad contemporánea.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2000-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-04-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:91a68718-c84e-434b-917d-341afa7ee606"
+    },
+    {
+      "tag": "identifier",
+      "value": "dcaefe4f-c650-468e-b5dc-0e88fcd15591"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "3463"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-ca-da-de-hyperion.epub",
+  "title": "La caída de Hyperion",
+  "year": "1990",
+  "description": "La peregrinación a las Tumbas de Tiempo desemboca en una crisis que amenaza a toda la Hegemonía. Las historias de los peregrinos, una conciencia ligada al poeta John Keats y los planes del TecnoNúcleo convergen en la continuación de Hyperion.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El pelegrinatge a les Tombes del Temps desemboca en una crisi que amenaça tota l’Hegemonia. Les històries dels pelegrins, una consciència vinculada al poeta John Keats i els plans del TecnoNucli convergeixen en la continuació d’Hyperion.",
+      "title": "La caída de Hyperion"
+    },
+    "en": {
+      "title": "The fall of Hyperion",
+      "description": "The pilgrimage to the Time Tombs leads into a crisis threatening the entire Hegemony. The pilgrims' stories, a consciousness linked to poet John Keats and the TechnoCore's plans converge in this continuation of Hyperion."
+    },
+    "es": {
+      "description": "La peregrinación a las Tumbas de Tiempo desemboca en una crisis que amenaza a toda la Hegemonía. Las historias de los peregrinos, una conciencia ligada al poeta John Keats y los planes del TecnoNúcleo convergen en la continuación de Hyperion.",
+      "title": "La caída de Hyperion"
+    }
+  }
+}

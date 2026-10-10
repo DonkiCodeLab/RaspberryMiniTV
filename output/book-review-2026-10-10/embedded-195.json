@@ -1,0 +1,42 @@
+{
+  "index": 195,
+  "path": "Books/nuestras-madres.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Nuestras madres"
+    },
+    {
+      "tag": "creator",
+      "value": "Gemma Ruiz Palà"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:16a8dda2-1505-47e2-b547-9511a7bb053f"
+    },
+    {
+      "tag": "description",
+      "value": "La celebración literaria de una generación de mujeres que son un referente vital. ¿Qué soñaba ser tu madre? Fuera lo que fuese, casi seguro que se quedó en el tintero. A las protagonistas de esta novela, nacidas durante la dictadura, no las dejan desplegar su talento. Pero ellas plantan cara y no se amilanan ante nada ni ante nadie. Y con sororidad y alegría huyen de la jaula doméstica, mantienen la pulsión artística, se atreven a lo impensable por el amor a un hijo, lideran luchas vecinales, descubren el feminismo y suben a aquellos vuelos chárter a Londres para ser dueñas de su destino. Nuestras madres rinde homenaje a la generación que renunció a sus sueños para que sus hijas sí que pudieran escoger. Los auténticos referentes de vida eran ellas, nuestras madres."
+    },
+    {
+      "tag": "date",
+      "value": "2024-01-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-06-19"
+    },
+    {
+      "tag": "identifier",
+      "value": "b5879e12-4115-4186-b7d5-f7f5a5bf510a"
+    },
+    {
+      "tag": "identifier",
+      "value": "84175"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

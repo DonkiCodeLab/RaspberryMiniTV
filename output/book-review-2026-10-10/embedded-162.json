@@ -1,0 +1,42 @@
+{
+  "index": 162,
+  "path": "Books/la-nena.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La Nena"
+    },
+    {
+      "tag": "creator",
+      "value": "Carmen Mola"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:2cb3d439-7691-419c-80c4-e0e3300978e6"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Vuelve Carmen Mola, el último fenómeno de la novela negra española (150.000 lectores) y su autora más audaz y enigmática, con una entrega aún más revulsiva, violenta y sorprendente.</p><p>«<b>Nadie regresa del infierno indemne</b>».</p><p>Es la noche del fin de año chino, empieza el año del cerdo. Chesca, al mando de la Brigada de Análisis de Casos desde hace un año, ha quedado con Ángel Zárate, pero en el último momento este le da plantón. Aun así, ella sale a divertirse, conoce a un hombre y pasa la noche con él. A la mañana siguiente, tres hombres rodean su cama, a la espera de unirse al festín. Y un repulsivo olor a cerdo impregna la estancia.</p><p>Después de un día entero sin dar señales, los compañeros de la BAC empiezan a buscar a su compañera. Cuentan con una ayuda inestimable: Elena Blanco, que aunque dejó la policía tras la debacle que supuso el caso de la Red Púrpura, no puede dar la espalda a una amiga. Pronto se darán cuenta de que tras la desaparición de Chesca se esconden secretos inconfesables.</p><p>Tras el abrumador éxito de <i>La novia gitana</i> y <i>La Red Púrpura</i>, Carmen Mola regresa en esta tercera entrega de la serie protagonizada por la <b>inspectora Elena Blanco</b> con nuevos e impactantes personajes, y una historia «no apta para lectores sensibles».</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2020-03-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-11-11"
+    },
+    {
+      "tag": "identifier",
+      "value": "6e4fe323-8cc8-405a-9b93-b16de263c44d"
+    },
+    {
+      "tag": "identifier",
+      "value": "52981"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    }
+  ]
+}

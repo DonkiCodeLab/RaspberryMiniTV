@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/choque-de-reyes.epub",
+  "title": "Choque de reyes",
+  "year": "1998",
+  "description": "Varios aspirantes reclaman el Trono de Hierro mientras la guerra divide los Siete Reinos. Tyrion intenta sostener el poder de su familia, los Stark buscan sobrevivir y, más allá del Muro y del mar, crecen amenazas que los contendientes apenas comprenden.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Xoc de reis",
+      "description": "Diversos aspirants reclamen el Tron de Ferro mentre la guerra divideix els Set Regnes. En Tyrion intenta sostenir el poder de la família, els Stark busquen sobreviure i, més enllà del Mur i del mar, creixen amenaces que els contendents amb prou feines comprenen."
+    },
+    "en": {
+      "title": "A Clash of Kings",
+      "description": "Rival claimants seek the Iron Throne as war divides the Seven Kingdoms. Tyrion works to preserve his family's power and the Starks struggle to survive, while dangers beyond the Wall and across the sea grow largely unnoticed by the contenders."
+    },
+    "es": {
+      "description": "Varios aspirantes reclaman el Trono de Hierro mientras la guerra divide los Siete Reinos. Tyrion intenta sostener el poder de su familia, los Stark buscan sobrevivir y, más allá del Muro y del mar, crecen amenazas que los contendientes apenas comprenden.",
+      "subtitle": "Canción de Hielo y Fuego 2",
+      "title": "Choque de reyes"
+    }
+  }
+}

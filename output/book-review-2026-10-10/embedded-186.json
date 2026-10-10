@@ -1,0 +1,34 @@
+{
+  "index": 186,
+  "path": "Books/matar-un-ruise-or.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Matar a un ruiseñor"
+    },
+    {
+      "tag": "creator",
+      "value": "Harper Lee"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:1f2eec29-4992-44d6-9768-3382707caee2"
+    },
+    {
+      "tag": "description",
+      "value": "«Disparad a todos los arrendajos azules que queráis, si podéis acertarles, pero recordad que es un pecado matar a un ruiseñor». Este es el consejo que da a sus hijos un abogado que está defendiendo al verdadero ruiseñor del clásico de Harper Lee: un hombre de color acusado de violar a una joven blanca. Desde la mirada de Jem y Scout Finch, Harper Lee explora con humor y una honestidad insobornable la actitud irracional que en cuestiones de raza y clase social tenían los adultos del Sur profundo en los años treinta. La conciencia de una ciudad impregnada de prejuicios, violencia e hipocresía se enfrenta con la fortaleza y el heroísmo silencioso de un hombre que lucha por la justicia.  Matar a un ruiseñor, audaz en la creación de una voz ingenua pero perspicaz, tan ocurrente como insolente, es también la novela de la formación de una niña temperamental y muy singular, movida por la aspiración de ser mejor y comprender a los otros. Los alegatos de Atticus ante el juez y el jurado, su valor, su aplomo, impregnan el libro, pero la corriente que sacude en todo momento a los lectores la conduce Scout, la chiquilla vestida de cualquier manera, sin coquetería, a la que le gusta leer, saber, escuchar."
+    },
+    {
+      "tag": "date",
+      "value": "1959-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-09-25"
+    },
+    {
+      "tag": "identifier",
+      "value": "7a9b72ff-e9ff-479b-9d89-8894f564b0a3"
+    }
+  ]
+}

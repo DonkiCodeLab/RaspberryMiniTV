@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-hombre-en-busca-de-sentido.epub",
+  "title": "El hombre en busca de sentido",
+  "year": "1946",
+  "description": "Viktor Frankl relata su experiencia en los campos de concentración nazis y reflexiona sobre la búsqueda de sentido ante el sufrimiento. El testimonio se vincula con su propuesta de logoterapia y con la capacidad humana de responder a circunstancias extremas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Viktor Frankl relata la seva experiència als camps de concentració nazis i reflexiona sobre la recerca de sentit davant del patiment. El testimoni es vincula amb la seva proposta de logoteràpia i amb la capacitat humana de respondre a circumstàncies extremes.",
+      "title": "El hombre en busca de sentido"
+    },
+    "en": {
+      "subtitle": "An introduction to logotherapy",
+      "title": "Man's Search for Meaning",
+      "description": "Viktor Frankl recounts his experiences in Nazi concentration camps and reflects on the search for meaning amid suffering. His testimony connects with his approach to logotherapy and his examination of the human capacity to respond to extreme circumstances."
+    },
+    "es": {
+      "description": "Viktor Frankl relata su experiencia en los campos de concentración nazis y reflexiona sobre la búsqueda de sentido ante el sufrimiento. El testimonio se vincula con su propuesta de logoterapia y con la capacidad humana de responder a circunstancias extremas.",
+      "title": "El hombre en busca de sentido"
+    }
+  }
+}

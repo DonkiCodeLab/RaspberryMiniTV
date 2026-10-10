@@ -1,0 +1,42 @@
+{
+  "index": 12,
+  "path": "Books/alas-de-hierro.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Alas de Hierro"
+    },
+    {
+      "tag": "creator",
+      "value": "Rebecca Yarros"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Todos esperaban que Violet Sorrengail muriera en su primer año en el Colegio de Guerra Basgiath, incluso ella misma. Pero la Trilla fue tan solo la primera de una serie de pruebas imposibles destinadas a deshacerse de los indignos y los desafortunados.</p><p>Ahora comienza el verdadero entrenamiento, y Violet no sabe cómo logrará superarlo. No solo porque es brutal y agotador o porque está diseñado para llevar al límite el umbral del dolor de los jinetes, sino porque el nuevo vicecomandante está empeñado en demostrarle lo débil que es, a menos que traicione al hombre que ama.</p><p>La voluntad de sobrevivir no será suficiente este año, porque Violet conoce el secreto que se oculta entre los muros del colegio, y nada, ni siquiera el fuego de dragón, será suficiente para salvarlos.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2022-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-05-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:f39a5b6a-514e-399b-9b97-9ffc1fb9e354"
+    },
+    {
+      "tag": "identifier",
+      "value": "6e030022-2b7e-44d3-9b8d-968611b5500a"
+    },
+    {
+      "tag": "identifier",
+      "value": "73426"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.3"
+    }
+  ]
+}

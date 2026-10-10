@@ -1,0 +1,42 @@
+{
+  "index": 13,
+  "path": "Books/alas-de-nix-emp-reo-3.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Alas de Ónix"
+    },
+    {
+      "tag": "creator",
+      "value": "Rebecca Yarros"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Tras casi dieciocho meses en el Colegio de Guerra Basgiath, Violet Sorrengail tiene claro que no queda tiempo para entrenar. Hay que tomar decisiones. La batalla ha comenzado y, con enemigos acercándose a las murallas e infiltrados en sus propias filas, es imposible saber en quién confiar.</p><p>Ahora Violet deberá emprender un viaje fuera de los límites de Aretia, en busca de aliados de tierras desconocidas que acepten pelear por Navarre. La misión pondrá a prueba su suerte, y la obligará a usar todo su ingenio y fortaleza para salvar lo que más ama: sus dragones, su familia, su hogar… y a él. Aunque eso signifique tener que guardar un secreto tan peligroso que podría destruir su mundo.</p><p>Navarre necesita un ejército. Necesita poder. Necesita magia. Y necesitará algo que solo Violet puede encontrar: la verdad.</p><p>Pero una tormenta se aproxima… y no todos sobrevivirán a su furia.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-08-17"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:8cad4122-3e9e-46d8-5be2-910243529e4b"
+    },
+    {
+      "tag": "identifier",
+      "value": "1505ff36-0792-4f40-ab9e-944d1e65492e"
+    },
+    {
+      "tag": "identifier",
+      "value": "75026"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    }
+  ]
+}

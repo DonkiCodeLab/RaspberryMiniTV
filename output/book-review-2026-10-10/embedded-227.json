@@ -1,0 +1,34 @@
+{
+  "index": 227,
+  "path": "Books/victus.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Victus"
+    },
+    {
+      "tag": "creator",
+      "value": "Albert Sánchez Piñol"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e5205f42-21a9-0cd7-2e45-a7e07543b44c"
+    },
+    {
+      "tag": "date",
+      "value": "2017-02-09"
+    },
+    {
+      "tag": "date",
+      "value": "2011-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "Victus es una novela histórica que nos narra la guerra de Sucesión española, un conflicto que puede considerarse como la primera de las contiendas mundiales y que termina el 11 de septiembre de 1714 con el apocalíptico asalto a Barcelona. También es la tragedia de Martí Zuviría, un joven barcelonés, alumno aventajado del marqués de Vauban, que se convierte en un genio de la ingeniería militar. VICTUS es un derroche de información y rigor histórico al servicio de un relato ágil, potente y desenfadado, con una dicción rabiosamente contemporánea que nos lleva de Francia a Barcelona pasando por Madrid, Toledo, Tortosa o las batallas de Brihuega y Almansa. Y es también una obra sobre la Barcelona irreductible de 1714, que sufrió un asedio desigual de trece meses y el bombardeo de más de treinta mil proyectiles. Victus cuestiona las versiones oficiales de ambos bandos y cede la palabra a los auténticos protagonistas de la historia, desde la figura inmensa de Villarroel, el general que defendió la capital catalana con lágrimas en los ojos, hasta los civiles y soldados anónimos de todas las naciones que lucharon a un lado y otro de las murallas. Pero, ante todo,Victus es un festín literario de primer orden que se devora del modo en que siempre se han devorado las grandes obras, como lo demuestra el que antes de su aparición ya se hayan vendido los derechos al ruso, el alemán, el holandés y el francés."
+    },
+    {
+      "tag": "identifier",
+      "value": "7fac165f-6612-4f62-b44d-51f444bac98a"
+    }
+  ]
+}

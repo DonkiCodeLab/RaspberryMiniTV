@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-retrato-de-dorian-gray.epub",
+  "title": "El Retrato de Dorian Gray",
+  "year": "1890",
+  "description": "El joven Dorian Gray desea conservar para siempre la belleza que un pintor ha capturado en su retrato. Cuando el cuadro empieza a reflejar el paso del tiempo y las consecuencias de sus actos, la búsqueda del placer se convierte en un conflicto entre apariencia y conciencia.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El jove Dorian Gray desitja conservar per sempre la bellesa que un pintor ha capturat al seu retrat. Quan el quadre comença a reflectir el pas del temps i les conseqüències dels seus actes, la recerca del plaer esdevé un conflicte entre aparença i consciència.",
+      "title": "El Retrato de Dorian Gray"
+    },
+    "en": {
+      "title": "The Picture of Dorian Gray",
+      "description": "Young Dorian Gray wishes to retain the beauty captured in his portrait forever. When the painting begins to bear the marks of time and his actions, his pursuit of pleasure becomes a conflict between outward appearances and conscience."
+    },
+    "es": {
+      "description": "El joven Dorian Gray desea conservar para siempre la belleza que un pintor ha capturado en su retrato. Cuando el cuadro empieza a reflejar el paso del tiempo y las consecuencias de sus actos, la búsqueda del placer se convierte en un conflicto entre apariencia y conciencia.",
+      "title": "El Retrato de Dorian Gray"
+    }
+  }
+}

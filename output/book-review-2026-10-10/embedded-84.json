@@ -1,0 +1,42 @@
+{
+  "index": 84,
+  "path": "Books/el-juego-de-ender.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El juego de Ender"
+    },
+    {
+      "tag": "creator",
+      "value": "Orson Scott Card"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4a649c5e-e1f2-c8eb-92fe-ad8eadf48604"
+    },
+    {
+      "tag": "description",
+      "value": "<p>La Tierra se ve amenazada por los insectores, una raza extraterrestre completamente ajena a los humanos, a los que pretende destruir. Para vencer a los insectores es necesario un nuevo tipo de genio militar, y por ello se ha permitido el nacimiento de Ender, quien en cierta forma constituye una anomalía viviente: es el tercer hijo de una pareja en un mundo que ha limitado estrictamente a dos el número de descendientes. El niño Ender deberá aprender todo lo relativo a la guerra en los videojuegos y en los peligrosos ensayos de batallas que realiza con sus compañeros.</p><p>A la habilidad en el tratamiento de las emociones, ya característica de Orson Scott Card, se une en este libro el interés por el empleo de las simulaciones de ordenador y juegos de fantasía en la formación militar, estratégica y psicológica del protagonista.</p><p><i>El juego de Ender</i>, la novela más conocida de Orson Scott Card, obtuvo los dos premios más prestigiosos de la ciencia ficción: el Nebula a la mejor novela en 1985 y el Hugo a la mejor novela en 1986.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1984-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-01-03"
+    },
+    {
+      "tag": "identifier",
+      "value": "dec57941-15dd-4e61-bd33-c5419c6034a1"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "180"
+    }
+  ]
+}

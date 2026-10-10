@@ -1,0 +1,42 @@
+{
+  "index": 109,
+  "path": "Books/el-tatuador-de-auschwitz.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El tatuador de Auschwitz"
+    },
+    {
+      "tag": "creator",
+      "value": "Heather Morris"
+    },
+    {
+      "tag": "description",
+      "value": "Basada en la gran historia real de Lale y Gita Sokolov, dos judíos eslovacos que consiguieron, contra todo pronóstico, sobrevivir al Holocausto. Para Lale, los días transcurren entre el horror y su trabajo como tatuador de prisioneros. Entre estos prisioneros se encuentra Gita, una joven de la que queda enamorado. En ese momento, la vida de Lale cobrará un nuevo sentido y hará todo lo posible para que Gita y el resto de prisioneros sobrevivan. Después de la guerra, deciden mudarse a Australia para poder comenzar de nuevo. Tras la muerte de Gita, Lale siente el peso de su pasado y la irremediable necesidad de contarlo. Esta es su historia. Una historia real de amor y superación en medio del horror de Auschwitz para todos los que se emocionaron con La lista de Schindler, La bibliotecaria de Auschwitz o El niño con el pijama de rayas."
+    },
+    {
+      "tag": "date",
+      "value": "2018-08-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-06-24"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:436de488-d0e0-412f-a9ea-5438abab9083"
+    },
+    {
+      "tag": "identifier",
+      "value": "2b7156cf-c52e-4f7f-ae16-3a7aa95c83a3"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "46729"
+    }
+  ]
+}

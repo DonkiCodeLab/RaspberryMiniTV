@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/sinuh-el-egipcio.epub",
+  "title": "Sinuhé, el egipcio",
+  "year": "1945",
+  "description": "El médico Sinuhé recuerda su vida en el Egipto de Akenatón y sus viajes por los reinos del Mediterráneo oriental. Entre intrigas de palacio, cambios religiosos y pérdidas personales, busca comprender a los seres humanos y el sentido de sus propias decisiones.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El metge Sinuhé recorda la vida a l’Egipte d’Akhenaton i els viatges pels regnes de la Mediterrània oriental. Entre intrigues de palau, canvis religiosos i pèrdues personals, busca comprendre els éssers humans i el sentit de les seves decisions.",
+      "title": "Sinuhé, el egipcio"
+    },
+    "en": {
+      "subtitle": "a novel",
+      "title": "The Egyptian",
+      "description": "Physician Sinuhe looks back on life in Akhenaten's Egypt and his travels through the eastern Mediterranean kingdoms. Amid court intrigue, religious upheaval and personal loss, he seeks to understand human nature and the meaning of his own choices."
+    },
+    "es": {
+      "title": "Sinuhé, el egipcio",
+      "description": "El médico Sinuhé recuerda su vida en el Egipto de Akenatón y sus viajes por los reinos del Mediterráneo oriental. Entre intrigas de palacio, cambios religiosos y pérdidas personales, busca comprender a los seres humanos y el sentido de sus propias decisiones."
+    }
+  }
+}

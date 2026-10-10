@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/las-madres.epub",
+  "title": "Las madres",
+  "year": "2022",
+  "description": "Dos asesinatos con un extraño vínculo biológico llevan a Elena Blanco y la BAC a buscar a unas mujeres desaparecidas. La investigación los enfrenta a una organización protegida por personas influyentes y pone a prueba la relación del equipo con el poder y con sus propias pérdidas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Dos assassinats amb un estrany vincle biològic porten Elena Blanco i la BAC a buscar unes dones desaparegudes. La investigació els enfronta a una organització protegida per persones influents i posa a prova la relació amb el poder i amb les seves pròpies pèrdues.",
+      "title": "Las madres"
+    },
+    "en": {
+      "description": "Two murders with an unusual biological connection lead Elena Blanco and the BAC to search for missing women. The investigation confronts them with an organisation protected by influential people, testing the team's relationship with power and its own unresolved losses.",
+      "title": "Las madres"
+    },
+    "es": {
+      "description": "Dos asesinatos con un extraño vínculo biológico llevan a Elena Blanco y la BAC a buscar a unas mujeres desaparecidas. La investigación los enfrenta a una organización protegida por personas influyentes y pone a prueba la relación del equipo con el poder y con sus propias pérdidas.",
+      "title": "Las madres"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "index": 113,
+  "path": "Books/erupci-n.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Erupción"
+    },
+    {
+      "tag": "creator",
+      "value": "James Patterson"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:0bab3d1c-9bf0-4da7-9f8b-efc1957869c1"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Una erupción volcánica que ocurre una vez cada siglo está a punto de destruir la isla de Hawái, pero un secreto militar oculto durante décadas podría convertir el volcán en algo aún más aterrador… Ahora depende de un puñado de personas salvar la isla y el mundo entero.</p><p>Michael Crichton, creador de <i>Parque Jurásico</i> y <i>Westworld</i>, tenía entre manos un proyecto apasionante en el que había trabajado durante años antes de su prematura muerte. Sabiendo lo especial que era para él, su viuda guardó el manuscrito hasta que encontró al autor adecuado para completarlo. El escritor que eligió es uno de los narradores más populares del mundo: James Patterson. Su ritmo narrativo convierte el planteamiento del gran Crichton en el <i>thriller</i> más esperado en años.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-06-02T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-07-18"
+    },
+    {
+      "tag": "identifier",
+      "value": "a668c39f-87f6-48b5-a776-2221204e087e"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "74921"
+    }
+  ]
+}

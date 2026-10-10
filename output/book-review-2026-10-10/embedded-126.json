@@ -1,0 +1,42 @@
+{
+  "index": 126,
+  "path": "Books/harry-potter-y-el-c-liz-de-fuego.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "epl:2684"
+    },
+    {
+      "tag": "identifier",
+      "value": "revision:1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:2335"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:05f58175-3109-4052-b16e-49f928bb7e84"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:32c04cde-a8b2-b628-57e9-2a50117fbda1"
+    },
+    {
+      "tag": "title",
+      "value": "Harry Potter y el cáliz de fuego"
+    },
+    {
+      "tag": "date",
+      "value": "2000-07-08T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Tras otro abominable verano con los Dursley, Harry se dispone a iniciar el cuarto curso en Hogwarts, la famosa escuela de magia y hechicería. A sus catorce años, a Harry le gustaría ser un joven mago como los demás y dedicarse a aprender nuevos sortilegios, encontrarse con sus amigos Ron y Hermione y asistir con ellos a los Mundiales de quidditch. Sin embargo, al llegar al colegio le espera una gran sorpresa que lo obligará a enfrentarse a los desafíos más temibles de toda su vida. Si logra superarlos, habrá demostrado que ya no es un niño y que está preparado para vivir las nuevas y emocionantes experiencias que el futuro le depara.</p>"
+    },
+    {
+      "tag": "creator",
+      "value": "J. K. Rowling"
+    }
+  ]
+}

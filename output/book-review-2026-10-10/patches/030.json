@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/breves-respuestas-a-las-grandes-preguntas.epub",
+  "title": "Breves Respuestas a Las Grandes Preguntas",
+  "year": "2018",
+  "description": "En este libro póstumo, Stephen Hawking aborda preguntas sobre el origen del universo, los agujeros negros y el futuro humano. Sus explicaciones de física conviven con reflexiones sobre la inteligencia artificial, la exploración espacial y nuestra responsabilidad ante los cambios tecnológicos.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Breus respostes per a les grans preguntes",
+      "description": "En aquest llibre pòstum, Stephen Hawking aborda preguntes sobre l’origen de l’univers, els forats negres i el futur humà. Les explicacions de física conviuen amb reflexions sobre la intel·ligència artificial, l’exploració espacial i la nostra responsabilitat davant els canvis tecnològics."
+    },
+    "en": {
+      "title": "Brief answers to the big questions",
+      "description": "In this posthumous book, Stephen Hawking considers questions about the universe's origins, black holes and humanity's future. Accessible explanations of physics accompany reflections on artificial intelligence, space exploration and our responsibility for the consequences of technological change."
+    },
+    "es": {
+      "description": "En este libro póstumo, Stephen Hawking aborda preguntas sobre el origen del universo, los agujeros negros y el futuro humano. Sus explicaciones de física conviven con reflexiones sobre la inteligencia artificial, la exploración espacial y nuestra responsabilidad ante los cambios tecnológicos.",
+      "title": "Breves Respuestas a Las Grandes Preguntas"
+    }
+  }
+}

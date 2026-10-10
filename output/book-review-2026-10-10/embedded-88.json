@@ -1,0 +1,42 @@
+{
+  "index": 88,
+  "path": "Books/el-messies-de-dune.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El mesías de Dune"
+    },
+    {
+      "tag": "creator",
+      "value": "Frank Herbert"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Arrakis, también llamado Dune: un mundo desierto en pos del sueño de convertirse en un paraíso, cuna de mil guerras que se han extendido por todo el universo y de un anhelo mesiánico que intenta alcanzar el sueño más antiguo de la humanidad…</p><p>Paul Atreides: un personaje mítico, perturbado por la cercana presencia de una sombra dominante: su hermana Alia.</p><p>Y frente a ellos, los grandes intereses económicos, políticos y religiosos que sacuden los espacios interestelares: la CHOAM, la Cofradía espacial, el Landsraad, la Bene Gesserit…</p><p>Todo ello, y mucho más, conforma esta segunda entrega de <cite>Dune</cite>: un fresco impresionante y una obra cumbre de la imaginación.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1968-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-04-03"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:39b96e29-4a67-4ad5-b207-3935c8ffdec2"
+    },
+    {
+      "tag": "identifier",
+      "value": "729438da-3b06-473f-ad29-2437c7188ad5"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "83275"
+    }
+  ]
+}

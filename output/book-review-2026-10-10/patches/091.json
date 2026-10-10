@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-mundo-y-sus-demonios.epub",
+  "title": "El Mundo y Sus Demonios",
+  "year": "1995",
+  "description": "Carl Sagan defiende el pensamiento científico como una herramienta para distinguir las pruebas de las creencias infundadas. Mediante ejemplos históricos y experiencias personales, examina la pseudociencia, los prejuicios y la necesidad de combinar curiosidad, escepticismo y responsabilidad pública.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "El mundo y sus demonios",
+      "description": "Carl Sagan defensa el pensament científic com una eina per distingir les proves de les creences infundades. Amb exemples històrics i experiències personals, examina la pseudociència, els prejudicis i la necessitat de combinar curiositat, escepticisme i responsabilitat pública."
+    },
+    "en": {
+      "subtitle": "Science as a Candle in the Dark",
+      "title": "The Demon-Haunted World",
+      "description": "Carl Sagan presents scientific thinking as a way to distinguish evidence from unsupported belief. Through historical examples and personal experiences, he examines pseudoscience, prejudice and the need to combine curiosity, scepticism and public responsibility."
+    },
+    "es": {
+      "description": "Carl Sagan defiende el pensamiento científico como una herramienta para distinguir las pruebas de las creencias infundadas. Mediante ejemplos históricos y experiencias personales, examina la pseudociencia, los prejuicios y la necesidad de combinar curiosidad, escepticismo y responsabilidad pública.",
+      "title": "El Mundo y Sus Demonios"
+    }
+  }
+}

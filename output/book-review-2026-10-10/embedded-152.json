@@ -1,0 +1,42 @@
+{
+  "index": 152,
+  "path": "Books/la-conspiraci-n.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La conspiración"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Un nuevo satélite de la NASA demuestra la existencia de un extraño objeto enterrado en el hielo del Ártico. Este descubrimiento supone una victoria muy necesaria para la política espacial de Estados Unidos y es clave para la futura elección de su Presidente.</p><p>La analista de inteligencia Rachel Sexton y el académico Michael Tolland son los encargados de verificar la autenticidad del hallazgo. Pero en su búsqueda descubren algo impensable: todo ha sido un engaño. Antes de que puedan hablar con el Presidente, Rachel y Michael son atacados por un grupo de asesinos a sueldo. Un misterioso hombre los lidera, y no se detendrá ante nada para ocultar la verdad.</p><p>Dan Brown transporta a los lectores desde la Oficina Nacional de Reconocimiento (NRO), en Virginia, hasta las plataformas de hielo del círculo polar ártico y a los pasillos del Ala Oeste de la Casa Blanca en un emocionante <i>thriller</i> que recorre los secretos mejor guardados de los servicios secretos norteamericanos.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2000-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-06-29"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:3116bace-833f-44e4-bb5f-3ac14847506a"
+    },
+    {
+      "tag": "identifier",
+      "value": "9ba5ad96-8d52-41d3-b0d0-4fdeda12f72b"
+    },
+    {
+      "tag": "identifier",
+      "value": "1862"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.7"
+    }
+  ]
+}

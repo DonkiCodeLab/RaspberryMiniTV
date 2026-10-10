@@ -1,0 +1,42 @@
+{
+  "index": 203,
+  "path": "Books/perdida.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Perdida"
+    },
+    {
+      "tag": "creator",
+      "value": "Gillian Flynn"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:03c0a3b1-a31b-4470-9a80-be79f92718bd"
+    },
+    {
+      "tag": "description",
+      "value": "En un caluroso día de verano, Amy y Nick se disponen a celebrar su quinto aniversario de bodas en North Carthage, a orillas del río Mississippi. Pero Amy desaparece esa misma mañana sin dejar rastro. A medida que la investigación policial avanza las sospechas recaen sobre Nick. Sin embargo, Nick insiste en su inocencia. Es cierto que se muestra extrañamente evasivo y frío, pero ¿es un asesino? Perdida arranca como todo buen «thriller» que se precie: una mujer desaparecida, una investigación policial… Pero es que Perdida no es solo un buen «thriller». Es una obra maestra. Un «thriller» psicológico brillante con una trama tan apasionante y giros tan inesperados que es absolutamente imposible parar de leer. Perdida es también una novela sobre el lado más oscuro del matrimonio, sobre los engaños, las decepciones, la obsesión, el miedo. Una radiografía completamente actual de los medios de comunicación y su capacidad para modelar la opinión pública. Pero sobre todo es la historia de amor de dos personas perdidamente enamoradas."
+    },
+    {
+      "tag": "date",
+      "value": "2012-10-14T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-09-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "67103e47-ecd3-4517-a25a-0745ab960ea2"
+    },
+    {
+      "tag": "identifier",
+      "value": "3801"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.6"
+    }
+  ]
+}

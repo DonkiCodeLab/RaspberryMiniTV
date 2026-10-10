@@ -1,0 +1,34 @@
+{
+  "index": 161,
+  "path": "Books/la-mujer-de-su-vida.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La mujer de su vida"
+    },
+    {
+      "tag": "creator",
+      "value": "Xavier Bosch"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:fa128037-6b59-4e77-aa50-8944be1dde34"
+    },
+    {
+      "tag": "description",
+      "value": "Joel, Raimon y Victòria, los hermanos Estrada, están muy unidos a pesar de que viven en distintas partes del planeta. Pero una investigación periodística pone a esta sólida familia en peligro. Joel, director de documentales, pronto se dará cuenta de que hay revelaciones que provocan que los sentimientos se tambaleen, que sacuden la vida y obligan a reescribir el pasado.Xavier Bosch, un escritor en plena madurez creativa, combina en esta novela lo mejor de sus dos mundos, el del constructor de intimidades y el del periodista, que se mezclan en una trama vertiginosa en la que nos adentraremos en el vínculo amoroso y descubriremos el precio que una familia puede pagar si osa traspasar las líneas rojas de la verdad."
+    },
+    {
+      "tag": "date",
+      "value": "2021-02-28T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-10-01"
+    },
+    {
+      "tag": "identifier",
+      "value": "e664523f-c16d-4298-b874-c311968343cf"
+    }
+  ]
+}

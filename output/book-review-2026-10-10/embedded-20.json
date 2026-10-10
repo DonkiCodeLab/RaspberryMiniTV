@@ -1,0 +1,42 @@
+{
+  "index": 20,
+  "path": "Books/arena-y-viento.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Arena y viento"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e04eea56-4826-4a9d-b665-20dc8a839457"
+    },
+    {
+      "tag": "description",
+      "value": "En este libro, Vázquez-Figueroa narra sus vivencias de adolescencia y juventud en el ex Sáhara español, adonde tuvo que trasladarse su familia por motivos políticos al estallar la Guerra Civil española en 1936."
+    },
+    {
+      "tag": "date",
+      "value": "1952-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-12-02"
+    },
+    {
+      "tag": "identifier",
+      "value": "33e52697-dd76-4233-a0d9-a023384b7d1f"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "13766"
+    }
+  ]
+}

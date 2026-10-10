@@ -1,0 +1,42 @@
+{
+  "index": 39,
+  "path": "Books/cien-a-os-de-soledad.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Cien años de soledad"
+    },
+    {
+      "tag": "creator",
+      "value": "Gabriel García Márquez"
+    },
+    {
+      "tag": "description",
+      "value": "<p>«Muchos años después, frente al pelotón de fusilamiento, el coronel Aureliano Buendía había de recordar aquella tarde remota en que su padre lo llevó a conocer el hielo». Macondo, en ese entonces, era una pequeña aldea a la que llegaban todos los años, por el mes de marzo, los gitanos dirigidos por Melquíades, llevando los últimos inventos de la ciencia. El patriarca y fundador de Macondo, José Arcadio Buendía, se obsesiona con los inventos de los gitanos al extremo de descuidar a su familia. Descubre que la tierra es redonda y planea un viaje para encontrar la tierra de los inventos, pero luego de un peligroso viaje, solo llega al mar. Ante su decisión de abandonar Macondo, Úrsula, su mujer, lo detiene y le dice que se ocupe de sus hijos. José Arcadio se entretiene en darles leccciones poco verídicas a sus hijos, José Arcadio y Aureliano. Cuando vuelven los gitanos, José Arcadio se entera de la muerte de Melquíades. Además, junto con sus dos hijos, conoce el hielo, que él cree es el más grande invento de su tiempo.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1967-04-30T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-10-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:3DDA0CB0-7AD1-11E2-B92A-0800200C9A66"
+    },
+    {
+      "tag": "identifier",
+      "value": "af2212c2-2beb-4146-94da-f6df4eb35cf2"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "431"
+    }
+  ]
+}

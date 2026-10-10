@@ -1,0 +1,34 @@
+{
+  "index": 58,
+  "path": "Books/el-agua-que-quieres.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El agua que quieres"
+    },
+    {
+      "tag": "creator",
+      "value": "Víctor García Tur"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "tag": "description",
+      "value": "Marie Tremblaypierre aprovecha la bonanza del verano quebeques para organizar una reunión familiar en el antiguo chalet de vacaciones. La excusa de celebrar el sesenta y seis aniversario es forzada, pero las hijas y el hijo no le dan más vueltas: rememorar los baños en el lago y revivir la infancia les parece suficiente buena idea para volver a encontrarse después de tanto tiempo. Se juntan con las respectivas familias, o lo que queda de ellas, pero con ellos también van sus secretos, sus vivencias y, sobre todo, los silencios de todo aquello que nunca se dijo en su debido momento."
+    },
+    {
+      "tag": "date",
+      "value": "2021-05-05T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-08-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "4fb222f9-2dcc-45e5-ba90-1b53de2df3a3"
+    }
+  ]
+}

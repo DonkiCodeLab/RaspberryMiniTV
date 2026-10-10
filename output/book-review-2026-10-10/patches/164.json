@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/la-pacient-silenciosa.epub",
+  "title": "La pacient silenciosa",
+  "year": "2019",
+  "description": "Alicia Berenson deja de hablar después de matar a su marido y es internada en una unidad psiquiátrica. El psicoterapeuta Theo Faber consigue trabajar con ella, decidido a comprender su silencio, pero su investigación descubre una historia más compleja que la versión pública del crimen.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "La pacient silenciosa",
+      "description": "Alicia Berenson deixa de parlar després de matar el marit i és internada en una unitat psiquiàtrica. El psicoterapeuta Theo Faber aconsegueix treballar amb ella, decidit a comprendre el silenci, però la investigació descobreix una història més complexa que la versió pública del crim."
+    },
+    "en": {
+      "title": "The Silent Patient",
+      "description": "Alicia Berenson stops speaking after killing her husband and is placed in psychiatric care. Psychotherapist Theo Faber secures a position working with her, determined to understand her silence, but uncovers a story more complicated than the public account of the crime."
+    },
+    "es": {
+      "title": "La paciente silenciosa",
+      "description": "Alicia Berenson deja de hablar después de matar a su marido y es internada en una unidad psiquiátrica. El psicoterapeuta Theo Faber consigue trabajar con ella, decidido a comprender su silencio, pero su investigación descubre una historia más compleja que la versión pública del crimen."
+    }
+  },
+  "author": "Alex Michaelides"
+}

@@ -1,0 +1,42 @@
+{
+  "index": 140,
+  "path": "Books/jane-eyre.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Jane Eyre"
+    },
+    {
+      "tag": "creator",
+      "value": "Charlotte Brontë"
+    },
+    {
+      "tag": "description",
+      "value": "Singular desde su complicada infancia de huérfana, primero a cargo de una tía poco cariñosa y después en la escuela Lowood, Jane Eyre logra el puesto de institutriz en Thornfield Hall, para educar a la hija de su atrabiliario y peculiar dueño, el señor Rochester. Poco a poco, el amor irá tejiendo su red entre ellos, pero la casa y la vida de Rochester guardan un estremecedor y terrible misterio."
+    },
+    {
+      "tag": "date",
+      "value": "1846-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-05-18"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:ee941d7e-e273-4ebf-a627-04fa2383082f"
+    },
+    {
+      "tag": "identifier",
+      "value": "4d346040-8c1c-4d13-987d-d901f6ce621f"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "2663"
+    }
+  ]
+}

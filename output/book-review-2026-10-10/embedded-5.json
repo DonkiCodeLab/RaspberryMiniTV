@@ -1,0 +1,42 @@
+{
+  "index": 5,
+  "path": "Books/a-lo-marciano.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "A lo marciano"
+    },
+    {
+      "tag": "creator",
+      "value": "Isaac Asimov"
+    },
+    {
+      "tag": "identifier",
+      "value": "epl:2145"
+    },
+    {
+      "tag": "identifier",
+      "value": "revision:2.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:155036"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:7b418d40-5013-4527-a07c-99ead4f90030"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:486b8a1d-f6ab-4664-95a3-6cb9220b464e"
+    },
+    {
+      "tag": "date",
+      "value": "1955-01-02T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p><cite>A lo marciano</cite> recoge dos novelas cortas y dos relatos de <b>Isaac Asimov</b> publicados originalmente a principios de los años cincuenta, década que se recuerda como la más fructífera y memorable de toda su trayectoria como escritor de ciencia ficción.</p><p>Las dos narraciones largas son particularmente sólidas y merecen figurar entre las obras más destacadas de Asimov. Planteando un cierto grado de expansión de la humanidad por el Sistema Solar, <cite>A lo marciano</cite> describe la crisis que padece una colonia afincada precariamente en Marte como consecuencia de los intereses políticos conservadores de un mandatario terrestre; es una reflexión sobre las condiciones necesarias y los problemas implicados en la carrera espacial, al tiempo que un lamento sobre el derroche energético… veinte años antes del advenimiento de la crisis de la energía. <cite>Engañabobos</cite> se centra en el estudio que lleva a cabo una expedición científica de los restos de una colonia afincada en un planeta bellísimo, que ha sucumbido a los efectos mortales de una misteriosa enfermedad; a la fascinación de poder llegar a conocer los posibles escenarios del universo y las virtudes de una trama impecable, hay que añadir el examen de fondo sobre las supuestas virtudes del conocimiento especializado.</p>"
+    }
+  ]
+}

@@ -189,6 +189,8 @@ __pycache__/
 DeviceApp/user_settings.json
 DeviceApp/subtitle_settings.json
 DeviceApp/game_settings.json
+DeviceApp/ai_settings.json
+DeviceApp/omdb_settings.json
 DeviceApp/alarm_sounds/*
 !DeviceApp/alarm_sounds/.gitkeep
 DeviceApp/menu/Loading_INTRO.png

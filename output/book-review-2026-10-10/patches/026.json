@@ -1,0 +1,22 @@
+{
+  "relativePath": "Books/bearn-o-la-sala-de-las-mun-ecas.epub",
+  "title": "Bearn o la sala de las muñecas",
+  "year": "1956",
+  "description": "Un sacerdote evoca la vida de los señores de Bearn y el ocaso de su mundo aristocrático en Mallorca. La memoria familiar, las ideas ilustradas y los secretos de la casa se entrelazan en el retrato de una sociedad que desaparece.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Un sacerdot evoca la vida dels senyors de Bearn i l’ocàs del seu món aristocràtic a Mallorca. La memòria familiar, les idees il·lustrades i els secrets de la casa s’entrellacen en el retrat d’una societat que desapareix.",
+      "title": "Bearn o la sala de les nines"
+    },
+    "en": {
+      "description": "A priest recalls the lords of Bearn and the decline of their aristocratic world in Mallorca. Family memory, Enlightenment ideas and the household's hidden history intertwine in a portrait of a society approaching its end.",
+      "title": "The Dolls' Room"
+    },
+    "es": {
+      "description": "Un sacerdote evoca la vida de los señores de Bearn y el ocaso de su mundo aristocrático en Mallorca. La memoria familiar, las ideas ilustradas y los secretos de la casa se entrelazan en el retrato de una sociedad que desaparece.",
+      "subtitle": "",
+      "title": "Bearn o la sala de las muñecas"
+    }
+  },
+  "openLibraryKey": ""
+}

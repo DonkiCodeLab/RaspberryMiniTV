@@ -1,0 +1,34 @@
+{
+  "index": 119,
+  "path": "Books/flores-para-algernon.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Flores para Algernon"
+    },
+    {
+      "tag": "creator",
+      "value": "Daniel Keyes"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:5fc703c7-986f-bbcd-cfce-9babf3beaa48"
+    },
+    {
+      "tag": "description",
+      "value": "Charlie Gordon es un chico con discapacidad mental, una buena persona que siente respeto por quienes le rodean. Charlie es escogido para una operación quirúrgica experimental, a la que también es sometido el ratón Algernon. A partir de entonces su inteligencia se irá ampliando, su visión del mundo se irá convirtiendo en algo más real y más decepcionante...., hasta llegar a la cúspide, donde se encuentra solo y adquiere la certeza de su terrible futuro.Este relato le proporcionó al autor varios premios Hugo y Nebula. Fue llevado a la televisión y posteriormente al cine, con el título Charly."
+    },
+    {
+      "tag": "date",
+      "value": "1966-02-28T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-09-23"
+    },
+    {
+      "tag": "identifier",
+      "value": "c8e40d06-4160-48c6-b640-647f69b30d69"
+    }
+  ]
+}

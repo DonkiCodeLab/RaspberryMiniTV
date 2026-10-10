@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/homo-deus.epub",
+  "title": "Homo Deus",
+  "year": "2015",
+  "description": "Yuval Noah Harari explora cómo la biotecnología, la inteligencia artificial y el uso de datos podrían transformar los proyectos humanos. El ensayo plantea escenarios sobre el poder, la desigualdad y la búsqueda de felicidad e inmortalidad, como preguntas sobre el futuro y no como predicciones inevitables.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Yuval Noah Harari explora com la biotecnologia, la intel·ligència artificial i l’ús de dades podrien transformar els projectes humans. L’assaig planteja escenaris sobre el poder, la desigualtat i la recerca de felicitat i immortalitat, com a preguntes sobre el futur i no com a prediccions inevitables.",
+      "title": "Homo Deus"
+    },
+    "en": {
+      "description": "Yuval Noah Harari explores how biotechnology, artificial intelligence and data could transform human ambitions. The essay considers power, inequality and the pursuit of happiness and immortality, presenting questions and possible futures rather than inevitable predictions.",
+      "title": "Homo Deus: A Brief History of Tomorrow"
+    },
+    "es": {
+      "description": "Yuval Noah Harari explora cómo la biotecnología, la inteligencia artificial y el uso de datos podrían transformar los proyectos humanos. El ensayo plantea escenarios sobre el poder, la desigualdad y la búsqueda de felicidad e inmortalidad, como preguntas sobre el futuro y no como predicciones inevitables.",
+      "title": "Homo Deus"
+    }
+  }
+}

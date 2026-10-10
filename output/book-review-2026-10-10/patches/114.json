@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/esfera.epub",
+  "title": "Esfera",
+  "year": "1987",
+  "description": "Un equipo de científicos desciende al fondo del Pacífico para investigar una nave de origen desconocido. En su interior encuentran una esfera que altera la misión y pone a prueba su capacidad de distinguir los peligros exteriores de sus propios temores.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Un equip de científics baixa al fons del Pacífic per investigar una nau d’origen desconegut. A l’interior hi troben una esfera que altera la missió i posa a prova la capacitat de distingir els perills exteriors de les seves pròpies pors.",
+      "title": "Esfera"
+    },
+    "en": {
+      "title": "Sphere",
+      "description": "A scientific team descends to the Pacific seabed to investigate a vessel of unknown origin. Inside, a mysterious sphere transforms their mission and tests their ability to distinguish external danger from the fears they bring with them."
+    },
+    "es": {
+      "title": "Esfera",
+      "description": "Un equipo de científicos desciende al fondo del Pacífico para investigar una nave de origen desconocido. En su interior encuentran una esfera que altera la misión y pone a prueba su capacidad de distinguir los peligros exteriores de sus propios temores."
+    }
+  },
+  "author": "Michael Crichton"
+}

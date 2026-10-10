@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/4-relatos.epub",
+  "title": "Cuatro Relatos",
+  "year": "2006",
+  "description": "Cuatro narraciones reúnen aventuras marítimas, memoria bélica y episodios históricos: «La pasajera del San Carlos», «Jodía Pavía», «El doblón del capitán Ahab» y «Ojos azules». El riesgo, la lealtad y el peso de la derrota recorren esta selección de relatos de Pérez-Reverte.",
+  "localizedMetadata": {
+    "es": {
+      "subtitle": "La pasajera de San Carlos. Jodía Pavía. El doblón del capitán Ahab. Ojos azules",
+      "title": "Cuatro Relatos",
+      "description": "Cuatro narraciones reúnen aventuras marítimas, memoria bélica y episodios históricos: «La pasajera del San Carlos», «Jodía Pavía», «El doblón del capitán Ahab» y «Ojos azules». El riesgo, la lealtad y el peso de la derrota recorren esta selección de relatos de Pérez-Reverte."
+    },
+    "ca": {
+      "description": "Quatre narracions apleguen aventures marítimes, memòria bèl·lica i episodis històrics: «La pasajera del San Carlos», «Jodía Pavía», «El doblón del capitán Ahab» i «Ojos azules». El risc, la lleialtat i el pes de la derrota recorren aquesta selecció de relats de Pérez-Reverte.",
+      "title": "Cuatro Relatos"
+    },
+    "en": {
+      "description": "Four stories bring together seafaring adventures, memories of war and historical episodes: “La pasajera del San Carlos”, “Jodía Pavía”, “El doblón del capitán Ahab” and “Ojos azules”. Risk, loyalty and the burden of defeat connect this selection of Pérez-Reverte's short fiction.",
+      "title": "Cuatro Relatos"
+    }
+  }
+}

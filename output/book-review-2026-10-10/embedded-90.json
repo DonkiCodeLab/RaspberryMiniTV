@@ -1,0 +1,42 @@
+{
+  "index": 90,
+  "path": "Books/el-mundo-perdido.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "urn:epl:2256"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:revision:1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:1923"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:7fd6b821-f7ff-409e-8002-bd8d36721075"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:8e87a0ef-6877-2c92-56bd-13a108dca7f5"
+    },
+    {
+      "tag": "title",
+      "value": "El mundo perdido"
+    },
+    {
+      "tag": "date",
+      "value": "1995-01-02T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "El excéntrico matemático Ian Malcolm, quien sobrevivió a los eventos de la primera novela (Parque Jurásico), y el ingeniero de materiales Jack «Doc» Thorne reciben una llamada satelital de un paleontólogo, Richard Levine, diciendo que se encuentra atrapado en una isla llamada Enclave B y necesita ayuda. Ellos organizan una operación de rescate con ayuda del mecánico Eddie Carr y se dirigen a Isla Sorna, luego de determinar que ese es el sitio llamado Enclave B. Con ellos viajan escondidos R.B. «Arby» Benton, un niño genio de once años y Kelly Curtis, de trece años y amiga de Arby. La isla es una instalación secreta de la empresa InGen, que se encuentra en bancarrota, donde mantenían los dinosaurios antes de transferirlos al Parque Jurásico."
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    }
+  ]
+}

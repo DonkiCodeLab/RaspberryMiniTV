@@ -1,0 +1,42 @@
+{
+  "index": 104,
+  "path": "Books/el-s-mbolo-perdido.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El símbolo perdido"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:412e2828-e88d-41e5-97ed-aa65e9b8391b"
+    },
+    {
+      "tag": "description",
+      "value": "Washington. El experto en simbología Robert Langdon es convocado inesperadamente por Peter Solomon, masón, filántropo y su antiguo mentor, para dar una conferencia en el Capitolio. Pero el secuestro de Peter y el hallazgo de una mano tatuada con cinco enigmáticos símbolos cambian drásticamente el curso de los acontecimientos. Atrapado entre las exigencias de una mente perturbada y la investigación oficial, Langdon se ve inmerso en un mundo clandestino de secretos masónicos, historia oculta y escenarios nunca antes vistos, que parecen arrastrarlo hacia una sencilla pero inconcebible verdad. Con la ayuda de Katherine Solomon, hermana de Peter y experta en ciencias noéticas, Robert Langdon tiene doce horas para salvar a su amigo y, al mismo tiempo, evitar que uno de los secretos mejor guardados de nuestra historia caiga en las manos equivocadas…"
+    },
+    {
+      "tag": "date",
+      "value": "2008-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-07-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "b3de685d-0a85-49a8-8a47-ade8a583a571"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.3"
+    },
+    {
+      "tag": "identifier",
+      "value": "1610"
+    }
+  ]
+}

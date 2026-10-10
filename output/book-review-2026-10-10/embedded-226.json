@@ -1,0 +1,34 @@
+{
+  "index": 226,
+  "path": "Books/vae-victus.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Vae Victus"
+    },
+    {
+      "tag": "creator",
+      "value": "Albert Sánchez Piñol"
+    },
+    {
+      "tag": "description",
+      "value": "VAE VICTUS narra cuatro nuevas aventuras del ingeniero Martí Zuviría. El libro comienza el 12 de septiembre de 1714, el día siguiente de la caída de Barcelona y poco antes de que Zuviría huya a Norteamérica, donde ayudará a los indios yamas en la guerra contra los colonos ingleses. Después de la aventura americana, volveremos a Cataluña, pero también iremos a Londres, Alemania e incluso a Nueva Zelanda. Nos reencontraremos con personajes históricos que ya conocimos en VICTUS, como el ambiguo duque de Berwick, su acérrimo enemigo Verboom o el admirado general Villarroel, al mismo tiempo que descubriremos a algunos nuevos, como el famoso guerrillero antiborbónico Pere Joan Barceló alias Carrasclet o el explorador inglés James Cook. Sánchez Piñol confirma con VAE VICTUS su pulso narrativo, un equilibrio prodigioso entre el rigor histórico y la imaginación más desbordante y un sentido del humor que convierten su prosa en una de las más modernas y a la vez populares de nuestro tiempo."
+    },
+    {
+      "tag": "date",
+      "value": "2015-10-31T23:00:00+00:00"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d740a9cb-0416-4481-8ad1-b0b7dceb944f"
+    },
+    {
+      "tag": "date",
+      "value": "2016-01-26"
+    },
+    {
+      "tag": "identifier",
+      "value": "a57cac5c-7fb7-466d-838e-964461c93bda"
+    }
+  ]
+}

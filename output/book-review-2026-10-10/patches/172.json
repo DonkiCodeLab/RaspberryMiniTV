@@ -1,0 +1,22 @@
+{
+  "relativePath": "Books/las-hermanas-gr-millet.cbr",
+  "title": "Las hermanas Grémillet 1: El sueño de Sarah",
+  "year": "2020",
+  "description": "Sarah tiene un sueño recurrente que parece conectado con el pasado de su madre. Junto a sus hermanas Cassiopée y Lucille, decide seguir las pistas y descubrir un secreto familiar, en una aventura que pone a prueba sus diferencias y su complicidad.",
+  "localizedMetadata": {
+    "es": {
+      "subtitle": "1. El sueño de Sarah",
+      "title": "Las hermanas Grémillet 1: El sueño de Sarah",
+      "description": "Sarah tiene un sueño recurrente que parece conectado con el pasado de su madre. Junto a sus hermanas Cassiopée y Lucille, decide seguir las pistas y descubrir un secreto familiar, en una aventura que pone a prueba sus diferencias y su complicidad."
+    },
+    "ca": {
+      "description": "La Sarah té un somni recurrent que sembla connectat amb el passat de la mare. Amb les germanes Cassiopée i Lucille, decideix seguir les pistes i descobrir un secret familiar, en una aventura que posa a prova les diferències i la complicitat.",
+      "title": "Les germanes Grémillet 1: El somni de la Sarah"
+    },
+    "en": {
+      "description": "Sarah has a recurring dream that seems connected to her mother's past. With her sisters Cassiopée and Lucille, she follows the clues towards a family secret, in an adventure that tests their differences and their bond.",
+      "title": "The Grémillet Sisters 1: Sarah's Dream"
+    }
+  },
+  "author": "Giovanni Di Gregorio y Alessandro Barbucci"
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/sue-an-los-androides-con-ovejas-el-ctricas.epub",
+  "title": "¿Sueñan los androides con ovejas eléctricas?",
+  "year": "1968",
+  "description": "En una Tierra devastada, Rick Deckard recibe el encargo de localizar androides que han escapado de las colonias. Sus encuentros cuestionan la diferencia entre humanos y seres artificiales en una sociedad donde los animales, la empatía y los recuerdos han adquirido un valor incierto.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "En una Terra devastada, Rick Deckard rep l’encàrrec de localitzar androides fugits de les colònies. Les trobades qüestionen la diferència entre humans i éssers artificials en una societat on els animals, l’empatia i els records han adquirit un valor incert.",
+      "title": "¿Sueñan los androides con ovejas eléctricas?"
+    },
+    "en": {
+      "title": "Blade runner",
+      "description": "On a devastated Earth, Rick Deckard is hired to locate androids who have escaped from the colonies. His encounters question the distinction between humans and artificial beings in a society where animals, empathy and memories carry uncertain value."
+    },
+    "es": {
+      "title": "Sueñan los androides con ovejas eléctricas?",
+      "description": "En una Tierra devastada, Rick Deckard recibe el encargo de localizar androides que han escapado de las colonias. Sus encuentros cuestionan la diferencia entre humanos y seres artificiales en una sociedad donde los animales, la empatía y los recuerdos han adquirido un valor incierto."
+    }
+  }
+}

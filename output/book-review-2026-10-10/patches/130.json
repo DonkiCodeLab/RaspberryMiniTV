@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/harry-potter-y-la-orden-del-f-nix.epub",
+  "title": "Harry Potter y la orden del Fénix",
+  "year": "2003",
+  "description": "El Ministerio de Magia niega el regreso de Voldemort y refuerza su control sobre Hogwarts mediante Dolores Umbridge. Harry intenta prepararse con sus compañeros mientras la Orden del Fénix actúa en secreto y una extraña conexión con su enemigo lo inquieta.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Harry Potter i l'orde del fènix",
+      "description": "El Ministeri de Màgia nega el retorn de Voldemort i reforça el control sobre Hogwarts mitjançant Dolores Umbridge. En Harry intenta preparar-se amb els companys mentre l’Orde del Fènix actua en secret i una estranya connexió amb l’enemic l’inquieta."
+    },
+    "en": {
+      "description": "The Ministry of Magic denies Voldemort's return and tightens its control over Hogwarts through Dolores Umbridge. Harry prepares with his friends while the Order of the Phoenix works in secret and a strange connection to his enemy troubles him.",
+      "title": "Harry Potter and the Order of the Phoenix"
+    },
+    "es": {
+      "description": "El Ministerio de Magia niega el regreso de Voldemort y refuerza su control sobre Hogwarts mediante Dolores Umbridge. Harry intenta prepararse con sus compañeros mientras la Orden del Fénix actúa en secreto y una extraña conexión con su enemigo lo inquieta.",
+      "subtitle": "Harry Potter 5",
+      "title": "Harry Potter y la orden del Fénix"
+    }
+  }
+}

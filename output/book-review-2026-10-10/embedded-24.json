@@ -1,0 +1,42 @@
+{
+  "index": 24,
+  "path": "Books/baja-mar.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Baja mar"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:388640e2-c0fb-5a6b-8f6c-1caac0269d51"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Los hombres nacen, crecen, mueren y se corrompen.</p><p>Los gobiernos nacen, crecen, se corrompen y mueren.</p><p>Esa sutil diferencia entre el ser humano y quienes les gobiernan resumen en cierto modo la odisea de la familia Ríos Bonfante, que vive en un hermoso lugar, pero se ve obligada a emigrar a Venezuela por culpa de una tiranía que ha convertido España en un infierno.</p><p>Cuando ya se sienten a gusto en lo que consideran un paraíso, una nueva tiranía aun más cruel lo convierte en un infierno y les obliga a regresar a España que consideran ahora un paraíso.</p><p>Estas páginas nos recuerdan que el eterno viaje del ser humano en busca de la felicidad se ve siempre sometido a los designios de otros seres humanos.</p><p>Basándose en retazos de su propia vida, Alberto Vázquez-Figueroa ha escrito una saga familiar de ida y vuelta, a caballo entre Europa, África y América. El autor nos ofrece aquí su novela más personal y nos muestra sentimientos profundos que creía olvidados antes de sentarse a escribir.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2018-02-28T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-12-01"
+    },
+    {
+      "tag": "identifier",
+      "value": "5cb632c9-22a1-478c-aecd-a8cd4cb2971a"
+    },
+    {
+      "tag": "identifier",
+      "value": "46854"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    }
+  ]
+}

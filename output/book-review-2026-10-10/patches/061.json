@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-asedio.epub",
+  "title": "El asedio",
+  "year": "2010",
+  "description": "En el Cádiz sitiado por los franceses, una serie de asesinatos inquieta al comisario Rogelio Tizón. La investigación se cruza con las vidas de comerciantes, espías y soldados en una ciudad que lucha por sobrevivir mientras se prepara una nueva Constitución.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Al Cadis assetjat pels francesos, una sèrie d’assassinats inquieta el comissari Rogelio Tizón. La investigació s’entrecreua amb les vides de comerciants, espies i soldats en una ciutat que lluita per sobreviure mentre es prepara una nova Constitució.",
+      "title": "El asedio"
+    },
+    "en": {
+      "description": "In Cádiz, under siege by French forces, a series of murders troubles police commissioner Rogelio Tizón. His investigation intersects with the lives of merchants, spies and soldiers as the city struggles to survive while a new constitution takes shape.",
+      "title": "The siege"
+    },
+    "es": {
+      "description": "En el Cádiz sitiado por los franceses, una serie de asesinatos inquieta al comisario Rogelio Tizón. La investigación se cruza con las vidas de comerciantes, espías y soldados en una ciudad que lucha por sobrevivir mientras se prepara una nueva Constitución.",
+      "title": "El asedio"
+    }
+  }
+}

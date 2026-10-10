@@ -12,6 +12,28 @@ import control_api as api
 
 
 class ProviderTests(unittest.TestCase):
+    def test_first_publication_uses_the_exact_work_without_language_or_edition_filters(self):
+        with patch.object(metadata, '_get', return_value={'docs': [
+                {'key': 'OL1W', 'first_publish_year': 1949}]}) as fetch:
+            self.assertEqual(metadata.first_publication_year('/works/OL1W', {}), '1949')
+            self.assertEqual(fetch.call_args.args[1]['q'], 'key:/works/OL1W')
+            self.assertNotIn('lang', fetch.call_args.args[1])
+            fetch.reset_mock()
+            self.assertEqual(metadata.first_publication_year('/works/OL1W', {'first_publish_date': '8 June 1949'}), '1949')
+            fetch.assert_not_called()
+        for payload in ({'docs': []}, {'docs': [{'key': '/works/OL2W', 'first_publish_year': 2001}]},
+                        {'docs': [{'key': '/works/OL1W', 'first_publish_year': 'unknown'}]}):
+            with patch.object(metadata, '_get', return_value=payload):
+                self.assertEqual(metadata.first_publication_year('/works/OL1W', {}), '')
+        with patch.object(metadata, '_get', side_effect=TimeoutError):
+            self.assertEqual(metadata.first_publication_year('/works/OL1W', {}), '')
+
+    def test_unknown_work_year_does_not_become_the_reprint_year(self):
+        with patch.object(metadata, '_get', return_value={'publish_date': '2021'}):
+            item = metadata.details('', '/books/OL2M')
+        self.assertEqual(item['year'], '')
+        self.assertEqual(item['publishDate'], '2021')
+
     def test_graphic_novel_boolean_accepts_json_and_multipart_without_losing_false(self):
         for value, expected in [(True, True), (False, False), ('true', True), ('false', False)]:
             self.assertEqual(metadata.normalize_profile({'isGraphicNovel': value}), {'isGraphicNovel': expected})
@@ -45,7 +67,7 @@ class ProviderTests(unittest.TestCase):
                 'publish_date': 'September 2001', 'publishers': ['Editorial'], 'number_of_pages': 120,
                 'languages': [{'key': '/languages/spa'}]},
             '/works/OL1W.json': {'title': 'Original', 'description': {'value': 'Sinopsis completa'}, 'subjects': ['Ficción'],
-                'authors': [{'author': {'key': '/authors/OL3A'}}], 'covers': [123]},
+                'first_publish_date': '1960', 'authors': [{'author': {'key': '/authors/OL3A'}}], 'covers': [123]},
             '/authors/OL3A.json': {'name': 'Una autora'},
         }
         with patch.object(metadata, '_get', side_effect=lambda path, params=None: fixtures.get(path, {'docs': []})) as fetch:
@@ -53,7 +75,8 @@ class ProviderTests(unittest.TestCase):
             self.assertEqual(item['description'], 'Sinopsis completa')
             self.assertEqual(item['publisher'], 'Editorial')
             self.assertEqual(item['author'], 'Una autora')
-            self.assertEqual(item['year'], '2001')
+            self.assertEqual(item['year'], '1960')
+            self.assertEqual(item['publishDate'], 'September 2001')
             self.assertEqual(item['pageCount'], '120')
             self.assertEqual(item['language'], 'spa')
             self.assertEqual(item['isbn'], '9781234567890')
@@ -91,7 +114,7 @@ class ProviderTests(unittest.TestCase):
                 key = {'es': '/books/OL3M', 'ca': '/books/OL4M'}[params['lang']]
                 return {'docs': [{'key': '/works/OL1W', 'editions': {'docs': [{'key': key}]}}]}
             if path == '/works/OL1W.json':
-                return {'title': 'Original', 'description': 'Work description', 'subjects': ['English topic']}
+                return {'title': 'Original', 'first_publish_date': '1960', 'description': 'Work description', 'subjects': ['English topic']}
             return editions[path.removesuffix('.json')]
         with patch.object(metadata, '_get', side_effect=fetch):
             item = metadata.details('/works/OL1W', '/books/OL2M', 'ca')

@@ -1,0 +1,34 @@
+{
+  "index": 212,
+  "path": "Books/shutter-island.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Shutter Island"
+    },
+    {
+      "tag": "creator",
+      "value": "Dennis Lehane"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:cd3e1900-e76a-425e-a678-02891e85adf3"
+    },
+    {
+      "tag": "description",
+      "value": "Verano de 1954. El agente federal Teddy Daniels llega a Shutter Island, isla en la que está ubicado el hospital Ashecliffe, un centro penitenciario para enfermos mentales. Junto con su compañero, Chuck Aule, se propone encontrar a una paciente desaparecida, una asesina llamada Rachel Solando, a medida que un huracán azota la isla. No obstante, nada es lo que parece en el hospital Ashecliffe. Y Teddy Daniels tampoco.¿Ha ido hasta allí para encontrar a una paciente desaparecida? ¿O le han enviado para investigar los rumores acerca de los radicales métodos psiquiátricos que se utilizan en esa institución? Unos métodos que posiblemente incluyan la experimentación con drogas, pruebas quirúrgicas terribles, contraataques mortales en la guerra encubierta en contra de los lavados de cerebro soviéticos…"
+    },
+    {
+      "tag": "date",
+      "value": "2003-04-14T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2016-08-06"
+    },
+    {
+      "tag": "identifier",
+      "value": "a3f2ea36-a09b-47df-ab62-72f11b836477"
+    }
+  ]
+}

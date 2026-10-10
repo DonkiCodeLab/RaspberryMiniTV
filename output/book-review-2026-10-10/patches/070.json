@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-club-dumas.epub",
+  "title": "El club Dumas",
+  "year": "1993",
+  "description": "Lucas Corso, experto en rastrear libros raros, recibe dos encargos: autenticar un manuscrito de Los tres mosqueteros y comparar ejemplares de un tratado ocultista. Sus pesquisas lo conducen a un laberinto de coleccionistas, engaños y referencias literarias donde leer puede resultar peligroso.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Lucas Corso, expert a rastrejar llibres rars, rep dos encàrrecs: autenticar un manuscrit d’Els tres mosqueters i comparar exemplars d’un tractat ocultista. Les investigacions el condueixen a un laberint de col·leccionistes, enganys i referències literàries on llegir pot resultar perillós.",
+      "title": "El club Dumas"
+    },
+    "en": {
+      "description": "Rare-book hunter Lucas Corso receives two assignments: authenticate a manuscript of The Three Musketeers and compare copies of an occult treatise. His investigations lead through a maze of collectors, deception and literary references, where reading can become a dangerous pursuit.",
+      "subtitle": "a novel",
+      "title": "The Club Dumas"
+    },
+    "es": {
+      "description": "Lucas Corso, experto en rastrear libros raros, recibe dos encargos: autenticar un manuscrito de Los tres mosqueteros y comparar ejemplares de un tratado ocultista. Sus pesquisas lo conducen a un laberinto de coleccionistas, engaños y referencias literarias donde leer puede resultar peligroso.",
+      "title": "El club Dumas"
+    }
+  }
+}

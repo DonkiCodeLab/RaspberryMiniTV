@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/vae-victus.epub",
+  "title": "Vae Victus",
+  "year": "2015",
+  "description": "Tras la caída de Barcelona en 1714, el ingeniero Martí Zuviría continúa sus aventuras lejos del escenario de Victus. Cuatro episodios lo llevan por nuevos conflictos y territorios, combinando su mirada irreverente con las disputas imperiales y las consecuencias de la derrota.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Vae Victus",
+      "description": "Després de la caiguda de Barcelona el 1714, l’enginyer Martí Zuviría continua les aventures lluny de l’escenari de Victus. Quatre episodis el porten per nous conflictes i territoris, combinant la mirada irreverent amb les disputes imperials i les conseqüències de la derrota."
+    },
+    "en": {
+      "description": "After Barcelona falls in 1714, engineer Martí Zuviría continues his adventures beyond the setting of Victus. Four episodes carry him through new conflicts and territories, combining his irreverent perspective with imperial struggles and the consequences of defeat.",
+      "title": "Vae Victus"
+    },
+    "es": {
+      "title": "Vae Victus",
+      "description": "Tras la caída de Barcelona en 1714, el ingeniero Martí Zuviría continúa sus aventuras lejos del escenario de Victus. Cuatro episodios lo llevan por nuevos conflictos y territorios, combinando su mirada irreverente con las disputas imperiales y las consecuencias de la derrota."
+    }
+  }
+}

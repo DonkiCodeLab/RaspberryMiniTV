@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/ana-karenina.epub",
+  "title": "Ana Karenina",
+  "year": "1878",
+  "description": "La relación de Anna con el conde Vronski desafía las convenciones de la aristocracia rusa y amenaza su vida familiar. En paralelo, Levin busca sentido en el trabajo, el amor y la fe, contraponiendo otra forma de vivir a las apariencias sociales.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Anna Karènina",
+      "description": "La relació de l’Anna amb el comte Vronski desafia les convencions de l’aristocràcia russa i amenaça la seva vida familiar. Paral·lelament, en Levin busca sentit en la feina, l’amor i la fe, contraposant una altra manera de viure a les aparences socials."
+    },
+    "en": {
+      "title": "Anna Karenina",
+      "description": "Anna's relationship with Count Vronsky challenges Russian aristocratic convention and endangers her family life. Alongside her story, Levin searches for meaning in work, love and faith, offering a contrasting exploration of the distance between social appearances and personal fulfilment."
+    },
+    "es": {
+      "description": "La relación de Anna con el conde Vronski desafía las convenciones de la aristocracia rusa y amenaza su vida familiar. En paralelo, Levin busca sentido en el trabajo, el amor y la fe, contraponiendo otra forma de vivir a las apariencias sociales.",
+      "title": "Ana Karenina"
+    }
+  }
+}

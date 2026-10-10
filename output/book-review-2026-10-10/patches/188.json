@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/mecanoscrito-del-segundo-origen.epub",
+  "title": "Mecanoscrito del segundo origen",
+  "year": "1974",
+  "description": "Alba y Dídac sobreviven a una catástrofe que ha destruido casi toda la humanidad. Mientras recorren un mundo vacío y reúnen conocimientos para seguir adelante, su relación plantea preguntas sobre la educación, la memoria y la posibilidad de empezar de nuevo.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "L’Alba i en Dídac sobreviuen a una catàstrofe que ha destruït gairebé tota la humanitat. Mentre recorren un món buit i reuneixen coneixements per continuar, la relació planteja preguntes sobre l’educació, la memòria i la possibilitat de començar de nou.",
+      "title": "Mecanoscrit del segon origen"
+    },
+    "en": {
+      "title": "Typescript of the Second Origin",
+      "description": "Alba and Dídac survive a catastrophe that has destroyed almost all humanity. As they explore an empty world and gather knowledge to continue living, their relationship raises questions about education, memory and the possibility of beginning again."
+    },
+    "es": {
+      "title": "Mecanoscrito del segundo origen",
+      "description": "Alba y Dídac sobreviven a una catástrofe que ha destruido casi toda la humanidad. Mientras recorren un mundo vacío y reúnen conocimientos para seguir adelante, su relación plantea preguntas sobre la educación, la memoria y la posibilidad de empezar de nuevo."
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "index": 80,
+  "path": "Books/el-hombre-terminal.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El hombre terminal"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "description",
+      "value": "Harry Benson es un treintañero que sufre de epilepsia psicomotora y psicosis acerca del posible dominio de las máquinas en el mundo. Sus ataques vienen continuados por desmayos, y tras despertarse horas después, no recuerda nada de lo que ha hecho. Durante uno de dichos ataques, ataca a dos personas, a las que produce lesiones graves. Su situación le convierte en un candidato idóneo para una operación sin precedentes consistente en implantar unos electrodos y un miniordenador en su cerebro para controlar los ataques. Dicha operación está a cargo de los cirujanos Ellis y Morris. El procedimiento y sus consecuencias son cuestionados por la psiquiatra Janet Ross y por el profesor Manon, argumentado el desorden mental del sujeto y los crímenes cometidos. Aunque Ellis admite que no se trata de una cura, sino de un modo de estimular el cerebro cuando se aproxima un ataque, deciden seguir adelante con la operación, durante la cual se implantan cuarenta electrodos en el cerebro de Benson, controlados por una batería de plutonio en su hombro. Durante las pruebas posteriores, consistentes en activar los electrodos dentro de su cabeza uno a uno hasta averiguar cuál detendría un posible episodio epiléptico, Ross descubre que Benson está aprendiendo a provocarse ataques de forma involuntaria porque le producen una descarga de placer, lo cual están conduciendo a un incremento de la frecuencia de dichos ataques. Al ir a comprobar el estado de Benson, descubre que éste ha desaparecido. Mientras intenta localizar a Benson, Ross es contactada por la policía, que le informa del asesinato de una mujer que estaba relacionada con Benson. Tras sufrir un enfrentamiento en su casa con el propio Benson, se da cuenta de que la psicosis de Benson respecto al dominio mundial de las máquinas ha aumentado y está dispuesto a atentar contra el hospital debido a que se siente intimidado por los sistemas tecnológicos del mismo, para lo cual se desplazará al mismo con intención de destruir el mainframe."
+    },
+    {
+      "tag": "date",
+      "value": "1971-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-03-02"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:1e2efc04-7c62-48b2-a398-eebc0a3a5857"
+    },
+    {
+      "tag": "identifier",
+      "value": "fb44b1c3-adcb-433b-84d0-44d69fc4e5db"
+    },
+    {
+      "tag": "identifier",
+      "value": "16760"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    }
+  ]
+}

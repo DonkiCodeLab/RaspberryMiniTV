@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-tatuador-de-auschwitz.epub",
+  "title": "El tatuador de Auschwitz",
+  "year": "2018",
+  "description": "Esta novela, inspirada en el testimonio de Lale Sokolov, cuenta su experiencia como prisionero obligado a tatuar números en Auschwitz. Su relación con Gita ocupa el centro de una narración sobre el afecto y la supervivencia bajo la persecución nazi.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Aquesta novel·la, inspirada en el testimoni de Lale Sokolov, explica l’experiència d’un presoner obligat a tatuar números a Auschwitz. La relació amb Gita ocupa el centre d’una narració sobre l’afecte i la supervivència sota la persecució nazi.",
+      "title": "El tatuador de Auschwitz"
+    },
+    "en": {
+      "description": "Inspired by Lale Sokolov's testimony, this novel follows a prisoner forced to tattoo identification numbers at Auschwitz. His relationship with Gita lies at the heart of a story about human connection and survival under Nazi persecution.",
+      "title": "El tatuador de Auschwitz"
+    },
+    "es": {
+      "description": "Esta novela, inspirada en el testimonio de Lale Sokolov, cuenta su experiencia como prisionero obligado a tatuar números en Auschwitz. Su relación con Gita ocupa el centro de una narración sobre el afecto y la supervivencia bajo la persecución nazi.",
+      "title": "El tatuador de Auschwitz"
+    }
+  },
+  "author": "Heather Morris"
+}

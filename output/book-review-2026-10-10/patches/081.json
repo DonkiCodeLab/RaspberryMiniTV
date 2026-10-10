@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-horror-de-r-quiem.epub",
+  "title": "El horror de Réquiem",
+  "year": "2020",
+  "description": "Un trabajador de la morgue de Barcelona se queda con el anillo de una mujer fallecida y desencadena una sucesión de hechos inquietantes. Con la ayuda de sus peculiares compañeros, se enfrenta a un misterio que combina humor negro, investigación y horror cósmico.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Un trabajador de la morgue de Barcelona se queda con el anillo de una mujer fallecida y desencadena una sucesión de hechos inquietantes. Con la ayuda de sus peculiares compañeros, se enfrenta a un misterio que combina humor negro, investigación y horror cósmico.",
+      "title": "El horror de Réquiem"
+    },
+    "ca": {
+      "description": "Un treballador del dipòsit de cadàvers de Barcelona es queda amb l’anell d’una dona morta i desencadena una successió de fets inquietants. Amb l’ajuda dels seus peculiars companys, s’enfronta a un misteri que combina humor negre, investigació i horror còsmic.",
+      "title": "El horror de Réquiem"
+    },
+    "en": {
+      "description": "A Barcelona morgue worker takes a dead woman's ring and sets off a series of disturbing events. With help from his unconventional companions, he faces a mystery blending dark comedy, investigation and cosmic horror.",
+      "title": "El horror de Réquiem"
+    }
+  }
+}

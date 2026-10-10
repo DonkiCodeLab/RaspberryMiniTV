@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/memorias-de-adriano.epub",
+  "title": "Memorias de Adriano",
+  "year": "1951",
+  "description": "Ante la proximidad de la muerte, el emperador Adriano reconstruye su vida en una carta imaginaria a Marco Aurelio. Recuerda el poder, los viajes, el amor y las pérdidas, en una novela que convierte la biografía histórica en una reflexión íntima sobre la condición humana.",
+  "localizedMetadata": {
+    "ca": {
+      "subtitle": "seguit de Quadern de notes de les \"Memòries d'Adrià\"",
+      "title": "Memòries d'Adrià",
+      "description": "Davant la proximitat de la mort, l’emperador Adrià reconstrueix la vida en una carta imaginària a Marc Aureli. Recorda el poder, els viatges, l’amor i les pèrdues, en una novel·la que converteix la biografia històrica en una reflexió íntima sobre la condició humana."
+    },
+    "en": {
+      "title": "Hadrian's memoirs",
+      "description": "Facing death, Emperor Hadrian reviews his life in an imagined letter to Marcus Aurelius. Power, travel, love and loss become the subjects of a novel that transforms historical biography into an intimate reflection on the human condition."
+    },
+    "es": {
+      "title": "Memorias de Adriano",
+      "description": "Ante la proximidad de la muerte, el emperador Adriano reconstruye su vida en una carta imaginaria a Marco Aurelio. Recuerda el poder, los viajes, el amor y las pérdidas, en una novela que convierte la biografía histórica en una reflexión íntima sobre la condición humana."
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/shutter-island.epub",
+  "title": "Shutter Island",
+  "year": "2003",
+  "description": "En 1954, los agentes Teddy Daniels y Chuck Aule llegan a una isla para investigar la desaparición de una paciente de un hospital psiquiátrico penitenciario. Un temporal los aísla mientras las contradicciones del personal y los recuerdos de Teddy vuelven incierta la investigación.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El 1954, els agents Teddy Daniels i Chuck Aule arriben a una illa per investigar la desaparició d’una pacient d’un hospital psiquiàtric penitenciari. Un temporal els aïlla mentre les contradiccions del personal i els records de Teddy fan incerta la investigació.",
+      "title": "Shutter Island"
+    },
+    "en": {
+      "description": "In 1954, marshals Teddy Daniels and Chuck Aule arrive on an island to investigate a patient's disappearance from a secure psychiatric hospital. A storm cuts them off as staff contradictions and Teddy's memories unsettle the investigation.",
+      "title": "Shutter Island"
+    },
+    "es": {
+      "title": "Shutter Island",
+      "description": "En 1954, los agentes Teddy Daniels y Chuck Aule llegan a una isla para investigar la desaparición de una paciente de un hospital psiquiátrico penitenciario. Un temporal los aísla mientras las contradicciones del personal y los recuerdos de Teddy vuelven incierta la investigación."
+    }
+  },
+  "author": "Dennis Lehane"
+}

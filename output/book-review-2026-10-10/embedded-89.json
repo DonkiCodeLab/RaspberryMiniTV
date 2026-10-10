@@ -1,0 +1,42 @@
+{
+  "index": 89,
+  "path": "Books/el-mundo-de-hielo-y-fuego.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El mundo de Hielo y Fuego"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "creator",
+      "value": "Elio García"
+    },
+    {
+      "tag": "creator",
+      "value": "Linda Antonsson"
+    },
+    {
+      "tag": "description",
+      "value": "Una visita ilustrada a los Siete Reinos y al mundo de Juego de tronos. El mundo de hielo y fuego es un trabajo de documentación titánico que abarca desde la Era del Amanecer hasta la Edad de los Héroes; desde la llegada de los primeros hombres hasta el desembarco de Aegon el Conquistador, la Danza de los Dragones y la rebelión del rey Robert. Un verdadero tratado elaborado a partir de todas las fuentes disponibles: libros y pergaminos de la biblioteca de la Ciudadela, canciones y tradiciones populares, textos sagrados de la Fe y el conocimiento arcano de brujos y magos. Desde que George R. R. Martin empezó a publicar Canción de hielo y fuego, huestes de lectores apasionados por la saga se han volcado en recopilar todos los datos disponibles en las novelas… y fuera de ellas. Elio M. García Jr. y Linda Antonsson, con la colaboración del propio Martin, han venido organizando toda esa información en la web Westeros.org, que se ha convertido en la fuente de referencia esencial de todo lo relacionado con la genial creación del autor. Con profusión de ilustraciones originales, El mundo de hielo y fuego recoge ese trabajo en un compendio exhaustivo de la historia de Poniente y de las tierra de más allá del mar Angosto."
+    },
+    {
+      "tag": "date",
+      "value": "2013-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-02-27"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:804D0000-2014-2016-0000-F0E600000000"
+    },
+    {
+      "tag": "identifier",
+      "value": "c39dc3d5-f55c-421b-a593-1158a85d55dc"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "index": 103,
+  "path": "Books/el-ruise-or.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El ruiseñor"
+    },
+    {
+      "tag": "creator",
+      "value": "Kristin Hannah"
+    },
+    {
+      "tag": "description",
+      "value": "Francia, 1939. En el tranquilo pueblo de Carriveau, Vianne Mauriac se despide de su marido, Antoine, que debe marchar al frente. Ella no cree que los nazis vayan a invadir Francia, pero lo hacen, con batallones de soldados marchando por las calles, con caravanas de camiones y tanques, con aviones que llenan los cielos y lanzan bombas sobre los inocentes. Cuando un capitán alemán requisa la casa de Vianne, ella y su hija deben convivir con el enemigo o arriesgarse a perderlo todo. Sin comida ni dinero ni esperanza, Vianne se ve obligada a tomar decisiones cada vez más difíciles para sobrevivir. La hermana de Vianne, Isabelle, es una joven rebelde de dieciocho años que busca un propósito para su vida con toda la temeraria pasión de la juventud. Mientras miles de parisinos escapan de la ciudad ante la inminente llegada de los alemanes, Isabelle se encuentra con Gaëton, un partisano que cree que los franceses pueden luchar contra los nazis desde dentro de Francia. Isabelle se enamora completamente pero, tras sentirse traicionada, decide unirse a la Resistencia. Sin detenerse nunca para mirar atrás, Isabelle arriesgará su vida una y otra vez para salvar a otros. En el amor descubrimos quiénes queremos ser. En la guerra descubrimos quiénes somos en realidad."
+    },
+    {
+      "tag": "date",
+      "value": "2015-01-28T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-09-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:231c4f86-51eb-4419-8dd9-54db43e60361"
+    },
+    {
+      "tag": "identifier",
+      "value": "74de9d99-0ab4-4371-a01e-8f9613d41394"
+    },
+    {
+      "tag": "identifier",
+      "value": "30198"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    }
+  ]
+}

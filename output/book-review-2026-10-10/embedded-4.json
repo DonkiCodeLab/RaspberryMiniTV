@@ -1,0 +1,34 @@
+{
+  "index": 4,
+  "path": "Books/a-la-deriva.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "A la deriva"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4f16bb45-0d0a-e580-11c0-ccedc18bae1d"
+    },
+    {
+      "tag": "description",
+      "value": "Un matrimonio de científicos anuncia que ha descubierto el origen de la vida en una poza volcánica de Lanzarote. Tras esta impactante revelación, y la visita de una comisión de expertos a la isla, la pareja de científicos es asesinada. Las sospechas recaen sobre los seis visitantes, que no podrán abandonar la isla mientras dure la investigación. Ficción científica y suspense analítico en la mejor tradición de Agatha Christie."
+    },
+    {
+      "tag": "date",
+      "value": "2004-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2016-07-30"
+    },
+    {
+      "tag": "identifier",
+      "value": "90437474-ec4b-42b4-b82e-811047925743"
+    }
+  ]
+}

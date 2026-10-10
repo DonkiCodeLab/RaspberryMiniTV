@@ -1,0 +1,42 @@
+{
+  "index": 145,
+  "path": "Books/la-asistenta.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La asistenta"
+    },
+    {
+      "tag": "creator",
+      "value": "Freida McFadden"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:ab7f1a1c-f92a-4004-8171-ab4a0cd87b34"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Detrás de la puerta, ella lo ve todo</b>.</p><p>Todos los días friego la preciosa casa de los Winchester de arriba abajo. Recojo a su hija del colegio y preparo deliciosas comidas para toda la familia antes de subir a cenar sola en mi minúscula habitación del piso superior.</p><p>Intento no prestar atención a Nina cuando lo ensucia todo simplemente para ver cómo lo limpio. A las extrañas mentiras que cuenta sobre su propia hija. A su marido, que cada día parece más abatido. Pero cuando miro a Andrew a los ojos, castaños, encantadores y llenos de dolor, no me resulta difícil imaginar cómo sería vivir en la piel de Nina. El gran vestidor, el coche de lujo, el esposo perfecto.</p><p>Hasta que un día no me resisto a probarme uno de sus maravillosos vestidos blancos. Solo quiero saber qué se siente. Pero ella pronto lo descubre, y cuando me doy cuenta de que la puerta de mi habitación solo se cierra por fuera ya es demasiado tarde.</p><p><b>Algo me reconforta: los Winchester no saben quién soy en realidad</b>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2022-04-21T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-10-07"
+    },
+    {
+      "tag": "identifier",
+      "value": "29a53098-2c4a-449a-bd31-9fa842c77821"
+    },
+    {
+      "tag": "identifier",
+      "value": "72614"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.3"
+    }
+  ]
+}

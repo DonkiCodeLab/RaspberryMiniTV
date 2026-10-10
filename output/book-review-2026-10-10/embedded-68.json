@@ -1,0 +1,46 @@
+{
+  "index": 68,
+  "path": "Books/el-capit-n-alatriste.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El capitán Alatriste"
+    },
+    {
+      "tag": "creator",
+      "value": "Arturo Pérez-Reverte"
+    },
+    {
+      "tag": "creator",
+      "value": "Carlota Pérez-Reverte"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:818cf757-3520-d57c-cfcd-8709b53581b3"
+    },
+    {
+      "tag": "description",
+      "value": "<p>«<i>No era el hombre más honesto ni el más piadoso, pero era un hombre valiente…</i>» Con estas palabras empieza <b>El capitán Alatriste</b>, la historia de un soldado veterano de los tercios de Fland es que malvive como espadachín a sueldo en el Madrid del siglo <small>XVII</small>. Sus aventuras peligrosas y apasionantes nos sumergen sin aliento en las intrigas de la Corte de una España corrupta y en decadencia, las emboscadas en callejones oscuros entre el brillo de dos aceros, las tabernas donde Francisco de Quevedo compone sonetos entre pendencias y botellas de vino, o los corrales de comedias donde las representaciones de Lope de Vega terminan a cuchilladas. Todo ello de la mano de personajes entrañables o fascinantes: el joven Íñigo Balboa, el implacable inquisidor fray Emilio Bocanegra, el peligroso asesino Gualterio Malatesta, o el diabólico secretario del rey, Luis de Alquézar. Acción, historia y aventura se dan cita como un torbellino en estas páginas inolvidables.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1995-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-12-31"
+    },
+    {
+      "tag": "identifier",
+      "value": "ad9c2d79-07a4-4421-a4d4-345e15873331"
+    },
+    {
+      "tag": "identifier",
+      "value": "1196"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.3"
+    }
+  ]
+}

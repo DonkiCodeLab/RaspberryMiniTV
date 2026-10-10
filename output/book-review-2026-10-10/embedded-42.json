@@ -1,0 +1,34 @@
+{
+  "index": 42,
+  "path": "Books/confeti.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Confeti"
+    },
+    {
+      "tag": "creator",
+      "value": "Jordi Puntí"
+    },
+    {
+      "tag": "description",
+      "value": "Una novela sobre la voluntad de ser feliz a cualquier precio, encarnada en la extraordinaria trayectoria del músico Xavier Cugat. «Los optimistas todo lo ven de color rosa y los pesimistas todo lo ven negro. Entre ambos colores, vivimos rodeados de ilusiones, sueños, esperanzas, malentendidos, envidias, trampas...» Con estas palabras, el narrador de Confeti nos avanza sus motivos para escribir: demostrar que gran parte de la existencia humana es una ficción hecha a medida. Y como cronista de espectáculos, encuentra la inspiración ideal en Xavier Cugat. Nacido el 1 de enero de 1900, como si el azar del calendario fuese un presagio del éxito, el músico catalán dedicó toda su vida a ser feliz y famoso a cualquier precio, siempre gracias a aquello que le apasionaba: las caricaturas, las orquestas, las películas, los matrimonios con mujeres guapas y jovencísimas, los chihuahuas...Con una prosa elegante y enérgica como los pasos de Fred Astaire, tocada por un fino sentido del humor, Jordi Puntí hace viajar al lector de Nueva York a Hollywood, de La Habana al hotel Ritz de Barcelona, a lo largo del turbulento y fantasioso siglo XX. Confeti, que obtuvo en 2023 el Premio Sant Jordi –uno de los más antiguos y prestigiosos de la literatura catalana–, retrata las peripecias de dos hombres que fueron amigos quizá por conveniencia, en un juego de espejos en el que la imaginación convive con la voluntad de ser inmortal, eterno. En las fiestas, brindan y cantan bajo una lluvia de confeti que los impregna de alegría, pero a la mañana siguiente se lo encuentran en la ropa, en el pelo (o en la peluca), como migajas de felicidad perdida. Con ellos descubrimos que, cuando la realidad no encaja con la biografía, siempre se puede reinventar mejorada en una novela."
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d0ef6ec1-2e44-48d0-a84e-e46bdf4de2a4"
+    },
+    {
+      "tag": "date",
+      "value": "2025-02-11T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-02-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "803ca2cf-d2d7-4960-94ac-f3e101b79491"
+    }
+  ]
+}

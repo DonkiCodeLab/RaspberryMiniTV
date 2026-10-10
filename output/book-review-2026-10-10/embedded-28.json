@@ -1,0 +1,42 @@
+{
+  "index": 28,
+  "path": "Books/boulder.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Boulder"
+    },
+    {
+      "tag": "creator",
+      "value": "Eva Baltasar"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:6a64da73-b1b5-40e2-b0b7-a6a05037f4fe"
+    },
+    {
+      "tag": "description",
+      "value": "La protagonista de <i>Boulder</i> se gana la vida como cocinera en un  viejo barco mercante. Es la situación perfecta: soledad, una cabina, el  océano, algún puerto en el que conocer mujeres y horas para encarar el  vacío, para sentir la fuerza de la provisionalidad. Hasta que un día una  de ellas consigue que abandone el mar, acceda a vivir entre cuatro  paredes y se implique en la gestación asistida y en la educación de un  hijo. ¿Qué ha hecho la maternidad con la mujer que en su día conoció en  un bar de la Patagonia? ¿Qué hará ella, animal enjaulado en una casa unifamiliar de Reikiavik?</p><p>Todo ha cambiado excepto su apodo, Boulder: esas enormes piedras  aisladas en medio del paisaje, expuestas a todo sin que nadie sepa de dónde vienen ni porque están ahí. Después de la exitosa Permafrost, esta es la segunda novela del  tríptico donde Baltasar explora la voz, la vida y el cuerpo de tres mujeres."
+    },
+    {
+      "tag": "date",
+      "value": "2020-02-29T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-03-26"
+    },
+    {
+      "tag": "identifier",
+      "value": "57cf2f94-d8c7-4afb-8747-e88216a0ea83"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "74875"
+    }
+  ]
+}

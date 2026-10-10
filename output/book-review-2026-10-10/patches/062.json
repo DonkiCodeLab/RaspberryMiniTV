@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-atlas-furtivo.epub",
+  "title": "El atlas furtivo",
+  "year": "1998",
+  "description": "En la Mallorca del siglo XIV, el cartógrafo judío Cresques Abraham recibe un encargo real: dibujar un gran atlas del mundo conocido. Junto a ese trabajo nace otro mapa secreto, donde el deseo de explorar se enfrenta a los límites de la fe y el poder.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "A la Mallorca del segle XIV, el cartògraf jueu Cresques Abraham rep un encàrrec reial: dibuixar un gran atles del món conegut. Al costat d’aquest treball neix un altre mapa secret, on el desig d’explorar s’enfronta als límits de la fe i el poder.",
+      "title": "El atlas furtivo"
+    },
+    "en": {
+      "description": "In fourteenth-century Mallorca, Jewish cartographer Cresques Abraham receives a royal commission to map the known world. Alongside it, a secret atlas takes shape, bringing the desire to explore into conflict with the boundaries imposed by faith and power.",
+      "title": "El atlas furtivo"
+    },
+    "es": {
+      "description": "En la Mallorca del siglo XIV, el cartógrafo judío Cresques Abraham recibe un encargo real: dibujar un gran atlas del mundo conocido. Junto a ese trabajo nace otro mapa secreto, donde el deseo de explorar se enfrenta a los límites de la fe y el poder.",
+      "title": "El atlas furtivo"
+    }
+  }
+}

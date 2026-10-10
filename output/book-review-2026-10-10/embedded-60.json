@@ -1,0 +1,34 @@
+{
+  "index": 60,
+  "path": "Books/el-arque-logo.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El arqueólogo"
+    },
+    {
+      "tag": "creator",
+      "value": "Martí Gironell"
+    },
+    {
+      "tag": "description",
+      "value": "Montserrat, 1910. El monje Bonaventura Ubach emprende un viaje a Tierra Santa y Mesopotamia en busca de piezas para el futuro museo bíblico del monasterio de Montserrat. Con la intención de ilustrar una edición catalana de la Biblia, también sigue este itinerario para contrastar las Sagradas Escrituras con sus escenarios reales. El viaje se convertirá en una odisea llena de tropiezos y peligros. El padre Ubach deberá enfrentarse a tormentas del desierto, plagas bíblicas, bandidos sanguinarios, sectas satánicas, jeques crueles, ejércitos corruptos, saqueadores de tumbas y otros personajes siniestros que harán lo imposible para impedir que el arqueólogo consiga su sueño. Después de los éxitos de El puente de los judíos y La venganza del bandolero, Martí Gironell novela la apasionante aventura de un personaje histórico real, artífice de la llamada Biblia de Montserrat y el Museo del Oriente Bíblico de este monasterio, fundado en 1911. Un viaje en el tiempo que atrapa al lector de principio a fin."
+    },
+    {
+      "tag": "date",
+      "value": "2010-10-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2018-05-19"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:350b448f-84fc-4501-aca3-aa94ba5060b2"
+    },
+    {
+      "tag": "identifier",
+      "value": "2a2bdb97-a1b2-4912-9940-a8748bccd6b3"
+    }
+  ]
+}

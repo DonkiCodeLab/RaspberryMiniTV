@@ -1,0 +1,42 @@
+{
+  "index": 224,
+  "path": "Books/un-mundo-feliz.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Un mundo feliz (Ed. Íntegra)"
+    },
+    {
+      "tag": "creator",
+      "value": "Aldous Huxley"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:dd281fb9-bad4-4d1a-b46f-9cb13cd0dda4"
+    },
+    {
+      "tag": "description",
+      "value": "«Un mundo feliz» es la novela más famosa del escritor británico Aldous Huxley, publicada por primera vez en 1932. La novela anticipa el desarrollo en tecnología reproductiva, cultivos humanos e hipnopedia que, combinadas, cambian radicalmente la sociedad. El mundo aquí descrito podría ser una utopía, aunque irónica y ambigua: la humanidad es desenfadada, saludable y avanzada tecnológicamente. La guerra y la pobreza han sido erradicadas, y todos son permanentemente felices. Sin embargo, la ironía es que todas estas cosas se han alcanzado tras eliminar muchas otras: la familia, la diversidad cultural, el arte, la ciencia, la literatura, la religión y la filosofía."
+    },
+    {
+      "tag": "date",
+      "value": "1931-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-01-17"
+    },
+    {
+      "tag": "identifier",
+      "value": "74b27f81-e23e-455a-b8e6-31f02e7fe9ca"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "78096"
+    }
+  ]
+}

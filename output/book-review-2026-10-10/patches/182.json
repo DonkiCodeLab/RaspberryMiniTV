@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/los-tres-mosqueteros.epub",
+  "title": "Los Tres Mosqueteros",
+  "year": "1844",
+  "description": "D’Artagnan llega a París con la esperanza de convertirse en mosquetero y entabla amistad con Athos, Porthos y Aramis. Juntos se ven envueltos en duelos y conspiraciones que comprometen a la reina, al cardenal Richelieu y a la enigmática Milady.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "D’Artagnan arriba a París amb l’esperança de convertir-se en mosqueter i fa amistat amb Athos, Porthos i Aramis. Junts queden atrapats en duels i conspiracions que comprometen la reina, el cardenal Richelieu i l’enigmàtica Milady.",
+      "title": "Los Tres Mosqueteros"
+    },
+    "en": {
+      "title": "The Three Musketeers",
+      "description": "D'Artagnan arrives in Paris hoping to become a musketeer and befriends Athos, Porthos and Aramis. Together they become embroiled in duels and conspiracies involving the queen, Cardinal Richelieu and the enigmatic Milady."
+    },
+    "es": {
+      "title": "Los Tres Mosqueteros",
+      "description": "D’Artagnan llega a París con la esperanza de convertirse en mosquetero y entabla amistad con Athos, Porthos y Aramis. Juntos se ven envueltos en duelos y conspiraciones que comprometen a la reina, al cardenal Richelieu y a la enigmática Milady."
+    }
+  }
+}

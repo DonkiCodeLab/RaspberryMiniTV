@@ -1,0 +1,42 @@
+{
+  "index": 164,
+  "path": "Books/la-pacient-silenciosa.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La paciente silenciosa"
+    },
+    {
+      "tag": "creator",
+      "value": "Alex Michaelides"
+    },
+    {
+      "tag": "description",
+      "value": "Alicia Berenson, una pintora de éxito, dispara cinco tiros en la cabeza de su marido, y no vuelve a hablar nunca más. Su negativa a emitir palabra alguna convierte una tragedia doméstica en un misterio que atrapa la imaginación de toda Inglaterra. Theo Faber, un ambicioso psicoterapeuta forense obsesionado con el caso, está empeñado en desentrañar el misterio de lo que ocurrió aquella noche fatal y consigue una plaza en The Grove, la unidad de seguridad en el norte de Londres a la que Alicia fue enviada hace seis años y en la que sigue obstinada en su silencio. Pronto descubre que el mutismo de la paciente está mucho más enraizado de lo que pensaba. Pero, si al final hablara, ¿estaría dispuesto a escuchar la verdad?"
+    },
+    {
+      "tag": "date",
+      "value": "2019-08-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-06-10"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d3b2f8e2-a48d-4446-87ff-35fa99c26da3"
+    },
+    {
+      "tag": "identifier",
+      "value": "9070ea29-46d0-40f9-82c7-0a3e6cac1f6b"
+    },
+    {
+      "tag": "identifier",
+      "value": "51194"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    }
+  ]
+}

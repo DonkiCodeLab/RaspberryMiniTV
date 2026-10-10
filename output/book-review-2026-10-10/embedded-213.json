@@ -1,0 +1,34 @@
+{
+  "index": 213,
+  "path": "Books/sinuh-el-egipcio.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Sinuhé, el egipcio"
+    },
+    {
+      "tag": "creator",
+      "value": "Mika Waltari"
+    },
+    {
+      "tag": "description",
+      "value": "En el ocaso de su vida, el protagonista de este relato confiesa: «porque yo, Sinuhé, soy un hombre y, como tal, he vivido en todos los que han existido antes que yo y viviré en todos los que existan después de mí. Viviré en las risas y en las lágrimas de los hombres, en sus pesares y temores, en su bondad y en su maldad, en su debilidad y en su fuerza». Sinuhé, el egipcio nos introduce en el fascinante y lejano mundo del Egipto de los faraones, los reinos sirios, la Babilonia decadente, la Creta anterior a la Hélade…, es decir, en todo el mundo conocido catorce siglos antes de Jesucristo. Sobre este mapa, Sinuhé dibuja la línea errante de sus viajes; y aunque la vida no sea generosa con él, en su corazón vive inextinguible la confianza en la bondad de los hombres. Una de las novelas más célebres del siglo XX y, en su momento, constituyó un notable éxito cinematográfico."
+    },
+    {
+      "tag": "date",
+      "value": "1944-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-04-23"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a93e6cad-1b7e-4c6c-9c2b-8b1611b27146"
+    },
+    {
+      "tag": "identifier",
+      "value": "3bcffbce-cd60-431a-8236-3ee72772817a"
+    }
+  ]
+}

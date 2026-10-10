@@ -1,0 +1,42 @@
+{
+  "index": 167,
+  "path": "Books/la-profesora.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La profesora"
+    },
+    {
+      "tag": "creator",
+      "value": "Freida McFadden"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:fb72a786-49f3-46a7-b43d-718fff5d3abf"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Primera lección: No confíes en nadie</b>.</p><p>Eve está contenta con su vida. Se levanta cada día, recibe un beso de su marido, Nate, y se va a dar clases de Matemáticas en un centro de secundaria. Todo va como debería. Solo que…</p><p>El año pasado, el Instituto Caseham se vio sacudido por el escándalo de una relación entre un profesor y una estudiante, con la adolescente Addie en el centro de la polémica. Pero Eve sabe que hay mucho más detrás de esos horribles rumores.</p><p>No se puede confiar en Addie. Miente. Hace daño a la gente. Arruina vidas. Al menos, eso es lo que todos dicen.</p><p>Pero nadie conoce a la verdadera Addie. Nadie conoce los secretos que podrían destruirla.</p><p><b>Y Addie hará lo que sea para mantenerlos a salvo</b>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-02-05T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-09-30"
+    },
+    {
+      "tag": "identifier",
+      "value": "febbe0b0-aebf-4e61-b490-f14183eb82ee"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "80290"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-plaza-del-diamante.epub",
+  "title": "La plaza del diamante",
+  "year": "1962",
+  "description": "Natàlia, a quien su marido llama Colometa, cuenta su vida en la Barcelona anterior y posterior a la Guerra Civil. El matrimonio, la maternidad y la pobreza transforman su mundo, en una narración sobre la pérdida de identidad y la búsqueda de un espacio propio.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "La plaça del Diamant",
+      "description": "La Natàlia, a qui el marit anomena Colometa, explica la vida a la Barcelona anterior i posterior a la Guerra Civil. El matrimoni, la maternitat i la pobresa transformen el seu món, en una narració sobre la pèrdua d’identitat i la recerca d’un espai propi."
+    },
+    "en": {
+      "title": "The Time of the Doves (La Plaza del Diamante)",
+      "description": "Natàlia, renamed Colometa by her husband, recounts her life in Barcelona before and after the Spanish Civil War. Marriage, motherhood and poverty transform her world in a story about lost identity and the search for a life of her own."
+    },
+    "es": {
+      "title": "La plaza del diamante",
+      "description": "Natàlia, a quien su marido llama Colometa, cuenta su vida en la Barcelona anterior y posterior a la Guerra Civil. El matrimonio, la maternidad y la pobreza transforman su mundo, en una narración sobre la pérdida de identidad y la búsqueda de un espacio propio."
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/alas-de-sangre.epub",
+  "title": "Alas de Sangre",
+  "year": "2023",
+  "description": "Violet Sorrengail esperaba formarse como escriba, pero su madre la obliga a ingresar en el mortal cuadrante de jinetes de dragón. En Basgiath deberá sobrevivir al entrenamiento, a sus rivales y a una guerra cuyos secretos contradicen cuanto le han enseñado.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Violet Sorrengail esperava formar-se com a escriba, però la seva mare l’obliga a ingressar al mortal quadrant de genets de drac. A Basgiath haurà de sobreviure a l’entrenament, als rivals i a una guerra amb secrets que contradiuen tot el que li han ensenyat.",
+      "title": "Alas de Sangre"
+    },
+    "en": {
+      "title": "Fourth WIng",
+      "description": "Violet Sorrengail expects to become a scribe, but her mother orders her into a lethal college for dragon riders. At Basgiath she must survive training, rival cadets and the discovery that the war beyond its walls is not what she has been taught."
+    },
+    "es": {
+      "description": "Violet Sorrengail esperaba formarse como escriba, pero su madre la obliga a ingresar en el mortal cuadrante de jinetes de dragón. En Basgiath deberá sobrevivir al entrenamiento, a sus rivales y a una guerra cuyos secretos contradicen cuanto le han enseñado.",
+      "subtitle": "Empíreo 1",
+      "title": "Alas de Sangre"
+    }
+  }
+}

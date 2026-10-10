@@ -1,0 +1,42 @@
+{
+  "index": 202,
+  "path": "Books/pensar-r-pido-pensar-despacio.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Pensar rápido, pensar despacio"
+    },
+    {
+      "tag": "creator",
+      "value": "Daniel Kahneman"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Daniel Kahneman, uno de los pensadores más importantes del mundo, recibió el premio Nobel de Economía por su trabajo pionero en psicología sobre el modelo racional de la toma de decisiones. Sus ideas han tenido un profundo impacto en campos tan diversos como la economía, la medicina o la política, pero hasta ahora no había reunido la obra de su vida en un libro.</p><p>En <i>Pensar rápido, pensar despacio</i>, un éxito internacional, Kahneman nos ofrece una revolucionaria perspectiva del cerebro y explica los dos sistemas que modelan cómo pensamos. El sistema 1 es rápido, intuitivo y emocional, mientras que el sistema 2 es más lento, deliberativo y lógico. Kahneman expone la extraordinaria capacidad (y también los errores y los sesgos) del pensamiento rápido, y revela la duradera influencia de las impresiones intuitivas sobre nuestro pensamiento y nuestra conducta. El impacto de la aversión a la pérdida y el exceso de confianza en las estrategias empresariales, la dificultad de predecir lo que nos hará felices en el futuro, el reto de enmarcar adecuadamente los riesgos en el trabajo y en el hogar, el profundo efecto de los sesgos cognitivos sobre todo lo que hacemos, desde jugar en la Bolsa hasta planificar las vacaciones; todo esto solo puede ser comprendido si entendemos el funcionamiento conjunto de los dos sistemas a la hora de formular nuestros juicios y decisiones.</p><p>Al implicar al lector en una animada reflexión sobre cómo pensamos, Kahneman consigue revelar cuándo podemos confiar en nuestras intuiciones y cuándo no, y de qué modo podemos aprovechar los beneficios del pensamiento lento. Además, ofrece enseñanzas prácticas e iluminadoras sobre cómo se adoptan decisiones en la vida profesional o personal, y sobre cómo podemos usar distintas técnicas para protegernos de los fallos mentales que nos crean problemas. <i>Pensar rápido, pensar despacio</i> cambiará para siempre nuestra manera de pensar sobre cómo pensamos.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2012-05-22T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-07-09"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:b232c96f-cf39-410a-bf46-cb506467ede1"
+    },
+    {
+      "tag": "identifier",
+      "value": "1fe9b795-c4e8-4dbf-8d58-69272c1ad0ca"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "5101"
+    }
+  ]
+}

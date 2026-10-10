@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-10",
+  "mode": "Real saved catalogue and TMDB metadata; simulated OpenAI response",
+  "networkRequests": 0,
+  "liveOpenAIValidated": false,
+  "deployed": false,
+  "sections": [
+    {
+      "section": "movies",
+      "records": 332,
+      "verifiedTmdbIds": 332,
+      "providerCandidates": 80,
+      "localTitleReturned": "Forrest Gump",
+      "exactLocalIdentityVerified": true,
+      "pathsOrUserIdSentToProvider": false
+    },
+    {
+      "section": "series",
+      "records": 6,
+      "verifiedTmdbIds": 6,
+      "providerCandidates": 6,
+      "localTitleReturned": "Futurama",
+      "exactLocalIdentityVerified": true,
+      "pathsOrUserIdSentToProvider": false
+    }
+  ],
+  "validation": {
+    "backendTestsPassed": 441,
+    "frontendTestsPassed": 133,
+    "productionBuild": "passed",
+    "diffWhitespaceCheck": "passed",
+    "browserFeatureValidation": "not completed: browser control detached at local fixture login",
+    "providerCalls": 0,
+    "downloadsStarted": 0
+  }
+}

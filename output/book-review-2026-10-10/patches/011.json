@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/al-sur-del-caribe.epub",
+  "title": "Al sur del Caribe",
+  "year": "1965",
+  "description": "En esta obra de su primera etapa como reportero, Vázquez-Figueroa combina experiencias de viaje y observación social. La aventura y el encuentro con otras formas de vida sirven de hilo conductor a una mirada sobre los territorios situados al sur del Caribe.",
+  "localizedMetadata": {
+    "es": {
+      "description": "En esta obra de su primera etapa como reportero, Vázquez-Figueroa combina experiencias de viaje y observación social. La aventura y el encuentro con otras formas de vida sirven de hilo conductor a una mirada sobre los territorios situados al sur del Caribe.",
+      "title": "Al sur del Caribe"
+    },
+    "ca": {
+      "description": "En aquesta obra de la seva primera etapa com a reporter, Vázquez-Figueroa combina experiències de viatge i observació social. L’aventura i la descoberta d’altres formes de vida articulen una mirada sobre els territoris situats al sud del Carib.",
+      "title": "Al sur del Caribe"
+    },
+    "en": {
+      "description": "In this work from his early years as a reporter, Vázquez-Figueroa combines travel experiences with social observation. Adventure and encounters with different ways of life shape his account of the lands to the south of the Caribbean.",
+      "title": "Al sur del Caribe"
+    }
+  }
+}

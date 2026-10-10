@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/harry-potter-y-el-c-liz-de-fuego.epub",
+  "title": "Harry Potter y el cáliz de fuego",
+  "year": "2000",
+  "description": "Hogwarts acoge el Torneo de los Tres Magos, pero el nombre de Harry aparece entre los participantes pese a no tener la edad requerida. Las pruebas peligrosas y unas señales del regreso de las fuerzas de Voldemort convierten el curso en una lucha por descubrir quién lo ha elegido.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Hogwarts acull el Torneig dels Tres Bruixots, però el nom d’en Harry apareix entre els participants tot i no tenir l’edat requerida. Les proves perilloses i els senyals del retorn de les forces de Voldemort converteixen el curs en una lluita per descobrir qui l’ha escollit.",
+      "title": "Harry Potter y el cáliz de fuego"
+    },
+    "en": {
+      "title": "Harry Potter and the Goblet of Fire",
+      "description": "Hogwarts hosts the Triwizard Tournament, but Harry's name is selected despite his being too young to compete. Dangerous challenges and signs of Voldemort's returning followers turn the school year into a search for whoever placed him in the contest."
+    },
+    "es": {
+      "subtitle": "Harry Potter 4",
+      "title": "Harry Potter y el cáliz de fuego",
+      "description": "Hogwarts acoge el Torneo de los Tres Magos, pero el nombre de Harry aparece entre los participantes pese a no tener la edad requerida. Las pruebas peligrosas y unas señales del regreso de las fuerzas de Voldemort convierten el curso en una lucha por descubrir quién lo ha elegido."
+    }
+  }
+}

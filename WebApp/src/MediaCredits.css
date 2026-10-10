@@ -1,0 +1,40 @@
+.media-credits {
+  min-width: 0;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background: rgba(22, 37, 48, 0.76);
+  color: rgba(239, 244, 250, 0.9);
+}
+
+.season-grid + .media-credits { margin-top: 1.2rem; }
+.media-credits h3 { margin: 0 0 1rem; font-size: 1.15rem; }
+.media-credits h4 {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(236, 243, 250, 0.72);
+}
+.media-credits__crew { display: flex; flex-wrap: wrap; gap: 1.2rem 2rem; }
+.media-credits__crew > div { flex: 1 1 180px; }
+.media-credits__group { min-width: 0; margin-bottom: 1rem; }
+.media-credits > .media-credits__group:last-child { margin-bottom: 0; }
+.media-credits__people { display: grid; gap: 0.4rem; list-style: none; margin: 0; padding: 0; }
+.media-credits__people--cast { grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 0.75rem 1rem; }
+.media-credits__people li { min-width: 0; overflow-wrap: anywhere; line-height: 1.45; }
+.media-credits__name, .media-credits__role, .media-credits__people small { display: block; }
+.media-credits__name { font-weight: 700; font-size: 0.92rem; }
+.media-credits__role { font-size: 0.84rem; color: rgba(239, 244, 250, 0.74); }
+.media-credits__people small { margin-top: 0.15rem; color: rgba(239, 244, 250, 0.58); font-size: 0.74rem; }
+.media-credits__more { margin-top: 0.7rem; }
+.media-credits__more summary { width: fit-content; cursor: pointer; color: #ffdc00; font-size: 0.85rem; padding-block: 0.3rem; }
+.media-credits__more[open] summary { margin-bottom: 0.55rem; }
+.media-credits__more summary:focus-visible, .media-credits__status button:focus-visible { outline: 2px solid #ffdc00; outline-offset: 4px; }
+.media-credits__status { margin: 0; font-size: 0.85rem; line-height: 1.5; color: rgba(239, 244, 250, 0.72); }
+.media-credits__status button { margin-left: 0.6rem; padding: 0.3rem 0; background: none; border: 0; color: #ffdc00; cursor: pointer; font: inherit; text-decoration: underline; }
+
+@media (max-width: 480px) {
+  .media-credits { padding: 0.9rem; }
+  .media-credits__people--cast { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

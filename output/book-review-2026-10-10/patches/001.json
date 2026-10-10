@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/300.cbr",
+  "title": "300",
+  "year": "1999",
+  "description": "Leónidas conduce a sus guerreros espartanos al paso de las Termópilas para frenar al ejército persa. Esta recreación gráfica de Frank Miller y Lynn Varley convierte la resistencia del pequeño contingente en un relato estilizado de guerra, sacrificio y leyenda.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Leònides condueix els seus guerrers espartans al pas de les Termòpiles per frenar l’exèrcit persa. Aquesta recreació gràfica de Frank Miller i Lynn Varley converteix la resistència del petit contingent en un relat estilitzat de guerra, sacrifici i llegenda.",
+      "title": "300"
+    },
+    "en": {
+      "title": "300",
+      "description": "Leonidas leads his Spartan warriors to Thermopylae to hold back the Persian army. Frank Miller and Lynn Varley's graphic retelling turns the small force's resistance into a stylized story of warfare, sacrifice and legend."
+    },
+    "es": {
+      "description": "Leónidas conduce a sus guerreros espartanos al paso de las Termópilas para frenar al ejército persa. Esta recreación gráfica de Frank Miller y Lynn Varley convierte la resistencia del pequeño contingente en un relato estilizado de guerra, sacrificio y leyenda.",
+      "title": "300"
+    }
+  }
+}

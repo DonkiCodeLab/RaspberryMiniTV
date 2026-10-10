@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/hyperion.epub",
+  "title": "Hyperion",
+  "year": "1989",
+  "description": "Siete peregrinos viajan a Hyperion para enfrentarse al Alcaudón, una criatura ligada a las enigmáticas Tumbas de Tiempo. Mientras una guerra amenaza a la humanidad, sus relatos personales revelan las conexiones entre sus destinos y los secretos del planeta.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Set pelegrins viatgen a Hyperion per enfrontar-se a l’Alcaudón, una criatura vinculada a les enigmàtiques Tombes del Temps. Mentre una guerra amenaça la humanitat, els relats personals revelen les connexions entre els seus destins i els secrets del planeta.",
+      "title": "Hyperion"
+    },
+    "en": {
+      "description": "Seven pilgrims travel to Hyperion to confront the Shrike, a creature linked to the mysterious Time Tombs. As war threatens humanity, the stories they tell reveal connections between their individual destinies and the secrets of the planet.",
+      "title": "Hyperion"
+    },
+    "es": {
+      "title": "Hyperion",
+      "description": "Siete peregrinos viajan a Hyperion para enfrentarse al Alcaudón, una criatura ligada a las enigmáticas Tumbas de Tiempo. Mientras una guerra amenaza a la humanidad, sus relatos personales revelan las conexiones entre sus destinos y los secretos del planeta."
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-son-ador.cbr",
+  "title": "El soñador",
+  "year": "1986",
+  "description": "Un joven dibujante intenta abrirse camino en la naciente industria estadounidense del cómic. Inspirándose en sus propios comienzos, Will Eisner retrata la ambición, la precariedad y los acuerdos difíciles de una generación que convirtió un oficio nuevo en una forma de expresión.",
+  "localizedMetadata": {
+    "es": {
+      "title": "El soñador",
+      "description": "Un joven dibujante intenta abrirse camino en la naciente industria estadounidense del cómic. Inspirándose en sus propios comienzos, Will Eisner retrata la ambición, la precariedad y los acuerdos difíciles de una generación que convirtió un oficio nuevo en una forma de expresión."
+    },
+    "ca": {
+      "description": "Un jove dibuixant intenta obrir-se camí en la naixent indústria nord-americana del còmic. Inspirant-se en els seus inicis, Will Eisner retrata l’ambició, la precarietat i els acords difícils d’una generació que va convertir un ofici nou en una forma d’expressió.",
+      "title": "El soñador"
+    },
+    "en": {
+      "description": "A young artist tries to establish himself in America's emerging comic-book industry. Drawing on his own early career, Will Eisner portrays the ambition, insecurity and difficult compromises of a generation helping a new profession become an art form.",
+      "title": "El soñador"
+    }
+  }
+}

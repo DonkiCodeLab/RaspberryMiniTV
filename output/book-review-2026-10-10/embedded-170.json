@@ -1,0 +1,42 @@
+{
+  "index": 170,
+  "path": "Books/la-verdad-est-en-el-agua.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La verdad está en el agua"
+    },
+    {
+      "tag": "creator",
+      "value": "Rosa Moreno Matellanes"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e1af9091-1ce7-4f2f-8366-1a41cafeb70c"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Un asesino en serie, apodado por la prensa como el estrangulador de Tohoku, lleva tres años matando mujeres en la región más apartada y hostil de Japón, en la isla de Honshü. El inspector, Taro Takahashi, lo ha intentado todo, pero una mala gestión policial hace que el caso aún siga abierto.</p><p>Justo cuando la investigación llega a un punto muerto, un terremoto de gran magnitud seguido por un poderoso tsunami que se ha adentrado más de treinta kilómetros tierra adentro alcanza la región de Tohoku y deja al descubierto un nuevo asesinato mucho más peculiar que los anteriores.</p><p>Aiko Grant que ha logrado sobrevivir milagrosamente a la fuerza aterradora del agua, busca con desesperación a su marido, Alex, un americano que lleva años viviendo en Japón y que ha desaparecido tras la tragedia.</p><p>En una espiral de desolación y muerte los protagonistas tendrán que demostrar fuerza y entereza para reconstruir la región y soportar el miedo, el cansancio, el terror y la desesperación que el tsunami les ha provocado. Mientras tanto la caza de Takahashi del asesino en serie más polémico de Japón no descansará y se verá entrelazada con las vidas de Aiko y sobre todo con la del desaparecido Alex Grant. ¿Será capaz el inspector de desvelar lo que ha removido el agua?</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2023-02-09T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-11-17"
+    },
+    {
+      "tag": "identifier",
+      "value": "37802904-d13c-4b67-ab49-e305b90caf01"
+    },
+    {
+      "tag": "identifier",
+      "value": "73227"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/misery.epub",
+  "title": "Misery",
+  "year": "1987",
+  "description": "El escritor Paul Sheldon sobrevive a un accidente gracias a Annie Wilkes, una antigua enfermera que admira sus novelas. Aislado y dependiente de sus cuidados, descubre que su anfitriona pretende controlar tanto su recuperación como el destino de su personaje favorito.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "L’escriptor Paul Sheldon sobreviu a un accident gràcies a Annie Wilkes, una antiga infermera que admira les seves novel·les. Aïllat i dependent de les cures, descobreix que l’amfitriona vol controlar tant la recuperació com el destí del seu personatge preferit.",
+      "title": "Misery"
+    },
+    "en": {
+      "title": "Misery",
+      "description": "Writer Paul Sheldon survives an accident thanks to Annie Wilkes, a former nurse devoted to his novels. Isolated and dependent on her care, he discovers that she intends to control both his recovery and the fate of her favourite fictional character."
+    },
+    "es": {
+      "description": "El escritor Paul Sheldon sobrevive a un accidente gracias a Annie Wilkes, una antigua enfermera que admira sus novelas. Aislado y dependiente de sus cuidados, descubre que su anfitriona pretende controlar tanto su recuperación como el destino de su personaje favorito.",
+      "title": "Misery"
+    }
+  }
+}

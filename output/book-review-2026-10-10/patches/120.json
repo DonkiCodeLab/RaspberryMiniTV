@@ -1,0 +1,30 @@
+{
+  "relativePath": "Books/frank-herbert-s-dune-saga-collection.epub",
+  "title": "Saga Dune: los seis libros de Frank Herbert",
+  "year": "1965",
+  "description": "Este volumen reúne las seis novelas de Dune escritas por Frank Herbert, publicadas entre 1965 y 1985. Desde la llegada de los Atreides a Arrakis hasta sus consecuencias milenarias, la saga explora la ecología, la religión y las luchas por controlar el futuro humano.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Este volumen reúne las seis novelas de Dune escritas por Frank Herbert, publicadas entre 1965 y 1985. Desde la llegada de los Atreides a Arrakis hasta sus consecuencias milenarias, la saga explora la ecología, la religión y las luchas por controlar el futuro humano.",
+      "title": "Saga Dune: los seis libros de Frank Herbert"
+    },
+    "ca": {
+      "description": "Aquest volum reuneix les sis novel·les de Dune escrites per Frank Herbert, publicades entre 1965 i 1985. Des de l’arribada dels Atreides a Arrakis fins a les conseqüències mil·lenàries, la saga explora l’ecologia, la religió i les lluites per controlar el futur humà.",
+      "title": "Saga Dune: els sis llibres de Frank Herbert"
+    },
+    "en": {
+      "description": "This volume brings together Frank Herbert's six Dune novels, originally published between 1965 and 1985. From the Atreides' arrival on Arrakis to its consequences across millennia, the saga explores ecology, religion and competing attempts to control humanity's future.",
+      "title": "Dune: Frank Herbert's Six-Book Saga"
+    }
+  },
+  "openLibraryKey": "",
+  "editionKey": "",
+  "isbn": "",
+  "publisher": "",
+  "publishDate": "",
+  "pageCount": "",
+  "pageCountSource": "",
+  "subjects": "",
+  "subtitle": "",
+  "language": "spa"
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-novio.epub",
+  "title": "El novio",
+  "year": "2024",
+  "description": "Después de muchas citas decepcionantes, Sydney Shaw cree haber encontrado a su pareja ideal: un médico atento y encantador. Pero una serie de asesinatos en Nueva York despierta dudas inquietantes sobre la confianza, las apariencias y las personas a las que dejamos entrar en nuestra vida.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Después de muchas citas decepcionantes, Sydney Shaw cree haber encontrado a su pareja ideal: un médico atento y encantador. Pero una serie de asesinatos en Nueva York despierta dudas inquietantes sobre la confianza, las apariencias y las personas a las que dejamos entrar en nuestra vida.",
+      "title": "El novio"
+    },
+    "ca": {
+      "description": "Després de moltes cites decebedores, Sydney Shaw creu que ha trobat la parella ideal: un metge atent i encantador. Però una sèrie d’assassinats a Nova York desperta dubtes inquietants sobre la confiança, les aparences i les persones que deixem entrar a la nostra vida.",
+      "title": "El novio"
+    },
+    "en": {
+      "description": "After many disappointing dates, Sydney Shaw believes she has found her ideal partner in a charming, attentive doctor. But a series of New York murders raises disturbing questions about trust, appearances and the people we allow into our lives.",
+      "title": "El novio"
+    }
+  }
+}

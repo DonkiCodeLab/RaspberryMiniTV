@@ -1,0 +1,42 @@
+{
+  "index": 157,
+  "path": "Books/la-luz-que-no-puedes-ver.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La luz que no puedes ver"
+    },
+    {
+      "tag": "creator",
+      "value": "Anthony Doerr"
+    },
+    {
+      "tag": "description",
+      "value": "Marie-Laure vive con su padre en París, cerca del Museo de Historia Natural, donde él trabaja como responsable de sus mil cerraduras. Cuando, siendo muy niña, Marie-Laure se queda ciega, su padre le construye una perfecta miniatura de su barrio para que pueda memorizarla gracias al tacto y encontrar el camino a casa. A sus doce años, los nazis ocupan París y padre e hija tienen que huir a la ciudad amurallada de Saint-Malo. Con ellos se llevan la que podría ser la más preciada y peligrosa joya del museo. En una ciudad minera de Alemania, el joven huérfano Werner crece junto a su hermana pequeña, cautivado por una rudimentaria radio que ambos encuentran. Werner se convierte en un experto en construir y reparar estos aparatos cruciales para los nuevos tiempos, un talento que no pasa desapercibido a las Juventudes Hitlerianas. Siguiendo al ejército alemán, Werner deberá atravesar el corazón en guerra de Europa. Hasta que en la última noche antes de la liberación de Saint-Malo los caminos de Werner y Marie-Laure por fin se crucen. Y sus vidas cambien para siempre."
+    },
+    {
+      "tag": "date",
+      "value": "2014-05-05T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-01-25"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a05ca448-f8b8-4694-a0da-709958c196ec"
+    },
+    {
+      "tag": "identifier",
+      "value": "85ace8c4-cd0a-4296-8aa8-b7c34c02cdc8"
+    },
+    {
+      "tag": "identifier",
+      "value": "22216"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.0"
+    }
+  ]
+}

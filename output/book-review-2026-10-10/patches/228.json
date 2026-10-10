@@ -1,0 +1,22 @@
+{
+  "relativePath": "Books/yo-claudio.epub",
+  "title": "Yo, Claudio",
+  "year": "1934",
+  "description": "Claudio reconstruye su vida entre los primeros emperadores de Roma, donde una aparente debilidad le permite observar las intrigas de su familia. Esta autobiografía ficticia retrata la ambición, el miedo y la violencia que se esconden detrás de la continuidad del poder imperial.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Claudi reconstrueix la vida entre els primers emperadors de Roma, on una feblesa aparent li permet observar les intrigues familiars. Aquesta autobiografia fictícia retrata l’ambició, la por i la violència que s’amaguen darrere de la continuïtat del poder imperial.",
+      "title": "Yo, Claudio"
+    },
+    "en": {
+      "description": "Claudius recounts his life among Rome's early emperors, where apparent weakness allows him to observe his family's intrigues. This fictional autobiography portrays the ambition, fear and violence behind the continuity of imperial power.",
+      "subtitle": "from the autobiography of Tiberius Claudius, born B.C. X, murdered and deified A.D. LIV",
+      "title": "I, Claudius"
+    },
+    "es": {
+      "subtitle": "a partir de la autobiografía de Claudio, emperador de los romanos nacido en el año 10 a. de C. y asesinado y deificado el 54 d. de C.",
+      "title": "Yo, Claudio",
+      "description": "Claudio reconstruye su vida entre los primeros emperadores de Roma, donde una aparente debilidad le permite observar las intrigas de su familia. Esta autobiografía ficticia retrata la ambición, el miedo y la violencia que se esconden detrás de la continuidad del poder imperial."
+    }
+  }
+}

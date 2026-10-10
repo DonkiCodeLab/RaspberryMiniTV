@@ -1,0 +1,70 @@
+{
+  "index": 67,
+  "path": "Books/el-caballero-misterioso.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El caballero misterioso"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "description",
+      "value": "<p>En el país de Poniente, donde la calma solo se puede explicar por la tormenta que ha de acontecer, Dunk y Egg han emprendido un viaje hacia Invernalia. Pero algo les detiene en el camino. Lord Butterwell celebra su boda y como parte de los festejos ha organizado un torneo cuyo campeón se hará con un premio único: un huevo de dragón.</p><p>Dunk estaría mejor pasando desapercibido. Solo desea un plato caliente, una copa de vino y una bolsa llena de monedas. Sin embargo, en los rincones de Murosblancos podría estar tramándose una peligrosa conspiración. Y quizá Dunk y Egg lleguen demasiado tarde para evitar que se lleve a cabo.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2010-03-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-10-21"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:16398c58-1a73-48a9-b50e-9812e145c86c"
+    },
+    {
+      "tag": "identifier",
+      "value": "fb3d31c4-e67c-4bc1-bb09-a5a3289c4228"
+    },
+    {
+      "tag": "identifier",
+      "value": "45940"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    }
+  ],
+  "contents": [
+    "El caballero misterioso",
+    "Cubierta",
+    "El caballero misterioso",
+    "Capítulo 1",
+    "Capítulo 2",
+    "Capítulo 3",
+    "Capítulo 4",
+    "Capítulo 5",
+    "Capítulo 6",
+    "Capítulo 7",
+    "Capítulo 8",
+    "Capítulo 9",
+    "Capítulo 10",
+    "Capítulo 11",
+    "Capítulo 12",
+    "Capítulo 13",
+    "Capítulo 14",
+    "Capítulo 15",
+    "Capítulo 16",
+    "Capítulo 17",
+    "Capítulo 18",
+    "Capítulo 19",
+    "Capítulo 20",
+    "Capítulo 21",
+    "Capítulo 22",
+    "Sobre el autor"
+  ]
+}

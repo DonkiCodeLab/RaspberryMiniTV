@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/bioko.epub",
+  "title": "Bioko",
+  "year": "2013",
+  "description": "El soldado Moisés Corvo es destinado a Fernando Poo a finales del siglo XIX tras varios conflictos disciplinarios. La búsqueda de una mujer desaparecida lo arrastra a una investigación donde la violencia colonial se mezcla con acontecimientos que desafían cualquier explicación corriente.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El soldat Moisès Corvo és destinat a Fernando Poo a finals del segle XIX després de diversos conflictes disciplinaris. La recerca d’una dona desapareguda l’arrossega a una investigació on la violència colonial es barreja amb fets que desafien qualsevol explicació corrent.",
+      "title": "Bioko"
+    },
+    "en": {
+      "description": "After disciplinary trouble, soldier Moisès Corvo is posted to Fernando Poo in the late nineteenth century. His search for a missing woman draws him into a mystery where colonial violence meets events that defy ordinary explanation.",
+      "title": "Bioko"
+    },
+    "es": {
+      "description": "El soldado Moisés Corvo es destinado a Fernando Poo a finales del siglo XIX tras varios conflictos disciplinarios. La búsqueda de una mujer desaparecida lo arrastra a una investigación donde la violencia colonial se mezcla con acontecimientos que desafían cualquier explicación corriente.",
+      "title": "Bioko"
+    }
+  }
+}

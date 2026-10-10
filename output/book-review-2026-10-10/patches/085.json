@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-ltimo-secreto.epub",
+  "title": "El último Secreto",
+  "year": "2025",
+  "description": "Durante una visita a Praga, Robert Langdon queda envuelto en un caso que amenaza a Katherine Solomon y sus investigaciones sobre la conciencia. La desaparición de un manuscrito lo obliga a descifrar símbolos y leyendas mientras intenta comprender quién quiere silenciar sus descubrimientos.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Durant una visita a Praga, Robert Langdon queda implicat en un cas que amenaça Katherine Solomon i les seves investigacions sobre la consciència. La desaparició d’un manuscrit l’obliga a desxifrar símbols i llegendes mentre intenta esbrinar qui vol silenciar-ne els descobriments.",
+      "title": "El último Secreto"
+    },
+    "en": {
+      "title": "The Secret of Secrets",
+      "description": "During a visit to Prague, Robert Langdon becomes entangled in a case threatening Katherine Solomon and her research into consciousness. A missing manuscript sends him through symbols and legends as he tries to discover who wants her findings suppressed."
+    },
+    "es": {
+      "description": "Durante una visita a Praga, Robert Langdon queda envuelto en un caso que amenaza a Katherine Solomon y sus investigaciones sobre la conciencia. La desaparición de un manuscrito lo obliga a descifrar símbolos y leyendas mientras intenta comprender quién quiere silenciar sus descubrimientos.",
+      "title": "El último Secreto"
+    }
+  }
+}

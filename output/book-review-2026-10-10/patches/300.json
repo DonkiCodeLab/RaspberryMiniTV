@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/persepolis/persepolis-01.cbr",
+  "title": "Persépolis 1",
+  "year": "2000",
+  "description": "Marjane recuerda su infancia en Teherán durante la caída del sah y el establecimiento de la República Islámica. Su mirada combina la vida familiar, las preguntas de una niña y los cambios políticos que transforman la escuela, la calle y las libertades cotidianas.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Marjane recuerda su infancia en Teherán durante la caída del sah y el establecimiento de la República Islámica. Su mirada combina la vida familiar, las preguntas de una niña y los cambios políticos que transforman la escuela, la calle y las libertades cotidianas.",
+      "title": "Persépolis 1"
+    },
+    "ca": {
+      "description": "Marjane recorda la infantesa a Teheran durant la caiguda del xa i l’establiment de la República Islàmica. La mirada combina la vida familiar, les preguntes d’una nena i els canvis polítics que transformen l’escola, el carrer i les llibertats quotidianes.",
+      "title": "Persépolis 1"
+    },
+    "en": {
+      "description": "Marjane recalls her childhood in Tehran during the shah's fall and the establishment of the Islamic Republic. Family life and a child's questions meet political changes transforming school, public life and everyday freedoms.",
+      "title": "Persépolis 1"
+    }
+  },
+  "author": "Marjane Satrapi"
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/harry-potter-la-colecci-n-completa.epub",
+  "title": "Harry Potter: La colección completa",
+  "year": "1997",
+  "description": "Esta colección reúne las siete novelas de Harry Potter, publicadas originalmente entre 1997 y 2007. Sigue su aprendizaje en Hogwarts junto a Ron y Hermione y su enfrentamiento con Voldemort, mientras la amistad y las decisiones personales adquieren un peso creciente.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Esta colección reúne las siete novelas de Harry Potter, publicadas originalmente entre 1997 y 2007. Sigue su aprendizaje en Hogwarts junto a Ron y Hermione y su enfrentamiento con Voldemort, mientras la amistad y las decisiones personales adquieren un peso creciente.",
+      "title": "Harry Potter: La colección completa"
+    },
+    "ca": {
+      "description": "Aquesta col·lecció reuneix les set novel·les de Harry Potter, publicades originalment entre 1997 i 2007. Segueix l’aprenentatge a Hogwarts amb en Ron i l’Hermione i l’enfrontament amb Voldemort, mentre l’amistat i les decisions personals adquireixen un pes creixent.",
+      "title": "Harry Potter: La colección completa"
+    },
+    "en": {
+      "description": "This collection contains the seven Harry Potter novels, originally published between 1997 and 2007. It follows his education at Hogwarts with Ron and Hermione and his conflict with Voldemort, as friendship and personal choices carry increasingly serious consequences.",
+      "title": "Harry Potter: La colección completa"
+    }
+  }
+}

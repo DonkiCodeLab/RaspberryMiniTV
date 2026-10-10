@@ -1,0 +1,42 @@
+{
+  "index": 211,
+  "path": "Books/shog-n.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "revision:2.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "epl:8079"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:7126"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:fe8fe384-937b-4150-8b95-91d7df01202d"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:0ccf91ac-35aa-48f0-b146-405ec744de1b"
+    },
+    {
+      "tag": "title",
+      "value": "Shogun"
+    },
+    {
+      "tag": "date",
+      "value": "1975-01-02T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Tras perderse en el mar, el inglés John Blackthorne despierta en un lugar que pocos europeos conocen y menos aún han visto: Japón. Inmerso en la hermética sociedad nipona del siglo&#160;<small>XVII</small>, una tierra en la que la línea que separa la vida de la muerte es muy fina, Blackthorne debe enfrentarse no sólo a un pueblo extranjero, con costumbres e idioma desconocidos, sino también a sus propias definiciones de moralidad, verdad y libertad.</p>\n\n    <p>A medida que las luchas políticas internas y el choque de culturas conducen a un conflicto aparentemente inevitable, la pasión y la pérdida ponen a prueba a Blackthorne, que se debate entre dos mundos que cambiarán para siempre.</p>"
+    },
+    {
+      "tag": "creator",
+      "value": "James Clavell"
+    }
+  ]
+}

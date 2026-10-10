@@ -1,0 +1,42 @@
+{
+  "index": 56,
+  "path": "Books/dios-emperador-de-dune.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Dios Emperador de Dune"
+    },
+    {
+      "tag": "creator",
+      "value": "Frank Herbert"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Esta cuarta entrega de la saga <cite>Dune</cite> centra su trama en la figura mesiánica de Leto Atreides II (hijo de Paul Atreides, héroe cuya estirpe hunde sus raíces en la legendaria casa griega de los Átridas) y nos lleva, a través de diversos dilemas éticos, a comprender los mitos que necesita la humanidad y a los héroes que los encarnan.</p><p>El futuro, en el mundo de Dune, pertenece solo a los que son capaces de pensar por sí mismos…</p><p>Esta saga apasionante plantea por primera vez de forma completa, racional y convincente todo un mundo absolutamente diferente del nuestro.</p><p>Sus referencias a los problemas ecológicos, el poder de las drogas y la fuerza psicológica de los mitos la han convertido en una obra de culto para millones de lectores en todo el mundo.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1980-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-04-10"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4737d7ee-b0d0-4ea8-9d76-3bb353c998d0"
+    },
+    {
+      "tag": "identifier",
+      "value": "014b148c-5a3e-47c5-bb3e-a00fb3b34a49"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "83277"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/llevar-tu-nombre.epub",
+  "title": "Llevará tu nombre",
+  "year": "2026",
+  "description": "En 1882, Mada Riva abandona Comillas tras ser señalada por un asesinato y repudiada por su familia. En Madrid, sus habilidades para leer y escribir le permiten buscar una vida propia mientras afronta las barreras de clase y género y las sombras de la acusación.",
+  "localizedMetadata": {
+    "es": {
+      "description": "En 1882, Mada Riva abandona Comillas tras ser señalada por un asesinato y repudiada por su familia. En Madrid, sus habilidades para leer y escribir le permiten buscar una vida propia mientras afronta las barreras de clase y género y las sombras de la acusación.",
+      "title": "Llevará tu nombre"
+    },
+    "ca": {
+      "description": "El 1882, Mada Riva abandona Comillas després de ser assenyalada per un assassinat i repudiada per la família. A Madrid, les habilitats per llegir i escriure li permeten buscar una vida pròpia mentre afronta barreres de classe i gènere i les ombres de l’acusació.",
+      "title": "Llevará tu nombre"
+    },
+    "en": {
+      "description": "In 1882, Mada Riva leaves Comillas after being accused of murder and rejected by her family. In Madrid, her reading and writing skills help her seek an independent life while facing barriers of class and gender and the shadow of the accusation.",
+      "title": "Llevará tu nombre"
+    }
+  }
+}

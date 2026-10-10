@@ -1,0 +1,42 @@
+{
+  "index": 193,
+  "path": "Books/neuromante.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Neuromante"
+    },
+    {
+      "tag": "creator",
+      "value": "William Gibson"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:CA542FEE-3ADE-4D05-A98A-222060313998"
+    },
+    {
+      "tag": "description",
+      "value": "Un futuro invadido por microprocesadores, en el que la información es la materia prima. Vaqueros como Henry Dorrett Case se ganan la vida hurtando información, traspasando defensas electrónicas, bloques tangibles y luminosos, como rascacielos geométricos. En este espeluznante y sombrío futuro la mayor parte del este de Norteamérica es una única y gigantesca ciudad, casi toda Europa un vertedero atómico y Japón una jungla de neón, corruptora y brillante, donde una persona es la suma de sus vicios."
+    },
+    {
+      "tag": "date",
+      "value": "1983-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-10-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "318b02e9-af5d-4e64-9cc6-cb51cc46a4ec"
+    },
+    {
+      "tag": "identifier",
+      "value": "4095"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.8"
+    }
+  ]
+}

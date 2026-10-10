@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-c-digo-da-vinci.epub",
+  "title": "El código Da Vinci",
+  "year": "2003",
+  "description": "El asesinato de un conservador del Louvre lleva a Robert Langdon y a la criptóloga Sophie Neveu a seguir una cadena de símbolos y enigmas. Su búsqueda, vinculada a Leonardo da Vinci y a sociedades secretas, pone en peligro un secreto protegido durante siglos.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "El codi Da Vinci",
+      "description": "L’assassinat d’un conservador del Louvre porta Robert Langdon i la criptòloga Sophie Neveu a seguir una cadena de símbols i enigmes. La recerca, vinculada a Leonardo da Vinci i a societats secretes, posa en perill un secret protegit durant segles."
+    },
+    "en": {
+      "title": "The Da Vinci Code",
+      "description": "The murder of a Louvre curator draws Robert Langdon and cryptologist Sophie Neveu into a trail of symbols and puzzles. Connections to Leonardo da Vinci and secret societies lead them towards a revelation that has been guarded for centuries."
+    },
+    "es": {
+      "description": "El asesinato de un conservador del Louvre lleva a Robert Langdon y a la criptóloga Sophie Neveu a seguir una cadena de símbolos y enigmas. Su búsqueda, vinculada a Leonardo da Vinci y a sociedades secretas, pone en peligro un secreto protegido durante siglos.",
+      "title": "El código Da Vinci"
+    }
+  }
+}

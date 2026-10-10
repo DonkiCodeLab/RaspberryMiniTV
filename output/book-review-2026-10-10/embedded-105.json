@@ -1,0 +1,42 @@
+{
+  "index": 105,
+  "path": "Books/el-se-or-de-los-anillos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El Señor de los Anillos"
+    },
+    {
+      "tag": "creator",
+      "value": "J. R. R. Tolkien"
+    },
+    {
+      "tag": "date",
+      "value": "1953-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p><i>El Señor de los Anillos</i> es una novela, obra cumbre del escritor John Ronald Reuel Tolkien, ambientada en un mundo fantástico llamado la Tierra Media hacia el final de su Tercera Edad. El título hace referencia a Sauron, el Señor Oscuro de Mordor, principal villano de la historia, creador del Anillo Único que utilizó para controlar el poder de los demás Anillos. <i>El Señor de los Anillos</i> constituye la continuación de un libro anterior de Tolkien, <i>El Hobbit</i>, que cuenta la historia de cómo el Anillo del Poder pasa a las manos de Bilbo Bolsón, el tío de Frodo Bolsón. En un nivel más profundo, constituye la continuación de otro libro llamado <i>El Silmarillion</i>, que habla de la creación de la Tierra Media y de todas las criaturas que en ella habitan, así como del primer Señor Oscuro, maestro de Sauron, y de las luchas por los Silmarils.</p><p><i>El Señor de los Anillos</i> narra las aventuras de un grupo de seres: (elfos, hobbits, enanos, humanos), que forman la Comunidad del Anillo en su intento por destruir el Anillo Único, forjado por Sauron. Es la historia del héroe del pueblo llano, de aquella persona que aún sabiendo que su destino puede ser fatal, lucha por cumplirlo, pues de él depende la continuidad de su mundo.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-04-23"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:dd898d12-2c0d-6361-2d66-9a1d1f8f8095"
+    },
+    {
+      "tag": "identifier",
+      "value": "5e343b9f-314b-48b4-b06c-885bd800ff0c"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.6"
+    },
+    {
+      "tag": "identifier",
+      "value": "1371"
+    }
+  ]
+}

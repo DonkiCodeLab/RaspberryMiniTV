@@ -1,0 +1,42 @@
+{
+  "index": 206,
+  "path": "Books/rabia.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Rabia"
+    },
+    {
+      "tag": "creator",
+      "value": "Richard Bachman"
+    },
+    {
+      "tag": "description",
+      "value": "Charles Decker es un adolescente de 18 años que sufre de esquizofrenia, al que quieren internar en un correccional por agredir a un profesor con una llave inglesa, provocándole un grave traumatismo craneal. Pistola en mano, y para que no lo encierren, secuestra a su clase toda una mañana. Para que la situación sea más llevadera Charles les cuenta parte de su infancia y su adolescencia; mientras, el ambiente empieza a caldearse entre los alumnos, y pronto comienzan a atacarse verbal y físicamente, contagiados de la demencia de Charles."
+    },
+    {
+      "tag": "date",
+      "value": "1977-09-05T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-09-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:5cd07448-98a6-4875-9e93-9a78012bd028"
+    },
+    {
+      "tag": "identifier",
+      "value": "ce17afc7-e10f-4367-bff1-3846f78ac41c"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.4"
+    },
+    {
+      "tag": "identifier",
+      "value": "3987"
+    }
+  ]
+}

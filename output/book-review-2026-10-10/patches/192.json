@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/mystic-river.epub",
+  "title": "Mystic river",
+  "year": "2001",
+  "description": "El asesinato de una joven reúne a tres amigos de infancia marcados por una experiencia traumática. Uno es el padre de la víctima, otro investiga el crimen y el tercero despierta sospechas, en una historia sobre el peso del pasado, la lealtad y la venganza.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "L’assassinat d’una jove reuneix tres amics d’infantesa marcats per una experiència traumàtica. Un és el pare de la víctima, un altre investiga el crim i el tercer desperta sospites, en una història sobre el pes del passat, la lleialtat i la venjança.",
+      "title": "Mystic river"
+    },
+    "en": {
+      "title": "Mystic River",
+      "description": "A young woman's murder reunites three childhood friends marked by a traumatic experience. One is the victim's father, another investigates the crime and the third comes under suspicion, in a story about the weight of the past, loyalty and revenge."
+    },
+    "es": {
+      "title": "Mystic river",
+      "description": "El asesinato de una joven reúne a tres amigos de infancia marcados por una experiencia traumática. Uno es el padre de la víctima, otro investiga el crimen y el tercero despierta sospechas, en una historia sobre el peso del pasado, la lealtad y la venganza."
+    }
+  }
+}

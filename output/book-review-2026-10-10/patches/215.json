@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/sonr-e.epub",
+  "title": "Sonríe!",
+  "year": "2010",
+  "description": "Después de un accidente que le daña los dientes, Raina atraviesa años de tratamientos dentales mientras aprende a convivir con los cambios de la adolescencia. Esta memoria gráfica aborda las amistades, los primeros enamoramientos y la construcción de la confianza en una misma.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Después de un accidente que le daña los dientes, Raina atraviesa años de tratamientos dentales mientras aprende a convivir con los cambios de la adolescencia. Esta memoria gráfica aborda las amistades, los primeros enamoramientos y la construcción de la confianza en una misma.",
+      "title": "Sonríe!"
+    },
+    "ca": {
+      "description": "Després d’un accident que li danya les dents, la Raina passa anys de tractaments dentals mentre aprèn a conviure amb els canvis de l’adolescència. Aquesta memòria gràfica aborda les amistats, els primers enamoraments i la construcció de la confiança en una mateixa.",
+      "title": "Sonríe!"
+    },
+    "en": {
+      "description": "After an accident damages her teeth, Raina undergoes years of dental treatment while navigating adolescence. This graphic memoir explores friendships, first crushes and the gradual work of developing confidence in oneself.",
+      "title": "Sonríe!"
+    }
+  }
+}

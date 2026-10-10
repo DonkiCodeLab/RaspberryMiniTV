@@ -1,0 +1,42 @@
+{
+  "index": 99,
+  "path": "Books/el-puente-de-los-judi-os.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El puente de los judíos"
+    },
+    {
+      "tag": "creator",
+      "value": "Martí Gironell"
+    },
+    {
+      "tag": "description",
+      "value": "En 1316, un constructor de Perpignan recibe el encargo de reconstruir el puente de Besalú, dañado por las riadas, terremotos, etc. El maestro de obras trabajará sobre un manuscrito de 1074 con el encargo de la primera construcción del puente. A partir de ahí, se desarrolla la trama en la que se cruzan los intereses de los habitantes de Besalú y el conde que gobierna la zona, con los del conde del Ampurdán, rival suyo, y que trata de impedir que la ciudad pueda ser defendida adecuadamente. El papel de la comunidad judía de Besalú, que colabora con los cristianos en la defensa de la ciudad, las intrigas y traiciones de algunos conciudadanos, partidarios del enemigo, y la aventura personal del constructor son la esencia de una trama bien construida, amena y con múltiples atractivos."
+    },
+    {
+      "tag": "date",
+      "value": "2007-05-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-06-13"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:5f783db0-e0e8-2c7b-a95d-b1ceef984a47"
+    },
+    {
+      "tag": "identifier",
+      "value": "ab1135c2-0505-4d1b-b506-3542d6140b51"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "1650"
+    }
+  ]
+}

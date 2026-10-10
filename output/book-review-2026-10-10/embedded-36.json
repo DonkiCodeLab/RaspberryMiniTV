@@ -1,0 +1,34 @@
+{
+  "index": 36,
+  "path": "Books/chica-del-tren.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La chica del tren"
+    },
+    {
+      "tag": "creator",
+      "value": "Paula Hawkins"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:c989a9c7-4dbf-4c33-8d4a-de08efcd0b25"
+    },
+    {
+      "tag": "date",
+      "value": "2016-02-28"
+    },
+    {
+      "tag": "date",
+      "value": "2014-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "¿Estabas en el tren de las 8.04? ¿Viste algo sospechoso? Rachel, sí. Rachel toma siempre el tren de las 8.04 h. Cada mañana lo mismo: el mismo paisaje, las mismas casas… y la misma parada en la señal roja. Son solo unos segundos, pero le permiten observar a una pareja desayunando tranquilamente en su terraza. Siente que los conoce y se inventa unos nombres para ellos: Jess y Jason. Su vida es perfecta, no como la suya. Pero un día ve algo. Sucede muy deprisa, pero es suficiente. ¿Y si Jess y Jason no son tan felices como ella cree? ¿Y si nada es lo que parece? Tú no la conoces. Ella a ti, sí."
+    },
+    {
+      "tag": "identifier",
+      "value": "c49240ba-cadb-4981-8bb4-2892e9b00de2"
+    }
+  ]
+}

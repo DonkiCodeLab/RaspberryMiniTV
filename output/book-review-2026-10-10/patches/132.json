@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/harry-potter-y-las-reliquias-de-la-muerte.epub",
+  "title": "Harry Potter y las reliquias de la muerte",
+  "year": "2007",
+  "description": "Harry, Ron y Hermione abandonan la seguridad de Hogwarts para buscar los objetos que sostienen el poder de Voldemort. Perseguidos y con pocas certezas, deberán afrontar las dudas sobre Dumbledore, el significado de las Reliquias y el coste de la resistencia.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "En Harry, en Ron i l’Hermione abandonen la seguretat de Hogwarts per buscar els objectes que sostenen el poder de Voldemort. Perseguits i amb poques certeses, hauran d’afrontar els dubtes sobre Dumbledore, el significat de les Relíquies i el cost de la resistència.",
+      "title": "Harry Potter i les relíquies de la Mort"
+    },
+    "en": {
+      "title": "Harry Potter and the Deathly Hallows",
+      "description": "Harry, Ron and Hermione leave the safety of Hogwarts to search for the objects sustaining Voldemort's power. Hunted and uncertain, they must confront doubts about Dumbledore, the meaning of the Hallows and the cost of resistance."
+    },
+    "es": {
+      "description": "Harry, Ron y Hermione abandonan la seguridad de Hogwarts para buscar los objetos que sostienen el poder de Voldemort. Perseguidos y con pocas certezas, deberán afrontar las dudas sobre Dumbledore, el significado de las Reliquias y el coste de la resistencia.",
+      "subtitle": "Harry Potter 7",
+      "title": "Harry Potter y las reliquias de la muerte"
+    }
+  }
+}

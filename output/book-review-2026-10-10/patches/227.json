@@ -1,0 +1,22 @@
+{
+  "relativePath": "Books/victus.epub",
+  "title": "Victus",
+  "year": "2012",
+  "description": "El ingeniero militar Martí Zuviría cuenta su formación y su participación en la Guerra de Sucesión, hasta el asedio de Barcelona de 1714. Su voz mezcla humor y desencanto al observar las estrategias de los poderosos y la experiencia de quienes defienden la ciudad.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "L’enginyer militar Martí Zuviría explica la formació i la participació en la Guerra de Successió, fins al setge de Barcelona de 1714. La seva veu barreja humor i desencís en observar les estratègies dels poderosos i l’experiència dels qui defensen la ciutat.",
+      "title": "Victus"
+    },
+    "en": {
+      "subtitle": "Barcelona 1714",
+      "title": "Victus CD",
+      "description": "Military engineer Martí Zuviría recounts his training and involvement in the War of the Spanish Succession, culminating in Barcelona's 1714 siege. His voice combines humour and disillusionment as he observes powerful strategists and those defending the city."
+    },
+    "es": {
+      "subtitle": "Barcelona 1714",
+      "title": "Victus",
+      "description": "El ingeniero militar Martí Zuviría cuenta su formación y su participación en la Guerra de Sucesión, hasta el asedio de Barcelona de 1714. Su voz mezcla humor y desencanto al observar las estrategias de los poderosos y la experiencia de quienes defienden la ciudad."
+    }
+  }
+}

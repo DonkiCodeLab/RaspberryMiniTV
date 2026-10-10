@@ -1,0 +1,42 @@
+{
+  "index": 79,
+  "path": "Books/el-hombre-en-busca-de-sentido.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El hombre en busca de sentido"
+    },
+    {
+      "tag": "creator",
+      "value": "Viktor Frankl"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:9b1097be-78cc-4fac-8360-35e7ab52b358"
+    },
+    {
+      "tag": "description",
+      "value": "En esta obra, Viktor Frankl explica la experiencia que le llevó al descubrimiento de la logoterapia. Prisionero durante mucho tiempo en los campos de concentración, él mismo sintió en su propio ser lo que significaba una existencia desnuda. ¿Cómo pudo él —que todo lo había perdido, que había visto destruir todo lo que valía la pena, que padeció hambre, frío, brutalidades sin fin, que tantas veces estuvo a punto del exterminio—, cómo pudo aceptar que la vida fuera digna de ser vivida? Las palabras del doctor Frankl alcanzan un temple sorprendentemente esperanzador sobre la capacidad humana de trascender sus dificultades y descubrir la verdad conveniente y orientadora."
+    },
+    {
+      "tag": "date",
+      "value": "1946-04-22T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-03-26"
+    },
+    {
+      "tag": "identifier",
+      "value": "46e57772-3b64-407a-b2b3-403c60444ff5"
+    },
+    {
+      "tag": "identifier",
+      "value": "6272"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.4"
+    }
+  ]
+}

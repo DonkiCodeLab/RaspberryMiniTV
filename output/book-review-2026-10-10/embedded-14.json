@@ -1,0 +1,42 @@
+{
+  "index": 14,
+  "path": "Books/alas-de-sangre.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Alas de sangre"
+    },
+    {
+      "tag": "creator",
+      "value": "Rebecca Yarros"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Violet Sorrengail creía que se uniría al Cuadrante de los Escribas para vivir una vida tranquila, sin embargo, por órdenes de su madre, debe unirse a los miles de candidatos que, en el Colegio de Guerra de Basgiath, luchan por formar parte de la élite de Navarre: el Cuadrante de los Jinetes de dragones.</p><p>Cuando eres más pequeña y frágil que los demás tu vida corre peligro, porque los dragones no se vinculan con humanos débiles. Además, con más jinetes que dragones disponibles, muchos la matarían con tal de mejorar sus probabilidades de éxito; y hay otros, como el despiadado Xaden Riorson, el líder de ala más poderoso del Cuadrante de Jinetes, que la asesinarían simplemente por ser la hija de la comandante general. Para sobrevivir, necesitará aprovechar al máximo todo su ingenio. Mientras la guerra se torna más letal Violet sospecha que los líderes de Navarre esconden un terrible secreto…</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2022-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-05-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4be6b2b2-7a6a-6f55-5f5b-34b50652a9d9"
+    },
+    {
+      "tag": "identifier",
+      "value": "47503335-79df-4054-8da3-40c59b891f18"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.3"
+    },
+    {
+      "tag": "identifier",
+      "value": "73347"
+    }
+  ]
+}

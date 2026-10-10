@@ -1,0 +1,42 @@
+{
+  "index": 217,
+  "path": "Books/the-great-train-robbery.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El gran robo del tren"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "description",
+      "value": "Esta novela de acción es una auténtica obra maestra del género. Ambientada en la época victoriana, el brumoso Londres finisecular sirve de telón de fondo para el robo más espectacular del siglo. Una vez al mes sale de Londres con destino a París un tren que transporta la paga del ejército británico que lucha en Crimea. Las dos cajas fuertes que la contienen son inviolables, y para abrirlas, se necesitan cuatro llaves distintas que están en poder de cuatro personas. Sin embargo, las cajas llegan vacías a París…"
+    },
+    {
+      "tag": "date",
+      "value": "1975-04-22T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-04-22"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:cdbd9f8b-0b89-4355-af70-5118f1e05a13"
+    },
+    {
+      "tag": "identifier",
+      "value": "7178111c-eaea-4c7e-92c4-18bc9a120df3"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.6"
+    },
+    {
+      "tag": "identifier",
+      "value": "2255"
+    }
+  ]
+}

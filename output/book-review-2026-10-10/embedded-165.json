@@ -1,0 +1,42 @@
+{
+  "index": 165,
+  "path": "Books/la-piel-fr-a.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La piel fría"
+    },
+    {
+      "tag": "creator",
+      "value": "Albert Sánchez Piñol"
+    },
+    {
+      "tag": "description",
+      "value": "<p>A comienzos del siglo <small>XX</small> un prófugo de la resistencia irlandesa llega a una pequeña isla del Atlántico Sur para realizar mediciones meteorológicas durante un año. Allí solamente encontrará una cabaña y un faro habitado por un personaje intratable y hermético. Pero lo peor llega durante la noche, cuando los dos habitantes de la isla se ven asediados por extrañas criaturas procedentes del océano.</p><p>Sometidos a una tensión extrema y conscientes de la titánica lucha que deben sostener para vencer la amenaza, descubren que convivir con lo desconocido es la única salida posible para sobrevivir.</p><p>Ganadora de los premios Ojo Crítico y Llibreter de narrativa, <cite>La piel fría</cite> es una novela trepidante y claustrofóbica sobre el miedo y el deseo, que muestra una verdad perturbadora: el único monstruo invencible es aquel que produce la propia mente.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2002-01-02T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-09-10"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:5f95fb05-eda8-4aeb-8e28-549b3c401200"
+    },
+    {
+      "tag": "identifier",
+      "value": "54b6d907-bf57-4b72-8552-86f4287bccc6"
+    },
+    {
+      "tag": "identifier",
+      "value": "3082"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "index": 185,
+  "path": "Books/manaos-the-manaos.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Manaos"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:c22b4da3-ebb7-48fd-9804-ead3e670d513"
+    },
+    {
+      "tag": "description",
+      "value": "En Manaos, perdidas en medio de la selva amazónica, se encuentran las explotaciones de caucho del argentino Sierra, un despiadado terrateniente que esclaviza a los indios y los somete al hambre y al látigo para aumentar los beneficios de su producción. Entre los esclavos se encuentran el Nordestino, que fue a parar allí por una deuda que nunca logrará pagar; el Gringo, un antiguo guardaespaldas de Sierra condenado a la esclavitud por acostarse con Claudia, la amante del patrón, y Ramiro Poco-poco, un indio auca recién llegado a la plantación. Cuando Sierra parece decidido a dejar a Claudia allí para satisfacer a los caucheros, lo insostenible de la situación determinará a estos tres hombres a rescatarla e intentar lo que hasta este momento ningún hombre ha logrado: huir."
+    },
+    {
+      "tag": "date",
+      "value": "1975-06-02T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2018-08-20"
+    },
+    {
+      "tag": "identifier",
+      "value": "9b19e737-0abb-43ff-987a-a077cd30fa63"
+    }
+  ]
+}

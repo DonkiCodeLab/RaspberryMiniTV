@@ -1,0 +1,34 @@
+{
+  "index": 43,
+  "path": "Books/congo-spanish-edition.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Congo"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:f1701012-0152-c7fe-b689-9d6bdf644f52"
+    },
+    {
+      "tag": "description",
+      "value": "En el corazón de África salvaje se desarrolla una apasionante aventura en pos de encontrar la ciudad perdida de Zinj, punto clave de una terrible intriga internacional. Sus protagonistas: una chica ambiciosa al servicio de una poderosa multinacional; un joven científico californiano; Amy, un gorila entrañable; y un experto cazador que conoce los misterios de la selva. Se enfrentan con peligros mortales: pigmeos siniestros, bestias monstruosas, ríos de lava, espías de naciones enemigas, mercenarios implacables…"
+    },
+    {
+      "tag": "date",
+      "value": "1979-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2017-10-30"
+    },
+    {
+      "tag": "identifier",
+      "value": "df6d45e3-345b-4ee1-a3e1-78049fcffff6"
+    }
+  ]
+}

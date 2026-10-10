@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-carretera.epub",
+  "title": "La carretera",
+  "year": "2006",
+  "description": "Un padre y su hijo avanzan hacia el sur por una tierra devastada, empujando un carro con sus escasas pertenencias. Entre el hambre, el frío y la amenaza de otros supervivientes, intentan conservar el afecto y una idea de humanidad en un mundo sin garantías.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "La carretera",
+      "description": "Un pare i el seu fill avancen cap al sud per una terra devastada, empenyent un carro amb les poques pertinences. Entre la fam, el fred i l’amenaça d’altres supervivents, intenten conservar l’afecte i una idea d’humanitat en un món sense garanties."
+    },
+    "en": {
+      "description": "A father and son travel south through a devastated landscape, pushing their few possessions in a shopping cart. Amid hunger, cold and threats from other survivors, they try to preserve their bond and a sense of humanity in an uncertain world.",
+      "title": "The Road"
+    },
+    "es": {
+      "description": "Un padre y su hijo avanzan hacia el sur por una tierra devastada, empujando un carro con sus escasas pertenencias. Entre el hambre, el frío y la amenaza de otros supervivientes, intentan conservar el afecto y una idea de humanidad en un mundo sin garantías.",
+      "title": "La carretera"
+    }
+  }
+}

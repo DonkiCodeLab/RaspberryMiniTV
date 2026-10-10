@@ -1,6 +1,7 @@
 import base64
 from concurrent.futures import ThreadPoolExecutor
 import io
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -120,6 +121,38 @@ class UserProfileTests(unittest.TestCase):
             self.assertEqual(payload["profile"]["userId"], "default")
             self.assertEqual(payload["profile"]["key"], '["video","TVShows/show/S01E01.mp4"]')
             self.assertEqual(self.client.post("/play", headers=self.headers, json={"id": "S01E01", "startSeconds": -1}).status_code, 400)
+
+    def test_stop_preserves_exact_last_position_before_quitting_player(self):
+        context = {"userId": "default", "key": '["video","movie.mp4"]', "markKey": "movie"}
+        state_file = self.path.parent / "playback.json"
+        state_file.write_text(json.dumps({"profile": context, "file": "movie.mp4"}))
+        events = []
+        def command(*parts):
+            events.append(parts)
+            if parts == ("quit",):
+                self.assertEqual(self.store.state("default")["progress"][context["key"]]["seconds"], 51.75)
+            return {"data": 51.75 if parts[-1] == "time-pos" else 120}
+        with patch.object(api, "PLAYBACK_STATE_PATH", str(state_file)), patch.object(api, "send_mpv_command", command), patch.object(api.subprocess, "run"), patch.dict(api.current, {"proc": None}):
+            self.assertEqual(api.read_playback_state()["profile"], context)
+            api.stop_locked()
+        self.assertEqual(events[-1], ("quit",))
+        self.assertFalse(self.store.state("default")["progress"][context["key"]]["completed"])
+
+    def test_profile_book_launch_has_local_reader_and_legacy_fallback(self):
+        book = self.path.parent / "test.pdf"
+        book.write_bytes(b"%PDF-1.7 fixture")
+        with patch.object(api, "resolve_book_path", return_value=str(book)), patch.object(api.shutil, "which", return_value="/usr/bin/chromium"), patch.object(api, "write_menu_command") as command:
+            response = self.client.post("/books/open", headers=self.headers, json={"relativePath": "Books/test.pdf", "userId": "default", "resume": True})
+            self.assertEqual(response.status_code, 200)
+            payload = command.call_args[0][0]
+            self.assertTrue(payload["readerUrl"].startswith("http://127.0.0.1:5050/?"))
+            self.assertIn("resume=1", payload["readerUrl"])
+            self.assertIn("#readerPin=1234", payload["readerUrl"])
+            response = self.client.post("/books/open", headers=self.headers, json={"relativePath": "Books/test.pdf"})
+            self.assertEqual(response.status_code, 200)
+            self.assertNotIn("readerUrl", command.call_args[0][0])
+        with patch.object(api, "resolve_book_path", return_value=str(book)), patch.object(api.shutil, "which", return_value=None):
+            self.assertEqual(self.client.post("/books/open", headers=self.headers, json={"relativePath": "Books/test.pdf", "userId": "default"}).status_code, 503)
 
 
 if __name__ == "__main__":

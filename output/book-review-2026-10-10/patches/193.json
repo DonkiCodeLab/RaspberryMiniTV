@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/neuromante.epub",
+  "title": "Neuromante",
+  "year": "1984",
+  "description": "Case, un especialista en intrusión informática incapaz de volver al ciberespacio, recibe una oferta para recuperar su antigua vida. Junto a Molly, participa en una operación que lo enfrenta a corporaciones, inteligencias artificiales y formas de conciencia que desdibujan la frontera entre humano y máquina.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Case, un especialista en intrusió informàtica incapaç de tornar al ciberespai, rep una oferta per recuperar l’antiga vida. Amb la Molly, participa en una operació que l’enfronta a corporacions, intel·ligències artificials i formes de consciència que desdibuixen la frontera entre humà i màquina.",
+      "title": "Neuromante"
+    },
+    "en": {
+      "description": "Case, a hacker unable to return to cyberspace, receives an offer to recover his former life. Alongside Molly, he joins an operation involving corporations, artificial intelligences and forms of consciousness that blur the boundary between human and machine.",
+      "title": "Neuromancer"
+    },
+    "es": {
+      "title": "Neuromante",
+      "description": "Case, un especialista en intrusión informática incapaz de volver al ciberespacio, recibe una oferta para recuperar su antigua vida. Junto a Molly, participa en una operación que lo enfrenta a corporaciones, inteligencias artificiales y formas de conciencia que desdibujan la frontera entre humano y máquina."
+    }
+  }
+}

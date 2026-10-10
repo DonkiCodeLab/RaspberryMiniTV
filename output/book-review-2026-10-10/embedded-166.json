@@ -1,0 +1,42 @@
+{
+  "index": 166,
+  "path": "Books/la-plaza-del-diamante.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:552d0773-176a-4e90-426a-62eb55e60c19"
+    },
+    {
+      "tag": "identifier",
+      "value": "db345d96-51f7-4fb4-b5af-d7b668619b15"
+    },
+    {
+      "tag": "identifier",
+      "value": "5172"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    },
+    {
+      "tag": "title",
+      "value": "La plaza del Diamante"
+    },
+    {
+      "tag": "date",
+      "value": "1961-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-02-23"
+    },
+    {
+      "tag": "description",
+      "value": "«La plaza del Diamante» (título original en catalán «La plaça del Diamant») es una novela de la escritora catalana Mercé Rodoreda. Considerada por los críticos como la obra cumbre de la autora, se ha convertido ya en un clásico de la literatura de posguerra. La novela, publicada por primera vez en 1962, ha sido traducida a más de veinte idiomas. La novela se centra en el personaje de Natalia, la «Colometa», una mujer que representa a muchas otras a las que les tocó vivir un periodo de la historia de España especialmente duro y cruel. Al igual que otras mujeres, Colometa verá partir y morir a sus seres queridos, pasará hambre y miseria y se verá muchas veces incapaz de sacar adelante a sus hijos. Hundida en un matrimonio que no le proporciona felicidad y unida a un hombre egoísta, Natalia renuncia a su propia identidad cediendo todo el protagonismo a su esposo, aceptando los convencionalismos de una época que dejaban a la mujer en un segundo plano. A lo largo del texto el lector va descubriendo la resignación de esta mujer ante la realidad que le ha tocado vivir. La historia de España está llena de «Colometas» y Rodoreda les hace en esta obra su homenaje personal. Natalia, nos explica su vida marcada por la opresión y la necesidad de liberarse de una historia individual que se transforma en una imagen de una época agitada."
+    },
+    {
+      "tag": "creator",
+      "value": "Mercè Rodoreda"
+    }
+  ]
+}

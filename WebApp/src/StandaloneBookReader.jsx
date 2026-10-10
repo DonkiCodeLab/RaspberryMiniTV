@@ -36,7 +36,7 @@ export default function StandaloneBookReader({ params }) {
   return <>
     {context && <Reader book={context.book} initialProgress={context.initialProgress}
       onProgress={value => profiles.saveProgress(context.userId, context.descriptor, value)} onClose={close} />}
-    {profiles.error && <div className="profile-status" style={{ position: "fixed", bottom: 12, left: 12, right: 12, zIndex: 2000 }} role="alert">{profiles.error} <button type="button" onClick={profiles.reload}>Reintentar</button></div>}
+    {profiles.error && <div className="profile-status" role="alert">{profiles.error} <button type="button" onClick={profiles.reload}>Reintentar</button></div>}
     {!context && !profiles.error && <div className="profile-status" role="status">Abriendo el libro…</div>}
   </>;
 }

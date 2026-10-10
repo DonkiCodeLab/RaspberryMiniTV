@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-arque-logo.epub",
+  "title": "El arqueólogo",
+  "year": "2010",
+  "description": "En 1910, el monje Bonaventura Ubach viaja a Tierra Santa y Mesopotamia para estudiar los escenarios de la Biblia y reunir piezas para el museo de Montserrat. Su búsqueda de conocimiento se convierte en una aventura entre desiertos, excavaciones y conflictos de culturas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El 1910, el monjo Bonaventura Ubach viatja a Terra Santa i Mesopotàmia per estudiar els escenaris de la Bíblia i reunir peces per al museu de Montserrat. La recerca de coneixement es converteix en una aventura entre deserts, excavacions i conflictes de cultures.",
+      "title": "El arqueólogo"
+    },
+    "en": {
+      "description": "In 1910, the monk Bonaventura Ubach travels to the Holy Land and Mesopotamia to study biblical settings and gather objects for Montserrat's museum. His pursuit of knowledge becomes an adventure through deserts, archaeological sites and encounters between different cultures.",
+      "title": "El arqueólogo"
+    },
+    "es": {
+      "subtitle": "de Montserrat a Tierra Santa persiguiendo un sueño",
+      "title": "El arqueólogo",
+      "description": "En 1910, el monje Bonaventura Ubach viaja a Tierra Santa y Mesopotamia para estudiar los escenarios de la Biblia y reunir piezas para el museo de Montserrat. Su búsqueda de conocimiento se convierte en una aventura entre desiertos, excavaciones y conflictos de culturas."
+    }
+  }
+}

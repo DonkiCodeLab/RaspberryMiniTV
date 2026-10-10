@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/orgullo-y-prejuicio.epub",
+  "title": "Orgullo y Prejuicio",
+  "year": "1813",
+  "description": "Elizabeth Bennet conoce al reservado señor Darcy en una sociedad donde el matrimonio condiciona la seguridad de las mujeres. Entre primeras impresiones, intereses familiares y malentendidos, ambos deben revisar sus juicios sobre el otro y sobre su propio lugar en el mundo.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Elizabeth Bennet coneix el reservat senyor Darcy en una societat on el matrimoni condiciona la seguretat de les dones. Entre primeres impressions, interessos familiars i malentesos, tots dos han de revisar els judicis sobre l’altre i sobre el seu lloc al món.",
+      "title": "Orgullo y Prejuicio"
+    },
+    "en": {
+      "title": "Pride and Prejudice",
+      "description": "Elizabeth Bennet meets the reserved Mr Darcy in a society where marriage shapes women's security. Amid first impressions, family interests and misunderstandings, both must reconsider their judgements of each other and their own place in the world."
+    },
+    "es": {
+      "description": "Elizabeth Bennet conoce al reservado señor Darcy en una sociedad donde el matrimonio condiciona la seguridad de las mujeres. Entre primeras impresiones, intereses familiares y malentendidos, ambos deben revisar sus juicios sobre el otro y sobre su propio lugar en el mundo.",
+      "title": "Orgullo y Prejuicio"
+    }
+  }
+}

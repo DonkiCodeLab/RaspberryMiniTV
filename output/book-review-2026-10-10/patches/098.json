@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-psicoanalista.epub",
+  "title": "El psicoanalista",
+  "year": "2002",
+  "description": "El psicoanalista Frederick Starks recibe una amenaza anónima que le exige descubrir la identidad de alguien que busca vengarse de él. Con un plazo de quince días y sus seres queridos en peligro, deberá revisar su pasado y aprender a actuar fuera de la consulta.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El psicoanalista Frederick Starks rep una amenaça anònima que li exigeix descobrir la identitat d’algú que se’n vol venjar. Amb un termini de quinze dies i els éssers estimats en perill, haurà de revisar el passat i aprendre a actuar fora de la consulta.",
+      "title": "El psicoanalista"
+    },
+    "en": {
+      "description": "Psychoanalyst Frederick Starks receives an anonymous threat demanding that he identify someone seeking revenge. With fifteen days to respond and his loved ones in danger, he must revisit his past and learn to act beyond the security of his consulting room.",
+      "title": "El psicoanalista"
+    },
+    "es": {
+      "description": "El psicoanalista Frederick Starks recibe una amenaza anónima que le exige descubrir la identidad de alguien que busca vengarse de él. Con un plazo de quince días y sus seres queridos en peligro, deberá revisar su pasado y aprender a actuar fuera de la consulta.",
+      "subtitle": "1. La Trama",
+      "title": "El psicoanalista"
+    }
+  }
+}

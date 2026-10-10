@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/ubik.epub",
+  "title": "Ubik",
+  "year": "1969",
+  "description": "Después de una operación que termina en explosión, Joe Chip y sus compañeros perciben cambios imposibles en los objetos y el tiempo. Mensajes de un hombre aparentemente muerto y un producto llamado Ubik complican la búsqueda de una realidad en la que puedan confiar.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Después de una operación que termina en explosión, Joe Chip y sus compañeros perciben cambios imposibles en los objetos y el tiempo. Mensajes de un hombre aparentemente muerto y un producto llamado Ubik complican la búsqueda de una realidad en la que puedan confiar.",
+      "title": "Ubik"
+    },
+    "ca": {
+      "description": "Després d’una operació que acaba en explosió, Joe Chip i els companys perceben canvis impossibles en els objectes i el temps. Missatges d’un home aparentment mort i un producte anomenat Ubik compliquen la recerca d’una realitat en què puguin confiar.",
+      "title": "Ubik"
+    },
+    "en": {
+      "description": "After an operation ends in an explosion, Joe Chip and his colleagues notice impossible changes in objects and time. Messages from an apparently dead man and a product called Ubik complicate their search for a reality they can trust.",
+      "title": "Ubik"
+    }
+  }
+}

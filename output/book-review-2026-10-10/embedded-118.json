@@ -1,0 +1,42 @@
+{
+  "index": 118,
+  "path": "Books/factfulness.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Factfulness"
+    },
+    {
+      "tag": "creator",
+      "value": "Hans Rosling"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Cuando se hacen preguntas sencillas sobre las tendencias mundiales: ¿qué porcentaje de la población mundial vive en la pobreza?, ¿por qué la población mundial está aumentando?, ¿cuántas chicas terminan la escuela? Sistemáticamente obtenemos las respuestas incorrectas. Tan incorrectas que incluso un chimpancé eligiendo las respuestas al azar superará siempre a los maestros, periodistas, premios Nobel y banqueros de inversión.</p><p>En <i>Factfulness</i>, el profesor de Salud Internacional y el fenómeno TED global Hans Rosling, junto con sus dos colaboradores, Anna y Ola, ofrece una nueva y radical explicación de por qué sucede esto. Nos revelan los diez instintos que distorsionan nuestra perspectiva: desde nuestra tendencia a dividir el mundo en dos campos (generalmente en nosotros y de ellos) a la forma en que consumimos los medios (donde el miedo gobierna) y cómo percibimos el progreso (creyendo que todo está empeorando). Nuestro problema es que no sabemos lo que no sabemos y que, incluso nuestras suposiciones, se basan en prejuicios inconscientes y predecibles. Resulta que el mundo, a pesar de sus imperfecciones, está en un estado mucho mejor de lo que podríamos pensar. Eso no significa que no haya preocupaciones reales. Pero cuando nos preocupamos por todo constantemente, en lugar de adaptar una cosmovisión basada en hechos, podemos perder nuestra capacidad de enfocarnos en las cosas que más nos amenazan.</p><p>Inspiradora y reveladora, llena de anécdotas e historias conmovedoras, <i>Factfulness</i> es un libro urgente y esencial que cambiará la forma de ver el mundo y le permitirá responder a las crisis y oportunidades del futuro.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2018-11-27T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-03-19"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a1a6580b-154d-479e-96cd-7011706fbdf3"
+    },
+    {
+      "tag": "identifier",
+      "value": "2369227a-7ffb-42dd-87d2-e5ea44f51c2b"
+    },
+    {
+      "tag": "identifier",
+      "value": "48421"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

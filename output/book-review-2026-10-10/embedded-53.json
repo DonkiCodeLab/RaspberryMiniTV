@@ -1,0 +1,42 @@
+{
+  "index": 53,
+  "path": "Books/devoradores-de-cad-veres.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Devoradores de cadáveres"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "description",
+      "value": "<p>En el siglo <small>X</small>, el califa de Bagdad envía un embajador al rey de los búlgaros, pero el emisario es secuestrado por los vikingos.</p><p>Para el refinado diplomático, las costumbres bárbaras de los pueblos escandinavos resultan a la vez salvajes y fascinantes.</p><p>Y junto a ellos y a su jefe Buliwyf emprende una trepidante aventura: luchar contra «los que se comen a los muertos…».</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1976-02-29T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-11-23"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:35BD6BE0-8368-11E2-9E96-0800200C9A66"
+    },
+    {
+      "tag": "identifier",
+      "value": "16d323ab-157b-4805-b631-a52132e97693"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "460"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "index": 33,
+  "path": "Books/canci-n-de-hielo-y-fuego.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Festín de cuervos (ed. ilustrada)"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e6c2a3a6-e9a0-4775-bfef-3ec80a4e5f6f"
+    },
+    {
+      "tag": "description",
+      "value": "<p>«—¿Qué es lo que más desea nuestro corazón? —preguntó Arianne, entrecerrando los ojos.<br/>—Venganza. —Hablaba en voz baja, como si temiera que pudieran oírlo—. Justicia».</p><p>Entre campos de batalla llenos de fantasmas y lúgubres fortalezas en ruina, entre ciudades convertidas en cementerios y tierras reducidas a osarios, la guerra de los Cinco Reyes toca a su fin.</p><p>La casa Lannister y sus aliados parecen haber salido victoriosos. Sin embargo, algo se remueve en las entrañas de los Siete Reinos y, mientras cuervos en forma humana se dan un festín de cenizas, se forjan nuevas alianzas y complots.</p><p>Pero incluso en esta paz del rey, aparentemente consolidada, fuerzas inesperadas se preparan para lanzar un ataque sangriento. Los hombres del hierro, liderados por Ojo de Cuervo, herederos de un culto olvidado, atacan al suroeste, obligando al Trono de Hierro a enfrentarse a un desafío sin precedentes.</p><p>Y de las brumas de un recuerdo enterrado hace mucho, una profecía siniestra amenaza la soberanía de la reina Cersei…</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2005-11-07T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2026-02-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "6c98b396-3d9a-4124-beb2-55ba2cb2bd7a"
+    },
+    {
+      "tag": "identifier",
+      "value": "81513"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ],
+  "contents": [
+    "Festín de cuervos (ed. ilustrada)",
+    "Cubierta",
+    "Festín de cuervos (ed. ilustrada)",
+    "Mapas",
+    "El Norte",
+    "El Sur",
+    "Islas del Hierro",
+    "Agradecimientos",
+    "Prólogo",
+    "El profeta",
+    "El capitán de los guardias",
+    "Cersei (1)",
+    "Brienne (1)",
+    "Samwell (1)",
+    "Arya (1)",
+    "Cersei (2)",
+    "Jaime (1)",
+    "Brienne (2)",
+    "Sansa",
+    "La hija del kraken",
+    "Cersei (3)",
+    "El caballero mancillado",
+    "Brienne (3)",
+    "Samwell (2)",
+    "Jaime (2)",
+    "Cersei (4)",
+    "El capitán del hierro",
+    "El hombre ahogado",
+    "Brienne (4)",
+    "La hacedora de reinas",
+    "Arya (2)",
+    "Alayne (1)",
+    "Cersei (5)",
+    "Brienne (5)",
+    "Samwell (3)",
+    "Jaime (3)",
+    "Cersei (6)",
+    "El saqueador",
+    "Jaime (4)",
+    "Brienne (6)",
+    "Cersei (7)",
+    "Jaime (5)",
+    "Gata de los canales",
+    "Samwell (4)",
+    "Cersei (8)",
+    "Brienne (7)",
+    "Jaime (6)",
+    "Cersei (9)",
+    "La princesa en la torre",
+    "Alayne (2)",
+    "Brienne (8)",
+    "Cersei (10)",
+    "Jaime (7)",
+    "Samwell (5)",
+    "Mientras, en el Muro…",
+    "Apéndices",
+    "Los Reyes y Sus Cortes",
+    "La Reina Regente",
+    "El Rey en el Muro",
+    "El Rey de las Islas y del Norte",
+    "Otras Casas Mayores y Menores",
+    "Casa Arryn",
+    "Casa Florent",
+    "Casa Frey",
+    "Casa Hightower",
+    "Casa Lannister",
+    "Casa Martell",
+    "Casa Stark",
+    "Casa Tully",
+    "Casa Tyrell"
+  ]
+}

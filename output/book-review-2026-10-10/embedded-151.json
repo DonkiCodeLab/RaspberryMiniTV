@@ -1,0 +1,34 @@
+{
+  "index": 151,
+  "path": "Books/la-carretera.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La carretera"
+    },
+    {
+      "tag": "creator",
+      "value": "Cormac McCarthy"
+    },
+    {
+      "tag": "date",
+      "value": "2005-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "La carretera, novela galardonada con el premio Pulitzer 2007 y best seller literario del año en Estados Unidos, transcurre en la inmensidad del territorio norteamericano, un paisaje literalmente quemado por lo que parece haber sido un reciente holocausto nuclear. Un padre trata de salvar a su hijo emprendiendo un viaje con él. Rodeados de un paisaje baldío, amenazados por bandas de caníbales, empujando un carrito de la compra donde guardan sus escasas pertenencias, recorren los lugares donde el padre pasó una infancia recordada a veces en forma de breves bocetos del paraíso perdido, y avanzan hacia el sur, hacia el mar, huyendo de un frío «capaz de romper las rocas»."
+    },
+    {
+      "tag": "date",
+      "value": "2024-06-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:831e02dc-0cba-42cd-8164-effead1f54ee"
+    },
+    {
+      "tag": "identifier",
+      "value": "e77e948e-473d-436c-87ea-cb26cfef659a"
+    }
+  ]
+}

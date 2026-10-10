@@ -1,0 +1,42 @@
+{
+  "index": 106,
+  "path": "Books/el-secreto-de-la-asistenta.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El secreto de la asistenta"
+    },
+    {
+      "tag": "creator",
+      "value": "Freida McFadden"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:49c019fd-5ce2-42b2-b9d7-998e0da3e235"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Es todo una cuestión de hasta dónde estoy dispuesta a llegar…</b></p><p>Es difícil encontrar a alguien que te ofrezca trabajo sin preguntar demasiado sobre tu pasado. Así que le agradezco al universo que, milagrosamente, los Garrick me hayan dado empleo limpiando su impresionante ático con vistas a todo Manhattan y preparándoles comidas sofisticadas en su inmensa cocina. Puedo trabajar aquí durante un tiempo, ser discreta hasta conseguir lo que quiero.</p><p>Es casi perfecto. Sin embargo, todavía no he conocido a la señora Garrick ni he podido ver lo que hay dentro de la habitación de invitados. Estoy segura de que la oigo llorar. Veo las pequeñas manchas de sangre en el cuello de sus camisones blancos cuando hago la colada. Y, un día, no puedo evitar llamar a su puerta. Cuando esta se abre lentamente, lo que veo lo cambia todo…</p><p>Es entonces cuando hago una promesa.</p><p>Douglas Garrick se ha equivocado. Y va a pagar.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2023-02-14T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-05-21"
+    },
+    {
+      "tag": "identifier",
+      "value": "5aaa030d-7f1c-4be2-b317-bed95b25c43a"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    },
+    {
+      "tag": "identifier",
+      "value": "74267"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-silencio-de-los-corderos.epub",
+  "title": "El silencio de los corderos",
+  "year": "1988",
+  "description": "La aprendiz del FBI Clarice Starling entrevista al psiquiatra encarcelado Hannibal Lecter para obtener ayuda en una investigación de asesinatos. Sus conversaciones se convierten en un duelo psicológico mientras Clarice intenta encontrar a la siguiente víctima antes de que sea demasiado tarde.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "L’aprenent de l’FBI Clarice Starling entrevista el psiquiatre empresonat Hannibal Lecter per obtenir ajuda en una investigació d’assassinats. Les converses es converteixen en un duel psicològic mentre Clarice intenta trobar la víctima següent abans que sigui massa tard.",
+      "title": "El silencio de los corderos"
+    },
+    "en": {
+      "description": "FBI trainee Clarice Starling interviews imprisoned psychiatrist Hannibal Lecter for help with a murder investigation. Their conversations become a psychological contest as she tries to find the killer's next victim before time runs out.",
+      "title": "The Silence of the Lambs"
+    },
+    "es": {
+      "description": "La aprendiz del FBI Clarice Starling entrevista al psiquiatra encarcelado Hannibal Lecter para obtener ayuda en una investigación de asesinatos. Sus conversaciones se convierten en un duelo psicológico mientras Clarice intenta encontrar a la siguiente víctima antes de que sea demasiado tarde.",
+      "title": "El silencio de los corderos"
+    }
+  },
+  "author": "Thomas Harris"
+}

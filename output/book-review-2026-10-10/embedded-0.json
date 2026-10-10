@@ -1,0 +1,42 @@
+{
+  "index": 0,
+  "path": "Books/1984.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "1984"
+    },
+    {
+      "tag": "creator",
+      "value": "George Orwell"
+    },
+    {
+      "tag": "description",
+      "value": "En una supuesta sociedad policial, el Estado ha conseguido el control total sobre el individuo. No existe siquiera un resquicio para la intimidad personal: el sexo es un crimen, las emociones están prohibidas, la adoración al sistema es la condición para seguir vivo. La Policía del Pensamiento se encargará de torturar hasta la muerte a los conspiradores, aunque para ello sea necesario acusar a inocentes. Winston y Julia, a pesar de ser miembros del Partido y sabiendo que el Gran Hermano les vigila, se rebelan contra ese poder que se ha adueñado de las conciencias de sus conciudadanos. El camino que seguirán se convertirá en un peligroso laberinto hacia un final incierto."
+    },
+    {
+      "tag": "date",
+      "value": "1948-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-10-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e301e225-4da0-4c77-8887-cbcc9f994c52"
+    },
+    {
+      "tag": "identifier",
+      "value": "0362acee-4a83-47ff-91e2-69967ec90994"
+    },
+    {
+      "tag": "identifier",
+      "value": "1677"
+    },
+    {
+      "tag": "identifier",
+      "value": "3.3"
+    }
+  ]
+}

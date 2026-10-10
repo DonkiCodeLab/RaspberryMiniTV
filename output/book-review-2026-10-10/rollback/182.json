@@ -1,0 +1,15 @@
+{
+  "relativePath": "Books/los-tres-mosqueteros.epub",
+  "title": "Los Tres Mosqueteros",
+  "year": "2023",
+  "description": "During the reign of France's King Louis XIV, D'Artagnan and three musketeers unite to defend the honor of Anne of Austria against the plots of Cardinal Richeliu.",
+  "localizedMetadata": {
+    "ca": {},
+    "en": {
+      "title": "The Three Musketeers"
+    },
+    "es": {
+      "title": "Los Tres Mosqueteros"
+    }
+  }
+}

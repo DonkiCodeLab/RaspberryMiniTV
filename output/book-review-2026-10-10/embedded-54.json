@@ -1,0 +1,42 @@
+{
+  "index": 54,
+  "path": "Books/dientes-de-drag-n.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Dientes de dragón"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:8b08d3f3-2aff-1393-32bb-e837b9d76bd3"
+    },
+    {
+      "tag": "description",
+      "value": "1876. Tribus de indios en pie de guerra asolan los territorios del oeste de Estados Unidos. A este paisaje primitivo y hostil llegan las expediciones dirigidas por dos paleontólogos rivales en busca de fósiles de dinosaurios. William Johnson, un universitario rico y consentido, se incorpora al grupo de Othniel Charles Marsh, pero cuando este sospecha de sus intenciones y le abandona, William se une a su archienemigo, Edward Drinker Cope. Ignora que está a punto de hacer un descubrimiento histórico que deberá defender de los personajes más peligrosos del Salvaje Oeste. A partir de un suceso real, Crichton alumbra un período histórico tan olvidado como fascinante en un nuevo «thriller» paleontológico destinado a convertirse en un clásico a la altura de sus éxitos más memorables."
+    },
+    {
+      "tag": "date",
+      "value": "2017-05-21T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-08-17"
+    },
+    {
+      "tag": "identifier",
+      "value": "8ca71d3d-90e9-476f-900d-26cea3486adb"
+    },
+    {
+      "tag": "identifier",
+      "value": "45740"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.1"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "index": 49,
+  "path": "Books/cumbres-borrascosas.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Cumbres borrascosas"
+    },
+    {
+      "tag": "creator",
+      "value": "Emily Brontë"
+    },
+    {
+      "tag": "description",
+      "value": "<p>La poderosa y hosca figura de Heathcliff domina Cumbres Borrascosas, novela apasionada y tempestuosa cuya sensibilidad se adelantó a su tiempo. Los brumosos y sombríos páramos de Yorkshire son el singular escenario donde se desarrolla con fuerza arrebatadora esta historia de venganza y odio, de pasiones desatadas y amores desesperados que van más allá de la muerte y que hacen de ella una de las obras más singulares y atractivas de todos los tiempos.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1846-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-04-08"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:32fa0a32-421e-44c5-9ed1-0933e5050134"
+    },
+    {
+      "tag": "identifier",
+      "value": "ce646215-07c6-461c-8566-8b9275a3517a"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.6"
+    },
+    {
+      "tag": "identifier",
+      "value": "2801"
+    }
+  ]
+}

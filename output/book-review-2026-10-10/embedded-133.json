@@ -1,0 +1,42 @@
+{
+  "index": 133,
+  "path": "Books/heretics-of-dune.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Herejes de Dune"
+    },
+    {
+      "tag": "creator",
+      "value": "Frank Herbert"
+    },
+    {
+      "tag": "description",
+      "value": "«Herejes de Dune» es el quinto libro en la saga de Dune de Frank Herbert. En él se plasman los acontecimientos siguientes al orden de paz forzada por Leto II, el Dios Emperador. Después de la Desaparición de Leto II, la humanidad ha intentado seguir su camino a través del espacio infinito. Muchos han huido del Antiguo Imperio hacia lo desconocido, en un suceso llamado la «dispersión». La trama se desarrolla muchos miles de años después, cuando los individuos que huyeron hacia la dispersión regresan al interior del Mundo Conocido. La Bene Gesserit tendrá que lidiar con un nuevo problema, al descubrir que ciertos elementos hostiles y poderosos surgen del exterior, trayendo la amenaza del exterminio y la subyugación. Las diversas fuerzas que anteriormente han conspirado por el poder y el control, deberán decidirse por un pacto en contra del enemigo en común, o seguir sus propios intereses hasta llegar al desastre. Surgen las Honoradas Matres, las nuevas rivales de la orden, quienes sólo pueden contar con sus poco eficaces recursos y su Bashar Miles Teg, genio militar, con un talento secreto inesperado."
+    },
+    {
+      "tag": "date",
+      "value": "1983-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-11-28"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:9F8067D0-B9C3-11E2-9E96-0800200C9A66"
+    },
+    {
+      "tag": "identifier",
+      "value": "756eea60-3fea-4c14-84ac-19fc96fac1b3"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.8"
+    },
+    {
+      "tag": "identifier",
+      "value": "3155"
+    }
+  ]
+}

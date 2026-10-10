@@ -1,0 +1,81 @@
+{
+  "checkedAt": "2026-10-10",
+  "source": "Saved Raspberry /videos snapshot and 338 verified cached TMDB detail responses",
+  "mode": "Offline catalogue execution; OpenAI provider not called",
+  "networkRequests": 0,
+  "catalogs": {
+    "movies": {
+      "total": 332,
+      "missingMetadata": 0
+    },
+    "series": {
+      "total": 6,
+      "missingMetadata": 0
+    },
+    "books": {
+      "total": 394,
+      "missingMetadata": 0
+    },
+    "games": {
+      "total": 35,
+      "missingMetadata": 0
+    },
+    "pictures": {
+      "total": 0,
+      "missingMetadata": 0
+    }
+  },
+  "buildMilliseconds": 556,
+  "queries": [
+    {
+      "field": "actor",
+      "value": "Tom Hanks",
+      "count": 7,
+      "ids": [
+        "Movies/forrest-gump.mp4",
+        "Movies/philadelphia.mp4",
+        "Movies/toy-story-2.mp4",
+        "Movies/toy-story-3.mp4",
+        "Movies/toy-story-4.mp4",
+        "Movies/toy-story-5.mp4",
+        "Movies/toy-story.mp4"
+      ],
+      "verifiedAgainstRawCredits": true
+    },
+    {
+      "field": "director",
+      "value": "Steven Spielberg",
+      "count": 5,
+      "ids": [
+        "Movies/e-t-l-extraterrestre.mp4",
+        "Movies/en-busca-del-arca-perdida.mp4",
+        "Movies/jurassic-park-parque-jur-sico.mp4",
+        "Movies/la-lista-de-schindler.mp4",
+        "Movies/the-lost-world-jurassic-park.mp4"
+      ],
+      "verifiedAgainstRawCredits": true
+    },
+    {
+      "field": "writer",
+      "value": "Quentin Tarantino",
+      "count": 5,
+      "ids": [
+        "Movies/abierto-hasta-el-amanecer.mp4",
+        "Movies/django-desencadenat.mp4",
+        "Movies/kill-bill-volumen-1.mp4",
+        "Movies/kill-bill-volumen-2.mp4",
+        "Movies/pulp-fiction.mp4"
+      ],
+      "verifiedAgainstRawCredits": true
+    }
+  ],
+  "liveOpenAIValidated": false,
+  "deployed": false,
+  "validation": {
+    "backendFullSuite": "373 passed before schema compatibility tweak; 19 provider tests passed after it",
+    "frontendFullSuite": "124 passed",
+    "browser": "Local full app: AI example applied 7 Tom Hanks results; dashboard key absent from response/input; simulated connection status rendered",
+    "providerInBrowser": "Mock query planner; real local catalogue evaluator",
+    "openaiNetworkCalled": false
+  }
+}

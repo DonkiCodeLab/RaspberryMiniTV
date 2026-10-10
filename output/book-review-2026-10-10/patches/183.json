@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/madame-bovary.epub",
+  "title": "Madame Bovary",
+  "year": "1857",
+  "description": "Emma Bovary busca en el amor y el lujo una vida distinta a la monotonía de su matrimonio provinciano. El choque entre sus aspiraciones y la realidad la empuja a decisiones cada vez más arriesgadas, en una mirada crítica a los deseos y las convenciones burguesas.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Emma Bovary busca en l’amor i el luxe una vida diferent de la monotonia del matrimoni provincià. El xoc entre les aspiracions i la realitat l’empeny a decisions cada vegada més arriscades, en una mirada crítica als desitjos i les convencions burgeses.",
+      "title": "Madame Bovary"
+    },
+    "en": {
+      "title": "Madame Bovary",
+      "description": "Emma Bovary seeks in romance and luxury an escape from the monotony of provincial marriage. The clash between her aspirations and reality drives increasingly risky decisions in a critical portrait of desire and middle-class conventions."
+    },
+    "es": {
+      "title": "Madame Bovary",
+      "description": "Emma Bovary busca en el amor y el lujo una vida distinta a la monotonía de su matrimonio provinciano. El choque entre sus aspiraciones y la realidad la empuja a decisiones cada vez más arriesgadas, en una mirada crítica a los deseos y las convenciones burguesas."
+    }
+  }
+}

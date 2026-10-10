@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/congo-spanish-edition.epub",
+  "title": "Congo (Spanish Edition)",
+  "year": "1980",
+  "description": "Una expedición entra en la selva del Congo para investigar la muerte de unos exploradores y localizar diamantes de gran valor industrial. Una gorila capaz de comunicarse mediante signos acompaña al grupo en un viaje donde tecnología, ambición y peligros desconocidos chocan.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Una expedició entra a la selva del Congo per investigar la mort d’uns exploradors i localitzar diamants de gran valor industrial. Una goril·la capaç de comunicar-se amb signes acompanya el grup en un viatge on xoquen tecnologia, ambició i perills desconeguts.",
+      "title": "Congo (Spanish Edition)"
+    },
+    "en": {
+      "description": "An expedition enters the Congo rainforest to investigate a previous team's deaths and locate industrially valuable diamonds. Accompanied by a gorilla who communicates through signs, its members confront dangers that test both their technology and their commercial ambitions.",
+      "title": "Congo"
+    },
+    "es": {
+      "title": "Congo",
+      "description": "Una expedición entra en la selva del Congo para investigar la muerte de unos exploradores y localizar diamantes de gran valor industrial. Una gorila capaz de comunicarse mediante signos acompaña al grupo en un viaje donde tecnología, ambición y peligros desconocidos chocan."
+    }
+  }
+}

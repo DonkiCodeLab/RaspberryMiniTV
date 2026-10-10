@@ -62,6 +62,8 @@
 .profile-resume__cancel { background: none; border: 0; color: inherit; cursor: pointer; padding: 12px; }
 .profile-status { margin: 10px auto; padding: 12px 20px; max-width: 900px; border-radius: 12px; background: #243b50; color: white; font-size: 13px; }
 .profile-status button { margin-left: 12px; cursor: pointer; }
+.profile-status[role="alert"] { position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 10020; box-shadow: 0 10px 30px #0005; }
+.raspberry-page__switch .media-switch__option[aria-selected="true"] img[src="/avatars/users.svg"] { filter: brightness(0); }
 .picture-profile-tile { min-width: 0; }
 .picture-profile-tile .picture-tile { width: 100%; }
 .picture-profile-tile .media-marks { justify-content: center; margin: 8px 0; }

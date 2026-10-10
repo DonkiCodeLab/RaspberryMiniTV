@@ -1,0 +1,42 @@
+{
+  "index": 66,
+  "path": "Books/el-caballero-errante-9-edici-n.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El caballero errante"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:c7aa427a-5eaa-9227-b819-28e578852367"
+    },
+    {
+      "tag": "description",
+      "value": "En el gran continente de Poniente, desde las rojas arenas de Dorne en el sur hasta las heladas montañas y gélidos valles del norte, las estaciones duran años y muchas veces décadas. En las novelas de la saga Canción de hielo y fuego, George R. R. Martin ha dotado de vida a este turbulento y extraño lugar. El caballero errante se sitúa unos noventa años antes del principio de Juego de Tronos, durante el mandato del buen rey Daeron, con el reino en paz y la dinastía Targaryen en su mejor momento. Cuenta la historia del primer encuentro entre Dunk, el escudero de un caballero errante, y Egg, un niño que es mucho más de lo que aparenta. Cuando acudan al gran torneo del Prado de Ashford, los pondrá a prueba su pasado, su presente y su futuro. El texto apareció por primera vez en 1998 en la antología Leyendas, una colección de historias de varios autores tales como Stephen King, Robert Jordan, Terry Pratchett y en la que el mismísimo Robert Jordan publicó su novela corta Nueva Primavera. La historia fue llevada al comic posteriormente por el artista gráfico Mike S. Miller."
+    },
+    {
+      "tag": "date",
+      "value": "1997-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-09-03"
+    },
+    {
+      "tag": "identifier",
+      "value": "5c541408-867a-48e8-b113-8b9f63cbe7d1"
+    },
+    {
+      "tag": "identifier",
+      "value": "13920"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.0"
+    }
+  ]
+}

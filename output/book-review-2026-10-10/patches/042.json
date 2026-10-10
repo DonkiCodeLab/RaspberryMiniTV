@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/confeti.epub",
+  "title": "Confeti",
+  "year": "2024",
+  "description": "Un cronista de espectáculos reconstruye la vida del músico Xavier Cugat y su empeño en alcanzar la felicidad y la fama. Entre Barcelona, La Habana y Hollywood, la novela juega con las versiones de una biografía y con la frontera entre recuerdo e invención.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Un cronista de espectáculos reconstruye la vida del músico Xavier Cugat y su empeño en alcanzar la felicidad y la fama. Entre Barcelona, La Habana y Hollywood, la novela juega con las versiones de una biografía y con la frontera entre recuerdo e invención.",
+      "title": "Confeti"
+    },
+    "ca": {
+      "description": "Un cronista d’espectacles reconstrueix la vida del músic Xavier Cugat i el seu afany d’assolir la felicitat i la fama. Entre Barcelona, l’Havana i Hollywood, la novel·la juga amb les versions d’una biografia i amb la frontera entre record i invenció.",
+      "title": "Confeti"
+    },
+    "en": {
+      "description": "An entertainment journalist reconstructs musician Xavier Cugat's pursuit of happiness and fame. Moving between Barcelona, Havana and Hollywood, the novel plays with competing versions of a life and the unstable boundary between memory and invention.",
+      "title": "Confeti"
+    }
+  }
+}

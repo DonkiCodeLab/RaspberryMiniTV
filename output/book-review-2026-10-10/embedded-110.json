@@ -1,0 +1,34 @@
+{
+  "index": 110,
+  "path": "Books/el-tiempo-de-las-cerezas.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El tiempo de las cerezas"
+    },
+    {
+      "tag": "creator",
+      "value": "Nicolas Barreau"
+    },
+    {
+      "tag": "date",
+      "value": "2022-04-06T22:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "La esperada continuación del best seller mundial La sonrisa de las mujeres es una deliciosa comedia romántica sobre libros, cocina y la eterna magia de París. Aurélie, la encantadora cocinera que regenta el restaurante Le Temps des Cerises, en el barrio de Saint-Germain de París, y André, editor y escritor de éxito, son pareja desde hace un año. El día de San Valentín se acerca, y con él la fecha perfecta para una proposición de matrimonio, pero antes de que André pueda hacer la gran pregunta, sucede algo inesperado: el pequeño restaurante de Aurélie recibe una estrella Michelin y la joven cocinera no puede contener su alegría... durante tres días. La sorpresa que parecía poner la guinda a la felicidad de la pareja ha sido solo el resultado de una confusión. Y cuando Aurélie conoce al auténtico destinatario de la distinción, el chef Jean-Marie Marronnier, que no solo cocina como los dioses sino que tiene un auténtico Monetcolgado en su restaurante, las cosas se van a complicar aún más... «Un delicioso viaje al París del romance, la belleza y el sabor de la mano de Nicolas Barreau, el autor que mejor sabe hacer sonreír a las mujeres».MAMEN SÁNCHEZ «Barreau es el maestro de la comedia romántica». La Stampa La crítica ha dicho:«La novela más encantadora y romántica de la temporada. El tiempo de las cerezas hechiza desde la primera página».Lesestoff «Increíblemente divertida, seductora, ingeniosa y romántica».WDR «La fascinante y divertida secuela del best seller La sonrisa de las mujeres casi puede leerse como una guía de los lugares más románticos de París. Y su frase más hermosa: a veces los milagros suceden cuando menos los esperas».Freundin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:21ecfae3-3ae1-40f4-ab28-f5c708d84195"
+    },
+    {
+      "tag": "date",
+      "value": "2022-07-09"
+    },
+    {
+      "tag": "identifier",
+      "value": "10ea1044-c60a-416f-baf6-84024c7f5e25"
+    }
+  ]
+}

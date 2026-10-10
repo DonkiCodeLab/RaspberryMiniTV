@@ -1,0 +1,42 @@
+{
+  "index": 190,
+  "path": "Books/memorias-de-adriano.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Memorias de Adriano"
+    },
+    {
+      "tag": "creator",
+      "value": "Marguerite Yourcenar"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:2d6264ce-62a3-c15e-adf7-b8dfa9fc0093"
+    },
+    {
+      "tag": "description",
+      "value": "La apasionante personalidad de Adriano, emperador de Roma en el siglo segundo, y uno de los más notables gobernantes que tuvo el Imperio, transciende cualquier reseña sobre su obra y figura para convertirse en fuente de inspiración de esta novela excepcional, alabada como una de las obras más singulares, bellas y hondas de la literatura del siglo XX. Este inventario autobiográfico ficticio que Adriano hace a las puertas de la muerte constituye el más íntimo y magistral retrato de quien fue uno de los últimos espíritus libres de la Antigüedad."
+    },
+    {
+      "tag": "date",
+      "value": "1951-12-04T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2023-12-07"
+    },
+    {
+      "tag": "identifier",
+      "value": "28cbcba4-1505-4f7a-97da-24f96209e4b6"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.9"
+    },
+    {
+      "tag": "identifier",
+      "value": "2749"
+    }
+  ]
+}

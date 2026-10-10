@@ -1,0 +1,42 @@
+{
+  "index": 31,
+  "path": "Books/cabo-trafalgar.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Cabo Trafalgar"
+    },
+    {
+      "tag": "creator",
+      "value": "Arturo Pérez-Reverte"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Un combate naval que cambió el destino del mundo.</p><p>En vísperas del bicentenario de la batalla de Trafalgar, Arturo Pérez-Reverte escribe un relato con su particular visión del combate naval más famoso de la historia, que enfrentó a la armada combinada hispano-francesa con la británica, mandada por el almirante Nelson, en las aguas españolas del cabo Trafalgar.</p><p>La combinación de rigor histórico y acción espectacular, unida a la habilidad narrativa del autor, convierten estas páginas en una apasionante pieza clave para comprender la trágica jornada de aquel 21 de octubre de 1805 que cambió la historia de Europa y del mundo.</p><p>La guerra y el mar, el coraje y la cobardía, el destino y la memoria histórica, en definitiva, las distintas batallas a las que nos enfrenta la vida son el paisaje por el que navega <cite>Cabo Trafalgar</cite>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2003-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-12-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:8746b3ce-59b3-4978-9f15-97e5189139e9"
+    },
+    {
+      "tag": "identifier",
+      "value": "a24396a8-02a3-4bf5-8121-f94d51525ba6"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.2"
+    },
+    {
+      "tag": "identifier",
+      "value": "2285"
+    }
+  ]
+}

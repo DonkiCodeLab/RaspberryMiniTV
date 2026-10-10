@@ -1,0 +1,42 @@
+{
+  "index": 52,
+  "path": "Books/de-ratones-y-hombres.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "De ratones y hombres"
+    },
+    {
+      "tag": "creator",
+      "value": "John Steinbeck"
+    },
+    {
+      "tag": "description",
+      "value": "<p>John Steinbeck, Premio Nobel 1962, plasmó en muchas de sus novelas el mundo de los desheredados que vagaban por la América rural de los años de la Depresión, en busca de cualquier trabajo que les permitiera sobrevivir.</p><p>En esta novela, que ha sido llevada a la pantalla en 1992, Steinbeck narra la relación entre Lennie y George: Lennie, un débil mental tan primitivo como tierno; George, un pícaro hábil e ingenioso, que intenta proteger a Lennie de sí mismo, aunque a veces se escude en su fuerza para salir de apuros.</p><p>La amistad entre estos dos seres marginados y su enfrentamiento al convencional y civilizado mundo de los poderosos es producto de un costado humano que sigue hoy tan vigente como cuando se escribió esta novela, hace más de sesenta años: la solidaridad.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1936-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-09-20"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:292d3a8d-94bd-c70a-a4be-ee9d1108e37f"
+    },
+    {
+      "tag": "identifier",
+      "value": "971bb16c-ca3e-4e92-b4d3-8d70c020ec5c"
+    },
+    {
+      "tag": "identifier",
+      "value": "3393"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.6"
+    }
+  ]
+}

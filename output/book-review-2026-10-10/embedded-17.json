@@ -1,0 +1,42 @@
+{
+  "index": 17,
+  "path": "Books/anaconda.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Anaconda"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d568ce2c-b627-123e-5941-eb29e8459bd7"
+    },
+    {
+      "tag": "description",
+      "value": "Anaconda, es la autobiografía de Alberto Vázquez-Figueroa. El autor nos lleva desde las Canarias (Tenerife), y desde allí a la Escuela Oficial de Periodismo, en Madrid, donde se formó técnicamente el gran periodista y escritor. En Anaconda, obra que se lee con el mismo interés que la más apasionante de sus novelas, Vázquez-Figueroa relata su infancia, su juventud y su extraordinaria trayectoria como reportero."
+    },
+    {
+      "tag": "date",
+      "value": "1975-08-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-09-25"
+    },
+    {
+      "tag": "identifier",
+      "value": "8694ef42-fa8e-4fab-a246-8697be0274d7"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.3"
+    },
+    {
+      "tag": "identifier",
+      "value": "17976"
+    }
+  ]
+}

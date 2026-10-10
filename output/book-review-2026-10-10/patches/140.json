@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/jane-eyre.epub",
+  "title": "Jane Eyre",
+  "year": "1847",
+  "description": "Tras una infancia marcada por el desamparo, Jane Eyre consigue trabajo como institutriz en Thornfield Hall. La relación con el enigmático Rochester enfrenta su deseo de afecto con la necesidad de conservar la independencia, mientras la casa oculta un secreto decisivo.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Després d’una infantesa marcada pel desemparament, Jane Eyre troba feina d’institutriu a Thornfield Hall. La relació amb l’enigmàtic Rochester enfronta el desig d’afecte amb la necessitat de conservar la independència, mentre la casa amaga un secret decisiu.",
+      "title": "Jane Eyre"
+    },
+    "en": {
+      "title": "Jane Eyre",
+      "description": "After a childhood of hardship, Jane Eyre becomes a governess at Thornfield Hall. Her relationship with the enigmatic Rochester pits her longing for affection against her determination to remain independent, while the house conceals a crucial secret."
+    },
+    "es": {
+      "description": "Tras una infancia marcada por el desamparo, Jane Eyre consigue trabajo como institutriz en Thornfield Hall. La relación con el enigmático Rochester enfrenta su deseo de afecto con la necesidad de conservar la independencia, mientras la casa oculta un secreto decisivo.",
+      "title": "Jane Eyre"
+    }
+  }
+}

@@ -1,5 +1,67 @@
 # WebApp
 
+## Puntuaciones de IMDb, Rotten Tomatoes y Metacritic con OMDb
+
+En **Dashboard → Servicios auxiliares → Puntuaciones · OMDb**, guarda la clave obtenida en
+[OMDb](https://www.omdbapi.com/apikey.aspx) y pulsa **Probar conexión**. La clave
+permanece en la Raspberry; no se incluye en la compilación web ni se devuelve al
+navegador. El plan gratuito de OMDb permite 1.000 consultas al día.
+
+Las fichas de películas y series, incluidas las vistas previas del buscador TMDB,
+muestran IMDb sobre 10 con sus votos, Rotten Tomatoes en porcentaje y Metacritic
+sobre 100, cuando OMDb los proporciona, junto a la fecha de actualización.
+Las tres puntuaciones se obtienen de la misma respuesta, sin claves ni consultas
+adicionales. Cada fuente sin nota se indica como «No disponible». Se consulta al
+abrir una ficha, con caché persistente de siete días; navegar por la biblioteca
+no descarga todas las puntuaciones. Si falla una actualización se muestra la nota
+guardada con un aviso. Las cachés antiguas que solo contienen IMDb se completan
+al volver a abrir la ficha; si falla la consulta se conserva la nota anterior. La
+valoración TMDB conserva su etiqueta y no se usa para rellenar una nota IMDb.
+
+Para completar de una vez las fichas existentes, pulsa **Actualizar fichas**
+en esa misma tarjeta de OMDb. La Raspberry recorre las películas y
+series identificadas y consulta únicamente las notas pendientes o caducadas.
+Se muestran el progreso, los títulos sin puntuaciones y las fichas sin identificar.
+La tarea continúa al cerrar la página; puedes pausarla y reanudarla. Si OMDb
+rechaza la clave, agota la cuota o falla la conexión, se pausa conservando el
+progreso. Tras reiniciar la Raspberry requiere reanudarla manualmente.
+
+Requiere actualizar también DeviceApp y configurar la clave en cada Raspberry.
+El modo demo no consulta OMDb ni inventa puntuaciones.
+
+## Usuarios y progreso
+
+El avatar situado a la derecha de **Fotos** abre un selector vertical animado.
+La app inicia cada sesión con el perfil `default`; el cambio de usuario afecta a
+favoritos, vistos/leídos y posiciones de reproducción o lectura. Los perfiles
+nuevos empiezan vacíos y no importan las antiguas marcas compartidas del navegador.
+
+**Dashboard → Users** permite crear, editar y borrar perfiles, cambiar su nombre,
+subir una foto JPG/PNG/WebP o elegir entre 25 avatares locales en una cuadrícula
+de 5×5. El perfil `default` se puede renombrar y personalizar, pero se conserva
+como perfil de inicio. Al borrar otro perfil se eliminan sus marcas y progreso;
+si estaba activo, se vuelve a `default`.
+
+Después de elegir dónde abrir un vídeo o libro, se ofrece **Continuar** o
+**Empezar desde el principio** solo si ese usuario ya tiene una posición guardada.
+Los vídeos guardan segundos; PDF/CBZ/CBR guardan páginas; EPUB guarda una posición
+CFI que se conserva al cambiar la pantalla o el tamaño de letra. Llegar al final
+marca el contenido como visto/leído. Cambiar de perfil no reasigna una reproducción
+que ya está en curso a otro usuario.
+
+Los datos se guardan en `MultimediaContent/user_profiles.sqlite3`, compartidos entre
+navegadores que se conectan a la misma Raspberry. El modo maqueta usa su propio
+almacenamiento local. Si falla un guardado, aparece un aviso con reintento; no
+conviene cerrar esa pestaña hasta que se guarden los cambios. Son perfiles de la
+biblioteca familiar, protegidos por el PIN común de la MiniTV, sin contraseñas
+individuales. Las fuentes de los avatares están en `public/avatars/catalog.json`.
+
+Para leer con progreso en la pantalla de la Raspberry se utiliza el mismo lector
+web en Chromium. Consulta [los requisitos del dispositivo](../DeviceApp/README.md#perfiles-de-usuario-y-reanudación).
+
+Pruebas: `node --test tests/userProfiles.test.js` y
+`python -m unittest discover -s DeviceApp/tests -p 'test_user_profiles.py'`.
+
 Libros → **Libros premiados** permite recorrer por año el **Pulitzer de Ficción**
 (1948–2026, 73 obras) y el **Premio Planeta de Novela** (1952–2025, 74 obras).
 Los catálogos en `DeviceApp/data/pulitzer_fiction.json` y `planeta_novel.json`
@@ -174,6 +236,18 @@ La migracion mas natural seria:
 3. crear endpoints nuevos en `control_api.py` para persistencia
 4. servir el build de React desde la propia Raspberry
 
+### Reparto y equipo de películas y series
+
+Las fichas de películas y series muestran **Reparto y equipo**: actores y personajes,
+dirección, guion/obra original y, en series, creadores. Las listas se pueden ampliar
+para consultar todas las personas disponibles. Estos datos se leen de la caché de
+la Raspberry y están disponibles sin conexión a TMDB una vez preparados.
+Para completar las fichas existentes, usa **Dashboard → Servicios auxiliares → TMDB
+→ Reparto y equipo → Completar todas las fichas**. El panel muestra el progreso,
+los errores y los títulos que necesitan identificar su ficha. Requiere actualizar
+tanto la web como la API de la Raspberry. Las nuevas incorporaciones preparan
+los créditos automáticamente.
+
 ### Fichas de juegos
 
 El formulario de añadir juegos busca automáticamente por nombre y consola en ScreenScraper e IGDB. Permite elegir la ficha antes de subir, ver su carátula y capturas y conservar texto o imágenes propios. El servidor guarda la ficha completa y todas las imágenes disponibles en la Raspberry; la biblioteca funciona después sin conexión y muestra fechas, géneros, desarrollador, distribuidor, jugadores/modos y puntuación cuando la fuente los ofrece.
@@ -212,3 +286,44 @@ Configura una clave de **YouTube Data API v3** en Dashboard → Servicios auxili
 La búsqueda se hace desde el servidor y conserva resultados en memoria durante
 15 minutos para evitar repetir consultas. Los errores de clave, cuota, conexión
 y las búsquedas vacías se indican en pantalla; no impiden usar los vídeos de IGDB.
+
+### Buscar con IA
+
+El botón **IA**, junto al filtro de la biblioteca, abre una consulta con ejemplos
+para la sección actual: películas por actor o director, series por creador,
+libros por autor y juegos por género, consola o desarrollador. En fotos se busca
+por nombre de archivo. La respuesta filtra el listado normal y se combina con
+los filtros manuales, favoritos y la vista actual. **Quitar filtro IA** permite
+volver al listado anterior. Una petición de aclaración conserva el filtro que
+ya estaba aplicado; no sustituye el listado por una respuesta inventada.
+
+Actívala desde **Dashboard → Servicios auxiliares → OpenAI**: introduce la clave,
+guarda y comprueba la conexión. La clave no se recupera del servidor ni se guarda
+en el almacenamiento del navegador; el campo vacío conserva la clave existente.
+La prueba utiliza los ajustes guardados. Requiere actualizar web y API, conexión
+a Internet y acceso a la API de OpenAI. En modo maqueta los controles indican que
+hay que conectarse a la Raspberry y no guardan credenciales ni simulan resultados.
+
+El modo **Buscar** interpreta filtros sobre metadatos y calcula los recuentos con
+el catálogo local. No reconoce imágenes ni busca escenas dentro de los vídeos.
+El panel avisa si hay fichas incompletas.
+
+En películas y series también aparece **Recomiéndame**. Puedes responder a una
+pregunta sobre tus gustos o pedir algo concreto, como «Una comedia para esta
+noche». Los gustos se guardan para el usuario seleccionado y se pueden editar,
+quitar uno a uno o borrar junto con la conversación. Se comparten entre películas
+y series, con un historial reciente separado para cada sección. Los favoritos
+y el progreso se conservan al olvidar los gustos.
+
+Las tarjetas distinguen **En tu biblioteca**, con acceso a la ficha local, de
+los títulos que faltan. **Buscar torrent** abre la ficha verificada de TMDB y
+busca torrents para esa película o serie; la descarga comienza sólo al elegir
+un resultado en la pantalla habitual. Una sugerencia que no se puede verificar
+no muestra un botón de descarga.
+
+Las recomendaciones envían a OpenAI los gustos, la conversación reciente y una
+selección abreviada del catálogo con las marcas de visto/favorito del usuario.
+Los archivos y las rutas permanecen en el dispositivo. El PIN compartido permite
+acceder a los distintos perfiles. Al cambiar de usuario se cancela la espera
+y se descarta cualquier respuesta del perfil anterior; las revisiones del
+servidor protegen también las ediciones y borrados simultáneos.

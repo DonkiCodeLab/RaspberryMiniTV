@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/ensayo-sobre-la-ceguera.epub",
+  "title": "Ensayo sobre la ceguera",
+  "year": "1995",
+  "description": "Una epidemia inexplicable de ceguera se extiende por una ciudad y desborda las medidas de aislamiento de las autoridades. Un pequeño grupo intenta sobrevivir al derrumbe de la convivencia, en una fábula sobre el miedo, el abuso de poder y la responsabilidad hacia los demás.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Una epidèmia inexplicable de ceguesa s’estén per una ciutat i desborda les mesures d’aïllament de les autoritats. Un petit grup intenta sobreviure a l’esfondrament de la convivència, en una faula sobre la por, l’abús de poder i la responsabilitat envers els altres.",
+      "title": "Ensayo sobre la ceguera"
+    },
+    "en": {
+      "title": "Blindness",
+      "description": "An unexplained epidemic of blindness spreads through a city and overwhelms the authorities' attempts at isolation. A small group struggles to survive the collapse of social order in a fable about fear, abuse of power and responsibility for others."
+    },
+    "es": {
+      "description": "Una epidemia inexplicable de ceguera se extiende por una ciudad y desborda las medidas de aislamiento de las autoridades. Un pequeño grupo intenta sobrevivir al derrumbe de la convivencia, en una fábula sobre el miedo, el abuso de poder y la responsabilidad hacia los demás.",
+      "title": "Ensayo sobre la ceguera"
+    }
+  }
+}

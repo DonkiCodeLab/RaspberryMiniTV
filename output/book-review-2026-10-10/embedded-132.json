@@ -1,0 +1,42 @@
+{
+  "index": 132,
+  "path": "Books/harry-potter-y-las-reliquias-de-la-muerte.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "epl:2687"
+    },
+    {
+      "tag": "identifier",
+      "value": "revision:1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:2338"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:db3078bd-995a-4557-918f-e66c4483efc4"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:76cb5a0c-8b45-e9f4-bd44-82257b080e86"
+    },
+    {
+      "tag": "title",
+      "value": "Harry Potter y las Reliquias de la Muerte"
+    },
+    {
+      "tag": "date",
+      "value": "2007-07-21T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Harry tiene que realizar una tarea siniestra, peligrosa y aparentemente imposible: la de localizar y de destruir a los Horrocruxes. Harry nunca se sintió tan sólo ni se enfrentó a un futuro tan incierto. Pero Harry debe encontrar la fuerza necesaria para terminar la tarea que le han dado. Él debe dejar el calor, la seguridad y el compañerismo de La Madriguera y seguir sin miedo el camino inexorable marcado para él.</p> <p>En este final, la séptima entrega de la serie Harry Potter, J.K. Rowling revela de manera espectacular las respuestas a las muchas preguntas que se han estado esperando con tanta impaciencia. Su rica prosa y su narrativa, llena de giros inesperados, han hecho que estos libros sean libros para leer y releer una y otra vez.</p>"
+    },
+    {
+      "tag": "creator",
+      "value": "J. K. Rowling"
+    }
+  ]
+}

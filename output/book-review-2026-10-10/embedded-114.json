@@ -1,0 +1,42 @@
+{
+  "index": 114,
+  "path": "Books/esfera.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Esfera"
+    },
+    {
+      "tag": "creator",
+      "value": "Michael Crichton"
+    },
+    {
+      "tag": "description",
+      "value": "En el fondo del océano Pacífico, al oeste de Tonga, se ha descubierto una nave espacial, lo que hace que inmediatamente los acechantes poderes políticos y militares norteamericanos se hagan cargo de la situación y tomen la zona. Un pequeño grupo de científicos especializados en distintas áreas es requerido para iniciar una misión de exploración y reconocimiento auspiciada y controlada por la Armada estadounidense. Deberán sumergirse a trescientos metros de profundidad, establecerse en una base submarina e iniciar las investigaciones. Cuando penetran en la gigantesca nave, como no podía ser de otra forma, las sorpresas comienzan a desgranarse una tras otra. Y la mayor de todas ellas es el descubrimiento de una perfecta esfera hecha de un extraño material y procedencia desconocida que, sin duda, contiene múltiples secretos."
+    },
+    {
+      "tag": "date",
+      "value": "1986-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-10-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:13c67da6-3e8e-4e3a-8741-9fe9ac0db01f"
+    },
+    {
+      "tag": "identifier",
+      "value": "714802e6-685e-4c2c-bc43-ee01d8b8ada2"
+    },
+    {
+      "tag": "identifier",
+      "value": "8506"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    }
+  ]
+}

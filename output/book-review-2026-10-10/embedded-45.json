@@ -1,0 +1,30 @@
+{
+  "index": 45,
+  "path": "Books/cr-menes-diez-casos-reales.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Crímenes"
+    },
+    {
+      "tag": "creator",
+      "value": "Carles Porta"
+    },
+    {
+      "tag": "date",
+      "value": "2022-04-06T22:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<div>\n<p>Carles Porta probablemente sea uno de nuestros mejores periodistas, pero sin duda se ha coronado, con sus libros, podcasts y series televisivas, como un magistral narrador de relatos reales. En este volumen, que recoge diez de los casos más impactantes de la crónica negra reciente, descubriremos su especialidad literaria: contarnos extraordinarias historias de crimen y trabajo policial mientras nos mantiene en vilo hasta la última línea. La fórmula puede parecer sencilla, pero él la convierte en inimitable gracias al tratamiento riguroso que hace de los grandes personajes que escoge y la manera en que los sabe envolver en tramas tan potentes como verídicas.</p>\n<p>Aquí encontraremos, entre otros: el caso de Amaia Azkue, la vecina de Zarautz cuyo asesino fue identificado por un detalle trivial; la estremecedora desaparición de los hermanos Òrrit en el hospital de Manresa y la búsqueda que ha llevado a cabo durante décadas su numerosa familia; el asesinato a sangre fría de un hombre en Madrid a causa de un macabro juego de rol; o el sangriento robo que cometió una mujer en Fargo, Dakota del Norte, contra su propia vecina.</p></div>"
+    },
+    {
+      "tag": "identifier",
+      "value": "6a44ec02-c580-4fdc-b55b-3b8c16948f20"
+    },
+    {
+      "tag": "identifier",
+      "value": "e0b09ab4-2e2c-4897-a1db-e75a33e02ce0"
+    }
+  ]
+}

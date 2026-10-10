@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/cien-a-os-de-soledad.epub",
+  "title": "Cien años de soledad",
+  "year": "1967",
+  "description": "Siete generaciones de los Buendía viven el nacimiento, la transformación y el declive de Macondo. Guerras, amores, invenciones y presagios entrelazan la historia familiar con la de un pueblo donde lo extraordinario forma parte de la vida cotidiana.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Set generacions dels Buendía viuen el naixement, la transformació i el declivi de Macondo. Guerres, amors, invents i presagis entrellacen la història familiar amb la d’un poble on els fets extraordinaris formen part de la vida quotidiana.",
+      "title": "Cien años de soledad"
+    },
+    "en": {
+      "title": "One hundred years of solitude",
+      "description": "Seven generations of the Buendía family experience Macondo's foundation, transformation and decline. Wars, love affairs, inventions and prophecies entwine family history with the fate of a town where extraordinary events belong to everyday life."
+    },
+    "es": {
+      "title": "Cien años de soledad",
+      "description": "Siete generaciones de los Buendía viven el nacimiento, la transformación y el declive de Macondo. Guerras, amores, invenciones y presagios entrelazan la historia familiar con la de un pueblo donde lo extraordinario forma parte de la vida cotidiana."
+    }
+  }
+}

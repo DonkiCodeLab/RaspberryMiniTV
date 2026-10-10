@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-nombre-del-viento.epub",
+  "title": "El nombre del viento",
+  "year": "2007",
+  "description": "Oculto como posadero, Kvothe empieza a contar la vida que lo convirtió en leyenda. Desde su infancia entre artistas ambulantes hasta su formación en la Universidad, la música, la magia y la búsqueda de quienes destruyeron su familia marcan su camino.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Amagat com a hostaler, Kvothe comença a explicar la vida que el va convertir en llegenda. Des de la infantesa entre artistes ambulants fins a la formació a la Universitat, la música, la màgia i la recerca dels qui van destruir la seva família marquen el camí.",
+      "title": "El nombre del viento"
+    },
+    "en": {
+      "subtitle": "The Kingkiller Chronicle: Day One",
+      "title": "The Name of the Wind",
+      "description": "Living in hiding as an innkeeper, Kvothe begins telling the story behind his legend. From childhood among travelling performers to his studies at the University, music, magic and the search for those who destroyed his family shape his life."
+    },
+    "es": {
+      "description": "Oculto como posadero, Kvothe empieza a contar la vida que lo convirtió en leyenda. Desde su infancia entre artistas ambulantes hasta su formación en la Universidad, la música, la magia y la búsqueda de quienes destruyeron su familia marcan su camino.",
+      "title": "El nombre del viento"
+    }
+  }
+}

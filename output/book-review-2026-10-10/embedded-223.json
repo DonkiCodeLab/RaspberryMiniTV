@@ -1,0 +1,42 @@
+{
+  "index": 223,
+  "path": "Books/ubik.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Ubik"
+    },
+    {
+      "tag": "creator",
+      "value": "Philip K. Dick"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:3a8fe45a-7e35-4f75-a111-a53fa571703b"
+    },
+    {
+      "tag": "description",
+      "value": "Glenn Runciter ha muerto. ¿O lo han hecho todos los demás? Alguien murió en una explosión organizada por sus competidores. De hecho, es el funeral de Runciter el que está programado en Des Moines. Pero mientras tanto, sus afligidos empleados están recibiendo asombrosos y a veces escatológicos mensajes de su jefe. Y el mundo que les rodea está alterándose de formas que sugieren que se les está agotando el tiempo. O que ya lo ha hecho. Esta cáustica comedia metafísica de muerte y salvación (servida en cómodo aerosol) es un tour de force de amenaza paranoica y diversión sin trabas, en la que los fallecidos dan consejos comerciales, compran su siguiente encarnación, y corren continuamente el riesgo de morir de nuevo. Como muchos autores, Philip K. Dick no alcanzó la cúspide de su fama ni el reconocimiento internacional hasta después de su muerte, ocurrida en 1982. Sin embargo, antes de ella, nos había ofrecido ya obras tan famosas como El hombre en el castillo, que ganó el premio Hugo, ¿Sueñan los androides con ovejas eléctricas? (de la que Ridley Scott hizo su clásica película Blade Runner) y Ubik, considerada como la mejor de todas ellas."
+    },
+    {
+      "tag": "date",
+      "value": "1968-12-31T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-07-02"
+    },
+    {
+      "tag": "identifier",
+      "value": "26a9cdc5-93bb-4e02-a536-2c86db58480d"
+    },
+    {
+      "tag": "identifier",
+      "value": "2327"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.0"
+    }
+  ]
+}

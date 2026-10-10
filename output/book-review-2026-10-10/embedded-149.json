@@ -1,0 +1,42 @@
+{
+  "index": 149,
+  "path": "Books/la-ca-da-de-hyperion.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La caída de Hyperion"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Simmons"
+    },
+    {
+      "tag": "description",
+      "value": "La aventura épica de HYPERION alcanzó su clímax cuando los peregrinos se reúnen ante las Tumbas de Tiempo y éstas se abren para liberar al Alcaudón. Los humanos de la Hegemonía y de los enjambres éxter, las inteligencias Artificiales de Tecnonúcleo, los peregrinos del Alcaudón y el cíbrido que reproduce la personalidad de John Keats, se verán irremisiblemente envueltos en la compleja trama del tiempo, del poder, de la guerra, de la inteligencia, de la religión y del amor."
+    },
+    {
+      "tag": "date",
+      "value": "1988-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-06-21"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d6084d3d-be10-4e1f-89e5-15abe213d18a"
+    },
+    {
+      "tag": "identifier",
+      "value": "3d69b8ee-69f9-4ca2-ab6a-d91d8ef5de4b"
+    },
+    {
+      "tag": "identifier",
+      "value": "2706"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.2"
+    }
+  ]
+}

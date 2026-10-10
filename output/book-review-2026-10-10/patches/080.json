@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-hombre-terminal.epub",
+  "title": "El hombre terminal",
+  "year": "1972",
+  "description": "Harry Benson se somete a una operación experimental que pretende controlar sus crisis neurológicas mediante un implante cerebral. Cuando la relación entre paciente y dispositivo evoluciona de forma imprevista, el equipo médico debe afrontar las consecuencias de su confianza en la tecnología.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Harry Benson se sotmet a una operació experimental que vol controlar les seves crisis neurològiques mitjançant un implant cerebral. Quan la relació entre pacient i dispositiu evoluciona de manera imprevista, l’equip mèdic ha d’afrontar les conseqüències de la seva confiança en la tecnologia.",
+      "title": "El hombre terminal"
+    },
+    "en": {
+      "description": "Harry Benson undergoes experimental surgery intended to control his neurological seizures through a brain implant. When the interaction between patient and device develops unexpectedly, the medical team must confront the consequences of its confidence in technology.",
+      "title": "The terminal man"
+    },
+    "es": {
+      "description": "Harry Benson se somete a una operación experimental que pretende controlar sus crisis neurológicas mediante un implante cerebral. Cuando la relación entre paciente y dispositivo evoluciona de forma imprevista, el equipo médico debe afrontar las consecuencias de su confianza en la tecnología.",
+      "title": "El hombre terminal"
+    }
+  }
+}

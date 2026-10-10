@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-conspiraci-n.epub",
+  "title": "La conspiración",
+  "year": "2001",
+  "description": "La analista Rachel Sexton viaja al Ártico para verificar un descubrimiento de la NASA con enormes consecuencias científicas y políticas. Junto al investigador Michael Tolland, encuentra indicios que ponen en duda la versión oficial y convierten la comprobación en una peligrosa búsqueda de la verdad.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "El gran engany",
+      "description": "L’analista Rachel Sexton viatja a l’Àrtic per verificar un descobriment de la NASA amb grans conseqüències científiques i polítiques. Amb l’investigador Michael Tolland, troba indicis que qüestionen la versió oficial i converteixen la comprovació en una recerca perillosa de la veritat."
+    },
+    "en": {
+      "title": "Deception Point",
+      "description": "Intelligence analyst Rachel Sexton travels to the Arctic to verify a NASA discovery with major scientific and political implications. Alongside researcher Michael Tolland, she finds evidence that challenges the official account and turns the assignment into a dangerous search for truth."
+    },
+    "es": {
+      "title": "La conspiración",
+      "description": "La analista Rachel Sexton viaja al Ártico para verificar un descubrimiento de la NASA con enormes consecuencias científicas y políticas. Junto al investigador Michael Tolland, encuentra indicios que ponen en duda la versión oficial y convierten la comprobación en una peligrosa búsqueda de la verdad."
+    }
+  }
+}

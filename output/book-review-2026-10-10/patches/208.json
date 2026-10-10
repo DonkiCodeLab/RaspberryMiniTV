@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/recursi-n.epub",
+  "title": "Recursión",
+  "year": "2019",
+  "description": "El detective Barry Sutton investiga recuerdos de vidas que sus portadores nunca vivieron. La neurocientífica Helena Smith intenta preservar la memoria mediante una tecnología experimental, y sus caminos convergen cuando lo que parecía un problema individual amenaza la estabilidad del tiempo y la realidad.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "El detectiu Barry Sutton investiga records de vides que els seus portadors mai no van viure. La neurocientífica Helena Smith intenta preservar la memòria amb una tecnologia experimental, i els camins convergeixen quan el que semblava un problema individual amenaça el temps i la realitat.",
+      "title": "Recursión"
+    },
+    "en": {
+      "description": "Detective Barry Sutton investigates memories of lives people never lived. Neuroscientist Helena Smith is developing experimental technology to preserve memory, and their paths converge when an apparently personal problem threatens the stability of time and reality.",
+      "title": "Recursion"
+    },
+    "es": {
+      "title": "Recursión",
+      "description": "El detective Barry Sutton investiga recuerdos de vidas que sus portadores nunca vivieron. La neurocientífica Helena Smith intenta preservar la memoria mediante una tecnología experimental, y sus caminos convergen cuando lo que parecía un problema individual amenaza la estabilidad del tiempo y la realidad."
+    }
+  }
+}

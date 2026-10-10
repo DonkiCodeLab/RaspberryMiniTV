@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/the-boys-comics/the-boys-1.pdf",
+  "title": "The Boys 01",
+  "year": "2006",
+  "description": "Una muerte causada por un superhéroe cambia la vida de Hughie. Billy Butcher se acerca a él mientras prepara el regreso de un equipo dedicado a vigilar los abusos de los supers.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Una muerte causada por un superhéroe cambia la vida de Hughie. Billy Butcher se acerca a él mientras prepara el regreso de un equipo dedicado a vigilar los abusos de los supers.",
+      "title": "The Boys 01"
+    },
+    "ca": {
+      "description": "Una mort causada per un superheroi canvia la vida de Hughie. Billy Butcher s’hi acosta mentre prepara el retorn d’un equip dedicat a vigilar els abusos dels supers.",
+      "title": "The Boys 01"
+    },
+    "en": {
+      "description": "A death caused by a superhero changes Hughie's life. Billy Butcher approaches him while preparing the return of a team dedicated to confronting superhuman abuses.",
+      "title": "The Boys 01"
+    }
+  },
+  "author": "Garth Ennis"
+}

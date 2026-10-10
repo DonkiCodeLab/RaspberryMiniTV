@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/los-pilares-de-la-tierra.epub",
+  "title": "Los pilares de la Tierra",
+  "year": "1989",
+  "description": "La construcción de una catedral une las vidas de monjes, artesanos y nobles en la Inglaterra del siglo XII. En Kingsbridge, la ambición política y los conflictos personales amenazan un proyecto que exige generaciones de trabajo, resistencia e imaginación.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La construcció d’una catedral uneix les vides de monjos, artesans i nobles a l’Anglaterra del segle XII. A Kingsbridge, l’ambició política i els conflictes personals amenacen un projecte que exigeix generacions de treball, resistència i imaginació.",
+      "title": "Los pilares de la Tierra"
+    },
+    "en": {
+      "description": "The building of a cathedral connects monks, craftspeople and nobles in twelfth-century England. In Kingsbridge, political ambition and personal conflicts threaten a project requiring generations of labour, endurance and imagination.",
+      "title": "The Pillars of the Earth"
+    },
+    "es": {
+      "title": "Los pilares de la Tierra",
+      "description": "La construcción de una catedral une las vidas de monjes, artesanos y nobles en la Inglaterra del siglo XII. En Kingsbridge, la ambición política y los conflictos personales amenazan un proyecto que exige generaciones de trabajo, resistencia e imaginación."
+    }
+  }
+}

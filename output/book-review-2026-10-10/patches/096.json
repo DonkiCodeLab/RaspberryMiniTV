@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-perfume-historia-de-un-asesino.epub",
+  "title": "El Perfume - Historia de un asesino",
+  "year": "1985",
+  "description": "Jean-Baptiste Grenouille nace en la Francia del siglo XVIII con un olfato extraordinario y sin olor propio. Su obsesión por dominar el mundo de los aromas lo conduce a la perfumería y a una búsqueda criminal de la fragancia perfecta.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Jean-Baptiste Grenouille nace en la Francia del siglo XVIII con un olfato extraordinario y sin olor propio. Su obsesión por dominar el mundo de los aromas lo conduce a la perfumería y a una búsqueda criminal de la fragancia perfecta.",
+      "title": "El Perfume - Historia de un asesino"
+    },
+    "ca": {
+      "description": "Jean-Baptiste Grenouille neix a la França del segle XVIII amb un olfacte extraordinari i sense olor pròpia. L’obsessió per dominar el món de les aromes el condueix a la perfumeria i a una recerca criminal de la fragància perfecta.",
+      "title": "El Perfume - Historia de un asesino"
+    },
+    "en": {
+      "description": "Jean-Baptiste Grenouille is born in eighteenth-century France with an extraordinary sense of smell and no scent of his own. His obsession with mastering aromas takes him into perfumery and a murderous pursuit of the perfect fragrance.",
+      "title": "El Perfume - Historia de un asesino"
+    }
+  }
+}

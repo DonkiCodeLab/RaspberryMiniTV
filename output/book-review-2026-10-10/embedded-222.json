@@ -1,0 +1,42 @@
+{
+  "index": 222,
+  "path": "Books/tuareg-tuareg-1.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Tuareg"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:4be90192-37bb-437e-804d-c7031b3f31cc"
+    },
+    {
+      "tag": "description",
+      "value": "Los tuareg constituyen un pueblo altivo cuyo código moral difiere del de los árabes. Auténticos hijos del desierto, los tuareg no tienen rival en cuanto a sobrevivir en las condiciones más adversas. El noble «inmouchar» Gacel Sayah, protagonista de esta novela, es amo absoluto de una infinita extensión de desierto. Cierto día llegan al campamento dos fugitivos procedentes del norte, y el «inmouchar», fiel a las multiseculares y sagradas leyes de la hospitalidad, los acoge. Sin embargo, Gacel ignora que esas mismas leyes le arrastrarán a una aventura mortal…"
+    },
+    {
+      "tag": "date",
+      "value": "1980-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-09-06"
+    },
+    {
+      "tag": "identifier",
+      "value": "dd517baf-47da-4366-9b55-4a9fbe3d7eb8"
+    },
+    {
+      "tag": "identifier",
+      "value": "13232"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.0"
+    }
+  ]
+}

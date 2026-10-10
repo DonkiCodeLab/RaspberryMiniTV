@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-alquimista.epub",
+  "title": "El alquimista",
+  "year": "1988",
+  "description": "Santiago, un joven pastor andaluz, emprende un viaje hacia Egipto siguiendo un sueño sobre un tesoro. Las personas que conoce y las pruebas del desierto convierten la búsqueda en una fábula sobre el deseo, la perseverancia y la interpretación del propio destino.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "En Santiago, un jove pastor andalús, emprèn un viatge cap a Egipte seguint un somni sobre un tresor. Les persones que coneix i les proves del desert converteixen la recerca en una faula sobre el desig, la perseverança i la interpretació del propi destí.",
+      "title": "El alquimista"
+    },
+    "en": {
+      "title": "The Alchemist",
+      "description": "Santiago, a young Andalusian shepherd, travels towards Egypt after dreaming of hidden treasure. Encounters along the way and trials in the desert turn his search into a fable about desire, perseverance and learning to understand one's own path."
+    },
+    "es": {
+      "description": "Santiago, un joven pastor andaluz, emprende un viaje hacia Egipto siguiendo un sueño sobre un tesoro. Las personas que conoce y las pruebas del desierto convierten la búsqueda en una fábula sobre el deseo, la perseverancia y la interpretación del propio destino.",
+      "title": "El alquimista"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "index": 143,
+  "path": "Books/kafka-en-la-orilla.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Kafka en la orilla"
+    },
+    {
+      "tag": "creator",
+      "value": "Haruki Murakami"
+    },
+    {
+      "tag": "description",
+      "value": "<p><b>Una versión inusitada de la tragedia clásica pasada por el tamiz de una sensibilidad moderna y salpicada de referencias culturales contemporáneas, sensualidad y un fino sentido del humor. Murakami en estado puro.</b></p><p>Kafka Tamura se va de casa el día en que cumple quince años. Le llevan a ello las malas relaciones con su padre —un famoso escultor convencido de que su hijo repetirá el aciago sino de Edipo—; y el vacío producido por la ausencia de su madre; se dirigirá al sur del país, donde encontrará refugio en una peculiar biblioteca y conocerá a la misteriosa señora Saeki. Sus pasos se cruzan con los de otro personaje, Satoru Nakata, sobre quien se ha abatido la tragedia: de niño, durante la segunda guerra mundial, sufrió un accidente del que salió con secuelas y dificultades para comunicarse… salvo con los gatos.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2001-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-01-06"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:6835390c-fffd-4bbb-bf62-d5fe24e00cbd"
+    },
+    {
+      "tag": "identifier",
+      "value": "ad70b2aa-c173-4ec6-99a0-1179efc13bda"
+    },
+    {
+      "tag": "identifier",
+      "value": "1913"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.1"
+    }
+  ]
+}

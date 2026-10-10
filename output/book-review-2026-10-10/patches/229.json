@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/yo-confieso.epub",
+  "title": "Yo confieso",
+  "year": "2011",
+  "description": "Adrià Ardèvol revisa su vida y la historia de un valioso violín ligado a su familia. Sus recuerdos se entrelazan con siglos de violencia, arte y culpa, en una confesión que pregunta cómo se transmiten el mal y la responsabilidad a través de las generaciones.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Adrià Ardèvol revisa la vida i la història d’un violí valuós lligat a la família. Els records s’entrellacen amb segles de violència, art i culpa, en una confessió que pregunta com es transmeten el mal i la responsabilitat al llarg de les generacions.",
+      "title": "Yo confieso"
+    },
+    "en": {
+      "description": "Adrià Ardèvol reviews his life and the history of a valuable violin connected to his family. His memories intertwine with centuries of violence, art and guilt in a confession asking how evil and responsibility pass between generations.",
+      "title": "Yo confieso"
+    },
+    "es": {
+      "title": "Yo confieso",
+      "description": "Adrià Ardèvol revisa su vida y la historia de un valioso violín ligado a su familia. Sus recuerdos se entrelazan con siglos de violencia, arte y culpa, en una confesión que pregunta cómo se transmiten el mal y la responsabilidad a través de las generaciones."
+    }
+  },
+  "author": "Jaume Cabré"
+}

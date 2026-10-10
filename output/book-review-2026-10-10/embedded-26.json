@@ -1,0 +1,34 @@
+{
+  "index": 26,
+  "path": "Books/bearn-o-la-sala-de-las-mun-ecas.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Bearn o la sala de las muñecas"
+    },
+    {
+      "tag": "creator",
+      "value": "Llorenç Villalonga"
+    },
+    {
+      "tag": "description",
+      "value": "El retrato melancólico de un mundo en inevitable decadencia, Publicada en 1956 por una pequeña editorial mallorquina, Bearn apenas vendió entonces dos docenas de ejemplares. Meses antes había sido finalista en el Premio Nadal que finalmente ganó El Jarama de Sánchez Ferlosio. Villalonga entendió que su narrativa de carga proustiana, su prosa sutil y plagada de juegos de espejos, estaban condenadas a una humillante derrota frente al realismo hegemónico. En 1961, sin embargo, apareció una versión catalana que inmediatamente despertó elogios y entusiasmos. Porcel, el escritor que mejor conoció a Villalonga, afirma que el relato fue concebido en castellano en 1936… No importa, estamos ante una de las mejores novelas españolas del siglo xx. Es el retrato melancólico de un mundo en inevitable decadencia, solo equiparable a El gatopardo de Lampedusa que se publicaría algo más tarde."
+    },
+    {
+      "tag": "identifier",
+      "value": "2fefff12-9783-415d-b2e3-86aec08a6393"
+    },
+    {
+      "tag": "date",
+      "value": "2017-10-03T05:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-10-30"
+    },
+    {
+      "tag": "identifier",
+      "value": "2b9ed676-f1d2-489d-93e9-45662b3ca861"
+    }
+  ]
+}

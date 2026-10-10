@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/new-york-the-big-city.cbr",
+  "title": "New York the big city",
+  "year": "1986",
+  "description": "Escaleras, ventanas, azoteas y calles sirven de escenario a pequeñas historias de la vida neoyorquina. Will Eisner observa encuentros, conflictos y momentos de soledad para construir un retrato coral de la ciudad a través de quienes habitan sus espacios cotidianos.",
+  "localizedMetadata": {
+    "es": {
+      "title": "New York the big city",
+      "description": "Escaleras, ventanas, azoteas y calles sirven de escenario a pequeñas historias de la vida neoyorquina. Will Eisner observa encuentros, conflictos y momentos de soledad para construir un retrato coral de la ciudad a través de quienes habitan sus espacios cotidianos."
+    },
+    "ca": {
+      "description": "Escales, finestres, terrats i carrers serveixen d’escenari a petites històries de la vida novaiorquesa. Will Eisner observa trobades, conflictes i moments de solitud per construir un retrat coral de la ciutat a través de qui habita els espais quotidians.",
+      "title": "New York the big city"
+    },
+    "en": {
+      "description": "Stairways, windows, rooftops and streets become the settings for small stories of New York life. Will Eisner observes encounters, conflicts and solitary moments, building a portrait of the city through the people inhabiting its everyday spaces.",
+      "title": "New York the big city"
+    }
+  }
+}

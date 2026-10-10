@@ -1,0 +1,34 @@
+{
+  "index": 11,
+  "path": "Books/al-sur-del-caribe.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Al sur del Caribe"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:1830daad-7123-4c50-8dfc-1e008f2936d4"
+    },
+    {
+      "tag": "description",
+      "value": "En este libro, uno de los primeros de su época de reportero, el autor consigue compaginar sus grandes pasiones: la literatura, la aventura, los viajes… Como él mismo ha comentado en varias ocasiones, el hecho de haber viajado por medio mundo le ha dado la experiencia y las vivencias necesarias para escribir las historias y situaciones de algunas de sus novelas más famosas."
+    },
+    {
+      "tag": "date",
+      "value": "1965-07-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2016-05-29"
+    },
+    {
+      "tag": "identifier",
+      "value": "2e973c6b-0174-4831-989f-6167081e50d2"
+    }
+  ]
+}

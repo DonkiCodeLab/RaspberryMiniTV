@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/materia-oscura.epub",
+  "title": "Materia Oscura",
+  "year": "2016",
+  "description": "Tras ser secuestrado, el físico Jason Dessen despierta en una realidad donde su carrera y su familia son distintas. Para volver a la vida que reconoce deberá comprender lo ocurrido y enfrentarse a las posibilidades que esconden las decisiones que no tomó.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Després de ser segrestat, el físic Jason Dessen es desperta en una realitat on la carrera i la família són diferents. Per tornar a la vida que reconeix haurà de comprendre què ha passat i afrontar les possibilitats amagades en les decisions que no va prendre.",
+      "title": "Materia Oscura"
+    },
+    "en": {
+      "description": "After being abducted, physicist Jason Dessen wakes in a reality where his career and family are different. To return to the life he knows, he must understand what happened and confront the possibilities contained in choices he never made.",
+      "title": "Dark Matter"
+    },
+    "es": {
+      "title": "Materia Oscura",
+      "description": "Tras ser secuestrado, el físico Jason Dessen despierta en una realidad donde su carrera y su familia son distintas. Para volver a la vida que reconoce deberá comprender lo ocurrido y enfrentarse a las posibilidades que esconden las decisiones que no tomó."
+    }
+  }
+}

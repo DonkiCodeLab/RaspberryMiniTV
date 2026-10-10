@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-ingenioso-hidalgo-don-quijote-de-la-mancha.epub",
+  "title": "El ingenioso hidalgo Don Quijote de la Mancha",
+  "year": "1605",
+  "description": "Alonso Quijano adopta el nombre de don Quijote y sale a recorrer los caminos como caballero andante, acompañado por Sancho Panza. Sus aventuras confrontan los ideales de los libros de caballerías con la realidad, entre humor, desencanto y preguntas sobre la libertad y la ficción.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Alonso Quijano adopta el nom de don Quixot i surt a recórrer els camins com a cavaller errant, acompanyat de Sancho Panza. Les aventures confronten els ideals dels llibres de cavalleries amb la realitat, entre humor, desencís i preguntes sobre la llibertat i la ficció.",
+      "title": "El ingenioso hidalgo Don Quijote de la Mancha"
+    },
+    "en": {
+      "title": "The first part of the delightful history of the most ingenious knight Don Quixote of the Mancha",
+      "description": "Alonso Quijano becomes Don Quixote and travels the roads as a knight-errant, accompanied by Sancho Panza. Their adventures bring chivalric ideals into contact with everyday reality, combining comedy and disillusionment with questions about freedom and fiction."
+    },
+    "es": {
+      "title": "El ingenioso hidalgo Don Quijote de la Mancha",
+      "description": "Alonso Quijano adopta el nombre de don Quijote y sale a recorrer los caminos como caballero andante, acompañado por Sancho Panza. Sus aventuras confrontan los ideales de los libros de caballerías con la realidad, entre humor, desencanto y preguntas sobre la libertad y la ficción."
+    }
+  }
+}

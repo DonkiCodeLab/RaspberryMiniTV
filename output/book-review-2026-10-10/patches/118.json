@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/factfulness.epub",
+  "title": "Factfulness",
+  "year": "2018",
+  "description": "Los autores examinan hábitos mentales que distorsionan nuestra percepción de las tendencias mundiales. Con datos y ejemplos, proponen comparar proporciones, revisar supuestos y distinguir los avances de los problemas pendientes para comprender mejor cuestiones como la pobreza, la salud y la educación.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Els autors examinen hàbits mentals que distorsionen la percepció de les tendències mundials. Amb dades i exemples, proposen comparar proporcions, revisar supòsits i distingir els avenços dels problemes pendents per comprendre millor qüestions com la pobresa, la salut i l’educació.",
+      "title": "Factfulness"
+    },
+    "en": {
+      "title": "Factfulness",
+      "description": "The authors examine habits of thought that distort our perception of global trends. Using data and examples, they encourage readers to compare proportions, question assumptions and distinguish progress from unresolved problems in areas such as poverty, health and education."
+    },
+    "es": {
+      "description": "Los autores examinan hábitos mentales que distorsionan nuestra percepción de las tendencias mundiales. Con datos y ejemplos, proponen comparar proporciones, revisar supuestos y distinguir los avances de los problemas pendientes para comprender mejor cuestiones como la pobreza, la salud y la educación.",
+      "title": "Factfulness"
+    }
+  },
+  "author": "Hans Rosling, Ola Rosling y Anna Rosling Rönnlund"
+}

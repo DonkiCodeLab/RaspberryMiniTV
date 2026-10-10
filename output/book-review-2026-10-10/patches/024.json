@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/baja-mar.epub",
+  "title": "Baja mar",
+  "year": "2018",
+  "description": "La familia Ríos Bonfante abandona España en busca de una vida mejor en Venezuela, pero los cambios políticos vuelven a empujarla al exilio. Esta saga familiar enlaza continentes y generaciones para explorar el desarraigo y la fragilidad de los lugares considerados un refugio.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La família Ríos Bonfante abandona Espanya buscant una vida millor a Veneçuela, però els canvis polítics la tornen a empènyer a l’exili. Aquesta saga familiar enllaça continents i generacions per explorar el desarrelament i la fragilitat dels llocs considerats un refugi.",
+      "title": "Baja mar"
+    },
+    "en": {
+      "description": "The Ríos Bonfante family leaves Spain for a better life in Venezuela, only to face political upheaval and another exile. This family saga moves across continents and generations to explore displacement and the fragility of places once regarded as safe havens.",
+      "title": "Baja mar"
+    },
+    "es": {
+      "description": "La familia Ríos Bonfante abandona España en busca de una vida mejor en Venezuela, pero los cambios políticos vuelven a empujarla al exilio. Esta saga familiar enlaza continentes y generaciones para explorar el desarraigo y la fragilidad de los lugares considerados un refugio.",
+      "title": "Baja mar"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "index": 72,
+  "path": "Books/el-cuaderno-gris.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El cuaderno gris"
+    },
+    {
+      "tag": "creator",
+      "value": "Roger Martin du Gard"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e46bfca9-97c8-aa1e-353c-79741cce5bee"
+    },
+    {
+      "tag": "description",
+      "value": "Los Thibault es un monumental retrato del mundo antes del estallido de la primera guerra mundial. Su trazado laberíntico relata la historia de Jacques Thibault, el rebelde hijo de una familia de clase media-alta, con el trasfondo de los destinos más serios de sus parientes. La obra da cuenta detallada de la desesperación del héroe cuando estallan la guerra y el fracaso de su loco intento por detenerla."
+    },
+    {
+      "tag": "date",
+      "value": "1921-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2018-12-29"
+    },
+    {
+      "tag": "identifier",
+      "value": "d2cdbf39-1689-4e25-ab54-a30d01759d62"
+    }
+  ],
+  "contents": [
+    "El cuaderno gris",
+    "Cubierta",
+    "El cuaderno gris",
+    "PRIMERA PARTE. El cuaderno gris",
+    "I",
+    "II",
+    "III",
+    "IV",
+    "V",
+    "VI",
+    "VII",
+    "VIII",
+    "IX",
+    "Sobre el autor",
+    "Notas I"
+  ]
+}

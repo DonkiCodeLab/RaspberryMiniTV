@@ -1,0 +1,42 @@
+{
+  "index": 51,
+  "path": "Books/danza-de-dragones.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Danza de dragones"
+    },
+    {
+      "tag": "creator",
+      "value": "George R. R. Martin"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:aff82bcc-c65d-4417-a132-f6538963e033"
+    },
+    {
+      "tag": "description",
+      "value": "Tras un largo e infructuoso peregrinaje por las Ciudades Libres para recabar recursos que le permitan reclamar el Trono de Hierro, Daenerys de la Tormenta decide asentarse en Meereen y gobernar la ciudad. Pero esa labor tampoco está exenta de peligros: sus enemigos proliferan, y en los Siete Reinos se tejen redes de conspiraciones de variada índole, todas atraídas por el inmenso poder de los dragones. Mientras tanto, en el Norte, asolado tras la guerra y abandonado a los salvajes que cruzaron el Muro, Jon Nieve se ve obligado a ejercer una delicada diplomacia para preservar la vigilia de la Guardia de la Noche frente a la amenaza que se aproxima implacable y ominosa hacia Poniente. George R. R. Martin demuestra de nuevo su genio narrativo al retomar personajes y tramas, e hilvanar con todos estos elementos una entrega que, pese a su tremenda complejidad, no decae un ápice en interés ni intensidad. «Danza de dragones» jalona hasta el momento una saga que, gracias a su impecable adaptación televisiva, pero sustentada en todo momento por sus propios méritos, ha logrado trascender las barreras de los géneros y se ha convertido en un fenómeno mundial y en una de las obras de referencia de la literatura contemporánea. Mientras el trono de Poniente sigue en el aire, Martin se ha erigido ya en soberano indiscutido de verdaderas huestes de lectores de toda ralea."
+    },
+    {
+      "tag": "date",
+      "value": "2011-07-11T22:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-02-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "e38d7ada-8d5d-413f-bb2a-2b16834cc6a3"
+    },
+    {
+      "tag": "identifier",
+      "value": "3.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "3143"
+    }
+  ]
+}

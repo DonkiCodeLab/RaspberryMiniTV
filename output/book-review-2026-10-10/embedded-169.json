@@ -1,0 +1,42 @@
+{
+  "index": 169,
+  "path": "Books/la-sombra-del-viento.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La Sombra del Viento"
+    },
+    {
+      "tag": "creator",
+      "value": "Carlos Ruiz Zafón"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Un amanecer de 1945 un muchacho es conducido por su padre a un misterioso lugar oculto en el corazón de la ciudad vieja: El Cementerio de los Libros Olvidados. Allí, Daniel Sempere encuentra un libro maldito que cambiará el rumbo de su vida y le arrastrará a un laberinto de intrigas y secretos enterrados en el alma oscura de la ciudad.</p><p><cite>La Sombra del Viento</cite> es un misterio literario ambientado en la Barcelona de la primera mitad del siglo&#160;<small>XX</small>, desde los últimos esplendores del Modernismo a las tinieblas de la posguerra.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2001-04-30T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-12-04"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:9c55d080-5515-11e2-bcfd-0800200c9a66"
+    },
+    {
+      "tag": "identifier",
+      "value": "2c0abd88-bae8-4540-b99c-94f41956ec08"
+    },
+    {
+      "tag": "identifier",
+      "value": "1278"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.3"
+    }
+  ]
+}

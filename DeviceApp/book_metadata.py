@@ -92,6 +92,26 @@ def edition_page_count(edition):
     return match.group(1) if match else ""
 
 
+def first_publication_year(work_key, work):
+    """Date the work, never a translation/reprint or the creation of its record."""
+    match = re.search(r"\b[1-9]\d{3}\b", str(work.get("first_publish_date") or ""))
+    if match:
+        return match.group()
+    if work_key:
+        try:
+            payload = _get("/search.json", {"q": f"key:{work_key}",
+                "fields": "key,first_publish_year", "limit": 1})
+            for item in payload.get("docs") or []:
+                key = str(item.get("key") or "")
+                if key == work_key or "/works/" + key == work_key:
+                    year = str(item.get("first_publish_year") or "")
+                    if re.fullmatch(r"[1-9]\d{3}", year):
+                        return year
+        except (OSError, ValueError):
+            pass  # Unknown is safer than silently substituting the edition year.
+    return ""
+
+
 def search(query, language="es", *, strict=False):
     if not query.strip():
         return []
@@ -174,13 +194,13 @@ def details(work_key, edition_key="", language="es"):
             authors.append(author["name"])
         elif key:
             authors.append(_get(key + ".json").get("name") or "")
-    date = str(edition.get("publish_date") or work.get("first_publish_date") or "")
-    year = re.search(r"\b\d{4}\b", date)
+    date = str(edition.get("publish_date") or "")
+    year = first_publication_year(work_key, work)
     pages = edition_page_count(edition)
     return {"openLibraryKey": work_key, "editionKey": edition_key,
         "title": edition.get("title") or work.get("title") or "",
         "subtitle": edition.get("subtitle") or work.get("subtitle") or "",
-        "author": ", ".join(filter(None, authors)), "year": year.group() if year else "",
+        "author": ", ".join(filter(None, authors)), "year": year,
         "isbn": next(iter(edition.get("isbn_13") or edition.get("isbn_10") or []), ""),
         "publisher": ", ".join(edition.get("publishers") or []), "publishDate": date,
         "language": ", ".join(str(item.get("key") or "").rsplit("/", 1)[-1] for item in edition.get("languages") or []),

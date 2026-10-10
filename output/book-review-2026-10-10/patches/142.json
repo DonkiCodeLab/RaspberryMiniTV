@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/juego-de-tronos.epub",
+  "title": "Juego de tronos",
+  "year": "1996",
+  "description": "Eddard Stark acepta convertirse en mano del rey y deja Invernalia para entrar en una corte llena de rivalidades. Mientras varias familias disputan el poder, una amenaza crece más allá del Muro y, al otro lado del mar, los herederos Targaryen buscan recuperar su lugar.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Eddard Stark accepta esdevenir mà del rei i deixa Hivèrnia per entrar en una cort plena de rivalitats. Mentre diverses famílies es disputen el poder, una amenaça creix més enllà del Mur i, a l’altra banda del mar, els hereus Targaryen busquen recuperar el seu lloc.",
+      "title": "Joc de Trons"
+    },
+    "en": {
+      "title": "A Game of Thrones",
+      "description": "Eddard Stark accepts the position of Hand of the King and leaves Winterfell for a court divided by rivalries. As families compete for power, a threat grows beyond the Wall and the Targaryen heirs seek their future across the sea."
+    },
+    "es": {
+      "description": "Eddard Stark acepta convertirse en mano del rey y deja Invernalia para entrar en una corte llena de rivalidades. Mientras varias familias disputan el poder, una amenaza crece más allá del Muro y, al otro lado del mar, los herederos Targaryen buscan recuperar su lugar.",
+      "subtitle": "Juego de Tronos 1",
+      "title": "Juego de tronos"
+    }
+  }
+}

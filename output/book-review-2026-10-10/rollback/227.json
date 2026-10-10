@@ -1,0 +1,17 @@
+{
+  "relativePath": "Books/victus.epub",
+  "title": "Victus",
+  "year": "2014",
+  "description": "\"Victus es una novela histórica que nos narra la guerra de Sucesión española, un conflicto que puede considerarse como la primera de las contiendas mundiales y que termina el 11 de septiembre de 1714 con el apocalíptico asalto a Barcelona.\"--P. [4] of cover.",
+  "localizedMetadata": {
+    "ca": {},
+    "en": {
+      "subtitle": "Barcelona 1714",
+      "title": "Victus CD"
+    },
+    "es": {
+      "subtitle": "Barcelona 1714",
+      "title": "Victus"
+    }
+  }
+}

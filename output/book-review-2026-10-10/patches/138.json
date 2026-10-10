@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/incierta-gloria.epub",
+  "title": "Incierta gloria",
+  "year": "1956",
+  "description": "En el frente de Aragón y la retaguardia catalana, varios jóvenes viven la Guerra Civil entre el amor, la amistad y las convicciones que se resquebrajan. Sus voces muestran la distancia entre los ideales de juventud y las contradicciones morales del conflicto.",
+  "localizedMetadata": {
+    "ca": {
+      "title": "Incerta glòria",
+      "description": "Al front d’Aragó i a la rereguarda catalana, diversos joves viuen la Guerra Civil entre l’amor, l’amistat i unes conviccions que s’esquerden. Les seves veus mostren la distància entre els ideals de joventut i les contradiccions morals del conflicte."
+    },
+    "en": {
+      "description": "On the Aragon front and in Catalonia behind the lines, young people experience the Spanish Civil War through love, friendship and faltering convictions. Their voices expose the distance between youthful ideals and the moral contradictions of conflict.",
+      "title": "Uncertain glory"
+    },
+    "es": {
+      "description": "En el frente de Aragón y la retaguardia catalana, varios jóvenes viven la Guerra Civil entre el amor, la amistad y las convicciones que se resquebrajan. Sus voces muestran la distancia entre los ideales de juventud y las contradicciones morales del conflicto.",
+      "subtitle": "novela",
+      "title": "Incierta gloria"
+    }
+  }
+}

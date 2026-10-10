@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-m-dico.epub",
+  "title": "El médico",
+  "year": "1986",
+  "description": "En la Inglaterra del siglo XI, el huérfano Rob Cole descubre su vocación médica junto a un cirujano ambulante. Su deseo de aprender lo lleva hasta Persia y las enseñanzas de Avicena, en un viaje que cruza fronteras religiosas, culturales y personales.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "A l’Anglaterra del segle XI, l’orfe Rob Cole descobreix la vocació mèdica al costat d’un cirurgià ambulant. El desig d’aprendre el porta fins a Pèrsia i els ensenyaments d’Avicenna, en un viatge que travessa fronteres religioses, culturals i personals.",
+      "title": "El médico"
+    },
+    "en": {
+      "title": "The Physician",
+      "description": "In eleventh-century England, orphan Rob Cole discovers his medical vocation while travelling with a barber-surgeon. His determination to learn takes him to Persia and the teachings of Avicenna, crossing religious, cultural and personal boundaries along the way."
+    },
+    "es": {
+      "title": "El médico",
+      "description": "En la Inglaterra del siglo XI, el huérfano Rob Cole descubre su vocación médica junto a un cirujano ambulante. Su deseo de aprender lo lleva hasta Persia y las enseñanzas de Avicena, en un viaje que cruza fronteras religiosas, culturales y personales."
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "index": 97,
+  "path": "Books/el-pozo-de-la-ascensi-n.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El Pozo de la Ascensión. (Ed. revisada)"
+    },
+    {
+      "tag": "creator",
+      "value": "Brandon Sanderson"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e79827ee-9232-4fb7-b8c2-ca02ead3bfda"
+    },
+    {
+      "tag": "description",
+      "value": "Durante mil años, han caído las cenizas y nada florece. Durante mil años, los skaa han sido esclavizados y han vivido sumidos en un miedo inevitable. Durante mil años, el Lord Legislador ha reinado con un poder absoluto gracias al terror y la divina invencibilidad que le otorga la poderosa magia de la alomancia. Pero vencer y matar al Lord Legislador fue la parte sencilla. El verdadero desafío será sobrevivir a las consecuencias de su caída. Tomar el poder tal vez resultó fácil, pero ¿qué ocurre después, cómo se usa? En ese mundo de aventura épica, la estrategia política y religiosa debe lidiar con los siempre misteriosos poderes de la alomancia."
+    },
+    {
+      "tag": "date",
+      "value": "2006-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2024-03-11"
+    },
+    {
+      "tag": "identifier",
+      "value": "4aaae1d0-e2cd-43b1-86e3-1d23d5f56dfb"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    },
+    {
+      "tag": "identifier",
+      "value": "35797"
+    }
+  ]
+}

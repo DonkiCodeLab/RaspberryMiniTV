@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-ruise-or.epub",
+  "title": "El Ruiseñor",
+  "year": "2015",
+  "description": "Durante la ocupación alemana de Francia, las hermanas Vianne e Isabelle responden de maneras distintas a la guerra. Una intenta proteger a su hija en casa; la otra se incorpora a la Resistencia. Sus decisiones exploran el miedo, el amor y las formas cotidianas de valentía.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Durant l’ocupació alemanya de França, les germanes Vianne i Isabelle responen de maneres diferents a la guerra. Una intenta protegir la filla a casa; l’altra s’incorpora a la Resistència. Les decisions exploren la por, l’amor i les formes quotidianes de valentia.",
+      "title": "El Ruiseñor"
+    },
+    "en": {
+      "title": "The Nightingale",
+      "description": "During the German occupation of France, sisters Vianne and Isabelle respond differently to war. One tries to protect her daughter at home; the other joins the Resistance. Their choices explore fear, love and the courage demanded by everyday survival."
+    },
+    "es": {
+      "description": "Durante la ocupación alemana de Francia, las hermanas Vianne e Isabelle responden de maneras distintas a la guerra. Una intenta proteger a su hija en casa; la otra se incorpora a la Resistencia. Sus decisiones exploran el miedo, el amor y las formas cotidianas de valentía.",
+      "title": "El Ruiseñor"
+    }
+  }
+}

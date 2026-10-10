@@ -1,0 +1,34 @@
+{
+  "index": 81,
+  "path": "Books/el-horror-de-r-quiem.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El horror de Réquiem"
+    },
+    {
+      "tag": "creator",
+      "value": "Marc Pastor"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:daf62729-2e7f-4799-b36b-eb07c9f72ae2"
+    },
+    {
+      "tag": "date",
+      "value": "2025-06-27T22:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<div> <p align=\"justify\">Réquiem, un técnico de autopsias que no aspira a nada en la vida, encuentra un anillo misterioso en el cuerpo de una chica que ha aparecido flotando en el puerto de Barcelona. Muerta, se entiende. A partir de este suceso, se obsesionará con descubrir tanto la causa de la muerte (de la chica, no de la muerte en general, un tema demasiado complejo para una novela como la que tienes entre manos) como el origen del anillo. Ya hemos dicho que era misterioso. Solo existe un pequeño problema: Réquiem es un investigador pésimo. Bueno, dos: que contará con la ayuda de Dalsy y Kurosawa, sus compañeros de piso y fracaso. Así, sin ninguna posibilidad de sacar nada bueno de ello, los tres se adentrarán en una siniestra conspiración que les viene grande. Lo malo es que el futuro de la humanidad depende de ellos, pero contar más ya sería entrar en spoilers. </p> <p align=\"justify\">Como una historia de H. P. Lovecraft adaptada por los Monty Python, en El horror de Réquiem no te vas a encontrar ningún estudio psicológico en profundidad de unos personajes marginales en una sociedad alienante, ni un delicado retrato de la soledad de su protagonista. Bastante ha sido mantenerlo con vida durante una historia rellena de clichés, de ritmo trepidante, con notas a pie de página, espectros bajo un estricto régimen de visitas, apellidos malditos que habitan tozudamente caserones encantados, fareros asediados por anfibios en una isla, gente mal vestida, alta costura, cincuenta formas de prender gasolina, mitología improvisada y un final a medida. </p> <p align=\"justify\">En resumen, una novela de humor cósmico.</p></div>"
+    },
+    {
+      "tag": "date",
+      "value": "2025-11-12"
+    },
+    {
+      "tag": "identifier",
+      "value": "e12a5415-6ae1-43f1-a366-a4d28cce0d9c"
+    }
+  ]
+}

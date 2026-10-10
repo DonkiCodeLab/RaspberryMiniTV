@@ -145,7 +145,7 @@ export function ResumeDialog({ request, onChoose, language }) {
     const previous = document.activeElement;
     card.current?.querySelector("button")?.focus();
     const keyboard = event => {
-      if (event.key === "Escape") onChoose(null);
+      if (event.key === "Escape") { event.stopPropagation(); onChoose(null); }
       if (event.key === "Tab") {
         const buttons = [...card.current.querySelectorAll("button")];
         if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons.at(-1).focus(); }

@@ -1,0 +1,34 @@
+{
+  "index": 27,
+  "path": "Books/bioko.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Bioko"
+    },
+    {
+      "tag": "creator",
+      "value": "Marc Pastor"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:62a0d0cc-5f77-1ee3-1ba5-6128a9425c00"
+    },
+    {
+      "tag": "description",
+      "value": "A finales del siglo XIX, Moisés Corvo, un joven y rebelde soldado barcelonés, es destinado en el destacamento español del norte de África, acusado de indisciplina, robo y traición es trasladado a la isla de Fernando Poo. Pero Corvo no logra pasar desapercibido, tanto por su carácter bravucón como por su facilidad innata para meterse en líos. La isla será entonces escenario de extraños acontecimientos, que bien podrían cambiar por completo el destino de sus habitantes y de toda la civilización. El joven soldado intentará resolver el ancestral misterio que guarda la isla, también conocida con el nombre de Bioko."
+    },
+    {
+      "tag": "date",
+      "value": "2012-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2017-03-31"
+    },
+    {
+      "tag": "identifier",
+      "value": "e5ed7078-f343-4b4e-b229-e599e61734ac"
+    }
+  ]
+}

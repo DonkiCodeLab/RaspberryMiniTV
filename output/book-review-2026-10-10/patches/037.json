@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/children-of-dune.epub",
+  "title": "Hijos de Dune. Nueva Edición / Children of Dune",
+  "year": "1976",
+  "description": "Los gemelos Leto y Ghanima, hijos de Paul Atreides, heredan una memoria ancestral y un imperio sometido a intrigas. Mientras Arrakis cambia y la regencia de Alia se debilita, deben decidir cómo afrontar el destino que pesa sobre su familia.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Els bessons Leto i Ghanima, fills de Paul Atreides, hereten una memòria ancestral i un imperi sotmès a intrigues. Mentre Arrakis canvia i la regència de l’Alia es debilita, han de decidir com afrontar el destí que pesa sobre la família.",
+      "title": "Hijos de Dune. Nueva Edición / Children of Dune"
+    },
+    "en": {
+      "title": "Children of Dune (Dune Chronicles, Book 3)",
+      "description": "Paul Atreides's twins, Leto and Ghanima, inherit ancestral memories and an empire riddled with intrigue. As Arrakis changes and Alia's regency grows unstable, they must decide how to confront the future their family's extraordinary inheritance has opened before them."
+    },
+    "es": {
+      "description": "Los gemelos Leto y Ghanima, hijos de Paul Atreides, heredan una memoria ancestral y un imperio sometido a intrigas. Mientras Arrakis cambia y la regencia de Alia se debilita, deben decidir cómo afrontar el destino que pesa sobre su familia.",
+      "subtitle": "Las crónicas de Dune",
+      "title": "Hijos de Dune"
+    }
+  }
+}

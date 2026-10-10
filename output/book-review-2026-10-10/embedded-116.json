@@ -1,0 +1,42 @@
+{
+  "index": 116,
+  "path": "Books/euf-ria.epub",
+  "metadata": [
+    {
+      "tag": "identifier",
+      "value": "epl:79078"
+    },
+    {
+      "tag": "identifier",
+      "value": "revision:1.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "calibre:60705"
+    },
+    {
+      "tag": "identifier",
+      "value": "uuid:ceda4b49-b3cb-4a05-8d35-e1b3af7abce5"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:09b29708-b167-4399-9879-b8379e62f7a8"
+    },
+    {
+      "tag": "title",
+      "value": "Euforia"
+    },
+    {
+      "tag": "date",
+      "value": "2014-02-20T00:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "¿Qué fue de Dani Santana? El periodista está enyesado de arriba abajo en un hospital tras un intento de asesinato. En la clínica traba amistad con el Gratu, un jugador de rugby juvenil que ha quedado en silla de ruedas. El Gratu, paciente inquieto y hacker compulsivo, arrastra a Santana a investigar ciertas prácticas que han llevado nuestro sistema sanitario a la ruina. Mientras tanto, llega a Barcelona uno de los hombres más ricos del mundo. El empresario mexicano Roberto M. Faura, líder de la telefonía móvil, negocia con el gobierno la instalación del parque temático más grande de Europa. Las protestas ciudada¬nas, el intento de saltarse la ley y las condiciones del poder harán tambalear un proyecto que parece vital para reflotar la economía del país. Pero no todo es como cuentan los periódicos."
+    },
+    {
+      "tag": "creator",
+      "value": "Xavier Bosch"
+    }
+  ]
+}

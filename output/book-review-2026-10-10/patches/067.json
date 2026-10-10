@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-caballero-misterioso.epub",
+  "title": "El caballero misterioso",
+  "year": "2010",
+  "description": "Dunk y Egg llegan a una boda en Murosblancos, donde se celebra un torneo cuyo premio es un huevo de dragón. Bajo la hospitalidad de los nobles se ocultan identidades, rencores y una intriga que amenaza la paz del reino.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Dunk y Egg llegan a una boda en Murosblancos, donde se celebra un torneo cuyo premio es un huevo de dragón. Bajo la hospitalidad de los nobles se ocultan identidades, rencores y una intriga que amenaza la paz del reino.",
+      "subtitle": "Cuentos de Dunk y Egg: El caballero de los Siete Reinos 3",
+      "title": "El caballero misterioso"
+    },
+    "ca": {
+      "description": "Dunk i Egg arriben a un casament a Murosblancos, on se celebra un torneig que té un ou de drac com a premi. Sota l’hospitalitat dels nobles s’amaguen identitats, rancúnies i una intriga que amenaça la pau del regne.",
+      "title": "El caballero misterioso"
+    },
+    "en": {
+      "description": "Dunk and Egg attend a wedding at Whitewalls, where a dragon's egg is offered as a tournament prize. Beneath the nobles' hospitality lie concealed identities, old resentments and a conspiracy that threatens the peace of the realm.",
+      "title": "El caballero misterioso"
+    }
+  }
+}

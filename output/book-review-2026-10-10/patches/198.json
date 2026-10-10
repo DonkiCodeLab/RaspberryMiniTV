@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/origen.epub",
+  "title": "Origen",
+  "year": "2017",
+  "description": "Robert Langdon acude al Guggenheim de Bilbao para escuchar un descubrimiento que promete cambiar las ideas sobre el origen humano. Un ataque interrumpe la presentación y lo obliga a colaborar con Ambra Vidal para recuperar el mensaje, siguiendo un rastro que conduce a Barcelona.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Robert Langdon va al Guggenheim de Bilbao per escoltar un descobriment que promet canviar les idees sobre l’origen humà. Un atac interromp la presentació i l’obliga a col·laborar amb Ambra Vidal per recuperar el missatge, seguint un rastre que porta a Barcelona.",
+      "title": "Origen"
+    },
+    "en": {
+      "title": "Origin",
+      "description": "Robert Langdon visits Bilbao's Guggenheim for an announcement promising to transform ideas about human origins. An attack interrupts the presentation, forcing him to work with Ambra Vidal to recover the message along a trail leading to Barcelona."
+    },
+    "es": {
+      "title": "Origen",
+      "description": "Robert Langdon acude al Guggenheim de Bilbao para escuchar un descubrimiento que promete cambiar las ideas sobre el origen humano. Un ataque interrumpe la presentación y lo obliga a colaborar con Ambra Vidal para recuperar el mensaje, siguiendo un rastro que conduce a Barcelona."
+    }
+  }
+}

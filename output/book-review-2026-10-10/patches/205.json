@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/proyecto-hail-mary.epub",
+  "title": "Proyecto Hail Mary",
+  "year": "2021",
+  "description": "Ryland Grace despierta solo en una nave lejana sin recordar quién es ni qué misión cumple. A medida que recupera la memoria, descubre una amenaza para la Tierra y debe utilizar la ciencia, la cooperación y el ingenio para intentar resolverla.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Ryland Grace es desperta sol en una nau llunyana sense recordar qui és ni quina missió compleix. A mesura que recupera la memòria, descobreix una amenaça per a la Terra i ha d’utilitzar la ciència, la cooperació i l’enginy per intentar resoldre-la.",
+      "title": "Proyecto Hail Mary"
+    },
+    "en": {
+      "title": "Project Hail Mary",
+      "description": "Ryland Grace wakes alone aboard a distant spacecraft with no memory of his identity or mission. As his memories return, he discovers a threat to Earth and must rely on science, cooperation and ingenuity to confront it."
+    },
+    "es": {
+      "title": "Proyecto Hail Mary",
+      "description": "Ryland Grace despierta solo en una nave lejana sin recordar quién es ni qué misión cumple. A medida que recupera la memoria, descubre una amenaza para la Tierra y debe utilizar la ciencia, la cooperación y el ingenio para intentar resolverla."
+    }
+  }
+}

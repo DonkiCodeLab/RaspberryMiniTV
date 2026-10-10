@@ -1,0 +1,42 @@
+{
+  "index": 15,
+  "path": "Books/alpha-centauri-la-estrella-m-s-pr-xima.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Alpha Centauri, la estrella más próxima"
+    },
+    {
+      "tag": "creator",
+      "value": "Isaac Asimov"
+    },
+    {
+      "tag": "description",
+      "value": "Ahora que la raza humana no está encerrada en la Tierra, y con colonias espaciales proyectadas para el futuro cercano, miramos hacia las estrellas con una nueva urgencia. En este libro informativo, Isaac Asimov habla de las estrellas de «nuestro vecindario» y en particular sobre la tercera más brillante y la más cercana: Alfa Centauro. La dramática historia sobre cómo son determinadas las distancias a las estrellas culmina con la revelación de que Alfa Centauro es en realidad una estrella triple —y que la más brillante de las tres estrellas Alfa Centauro es virtualmente la melliza de nuestro Sol. Tocando preguntas tan portentosas como cuáles estrellas tienen planetas con vida a su alrededor, el Dr. Asimov cuenta cómo buscarlas, cómo encontrarlas, y dónde se ubica Alfa Centauro. En este libro como en «Jupiter, the Largest Planet», el Dr. Asimov pone la ciencia astronómica al alcance del lector interesado sin previo conocimiento sobre la materia, presentando todos los hechos acerca de Alfa Centauro enriquecidos con sus propias especulaciones brillantes."
+    },
+    {
+      "tag": "date",
+      "value": "1975-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2020-06-10"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:83aa4f0c-16fa-6482-eac8-03a292f0fe91"
+    },
+    {
+      "tag": "identifier",
+      "value": "ec70432a-a508-48e9-ad05-9d7866a481b5"
+    },
+    {
+      "tag": "identifier",
+      "value": "21850"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.4"
+    }
+  ]
+}

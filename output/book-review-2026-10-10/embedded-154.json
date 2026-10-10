@@ -1,0 +1,42 @@
+{
+  "index": 154,
+  "path": "Books/la-fortaleza-digital.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "La fortaleza digital"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Susan Fletcher, la criptógrafa estrella de la ultrasecreta Agencia de Seguridad Nacional (NSA) no puede dar crédito a sus oídos cuando su jefe, el subdirector de la Agencia, le informa de que han interceptado un código que ni siquiera la mayor supercomputadora conocida puede descifrar.</p><p>La única pista para romper el letal código parece estar oculta en el cadáver de un hombre que ha fallecido en España, donde ha sido enviado David, el prometido de Susan.</p><p>Mientras este intenta hallar la clave y sobrevivir a la persecución de un metódico e implacable asesino a sueldo en las calles de Sevilla, Susan se enfrentará a su propio drama en las instalaciones de máxima seguridad de la NSA, durante una larga noche en la que la mentira y el asesinato acechan tras cada puerta.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "1998-01-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-01-20"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:3f249821-1b85-4dac-b638-e236720de0c0"
+    },
+    {
+      "tag": "identifier",
+      "value": "0574c2c9-88e3-4317-ab33-9844d1a67c94"
+    },
+    {
+      "tag": "identifier",
+      "value": "2127"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/el-caballero-del-jub-n-amarillo.epub",
+  "title": "El caballero del jubón amarillo",
+  "year": "2003",
+  "description": "En el Madrid de Felipe IV, la relación de Alatriste con una actriz lo acerca a los peligros de la corte. Íñigo Balboa acompaña al capitán entre teatros, celos y una conspiración en la que se confunden los intereses del rey y los de sus enemigos.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Al Madrid de Felip IV, la relació d’Alatriste amb una actriu l’acosta als perills de la cort. Íñigo Balboa acompanya el capità entre teatres, gelosia i una conspiració en què es confonen els interessos del rei i els dels seus enemics.",
+      "title": "El caballero del jubón amarillo"
+    },
+    "en": {
+      "description": "In Philip IV's Madrid, Alatriste's involvement with an actress draws him into the dangers of court politics. Íñigo Balboa follows the captain through theatres, jealousy and a conspiracy in which the king's interests become entangled with those of his enemies.",
+      "title": "The man in the yellow doublet"
+    },
+    "es": {
+      "description": "En el Madrid de Felipe IV, la relación de Alatriste con una actriz lo acerca a los peligros de la corte. Íñigo Balboa acompaña al capitán entre teatros, celos y una conspiración en la que se confunden los intereses del rey y los de sus enemigos.",
+      "subtitle": "Las aventuras del capitán Alatriste 5",
+      "title": "El caballero del jubón amarillo"
+    }
+  }
+}

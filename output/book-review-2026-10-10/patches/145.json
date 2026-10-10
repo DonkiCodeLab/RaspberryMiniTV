@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-asistenta.epub",
+  "title": "La asistenta",
+  "year": "2022",
+  "description": "Millie acepta un empleo como asistenta interna de los Winchester para empezar de nuevo. La comodidad de la casa contrasta con las contradicciones de Nina, la tristeza de su marido y una habitación que despierta inquietud: cada miembro de la familia parece guardar algo.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La Millie accepta una feina d’assistenta interna dels Winchester per començar de nou. La comoditat de la casa contrasta amb les contradiccions de la Nina, la tristesa del marit i una habitació inquietant: cada membre de la família sembla amagar alguna cosa.",
+      "title": "La asistenta"
+    },
+    "en": {
+      "description": "Millie takes a live-in housekeeping job with the Winchesters, hoping for a fresh start. The comfortable home contrasts with Nina's unpredictable behaviour, her husband's unhappiness and an unsettling attic room: everyone appears to be keeping something hidden.",
+      "title": "La asistenta"
+    },
+    "es": {
+      "description": "Millie acepta un empleo como asistenta interna de los Winchester para empezar de nuevo. La comodidad de la casa contrasta con las contradicciones de Nina, la tristeza de su marido y una habitación que despierta inquietud: cada miembro de la familia parece guardar algo.",
+      "title": "La asistenta"
+    }
+  }
+}

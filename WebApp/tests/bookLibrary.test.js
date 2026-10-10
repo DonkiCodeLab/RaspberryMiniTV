@@ -9,6 +9,15 @@ const volume = (number, overrides = {}) => ({
   relativePath: `Books/The Boys/The Boys ${number}.cbz`, format: "cbz", ...overrides,
 });
 
+test("a reprint date never supplies a missing work year in collection or volume sorting", () => {
+  const books = [volume(1, { name: "Unknown", publishDate: "2026" }), volume(2, { name: "Known", year: "1949", publishDate: "2021" })];
+  for (const direction of ["asc", "desc"]) {
+    const [group] = buildBookCollections(books, {}, "es", { sort: "year", direction });
+    assert.equal(group.year, 1949);
+    assert.deepEqual(group.books.map(book => book.name), ["Known", "Unknown"]);
+  }
+});
+
 test("book types respect explicit choices, infer legacy comics and split mixed collections", () => {
   assert.equal(isGraphicNovel({ format: "CBR" }), true);
   assert.equal(isGraphicNovel({ relativePath: "Books/old.cbz" }), true);
@@ -99,7 +108,7 @@ test("book search matches title, author, year and combined terms without accents
   assert.equal(matchesBookQuery(book, "2024"), false);
   assert.equal(matchesBookQuery(book, "Yarros 2024"), false);
   assert.equal(matchesBookQuery(book, "Empireo", "Empíreo"), true);
-  assert.equal(matchesBookQuery({ publishDate: "2001-08-15" }, "2001"), true);
+  assert.equal(matchesBookQuery({ publishDate: "2001-08-15" }, "2001"), false);
   assert.equal(matchesBookQuery({}, "2025"), false);
   assert.equal(matchesBookQuery({}, "  "), true);
 });

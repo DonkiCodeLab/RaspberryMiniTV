@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/los-extra-os.epub",
+  "title": "Los extraños",
+  "year": "2014",
+  "description": "Vicente Valero reconstruye las vidas de cuatro familiares que quedaron en los márgenes del relato familiar. Recuerdos heredados, documentos y viajes le sirven para acercarse a sus trayectorias y preguntarse cómo se forman el olvido, la pertenencia y la propia identidad.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Vicente Valero reconstrueix les vides de quatre familiars que van quedar als marges del relat familiar. Records heretats, documents i viatges li serveixen per acostar-se a les trajectòries i preguntar-se com es formen l’oblit, la pertinença i la pròpia identitat.",
+      "title": "Los extraños"
+    },
+    "en": {
+      "description": "Vicente Valero reconstructs the lives of four relatives left on the margins of his family's story. Inherited memories, documents and journeys bring him closer to their experiences and raise questions about forgetting, belonging and his own identity.",
+      "title": "Los extraños"
+    },
+    "es": {
+      "description": "Vicente Valero reconstruye las vidas de cuatro familiares que quedaron en los márgenes del relato familiar. Recuerdos heredados, documentos y viajes le sirven para acercarse a sus trayectorias y preguntarse cómo se forman el olvido, la pertenencia y la propia identidad.",
+      "title": "Los extraños"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "verifiedAtUtc": "2026-10-10T09:38:44.367650+00:00",
+  "status": "saved_and_verified",
+  "booksVerified": 394,
+  "localizedSynopsesVerified": 1182,
+  "firstPublicationYearsVerified": 394,
+  "checks": [
+    "All 394 save responses match their intended payloads.",
+    "A fresh catalog read matches every saved field.",
+    "Every record contains Spanish, Catalan and English synopses.",
+    "Book files, sizes, formats, collection assignments, covers and classifications are unchanged.",
+    "Previously saved fields outside the edits remain unchanged."
+  ],
+  "codeValidation": {
+    "backendTestsPassed": 19,
+    "frontendTestsPassed": 21
+  },
+  "codeDeployment": "Source changes are local; no application deployment was performed."
+}

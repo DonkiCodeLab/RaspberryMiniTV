@@ -1,0 +1,42 @@
+{
+  "index": 137,
+  "path": "Books/hyperion.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Hyperion"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Simmons"
+    },
+    {
+      "tag": "description",
+      "value": "En el mundo llamado Hyperion, más allá de la Red de la Hegemonía del Hombre, aguarda el Alcaudón, una sorprendente y temible criatura a la que los miembros de la Iglesia de la Expiación Final veneran como Señor del Dolor. En vísperas del Armageddon, y con el trasfondo de la posible guerra entre la Hegemonía, los enjambres éxter y las inteligencias artificiales del TecnoNúcleo, siete peregrinos acuden a Hyperion para resucitar un antiguo rito religioso. Todos son portadores de esperanzas imposibles y, también, de terribles secretos. Un diplomático, un sacerdote, un militar, un poeta, un profesor, una detective y un navegante entrecruzan sus vidas y sus destinos en su peregrinar en busca del Alcaudón y de las Tumbas de Tiempo, majestuosas e incomprensibles construcciones que albergan un secreto procedente del futuro. Sus historias personales componen una sugerente visión caleidoscópica de la compleja sociedad en la que viven y que, tal vez, puedan salvar."
+    },
+    {
+      "tag": "date",
+      "value": "1988-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2021-06-21"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:e5cdd4e6-e214-4fe1-855f-3657cb78840c"
+    },
+    {
+      "tag": "identifier",
+      "value": "e175eebe-e47c-4d93-9c5b-9626040d27b1"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.1"
+    },
+    {
+      "tag": "identifier",
+      "value": "2705"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "index": 78,
+  "path": "Books/el-hobbit.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El Hobbit"
+    },
+    {
+      "tag": "creator",
+      "value": "J. R. R. Tolkien"
+    },
+    {
+      "tag": "date",
+      "value": "1937-09-20T23:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Bilbo Bolsón es como cualquier hobbit: no mide más de metro y medio, vive pacíficamente en la Comarca, y su máxima aspiración es disfrutar de los placeres sencillos de la vida (comer bien, pasear y charlar con los amigos). Y es que todos ellos son tan vagos como bonachones, por naturaleza, y porque quieren. Pero una soleada mañana, Bilbo recibe la inesperada visita de Gandalf, el mago de larga barba gris y alto sombrero, que cambiará su vida para siempre. Con Gandalf y una pandilla de trece enanos, y con la ayuda de un mapa misterioso, nuestro héroe partirá hacia la Montaña Solitaria a fin de rescatar el valioso tesoro custodiado por Smaug el Dorado, un terrible y enorme dragón. Para eso tendrán que superar muchísimos peligros y toda clase de aventuras que Bilbo jamás hubiera podido ni imaginar y que lo convertirán en el hobbit más famoso del mundo. Lo que Bilbo no sabe es que el anillo que encontró en el camino será el principio de otra gran aventura… la de <i>El Señor de los Anillos</i>.</p>\n\n    <p>Cuando alrededor de 1930, J.R.R. Tolkien comenzó a escribir <i>El Hobbit</i>, hacía ya diez años que trabajaba en el vasto panorama mitológico de <i>El Libro de los Relatos</i>, que más tarde se llamaría <i>El Silmarillion</i>. Así como esas crónicas tempranas narraban los mitos inmemoriales de la Primera y Segunda Edad, Tolkien pronto advirtió que <i>El Hobbit</i> iba ordenándose de algún modo como un relato de la Tercera Edad (Gandalf habla del Nigromante en las primeras páginas), aunque las inesperadas aventuras de un pacífico hombre del campo no parecieran tener mucha relación con las vastas y oscuras mitologías de la Tierra Media. El estilo directo y lineal, con alusiones (que el autor deploró más tarde) a un público infantil, no impide la poderosa irrupción —unas pocas veces en términos de comedia— de los grandes temas tolkienianos (el poder, la codicia, la guerra, la muerte) que reaparecerían en una dimensión a menudo obviamente épica en <i>El Señor de los Anillos</i>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2021-09-29"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a98ea1c9-791d-2a5c-7d2b-82e31570884b"
+    },
+    {
+      "tag": "identifier",
+      "value": "a8c85534-edb5-446c-8778-7935f1f682ec"
+    },
+    {
+      "tag": "identifier",
+      "value": "1370"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.2"
+    }
+  ]
+}

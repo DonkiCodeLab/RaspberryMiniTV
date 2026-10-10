@@ -1,0 +1,42 @@
+{
+  "index": 196,
+  "path": "Books/nunca-mientas.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Nunca mientas"
+    },
+    {
+      "tag": "creator",
+      "value": "Freida McFadden"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:a08bedd8-a676-4a30-ad83-422a51c3a517"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Tricia y Ethan acaban de casarse y están a la búsqueda de la casa de sus sueños.</p><p>Pero cuando visitan la remota mansión que una vez perteneció a la doctora Adrienne Hale, una reconocida psiquiatra que desapareció sin dejar rastro cuatro años antes, una violenta tormenta los deja atrapados.</p><p>Mientras busca un libro para entretenerse hasta que deje de nevar, Tricia tropieza con una habitación secreta que contiene las transcripciones de las conversaciones con todos y cada uno de los pacientes que trató la doctora Hale. Y, cuando escucha las cintas, descubre la aterradora sucesión de acontecimientos que condujo a la misteriosa desaparición de la psiquiatra.</p><p>Con cada una de ellas, una nueva pieza del rompecabezas encaja en su sitio, revelando lentamente una inesperada e impactante red de mentiras.</p><p>Hasta que Tricia llega a la última cinta. La cinta que revela toda la terrible verdad. Y entonces es demasiado tarde…</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2024-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-09-16"
+    },
+    {
+      "tag": "identifier",
+      "value": "a2338505-26ac-4881-b271-15959c131131"
+    },
+    {
+      "tag": "identifier",
+      "value": "79684"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.0"
+    }
+  ]
+}

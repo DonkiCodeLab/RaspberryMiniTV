@@ -1,0 +1,34 @@
+{
+  "index": 174,
+  "path": "Books/las-uvas-de-la-ira.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Las uvas de la ira"
+    },
+    {
+      "tag": "creator",
+      "value": "John Steinbeck"
+    },
+    {
+      "tag": "description",
+      "value": "Premio Nobel de Literatura en 1962, John Steinbeck (1902-1968) fue testigo directo de la Depresión económica que, originada por el crack bursátil de 1929, azotó durante la década de los años treinta a los Estados Unidos. Publicada en 1939 y objeto de varias versiones cinematográficas -entre ellas un memorable film de John Ford-, Las uvas de la ira relata, en una narración que alcanza por momentos cotas épicas, la emigración que, desde una inhabitable Oklahoma, lleva a cabo la familia Joad junto a miles de personas más hacia la tierra de promisión que parece California. A lo largo del camino, sin embargo, este ejército de desposeídos comprobará la frágil consistencia de un sueño americano que progresiva e inevitablemente acabará desvaneciéndose."
+    },
+    {
+      "tag": "date",
+      "value": "1939-04-22T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2025-12-17"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:7bb7b0d9-67ce-32d7-b9ee-ecd6b233d4ae"
+    },
+    {
+      "tag": "identifier",
+      "value": "aa5fab54-bbc5-45a4-88ea-69d5dbd5164b"
+    }
+  ]
+}

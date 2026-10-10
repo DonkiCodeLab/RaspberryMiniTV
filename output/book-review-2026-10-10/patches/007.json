@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/acoso.epub",
+  "title": "Acoso",
+  "year": "1994",
+  "description": "Tras rechazar las insinuaciones de su nueva superiora, el ejecutivo Tom Sanders se enfrenta a una acusación de acoso sexual. Al intentar defenderse, descubre que su conflicto personal está entrelazado con una lucha por el poder dentro de una empresa tecnológica.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "Després de rebutjar les insinuacions de la seva nova superiora, l’executiu Tom Sanders s’enfronta a una acusació d’assetjament sexual. Quan intenta defensar-se, descobreix que el seu conflicte personal està entrellaçat amb una lluita pel poder dins d’una empresa tecnològica.",
+      "title": "Acoso"
+    },
+    "en": {
+      "description": "After rejecting advances from his new boss, technology executive Tom Sanders faces an accusation of sexual harassment. His effort to defend himself uncovers a corporate power struggle in which his career, reputation and marriage have become bargaining chips.",
+      "title": "Disclosure"
+    },
+    "es": {
+      "description": "Tras rechazar las insinuaciones de su nueva superiora, el ejecutivo Tom Sanders se enfrenta a una acusación de acoso sexual. Al intentar defenderse, descubre que su conflicto personal está entrelazado con una lucha por el poder dentro de una empresa tecnológica.",
+      "title": "Acoso"
+    }
+  }
+}

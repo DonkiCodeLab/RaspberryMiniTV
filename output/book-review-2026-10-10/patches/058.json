@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/el-agua-que-quieres.epub",
+  "title": "El agua que quieres",
+  "year": "2021",
+  "description": "Marie reúne a sus hijos y sus familias en la antigua casa de vacaciones de Quebec para celebrar su cumpleaños. El regreso al lago despierta recuerdos de infancia, desacuerdos y silencios que obligan a revisar las relaciones familiares y el futuro de aquel lugar.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "La Marie reuneix els fills i les seves famílies a l’antiga casa de vacances del Quebec per celebrar l’aniversari. El retorn al llac desperta records d’infantesa, desacords i silencis que obliguen a revisar les relacions familiars i el futur d’aquell lloc.",
+      "title": "El agua que quieres"
+    },
+    "en": {
+      "description": "Marie gathers her children and their families at their old Quebec holiday home for her birthday. Returning to the lake revives childhood memories, disagreements and long silences, forcing them to reconsider their relationships and the future of the place itself.",
+      "title": "El agua que quieres"
+    },
+    "es": {
+      "description": "Marie reúne a sus hijos y sus familias en la antigua casa de vacaciones de Quebec para celebrar su cumpleaños. El regreso al lago despierta recuerdos de infancia, desacuerdos y silencios que obligan a revisar las relaciones familiares y el futuro de aquel lugar.",
+      "title": "El agua que quieres"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "relativePath": "Books/la-mala-mujer.epub",
+  "title": "La mala mujer",
+  "year": "2008",
+  "description": "En la Barcelona de 1912, el inspector Moisès Corvo investiga desapariciones de niños que las autoridades prefieren ignorar. La novela transforma el caso de Enriqueta Martí en una ficción oscura sobre la desigualdad, los secretos urbanos y los abusos que encuentran protección en el silencio.",
+  "localizedMetadata": {
+    "ca": {
+      "description": "A la Barcelona de 1912, l’inspector Moisès Corvo investiga desaparicions d’infants que les autoritats prefereixen ignorar. La novel·la transforma el cas d’Enriqueta Martí en una ficció fosca sobre la desigualtat, els secrets urbans i els abusos que troben protecció en el silenci.",
+      "title": "La mala mujer"
+    },
+    "en": {
+      "description": "In 1912 Barcelona, Inspector Moisès Corvo investigates child disappearances the authorities would rather overlook. The novel turns the Enriqueta Martí case into dark fiction about inequality, urban secrets and abuses protected by silence.",
+      "title": "La mala mujer"
+    },
+    "es": {
+      "title": "La mala mujer",
+      "description": "En la Barcelona de 1912, el inspector Moisès Corvo investiga desapariciones de niños que las autoridades prefieren ignorar. La novela transforma el caso de Enriqueta Martí en una ficción oscura sobre la desigualdad, los secretos urbanos y los abusos que encuentran protección en el silencio."
+    }
+  }
+}

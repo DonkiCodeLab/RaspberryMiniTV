@@ -1,0 +1,42 @@
+{
+  "index": 25,
+  "path": "Books/bajo-siete-mares.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Bajo siete mares"
+    },
+    {
+      "tag": "creator",
+      "value": "Alberto Vázquez-Figueroa"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d8cafd86-f88b-45b3-acb1-5c6f6458b0e9"
+    },
+    {
+      "tag": "description",
+      "value": "Ésta es la primera novela de Alberto Vázquez-Figueroa, una obra de juventud de indispensable lectura para comprender la magnífica trayectoria literaria de un autor que, entre sus diversas actividades, incluye la de haber sido uno de los pioneros del submarinismo en España. Precisamente en este libro, que tiene mucho de autobiográfico, relata sus extraordinarias vivencias a lo largo y ancho de los mares, los excepcionales lugares que visitó y los curiosos personajes que conoció. En suma, un sugerente viaje por todo el mundo y todo el sabor de la aventura que distingue a este excepcional narrador."
+    },
+    {
+      "tag": "date",
+      "value": "1967-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2019-12-15"
+    },
+    {
+      "tag": "identifier",
+      "value": "233f13b4-a1f0-4a20-b460-4091ce049261"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.3"
+    },
+    {
+      "tag": "identifier",
+      "value": "13545"
+    }
+  ]
+}

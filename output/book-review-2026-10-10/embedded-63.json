@@ -1,0 +1,42 @@
+{
+  "index": 63,
+  "path": "Books/el-c-digo-da-vinci.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "El código Da Vinci"
+    },
+    {
+      "tag": "creator",
+      "value": "Dan Brown"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Robert Langdon, experto en simbología, recibe una llamada en mitad de la noche: el conservador del museo del Louvre ha sido asesinado en extrañas circunstancias, y junto a su cadáver ha aparecido un desconcertante mensaje cifrado. Al profundizar en la investigación, Langdom descubre que las pistas conducen a las obras de Leonardo Da Vinci… y que están a la vista de todos, ocultas por el ingenio del pintor.</p><p>Langdon une esfuerzos con la criptóloga francesa Sophie Neveu y descubre que el conservador del museo pertenecía al Priorato de Sión, una sociedad que a lo largo de los siglos ha contado con miembros tan destacados como Sir Isaac Newton, Botticelli, Victor Hugo o el propio Da Vinci, y que ha velado por mantener en secreto una sorprendente verdad histórica.</p><p>Una mezcla trepidante de aventuras, intrigas vaticanas, simbología y enigmas cifrados que provocó una extraordinaria polémica al poner en duda algunos de los dogmas sobre los que se asienta la iglesia católica.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2002-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "date",
+      "value": "2022-11-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:40e76acf-8ee5-4d05-995f-59168903dab3"
+    },
+    {
+      "tag": "identifier",
+      "value": "04f286dc-9aa2-457b-80e5-1c42580cabd1"
+    },
+    {
+      "tag": "identifier",
+      "value": "1633"
+    },
+    {
+      "tag": "identifier",
+      "value": "2.4"
+    }
+  ]
+}

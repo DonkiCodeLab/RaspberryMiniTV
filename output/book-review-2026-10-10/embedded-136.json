@@ -1,0 +1,42 @@
+{
+  "index": 136,
+  "path": "Books/homo-deus.epub",
+  "metadata": [
+    {
+      "tag": "title",
+      "value": "Homo Deus"
+    },
+    {
+      "tag": "creator",
+      "value": "Yuval Noah Harari"
+    },
+    {
+      "tag": "date",
+      "value": "2014-12-31T23:00:00+00:00"
+    },
+    {
+      "tag": "description",
+      "value": "<p>Yuval Noah Harari, autor de <i>Sapiens</i>, un fenómeno internacional unánimemente aclamado por la crítica, regresa con una secuela igualmente original, convincente y provocadora, centrando su atención en el futuro de la humanidad y en nuestra obsesión por convertirnos en dioses.</p><p>A lo largo del último siglo, la humanidad ha logrado lo imposible frenando la hambruna, la peste y la guerra. Por primera vez en la historia, más personas mueren por obesidad que por pasar hambre y hay más probabilidades de quitarse la vida que de morir en un conflicto bélico o un atentado terrorista.</p><p>¿Qué pasará con la democracia cuando Google y Facebook lleguen a conocer nuestros gustos y preferencias políticas mejor que nos conocemos a nosotros mismos? ¿Qué pasará con el estado de bienestar cuando la inteligencia artificial expulse a los individuos del mercado laboral, creando una «clase innecesaria» de humanos? ¿Cómo podremos lidiar con los avances en ingeniería genética? ¿Terminará Silicon Valley por establecer nuevas religiones en lugar de enfocarse a producir únicamente dispositivos inteligentes?</p><p><i>Homo Deus</i> explora los proyectos, los sueños y las pesadillas que configurarán el siglo XXI: desde superar la muerte hasta la creación de la inteligencia y la vida artificial.</p><p>¿Hacia dónde nos dirigimos? ¿Cómo protegeremos al mundo de nuestros propios poderes destructivos? He aquí una mirada hacia el futuro de la evolución. He aquí <i>Homo Deus</i>.</p>"
+    },
+    {
+      "tag": "date",
+      "value": "2022-03-05"
+    },
+    {
+      "tag": "identifier",
+      "value": "urn:uuid:d34bfbaa-94fe-4d37-8803-fb898d466ba0"
+    },
+    {
+      "tag": "identifier",
+      "value": "296648e1-8a32-459c-9ab4-f517cf9d3bb2"
+    },
+    {
+      "tag": "identifier",
+      "value": "1.5"
+    },
+    {
+      "tag": "identifier",
+      "value": "33691"
+    }
+  ]
+}

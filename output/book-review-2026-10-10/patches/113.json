@@ -1,0 +1,21 @@
+{
+  "relativePath": "Books/erupci-n.epub",
+  "title": "Erupción",
+  "year": "2024",
+  "description": "Una gran erupción amenaza la isla de Hawái y moviliza a científicos y servicios de emergencia. El peligro aumenta cuando un secreto militar oculto en la zona obliga a plantear una operación desesperada para evitar consecuencias mucho mayores que las del volcán.",
+  "localizedMetadata": {
+    "es": {
+      "description": "Una gran erupción amenaza la isla de Hawái y moviliza a científicos y servicios de emergencia. El peligro aumenta cuando un secreto militar oculto en la zona obliga a plantear una operación desesperada para evitar consecuencias mucho mayores que las del volcán.",
+      "title": "Erupción"
+    },
+    "ca": {
+      "description": "Una gran erupció amenaça l’illa de Hawaii i mobilitza científics i serveis d’emergència. El perill augmenta quan un secret militar amagat a la zona obliga a plantejar una operació desesperada per evitar conseqüències molt més grans que les del volcà.",
+      "title": "Erupción"
+    },
+    "en": {
+      "description": "A major eruption threatens Hawaii, mobilising scientists and emergency teams. The danger escalates when a military secret hidden nearby forces a desperate effort to prevent consequences far beyond those of the volcano itself.",
+      "title": "Erupción"
+    }
+  },
+  "author": "Michael Crichton y James Patterson"
+}
