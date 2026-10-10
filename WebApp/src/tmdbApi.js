@@ -406,7 +406,7 @@ export async function getLibrarySummaries(movies, directories, language) {
   }
   const cards = collection => Object.fromEntries(Object.entries(collection || {}).map(([id, card]) =>
     [id, { ...card, posterImage: buildTmdbImageUrl(card.posterPath, "w500") }]));
-  return { movies: cards(summaries.movies), series: cards(summaries.series) };
+  return { movies: cards(summaries.movies), series: cards(summaries.series), ratings: summaries.ratings || {} };
 }
 
 export async function getTvSeriesById(seriesId, language, importPreview = false) {

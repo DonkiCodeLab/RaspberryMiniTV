@@ -1,7 +1,7 @@
 const strings = {
   es: {
     setup: "Activa la IA y guarda una clave de OpenAI en el dashboard.", rateLimit: "Hay demasiadas consultas. Espera un momento y vuelve a intentarlo.", authError: "OpenAI ha rechazado la clave. Revisa las credenciales en el dashboard.", modelError: "El modelo no está disponible para esta cuenta. Revisa el modelo en el dashboard.", invalidQuery: "Revisa la consulta e inténtalo de nuevo.", refused: "No se pudo procesar esta petición. Prueba otra consulta sobre el catálogo.",
-    ask: "Preguntar a la IA", title: "Consulta tu catálogo", prompt: "¿Qué quieres encontrar?", send: "Buscar", waiting: "Consultando el catálogo…", close: "Cerrar", cancel: "Cancelar", clear: "Quitar búsqueda IA",
+    ask: "Preguntar a la IA", title: "Pregunta a la IA: Consulta tu catálogo", prompt: "¿Qué quieres encontrar?", send: "Buscar", waiting: "Consultando el catálogo…", close: "Cerrar", cancel: "Cancelar", clear: "Quitar búsqueda IA",
     hint: "Busca por los datos de las fichas. Los resultados se combinan con tus filtros y la vista actual.", picturesHint: "Busca imágenes por nombre de archivo. No se analiza el contenido de las fotos.",
     demo: "Conecta con la Raspberry para usar la IA.", error: "No se pudo consultar la IA. Revisa la conexión y la configuración de OpenAI en el dashboard.", timeout: "La consulta ha tardado demasiado. Puedes reintentarlo.",
     matches: "coincidencias", visible: "visibles en esta vista", missing: "fichas con información incompleta", applied: "Búsqueda IA", examples: "Prueba con…", empty: "No hay resultados para esta búsqueda y los filtros actuales.",
@@ -10,7 +10,7 @@ const strings = {
   },
   ca: {
     setup: "Activa la IA i desa una clau d’OpenAI al dashboard.", rateLimit: "Hi ha massa consultes. Espera un moment i torna-ho a provar.", authError: "OpenAI ha rebutjat la clau. Revisa les credencials al dashboard.", modelError: "El model no està disponible per a aquest compte. Revisa el model al dashboard.", invalidQuery: "Revisa la consulta i torna-ho a provar.", refused: "No s’ha pogut processar aquesta petició. Prova una altra consulta sobre el catàleg.",
-    ask: "Pregunta a la IA", title: "Consulta el teu catàleg", prompt: "Què vols trobar?", send: "Cerca", waiting: "Consultant el catàleg…", close: "Tanca", cancel: "Cancel·la", clear: "Treu la cerca IA",
+    ask: "Pregunta a la IA", title: "Pregunta a la IA: Consulta el teu catàleg", prompt: "Què vols trobar?", send: "Cerca", waiting: "Consultant el catàleg…", close: "Tanca", cancel: "Cancel·la", clear: "Treu la cerca IA",
     hint: "Cerca per les dades de les fitxes. Els resultats es combinen amb els filtres i la vista actual.", picturesHint: "Cerca imatges pel nom del fitxer. No s’analitza el contingut de les fotos.",
     demo: "Connecta amb la Raspberry per fer servir la IA.", error: "No s’ha pogut consultar la IA. Revisa la connexió i la configuració d’OpenAI al dashboard.", timeout: "La consulta ha trigat massa. Pots tornar-ho a provar.",
     matches: "coincidències", visible: "visibles en aquesta vista", missing: "fitxes amb informació incompleta", applied: "Cerca IA", examples: "Prova amb…", empty: "No hi ha resultats per a aquesta cerca i els filtres actuals.",
@@ -19,7 +19,7 @@ const strings = {
   },
   en: {
     setup: "Enable AI and save an OpenAI key in the dashboard.", rateLimit: "Too many requests. Wait a moment and try again.", authError: "OpenAI rejected the key. Check your credentials in the dashboard.", modelError: "The model is unavailable for this account. Check the model in the dashboard.", invalidQuery: "Review your query and try again.", refused: "This request could not be processed. Try another question about the catalog.",
-    ask: "Ask AI", title: "Search your catalog", prompt: "What would you like to find?", send: "Search", waiting: "Searching the catalog…", close: "Close", cancel: "Cancel", clear: "Clear AI search",
+    ask: "Ask AI", title: "Ask AI: Search your catalog", prompt: "What would you like to find?", send: "Search", waiting: "Searching the catalog…", close: "Close", cancel: "Cancel", clear: "Clear AI search",
     hint: "Search the information in your profiles. Results combine with your filters and current view.", picturesHint: "Find pictures by file name. Photo contents are not analyzed.",
     demo: "Connect to your Raspberry to use AI.", error: "The AI request failed. Check your connection and the OpenAI settings in the dashboard.", timeout: "The request took too long. Please try again.",
     matches: "matches", visible: "visible in this view", missing: "profiles with incomplete information", applied: "AI search", examples: "Try asking…", empty: "No results match this search and the current filters.",

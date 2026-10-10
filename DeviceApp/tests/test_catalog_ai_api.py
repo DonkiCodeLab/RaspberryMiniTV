@@ -44,18 +44,25 @@ class CatalogAIApiTests(unittest.TestCase):
             planner.assert_not_called()
             connection.assert_not_called()
 
-    def test_settings_redact_key_preserve_blank_and_explicitly_delete(self):
+    def test_settings_show_saved_values_preserve_blank_and_explicitly_delete(self):
         response = self.client.get("/settings/ai", headers=self.headers)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json["settings"]["configured"])
-        self.assertNotIn("sk-test-secret", response.get_data(as_text=True))
-        self.assertNotIn("apiKey", response.json["settings"])
+        self.assertEqual(response.json["settings"]["apiKey"], "sk-test-secret")
+        self.assertTrue(response.json["settings"]["enabled"])
+        self.assertEqual(response.json["settings"]["requestsPerMinute"], 10)
         self.assertEqual(response.headers["Cache-Control"], "no-store")
         response = self.client.post("/settings/ai", headers=self.headers, json={"apiKey": "", "model": "gpt-4.1-mini"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.settings.credentials()["apiKey"], "sk-test-secret")
+        self.assertEqual(response.json["settings"]["apiKey"], "sk-test-secret")
+        response = self.client.post("/settings/ai", headers=self.headers,
+                                    json={"apiKey": "sk-replacement", "model": "saved-model", "requestsPerMinute": 7})
+        self.assertEqual(response.json["settings"]["apiKey"], "sk-replacement")
+        self.assertEqual(response.json["settings"], self.client.get("/settings/ai", headers=self.headers).json["settings"])
         response = self.client.post("/settings/ai", headers=self.headers, json={"clearApiKey": True})
         self.assertFalse(response.json["settings"]["configured"])
+        self.assertEqual(response.json["settings"]["apiKey"], "")
         self.assertFalse(self.settings.credentials()["apiKey"])
         self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
 

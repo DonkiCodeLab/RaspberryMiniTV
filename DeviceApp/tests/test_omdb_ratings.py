@@ -317,6 +317,34 @@ class OmdbApiTests(OmdbFixture):
         self.client = api.app.test_client()
         self.headers = {"X-Web-Pin": "test-pin"}
 
+    def test_library_exposes_saved_scores_by_path_without_network_or_credentials(self):
+        with patch.object(omdb, "_download_json", return_value=CRITIC_MOVIE):
+            self.ratings.get(imdb_id="tt0111161", kind="movie")
+        with patch.object(omdb, "_download_json", return_value=SERIES):
+            self.ratings.get(imdb_id="tt0096697", kind="tv")
+        self.now += omdb.RATING_TTL + 1
+        self.settings.update({"clearApiKey": True})
+        omdb._write(self.ratings.root / "ids" / "tv-456.json", {"imdbId": "tt0096697"})
+        library = {"movies": {"Movies/one.mkv": {"tmdbId": 1, "imdbUrl": "https://www.imdb.com/title/tt0111161/"},
+                              "Movies/imdb-only.mkv": {"imdbId": "tt0111161"},
+                              "Movies/unknown.mkv": {}},
+                   "series": {"TVShows/test": {"tmdbId": 456}}}
+        with patch.object(api, "load_media_library", return_value=library), \
+                patch.object(api.tmdb_artwork, "library_summary", side_effect=lambda kind, tmdb_id, language: {"id": tmdb_id, "name": "Test"}), \
+                patch.object(omdb, "_download_json", side_effect=AssertionError("Must stay offline")) as download, \
+                patch.object(omdb, "_write", side_effect=AssertionError("Must not write")):
+            self.assertIsNone(self.ratings.peek(imdb_id="tt0111161"))
+            response = self.client.get("/tmdb/library", headers=self.headers)
+            self.assertEqual(response.status_code, 200)
+            scores = response.json["ratings"]
+            self.assertEqual(scores["movies"]["Movies/one.mkv"]["rottenTomatoes"], 89)
+            self.assertEqual(scores["movies"]["Movies/one.mkv"]["metacritic"], 82)
+            self.assertEqual(scores["movies"]["Movies/imdb-only.mkv"]["rating"], 9.3)
+            self.assertTrue(scores["movies"]["Movies/one.mkv"]["stale"])
+            self.assertNotIn("Movies/unknown.mkv", scores["movies"])
+            self.assertEqual(scores["series"]["TVShows/test"]["rating"], 8.7)
+            download.assert_not_called()
+
     def test_all_routes_require_pin_and_disable_http_caching(self):
         with patch.object(omdb, "_download_json") as download:
             for method, route in (("get", "/settings/omdb"), ("post", "/settings/omdb"),
@@ -326,16 +354,18 @@ class OmdbApiTests(OmdbFixture):
                 self.assertEqual(response.headers["Cache-Control"], "no-store")
             download.assert_not_called()
 
-    def test_settings_redact_preserve_and_delete_private_key(self):
+    def test_settings_show_preserve_replace_and_delete_saved_key(self):
         for response in (self.client.get("/settings/omdb", headers=self.headers),
                          self.client.post("/settings/omdb", headers=self.headers, json={"apiKey": ""})):
-            self.assertEqual(response.json, {"ok": True, "settings": {"configured": True}})
-            self.assertNotIn("test-secret", response.get_data(as_text=True))
+            self.assertEqual(response.json, {"ok": True, "settings": {"configured": True, "apiKey": "test-secret"}})
             self.assertEqual(response.headers["Cache-Control"], "no-store")
         self.assertEqual(self.settings.credentials(), "test-secret")
         self.assertEqual(self.settings.path.stat().st_mode & 0o777, 0o600)
+        response = self.client.post("/settings/omdb", headers=self.headers, json={"apiKey": "replacement-key"})
+        self.assertEqual(response.json["settings"]["apiKey"], "replacement-key")
+        self.assertEqual(response.json, self.client.get("/settings/omdb", headers=self.headers).json)
         response = self.client.post("/settings/omdb", headers=self.headers, json={"clearApiKey": True})
-        self.assertEqual(response.json["settings"], {"configured": False})
+        self.assertEqual(response.json["settings"], {"configured": False, "apiKey": ""})
         self.assertEqual(self.settings.credentials(), "")
 
     def test_invalid_settings_and_requests_have_stable_errors(self):

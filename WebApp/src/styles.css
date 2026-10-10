@@ -477,9 +477,14 @@ img {
   pointer-events: none;
   z-index: 3;
 }
-.movie-filter__panel {
+.movie-filter__panel,
+.catalog-ai-panel,
+.catalog-ai-result {
   width: min(1128.8px, var(--series-visible-width));
   margin: 0 auto 1rem max(0px, calc((100% - 1360px) / 2));
+}
+
+.movie-filter__panel {
   padding: 1rem;
   border: 2px solid rgba(255,255,255,.25);
   border-radius: 20px;
@@ -1789,6 +1794,9 @@ img {
 .movie-library__info h2 { margin: 0; min-height: 2.5em; color: #fff; font-size: 1.05rem; line-height: 1.25; }
 .movie-library__meta { display: flex; justify-content: space-between; gap: .7rem; color: rgba(255,255,255,.75); font-weight: 800; font-size: .88rem; }
 .movie-library__meta span:last-child { color: #ffd429; }
+.movie-library__score { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; text-align: right; }
+.movie-library__score small { font-size: .65rem; color: rgba(255,255,255,.7); }
+.series-library__selected-rating { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; color: #17232c; }
 .movie-library__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 .movie-library__actions--single { grid-template-columns: 1fr; }
 .movie-library__actions button, .movie-library__actions a { display: grid; place-items: center; min-height: 2.55rem; padding: .55rem; border: 1px solid rgba(255,255,255,.22); border-radius: 11px; background: rgba(255,255,255,.08); color: #fff; text-decoration: none; text-align: center; font-size: .78rem; font-weight: 900; cursor: pointer; }
@@ -2044,6 +2052,24 @@ img {
   line-height: 1.5;
 }
 
+.raspberry-tmdb-card--credentials { margin-top: 1rem; }
+
+.raspberry-tmdb-card--credentials .raspberry-tmdb-card__header h3 {
+  margin: 0;
+  color: #ffd429;
+  font-size: 1.1rem;
+}
+
+.raspberry-tmdb-card--credentials .raspberry-tmdb-card__header p {
+  margin: 0.6rem 0 0;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1.5;
+}
+
 .raspberry-tmdb-card__form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
@@ -2089,6 +2115,11 @@ img {
 .raspberry-tmdb-card__save:disabled {
   cursor: wait;
   opacity: 0.7;
+}
+
+.raspberry-tmdb-card__form .dialog-button--secondary {
+  background: #f2f5f8;
+  color: #183041;
 }
 
 .raspberry-language-card__header {
@@ -5676,7 +5707,9 @@ img {
     padding-top: 0;
   }
 
-  .movie-filter__panel {
+  .movie-filter__panel,
+  .catalog-ai-panel,
+  .catalog-ai-result {
     width: 100%;
     margin-right: auto;
     margin-left: auto;
@@ -6319,6 +6352,12 @@ img {
   font-size: min(.78rem, 1.65cqw);
   border-radius: min(14px, 1.8cqw);
 }
+.movie-library__browse-tools .movie-library__rating-source { flex-shrink: 1; min-width: 0; }
+.movie-library__rating-source select { min-width: 0; max-width: 100%; }
+.movie-library__browse-tools select:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
+@container (max-width: 1000px) {
+  .movie-library__rating-source > span { display: none; }
+}
 .movie-library__browse-tools .oscar-view-button svg {
   width: min(21px, 3cqw);
   height: min(21px, 3cqw);
@@ -6431,6 +6470,12 @@ img {
 .tmdb-cache-panel details ul { max-height: 240px; overflow-y: auto; }
 
 .tmdb-cache-panel > .dialog-button { margin: 0 12px 12px 0; }
+
+.tmdb-cache-panel > .dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
 
 .tmdb-cache-storage { margin: 16px 0 24px; }
 
@@ -6898,6 +6943,4 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
 
 .games-library__controls { --series-controls-item-size: 54px; display: flex; align-items: center; gap: 12px; width: min(1128.8px, 100%); margin: 0 auto 1.25rem max(0px, calc((100% - 1360px) / 2)); }
 .games-library__controls .series-select { flex: 1; width: auto; min-width: 0; }
-.games-library__filter { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; flex-shrink: 0; }
-.games-library__filter svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; }
-.games-library__filter.is-open { border-color: #ffd429; color: #ffd429; }
+.games-library__controls .movie-filter__toggle { flex-shrink: 0; }

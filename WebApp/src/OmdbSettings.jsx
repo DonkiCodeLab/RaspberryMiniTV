@@ -21,7 +21,10 @@ export default function OmdbSettings({ language }) {
     currentRequest.current.controller = controller;
     setBusy(demo ? "" : "load"); setError(null);
     if (!demo) getOmdbSettings(controller.signal).then(result => {
-      if (!controller.signal.aborted && generation === currentRequest.current.generation) setSettings(result.settings);
+      if (!controller.signal.aborted && generation === currentRequest.current.generation) {
+        setSettings(result.settings);
+        setApiKey(result.settings.apiKey || "");
+      }
     }).catch(nextError => { if (!controller.signal.aborted) setError(nextError); })
       .finally(() => { if (!controller.signal.aborted) setBusy(""); });
     return () => { currentRequest.current.generation += 1; currentRequest.current.controller?.abort(); };
@@ -38,32 +41,33 @@ export default function OmdbSettings({ language }) {
       const result = action === "test" ? await testOmdbSettings(controller.signal)
         : await saveOmdbSettings(omdbSettingsPayload(apiKey, action === "remove"), controller.signal);
       if (generation !== currentRequest.current.generation || controller.signal.aborted) return;
-      if (action !== "test") { setSettings(result.settings); setApiKey(""); setSettingsRevision(value => value + 1); }
+      if (action !== "test") { setSettings(result.settings); setApiKey(result.settings.apiKey || ""); setSettingsRevision(value => value + 1); }
       setMessage(action === "test" ? "connected" : action === "remove" ? "removed" : "saved");
     } catch (nextError) { if (!controller.signal.aborted) setError(nextError); }
     finally { currentRequest.current.busy = false; if (generation === currentRequest.current.generation) setBusy(""); }
   }
   const disabled = Boolean(busy || !settings);
-  return <article className="raspberry-tmdb-card omdb-settings" aria-labelledby="omdb-settings-title" aria-busy={Boolean(busy)}>
+  const dirty = apiKey.trim() !== (settings?.apiKey || "");
+  return <article className="raspberry-tmdb-card raspberry-tmdb-card--credentials omdb-settings" aria-labelledby="omdb-settings-title" aria-busy={Boolean(busy)}>
     <div className="raspberry-tmdb-card__header"><h3 id="omdb-settings-title">{s.settingsTitle}</h3><p>{s.settingsHint}</p></div>
     <a className="omdb-settings__key-link" href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener noreferrer">{s.keyLink} ↗</a>
     {demo ? <p>{s.demo}</p> : <>
       {busy === "load" && <p role="status">{s.loading}</p>}
       <form className="raspberry-tmdb-card__form" onSubmit={event => { event.preventDefault(); act("save"); }}>
-        <label><span>{s.key}</span><input type="password" autoComplete="new-password" spellCheck={false} maxLength={256}
+        <label><span>{s.key}</span><input type="text" autoComplete="off" spellCheck={false} autoCapitalize="none" maxLength={256}
           disabled={disabled} value={apiKey} placeholder={settings?.configured ? s.keySaved : s.keyEmpty}
           onChange={event => { setApiKey(event.target.value); setMessage(""); }} /></label>
         <div className="omdb-settings__actions">
-          <button type="submit" disabled={disabled || !apiKey.trim()}>{busy === "save" ? s.saving : s.save}</button>
-          <button type="button" disabled={disabled || !settings?.configured || Boolean(apiKey)} onClick={() => act("test")}>{busy === "test" ? s.testing : s.test}</button>
+          <button type="submit" disabled={disabled || !dirty || !apiKey.trim()}>{busy === "save" ? s.saving : s.save}</button>
+          <button type="button" className="dialog-button dialog-button--secondary" disabled={disabled || !settings?.configured || dirty} onClick={() => act("test")}>{busy === "test" ? s.testing : s.test}</button>
           <button type="button" disabled={disabled || !settings?.configured} onClick={() => act("remove")}>{s.remove}</button>
         </div>
       </form>
-      {apiKey && <p className="omdb-settings__hint">{s.saveBeforeTest}</p>}
+      {dirty && <p className="omdb-settings__hint">{s.saveBeforeTest}</p>}
       {error && <p className="dialog-error" role="alert">{omdbError(error, language)}</p>}
       {!settings && !busy && <button type="button" className="dialog-button" onClick={() => setAttempt(value => value + 1)}>{s.retry}</button>}
       {message && <p role="status">{s[message]}</p>}
-      {settings && <OmdbLibraryUpdate key={settingsRevision} language={language} disabled={Boolean(busy || apiKey)} />}
+      {settings && <OmdbLibraryUpdate key={settingsRevision} language={language} disabled={Boolean(busy || dirty)} />}
     </>}
   </article>;
 }

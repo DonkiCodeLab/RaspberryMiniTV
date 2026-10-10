@@ -4,7 +4,8 @@
 
 En **Dashboard → Servicios auxiliares → Puntuaciones · OMDb**, guarda la clave obtenida en
 [OMDb](https://www.omdbapi.com/apikey.aspx) y pulsa **Probar conexión**. La clave
-permanece en la Raspberry; no se incluye en la compilación web ni se devuelve al
+se guarda en la Raspberry y se muestra en el formulario de configuración al acceder
+con el PIN. No se incluye en la compilación ni se guarda en el almacenamiento del
 navegador. El plan gratuito de OMDb permite 1.000 consultas al día.
 
 Las fichas de películas y series, incluidas las vistas previas del buscador TMDB,
@@ -28,6 +29,16 @@ progreso. Tras reiniciar la Raspberry requiere reanudarla manualmente.
 
 Requiere actualizar también DeviceApp y configurar la clave en cada Raspberry.
 El modo demo no consulta OMDb ni inventa puntuaciones.
+
+En **Películas** y **Series**, el selector **Puntuación** junto a **Ordenar por**
+permite elegir TMDB (sobre 5), IMDb (sobre 10), Rotten Tomatoes (%) o Metacritic
+(sobre 100). La fuente elegida se usa en las tarjetas, en la puntuación principal
+de la ficha y al ordenar por puntuación; se recuerda en ese navegador para ambas
+secciones. Las notas ausentes se muestran como «No disponible» y quedan al final
+en ambos sentidos de ordenación. La biblioteca lee las notas OMDb ya guardadas,
+incluidas las antiguas, sin consultas externas. **Actualizar fichas** permite
+completar las pendientes; al abrir una ficha se actualiza también su nota en la
+biblioteca.
 
 ## Usuarios y progreso
 
@@ -298,8 +309,9 @@ volver al listado anterior. Una petición de aclaración conserva el filtro que
 ya estaba aplicado; no sustituye el listado por una respuesta inventada.
 
 Actívala desde **Dashboard → Servicios auxiliares → OpenAI**: introduce la clave,
-guarda y comprueba la conexión. La clave no se recupera del servidor ni se guarda
-en el almacenamiento del navegador; el campo vacío conserva la clave existente.
+guarda y comprueba la conexión. El formulario recupera y muestra la clave y los
+ajustes guardados al acceder con el PIN, sin guardarlos en el almacenamiento del
+navegador; el campo vacío conserva la clave existente.
 La prueba utiliza los ajustes guardados. Requiere actualizar web y API, conexión
 a Internet y acceso a la API de OpenAI. En modo maqueta los controles indican que
 hay que conectarse a la Raspberry y no guardan credenciales ni simulan resultados.

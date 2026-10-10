@@ -1,7 +1,7 @@
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
 from omdb_ratings import OmdbSettings, OmdbRatings, OmdbError
-from omdb_backfill import OmdbBackfill
+from omdb_backfill import OmdbBackfill, cached_library_ratings
 from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
 from video_formats import is_video_file
 import movie_subtitles
@@ -4019,9 +4019,9 @@ def omdb_error(error):
 
 @app.route("/settings/omdb", methods=["GET", "POST"])
 def omdb_settings():
-    settings = (omdb_settings_store.update(request.get_json(silent=True)) if request.method == "POST"
-                else omdb_settings_store.public())
-    return jsonify({"ok": True, "settings": settings})
+    if request.method == "POST":
+        omdb_settings_store.update(request.get_json(silent=True))
+    return jsonify({"ok": True, "settings": omdb_settings_store.for_editor()})
 
 
 @app.route("/settings/omdb/test", methods=["POST"])
@@ -4139,7 +4139,7 @@ def cached_tmdb_library():
     if language not in ("es-ES", "ca-ES", "en-US"):
         return jsonify({"error": "Idioma no permitido"}), 400
     library = load_media_library()
-    result = {}
+    result = {"ratings": cached_library_ratings(library, omdb_ratings)}
     for collection, kind in (("movies", "movie"), ("series", "tv")):
         ids = {int(item["tmdbId"]) for item in library.get(collection, {}).values() if item.get("tmdbId")}
         result[collection] = {}
@@ -4349,10 +4349,8 @@ def ai_settings():
         if request.method == "POST":
             if request.content_length and request.content_length > 16384:
                 return ai_json({"ok": False, "error": "Configuración demasiado larga.", "code": "AI_INVALID_SETTINGS"}, 400)
-            settings = ai_settings_store.update(request.get_json(silent=True))
-        else:
-            settings = ai_settings_store.public()
-        return ai_json({"ok": True, "settings": settings})
+            ai_settings_store.update(request.get_json(silent=True))
+        return ai_json({"ok": True, "settings": ai_settings_store.for_editor()})
     except AIError as error:
         return ai_error_response(error)
     except (OSError, ValueError):

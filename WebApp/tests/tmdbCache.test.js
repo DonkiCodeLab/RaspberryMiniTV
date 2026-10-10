@@ -75,7 +75,7 @@ test('library loads a single compact local response without detail requests', as
   globalThis.fetch = async url => {
     requests.push(url);
     assert.equal(url, 'http://raspberry:5050/tmdb/library?language=es-ES');
-    return { ok: true, text: async () => JSON.stringify({ movies: { 1: { id: 1, name: 'Test', posterPath: '/poster.jpg' } },
+    return { ok: true, text: async () => JSON.stringify({ ratings: { movies: { 'Movies/test.mp4': { rating: 8.2, rottenTomatoes: 0, metacritic: 71 } }, series: { 'TVShows/test': { rating: 7.5 } } }, movies: { 1: { id: 1, name: 'Test', posterPath: '/poster.jpg' } },
       series: { 2: { id: 2, seasonCount: 2, totalEpisodeCount: 3, totalRuntimeMinutes: 150, runtimeIsEstimated: false } } }) };
   };
   try {
@@ -88,6 +88,9 @@ test('library loads a single compact local response without detail requests', as
     assert.equal(cards.series[2].totalEpisodeCount, 3);
     assert.equal(cards.series[2].totalRuntimeMinutes, 150);
     assert.equal(cards.series[2].runtimeIsEstimated, false);
+    assert.equal(cards.ratings.movies['Movies/test.mp4'].rating, 8.2);
+    assert.equal(cards.ratings.movies['Movies/test.mp4'].rottenTomatoes, 0);
+    assert.equal(cards.ratings.series['TVShows/test'].rating, 7.5);
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
 

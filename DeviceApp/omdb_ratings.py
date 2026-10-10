@@ -100,6 +100,11 @@ class OmdbSettings:
     def public(self):
         return {"configured": bool(self.credentials())}
 
+    def for_editor(self):
+        """Saved values for the PIN-protected settings form only."""
+        key = self.credentials()
+        return {"configured": bool(key), "apiKey": key}
+
     def update(self, changes):
         if (not isinstance(changes, dict) or set(changes) - {"apiKey", "clearApiKey"}
                 or not self._valid_key(changes.get("apiKey", ""))
@@ -307,8 +312,8 @@ class OmdbRatings:
         ttl = RATING_TTL if any(cached.get(field) is not None for field in SCORE_FIELDS) else MISSING_TTL
         return now - cached["updatedAt"] < ttl
 
-    def peek(self, *, imdb_id=None, kind=None, tmdb_id=None):
-        """Return a current cached result only; never resolve online or write."""
+    def peek(self, *, imdb_id=None, kind=None, tmdb_id=None, allow_stale=False):
+        """Read cached scores without network or writes; optionally retain old scores."""
         self._identity(imdb_id, kind, tmdb_id)
         if not imdb_id:
             data = _read(self.root / "ids" / f"{kind}-{int(tmdb_id)}.json") or {}
@@ -319,7 +324,8 @@ class OmdbRatings:
             return None
         now = time.time()
         cached = self._cached(imdb_id, kind, now)
-        return self._public(cached) if self._current(cached, now) else None
+        current = self._current(cached, now)
+        return self._public(cached, stale=not current) if cached and (current or allow_stale) else None
 
     def _fetch(self, key, imdb_id, kind=None):
         params = {"apikey": key, "i": imdb_id, "r": "json", "plot": "short"}

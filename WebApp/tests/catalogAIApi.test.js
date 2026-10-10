@@ -19,12 +19,12 @@ test("AI uses authenticated Raspberry endpoints, keeps keys off storage and test
     assert.equal(options.headers["X-Web-Pin"], "test-pin");
     assert.equal(options.cache, "no-store");
     assert.ok(options.signal instanceof AbortSignal);
-    return { ok: true, text: async () => '{"ok":true,"settings":{"enabled":true,"configured":true,"model":"gpt-4.1-mini","requestsPerMinute":10}}' };
+    return { ok: true, text: async () => '{"ok":true,"settings":{"enabled":true,"configured":true,"apiKey":"sk-synthetic-test","model":"gpt-4.1-mini","requestsPerMinute":10}}' };
   };
   try {
     const api = await loadAPI();
-    await api.getAISettings();
-    await api.saveAISettings({ enabled: true, apiKey: "sk-synthetic-test", model: "gpt-4.1-mini", requestsPerMinute: 10 });
+    assert.equal((await api.getAISettings()).settings.apiKey, "sk-synthetic-test");
+    assert.equal((await api.saveAISettings({ enabled: true, apiKey: "sk-synthetic-test", model: "gpt-4.1-mini", requestsPerMinute: 10 })).settings.apiKey, "sk-synthetic-test");
     await api.testAISettings();
     await api.searchCatalogAI({ section: "books", prompt: "Books by an author", language: "en" });
     assert.deepEqual(calls.map(({ url }) => new URL(url).pathname), ["/settings/ai", "/settings/ai", "/settings/ai/test", "/ai/search"]);

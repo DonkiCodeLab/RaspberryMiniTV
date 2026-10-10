@@ -4,7 +4,7 @@
 .catalog-ai-button.has-filters, .catalog-ai-button.is-open { color: #ffd429; border-color: #ffd429; }
 .series-hero__controls-row.series-hero__controls-row--ai { grid-template-columns: auto auto minmax(0, 1fr); }
 .series-hero__controls-row.series-hero__controls-row--ai.series-hero__controls-row--selector-only { grid-template-columns: auto minmax(0, 1fr); }
-.catalog-ai-panel, .catalog-ai-result { box-sizing: border-box; width: var(--series-visible-width); max-width: 100%; margin: 0 0 1.2rem; padding: 1.2rem; border: 1px solid #ffd42966; border-radius: 18px; color: #eff4fa; background: rgba(18, 32, 45, 0.96); position: relative; z-index: 3; }
+.catalog-ai-panel, .catalog-ai-result { box-sizing: border-box; max-width: 100%; padding: 1.2rem; border: 1px solid #ffd42966; border-radius: 18px; color: #eff4fa; background: rgba(18, 32, 45, 0.96); position: relative; z-index: 3; }
 .catalog-ai-panel__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .catalog-ai-panel h2 { font-size: 1.1rem; margin: 0; }
 .catalog-ai-panel__heading > button { color: inherit; background: none; border: 0; font-size: 1.8rem; cursor: pointer; padding: 0 0.4rem; }
@@ -20,15 +20,9 @@
 .catalog-ai-result small { display: block; color: #e5edf6bb; line-height: 1.5; }
 .catalog-ai-result > button { flex-shrink: 0; }
 .catalog-ai-extra-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; width: var(--series-visible-width); margin-bottom: 1rem; }
-.openai-settings { margin-top: 1rem; }
-.openai-settings h3 { margin: 0; color: #ffd429; }
-.openai-settings .raspberry-tmdb-card__header { align-items: start; }
-.openai-settings .raspberry-tmdb-card__header p { line-height: 1.5; font-size: 0.9rem; }
 .openai-settings .openai-settings__enabled { display: flex; flex-direction: row; align-items: center; gap: 0.5rem; grid-column: 1 / -1; }
 .openai-settings .openai-settings__enabled input { width: auto; }
 .openai-settings .dialog-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.6rem; }
 @media (max-width: 600px) {
   .catalog-ai-result { align-items: stretch; flex-direction: column; }
-  .app-shell .games-library__controls { flex-wrap: wrap; }
-  .app-shell .games-library__controls .series-select { flex-basis: 100%; }
 }

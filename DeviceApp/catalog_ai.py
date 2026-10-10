@@ -83,6 +83,12 @@ class AISettings:
         with self.lock:
             return self._public(self._load())
 
+    def for_editor(self):
+        """Saved values for the PIN-protected settings form only."""
+        with self.lock:
+            data = self._load()
+            return {**self._public(data), "apiKey": data["apiKey"]}
+
     def credentials(self):
         """Private server-side snapshot; never serialize this into an HTTP response."""
         with self.lock:

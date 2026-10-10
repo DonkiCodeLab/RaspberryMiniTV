@@ -26,6 +26,23 @@ def _imdb_id(item):
         return None
 
 
+def cached_library_ratings(library, ratings):
+    """Scores by media path, including IMDb-only profiles, without online lookups."""
+    result = {"movies": {}, "series": {}}
+    for collection, kind in (("movies", "movie"), ("series", "tv")):
+        for path, item in library.get(collection, {}).items():
+            if not isinstance(item, dict):
+                continue
+            try:
+                cached = ratings.peek(kind=kind, tmdb_id=item.get("tmdbId"),
+                                      imdb_id=_imdb_id(item), allow_stale=True)
+            except OmdbError:
+                continue
+            if cached is not None:
+                result[collection][path] = cached
+    return result
+
+
 def library_targets(library):
     """Deduplicate both TMDB and IMDb aliases without visiting media files."""
     rows, parents, aliases, missing = [], [], {}, []

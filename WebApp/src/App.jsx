@@ -10,6 +10,7 @@ import CatalogAI, { CatalogAIButton, CatalogAIResult } from "./CatalogAI.jsx";
 import OpenAISettings from "./OpenAISettings.jsx";
 import OmdbSettings from "./OmdbSettings.jsx";
 import ImdbRating from "./ImdbRating.jsx";
+import { RATING_SOURCES, ratingSource, loadRatingSource, saveRatingSource, formatLibraryRating, compareLibraryRatings } from "./libraryRatings.js";
 import { catalogAIIds, filterAICollections, matchesCatalogAI } from "./catalogAI.js";
 import { recommendationLibraryTarget, recommendationTorrentTarget } from "./recommendations.js";
 import BrowserVideo from "./BrowserVideo.jsx";
@@ -54,7 +55,7 @@ import GameImagePreview from "./GameImagePreview.jsx";
 import { gameMetadataImageUrl } from "./api/raspberryApi";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
 import { mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason } from "./mediaMarks.js";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import cartellMask from "./assets/cartell_base_black_mask.png";
 import cartellLogo from "./assets/cartell_logo.png";
@@ -743,6 +744,7 @@ const UI_STRINGS = {
     movie_sort_year: "Año",
     movie_sort_rating: "Puntuación",
     movie_sort_label: "Ordenar por",
+    library_rating_source: "Puntuación",
     series_library: "Todas las series",
     select_series: "Seleccionar serie",
     no_movies_available: "Sin películas disponibles",
@@ -1194,6 +1196,7 @@ const UI_STRINGS = {
     movie_sort_year: "Any",
     movie_sort_rating: "Puntuació",
     movie_sort_label: "Ordenar per",
+    library_rating_source: "Puntuació",
     series_library: "Totes les sèries",
     select_series: "Seleccionar sèrie",
     no_movies_available: "No hi ha pel·lícules disponibles",
@@ -1645,6 +1648,7 @@ const UI_STRINGS = {
     movie_sort_year: "Year",
     movie_sort_rating: "Rating",
     movie_sort_label: "Sort by",
+    library_rating_source: "Rating source",
     series_library: "All series",
     select_series: "Select series",
     no_movies_available: "No movies available",
@@ -5253,7 +5257,7 @@ function RaspberryBirthdaysCard({ birthdays, saving, status, onSaveList, t }) {
 }
 
 function RaspberryPage({
-  profiles, userEditorId, onUserEditorChange, onManageUsers,
+  profiles, userEditorId, onUserEditorChange,
   raspberryTab,
   onChangeTab,
   dashboardSection,
@@ -5722,7 +5726,6 @@ function RaspberryPage({
             <GameProviderSettings language={raspberryLanguage} />
             <GameProviderSettings language={raspberryLanguage} youtube />
           </section>
-          <section className="raspberry-dashboard-section"><h2 className="raspberry-dashboard-section__title">Users</h2><button type="button" className="dialog-button dialog-button--accent" onClick={() => onManageUsers(profiles.activeId)}>{userStrings(raspberryLanguage).edit}</button></section>
           <SystemUpdate language={raspberryLanguage} />
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
@@ -6449,6 +6452,9 @@ export default function App() {
   const [bookActionsVisible, setBookActionsVisible] = useState(false);
   const [seriesLibraryView, setSeriesLibraryView] = useState("grid");
   const [seriesLibrarySort, setSeriesLibrarySort] = useState("name");
+  const [libraryRatingSource, setLibraryRatingSource] = useState(loadRatingSource);
+  const [libraryRatings, setLibraryRatings] = useState({});
+  useEffect(() => { saveRatingSource(libraryRatingSource); }, [libraryRatingSource]);
   const [mediaFilterOpen, setMediaFilterOpen] = useState(false);
   const [catalogAIOpen, setCatalogAIOpen] = useState(false);
   const [catalogAIResults, setCatalogAIResults] = useState({});
@@ -6938,6 +6944,7 @@ export default function App() {
     setError("");
     getLibrarySummaries(libraryMovies, directories, tmdbLanguage).then(async summaries => {
       if (cancelled) return;
+      setLibraryRatings(summaries.ratings || {});
       console.info("[Biblioteca] Completado: resumen local", { ms: Date.now() - summaryStarted });
       setLibraryStage("Cargando miniaturas locales de series y películas");
       const covers = [
@@ -7025,6 +7032,7 @@ export default function App() {
         firstAirDate: tmdbSeries?.firstAirDate || "",
         creators: tmdbSeries?.creators || [],
         voteAverage: tmdbSeries?.voteAverage || 0,
+        omdbRatings: libraryRatings.series?.[directory.relativePath],
         seasons: tmdbSeries?.seasons || [],
         seasonCount: tmdbSeries?.seasonCount ?? null,
         episodeCount: tmdbSeries?.totalEpisodeCount ?? null,
@@ -7032,7 +7040,7 @@ export default function App() {
         runtimeIsEstimated: Boolean(tmdbSeries?.runtimeIsEstimated),
       };
     }).sort(compareMediaNames);
-  }, [directories, seriesProfiles, tmdbSeriesMap, raspberryLanguage]);
+  }, [directories, seriesProfiles, tmdbSeriesMap, raspberryLanguage, libraryRatings]);
 
   const movieOptions = useMemo(() => {
     return movieLibrary.map((movie) => {
@@ -7057,10 +7065,11 @@ export default function App() {
         releaseDate: tmdbMovie?.releaseDate || "",
         runtime: tmdbMovie?.runtime || 0,
         voteAverage: tmdbMovie?.voteAverage || 0,
+        omdbRatings: libraryRatings.movies?.[movie.fileRelativePath || movie.id],
         genres: tmdbMovie?.genres || [],
       };
     }).sort(compareMediaNames);
-  }, [movieLibrary, movieProfiles, tmdbMovieMap, raspberryLanguage]);
+  }, [movieLibrary, movieProfiles, tmdbMovieMap, raspberryLanguage, libraryRatings]);
 
   const selectedSeries = selectedDirectoryPath
     ? seriesOptions.find((series) => series.directoryPath === selectedDirectoryPath) || null
@@ -7076,6 +7085,13 @@ export default function App() {
     selectedMovieId == null
       ? null
       : movieOptions.find((movie) => String(movie.id) === String(selectedMovieId)) || null;
+
+  const handleMovieRatingLoaded = useCallback(data => {
+    setLibraryRatings(current => ({ ...current, movies: { ...current.movies, [selectedMovieId]: data } }));
+  }, [selectedMovieId]);
+  const handleSeriesRatingLoaded = useCallback(data => {
+    setLibraryRatings(current => ({ ...current, series: { ...current.series, [selectedDirectoryPath]: data } }));
+  }, [selectedDirectoryPath]);
 
   useEffect(() => {
     if (!raspberryHealth.running) return;
@@ -8927,11 +8943,11 @@ export default function App() {
     matchesAI(movie) && matchesName(movie.name) && matchesFavorite("movie", movie.id) &&
     (!selectedMovieGenres.length || (movie.genres || []).some((genre) => selectedMovieGenres.includes(genre))) &&
     (!movieAwardFilters.length || movieAwards(getMovieTmdbId(movie)).some(({ award }) => movieAwardFilters.includes(award)))
-  ).sort((left, right) => compareLibraryItems(left, right, movieLibrarySort, movieSortDirection, normalizeRaspberryLanguage(raspberryLanguage)));
+  ).sort((left, right) => compareLibraryItems(left, right, movieLibrarySort, movieSortDirection, normalizeRaspberryLanguage(raspberryLanguage), libraryRatingSource));
   const filteredSeriesOptions = seriesOptions
     .filter((series) => matchesAI(series) && matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath))
     .sort((left, right) => seriesLibrarySort === "rating"
-      ? (Number(right.voteAverage) || 0) - (Number(left.voteAverage) || 0) || compareMediaNames(left, right)
+      ? compareLibraryRatings(left, right, libraryRatingSource, "desc", normalizeRaspberryLanguage(raspberryLanguage))
       : compareMediaNames(left, right));
   const filteredGameOptions = consoleGames
     .filter(game => matchesAI(game) && matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath))
@@ -9171,7 +9187,7 @@ export default function App() {
               </section>
             ) : currentView === "raspberry" ? (
               <RaspberryPage
-                profiles={profiles} userEditorId={userEditorId} onUserEditorChange={setUserEditorId} onManageUsers={handleManageUsers}
+                profiles={profiles} userEditorId={userEditorId} onUserEditorChange={setUserEditorId}
                 raspberryTab={raspberryTab}
                 onChangeTab={setRaspberryTab}
                 dashboardSection={dashboardSection}
@@ -9418,6 +9434,12 @@ export default function App() {
                                 {!isGamesMode && <option value="rating">{t("movie_sort_rating")}</option>}
                               </select>
                             </label>}
+                            {!isOscarView && (isMoviesMode || isSeriesMode) && <label className="movie-library__sort movie-library__rating-source">
+                              <span>{t("library_rating_source")}</span>
+                              <select value={libraryRatingSource} aria-label={t("library_rating_source")} onChange={event => setLibraryRatingSource(event.target.value)}>
+                                {RATING_SOURCES.map(source => <option key={source.id} value={source.id}>{source.label}</option>)}
+                              </select>
+                            </label>}
                         </div>
                       ) : null}
                       {isOscarView && <AwardSelector value={awardType} onChange={setAwardType} language={raspberryLanguage} />}
@@ -9532,26 +9554,26 @@ export default function App() {
                 </header>
 
                 {isGamesMode && !isMediaDetail && <div className="games-library__controls">
-                  <button className={`dialog-button games-library__filter${mediaFilterOpen ? " is-open" : ""}`} type="button"
+                  <button className={`movie-filter__toggle${mediaFilterOpen ? " is-open" : ""}${mediaFiltersActive ? " has-filters" : ""}`} type="button"
                     onClick={() => setMediaFilterOpen(current => !current)} aria-expanded={mediaFilterOpen}
-                    aria-controls="library-filter-panel">
+                    aria-controls="library-filter-panel" aria-label={t("games_filter")} title={t("games_filter")}>
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d={mediaFilterOpen ? "M5 15l7-7 7 7" : "M4 6h16M7 12h10M10 18h4"} /></svg>
-                    {t("games_filter")}{mediaFiltersActive ? ` (${activeFilterCount})` : ""}
+                    {mediaFiltersActive ? <span>{activeFilterCount}</span> : null}
                   </button>
-                  <CatalogAIButton language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
+                  <CatalogAIButton compact language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
                   <HeroSelector options={heroSelectorOptions} value={selectorValue}
                     placeholder={heroSelectorOptions.length ? selectorLabel : t("games_empty_title")}
                     disabled={!heroSelectorOptions.length} onChange={handleOpenGameDetails} />
                 </div>}
 
-                {(isPicturesMode || isMediaDetail || isOscarView || isBookAwardView) && <div className="catalog-ai-extra-tools">
+                {!isMediaDetail && (isPicturesMode || isOscarView || isBookAwardView) && <div className="catalog-ai-extra-tools">
                   {isPicturesMode && <button className="dialog-button" type="button" onClick={() => setMediaFilterOpen(value => !value)} aria-expanded={mediaFilterOpen} aria-controls="library-filter-panel">{t("movie_filter")}</button>}
                   <CatalogAIButton language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
                 </div>}
-                {catalogAIOpen && <CatalogAI key={`${profiles.activeId}:${activeMediaType}:${raspberryLanguage}`} section={activeMediaType} language={raspberryLanguage}
+                {!isMediaDetail && catalogAIOpen && <CatalogAI key={`${profiles.activeId}:${activeMediaType}:${raspberryLanguage}`} section={activeMediaType} language={raspberryLanguage}
                   user={profiles.ready ? profiles.activeUser : null} onOpenLibrary={handleOpenRecommendedLibrary} onSearchTorrent={handleRecommendedTorrent}
                   initialPrompt={activeAIResult?.prompt || ""} onResult={applyCatalogAI} onClose={() => setCatalogAIOpen(false)} />}
-                {!isOscarView && !isBookAwardView && <CatalogAIResult result={activeAIResult} visible={filterVisible} language={raspberryLanguage}
+                {!isMediaDetail && !isOscarView && !isBookAwardView && <CatalogAIResult result={activeAIResult} visible={filterVisible} language={raspberryLanguage}
                   onClear={() => setCatalogAIResults(current => ({ ...current, [activeMediaType]: null }))} />}
 
                 {!isOscarView && !isBookAwardView && !isMediaDetail && (isGamesMode || filterTotal > 0) && mediaFilterOpen ? (
@@ -9774,7 +9796,7 @@ export default function App() {
                       {filteredSeriesOptions.map((series) => {
                         const poster = series.posterImage;
                         const year = series.firstAirDate?.slice(0, 4) || t("not_available");
-                        const rating = Number(series.voteAverage) > 0 ? `${(series.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
+                        const rating = formatLibraryRating(series, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
                           <article className="movie-library__card" key={series.directoryPath}>
                             <button className="movie-library__poster" type="button" onClick={() => handleOpenSeriesDetails(series.directoryPath)} aria-label={`${t("movie_details")}: ${series.name}`}>
@@ -9782,7 +9804,7 @@ export default function App() {
                             </button>
                             <div className="movie-library__info">
                               <h2>{series.name}</h2>
-                              <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
+                              <div className="movie-library__meta"><span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
                               <dl className="series-library__stats">
                                 <div title={t("seasons_label")}>
                                   <dt>{t("series_stats_seasons")}</dt>
@@ -9820,7 +9842,8 @@ export default function App() {
                   </section>
                 ) : isSeriesMode && !seasons.length ? (
                   <section className="empty-state">
-                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} />
+                    <div className="series-library__selected-rating"><strong>{ratingSource(libraryRatingSource).label}</strong><span>{formatLibraryRating(selectedSeries, libraryRatingSource, raspberryLanguage, t("not_available"))}</span></div>
+                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
                     <div className="empty-state__card">
                       <h2>{emptyTitle}</h2>
                       <p>{emptyDescription}</p>
@@ -9829,7 +9852,8 @@ export default function App() {
                   </section>
                 ) : isSeriesMode ? (
                   <section className="seasons-section">
-                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} />
+                    <div className="series-library__selected-rating"><strong>{ratingSource(libraryRatingSource).label}</strong><span>{formatLibraryRating(selectedSeries, libraryRatingSource, raspberryLanguage, t("not_available"))}</span></div>
+                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
                     <div className="seasons-section__label">
                       {`${seasons.length} ${t("seasons_label")} (${selectedSeries?.episodeCount || 0} ${t("chapters_summary")})`}
                     </div>
@@ -9851,7 +9875,7 @@ export default function App() {
                   </section>
                 ) : isMoviesMode && !selectedMovie ? (
                   <section className="movie-library seasons-section library-with-scroll-rail">
-                    <LibraryScrollRail labels={filteredMovieOptions.map(item => libraryScrollLabel(item, movieLibrarySort, normalizeRaspberryLanguage(raspberryLanguage)))} language={raspberryLanguage} sort={movieLibrarySort} direction={movieSortDirection} onDirectionChange={setMovieSortDirection} actionsVisible={movieActionsVisible} onActionsChange={movieLibraryView === "list" ? undefined : setMovieActionsVisible} />
+                    <LibraryScrollRail labels={filteredMovieOptions.map(item => libraryScrollLabel(item, movieLibrarySort, normalizeRaspberryLanguage(raspberryLanguage), libraryRatingSource))} language={raspberryLanguage} sort={movieLibrarySort} direction={movieSortDirection} onDirectionChange={setMovieSortDirection} actionsVisible={movieActionsVisible} onActionsChange={movieLibraryView === "list" ? undefined : setMovieActionsVisible} />
                     <div className="seasons-section__label">{libraryCountLabel}</div>
                     <MovieLibraryItems view={movieLibraryView} actionsVisible={movieActionsVisible}>
                       {filteredMovieOptions.map((movie) => {
@@ -9863,7 +9887,7 @@ export default function App() {
                         const isWatched = Boolean(movieMarks.watched);
                         const poster = movie.posterImage || movie.imageOptions?.[1] || movie.heroImage || cartellLogo;
                         const year = movie.releaseDate?.slice(0, 4) || t("not_available");
-                        const rating = Number(movie.voteAverage) > 0 ? `${(movie.voteAverage / 2).toFixed(1)} / 5` : t("not_available");
+                        const rating = formatLibraryRating(movie, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
                           <article data-library-index className="movie-library__card" key={movie.id}>
                             <button className="movie-library__poster" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={[`${t("movie_details")}: ${movie.name}`, ...awards.map(award => award.label)].join(" · ")}>
@@ -9872,7 +9896,7 @@ export default function App() {
                             </button>
                             <div className="movie-library__info">
                               <h2>{movie.name}</h2>
-                              <div className="movie-library__meta"><span>{year}</span><span>★ {rating}</span></div>
+                              <div className="movie-library__meta"><span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
                               <div className="movie-library__actions-reveal" inert={movieLibraryView !== "list" && !movieActionsVisible} aria-hidden={movieLibraryView !== "list" && !movieActionsVisible}>
                                 <div className="movie-library__actions-clip">
                                   <div className="movie-library__actions movie-library__actions--icons">
@@ -10013,16 +10037,11 @@ export default function App() {
                             </span>
                           </div>
                           <div className="movie-panel__fact">
-                            <strong>{t("rating")}</strong>
-                            {typeof selectedMovie.voteAverage === "number" &&
-                            selectedMovie.voteAverage > 0 ? (
-                              <div className="movie-panel__rating">
-                                <span>{(selectedMovie.voteAverage / 2).toFixed(1)} / 5</span>
-                                <RatingStars rating={selectedMovie.voteAverage} />
-                              </div>
-                            ) : (
-                              <span>{t("tmdb_rating_missing")}</span>
-                            )}
+                            <strong>{t("library_rating_source")} · {ratingSource(libraryRatingSource).label}</strong>
+                            <div className="movie-panel__rating">
+                              <span>{formatLibraryRating(selectedMovie, libraryRatingSource, raspberryLanguage, t("not_available"))}</span>
+                              {libraryRatingSource === "tmdb" && selectedMovie.voteAverage > 0 && <RatingStars rating={selectedMovie.voteAverage} />}
+                            </div>
                           </div>
                           <div className="movie-panel__fact">
                             <strong>{t("genres")}</strong>
@@ -10056,7 +10075,7 @@ export default function App() {
                           </div>
                         </div>
 
-                        <ImdbRating kind="movie" tmdbId={selectedMovie.tmdbId} imdbUrl={selectedMovie.imdbUrl} language={raspberryLanguage} />
+                        <ImdbRating kind="movie" tmdbId={selectedMovie.tmdbId} imdbUrl={selectedMovie.imdbUrl} language={raspberryLanguage} onLoad={handleMovieRatingLoaded} />
                         <div className="movie-panel__overview">
                           <strong>{t("synopsis")}</strong>
                           <p>{selectedMovie.overview || t("synopsis_unavailable")}</p>

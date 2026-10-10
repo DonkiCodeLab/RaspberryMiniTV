@@ -23,12 +23,12 @@ test("OMDb calls authenticated Raspberry routes with saved-key tests and no pers
     assert.equal(options.cache, "no-store");
     assert.ok(options.signal instanceof AbortSignal);
     return { ok: true, text: async () => JSON.stringify(new URL(url).pathname === "/omdb/ratings"
-      ? rating : { ok: true, settings: { configured: true } }) };
+      ? rating : { ok: true, settings: { configured: true, apiKey: "synthetic-key" } }) };
   };
   try {
     const api = await loadAPI();
-    assert.deepEqual(await api.getOmdbSettings(), { ok: true, settings: { configured: true } });
-    await api.saveOmdbSettings({ apiKey: "  synthetic-key  ", unrelated: "ignore" });
+    assert.deepEqual(await api.getOmdbSettings(), { ok: true, settings: { configured: true, apiKey: "synthetic-key" } });
+    assert.equal((await api.saveOmdbSettings({ apiKey: "  synthetic-key  ", unrelated: "ignore" })).settings.apiKey, "synthetic-key");
     await api.saveOmdbSettings({ apiKey: "" });
     await api.saveOmdbSettings({ clearApiKey: true, apiKey: "synthetic-key" });
     await api.testOmdbSettings();

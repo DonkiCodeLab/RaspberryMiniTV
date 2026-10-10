@@ -1722,10 +1722,11 @@ function requestOmdb(path, options, signal) {
 }
 
 function validateOmdbSettings(data) {
-  if (data?.ok !== true || typeof data.settings?.configured !== "boolean") {
+  if (data?.ok !== true || typeof data.settings?.configured !== "boolean" ||
+      (data.settings.apiKey !== undefined && typeof data.settings.apiKey !== "string")) {
     throw Object.assign(new Error("Invalid OMDb settings response"), { code: "OMDB_INVALID_RESPONSE" });
   }
-  return { ok: true, settings: { configured: data.settings.configured } };
+  return { ok: true, settings: { configured: data.settings.configured, apiKey: data.settings.apiKey || "" } };
 }
 
 export function getOmdbSettings(signal) {

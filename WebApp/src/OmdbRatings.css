@@ -23,8 +23,6 @@
 .seasons-section > .imdb-rating { margin-bottom: 1.2rem; }
 .empty-state > .imdb-rating { width: min(100%, 760px); margin-block: 1rem; }
 .tmdb-browser-series > .imdb-rating { margin-block: 1rem; }
-.omdb-settings h3 { margin: 0; font-size: 1.1rem; }
-.omdb-settings .raspberry-tmdb-card__header p { margin: 0.5rem 0 0; font-size: 0.9rem; font-weight: 400; color: #bdcbd7; text-transform: none; letter-spacing: normal; line-height: 1.5; }
 .omdb-settings .raspberry-tmdb-card__form { grid-template-columns: minmax(160px, 1fr) auto; }
 .omdb-settings__key-link { width: fit-content; color: #ffdc00; font-size: 0.85rem; }
 .omdb-settings__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }

@@ -41,7 +41,7 @@ export function ImdbRatingContent({ data, status = "ready", error, language = "e
   </div>;
 }
 
-export default function ImdbRating({ kind, tmdbId, imdbId, imdbUrl, language }) {
+export default function ImdbRating({ kind, tmdbId, imdbId, imdbUrl, language, onLoad }) {
   const candidate = imdbId || String(imdbUrl || "").match(/^https:\/\/(?:www\.)?imdb\.com\/title\/(tt\d{7,12})(?:\/|$)/)?.[1] || "";
   const resolvedId = isImdbId(candidate) ? candidate : "";
   const id = Number(tmdbId);
@@ -54,10 +54,15 @@ export default function ImdbRating({ kind, tmdbId, imdbId, imdbUrl, language }) 
     if (!valid || demo) return;
     const controller = new AbortController();
     getOmdbRating(resolvedId ? { imdbId: resolvedId } : { kind, tmdbId: id }, controller.signal)
-      .then(data => { if (!controller.signal.aborted) setLoaded({ key, data, status: "ready" }); })
+      .then(data => {
+        if (!controller.signal.aborted) {
+          setLoaded({ key, data, status: "ready" });
+          onLoad?.(data);
+        }
+      })
       .catch(error => { if (!controller.signal.aborted) setLoaded({ key, error, status: "error" }); });
     return () => controller.abort();
-  }, [key, resolvedId, kind, id, valid, demo]);
+  }, [key, resolvedId, kind, id, valid, demo, onLoad]);
   const current = demo ? { status: "error", error: { code: "OMDB_DEMO" } }
     : !valid ? { status: "error", error: { code: "OMDB_ID_MISSING" } } : loaded?.key === key ? loaded : { status: "loading" };
   return <ImdbRatingContent {...current} language={language}

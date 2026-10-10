@@ -559,8 +559,9 @@ clave guardada y consume una consulta. La integración necesita también el back
 actualizado en la Raspberry; el modo demo no consulta OMDb.
 
 La clave permanece en `DeviceApp/omdb_settings.json`, con permisos `0600`, excluida
-de Git y conservada por el actualizador. La API solo devuelve si existe una clave;
-un campo vacío al guardar conserva la actual y **Eliminar clave** la borra. No se
+de Git y conservada por el actualizador. La ruta de configuración protegida por el
+PIN devuelve la clave para mostrarla en el formulario, sin caché HTTP ni almacenamiento
+persistente en el navegador. Un campo vacío al guardar conserva la actual y **Eliminar clave** la borra. No se
 debe poner la clave en variables `VITE_*`, en el código web ni en URLs del navegador.
 
 Las consultas se hacen al abrir una ficha. Una misma respuesta de OMDb puede incluir
@@ -623,7 +624,7 @@ una puntuación inventada.
 
 Rutas protegidas por el PIN y con `Cache-Control: no-store`:
 
-- `GET/POST /settings/omdb`: estado `{settings: {configured}}`; guardar
+- `GET/POST /settings/omdb`: valores guardados `{settings: {configured, apiKey}}`; guardar
   `{apiKey: "..."}` o eliminar `{clearApiKey: true}`.
 - `POST /settings/omdb/test`: verifica la clave guardada con una consulta.
 - `GET /omdb/library`: inventario y progreso local, sin consultar los proveedores
@@ -907,8 +908,9 @@ proveedor. La caché en memoria dura 15 minutos y tiene un máximo de 128 búsqu
 
 Configura la clave en **Dashboard → Servicios auxiliares → OpenAI**. Se guarda
 en `DeviceApp/ai_settings.json`, con permisos 0600 y excluida de Git y de las
-copias temporales del actualizador. La API de configuración devuelve únicamente
-si existe una clave; un campo vacío conserva la anterior y **Eliminar clave**
+copias temporales del actualizador. La API de configuración protegida por el PIN
+devuelve la clave y los ajustes para mostrarlos en el formulario, sin caché HTTP ni
+almacenamiento persistente en el navegador; un campo vacío conserva la anterior y **Eliminar clave**
 la borra. No hay que introducirla en `.env` del frontend ni en variables `VITE_*`.
 Guardar y probar son acciones separadas. La prueba realiza una petición pequeña
 al modelo guardado, incluso si la búsqueda está desactivada.

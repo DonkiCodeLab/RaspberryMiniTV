@@ -1,6 +1,9 @@
-export function libraryScrollLabel(item, sort = "name", language = "es") {
+import { compareLibraryRatings, formatLibraryRating } from "./libraryRatings.js";
+
+export function libraryScrollLabel(item, sort = "name", language = "es", ratingSource = "tmdb") {
   if (sort === "year") return String(item.year || item.releaseDate || "").match(/\b\d{4}\b/)?.[0] || "—";
   if (sort === "rating") {
+    if (ratingSource !== "tmdb") return formatLibraryRating(item, ratingSource, language);
     const rating = Number(item.voteAverage);
     return rating > 0 ? `★ ${new Intl.NumberFormat(language, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(rating / 2)}` : "—";
   }
@@ -21,7 +24,8 @@ export function scrollIndexAtPosition(positions, position) {
 }
 
 // Missing numeric metadata stays last in either direction; ties use the name.
-export function compareLibraryItems(left, right, sort = "name", direction = "asc", language = "es") {
+export function compareLibraryItems(left, right, sort = "name", direction = "asc", language = "es", ratingSource = "tmdb") {
+  if (sort === "rating") return compareLibraryRatings(left, right, ratingSource, direction, language);
   const names = String(left.label || left.name || "").localeCompare(String(right.label || right.name || ""), language, { sensitivity: "base", numeric: true });
   const sign = direction === "desc" ? -1 : 1;
   if (sort === "name") return sign * names;
