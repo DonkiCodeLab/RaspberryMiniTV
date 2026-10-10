@@ -3,7 +3,7 @@ import { clearLocalMetadataCache, getTmdbCreditsStatus, isMockMode } from "./api
 
 const strings = {
   es: {
-    title: "Reparto y equipo", copy: "Completa las fichas de tus películas y series con actores, personajes, dirección y guion de TMDB.",
+    title: "Reparto y equipo", copy: "Completa las fichas de tus películas y series con actores, personajes, dirección, guion y sus fotos de TMDB.",
     start: "Completar todas las fichas", retry: "Reintentar pendientes", working: "Completando fichas…", ready: "fichas completadas",
     remaining: "pendientes", failed: "con errores", loading: "Comprobando las fichas…", empty: "Todavía no hay películas ni series con ficha TMDB.",
     error: "No se pudo consultar o iniciar la descarga. Comprueba la conexión y que la Raspberry esté actualizada.",
@@ -12,7 +12,7 @@ const strings = {
     continues: "La descarga continúa aunque cierres esta página.",
   },
   ca: {
-    title: "Repartiment i equip", copy: "Completa les fitxes de les teves pel·lícules i sèries amb actors, personatges, direcció i guió de TMDB.",
+    title: "Repartiment i equip", copy: "Completa les fitxes de les teves pel·lícules i sèries amb actors, personatges, direcció, guió i les seves fotos de TMDB.",
     start: "Completa totes les fitxes", retry: "Torna a provar les pendents", working: "Completant fitxes…", ready: "fitxes completades",
     remaining: "pendents", failed: "amb errors", loading: "Comprovant les fitxes…", empty: "Encara no hi ha pel·lícules ni sèries amb fitxa TMDB.",
     error: "No s'ha pogut consultar o iniciar la baixada. Comprova la connexió i que la Raspberry estigui actualitzada.",
@@ -21,7 +21,7 @@ const strings = {
     continues: "La baixada continua encara que tanquis aquesta pàgina.",
   },
   en: {
-    title: "Cast and crew", copy: "Complete your movie and TV profiles with actors, characters, directors and writers from TMDB.",
+    title: "Cast and crew", copy: "Complete your movie and TV profiles with actors, characters, directors, writers and their photos from TMDB.",
     start: "Complete all profiles", retry: "Retry remaining profiles", working: "Completing profiles…", ready: "profiles completed",
     remaining: "remaining", failed: "failed", loading: "Checking profiles…", empty: "There are no movies or TV shows with a TMDB profile yet.",
     error: "Could not check or start the download. Check the connection and update your Raspberry if needed.",

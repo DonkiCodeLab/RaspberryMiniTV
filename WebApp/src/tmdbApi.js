@@ -450,6 +450,7 @@ export async function getTvSeriesById(seriesId, language, importPreview = false)
     posterImage: buildTmdbImageUrl(show?.poster_path, "w500", importPreview),
     firstAirDate: show?.first_air_date || "",
     voteAverage: Number(show?.vote_average) || 0,
+    voteCount: Number.isSafeInteger(show?.vote_count) && show.vote_count >= 0 ? show.vote_count : null,
     heroImage,
     imageOptions,
     seasonCount: seasons.length,
@@ -503,6 +504,7 @@ export async function getMovieById(movieId, language, importPreview = false) {
     releaseDate: movie?.release_date || "",
     runtime: Number(movie?.runtime) || 0,
     voteAverage: Number(movie?.vote_average) || 0,
+    voteCount: Number.isSafeInteger(movie?.vote_count) && movie.vote_count >= 0 ? movie.vote_count : null,
     genres: (Array.isArray(movie?.genres) ? movie.genres : [])
       .map((genre) => String(genre?.name || "").trim())
       .filter(Boolean),

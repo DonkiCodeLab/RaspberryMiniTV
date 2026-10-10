@@ -16,13 +16,14 @@ test('connected catalog uses Raspberry cache and PIN without frontend TMDB crede
     requests.push({ url, options });
     assert.ok(url.startsWith('http://raspberry:5050/tmdb/json/'));
     const data = url.includes('/images') ? { posters: [{ file_path: '/poster.jpg' }] }
-      : { id: 1, title: 'Test', overview: 'Stored overview', poster_path: '/poster.jpg', backdrop_path: '/back.jpg', external_ids: { wikidata_id: 'Q123' }, rottenTomatoesUrl: 'https://www.rottentomatoes.com/m/stored_test' };
+      : { id: 1, title: 'Test', overview: 'Stored overview', vote_count: 123456, poster_path: '/poster.jpg', backdrop_path: '/back.jpg', external_ids: { wikidata_id: 'Q123' }, rottenTomatoesUrl: 'https://www.rottentomatoes.com/m/stored_test' };
     return { ok: true, text: async () => JSON.stringify(data) };
   };
   try {
     const tmdb = await loadBrowserModule('../src/tmdbApi.js');
     const movie = await tmdb.getMovieById(1, 'es-ES');
     assert.equal(movie.name, 'Test');
+    assert.equal(movie.voteCount, 123456);
     assert.equal(movie.rottenTomatoesUrl, 'https://www.rottentomatoes.com/m/stored_test');
     assert.equal(movie.heroImage, 'http://raspberry:5050/tmdb/images/back.jpg?pin=1234&width=1280');
     assert.ok(movie.imageOptions.every(url => url.includes('/tmdb/images/')));
@@ -124,7 +125,7 @@ test('opening a series does not fetch its seasons episodes', async () => {
     requests.push(url);
     assert.ok(!url.includes('/season/'), 'chapter metadata must wait until a season is opened');
     const data = url.includes('/images') ? { posters: [] } : {
-      id: 1, name: 'Test', overview: 'Stored', poster_path: '/poster.jpg',
+      id: 1, name: 'Test', overview: 'Stored', vote_count: 23456, poster_path: '/poster.jpg',
       seasons: [{ season_number: 1, episode_count: 10, poster_path: '/season.jpg' }]
     };
     return { ok: true, text: async () => JSON.stringify(data) };
@@ -135,6 +136,7 @@ test('opening a series does not fetch its seasons episodes', async () => {
     assert.equal(series.posterImage, 'http://raspberry:5050/tmdb/images/poster.jpg?pin=1234&width=500');
     assert.equal(requests.length, 2);
     assert.equal(series.seasons.length, 1);
+    assert.equal(series.voteCount, 23456);
     assert.ok(series.seasons[0].image.includes('/season.jpg'));
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });

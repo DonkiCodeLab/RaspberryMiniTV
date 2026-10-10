@@ -7,16 +7,19 @@
   background: rgba(19, 30, 39, 0.9);
 }
 .imdb-rating__heading { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem 1rem; }
-.imdb-rating__providers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(145px, 100%), 1fr)); gap: 0.75rem; }
+.imdb-rating__providers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 0.75rem; }
 .imdb-rating__provider { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; min-width: 0; padding: 0.75rem; border-radius: 10px; background: rgba(255, 255, 255, 0.035); }
 .imdb-rating__heading a { display: inline-flex; text-decoration: none; }
 .imdb-rating__badge { display: inline-block; padding: 0.2rem 0.45rem; border-radius: 4px; background: #f5c518; color: #101820; font-size: 0.95rem; font-weight: 900; line-height: 1.2; }
+.imdb-rating__badge--tmdb { background: #80d8c4; color: #102c36; }
 .imdb-rating__badge--rotten { background: #fa7266; color: #25110f; font-size: 0.8rem; line-height: 1.425; }
 .imdb-rating__badge--metacritic { background: #b7c9e2; color: #152438; font-size: 0.8rem; line-height: 1.425; }
+.imdb-rating__score-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.15rem 0.45rem; }
 .imdb-rating__score { font-size: 1.3rem; font-weight: 800; white-space: nowrap; }
 .imdb-rating__score > span { color: #f5c518; }
 .imdb-rating__score small { font-size: 0.85rem; color: #bcc9d4; font-weight: 500; }
 .imdb-rating__votes, .imdb-rating__updated, .imdb-rating__status, .imdb-rating__unavailable { color: #bdcbd7; font-size: 0.8rem; line-height: 1.5; }
+.imdb-rating__votes { font-weight: 400; }
 .imdb-rating__updated, .imdb-rating__status { margin: 0.5rem 0 0; }
 .imdb-rating__status button { color: #ffdc00; padding: 0.15rem 0; margin-left: 0.6rem; border: 0; background: transparent; cursor: pointer; font: inherit; text-decoration: underline; }
 .imdb-rating a:focus-visible, .imdb-rating button:focus-visible, .omdb-settings a:focus-visible { outline: 2px solid #ffdc00; outline-offset: 4px; }

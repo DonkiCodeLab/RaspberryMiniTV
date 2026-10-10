@@ -34,15 +34,6 @@
 .torrent-dashboard__refresh:focus-visible { outline: 2px solid #ffdc35; outline-offset: 2px; }
 .torrent-dashboard__scroll { max-height: min(62vh, 640px); overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #ffdc35 #151c24; padding: 4px 10px 4px 4px; border-radius: 12px; }
 .torrent-dashboard__scroll:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
-.torrent-dashboard__tabs { display: inline-flex; max-width: 100%; gap: 4px; padding: 5px; margin-bottom: 18px; border: 1px solid #ffffff24; border-radius: 999px; background: #151c24; }
-.torrent-dashboard__tab { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; min-height: 44px; padding: 10px 20px; border: 0; border-radius: 999px; background: transparent; color: #c2cbd4; font: inherit; font-weight: 700; cursor: pointer; transition: background .18s ease, color .18s ease; }
-.torrent-dashboard__tab:hover { background: #ffffff12; color: #fff; }
-.torrent-dashboard__tab[aria-selected="true"] { background: #ffdc35; color: #203744; }
-.torrent-dashboard__tab:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
-.torrent-dashboard__count { padding: 2px 8px; border-radius: 999px; background: #ffffff12; color: #ffdc35; font-size: .8em; font-variant-numeric: tabular-nums; }
-.torrent-dashboard__tab[aria-selected="true"] .torrent-dashboard__count { background: #203744; color: #ffdc35; }
-@media (max-width: 600px) { .torrent-dashboard__tabs { display: flex; } .torrent-dashboard__tab { flex: 1; padding: 10px 12px; gap: 6px; } }
-@media (prefers-reduced-motion: reduce) { .torrent-dashboard__tab { transition: none; } }
 .torrent-dashboard__hint { margin: 0 0 14px; color: #e5edf4; font-size: 13px; line-height: 1.5; }
 .torrent-job { padding: 20px; background: #151c24; color: #fff; border: 1px solid #ffffff24; border-radius: 18px; min-width: 0; }
 .torrent-job h4 { margin: 0; font-size: 18px; }

@@ -69,6 +69,17 @@ class MediaCreditsApiTests(unittest.TestCase):
         response = self.client.get("/tmdb/credits", headers=self.headers)
         self.assertEqual(response.json["missingIds"], ["Movies/unknown.mp4", "TVShows/show"])
 
+    def test_saved_credits_with_missing_portraits_are_pending_and_queue_without_network(self):
+        credits = {"id": 1, "cast": [{"id": 1, "name": "Actor", "character": "Hero", "profile_path": "/actor.jpg"}], "crew": []}
+        with patch.object(self.cache, "_download", return_value=(json.dumps(credits).encode(), "application/json")):
+            self.cache.warm_credits("movie", 1)
+        with patch.object(self.cache, "start"), patch.object(self.cache, "_download", side_effect=AssertionError("only enqueue")):
+            self.assertEqual(self.client.get("/tmdb/credits", headers=self.headers).json["ready"], 0)
+            response = self.client.post("/tmdb/credits", headers=self.headers)
+            self.assertEqual(response.json["pending"], 2)
+            self.assertTrue(self.cache.jobs["movie/1"]["creditsOnly"])
+            self.assertEqual(self.client.get("/tmdb/images/actor.jpg?width=185", headers=self.headers).status_code, 409)
+
     def test_credit_endpoint_uses_local_cache_and_ignores_ui_language(self):
         credits = {"id": 2, "cast": [{"id": 3, "name": "Actor", "roles": [{"character": "Hero"}]}], "crew": []}
         with patch.object(self.cache, "_download", return_value=(json.dumps(credits).encode(), "application/json")):

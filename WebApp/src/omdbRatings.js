@@ -94,6 +94,8 @@ export function normalizeOmdbRating(payload) {
   return { ok: true, imdbId: payload.imdbId, rating: payload.rating, votes: payload.votes,
     rottenTomatoes: isOmdbCriticScore(payload.rottenTomatoes) ? payload.rottenTomatoes : null,
     metacritic: isOmdbCriticScore(payload.metacritic) ? payload.metacritic : null,
+    ...Object.fromEntries(["rottenTomatoesVotes", "metacriticVotes"]
+      .filter(key => Number.isSafeInteger(payload[key]) && payload[key] >= 0).map(key => [key, payload[key]])),
     updatedAt: payload.updatedAt, stale: payload.stale, ...(payload.code ? { code: payload.code } : {}) };
 }
 
@@ -110,6 +112,11 @@ export function formatOmdbCriticScore(value, language) {
 export function formatOmdbRating(value, language) {
   return typeof value === "number" && Number.isFinite(value) && value >= 1 && value <= 10
     ? new Intl.NumberFormat(locale(language), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value) : "—";
+}
+
+export function formatTmdbRating(value, language) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 && value <= 10
+    ? new Intl.NumberFormat(locale(language), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 2) : "—";
 }
 
 export function formatOmdbVotes(value, language) {

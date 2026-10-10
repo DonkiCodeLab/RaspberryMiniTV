@@ -248,6 +248,45 @@ class GameMetadataApiTests(GameMetadataFixture, unittest.TestCase):
             self.assertEqual(self.client.get("/games/metadata", query_string={"relativePath": item["relativePath"]}).status_code, 401)
             self.assertEqual(self.client.post("/games/metadata", json={"relativePath": item["relativePath"]}).status_code, 401)
 
+    def test_preferred_video_persists_without_changing_metadata_and_survives_refresh(self):
+        item = self.upload().json["item"]
+        video = {"id": "abcdefghijk", "name": "My chosen video", "channel": "Test channel"}
+        result = self.client.post("/games/video", json={"relativePath": item["relativePath"], "video": video})
+        self.assertEqual(result.status_code, 200, result.json)
+        self.assertEqual(result.json["video"], video)
+        saved = api.load_media_library()["games"][item["relativePath"]]
+        self.assertEqual(saved, {**item, "preferredVideo": video})
+        self.assertEqual(api.list_game_entries()[0]["preferredVideo"], video)
+        refreshed = self.client.post("/games/metadata", json={"relativePath": item["relativePath"]})
+        self.assertEqual(refreshed.json["item"]["preferredVideo"], video)
+        self.assertEqual(api.list_game_entries()[0]["preferredVideo"], video)
+        replacement = {"id": "12345678901", "name": "Another video", "channel": "Another channel"}
+        self.client.post("/games/video", json={"relativePath": item["relativePath"], "video": replacement})
+        self.assertEqual(api.list_game_entries()[0]["preferredVideo"], replacement)
+
+    def test_preferred_video_can_be_saved_without_provider_metadata(self):
+        self.credentials.clear()
+        item = self.upload().json["item"]
+        result = self.client.post("/games/video", json={"relativePath": item["relativePath"],
+            "video": {"id": "abcdefghijk", "name": "  My video  "}})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(api.list_game_entries()[0]["preferredVideo"],
+                         {"id": "abcdefghijk", "name": "My video", "channel": ""})
+
+    def test_preferred_video_rejects_invalid_requests_and_requires_authentication(self):
+        item = self.upload().json["item"]
+        payload = {"relativePath": item["relativePath"], "video": {"id": "abcdefghijk"}}
+        for video in (None, [], {"id": "../bad"}, {"id": "https://youtu.be/abcdefghijk"},
+                      {"id": "abcdefghijk", "name": []}):
+            result = self.client.post("/games/video", json={**payload, "video": video})
+            self.assertEqual(result.status_code, 400)
+        self.assertEqual(self.client.post("/games/video", json=[]).status_code, 400)
+        for path in ("Games/missing.gb", "../Tetris.gb"):
+            self.assertEqual(self.client.post("/games/video", json={**payload, "relativePath": path}).status_code, 404)
+        with patch.object(api, "is_authorized_request", return_value=False):
+            self.assertEqual(self.client.post("/games/video", json=payload).status_code, 401)
+        self.assertNotIn("preferredVideo", api.load_media_library()["games"][item["relativePath"]])
+
 
 if __name__ == "__main__":
     unittest.main()

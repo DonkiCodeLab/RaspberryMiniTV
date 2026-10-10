@@ -647,10 +647,13 @@ Pruebas sin acceso a Internet:
 Las fichas de películas y series también conservan el reparto completo disponible
 en TMDB (identificadores, nombres y personajes) y el equipo, con sus funciones.
 En series se usan los créditos agregados de todos los episodios. La preparación de
-nuevas incorporaciones descarga estos datos automáticamente, sin descargar retratos.
+nuevas incorporaciones descarga estos datos y los retratos de las personas mostradas
+automáticamente. Los avatares se descargan a 185 píxeles, se guardan como WebP y se
+comparten entre títulos; no es necesario descargar las fotos originales.
 Las fichas existentes se completan desde **Dashboard → Servicios auxiliares → TMDB
 → Reparto y equipo → Completar todas las fichas**. Esta acción descarga únicamente
-los créditos que faltan; conserva los vídeos, imágenes y ajustes de cada ficha.
+los créditos y retratos que faltan; conserva los vídeos, imágenes y ajustes de cada ficha.
+Las fichas con créditos antiguos y sin avatares vuelven a aparecer como pendientes.
 La cola continúa al cerrar la web, se reanuda tras reiniciar la API y permite
 reintentar fallos. Las fichas sin identificador requieren una coincidencia manual.
 
@@ -903,6 +906,12 @@ YouTube Data API v3, con filtros `videoEmbeddable=true` y `videoSyndicated=true`
 Usa `YOUTUBE_API_KEY` del entorno/`.env` o de la configuración de juegos del
 dashboard. La clave permanece en el servidor; no se devuelven errores crudos del
 proveedor. La caché en memoria dura 15 minutos y tiene un máximo de 128 búsquedas.
+
+`POST /games/video` requiere PIN y recibe `{ relativePath, video: { id, name, channel } }`.
+Guarda el vídeo principal elegido en `preferredVideo` dentro del perfil del juego
+en SQLite. Valida el identificador de YouTube y que la ROM exista; no modifica
+las imágenes ni los metadatos del proveedor. La selección se devuelve en la
+biblioteca y se conserva al completar o actualizar la ficha.
 
 ### Búsqueda del catálogo con OpenAI
 

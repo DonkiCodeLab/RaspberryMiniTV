@@ -45,6 +45,7 @@ import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
 import TmdbCreditsCompletion from "./TmdbCreditsCompletion.jsx";
 import TorrentDownloads, { MediaTorrentSearch, useTorrentDownloads } from "./TorrentDownloads.jsx";
+import SectionSwitcher from "./SectionSwitcher.jsx";
 import { localTmdbImageUrl } from "./api/raspberryApi";
 import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
 import GameConsoleCarousel from "./GameConsoleCarousel";
@@ -120,6 +121,7 @@ import {
   getHealth,
   getBrowserGameUrl,
   getGameDownloadUrl,
+  saveGameVideo,
   getMediaStreamUrl,
   getBookContent,
   getBookContentUrl,
@@ -450,6 +452,7 @@ const UI_STRINGS = {
     dashboard_general_title: "Información general",
     dashboard_clock_title: "Configuración del reloj",
     dashboard_auxiliary_title: "Servicios auxiliares",
+    dashboard_games_service: "Videojuegos",
     logout_title: "Cerrar sesión",
     logout_copy: "Al cerrar la sesión, tendrás que introducir el PIN para volver a acceder.",
     stats_series_installed: "Series instaladas",
@@ -607,6 +610,11 @@ const UI_STRINGS = {
     games_videos_label: "Vídeos",
     games_video_title: "Vídeos del juego",
     games_video_choose: "Elegir vídeo",
+    games_video_save: "Guardar vídeo seleccionado",
+    games_video_saving: "Guardando vídeo…",
+    games_video_saved: "Vídeo guardado",
+    games_video_saved_hint: "Este vídeo aparecerá primero al volver a abrir la ficha.",
+    games_video_save_error: "No se pudo guardar el vídeo. Vuelve a pulsar Guardar vídeo seleccionado para reintentarlo.",
     games_video_open: "Ver en YouTube",
     games_video_online: "Requiere conexión a Internet. Si el vídeo no se puede reproducir aquí, ábrelo en YouTube.",
     games_video_missing: "Esta ficha no tiene vídeos de YouTube asociados. Puedes buscar un gameplay por nombre y consola.",
@@ -902,6 +910,7 @@ const UI_STRINGS = {
     dashboard_general_title: "Informació general",
     dashboard_clock_title: "Configuració del rellotge",
     dashboard_auxiliary_title: "Serveis auxiliars",
+    dashboard_games_service: "Videojocs",
     logout_title: "Tancar la sessió",
     logout_copy: "En tancar la sessió, hauràs d’introduir el PIN per tornar a accedir.",
     stats_series_installed: "Sèries instal·lades",
@@ -1059,6 +1068,11 @@ const UI_STRINGS = {
     games_videos_label: "Vídeos",
     games_video_title: "Vídeos del joc",
     games_video_choose: "Tria un vídeo",
+    games_video_save: "Desa el vídeo seleccionat",
+    games_video_saving: "Desant el vídeo…",
+    games_video_saved: "Vídeo desat",
+    games_video_saved_hint: "Aquest vídeo apareixerà primer quan tornis a obrir la fitxa.",
+    games_video_save_error: "No s’ha pogut desar el vídeo. Torna a prémer Desa el vídeo seleccionat per reintentar-ho.",
     games_video_open: "Veure a YouTube",
     games_video_online: "Cal connexió a Internet. Si el vídeo no es pot reproduir aquí, obre'l a YouTube.",
     games_video_missing: "Aquesta fitxa no té vídeos de YouTube associats. Pots cercar un gameplay per nom i consola.",
@@ -1354,6 +1368,7 @@ const UI_STRINGS = {
     dashboard_general_title: "General information",
     dashboard_clock_title: "Clock settings",
     dashboard_auxiliary_title: "Auxiliary services",
+    dashboard_games_service: "Video games",
     logout_title: "Log out",
     logout_copy: "You will need to enter the PIN to access the app again.",
     stats_series_installed: "Installed series",
@@ -1511,6 +1526,11 @@ const UI_STRINGS = {
     games_videos_label: "Videos",
     games_video_title: "Game videos",
     games_video_choose: "Choose video",
+    games_video_save: "Save selected video",
+    games_video_saving: "Saving video…",
+    games_video_saved: "Video saved",
+    games_video_saved_hint: "This video will appear first when you reopen the game details.",
+    games_video_save_error: "Could not save the video. Press Save selected video again to retry.",
     games_video_open: "Watch on YouTube",
     games_video_online: "Internet connection required. If the video cannot play here, open it on YouTube.",
     games_video_missing: "This profile has no linked YouTube videos. You can search for gameplay by game name and console.",
@@ -2616,41 +2636,6 @@ function EpisodeRow({ episode, available, onSelect, t }) {
       <div className="episode-card__arrow">›</div>
       </button>
     </article>
-  );
-}
-
-const RATING_STAR_PATH = "M12 2.4l2.88 5.84 6.45.94-4.67 4.55 1.1 6.43L12 17.13l-5.76 3.03 1.1-6.43-4.67-4.55 6.45-.94L12 2.4z";
-
-function RatingStar({ fillPercent }) {
-  return (
-    <span className="movie-panel__star" aria-hidden="true">
-      <svg className="movie-panel__star-empty" viewBox="0 0 24 24">
-        <path d={RATING_STAR_PATH} />
-      </svg>
-      <span className="movie-panel__star-fill" style={{ width: `${fillPercent}%` }}>
-        <svg className="movie-panel__star-filled" viewBox="0 0 24 24">
-          <path d={RATING_STAR_PATH} />
-        </svg>
-      </span>
-    </span>
-  );
-}
-
-function RatingStars({ rating }) {
-  const safeRating = Math.min(5, Math.max(0, (Number(rating) || 0) / 2));
-
-  return (
-    <span
-      className="movie-panel__stars"
-      role="img"
-      aria-label={`${safeRating.toFixed(1)} / 5`}
-    >
-      {Array.from({ length: 5 }, (_, index) => {
-        const fillPercent = Math.min(100, Math.max(0, (safeRating - index) * 100));
-
-        return <RatingStar fillPercent={fillPercent} key={index} />;
-      })}
-    </span>
   );
 }
 
@@ -4859,7 +4844,8 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                   <p>{`${selectedItem.seasonCount || selectedItem.seasons?.length || 0} ${t("seasons_label")} · ${selectedItem.totalEpisodeCount || 0} ${t("episodes")}`}</p>
                 </header>
 
-                <ImdbRating kind="tv" tmdbId={selectedItem.id} imdbId={selectedItem.imdbId} language={tmdbLanguage} />
+                <ImdbRating kind="tv" tmdbId={selectedItem.id} tmdbRating={selectedItem.voteAverage} tmdbVotes={selectedItem.voteCount} imdbId={selectedItem.imdbId} language={tmdbLanguage} />
+                <MediaCredits mediaType="tv" tmdbId={selectedItem.id} language={tmdbLanguage} creators={selectedItem.creators} importPreview />
                 <div className="tmdb-browser-series__seasons">
                   {(selectedItem.seasons || []).map((season) => (
                     <SeasonCard
@@ -4968,17 +4954,10 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                         <dt>{t("duration")}</dt>
                         <dd>{selectedItem.runtime ? `${selectedItem.runtime} min` : t("duration_unknown")}</dd>
                       </div>
-                      <div className="tmdb-browser-movie__score">
-                        <dt>{t("rating")}</dt>
-                        <dd className="tmdb-browser-movie__rating">
-                          {typeof selectedItem.voteAverage === "number" && selectedItem.voteAverage > 0 ? (
-                            <><span aria-hidden="true">★</span> {selectedItem.voteAverage.toFixed(1)} <small>/ 10</small></>
-                          ) : t("tmdb_rating_missing")}
-                        </dd>
-                      </div>
                     </dl>
 
-                    <ImdbRating kind="movie" tmdbId={selectedItem.id} imdbId={selectedItem.imdbId} language={tmdbLanguage} />
+                    <ImdbRating kind="movie" tmdbId={selectedItem.id} tmdbRating={selectedItem.voteAverage} tmdbVotes={selectedItem.voteCount} imdbId={selectedItem.imdbId} language={tmdbLanguage} />
+                    <MediaCredits mediaType="movie" tmdbId={selectedItem.id} language={tmdbLanguage} importPreview />
                     <ul className="tmdb-browser-movie__genres" aria-label={t("genres")}>
                       {(selectedItem.genres?.length ? selectedItem.genres : [t("not_available")]).map((genre) => (
                         <li key={genre}>{genre}</li>
@@ -5339,14 +5318,31 @@ function RaspberryPage({
   const [cameraImageUrl, setCameraImageUrl] = useState("");
   const [cameraBusy, setCameraBusy] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [selectedDashboardSection, setSelectedDashboardSection] = useState(
+    () => dashboardSection === "subtitles" ? "auxiliary" : "general"
+  );
+  const [selectedAuxiliaryService, setSelectedAuxiliaryService] = useState(
+    () => dashboardSection === "subtitles" ? "subtitles" : "tmdb"
+  );
   const subtitleSettingsRef = useRef(null);
 
   useEffect(() => {
-    if (raspberryTab !== "dashboard" || dashboardSection !== "subtitles" || !subtitleSettingsRef.current) return;
-    subtitleSettingsRef.current.focus({ preventScroll: true });
-    subtitleSettingsRef.current.scrollIntoView({ behavior: "instant", block: "center" });
+    if (raspberryTab !== "dashboard" || !dashboardSection) return;
+    const requestedSection = dashboardSection === "subtitles" ? "auxiliary" : dashboardSection;
+    if (selectedDashboardSection !== requestedSection) {
+      setSelectedDashboardSection(requestedSection);
+      return;
+    }
+    if (dashboardSection === "subtitles") {
+      if (selectedAuxiliaryService !== "subtitles") {
+        setSelectedAuxiliaryService("subtitles");
+        return;
+      }
+      subtitleSettingsRef.current?.focus({ preventScroll: true });
+      subtitleSettingsRef.current?.scrollIntoView({ behavior: "instant", block: "center" });
+    }
     onDashboardSectionShown("");
-  }, [raspberryTab, dashboardSection, onDashboardSectionShown]);
+  }, [raspberryTab, dashboardSection, selectedDashboardSection, selectedAuxiliaryService, onDashboardSectionShown]);
 
   useEffect(() => () => {
     if (cameraImageUrl) URL.revokeObjectURL(cameraImageUrl);
@@ -5434,6 +5430,16 @@ function RaspberryPage({
 
       {raspberryTab === "dashboard" ? (
         <div className="raspberry-page__content">
+          <SectionSwitcher idPrefix="dashboard" label={t("mini_tv_config")}
+            className="raspberry-dashboard-switcher"
+            tabs={[
+              { key: "general", title: t("dashboard_general_title") },
+              { key: "clock", title: t("dashboard_clock_title") },
+              { key: "auxiliary", title: t("dashboard_auxiliary_title") },
+            ]}
+            selected={selectedDashboardSection} onSelect={setSelectedDashboardSection} />
+          <div className="raspberry-dashboard-panel" id="dashboard-general-panel" role="tabpanel"
+            aria-labelledby="dashboard-general-tab" hidden={selectedDashboardSection !== "general"} tabIndex={0}>
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-general-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-general-title">
               {t("dashboard_general_title")}
@@ -5544,6 +5550,18 @@ function RaspberryPage({
           </section>
 
           <TorrentDownloads downloads={torrentDownloads} language={raspberryLanguage} />
+          <SystemUpdate language={raspberryLanguage} />
+          <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
+            <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
+            <article className="raspberry-tmdb-card">
+              <p>{t("logout_copy")}</p>
+              <button className="dialog-button" type="button" onClick={onLogout}>{t("logout_title")}</button>
+            </article>
+          </section>
+          </div>
+
+          <div className="raspberry-dashboard-panel" id="dashboard-clock-panel" role="tabpanel"
+            aria-labelledby="dashboard-clock-tab" hidden={selectedDashboardSection !== "clock"} tabIndex={0}>
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-clock-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-clock-title">
               {t("dashboard_clock_title")}
@@ -5677,11 +5695,27 @@ function RaspberryPage({
             ) : null}
           </article>
           </section>
+          </div>
 
+          <div className="raspberry-dashboard-panel" id="dashboard-auxiliary-panel" role="tabpanel"
+            aria-labelledby="dashboard-auxiliary-tab" hidden={selectedDashboardSection !== "auxiliary"} tabIndex={0}>
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-auxiliary-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-auxiliary-title">
               {t("dashboard_auxiliary_title")}
             </h2>
+            <SectionSwitcher idPrefix="auxiliary" label={t("dashboard_auxiliary_title")}
+              className="raspberry-auxiliary-switcher"
+              tabs={[
+                { key: "tmdb", title: "TMDB" },
+                { key: "openai", title: "OpenAI" },
+                { key: "omdb", title: "OMDb" },
+                { key: "subtitles", title: "OpenSubtitles" },
+                { key: "games", title: t("dashboard_games_service") },
+                { key: "youtube", title: "YouTube" },
+              ]}
+              selected={selectedAuxiliaryService} onSelect={setSelectedAuxiliaryService} />
+            <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-tmdb-panel" role="tabpanel"
+              aria-labelledby="auxiliary-tmdb-tab" hidden={selectedAuxiliaryService !== "tmdb"} tabIndex={0}>
             <article className="raspberry-tmdb-card">
               <div className="raspberry-tmdb-card__header">
                 <p>{t("tmdb_settings_title")}</p>
@@ -5720,20 +5754,29 @@ function RaspberryPage({
               <TmdbCachePanel language={raspberryLanguage} />
               <TmdbCreditsCompletion language={raspberryLanguage} />
             </article>
-            <OpenAISettings language={raspberryLanguage} />
-            <OmdbSettings language={raspberryLanguage} />
-            <OpenSubtitlesSettings language={raspberryLanguage} sectionRef={subtitleSettingsRef} />
-            <GameProviderSettings language={raspberryLanguage} />
-            <GameProviderSettings language={raspberryLanguage} youtube />
+            </div>
+            <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-openai-panel" role="tabpanel"
+              aria-labelledby="auxiliary-openai-tab" hidden={selectedAuxiliaryService !== "openai"} tabIndex={0}>
+              <OpenAISettings language={raspberryLanguage} />
+            </div>
+            <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-omdb-panel" role="tabpanel"
+              aria-labelledby="auxiliary-omdb-tab" hidden={selectedAuxiliaryService !== "omdb"} tabIndex={0}>
+              <OmdbSettings language={raspberryLanguage} />
+            </div>
+            <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-subtitles-panel" role="tabpanel"
+              aria-labelledby="auxiliary-subtitles-tab" hidden={selectedAuxiliaryService !== "subtitles"} tabIndex={0}>
+              <OpenSubtitlesSettings language={raspberryLanguage} sectionRef={subtitleSettingsRef} />
+            </div>
+            <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-games-panel" role="tabpanel"
+              aria-labelledby="auxiliary-games-tab" hidden={selectedAuxiliaryService !== "games"} tabIndex={0}>
+              <GameProviderSettings language={raspberryLanguage} />
+            </div>
+            <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-youtube-panel" role="tabpanel"
+              aria-labelledby="auxiliary-youtube-tab" hidden={selectedAuxiliaryService !== "youtube"} tabIndex={0}>
+              <GameProviderSettings language={raspberryLanguage} youtube />
+            </div>
           </section>
-          <SystemUpdate language={raspberryLanguage} />
-          <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
-            <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
-            <article className="raspberry-tmdb-card">
-              <p>{t("logout_copy")}</p>
-              <button className="dialog-button" type="button" onClick={onLogout}>{t("logout_title")}</button>
-            </article>
-          </section>
+          </div>
         </div>
       ) : null}
 
@@ -7032,6 +7075,7 @@ export default function App() {
         firstAirDate: tmdbSeries?.firstAirDate || "",
         creators: tmdbSeries?.creators || [],
         voteAverage: tmdbSeries?.voteAverage || 0,
+        voteCount: tmdbSeries?.voteCount ?? null,
         omdbRatings: libraryRatings.series?.[directory.relativePath],
         seasons: tmdbSeries?.seasons || [],
         seasonCount: tmdbSeries?.seasonCount ?? null,
@@ -7065,6 +7109,7 @@ export default function App() {
         releaseDate: tmdbMovie?.releaseDate || "",
         runtime: tmdbMovie?.runtime || 0,
         voteAverage: tmdbMovie?.voteAverage || 0,
+        voteCount: tmdbMovie?.voteCount ?? null,
         omdbRatings: libraryRatings.movies?.[movie.fileRelativePath || movie.id],
         genres: tmdbMovie?.genres || [],
       };
@@ -7485,6 +7530,16 @@ export default function App() {
     } catch (nextError) {
       window.alert(nextError.message || "No se pudieron guardar los cambios.");
     }
+  }
+
+  async function handleSaveGameVideo(video) {
+    const relativePath = selectedGame?.relativePath;
+    if (!relativePath) throw new Error("Game not found");
+    const response = await saveGameVideo(relativePath, video);
+    setVideos(current => current ? { ...current,
+      games: (current.games || []).map(game => game.relativePath === relativePath
+        ? { ...game, preferredVideo: response.video } : game),
+    } : current);
   }
 
   async function handleSaveGameSettings(updates) {
@@ -9566,17 +9621,16 @@ export default function App() {
                     disabled={!heroSelectorOptions.length} onChange={handleOpenGameDetails} />
                 </div>}
 
-                {!isMediaDetail && (isPicturesMode || isOscarView || isBookAwardView) && <div className="catalog-ai-extra-tools">
-                  {isPicturesMode && <button className="dialog-button" type="button" onClick={() => setMediaFilterOpen(value => !value)} aria-expanded={mediaFilterOpen} aria-controls="library-filter-panel">{t("movie_filter")}</button>}
+                {!isMediaDetail && (isOscarView || isBookAwardView) && <div className="catalog-ai-extra-tools">
                   <CatalogAIButton language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
                 </div>}
-                {!isMediaDetail && catalogAIOpen && <CatalogAI key={`${profiles.activeId}:${activeMediaType}:${raspberryLanguage}`} section={activeMediaType} language={raspberryLanguage}
+                {!isMediaDetail && !isPicturesMode && catalogAIOpen && <CatalogAI key={`${profiles.activeId}:${activeMediaType}:${raspberryLanguage}`} section={activeMediaType} language={raspberryLanguage}
                   user={profiles.ready ? profiles.activeUser : null} onOpenLibrary={handleOpenRecommendedLibrary} onSearchTorrent={handleRecommendedTorrent}
                   initialPrompt={activeAIResult?.prompt || ""} onResult={applyCatalogAI} onClose={() => setCatalogAIOpen(false)} />}
-                {!isMediaDetail && !isOscarView && !isBookAwardView && <CatalogAIResult result={activeAIResult} visible={filterVisible} language={raspberryLanguage}
+                {!isMediaDetail && !isPicturesMode && !isOscarView && !isBookAwardView && <CatalogAIResult result={activeAIResult} visible={filterVisible} language={raspberryLanguage}
                   onClear={() => setCatalogAIResults(current => ({ ...current, [activeMediaType]: null }))} />}
 
-                {!isOscarView && !isBookAwardView && !isMediaDetail && (isGamesMode || filterTotal > 0) && mediaFilterOpen ? (
+                {!isPicturesMode && !isOscarView && !isBookAwardView && !isMediaDetail && (isGamesMode || filterTotal > 0) && mediaFilterOpen ? (
                   <section id="library-filter-panel" className="movie-filter__panel" aria-label={t("movie_filter_title")}>
                     <div className="movie-filter__heading">
                       <strong>{t("movie_filter_title")}</strong>
@@ -9749,8 +9803,10 @@ export default function App() {
                   {selectedGame && filteredGameOptions.some(game => game.relativePath === selectedGame.relativePath) ? (
                     <GameDetails key={selectedGame.relativePath} game={selectedGame} t={t} language={raspberryLanguage}
                       headerControls
+                      downloadAction={<MovieDownload url={getGameDownloadUrl(selectedGame.relativePath)} name={selectedGame.file || selectedGame.name} label={t("movie_download")} />}
                       onBack={handleBackToGameLibrary} onEdit={handleOpenCustomization}
                       onDelete={() => handleDeleteGame(selectedGame)}
+                      onSaveVideo={handleSaveGameVideo}
                       onPlay={handlePlayGame} onPlayInBrowser={handlePlayGameInBrowser}
                       playing={raspberryControlsBusy}
                       browserSupported={WEB_EMULATOR_SYSTEMS.has(systemForGame(selectedGame)?.id || selectedSystemId)}
@@ -9842,19 +9898,18 @@ export default function App() {
                   </section>
                 ) : isSeriesMode && !seasons.length ? (
                   <section className="empty-state">
-                    <div className="series-library__selected-rating"><strong>{ratingSource(libraryRatingSource).label}</strong><span>{formatLibraryRating(selectedSeries, libraryRatingSource, raspberryLanguage, t("not_available"))}</span></div>
-                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
+                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} tmdbRating={selectedSeries.voteAverage} tmdbVotes={selectedSeries.voteCount} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
+                    <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
                     <div className="empty-state__card">
                       <h2>{emptyTitle}</h2>
                       <p>{emptyDescription}</p>
                     </div>
-                    <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
                   </section>
                 ) : isSeriesMode ? (
                   <section className="seasons-section">
-                    <div className="series-library__selected-rating"><strong>{ratingSource(libraryRatingSource).label}</strong><span>{formatLibraryRating(selectedSeries, libraryRatingSource, raspberryLanguage, t("not_available"))}</span></div>
-                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
-                    <div className="seasons-section__label">
+                    <ImdbRating kind="tv" tmdbId={selectedSeries.id} tmdbRating={selectedSeries.voteAverage} tmdbVotes={selectedSeries.voteCount} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
+                    <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
+                    <div className="seasons-section__label seasons-section__label--inline">
                       {`${seasons.length} ${t("seasons_label")} (${selectedSeries?.episodeCount || 0} ${t("chapters_summary")})`}
                     </div>
                     <div className={`season-grid${seasons.length === 1 ? " season-grid--single" : ""}`}>
@@ -9871,11 +9926,10 @@ export default function App() {
                         />
                       ))}
                     </div>
-                    <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
                   </section>
                 ) : isMoviesMode && !selectedMovie ? (
                   <section className="movie-library seasons-section library-with-scroll-rail">
-                    <LibraryScrollRail labels={filteredMovieOptions.map(item => libraryScrollLabel(item, movieLibrarySort, normalizeRaspberryLanguage(raspberryLanguage), libraryRatingSource))} language={raspberryLanguage} sort={movieLibrarySort} direction={movieSortDirection} onDirectionChange={setMovieSortDirection} actionsVisible={movieActionsVisible} onActionsChange={movieLibraryView === "list" ? undefined : setMovieActionsVisible} />
+                    <LibraryScrollRail labels={filteredMovieOptions.map(item => libraryScrollLabel(item, movieLibrarySort, normalizeRaspberryLanguage(raspberryLanguage), libraryRatingSource))} language={raspberryLanguage} sort={movieLibrarySort} ratingSource={libraryRatingSource} direction={movieSortDirection} onDirectionChange={setMovieSortDirection} actionsVisible={movieActionsVisible} onActionsChange={movieLibraryView === "list" ? undefined : setMovieActionsVisible} />
                     <div className="seasons-section__label">{libraryCountLabel}</div>
                     <MovieLibraryItems view={movieLibraryView} actionsVisible={movieActionsVisible}>
                       {filteredMovieOptions.map((movie) => {
@@ -10037,13 +10091,6 @@ export default function App() {
                             </span>
                           </div>
                           <div className="movie-panel__fact">
-                            <strong>{t("library_rating_source")} · {ratingSource(libraryRatingSource).label}</strong>
-                            <div className="movie-panel__rating">
-                              <span>{formatLibraryRating(selectedMovie, libraryRatingSource, raspberryLanguage, t("not_available"))}</span>
-                              {libraryRatingSource === "tmdb" && selectedMovie.voteAverage > 0 && <RatingStars rating={selectedMovie.voteAverage} />}
-                            </div>
-                          </div>
-                          <div className="movie-panel__fact">
                             <strong>{t("genres")}</strong>
                             <span>
                               {selectedMovie.genres?.length
@@ -10075,12 +10122,12 @@ export default function App() {
                           </div>
                         </div>
 
-                        <ImdbRating kind="movie" tmdbId={selectedMovie.tmdbId} imdbUrl={selectedMovie.imdbUrl} language={raspberryLanguage} onLoad={handleMovieRatingLoaded} />
+                        <ImdbRating kind="movie" tmdbId={selectedMovie.tmdbId} tmdbRating={selectedMovie.voteAverage} tmdbVotes={selectedMovie.voteCount} imdbUrl={selectedMovie.imdbUrl} language={raspberryLanguage} onLoad={handleMovieRatingLoaded} />
+                        <MediaCredits mediaType="movie" tmdbId={selectedMovie.tmdbId} language={raspberryLanguage} />
                         <div className="movie-panel__overview">
                           <strong>{t("synopsis")}</strong>
                           <p>{selectedMovie.overview || t("synopsis_unavailable")}</p>
                         </div>
-                        <MediaCredits mediaType="movie" tmdbId={selectedMovie.tmdbId} language={raspberryLanguage} />
                       </div>
                     </div>
                   </section>
@@ -10217,7 +10264,7 @@ export default function App() {
               initialMediaType={uploadMediaType === "movies" ? "movies" : "series"}
               initialMovie={torrentInitialMovie}
               onTorrentStarted={torrentDownloads.refresh}
-              onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); }}
+              onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("general"); }}
             />
             <EpisodeDetailsModal
               loading={episodeLoading}
@@ -10256,7 +10303,7 @@ export default function App() {
         )}
       </div>
       {bookTorrentTarget && <BookTorrentModal key={bookTorrentTarget.key} winner={bookTorrentTarget} language={raspberryLanguage} onClose={() => setBookTorrentTarget(null)}
-        onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); }} />}
+        onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("general"); }} />}
       {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
   );

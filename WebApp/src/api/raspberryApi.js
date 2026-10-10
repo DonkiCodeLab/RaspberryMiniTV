@@ -979,6 +979,20 @@ export function retryGameMetadata(relativePath, selection) {
   return request("/games/metadata", { method: "POST", body: JSON.stringify({ relativePath, source: selection?.source, id: selection?.id }) });
 }
 
+export async function saveGameVideo(relativePath, video) {
+  const path = String(relativePath || "").trim();
+  if (!path || !/^[A-Za-z0-9_-]{11}$/.test(video?.id || "")) throw new Error("Invalid game or video");
+  const selection = { id: video.id, name: String(video.name || "YouTube").trim().slice(0, 300) || "YouTube",
+    channel: String(video.channel || "").trim().slice(0, 200) };
+  if (isMockModeEnabled()) {
+    const games = loadMockGamesLibrary();
+    if (!games.some(game => game.relativePath === path)) throw new Error("Game not found");
+    saveMockGamesLibrary(games.map(game => game.relativePath === path ? { ...game, preferredVideo: selection } : game));
+    return { ok: true, mock: true, relativePath: path, video: selection };
+  }
+  return request("/games/video", { method: "POST", body: JSON.stringify({ relativePath: path, video: selection }) });
+}
+
 export function gameMetadataImageUrl(url) {
   if (!url) return "";
   if (url.startsWith("/game-covers/")) return `${getBaseUrl()}${url}`;
@@ -1831,8 +1845,8 @@ export function localTmdbImageUrl(value) {
   const path = remote?.[1] || local?.[1];
   if (!path) return value;
   const params = new URLSearchParams({ pin: getStoredWebPin() });
-  const requestedWidth = String(value).match(/\/t\/p\/w(342|500|780|1280)\//)?.[1]
-    || String(value).match(/[?&]width=(342|500|780|1280)(?:&|$)/)?.[1];
+  const requestedWidth = String(value).match(/\/t\/p\/w(185|342|500|780|1280)\//)?.[1]
+    || String(value).match(/[?&]width=(185|342|500|780|1280)(?:&|$)/)?.[1];
   if (requestedWidth) params.set("width", requestedWidth);
   return `${getBaseUrl()}/tmdb/images${path}?${params}`;
 }

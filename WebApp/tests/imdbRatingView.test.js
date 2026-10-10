@@ -57,10 +57,15 @@ test("failed refresh retains the saved score and explicitly marks it as stale", 
   assert.match(html, /Actualizado:/);
 });
 
-test("three providers render their own scales without mixing IMDb votes or inventing missing scores", async () => {
+test("four providers render stars, their own scales and inline votes without inventing missing scores", async () => {
   const render = await loadContent();
   const data = { imdbId: "tt1234567", rating: 8.7, votes: 123456, rottenTomatoes: 95, metacritic: 77 };
-  const html = render({ data, language: "es" });
+  const html = render({ data, tmdb: { rating: 9, votes: 23456 }, language: "es" });
+  assert.match(html, /aria-label="TMDB"/);
+  assert.match(html, /4,5<small> \/ 5/);
+  assert.equal((html.match(/★/g) || []).length, 4);
+  assert.match(html, /<small class="imdb-rating__votes">\(23\.456 votos\)<\/small>/);
+  assert.match(html, /<small class="imdb-rating__votes">\(123\.456 votos\)<\/small>/);
   assert.match(html, /Rotten Tomatoes/);
   assert.match(html, /Metacritic/);
   assert.match(html, /8,7<small> \/ 10/);

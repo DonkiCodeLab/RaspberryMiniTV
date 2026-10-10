@@ -26,6 +26,11 @@ test("credits browse local cache without credentials or language parameters; pre
     const movie = await tmdb.getMediaCredits("movie", 17);
     assert.deepEqual(movie.cast[0].characters, ["Lead"]);
     assert.equal(new URL(requests[0]).pathname, "/tmdb/json/movie/17/credits");
+    const portrait = new URL(tmdb.buildTmdbImageUrl("/actor.jpg", "w185"));
+    assert.equal(portrait.pathname, "/tmdb/images/actor.jpg");
+    assert.equal(portrait.searchParams.get("width"), "185");
+    assert.equal(portrait.searchParams.get("pin"), "1234");
+    assert.equal(new URL(tmdb.buildTmdbImageUrl("/actor.jpg", "w185", true)).pathname, "/tmdb/import/images/actor.jpg");
     await tmdb.getMediaCredits("movie", 17);
     assert.equal(requests.length, 1, "reopening the same title reuses the existing local request cache");
     await tmdb.getMediaCredits("tv", 18);

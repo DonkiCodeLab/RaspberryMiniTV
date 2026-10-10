@@ -3,6 +3,7 @@ import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { getBookContent } from "./api/raspberryApi";
 import { bookStrings } from "./bookStrings.js";
+import { syncEpubPreviewPages } from "./bookHeaderPagination.js";
 import "./BookHeaderPreview.css";
 
 GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
@@ -121,25 +122,10 @@ export default function BookHeaderPreview({ book, cover, language }) {
             if (!disposed && !position.current.cfi && !first.currentLocation().atEnd) await first.next();
           }
           if (disposed) return;
-          const firstLocation = first.currentLocation();
-          position.current.cfi = firstLocation.start.cfi;
-          let end = firstLocation.atEnd;
-          for (let index = 1; index < count; index++) {
-            slots[index].hidden = end;
-            if (end) continue;
-            const previous = renditions[index - 1];
-            const previousCfi = previous.currentLocation().start.cfi;
-            // Ask the paginator for the next screen, then restore the visible page.
-            await previous.next();
-            if (disposed) return;
-            const nextCfi = previous.currentLocation().start.cfi;
-            await previous.display(previousCfi);
-            if (disposed) return;
-            await renditions[index].display(nextCfi);
-            if (disposed) return;
-            end = renditions[index].currentLocation().atEnd;
-          }
-          if (!disposed) setStatus({ busy: false, start: firstLocation.atStart, end, error: false });
+          const pages = await syncEpubPreviewPages(renditions, slots, () => disposed);
+          if (!pages) return;
+          position.current.cfi = pages.cfi;
+          setStatus({ busy: false, start: pages.start, end: pages.end, error: false });
         }
       } catch { fail(); }
       finally { busy = false; }
@@ -158,12 +144,21 @@ export default function BookHeaderPreview({ book, cover, language }) {
   return <div className="book-header-preview">
     <img className="book-header-preview__cover" src={cover} alt={book.name} />
     <div className="book-header-preview__reader" aria-label={t.pageCount} aria-busy={status.busy}>
-      <button type="button" disabled={status.busy || status.start} onClick={() => navigate.current?.(-1)} aria-label={t.previousPage}>‹</button>
+      <button type="button" disabled={status.busy || status.start} onClick={() => navigate.current?.(-1)} aria-label={t.previousPage}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7" /></svg>
+      </button>
       <div className="book-header-preview__viewport">
         <div ref={host} className="book-header-preview__pages" inert aria-hidden="true" />
-        {status.error ? <span className="book-header-preview__message" role="status">{t.previewError}</span> : status.busy ? <span className="book-header-preview__message" role="status">{t.previewLoading}</span> : null}
+        {status.error ? <span className="book-header-preview__message" role="status">{t.previewError}</span> : status.busy ? (
+          <div className="book-header-preview__message book-header-preview__message--loading" role="status">
+            <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
+            <span>{t.previewLoading}</span>
+          </div>
+        ) : null}
       </div>
-      <button type="button" disabled={status.busy || status.end} onClick={() => navigate.current?.(1)} aria-label={t.nextPage}>›</button>
+      <button type="button" disabled={status.busy || status.end} onClick={() => navigate.current?.(1)} aria-label={t.nextPage}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>
+      </button>
     </div>
   </div>;
 }

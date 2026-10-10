@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 import sys
 import tempfile
@@ -10,6 +11,13 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tmdb_cache import TmdbCache, LANGUAGES, TmdbError, CREDITS_VERSION
 import control_api as api
+
+
+def portrait_bytes():
+    from PIL import Image
+    buffer = io.BytesIO()
+    Image.new("RGB", (185, 278), "navy").save(buffer, "JPEG")
+    return buffer.getvalue()
 
 
 class TmdbCacheTests(unittest.TestCase):
@@ -186,8 +194,9 @@ class TmdbCacheTests(unittest.TestCase):
             self.cache.warm('tv', 1)
         self.assertEqual({call.args for call in thumbnails.call_args_list}, {
             ('/back.jpg', 1280), ('/variant.jpg', 780), ('/still2.jpg', 780),
-            ('/still.jpg', 780), ('/season.jpg', 500), ('/season.jpg', 780)})
-        self.assertEqual(thumbnails.call_count, 6)
+            ('/still.jpg', 780), ('/season.jpg', 500), ('/season.jpg', 780),
+            ('/person.jpg', 185), ('/creator.jpg', 185)})
+        self.assertEqual(thumbnails.call_count, 8)
         self.assertEqual({call.args[0] for call in images.call_args_list}, {'/back.jpg', '/logo.png', '/variant.jpg', '/still2.jpg', '/still.jpg', '/season.jpg'})
         for language in LANGUAGES:
             self.assertIn(('/tv/1/season/1', {'language': language}), paths)
@@ -635,10 +644,11 @@ class TmdbCreditsTests(unittest.TestCase):
             self.cache.enqueue('movie', 1)
             self.assertTrue(self.cache.jobs['movie/1']['creditsOnly'])
             self.assertFalse(self.cache.enqueue_credits('movie', 1))
-        with patch.object(self.cache, '_download', return_value=(json.dumps(self.credits('movie')).encode(), 'application/json')) as download, \
+        with patch.object(self.cache, '_download', side_effect=lambda url, *_:
+                (portrait_bytes(), 'image/jpeg') if '/w185/' in url else (json.dumps(self.credits('movie')).encode(), 'application/json')) as download, \
                 patch.object(self.cache, 'warm', side_effect=AssertionError('must only fetch credits')):
             self.cache._run()
-            download.assert_called_once()
+            self.assertEqual(download.call_count, 3)
         job = self.cache.status()['jobs']['movie/1']
         self.assertEqual(job['state'], 'complete')
         self.assertTrue(job['thumbnailsReady'])
@@ -665,7 +675,8 @@ class TmdbCreditsTests(unittest.TestCase):
         self.cache._save_jobs()
         reopened = TmdbCache(self.temp.name, lambda: {'apiKey': 'key'})
         self.assertEqual(reopened.jobs['tv/1']['state'], 'pending')
-        with patch.object(reopened, '_download', return_value=(json.dumps(self.credits('tv')).encode(), 'application/json')):
+        with patch.object(reopened, '_download', side_effect=lambda url, *_:
+                (portrait_bytes(), 'image/jpeg') if '/w185/' in url else (json.dumps(self.credits('tv')).encode(), 'application/json')):
             reopened._run()
         self.assertTrue(reopened.credits_ready('tv', 1))
         self.assertTrue(reopened.jobs['tv/1']['thumbnailsReady'])
@@ -724,6 +735,89 @@ class TmdbCreditsTests(unittest.TestCase):
             self.assertTrue(reopened.credits_ready('tv', 1))
             self.assertEqual(reopened.remove_unused([('tv', {'tmdbId': 1})], {}), {'metadata': 1, 'images': 0})
             self.assertFalse(reopened.credits_ready('tv', 1))
+
+
+class TmdbPortraitTests(unittest.TestCase):
+    setUp = TmdbCacheTests.setUp
+
+    def save_json(self, path, data, params=None):
+        with patch.object(self.cache, '_download', return_value=(json.dumps(data).encode(), 'application/json')):
+            return self.cache.json(path, params)
+
+    def test_small_portrait_is_downloaded_once_without_original_and_available_offline(self):
+        with patch.object(self.cache, '_download', return_value=(portrait_bytes(), 'image/jpeg')) as download:
+            first = self.cache.display_image('/actor.jpg', 185)
+            self.assertEqual(self.cache.display_image('/actor.jpg', 185), first)
+            download.assert_called_once_with('https://image.tmdb.org/t/p/w185/actor.jpg', {}, 4 * 1024 * 1024)
+        self.assertFalse((self.cache.root / 'images').exists())
+        from PIL import Image
+        with Image.open(first) as portrait:
+            self.assertEqual(portrait.format, 'WEBP')
+            self.assertEqual(portrait.width, 185)
+        reopened = TmdbCache(self.temp.name, lambda: {})
+        with patch.object(reopened, '_download', side_effect=AssertionError('offline')):
+            self.assertEqual(reopened.display_image('/actor.jpg', 185, local_only=True), first)
+        with patch.object(self.cache, '_download', return_value=(b'<html>Not an image</html>', 'text/html')):
+            with self.assertRaises(OSError):
+                self.cache.display_image('/broken.jpg', 185)
+        self.assertFalse((self.cache.root / 'thumbnails/185/broken.jpg.webp').exists())
+
+    def test_legacy_credits_queue_missing_portraits_and_retry_without_redownloading_metadata(self):
+        credits = {'id': 1, 'cast': [{'id': 1, 'name': 'Actor', 'character': 'Hero', 'profile_path': '/actor.jpg'},
+                                    {'id': 2, 'name': 'No photo', 'character': 'Friend', 'profile_path': None}], 'crew': []}
+        self.save_json('/movie/1/credits', credits)
+        self.assertTrue(self.cache.credits_ready('movie', 1))
+        self.assertFalse(self.cache.credits_ready('movie', 1, include_portraits=True))
+        self.cache.jobs['movie/1'] = {'state': 'complete', 'images': [], 'thumbnailsReady': True, 'creditsVersion': 1}
+        with patch.object(self.cache, 'start'):
+            self.cache.enqueue('movie', 1)
+        self.assertTrue(self.cache.jobs['movie/1']['creditsOnly'])
+        with patch.object(self.cache, '_download', side_effect=TmdbError('offline', 'TMDB_CONNECTION_ERROR')):
+            self.cache._run()
+        self.assertEqual(self.cache.jobs['movie/1']['state'], 'failed')
+        self.assertFalse(self.cache.jobs['movie/1']['creditsReady'])
+        self.assertTrue(self.cache.jobs['movie/1']['thumbnailsReady'])
+        with patch.object(self.cache, 'start'):
+            self.assertTrue(self.cache.enqueue_credits('movie', 1))
+        with patch.object(self.cache, '_download', return_value=(portrait_bytes(), 'image/jpeg')) as download:
+            self.cache._run()
+            download.assert_called_once()
+            self.assertIn('/w185/actor.jpg', download.call_args.args[0])
+        self.assertEqual(self.cache.jobs['movie/1']['state'], 'complete')
+        self.assertTrue(self.cache.credits_ready('movie', 1, include_portraits=True))
+        self.assertEqual(self.cache.jobs['movie/1']['creditsVersion'], CREDITS_VERSION)
+        with patch.object(self.cache, '_download', side_effect=AssertionError('offline')):
+            self.assertFalse(self.cache.enqueue_credits('movie', 1))
+        (self.cache.root / 'thumbnails/185/actor.jpg.webp').unlink()
+        self.assertFalse(self.cache.credits_ready('movie', 1, include_portraits=True))
+
+    def test_aggregate_cast_creators_directors_and_writers_share_portraits(self):
+        self.save_json('/tv/1', {'id': 1, 'created_by': [{'id': 7, 'name': 'Creator', 'profile_path': '/creator.jpg'}]}, {'language': 'es-ES'})
+        credits = {'id': 1, 'cast': [{'id': 1, 'name': 'Actor', 'roles': [], 'profile_path': '/shared.jpg'}],
+                   'crew': [{'id': 2, 'name': 'Director', 'jobs': [{'job': 'Director'}], 'profile_path': '/shared.jpg'},
+                            {'id': 3, 'name': 'Writer', 'jobs': [{'job': 'Teleplay'}], 'profile_path': '/writer.jpg'},
+                            {'id': 4, 'name': 'Author', 'jobs': [], 'department': 'Writing', 'profile_path': '/author.png'},
+                            {'id': 5, 'name': 'Other crew', 'jobs': [{'job': 'Sound'}], 'profile_path': '/unused.jpg'},
+                            {'id': 6, 'name': 'Invalid', 'jobs': [{'job': 'Director'}], 'profile_path': '/../private.jpg'}]}
+        self.save_json('/tv/1/aggregate_credits', credits)
+        with patch.object(self.cache, '_download', return_value=(portrait_bytes(), 'image/jpeg')) as download:
+            self.cache.warm_credit_portraits('tv', 1, credits)
+        self.assertEqual(download.call_count, 4)
+        self.assertEqual({call.args[0].rsplit('/', 1)[1] for call in download.call_args_list},
+                         {'shared.jpg', 'writer.jpg', 'author.png', 'creator.jpg'})
+        with patch.object(self.cache, '_download', side_effect=AssertionError('offline')):
+            self.assertTrue(self.cache.credits_ready('tv', 1, include_portraits=True))
+
+    def test_portrait_cleanup_retains_shared_people_until_last_title_is_removed(self):
+        for tmdb_id in (1, 2):
+            self.save_json(f'/movie/{tmdb_id}/credits', {'id': tmdb_id, 'cast': [
+                {'id': 10, 'name': 'Actor', 'character': 'Lead', 'profile_path': '/shared.jpg'}], 'crew': []})
+        with patch.object(self.cache, '_download', return_value=(portrait_bytes(), 'image/jpeg')):
+            target = self.cache.display_image('/shared.jpg', 185)
+        self.cache.remove_unused([('movie', {'tmdbId': 1})], {'movies': {'copy.mp4': {'tmdbId': 2}}})
+        self.assertTrue(target.exists())
+        self.cache.remove_unused([('movie', {'tmdbId': 2})], {})
+        self.assertFalse(target.exists())
 
 
 class TmdbCleanupTests(unittest.TestCase):

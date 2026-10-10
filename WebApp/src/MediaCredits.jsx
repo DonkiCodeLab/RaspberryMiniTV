@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useState } from "react";
-import { getMediaCredits } from "./tmdbApi.js";
+import { buildTmdbImageUrl, getMediaCredits } from "./tmdbApi.js";
 import { mediaCreditsFailure, normalizeCreators } from "./mediaCredits.js";
 import "./MediaCredits.css";
 
@@ -24,14 +24,30 @@ const labels = {
   },
 };
 
-function People({ people, title, cast = false, t }) {
+function PersonAvatar({ person, importPreview }) {
+  const src = buildTmdbImageUrl(person.profilePath, "w185", importPreview);
+  const [failedSrc, setFailedSrc] = useState(null);
+  const words = person.name.trim().split(/\s+/);
+  const initials = [words[0], ...(words.length > 1 ? [words.at(-1)] : [])]
+    .map(word => Array.from(word)[0]).join("").toLocaleUpperCase();
+  return <span className="media-credits__avatar" aria-hidden="true">
+    {src && failedSrc !== src
+      ? <img src={src} alt="" width="64" height="64" loading="lazy" decoding="async" onError={() => setFailedSrc(src)} />
+      : <span>{initials}</span>}
+  </span>;
+}
+
+function People({ people, title, cast = false, t, importPreview }) {
   if (!people.length) return null;
   const limit = cast ? 12 : 6;
   const renderList = entries => <ul className={`media-credits__people${cast ? " media-credits__people--cast" : ""}`}>
     {entries.map(person => <li key={person.key}>
-      <span className="media-credits__name">{person.name}</span>
-      {cast && person.characters.length > 0 && <span className="media-credits__role">{person.characters.join(" · ")}</span>}
-      {cast && person.episodeCount > 0 && <small>{t.episodes(person.episodeCount)}</small>}
+      <PersonAvatar person={person} importPreview={importPreview} />
+      <div className="media-credits__identity">
+        <span className="media-credits__name">{person.name}</span>
+        {cast && person.characters.length > 0 && <span className="media-credits__role">{person.characters.join(" · ")}</span>}
+        {cast && person.episodeCount > 0 && <small>{t.episodes(person.episodeCount)}</small>}
+      </div>
     </li>)}
   </ul>;
   return <div className="media-credits__group">
@@ -44,25 +60,27 @@ function People({ people, title, cast = false, t }) {
   </div>;
 }
 
-export function MediaCreditsContent({ credits, creators, language = "es", status = "ready", onRetry }) {
+export function MediaCreditsContent({ credits, creators, language = "es", status = "ready", onRetry, importPreview = false }) {
   const languageKey = String(language).toLowerCase().split(/[-_]/)[0];
   const t = labels[languageKey === "cat" ? "ca" : languageKey] || labels.es;
   const headingId = useId();
   const createdBy = normalizeCreators(creators);
   const hasCredits = Boolean(credits && (credits.cast.length || credits.directors.length || credits.writers.length));
-  return <section className="media-credits" aria-labelledby={headingId} aria-busy={status === "loading"}>
-    <h3 id={headingId}>{t.title}</h3>
+  return <details className="media-credits" aria-labelledby={headingId} aria-busy={status === "loading"}>
+    <summary className="media-credits__summary"><h3 id={headingId}>{t.title}</h3><span className="media-credits__chevron" aria-hidden="true">⌄</span></summary>
+    <div className="media-credits__body">
     <div className="media-credits__crew">
-      <People people={createdBy} title={t.creators} t={t} />
-      <People people={credits?.directors || []} title={t.directors} t={t} />
-      <People people={credits?.writers || []} title={t.writers} t={t} />
+      <People people={createdBy} title={t.creators} t={t} importPreview={importPreview} />
+      <People people={credits?.directors || []} title={t.directors} t={t} importPreview={importPreview} />
+      <People people={credits?.writers || []} title={t.writers} t={t} importPreview={importPreview} />
     </div>
-    <People people={credits?.cast || []} title={t.cast} cast t={t} />
+    <People people={credits?.cast || []} title={t.cast} cast t={t} importPreview={importPreview} />
     {status !== "ready" ? <p className="media-credits__status" role="status">
       {t[status]}
       {status !== "loading" && onRetry && <button type="button" onClick={onRetry}>{t.retry}</button>}
     </p> : !hasCredits && !createdBy.length && <p className="media-credits__status">{t.empty}</p>}
-  </section>;
+    </div>
+  </details>;
 }
 
 export default function MediaCredits({ mediaType, tmdbId, language, creators, importPreview = false }) {
@@ -83,6 +101,6 @@ export default function MediaCredits({ mediaType, tmdbId, language, creators, im
   }, [key, mediaType, id, importPreview, valid]);
   if (!valid) return null;
   const current = loaded?.key === key ? loaded : { status: "loading" };
-  return <MediaCreditsContent key={key} {...current} creators={creators} language={language}
+  return <MediaCreditsContent key={`${mediaType}:${id}:${importPreview}`} {...current} creators={creators} language={language} importPreview={importPreview}
     onRetry={() => setRetry(value => value + 1)} />;
 }

@@ -10,13 +10,13 @@ import tvGreen from "./assets/tele_green_2_fixed.png";
 import "./GameDetails.css";
 
 export default function GameDetails({ game, t, language, marks, onBack, onEdit, onDelete,
-  onPlay, onPlayInBrowser, playing, browserSupported, onRefresh, headerControls = false }) {
+  onPlay, onPlayInBrowser, playing, browserSupported, onRefresh, onSaveVideo, downloadAction, headerControls = false }) {
   const metadata = game.gameMetadata || {};
   const name = game.name || game.file;
   const system = systemForGame(game);
   const platform = game.platformName || system?.name || game.platform;
   const images = gameScreenshots(game);
-  const videos = gameVideos(metadata);
+  const videos = gameVideos(metadata, game.preferredVideo);
   const [media, setMedia] = useState(images.length ? "images" : "videos");
   const [imageIndex, setImageIndex] = useState(0);
   const selectedImage = Math.min(imageIndex, Math.max(0, images.length - 1));
@@ -36,6 +36,7 @@ export default function GameDetails({ game, t, language, marks, onBack, onEdit, 
       {!headerControls && <button type="button" className="back-button" onClick={onBack}>← {t("media_games")}</button>}
       <div className="game-details__tools">
         {!headerControls && <button className="dialog-button dialog-button--ghost" type="button" onClick={onEdit}>{t("games_edit_title")}</button>}
+        {downloadAction}
         <button className="media-delete-button" type="button" onClick={onDelete}
           aria-label={t("delete_media", { media: t("media_games_singular") })}
           title={t("delete_media", { media: t("media_games_singular") })}>
@@ -112,7 +113,7 @@ export default function GameDetails({ game, t, language, marks, onBack, onEdit, 
             </button>)}
           </div>}
         </div> : <GameVideo key={`${game.relativePath}:${game.metadataId}`} metadata={{ ...metadata, name: metadata.name || name }}
-          platform={game.platform} t={t} />}
+          platform={game.platform} t={t} preferredVideo={game.preferredVideo} onSaveVideo={onSaveVideo} />}
       </div>
     </section>
   </section>;

@@ -1,0 +1,9 @@
+.section-switcher { display: inline-flex; max-width: 100%; gap: 4px; padding: 5px; margin-bottom: 18px; border: 1px solid #ffffff24; border-radius: 999px; background: #151c24; }
+.section-switcher__tab { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; min-height: 44px; padding: 10px 20px; border: 0; border-radius: 999px; background: transparent; color: #c2cbd4; font: inherit; font-weight: 700; cursor: pointer; transition: background .18s ease, color .18s ease; }
+.section-switcher__tab:hover { background: #ffffff12; color: #fff; }
+.section-switcher__tab[aria-selected="true"] { background: #ffdc35; color: #203744; }
+.section-switcher__tab:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
+.section-switcher__count { padding: 2px 8px; border-radius: 999px; background: #ffffff12; color: #ffdc35; font-size: .8em; font-variant-numeric: tabular-nums; }
+.section-switcher__tab[aria-selected="true"] .section-switcher__count { background: #203744; color: #ffdc35; }
+@media (max-width: 600px) { .section-switcher { display: flex; } .section-switcher__tab { flex: 1; padding: 10px 12px; gap: 6px; } }
+@media (prefers-reduced-motion: reduce) { .section-switcher__tab { transition: none; } }

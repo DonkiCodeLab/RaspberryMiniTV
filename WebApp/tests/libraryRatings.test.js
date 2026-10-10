@@ -26,8 +26,9 @@ test("cards and navigation labels retain each provider's scale and localized dec
   assert.equal(formatLibraryRating(titles[0], "imdb", "en"), "5.0 / 10");
   assert.equal(formatLibraryRating(titles[0], "rottenTomatoes", "ca"), "0 %");
   assert.equal(formatLibraryRating(titles[0], "metacritic", "es"), "90 / 100");
-  assert.equal(libraryScrollLabel(titles[0], "rating", "es", "imdb"), "5,0 / 10");
+  assert.equal(libraryScrollLabel(titles[0], "rating", "es", "imdb"), "5,0");
   assert.equal(libraryScrollLabel(titles[0], "rating", "es", "rottenTomatoes"), "0 %");
+  assert.equal(libraryScrollLabel(titles[0], "rating", "es", "metacritic"), "90");
   assert.equal(libraryScrollLabel(titles[2], "rating", "es", "metacritic"), "—");
 });
 

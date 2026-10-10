@@ -17,7 +17,7 @@ import urllib.request
 IMAGE_RE = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg)")
 DETAIL_RE = re.compile(r"/(?:movie/\d+(?:/images|/credits)?|tv/\d+(?:/images|/aggregate_credits|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
 LANGUAGES = ("es-ES", "ca-ES", "en-US")
-CREDITS_VERSION = 1
+CREDITS_VERSION = 2
 
 
 class TmdbError(RuntimeError):
@@ -295,7 +295,7 @@ class TmdbCache:
         self._validate_credits(path, data)
         return data
 
-    def credits_ready(self, kind, tmdb_id):
+    def credits_ready(self, kind, tmdb_id, *, include_portraits=False):
         """Check local validated credits without network requests or cache writes."""
         try:
             path = self._credits_path(kind, tmdb_id)
@@ -314,17 +314,25 @@ class TmdbCache:
             return False
         signature = tuple(signatures)
         saved = self.credits_snapshots.get(filename)
-        if saved and saved[0] == signature:
-            return saved[1]
-        try:
-            self.json(path, local_only=True)
-            ready = True
-        except (TmdbError, ValueError):
-            ready = False
-        # Atomic cache replacement changes the signature. No additional lock is
-        # needed: concurrent readers may harmlessly validate the same file twice.
-        self.credits_snapshots[filename] = (signature, ready)
-        return ready
+        if not saved or saved[0] != signature:
+            try:
+                data = self.json(path, local_only=True)
+                portraits = self._credit_portrait_paths(kind, tmdb_id, data, include_creators=False)
+                ready = True
+            except (TmdbError, ValueError):
+                ready, portraits = False, set()
+            # Keep only validated portrait paths in memory, not entire credits.
+            saved = (signature, ready, portraits)
+            self.credits_snapshots[filename] = saved
+        if not saved[1]:
+            return False
+        if include_portraits:
+            for portrait in saved[2] | self._credit_portrait_paths(kind, tmdb_id, {}):
+                try:
+                    self.display_image(portrait, 185, local_only=True)
+                except (TmdbError, ValueError):
+                    return False
+        return True
 
     def warm_credits(self, kind, tmdb_id, refresh=False):
         """Persist full cast/crew JSON; person portraits are never downloaded here."""
@@ -335,6 +343,42 @@ class TmdbCache:
         self._validate_credits(path, data)
         self._progress("credits", 1, 1, path)
         return data
+
+    def _credit_portrait_paths(self, kind, tmdb_id, data, *, include_creators=True):
+        """Portraits for the people shown in the credits panel, including creators."""
+        writing_jobs = {"writer", "screenplay", "story", "teleplay", "characters", "novel", "author",
+                        "adaptation", "original story", "original film writer", "original series creator"}
+        people = list(data.get("cast", []))
+        for person in data.get("crew", []):
+            jobs = {str(person.get("job", "")).lower()}
+            jobs.update(str(job.get("job", "")).lower() for job in person.get("jobs", []))
+            if ("director" in jobs or jobs & writing_jobs
+                    or str(person.get("department", "")).lower() == "writing"):
+                people.append(person)
+        if kind == "tv" and include_creators:
+            for params in ({}, *({"language": language} for language in LANGUAGES),
+                           {"append_to_response": "aggregate_credits"}):
+                try:
+                    detail = self.json(f"/tv/{int(tmdb_id)}", params, local_only=True)
+                    people.extend(detail.get("created_by") or [])
+                except TmdbError:
+                    pass
+        return {person["profile_path"] for person in people if isinstance(person, dict)
+                and isinstance(person.get("profile_path"), str)
+                and re.fullmatch(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp)", person["profile_path"])}
+
+    def warm_credit_portraits(self, kind, tmdb_id, data):
+        portraits = self._credit_portrait_paths(kind, tmdb_id, data)
+        errors = []
+        for count, portrait in enumerate(sorted(portraits), 1):
+            self._check_worker()
+            try:
+                self.display_image(portrait, 185)
+            except Exception as exc:
+                errors.append(f"{portrait}: {exc}")
+            self._progress("thumbnails", count, len(portraits), portrait)
+        if errors:
+            raise RuntimeError("; ".join(errors)[:4000])
 
     def _with_movie_links(self, path, data, refresh=False, lookup=False, lookup_results=None):
         """Persist movie links once, shared by languages, browsers and restarts."""
@@ -403,7 +447,7 @@ class TmdbCache:
 
     def display_image(self, path, width=None, local_only=False):
         if local_only:
-            if not IMAGE_RE.fullmatch(path) or width not in (None, 342, 500, 780, 1280):
+            if not IMAGE_RE.fullmatch(path) or width not in (None, 185, 342, 500, 780, 1280):
                 raise ValueError("Imagen o tamaño no permitido")
             target = self.root / "thumbnails" / str(width) / (path.lstrip("/") + ".webp") if width else self.root / "images" / path.lstrip("/")
             if target.is_file() and target.stat().st_size:
@@ -411,21 +455,25 @@ class TmdbCache:
             raise TmdbError("Imagen pendiente de preparación local", "TMDB_LOCAL_MISSING")
         if width is None:
             return self.image(path)
-        if width not in (342, 500, 780, 1280):
+        if width not in (185, 342, 500, 780, 1280):
             raise ValueError("Tamaño de imagen no permitido")
         if not IMAGE_RE.fullmatch(path):
             raise ValueError("Ruta de imagen no permitida")
         target = self.root / "thumbnails" / str(width) / (path.lstrip("/") + ".webp")
         if target.is_file() and target.stat().st_size:
             return target
-        source = self.image(path)
-        if source.suffix == ".svg":
+        source = None if width == 185 else self.image(path)
+        if source is not None and source.suffix == ".svg":
             return source
         with self.state_lock:
             generation = self.generations.get("image:" + path, 0)
         with self.io_locks[hash(str(target)) % len(self.io_locks)]:
             if target.is_file() and target.stat().st_size:
                 return target
+            if width == 185:
+                # Avatars do not need an original multi-megapixel portrait.
+                raw, _ = self._download("https://image.tmdb.org/t/p/w185" + path, {}, 4 * 1024 * 1024)
+                source = io.BytesIO(raw)
             from PIL import Image, ImageOps
             with self.thumbnail_slots, Image.open(source) as original:
                 original.draft("RGB", (width, width * 2))
@@ -561,7 +609,8 @@ class TmdbCache:
         errors.extend(self._warm_images(images, thumbnails))
         if self.include_credits:
             try:
-                self.warm_credits(kind, tmdb_id, refresh=refresh)
+                credits = self.warm_credits(kind, tmdb_id, refresh=refresh)
+                self.warm_credit_portraits(kind, tmdb_id, credits)
             except Exception as exc:
                 errors.append(f"Créditos {base}: {exc}")
         if errors:
@@ -613,7 +662,7 @@ class TmdbCache:
             active = previous.get("state") in ("pending", "running")
             if active and not previous.get("creditsOnly") and same_images and not refresh:
                 return
-            credits_ready = self.credits_ready(kind, tmdb_id)
+            credits_ready = self.credits_ready(kind, tmdb_id, include_portraits=True)
             artwork_ready = bool(previous.get("thumbnailsReady"))
             credits_only = artwork_ready and same_images and not refresh
             if credits_only and ((active and previous.get("creditsOnly")) or credits_ready or not self.include_credits):
@@ -629,14 +678,14 @@ class TmdbCache:
         self.start()
 
     def enqueue_credits(self, kind, tmdb_id, refresh=False):
-        """Queue metadata only, preserving prepared artwork and deduplicating active work."""
+        """Queue credits and portraits, preserving artwork and deduplicating work."""
         self._credits_path(kind, tmdb_id)
         key = f"{kind}/{int(tmdb_id)}"
         with self.jobs_lock:
             previous = self.jobs.get(key, {})
             if previous.get("state") in ("pending", "running"):
                 return False  # Full preparation also includes credits.
-            ready = self.credits_ready(kind, tmdb_id)
+            ready = self.credits_ready(kind, tmdb_id, include_portraits=True)
             if ready and not refresh:
                 return False
             self.jobs[key] = {"kind": kind, "id": int(tmdb_id), "state": "pending", "error": "",
@@ -686,7 +735,8 @@ class TmdbCache:
             try:
                 self.worker_context.job = (key, generation)
                 if job.get("creditsOnly"):
-                    self.warm_credits(job["kind"], job["id"], job.get("refresh", False))
+                    credits = self.warm_credits(job["kind"], job["id"], job.get("refresh", False))
+                    self.warm_credit_portraits(job["kind"], job["id"], credits)
                 else:
                     self.warm(job["kind"], job["id"], job["images"], job.get("refresh", False))
                 state, error = "complete", ""
@@ -699,7 +749,7 @@ class TmdbCache:
                     job.update(state=state, error=error)
                     if not job.get("creditsOnly"):
                         job["thumbnailsReady"] = state == "complete"
-                    job["creditsReady"] = self.credits_ready(job["kind"], job["id"])
+                    job["creditsReady"] = self.credits_ready(job["kind"], job["id"], include_portraits=True)
                     job["creditsVersion"] = CREDITS_VERSION if job["creditsReady"] else 0
                 try:
                     self._save_jobs()
@@ -793,7 +843,7 @@ class TmdbCache:
             for path in candidates - protected_images:
                 if IMAGE_RE.fullmatch(path):
                     self.generations["image:" + path] = self.generations.get("image:" + path, 0) + 1
-                    for width in (342, 500, 780, 1280):
+                    for width in (185, 342, 500, 780, 1280):
                         (self.root / "thumbnails" / str(width) / (path.lstrip("/") + ".webp")).unlink(missing_ok=True)
                     target = self.root / "images" / path.lstrip("/")
                     if target.is_file():

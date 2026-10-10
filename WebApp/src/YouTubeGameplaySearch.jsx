@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { searchYoutubeGameplay } from "./api/raspberryApi";
 
-export default function YouTubeGameplaySearch({ initialQuery, t, selectedId, onSelect }) {
+export default function YouTubeGameplaySearch({ initialQuery, t, selectedId, onSelect, disabled = false }) {
   const [query, setQuery] = useState(initialQuery);
   const [request, setRequest] = useState({ query: initialQuery, attempt: 0 });
   const [state, setState] = useState({ busy: true, results: [], message: "" });
@@ -36,7 +36,7 @@ export default function YouTubeGameplaySearch({ initialQuery, t, selectedId, onS
     <p role="status" aria-live="polite">{state.busy ? t("searching_button") : state.message ? t(state.message) : t("youtube_results")}</p>
     <div className="youtube-gameplay-search__results">
       {state.results.map(video => <button type="button" key={video.id} className="game-video__choice"
-        aria-pressed={selectedId === video.id} onClick={() => onSelect({ id: video.id, name: video.title, channel: video.channel })}>
+        aria-pressed={selectedId === video.id} disabled={disabled} onClick={() => onSelect({ id: video.id, name: video.title, channel: video.channel })}>
         <span className="game-video__thumbnail"><img src={`https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`} alt="" loading="lazy" /><span aria-hidden="true">▶</span></span>
         <span><strong>{video.title}</strong><small>{video.channel}</small></span>
       </button>)}

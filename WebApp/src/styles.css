@@ -1796,7 +1796,7 @@ img {
 .movie-library__meta span:last-child { color: #ffd429; }
 .movie-library__score { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; text-align: right; }
 .movie-library__score small { font-size: .65rem; color: rgba(255,255,255,.7); }
-.series-library__selected-rating { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; color: #17232c; }
+.seasons-section__label--inline { position: static; transform: none; width: fit-content; margin-bottom: 1.2rem; }
 .movie-library__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 .movie-library__actions--single { grid-template-columns: 1fr; }
 .movie-library__actions button, .movie-library__actions a { display: grid; place-items: center; min-height: 2.55rem; padding: .55rem; border: 1px solid rgba(255,255,255,.22); border-radius: 11px; background: rgba(255,255,255,.08); color: #fff; text-decoration: none; text-align: center; font-size: .78rem; font-weight: 900; cursor: pointer; }
@@ -1908,6 +1908,56 @@ img {
 .raspberry-page__content {
   width: min(1100px, 100%);
   margin: 1.35rem auto 0;
+}
+
+.raspberry-dashboard-switcher.section-switcher {
+  display: flex;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.raspberry-dashboard-switcher .section-switcher__tab {
+  flex: 1;
+  padding: 12px clamp(6px, 2vw, 20px);
+  font-size: clamp(0.75rem, 1.8vw, 1rem);
+}
+
+.raspberry-dashboard-panel[hidden] {
+  display: none;
+}
+
+.raspberry-dashboard-panel:focus-visible {
+  outline: 2px solid #ffdc35;
+  outline-offset: 6px;
+  border-radius: 20px;
+}
+
+.raspberry-auxiliary-switcher.section-switcher {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  width: 100%;
+}
+
+.raspberry-auxiliary-switcher .section-switcher__tab {
+  padding: 10px 8px;
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+}
+
+.raspberry-auxiliary-panel > .raspberry-tmdb-card {
+  margin-top: 0;
+}
+
+@media (max-width: 800px) {
+  .raspberry-auxiliary-switcher.section-switcher {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .raspberry-auxiliary-switcher.section-switcher {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .raspberry-dashboard-section + .raspberry-dashboard-section {
@@ -6570,7 +6620,8 @@ img {
   gap: 0.65rem;
 }
 
-.movie-panel__file-actions .media-delete-button--movie {
+.movie-panel__file-actions .media-delete-button--movie,
+.game-details__tools .media-delete-button {
   position: relative;
   inset: auto;
   width: 50px;
@@ -6578,12 +6629,14 @@ img {
   background: #fff;
 }
 
-.movie-panel__file-actions .media-delete-button--movie img {
+.movie-panel__file-actions .media-delete-button--movie img,
+.game-details__tools .media-delete-button img {
   width: 22px;
   height: 22px;
 }
 
-.movie-panel__file-actions .media-delete-button--movie:is(:hover, :focus-visible) {
+.movie-panel__file-actions .media-delete-button--movie:is(:hover, :focus-visible),
+.game-details__tools .media-delete-button:is(:hover, :focus-visible) {
   background: #fff;
   border-color: #dc4034;
 }

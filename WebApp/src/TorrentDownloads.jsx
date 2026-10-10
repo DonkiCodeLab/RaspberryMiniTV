@@ -4,6 +4,7 @@ import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torren
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import "./TorrentDownloads.css";
+import SectionSwitcher from "./SectionSwitcher.jsx";
 import { bookTorrentStrings } from './bookTorrentUtils.js';
 
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted }) {
@@ -187,28 +188,9 @@ export default function TorrentDownloads({ downloads, language }) {
       </button>
     </div>
     <div className="raspberry-torrents-card">
-    <div className="torrent-dashboard__tabs" role="tablist" aria-label={s.list}>
-      {groups.map((group, index) => <button
-        className="torrent-dashboard__tab"
-        key={group.key}
-        id={`torrent-${group.key}-tab`}
-        type="button"
-        role="tab"
-        aria-selected={selectedGroup === group.key}
-        aria-controls={`torrent-${group.key}-panel`}
-        tabIndex={selectedGroup === group.key ? 0 : -1}
-        onClick={() => setSelectedGroup(group.key)}
-        onKeyDown={event => {
-          const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? groups.length - 1
-            : event.key === "ArrowRight" ? (index + 1) % groups.length
-            : event.key === "ArrowLeft" ? (index + groups.length - 1) % groups.length : null;
-          if (nextIndex === null) return;
-          event.preventDefault();
-          setSelectedGroup(groups[nextIndex].key);
-          event.currentTarget.parentElement.children[nextIndex].focus();
-        }}
-      >{group.title} <span className="torrent-dashboard__count">{group.jobs.length}</span></button>)}
-    </div>
+    <SectionSwitcher idPrefix="torrent" label={s.list}
+      tabs={groups.map(group => ({ ...group, count: group.jobs.length }))}
+      selected={selectedGroup} onSelect={setSelectedGroup} />
     {(error || serviceError) && <p className="dialog-error" role="alert">{error || serviceError}</p>}
     {groups.map(group => <section className="torrent-dashboard__scroll" key={group.key}
       id={`torrent-${group.key}-panel`} role="tabpanel" aria-labelledby={`torrent-${group.key}-tab`}

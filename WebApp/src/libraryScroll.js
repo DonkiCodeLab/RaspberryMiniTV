@@ -3,6 +3,7 @@ import { compareLibraryRatings, formatLibraryRating } from "./libraryRatings.js"
 export function libraryScrollLabel(item, sort = "name", language = "es", ratingSource = "tmdb") {
   if (sort === "year") return String(item.year || item.releaseDate || "").match(/\b\d{4}\b/)?.[0] || "—";
   if (sort === "rating") {
+    if (["imdb", "metacritic"].includes(ratingSource)) return formatLibraryRating(item, ratingSource, language).replace(/\s*\/ (?:10|100)$/, "");
     if (ratingSource !== "tmdb") return formatLibraryRating(item, ratingSource, language);
     const rating = Number(item.voteAverage);
     return rating > 0 ? `★ ${new Intl.NumberFormat(language, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(rating / 2)}` : "—";
@@ -11,6 +12,32 @@ export function libraryScrollLabel(item, sort = "name", language = "es", ratingS
   if (/^\p{N}/u.test(name)) return "0–9";
   // Preserve Ñ as its own letter while grouping accented vowels with their base letter.
   return (Array.from(name)[0] || "#").toLocaleUpperCase(language).normalize("NFD").replace(/(?!\u0303)\p{M}/gu, "").normalize("NFC");
+}
+
+// Keep the printed scale sparse while preserving every exact score as a stop.
+export function buildRatingScale(labels, direction = "asc", source = "imdb") {
+  const percentage = source === "rottenTomatoes";
+  const hundredPoint = percentage || source === "metacritic";
+  const max = hundredPoint ? 100 : 10;
+  const step = hundredPoint ? 10 : 1;
+  const values = labels.map(label => {
+    const number = percentage ? label.replace(/\s*%$/, "") : label;
+    const value = /^\d+(?:[.,]\d+)?$/.test(number) ? Number(number.replace(",", ".")) : NaN;
+    return Number.isFinite(value) && value >= 0 && value <= max ? value : null;
+  });
+  if (!values.some(value => value !== null)) return { max, values, positions: values.map(() => 0), marks: [["—", 0]] };
+  const hasMissing = values.includes(null);
+  // Unrated titles keep a separate stop after the numeric range in both orders.
+  const extent = hasMissing ? 10 / 11 : 1;
+  const position = value => (direction === "desc" ? 1 - value / max : value / max) * extent;
+  const marks = Array.from({ length: hundredPoint ? 11 : 10 }, (_, index) => [String(index * step), position(index * step)]).sort((a, b) => a[1] - b[1]);
+  if (hasMissing) marks.push(["—", 1]);
+  return { max, values, positions: values.map(value => value === null ? 1 : position(value)), marks };
+}
+
+export function nearestRailTick(positions, fraction) {
+  return positions.reduce((nearest, position, index) =>
+    Math.abs(position - fraction) < Math.abs(positions[nearest] - fraction) ? index : nearest, 0);
 }
 
 export function scrollIndexAtPosition(positions, position) {

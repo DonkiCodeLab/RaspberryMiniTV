@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { scrollIndexAtPosition, buildDecadeTicks } from "./libraryScroll.js";
+import { scrollIndexAtPosition, buildDecadeTicks, buildRatingScale, nearestRailTick } from "./libraryScroll.js";
 
-export default function LibraryScrollRail({ labels, language = "es", sort = "name", direction = "asc", onDirectionChange, actionsVisible = false, onActionsChange, actionLabels }) {
+export default function LibraryScrollRail({ labels, language = "es", sort = "name", ratingSource = "tmdb", direction = "asc", onDirectionChange, actionsVisible = false, onActionsChange, actionLabels }) {
   const host = useRef(null);
   const geometry = useRef({ positions: [], start: 0, end: 0 });
   const selectedEntry = useRef(null);
@@ -67,6 +67,7 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
   const currentLabel = labels[state.index];
   const currentDecade = decades.find(group => group.years.some(([year]) => year === currentLabel));
   const ticks = yearMode ? decades.map(group => [group.label, group.index]) : [...entries];
+  const ratingScale = sort === "rating" && ["imdb", "rottenTomatoes", "metacritic"].includes(ratingSource) ? buildRatingScale(ticks.map(([label]) => label), direction, ratingSource) : null;
   const currentTick = Math.max(0, yearMode ? decades.indexOf(currentDecade) : ticks.findIndex(([label]) => label === currentLabel));
   const yearTicks = currentDecade?.label !== "—" ? currentDecade?.years || [] : [];
   const currentYearTick = Math.max(0, yearTicks.findIndex(([label]) => label === currentLabel));
@@ -84,7 +85,7 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
           onSelect={jumpToEntry} onActive={setActive} />
       </div> : null}
       <RailScale ticks={sort === "rating" ? ticks.map(([value, index]) => [value.replace(/^★\s*/, ""), index]) : ticks} currentTick={currentTick} label={yearMode ? decadeText : text[sort]}
-        onSelect={jumpToEntry} onActive={setActive} />
+        ratingScale={ratingScale} onSelect={jumpToEntry} onActive={setActive} />
     </div>
     {onActionsChange ? <button className="library-scroll-rail__control library-scroll-rail__options" type="button"
       aria-pressed={actionsVisible} aria-label={actionsVisible ? actionLabels?.hideActions || controls.hide : actionLabels?.showActions || controls.show} title={actionsVisible ? actionLabels?.hideActions || controls.hide : actionLabels?.showActions || controls.show}
@@ -96,8 +97,10 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
 }
 
 // Both levels use the same pointer and keyboard navigation, with independent capture.
-function RailScale({ ticks, currentTick, label, onSelect, onActive }) {
+function RailScale({ ticks, currentTick, label, onSelect, onActive, ratingScale }) {
   const dragging = useRef(false);
+  const positions = ratingScale?.positions || ticks.map((_, index) => ticks.length > 1 ? index / (ticks.length - 1) : 0);
+  const marks = ratingScale?.marks || ticks.map(([value], index) => [value, positions[index]]);
   const select = index => {
     const entry = ticks[Math.max(0, Math.min(ticks.length - 1, index))];
     if (entry) onSelect(entry[1]);
@@ -105,12 +108,12 @@ function RailScale({ ticks, currentTick, label, onSelect, onActive }) {
   const move = event => {
     const rect = event.currentTarget.getBoundingClientRect();
     const fraction = Math.max(0, Math.min(1, (event.clientY - rect.top - 22) / Math.max(1, rect.height - 44)));
-    select(Math.round(fraction * (ticks.length - 1)));
+    select(ratingScale ? nearestRailTick(positions, fraction) : Math.round(fraction * (ticks.length - 1)));
   };
   const stop = () => { dragging.current = false; onActive(false); };
-  return <div className="library-scroll-rail__track" style={{ "--rail-intervals": Math.max(1, ticks.length - 1) }}>
+  return <div className="library-scroll-rail__track" style={{ "--rail-intervals": Math.max(1, marks.length - 1) }}>
     <div className="library-scroll-rail__scale" role="slider" tabIndex={0} aria-label={label} aria-orientation="vertical"
-      aria-valuemin={0} aria-valuemax={Math.max(0, ticks.length - 1)} aria-valuenow={currentTick} aria-valuetext={ticks[currentTick]?.[0] || ""}
+      aria-valuemin={0} aria-valuemax={ratingScale ? ratingScale.max : Math.max(0, ticks.length - 1)} aria-valuenow={ratingScale ? ratingScale.values[currentTick] ?? 0 : currentTick} aria-valuetext={ticks[currentTick]?.[0] || ""}
       onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); event.currentTarget.focus({ preventScroll: true }); event.currentTarget.setPointerCapture(event.pointerId); dragging.current = true; onActive(true); move(event); }}
       onPointerMove={event => { if (dragging.current) move(event); }}
       onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}
@@ -120,8 +123,8 @@ function RailScale({ ticks, currentTick, label, onSelect, onActive }) {
           event.preventDefault(); select(event.key === "Home" ? 0 : event.key === "End" ? ticks.length - 1 : currentTick + steps[event.key]);
         }
       }}>
-      <div className="library-scroll-rail__ticks" aria-hidden="true">{ticks.map(([value], index) => <span key={value} style={{ top: `${ticks.length > 1 ? index / (ticks.length - 1) * 100 : 0}%` }}>{value}</span>)}</div>
-      <div className="library-scroll-rail__travel" aria-hidden="true"><span className="library-scroll-rail__thumb" style={{ top: `${ticks.length > 1 ? currentTick / (ticks.length - 1) * 100 : 0}%` }}>{ticks[currentTick]?.[0]}</span></div>
+      <div className="library-scroll-rail__ticks" aria-hidden="true">{marks.map(([value, position]) => <span key={value} style={{ top: `${position * 100}%` }}>{value}</span>)}</div>
+      <div className="library-scroll-rail__travel" aria-hidden="true"><span className="library-scroll-rail__thumb" style={{ top: `${(positions[currentTick] || 0) * 100}%` }}>{ratingScale ? <i /> : ticks[currentTick]?.[0]}</span></div>
     </div>
   </div>;
 }

@@ -736,7 +736,7 @@ def upsert_game_metadata(relative_path, updates):
         item["imageOptions"] = unique_ordered_urls(updates.get("imageOptions"))
     if "source" in updates:
         item["source"] = str(updates.get("source") or "").strip()
-    for key in ("gameMetadata", "metadataSource", "metadataId", "metadataStatus", "metadataFailedImages", "metadataWarnings", "screenshots"):
+    for key in ("gameMetadata", "metadataSource", "metadataId", "metadataStatus", "metadataFailedImages", "metadataWarnings", "screenshots", "preferredVideo"):
         if key in updates:
             item[key] = updates[key]
     if "imageOptions" in updates and item.get("gameMetadata"):
@@ -1357,6 +1357,7 @@ def list_game_entries():
                 "metadataId": metadata.get("metadataId", 0),
                 "metadataStatus": metadata.get("metadataStatus", ""),
                 "metadataFailedImages": metadata.get("metadataFailedImages", 0),
+                "preferredVideo": metadata.get("preferredVideo"),
                 "gameMetadata": {key: value for key, value in (metadata.get("gameMetadata") or {}).items()
                                  if key not in {"raw", "media", "covers", "screenshots"}},
                 "sizeBytes": os.path.getsize(full_entry),
@@ -2408,6 +2409,30 @@ def game_youtube_search():
         return jsonify({"error": str(error), "code": str(error)}), 502
     except (OSError, ValueError, AttributeError):
         return jsonify({"error": "YOUTUBE_CONFIG_ERROR", "code": "YOUTUBE_CONFIG_ERROR"}), 500
+
+
+@app.route("/games/video", methods=["POST"])
+def save_game_video():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid video selection"}), 400
+    relative_path = str(data.get("relativePath") or "").strip()
+    video = data.get("video")
+    if not relative_path or not isinstance(video, dict):
+        return jsonify({"error": "Missing game or video"}), 400
+    video_id = video.get("id")
+    if not isinstance(video_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        return jsonify({"error": "Invalid YouTube video identifier"}), 400
+    if any(not isinstance(video.get(key, ""), str) for key in ("name", "channel")):
+        return jsonify({"error": "Invalid video details"}), 400
+    path = resolve_game_path(relative_path)
+    if not path or not os.path.isfile(path) or not is_game_rom_file(path):
+        return jsonify({"error": "Game not found"}), 404
+    relative_path = game_relative_path(os.path.basename(path))
+    selection = {"id": video_id, "name": video.get("name", "").strip()[:300] or "YouTube",
+                 "channel": video.get("channel", "").strip()[:200]}
+    item = upsert_game_metadata(relative_path, {"preferredVideo": selection})
+    return jsonify({"ok": True, "relativePath": relative_path, "video": item["preferredVideo"]})
 
 
 @app.route("/games/search", methods=["GET"])
@@ -4257,7 +4282,7 @@ def tmdb_credits_snapshot(titles, profiles, missing):
               "series": sum(item["kind"] == "tv" for item in titles.values()),
               "missingIds": missing, "errors": []}
     for key, item in titles.items():
-        if tmdb_artwork.credits_ready(item["kind"], item["id"]):
+        if tmdb_artwork.credits_ready(item["kind"], item["id"], include_portraits=True):
             result["ready"] += 1
             continue
         job = jobs.get(key, {})
@@ -4278,7 +4303,7 @@ def complete_tmdb_credits():
             titles, profiles, missing = tmdb_credits_inventory()
             if request.method == "POST":
                 incomplete = [item for item in titles.values()
-                              if not tmdb_artwork.credits_ready(item["kind"], item["id"])]
+                              if not tmdb_artwork.credits_ready(item["kind"], item["id"], include_portraits=True)]
                 if incomplete and not any(tmdb_credentials().values()):
                     return jsonify({"error": "Guarda las credenciales de TMDB para completar las fichas.",
                                     "code": "TMDB_CREDENTIALS_MISSING"}), 503

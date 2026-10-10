@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { build } from "esbuild";
+import { gameVideos } from "../src/gameVideos.js";
 
 const require = createRequire(import.meta.url);
 
@@ -73,6 +74,29 @@ test("a profile without video shows an explicit fallback without an empty player
   assert.match(html, /games_video_missing/);
   assert.match(html, /youtube.com\/results/);
   assert.doesNotMatch(html, /<iframe/);
+});
+
+test("saved video is the default after remount, ahead of gameplay and without duplicates", async () => {
+  const Video = await loadComponent("GameVideo");
+  const metadata = { name: "Tetris", videos: [
+    { name: "Gameplay", video_id: "12345678901" },
+    { name: "Trailer", video_id: "abcdefghijk" },
+  ] };
+  const preferredVideo = { id: "abcdefghijk", name: "My choice", channel: "My channel" };
+  assert.equal(gameVideos(metadata, preferredVideo).length, 2);
+  assert.equal(gameVideos(metadata, { id: "../unsafe" })[0].id, "12345678901");
+  const html = renderToStaticMarkup(React.createElement(Video, {
+    metadata, preferredVideo, platform: "gb", t: key => key, onSaveVideo() {},
+  }));
+  assert.match(html, /youtube-nocookie.com\/embed\/abcdefghijk/);
+  assert.match(html, /My choice/);
+  assert.match(html, /My channel/);
+  assert.match(html, /disabled="">games_video_saved/);
+  const withoutProvider = renderToStaticMarkup(React.createElement(Video, {
+    metadata: { name: "Tetris" }, preferredVideo, platform: "gb", t: key => key,
+  }));
+  assert.match(withoutProvider, /youtube-nocookie.com\/embed\/abcdefghijk/);
+  assert.doesNotMatch(withoutProvider, /games_video_missing|games_video_save/);
 });
 
 test("game details keep the saved cover and respect images removed from the gallery", async () => {

@@ -7,7 +7,9 @@ function identity(person) {
   const id = Number(person?.id);
   const name = text(person?.name) || text(person?.original_name);
   if (!name) return null;
+  const profilePath = text(person?.profile_path);
   return { id: Number.isSafeInteger(id) && id > 0 ? id : null, name,
+    profilePath: /^\/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp)$/.test(profilePath) ? profilePath : null,
     key: Number.isSafeInteger(id) && id > 0 ? `person:${id}` : `name:${name.toLocaleLowerCase()}` };
 }
 
@@ -20,6 +22,7 @@ function mergePeople(entries, details) {
     const previous = people.get(person.key);
     const merged = { ...person, ...next };
     if (previous) {
+      merged.profilePath ||= previous.profilePath;
       for (const field of ["characters", "jobs", "departments"]) {
         if (previous[field] || next[field]) merged[field] = unique([...(previous[field] || []), ...(next[field] || [])]);
       }

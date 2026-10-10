@@ -9,8 +9,10 @@ con el PIN. No se incluye en la compilación ni se guarda en el almacenamiento d
 navegador. El plan gratuito de OMDb permite 1.000 consultas al día.
 
 Las fichas de películas y series, incluidas las vistas previas del buscador TMDB,
-muestran IMDb sobre 10 con sus votos, Rotten Tomatoes en porcentaje y Metacritic
-sobre 100, cuando OMDb los proporciona, junto a la fecha de actualización.
+muestran cuatro tarjetas: TMDB sobre 5, IMDb sobre 10, Rotten Tomatoes en porcentaje
+y Metacritic sobre 100. Cada nota lleva una estrella delante y, cuando la fuente
+proporciona el recuento, sus votos al lado entre paréntesis y en letra pequeña.
+Las notas de OMDb incluyen su fecha de actualización.
 Las tres puntuaciones se obtienen de la misma respuesta, sin claves ni consultas
 adicionales. Cada fuente sin nota se indica como «No disponible». Se consulta al
 abrir una ficha, con caché persistente de siete días; navegar por la biblioteca
@@ -32,13 +34,20 @@ El modo demo no consulta OMDb ni inventa puntuaciones.
 
 En **Películas** y **Series**, el selector **Puntuación** junto a **Ordenar por**
 permite elegir TMDB (sobre 5), IMDb (sobre 10), Rotten Tomatoes (%) o Metacritic
-(sobre 100). La fuente elegida se usa en las tarjetas, en la puntuación principal
-de la ficha y al ordenar por puntuación; se recuerda en ese navegador para ambas
+(sobre 100). La fuente elegida se usa en las tarjetas de la biblioteca y al ordenar
+por puntuación; las fichas muestran las cuatro fuentes juntas. La selección se recuerda en ese navegador para ambas
 secciones. Las notas ausentes se muestran como «No disponible» y quedan al final
 en ambos sentidos de ordenación. La biblioteca lee las notas OMDb ya guardadas,
 incluidas las antiguas, sin consultas externas. **Actualizar fichas** permite
 completar las pendientes; al abrir una ficha se actualiza también su nota en la
 biblioteca.
+
+Al ordenar películas por IMDb, el deslizador muestra marcas enteras del 0 al 9,
+sin «/10». Al recorrerlo, el indicador de la izquierda muestra la nota exacta
+con decimales; las películas sin puntuación conservan su acceso al final.
+Con Rotten Tomatoes y Metacritic, las marcas van del 0 al 100 de diez en diez
+y el indicador de la izquierda conserva la puntuación exacta. Metacritic
+prescinde de «/100» en el deslizador.
 
 ## Usuarios y progreso
 
@@ -249,15 +258,20 @@ La migracion mas natural seria:
 
 ### Reparto y equipo de películas y series
 
-Las fichas de películas y series muestran **Reparto y equipo**: actores y personajes,
-dirección, guion/obra original y, en series, creadores. Las listas se pueden ampliar
-para consultar todas las personas disponibles. Estos datos se leen de la caché de
+Las fichas de películas y series muestran **Reparto y equipo** justo después de
+las puntuaciones y antes de las temporadas. El bloque aparece plegado, solo con
+su título y la flecha para abrirlo o cerrarlo. Incluye actores y personajes,
+dirección, guion/obra original y, en series, creadores. Cada persona tiene un avatar
+circular con su foto de TMDB; si no hay foto o no se puede cargar, aparecen sus
+iniciales. Las listas se pueden ampliar para consultar todas las personas disponibles.
+Las fotos se cargan a medida que son visibles. Estos datos se leen de la caché de
 la Raspberry y están disponibles sin conexión a TMDB una vez preparados.
 Para completar las fichas existentes, usa **Dashboard → Servicios auxiliares → TMDB
 → Reparto y equipo → Completar todas las fichas**. El panel muestra el progreso,
 los errores y los títulos que necesitan identificar su ficha. Requiere actualizar
 tanto la web como la API de la Raspberry. Las nuevas incorporaciones preparan
-los créditos automáticamente.
+los créditos y sus fotos automáticamente. Usa también **Completar todas las fichas**
+para añadir los avatares a créditos descargados antes de esta actualización.
 
 ### Fichas de juegos
 
@@ -292,6 +306,11 @@ y pueden mostrar otra plataforma si el título se publicó en varias.
 La sección **Más gameplays en YouTube** realiza una búsqueda adicional al desplegarla.
 Muestra hasta seis vídeos incrustables con miniatura, título y canal, y permite
 editar la búsqueda. Al elegir un resultado, se muestra en el mismo reproductor.
+En una ficha guardada, **Guardar vídeo seleccionado** conserva la selección en
+la Raspberry y la muestra primero al volver a abrir el juego, también tras
+actualizar sus metadatos. Se conservan los vídeos originales de la ficha.
+El botón confirma el guardado y permite reintentar si falla. Requiere actualizar
+tanto WebApp como DeviceApp.
 Configura una clave de **YouTube Data API v3** en Dashboard → Servicios auxiliares
 → YouTube Data API v3 (habilita la API en el proyecto de Google Cloud).
 La búsqueda se hace desde el servidor y conserva resultados en memoria durante
