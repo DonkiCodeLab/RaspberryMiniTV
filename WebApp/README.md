@@ -358,3 +358,10 @@ Los archivos y las rutas permanecen en el dispositivo. El PIN compartido permite
 acceder a los distintos perfiles. Al cambiar de usuario se cancela la espera
 y se descarta cualquier respuesta del perfil anterior; las revisiones del
 servidor protegen también las ediciones y borrados simultáneos.
+
+## Codex en el dashboard
+
+**Dashboard → Codex** incorpora conversaciones con el Codex de la Raspberry:
+mensajes en directo, historial, aprobaciones y cancelación. El panel tiene una
+clave de administrador separada del PIN familiar, respeta el idioma de la web
+y permanece inactivo en modo demo. [Preparar la Raspberry](../DeviceApp/CODEX.md).

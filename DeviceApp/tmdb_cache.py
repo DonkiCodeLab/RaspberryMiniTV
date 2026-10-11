@@ -15,7 +15,7 @@ import urllib.parse
 import urllib.request
 
 IMAGE_RE = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg)")
-DETAIL_RE = re.compile(r"/(?:movie/\d+(?:/images|/credits)?|tv/\d+(?:/images|/aggregate_credits|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
+DETAIL_RE = re.compile(r"/(?:person/[1-9]\d*|movie/\d+(?:/images|/credits)?|tv/\d+(?:/images|/aggregate_credits|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
 LANGUAGES = ("es-ES", "ca-ES", "en-US")
 CREDITS_VERSION = 2
 

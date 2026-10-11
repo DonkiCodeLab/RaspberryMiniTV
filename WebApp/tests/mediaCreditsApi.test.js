@@ -49,3 +49,28 @@ test("credits browse local cache without credentials or language parameters; pre
     globalThis.fetch = previousFetch;
   }
 });
+
+test("person profiles load on demand, reuse cache and fall back to English biographies", async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  globalThis.window = { location: { origin: "http://raspberry:5050", hostname: "raspberry" }, sessionStorage: { getItem: () => "1234" } };
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    assert.equal(new URL(url).pathname, "/tmdb/import/json/person/42");
+    const english = new URL(url).searchParams.get("language") === "en-US";
+    return { ok: true, text: async () => JSON.stringify({ id: 42, name: "Actor", biography: english ? "An actor's biography." : "", imdb_id: "nm0000042" }) };
+  };
+  try {
+    const tmdb = await loadTmdb();
+    const person = await tmdb.getPersonDetails(42, "es-ES");
+    assert.equal(person.biography, "An actor's biography.");
+    assert.equal(person.imdbUrl, "https://www.imdb.com/name/nm0000042/");
+    await tmdb.getPersonDetails(42, "es-ES");
+    assert.equal(requests.length, 2);
+    await assert.rejects(tmdb.getPersonDetails("../movie/1"), /Invalid TMDB person ID/);
+    globalThis.fetch = async () => ({ ok: true, text: async () => JSON.stringify({ id: 43, name: "Unknown", imdb_id: "javascript:alert(1)" }) });
+    const missing = await tmdb.getPersonDetails(43, "en-US");
+    assert.equal(missing.biography, "");
+    assert.equal(missing.imdbUrl, "");
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});

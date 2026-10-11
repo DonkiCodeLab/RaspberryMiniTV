@@ -144,3 +144,27 @@ test("credential test is hidden until credentials exist", async () => {
   assert.equal(renderToStaticMarkup(React.createElement(Test, { language: "en", credentials: {}, configured: false })), "");
   assert.match(renderToStaticMarkup(React.createElement(Test, { language: "en", credentials: { apiKey: "key" }, configured: true })), /Test credentials/);
 });
+
+test("movie details reopen the saved trailer with a photo switch and movie-specific search", async () => {
+  const Media = await loadComponent("MovieMedia");
+  const html = renderToStaticMarkup(React.createElement(Media, {
+    movie: { id: "Movies/Alien.mp4", tmdbId: 348, name: "Alien", releaseDate: "1979-05-25",
+      preferredVideo: { id: "abcdefghijk", name: "Official trailer" } },
+    language: "es", t: key => key, onSaveVideo() {},
+  }, React.createElement("div", null, "Photo carousel")));
+  assert.match(html, /youtube-nocookie.com\/embed\/abcdefghijk/);
+  assert.match(html, /Fotos/);
+  assert.match(html, /Tráiler/);
+  assert.match(html, /Alien\+1979\+trailer\+oficial/);
+  assert.doesNotMatch(html, /gameplay|Photo carousel/);
+  assert.match(html, /games_video_saved/);
+});
+
+test("movie without saved trailer starts with its photo carousel", async () => {
+  const Media = await loadComponent("MovieMedia");
+  const html = renderToStaticMarkup(React.createElement(Media, {
+    movie: { id: 348, name: "Alien" }, language: "es", t: key => key,
+  }, React.createElement("div", null, "Photo carousel")));
+  assert.match(html, /Photo carousel/);
+  assert.doesNotMatch(html, /<iframe/);
+});

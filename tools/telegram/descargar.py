@@ -83,6 +83,13 @@ def topic_id(message):
     return 1
 
 
+def download_folder(db, destination, chat, topic):
+    row = db.execute('SELECT name FROM topic_folders WHERE chat=? AND topic=?',
+                     (chat, topic)).fetchone()
+    name = safe_name(row[0]) if row else f'tema_{topic}'
+    return destination / str(chat) / name
+
+
 async def list_topics(client, entity, contains='', limit=None):
     from telethon import functions
 
@@ -196,9 +203,11 @@ async def main(args):
             db.execute('CREATE TABLE IF NOT EXISTS completed '
                        '(chat INTEGER, message INTEGER, document TEXT, path TEXT, size INTEGER, '
                        'PRIMARY KEY (chat, message))')
+            db.execute('CREATE TABLE IF NOT EXISTS topic_folders '
+                       '(chat INTEGER, topic INTEGER, name TEXT, PRIMARY KEY (chat, topic))')
             folder = args.destino / str(chat_id)
             if args.tema is not None:
-                folder /= f'tema_{args.tema}'
+                folder = download_folder(db, args.destino, chat_id, args.tema)
             folder.mkdir(parents=True, exist_ok=True)
             print(f'Destino: {folder}', flush=True)
         count = total = failures = downloaded = skipped = scanned = 0
@@ -225,7 +234,7 @@ async def main(args):
                 total += size
                 print(f'mensaje={msg.id} tema={topic} {size / 1048576:.2f} MB {name}', flush=True)
                 if db is not None:
-                    folder = args.destino / str(chat_id) / f'tema_{topic}'
+                    folder = download_folder(db, args.destino, chat_id, topic)
                     folder.mkdir(parents=True, exist_ok=True)
                     target = folder / f'{msg.id}_{msg.document.id}_{safe_name(name)}'
                     record = db.execute('SELECT document, path, size FROM completed '

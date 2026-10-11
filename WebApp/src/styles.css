@@ -1315,6 +1315,11 @@ img {
   right: 0.75rem;
 }
 
+.media-delete-button--season,
+.media-delete-button--season:is(:hover, :focus-visible) {
+  background: #fff;
+}
+
 .game-card__cover {
   aspect-ratio: 3 / 4;
   overflow: hidden;
@@ -1790,6 +1795,10 @@ img {
 .movie-library__poster { display: block; width: 100%; aspect-ratio: 2 / 3; padding: 0; overflow: hidden; background: #111a21; cursor: pointer; }
 .movie-library__poster img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 180ms ease; }
 .movie-library__poster:hover img, .movie-library__poster:focus-visible img { transform: scale(1.035); }
+.movie-poster-preview { position: relative; }
+.movie-poster-preview__button { display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: pointer; }
+.movie-poster-preview:focus-within { outline: 2px solid currentColor; outline-offset: 2px; }
+.movie-poster-preview__video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; pointer-events: none; }
 .movie-library__info { display: grid; gap: .7rem; padding: .9rem; }
 .movie-library__info h2 { margin: 0; min-height: 2.5em; color: #fff; font-size: 1.05rem; line-height: 1.25; }
 .movie-library__meta { display: flex; justify-content: space-between; gap: .7rem; color: rgba(255,255,255,.75); font-weight: 800; font-size: .88rem; }
@@ -6997,3 +7006,13 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
 .games-library__controls { --series-controls-item-size: 54px; display: flex; align-items: center; gap: 12px; width: min(1128.8px, 100%); margin: 0 auto 1.25rem max(0px, calc((100% - 1360px) / 2)); }
 .games-library__controls .series-select { flex: 1; width: auto; min-width: 0; }
 .games-library__controls .movie-filter__toggle { flex-shrink: 0; }
+
+.movie-media { min-width: 0; width: 100%; }
+.movie-media > .game-details__media-switch { width: fit-content; margin: 0 auto 12px; justify-content: center; }
+.movie-media > .movie-panel__gallery { max-width: 100%; }
+.movie-media .game-video { min-width: 0; margin: 0; padding: 0; border: 0; }
+.movie-media .game-video__main iframe { aspect-ratio: 1.78 / 1; border-radius: 24px; }
+@media (min-width: 1180px) {
+  .movie-panel__card > .movie-media { max-width: 60%; margin-inline: auto; }
+}
+.tmdb-browser-movie__media { grid-area: trailer; min-width: 0; width: 100%; }

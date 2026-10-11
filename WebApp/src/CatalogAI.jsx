@@ -9,9 +9,9 @@ import "./CatalogAI.css";
 export function CatalogAIButton({ language, open, active, onClick, compact = false }) {
   const s = catalogAIStrings(language);
   return <button type="button" className={`${compact ? "movie-filter__toggle" : "dialog-button"} catalog-ai-button${open ? " is-open" : ""}${active ? " has-filters" : ""}`}
-    onClick={onClick} aria-label={s.ask} title={s.ask} aria-expanded={open} aria-controls="catalog-ai-panel">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4ZM20 2v4M18 4h4" /></svg>
-    {!compact && s.ask}
+    onClick={onClick} aria-label={open ? s.close : s.ask} title={open ? s.close : s.ask} aria-expanded={open} aria-controls="catalog-ai-panel">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d={open ? "M5 15l7-7 7 7" : "m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4ZM20 2v4M18 4h4"} /></svg>
+    {!compact && (open ? s.close : s.ask)}
   </button>;
 }
 

@@ -26,6 +26,22 @@ class TmdbCacheTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.cache = TmdbCache(self.temp.name, lambda: {"apiKey": "test-secret"})
 
+    def test_person_profiles_are_cached_and_local_reads_stay_offline(self):
+        data = {"id": 42, "name": "Actor", "biography": "Biography", "imdb_id": "nm0000042"}
+        params = {"language": "es-ES"}
+        with patch.object(self.cache, '_download', return_value=(json.dumps(data).encode(), 'application/json')) as download:
+            self.assertEqual(self.cache.json('/person/42', params), data)
+            self.assertEqual(self.cache.json('/person/42', params), data)
+            self.assertEqual(download.call_count, 1)
+        reopened = TmdbCache(self.temp.name, lambda: {})
+        with patch.object(reopened, '_download', side_effect=AssertionError('offline')):
+            self.assertEqual(reopened.json('/person/42', params, local_only=True), data)
+            with self.assertRaises(TmdbError):
+                reopened.json('/person/43', params, local_only=True)
+            for path in ('/person/0', '/person/42/anything', '/person/../movie/1'):
+                with self.assertRaises(ValueError):
+                    reopened.json(path)
+
     def test_metadata_and_images_survive_restart_without_network_or_credentials(self):
         with patch.object(self.cache, '_download', return_value=(b'{"id":1}', 'application/json')) as download:
             self.cache.json('/movie/1', {'language': 'es-ES'})

@@ -35,6 +35,20 @@ test('EPUB bytes use authenticated fetch; PDF checks and HTTP errors remain inta
       assert.equal((await api.getBookContent(`Books/comic.${extension}`))[0], 37);
       assert.equal(new URL(api.getBookContentUrl(`Books/comic.${extension}`)).searchParams.get('render'), null);
     }
+    for (const extension of ['pdf', 'cbr', 'cbz']) {
+      globalThis.fetch = async (url, options) => {
+        assert.equal(new URL(url).searchParams.get('render'), 'preview');
+        assert.equal(options.headers['X-Web-Pin'], 'test-pin');
+        assert.equal(options.signal, controller.signal);
+        return new Response('%PDF-1.7 sample');
+      };
+      await api.getBookContent(`Books/comic.${extension}`, { preview: true, signal: controller.signal });
+    }
+    globalThis.fetch = async (url) => {
+      assert.equal(new URL(url).searchParams.get('render'), null);
+      return new Response(new Uint8Array([0x50, 0x4b, 3, 4]));
+    };
+    await api.getBookContent('Books/book.epub', { preview: true, format: 'epub' });
     globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     await assert.rejects(api.getBookContent('Books/book.epub', { format: 'epub' }), error => error.status === 401);
   } finally { Object.assign(globalThis, previous); }

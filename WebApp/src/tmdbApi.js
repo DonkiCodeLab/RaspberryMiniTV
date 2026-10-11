@@ -569,3 +569,22 @@ export async function getTvEpisodeDetails({ seriesId, seasonNumber, episodeNumbe
   const episode = await fetchTmdbJsonWithEnglishOverview(`/tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}`, { language });
   return { title: episode.name, synopsis: episode.overview || '', runtime: episode.runtime || 0, voteAverage: episode.vote_average || 0, airDate: episode.air_date || '', image: buildTmdbImageUrl(episode.still_path, 'w780') };
 }
+
+// Opening a person explicitly loads their profile through the persistent import cache.
+export async function getPersonDetails(personId, language = "es-ES") {
+  const id = Number(personId);
+  if (!Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid TMDB person ID");
+  const options = { language, importPreview: true };
+  const data = await fetchTmdbJson(`/person/${id}`, options);
+  if (Number(data?.id) !== id || !hasText(data?.name)) throw new Error("Invalid TMDB person response");
+  let biography = String(data.biography || "").trim();
+  if (!biography && language !== TMDB_ENGLISH_FALLBACK_LANGUAGE) {
+    const fallback = await fetchTmdbJson(`/person/${id}`, { ...options, language: TMDB_ENGLISH_FALLBACK_LANGUAGE }).catch(() => null);
+    biography = String(fallback?.biography || "").trim();
+  }
+  const imdbId = String(data.imdb_id || "");
+  return { name: data.name, biography, profilePath: data.profile_path || null,
+    birthday: data.birthday || "", deathday: data.deathday || "", birthplace: data.place_of_birth || "",
+    imdbUrl: /^nm\d+$/.test(imdbId) ? `https://www.imdb.com/name/${imdbId}/` : "",
+    tmdbUrl: `https://www.themoviedb.org/person/${id}` };
+}

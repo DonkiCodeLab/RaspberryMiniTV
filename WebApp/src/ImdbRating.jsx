@@ -32,12 +32,12 @@ export function ImdbRatingContent({ data, tmdb, status = "ready", error, languag
         {hasRating ? <ProviderScore score={formatOmdbRating(data.rating, language)} scale=" / 10" votes={data.votes} language={language} />
           : status === "ready" && <span className="imdb-rating__unavailable">{s.unavailable}</span>}
       </div>
-      <div className="imdb-rating__provider" aria-label="Rotten Tomatoes">
+      <div className="imdb-rating__provider imdb-rating__provider--compact" aria-label="Rotten Tomatoes">
         <span className="imdb-rating__badge imdb-rating__badge--rotten">Rotten Tomatoes</span>
         {hasRottenTomatoes ? <ProviderScore score={formatOmdbCriticScore(data.rottenTomatoes, language)} scale=" %" votes={data.rottenTomatoesVotes} language={language} />
           : status === "ready" && <span className="imdb-rating__unavailable">{s.unavailable}</span>}
       </div>
-      <div className="imdb-rating__provider" aria-label="Metacritic">
+      <div className="imdb-rating__provider imdb-rating__provider--compact" aria-label="Metacritic">
         <span className="imdb-rating__badge imdb-rating__badge--metacritic">Metacritic</span>
         {hasMetacritic ? <ProviderScore score={formatOmdbCriticScore(data.metacritic, language)} scale=" / 100" votes={data.metacriticVotes} language={language} />
           : status === "ready" && <span className="imdb-rating__unavailable">{s.unavailable}</span>}

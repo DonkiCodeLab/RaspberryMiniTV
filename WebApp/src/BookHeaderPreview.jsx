@@ -12,7 +12,7 @@ export default function BookHeaderPreview({ book, cover, language }) {
   const t = bookStrings(language);
   const host = useRef(null);
   const navigate = useRef(null);
-  const position = useRef({ page: 2, cfi: undefined });
+  const position = useRef({ page: 1, cfi: undefined });
   const [size, setSize] = useState(null);
   const [documentData, setDocumentData] = useState(null);
   const [status, setStatus] = useState({ busy: true, start: true, end: true, error: false });
@@ -34,9 +34,9 @@ export default function BookHeaderPreview({ book, cover, language }) {
     let epub;
     setDocumentData(null);
     setStatus({ busy: true, start: true, end: true, error: false });
-    position.current = { page: 2, cfi: undefined };
+    position.current = { page: 1, cfi: undefined };
     (async () => {
-      const data = await getBookContent(book.relativePath, { signal: controller.signal, format: book.format === "epub" ? "epub" : "pdf" });
+      const data = await getBookContent(book.relativePath, { signal: controller.signal, format: book.format === "epub" ? "epub" : "pdf", preview: true });
       if (disposed) return;
       if (book.format === "epub") {
         const { default: ePub } = await import("epubjs");
@@ -68,7 +68,7 @@ export default function BookHeaderPreview({ book, cover, language }) {
     const renderTasks = new Set();
     const renditions = [];
     const container = host.current;
-    const count = Math.max(1, Math.floor((size.width + 12) / (size.height * 2 / 3 + 12)));
+    const count = Math.min(documentData.pdf?.numPages || Infinity, 4, Math.max(1, Math.floor((size.width + 12) / (size.height * 2 / 3 + 12))));
     const width = Math.floor((size.width - (count - 1) * 12) / count);
     const slots = Array.from({ length: count }, () => {
       const slot = document.createElement("div");

@@ -62,6 +62,53 @@ class ComicTests(unittest.TestCase):
                 comic.comic_pdf(str(self.path), self.cache)
         self.assertEqual(len(list(Path(self.cache).glob("*.pdf"))), 1)
 
+    def test_preview_extracts_only_four_interior_pages_and_has_separate_cache(self):
+        self.path.write_bytes(b"Rar!")
+        names = [f"page{number}.png" for number in range(1, 11)]
+        def read(path, member=None):
+            return "\n".join(names).encode() if member is None else self.image("red")
+        with patch.object(comic, "_rar", side_effect=read) as extract:
+            preview = comic.comic_pdf(str(self.path), self.cache, start=1, limit=4)
+            self.assertEqual([call.args[1] for call in extract.call_args_list[1:]], names[1:5])
+            with fitz.open(preview) as doc:
+                self.assertEqual(len(doc), 4)
+            extract.reset_mock()
+            self.assertEqual(comic.comic_pdf(str(self.path), self.cache, start=1, limit=4), preview)
+            extract.assert_not_called()
+            full = comic.comic_pdf(str(self.path), self.cache)
+            self.assertNotEqual(preview, full)
+            with fitz.open(full) as doc:
+                self.assertEqual(len(doc), 10)
+            extract.reset_mock()
+            comic.comic_cover(str(self.path), self.cache)
+            self.assertEqual([call.args[1] for call in extract.call_args_list[1:]], names[:1])
+
+    def test_pdf_preview_endpoint_bounds_size_and_preserves_original(self):
+        path = self.root / "sample.pdf"
+        with fitz.open() as doc:
+            for number in range(8):
+                page = doc.new_page(width=1200, height=1800)
+                page.draw_rect(page.rect, color=None, fill=(number / 10, 0, 0))
+            doc.save(path)
+        with patch.object(api, "BOOKS_DIR", str(self.root)), patch.object(api, "BOOK_COVERS_DIR", self.cache), patch.object(api, "is_authorized_request", return_value=True):
+            with api.app.test_client().get("/books/content?relativePath=sample.pdf&render=preview") as response:
+                self.assertEqual(response.status_code, 200)
+                with fitz.open(stream=response.data, filetype="pdf") as doc:
+                    self.assertEqual(len(doc), 4)
+                    self.assertLessEqual(max(doc[0].rect), 720)
+                    self.assertGreater(doc[0].get_pixmap().pixel(0, 0)[0], 15)
+            with api.app.test_client().get("/books/content?relativePath=sample.pdf") as response:
+                self.assertEqual(response.data, path.read_bytes())
+
+    def test_short_comic_previews(self):
+        for count in (1, 2, 4):
+            with zipfile.ZipFile(self.path, "w") as archive:
+                for number in range(count):
+                    archive.writestr(f"page{number}.png", self.image("red"))
+            output = comic.comic_pdf(str(self.path), self.cache, start=1, limit=4)
+            with fitz.open(output) as doc:
+                self.assertEqual(len(doc), max(1, count - 1))
+
     @unittest.skipUnless(comic.shutil.which("bsdtar"), "libarchive-tools required")
     def test_real_rar_extraction(self):
         # libarchive's test_read_format_rar.rar.uu fixture (BSD licensed):
@@ -121,6 +168,10 @@ class ComicTests(unittest.TestCase):
         self.write_zip()
         with patch.object(api, "BOOKS_DIR", str(self.root)), patch.object(api, "BOOK_COVERS_DIR", self.cache), patch.object(api, "is_authorized_request", return_value=True):
             client = api.app.test_client()
+            with client.get("/books/content?relativePath=sample.cbr&render=preview") as response:
+                self.assertEqual(response.status_code, 200)
+                with fitz.open(stream=response.data, filetype="pdf") as doc:
+                    self.assertEqual(len(doc), 1)
             response = client.get("/books/content?relativePath=sample.cbr&render=pdf")
             self.assertEqual(response.status_code, 200)
             self.assertTrue(response.data.startswith(b"%PDF-"))

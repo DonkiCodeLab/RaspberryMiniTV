@@ -6,11 +6,13 @@ from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
 from video_formats import is_video_file
 import movie_subtitles
 import system_update
+from codex_bridge import create_codex_blueprint
 from oscar_catalog import OscarCatalog
 from background_stats import BackgroundStats
 import catalog_store
 import book_metadata
 import youtube_search
+import movie_trailers
 from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan
 from ai_catalog import build_catalog, execute_plan, SECTION_FIELDS
 from ai_recommender import recommend
@@ -151,6 +153,7 @@ DEFAULT_SETTINGS = {
 SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 
 app = Flask(__name__)
+app.register_blueprint(create_codex_blueprint())
 
 lock = threading.Lock()
 current = {"proc": None, "id": None, "directory": None, "file": None}
@@ -2306,6 +2309,13 @@ def stream_book():
     target_path = resolve_book_path(relative_path)
     if not target_path or not os.path.isfile(target_path) or not is_book_file(target_path):
         return jsonify({"error": "Book not found"}), 404
+    if request.args.get("render") == "preview" and os.path.splitext(target_path)[1].lower() in {".pdf", ".cbr", ".cbz"}:
+        try:
+            rendered = comic_pdf(target_path, os.path.join(BOOK_COVERS_DIR, "comics"), start=1, limit=4)
+        except ComicError as error:
+            return jsonify({"error": str(error)}), 422
+        return send_file(rendered, mimetype="application/pdf", conditional=True,
+                         download_name="preview.pdf")
     if request.args.get("render") == "pdf" and os.path.splitext(target_path)[1].lower() in {".cbr", ".cbz"}:
         try:
             rendered = comic_pdf(target_path, os.path.join(BOOK_COVERS_DIR, "comics"))
@@ -2409,6 +2419,44 @@ def game_youtube_search():
         return jsonify({"error": str(error), "code": str(error)}), 502
     except (OSError, ValueError, AttributeError):
         return jsonify({"error": "YOUTUBE_CONFIG_ERROR", "code": "YOUTUBE_CONFIG_ERROR"}), 500
+
+
+@app.route("/series/trailer", methods=["GET", "POST"])
+@app.route("/movies/trailer", methods=["GET", "POST"])
+def movie_trailer():
+    is_series = request.path == "/series/trailer"
+    collection = "series" if is_series else "movies"
+    if request.method == "GET":
+        try:
+            tmdb_id = int(request.args.get("tmdbId") or 0)
+            name = str(request.args.get("name") or "").strip()[:200]
+            if tmdb_id < 0 or not name:
+                return jsonify({"error": "Invalid movie"}), 400
+            video = movie_trailers.find_trailer(tmdb_artwork, tmdb_id, name, current_language(),
+                lambda query: youtube_search.search(query, game_config_value("YOUTUBE_API_KEY"), current_language()),
+                kind="tv" if is_series else "movie")
+            return jsonify({"video": video})
+        except ValueError:
+            return jsonify({"error": "Invalid movie"}), 400
+        except youtube_search.SearchError as error:
+            return jsonify({"error": str(error), "code": str(error)}), 502
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid video selection"}), 400
+    try:
+        selection = movie_trailers.normalize_video(data.get("video"))
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    relative_path = str(data.get("relativePath") or "").strip()
+    path = resolve_relative_video_path(relative_path, TVSHOWS_DIR if is_series else MOVIES_DIR)
+    if not path or (not os.path.isdir(path) if is_series else not os.path.isfile(path) or not is_video_file(path)):
+        return jsonify({"error": "Series not found" if is_series else "Movie not found"}), 404
+    with catalog_store.transaction(MEDIA_LIBRARY_PATH, LEGACY_MOVIE_LIBRARY_PATH):
+        library = load_media_library()
+        item = library[collection].setdefault(relative_path, {"relativePath": relative_path})
+        item["preferredVideo"] = selection
+        save_media_library(library)
+    return jsonify({"ok": True, "video": selection})
 
 
 @app.route("/games/video", methods=["POST"])

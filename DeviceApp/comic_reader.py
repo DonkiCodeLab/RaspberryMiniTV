@@ -1,6 +1,7 @@
-"""Render ZIP/RAR comics once for both PDF readers and library covers."""
+"""Cache full comics, covers, and bounded PDF/comic header previews."""
 import hashlib
 import fcntl
+import io
 import os
 import re
 import shutil
@@ -46,18 +47,19 @@ def _rar(path, member=None):
         raise ComicError("No se pudo leer el CBR con libarchive. Instala UnRAR con DeviceApp/install_comic_support.sh y vuelve a intentarlo.") from exc
 
 
-def comic_pdf(path, cache_dir):
+def comic_pdf(path, cache_dir, *, start=0, limit=None):
     stat = os.stat(path)
-    key = hashlib.sha256(f"v1:{os.path.realpath(path)}:{stat.st_size}:{stat.st_mtime_ns}".encode()).hexdigest()
+    variant = "v1" if limit is None else f"sample-v1:{start}:{limit}"
+    key = hashlib.sha256(f"{variant}:{os.path.realpath(path)}:{stat.st_size}:{stat.st_mtime_ns}".encode()).hexdigest()
     os.makedirs(cache_dir, exist_ok=True)
     output = os.path.join(cache_dir, key + ".pdf")
     # The menu and concurrent cover/browser requests share one conversion.
     with open(output + ".lock", "a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        return _render_pdf(path, cache_dir, output)
+        return _render_pdf(path, cache_dir, output, start=start, limit=limit)
 
 
-def _render_pdf(path, cache_dir, output):
+def _render_pdf(path, cache_dir, output, *, start=0, limit=None):
     if os.path.isfile(output):
         return output
     try:
@@ -69,7 +71,11 @@ def _render_pdf(path, cache_dir, output):
     temporary = None
     try:
         # Some .cbr files are actually ZIPs; detect the content, not the suffix.
-        if zipfile.is_zipfile(path):
+        if os.path.splitext(path)[1].lower() == ".pdf":
+            archive = fitz.open(path)
+            names = list(range(len(archive)))
+            read = None
+        elif zipfile.is_zipfile(path):
             archive = zipfile.ZipFile(path)
             names = page_names(archive.namelist())
             read = archive.read
@@ -78,11 +84,36 @@ def _render_pdf(path, cache_dir, output):
             read = lambda name: _rar(path, name)
         if not names:
             raise ComicError("El cómic no contiene páginas de imagen compatibles.")
+        if limit is not None:
+            # Skip the cover, but retain a preview for single-page books.
+            first = min(start, len(names) - 1)
+            names = names[first:first + limit]
         with fitz.open() as document:
+            def append_page(page):
+                if limit is None or (start == 0 and limit == 1):
+                    document.insert_pdf(page)
+                else:
+                    from PIL import Image
+                    # Header previews never need full-resolution print images.
+                    source = page[0]
+                    scale = min(1, 720 / max(source.rect.width, source.rect.height))
+                    pixels = source.get_pixmap(matrix=fitz.Matrix(scale, scale), colorspace=fitz.csRGB, alpha=False)
+                    target = document.new_page(width=pixels.width, height=pixels.height)
+                    # Pillow also works with Raspberry Pi's older PyMuPDF builds.
+                    with Image.frombytes("RGB", (pixels.width, pixels.height), pixels.samples) as image:
+                        buffer = io.BytesIO()
+                        image.save(buffer, format="JPEG", quality=80)
+                        target.insert_image(target.rect, stream=buffer.getvalue())
+
             for name in names:
-                with fitz.open(stream=read(name), filetype=os.path.splitext(name)[1][1:]) as picture:
-                    with fitz.open("pdf", picture.convert_to_pdf()) as page:
-                        document.insert_pdf(page)
+                if read is None:
+                    with fitz.open() as page:
+                        page.insert_pdf(archive, from_page=name, to_page=name)
+                        append_page(page)
+                else:
+                    with fitz.open(stream=read(name), filetype=os.path.splitext(name)[1][1:]) as picture:
+                        with fitz.open("pdf", picture.convert_to_pdf()) as page:
+                            append_page(page)
             fd, temporary = tempfile.mkstemp(suffix=".pdf", dir=cache_dir)
             os.close(fd)
             document.save(temporary, deflate=True)
@@ -100,7 +131,7 @@ def _render_pdf(path, cache_dir, output):
 
 
 def comic_cover(path, cache_dir):
-    pdf = comic_pdf(path, cache_dir)
+    pdf = comic_pdf(path, cache_dir, limit=1)
     cover = pdf[:-4] + ".png"
     if not os.path.isfile(cover):
         import fitz

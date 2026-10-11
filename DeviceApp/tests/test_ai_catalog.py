@@ -78,6 +78,23 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(cached.call_count, 2, "duplicate editions read each cached detail once")
         self.assertTrue(all(call.kwargs == {"local_only": True} for call in cached.call_args_list))
 
+    def test_resolved_top_gun_actor_matches_other_local_movies_without_reference_title(self):
+        self.cache_movie()
+        for tmdb_id, title, year in ((1001, "Minority Report", "2002"), (1002, "Rain Man", "1988")):
+            self.cache_json(f"/movie/{tmdb_id}", {**self.movie, "id": tmdb_id,
+                            "title": title, "original_title": title, "release_date": year + "-01-01"},
+                            {"language": "es-ES", "append_to_response": "external_ids"})
+            self.cache_json(f"/movie/{tmdb_id}/credits", {"id": tmdb_id,
+                            "cast": [{"id": 500, "name": "Tom Cruise", "character": "Lead"}], "crew": []})
+            self.snapshot["movieRootFiles"].append({"relativePath": f"Movies/{title}.mp4", "tmdbId": tmdb_id})
+        with patch.object(self.cache, "_download", side_effect=AssertionError("No network")):
+            records = build_catalog("movies", self.snapshot, self.cache)["records"]
+            self.assertEqual(execute_plan(records, plan([condition("actor", "Tom Cruise")])),
+                             ["Movies/Minority Report.mp4", "Movies/Rain Man.mp4"])
+            self.assertEqual(execute_plan(records, plan([condition("actor", "Tom Cruise"),
+                                                         condition("year", "2000", "gte")])),
+                             ["Movies/Minority Report.mp4"])
+
     def test_appended_movie_credits_compatibility_does_not_promote_or_download(self):
         self.cache_json("/movie/98", {**self.movie, "credits": {key: value for key, value in self.credits.items() if key != "id"}},
                         {"append_to_response": "credits"})

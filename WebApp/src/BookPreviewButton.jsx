@@ -69,11 +69,11 @@ function BookPagePreview({ book }) {
         };
         schedule(next);
       } else {
-        const data = await getBookContent(book.relativePath, { signal: controller.signal });
+        const data = await getBookContent(book.relativePath, { signal: controller.signal, preview: true });
         if (disposed) return;
         pdfTask = getDocument({ data });
         const pdf = await pdfTask.promise;
-        let pageNumber = pdf.numPages > 1 ? 2 : 1;
+        let pageNumber = 1;
         const next = async () => {
           if (disposed) return;
           const page = await pdf.getPage(pageNumber);

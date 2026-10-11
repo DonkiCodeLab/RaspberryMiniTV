@@ -1,0 +1,23 @@
+.person-modal { width: min(740px, calc(100vw - 32px)); max-height: min(85dvh, 900px); padding: 0; border: 1px solid #53616c; border-radius: 24px; background: #162530; color: #eff4fa; box-shadow: 0 28px 90px #0009; overflow: auto; }
+.person-modal::backdrop { background: #050d18c9; backdrop-filter: blur(7px); }
+.person-modal__content { position: relative; padding: 32px; background: radial-gradient(ellipse at top left, #344758, transparent 65%); }
+.person-modal__close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid #ffffff26; border-radius: 50%; color: #eff4fa; background: #162530; font-size: 26px; cursor: pointer; }
+.person-modal__header { display: flex; align-items: center; gap: 26px; padding-right: 16px; }
+.person-modal__portrait { flex: 0 0 156px; height: 214px; display: grid; place-items: center; overflow: hidden; border-radius: 16px; background: #304657; color: #ffdc00; font-size: 42px; font-weight: 800; box-shadow: 0 8px 24px #0004; }
+.person-modal__portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.person-modal__identity { min-width: 0; overflow-wrap: anywhere; }
+.person-modal__eyebrow { margin: 0 0 8px; color: #ffdc00; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.person-modal h2 { margin: 0; font-size: clamp(24px, 4vw, 34px); line-height: 1.12; }
+.person-modal__roles { color: #d0d9e2; margin: 10px 0; line-height: 1.5; }
+.person-modal dl { margin: 18px 0 0; font-size: 13px; line-height: 1.5; }
+.person-modal dt { color: #aabac8; margin-top: 8px; }
+.person-modal dd { margin: 2px 0 0; }
+.person-modal__biography { margin-top: 28px; border-top: 1px solid #ffffff1c; padding-top: 22px; }
+.person-modal h3 { margin: 0 0 12px; font-size: 17px; }
+.person-modal__biography p { white-space: pre-line; line-height: 1.75; color: #d5dfe8; font-size: 14px; margin: 0; overflow-wrap: anywhere; }
+.person-modal__links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.person-modal__links a, .person-modal__status button { display: inline-block; padding: 10px 16px; border: 1px solid #ffffff30; border-radius: 10px; color: #eff4fa; text-decoration: none; font: inherit; font-size: 13px; font-weight: 700; background: #243949; cursor: pointer; }
+.person-modal__links .person-modal__imdb { background: #ffdc00; border-color: #ffdc00; color: #18222b; }
+.person-modal__status { margin-top: 26px; color: #d5dfe8; line-height: 1.6; }
+.person-modal :is(button, a):focus-visible { outline: 2px solid #ffdc00; outline-offset: 4px; }
+@media (max-width: 520px) { .person-modal__content { padding: 24px 20px; } .person-modal__header { gap: 16px; align-items: flex-start; padding-top: 24px; padding-right: 0; } .person-modal__portrait { flex-basis: 98px; height: 142px; } .person-modal h2 { font-size: 24px; } }

@@ -1,4 +1,22 @@
 import { requestWithTimeout } from '../requestWithTimeout.js';
+// Admin credentials stay in request headers; never place them in URLs or media links.
+export async function codexRequest(action, token = '', data = null, signal) {
+  if (isMockModeEnabled()) throw new Error('Codex no está disponible en modo demo.');
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  if (signal?.aborted) abort();
+  signal?.addEventListener('abort', abort, { once: true });
+  const timer = setTimeout(abort, 35000);
+  try {
+    return await request(`/codex/${action}`, {
+      method: data === null ? 'GET' : 'POST',
+      signal: controller.signal,
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', 'X-Web-Pin': getStoredWebPin() || '', 'X-Codex-Session': token },
+      ...(data === null ? {} : { body: JSON.stringify(data) }),
+    });
+  } finally { clearTimeout(timer); signal?.removeEventListener('abort', abort); }
+}
 import { aiRequestWithTimeout } from '../catalogAI.js';
 import { isImdbId, normalizeOmdbRating, omdbRequestWithTimeout, omdbSettingsPayload } from '../omdbRatings.js';
 import { normalizeOmdbLibrary } from '../omdbLibrary.js';
@@ -1405,8 +1423,8 @@ export function getBookContentUrl(relativePath, { render } = {}) {
   return `${getBaseUrl()}/books/content?${params.toString()}`;
 }
 
-export async function getBookContent(relativePath, { signal, format = "pdf" } = {}) {
-  const url = getBookContentUrl(relativePath, { render: /\.(cbr|cbz)$/i.test(relativePath) && format === "pdf" ? "pdf" : undefined });
+export async function getBookContent(relativePath, { signal, format = "pdf", preview = false } = {}) {
+  const url = getBookContentUrl(relativePath, { render: format === "pdf" && preview ? "preview" : /\.(cbr|cbz)$/i.test(relativePath) && format === "pdf" ? "pdf" : undefined });
   if (!url) throw new Error("Missing book path");
 
   const storedPin = getStoredWebPin();
@@ -1919,4 +1937,19 @@ export async function patchUserState(id, patch) {
 export function testServiceCredentials(provider, credentials) {
   if (isMockModeEnabled()) return Promise.reject(new Error("Demo mode"));
   return request(`/settings/services/${provider}/test`, { method: "POST", body: JSON.stringify(credentials) });
+}
+
+export async function findMovieTrailer(movie, signal, kind = "movie") {
+  if (isMockModeEnabled()) return { video: null };
+  return request(`/${kind === "tv" ? "series" : "movies"}/trailer?${new URLSearchParams({ tmdbId: movie.tmdbId ?? movie.id ?? 0, name: movie.name || "" })}`, { signal });
+}
+
+export async function saveMovieTrailer(relativePath, video) {
+  if (isMockModeEnabled()) throw new Error("Saving trailers requires a backend.");
+  return request("/movies/trailer", { method: "POST", body: JSON.stringify({ relativePath, video }) });
+}
+
+export async function saveSeriesTrailer(relativePath, video) {
+  if (isMockModeEnabled()) return { video };
+  return request("/series/trailer", { method: "POST", body: JSON.stringify({ relativePath, video }) });
 }

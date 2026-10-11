@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useState } from "react";
 import { buildTmdbImageUrl, getMediaCredits } from "./tmdbApi.js";
 import { mediaCreditsFailure, normalizeCreators } from "./mediaCredits.js";
+import PersonDetailsModal from "./PersonDetailsModal.jsx";
 import "./MediaCredits.css";
 
 const labels = {
@@ -37,17 +38,19 @@ function PersonAvatar({ person, importPreview }) {
   </span>;
 }
 
-function People({ people, title, cast = false, t, importPreview }) {
+function People({ people, title, cast = false, t, importPreview, onSelect }) {
   if (!people.length) return null;
   const limit = cast ? 12 : 6;
   const renderList = entries => <ul className={`media-credits__people${cast ? " media-credits__people--cast" : ""}`}>
     {entries.map(person => <li key={person.key}>
+      <button type="button" className="media-credits__person" disabled={!person.id} aria-haspopup="dialog" onClick={() => onSelect(person)}>
       <PersonAvatar person={person} importPreview={importPreview} />
-      <div className="media-credits__identity">
+      <span className="media-credits__identity">
         <span className="media-credits__name">{person.name}</span>
         {cast && person.characters.length > 0 && <span className="media-credits__role">{person.characters.join(" · ")}</span>}
         {cast && person.episodeCount > 0 && <small>{t.episodes(person.episodeCount)}</small>}
-      </div>
+      </span>
+      </button>
     </li>)}
   </ul>;
   return <div className="media-credits__group">
@@ -64,22 +67,24 @@ export function MediaCreditsContent({ credits, creators, language = "es", status
   const languageKey = String(language).toLowerCase().split(/[-_]/)[0];
   const t = labels[languageKey === "cat" ? "ca" : languageKey] || labels.es;
   const headingId = useId();
+  const [selectedPerson, setSelectedPerson] = useState(null);
   const createdBy = normalizeCreators(creators);
   const hasCredits = Boolean(credits && (credits.cast.length || credits.directors.length || credits.writers.length));
   return <details className="media-credits" aria-labelledby={headingId} aria-busy={status === "loading"}>
     <summary className="media-credits__summary"><h3 id={headingId}>{t.title}</h3><span className="media-credits__chevron" aria-hidden="true">⌄</span></summary>
     <div className="media-credits__body">
     <div className="media-credits__crew">
-      <People people={createdBy} title={t.creators} t={t} importPreview={importPreview} />
-      <People people={credits?.directors || []} title={t.directors} t={t} importPreview={importPreview} />
-      <People people={credits?.writers || []} title={t.writers} t={t} importPreview={importPreview} />
+      <People people={createdBy} title={t.creators} t={t} importPreview={importPreview} onSelect={setSelectedPerson} />
+      <People people={credits?.directors || []} title={t.directors} t={t} importPreview={importPreview} onSelect={setSelectedPerson} />
+      <People people={credits?.writers || []} title={t.writers} t={t} importPreview={importPreview} onSelect={setSelectedPerson} />
     </div>
-    <People people={credits?.cast || []} title={t.cast} cast t={t} importPreview={importPreview} />
+    <People people={credits?.cast || []} title={t.cast} cast t={t} importPreview={importPreview} onSelect={setSelectedPerson} />
     {status !== "ready" ? <p className="media-credits__status" role="status">
       {t[status]}
       {status !== "loading" && onRetry && <button type="button" onClick={onRetry}>{t.retry}</button>}
     </p> : !hasCredits && !createdBy.length && <p className="media-credits__status">{t.empty}</p>}
     </div>
+    {selectedPerson && <PersonDetailsModal person={selectedPerson} language={language} onClose={() => setSelectedPerson(null)} />}
   </details>;
 }
 

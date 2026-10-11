@@ -1001,3 +1001,10 @@ salida limitada y no se reintentan automáticamente.
 Pruebas sin usar una clave real:
 `python -m unittest discover -s DeviceApp/tests -p 'test_*ai*.py'` (requiere Flask).
 Hay pruebas adicionales de proyección/filtrado en `tests/test_ai_catalog.py`.
+
+## Codex en el dashboard
+
+La pestaña **Dashboard → Codex** permite enviar prompts y ver respuestas, comandos,
+cambios e historial desde la web. Requiere instalar Codex en la Raspberry y
+vincular tu cuenta desde el propio panel. Trabaja con un usuario sin privilegios
+y una copia de desarrollo independiente. [Instalación y uso](CODEX.md).

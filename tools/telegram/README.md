@@ -74,6 +74,10 @@ y repite el comando para cargar los cambios.
 
 Los archivos se guardan en `data/descargas/ID_CHAT/tema_ID/`, con IDs delante
 del nombre para evitar colisiones. Un registro SQLite permite omitir los
+archivos completados. Si se renombra una carpeta, su nombre se conserva en la tabla
+`topic_folders` del registro (chat, topic, name), y las rutas de `completed` deben
+actualizarse con la descarga detenida. El script utiliza ese nombre al reanudar.
+El registro permite omitir los
 archivos completados al repetir el comando y comprueba su tamaño, sin calcular
 un hash de integridad. Si interrumpes una descarga, ese archivo se reinicia
 desde cero en la siguiente ejecución; los completados se conservan. Telegram

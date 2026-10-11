@@ -2,6 +2,7 @@ import asyncio
 from contextlib import redirect_stdout
 import io
 import os
+import sqlite3
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace as S
@@ -51,11 +52,20 @@ class DownloadTests(unittest.TestCase):
                   patch('telethon.utils.get_peer_id', return_value=-1002130477987),
                   redirect_stdout(io.StringIO()) as output):
                 asyncio.run(descargar.run_with_feedback(args))
+                old = args.destino/'-1002130477987'/'tema_60977'
+                renamed = old.with_name('Nintendo Game Boy')
+                old.rename(renamed)
+                with sqlite3.connect(args.destino/'registro.sqlite3') as db:
+                    db.execute('INSERT INTO topic_folders VALUES (?, ?, ?)',
+                               (-1002130477987, 60977, renamed.name))
+                    db.execute('UPDATE completed SET path=?',
+                               (str(renamed/'42_99_juego.bin'),))
                 asyncio.run(descargar.run_with_feedback(args))
             self.assertEqual(calls, [42])
             self.assertIn('Destino:', output.getvalue())
             self.assertIn('1 ya guardados', output.getvalue())
-            target = args.destino/'-1002130477987'/'tema_60977'/'42_99_juego.bin'
+            self.assertFalse(old.exists())
+            target = renamed/'42_99_juego.bin'
             self.assertEqual(target.read_bytes(), b'data')
 
 

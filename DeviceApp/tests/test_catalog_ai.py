@@ -201,6 +201,22 @@ class PlannerTests(unittest.TestCase):
                 self.call(**kwargs)
         self.opener.open.assert_not_called()
 
+    def test_indirect_person_reference_instructions_allow_resolution_without_inventing_results(self):
+        # Provider output is simulated: this checks the planner contract, not
+        # whether a live model successfully resolves the natural-language query.
+        expected = {"intent": "filter", "message": "El protagonista de Top Gun es Tom Cruise.",
+                    "groups": [{"conditions": [{"field": "actor", "op": "contains", "value": "Tom Cruise"}]}]}
+        self.response.read.return_value = json.dumps(response_for(expected)).encode()
+        result = self.call(prompt="buscame todas las pelicuas que como actor salga el que ha hecho de prota de topgun")
+        self.assertEqual(result, expected)
+        body = json.loads(self.opener.open.call_args.args[0].data)
+        instructions = body['instructions']
+        self.assertIn("actor contains 'Tom Cruise'", instructions)
+        self.assertIn('do not add its title, genre or year as a constraint', instructions)
+        self.assertIn('use clarify and ask a specific question', instructions)
+        self.assertIn('only local matching determines results', instructions)
+        self.assertNotIn('require unavailable fields or semantic/visual knowledge', instructions)
+
     def test_fine_tuned_model_schema_keeps_strict_shape_without_unsupported_length_keywords(self):
         self.call(settings={**self.settings, 'model': 'ft:gpt-4.1-mini:org:catalogue:abc123'})
         body = json.loads(self.opener.open.call_args.args[0].data)

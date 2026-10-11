@@ -4,7 +4,7 @@ import { GAME_SYSTEMS } from "./gameSystems.js";
 import "./GameMetadata.css";
 import YouTubeGameplaySearch from "./YouTubeGameplaySearch.jsx";
 
-export default function GameVideo({ metadata, platform, t, preferredVideo, onSaveVideo }) {
+export default function GameVideo({ metadata, platform, t, preferredVideo, onSaveVideo, searchQuery }) {
   const videos = gameVideos(metadata, preferredVideo);
   const [chosen, setChosen] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -31,8 +31,8 @@ export default function GameVideo({ metadata, platform, t, preferredVideo, onSav
     if (chosen) playerRef.current?.scrollIntoView({ block: "nearest", behavior: "auto" });
   }, [chosen]);
   const consoleName = GAME_SYSTEMS.find(system => system.id === platform || system.appPlatformId === platform)?.name || "";
-  const searchUrl = `https://www.youtube.com/results?${new URLSearchParams({ search_query: `${metadata?.name || ""} ${consoleName} gameplay`.trim() })}`;
-  const gameplayQuery = `${metadata?.name || ""} ${consoleName} gameplay`.trim().slice(0, 200);
+  const searchUrl = `https://www.youtube.com/results?${new URLSearchParams({ search_query: (searchQuery || `${metadata?.name || ""} ${consoleName} gameplay`.trim()) })}`;
+  const gameplayQuery = (searchQuery || `${metadata?.name || ""} ${consoleName} gameplay`.trim()).slice(0, 200);
   return <section className="game-video" aria-label={t("games_video_title")}>
     {video ? <div className={`game-video__layout${videos.length > 1 ? " game-video__layout--playlist" : ""}`}>
       <div className="game-video__main" ref={playerRef}>

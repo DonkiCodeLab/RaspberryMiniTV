@@ -1,13 +1,18 @@
+import { saveSeriesTrailer } from "./api/raspberryApi";
+import MovieMedia from "./MovieMedia.jsx";
+import { saveMovieTrailer } from "./api/raspberryApi";
 import { gameYear, gameRating } from "./gameCardMetadata.js";
 import { playbackArtwork, refreshCurrentPlayback } from "./currentPlayback.js";
 import { seriesArtwork } from "./seriesArtwork.js";
 import LibraryScrollRail from "./LibraryScrollRail.jsx";
 import BackToTop from "./BackToTop.jsx";
 import MovieLibraryItems from "./MovieLibraryItems.jsx";
+import MoviePosterPreview from "./MoviePosterPreview.jsx";
 import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
 import MediaCredits from "./MediaCredits.jsx";
 import CatalogAI, { CatalogAIButton, CatalogAIResult } from "./CatalogAI.jsx";
 import OpenAISettings from "./OpenAISettings.jsx";
+import CodexPanel from "./CodexPanel.jsx";
 import OmdbSettings from "./OmdbSettings.jsx";
 import ImdbRating from "./ImdbRating.jsx";
 import { RATING_SOURCES, ratingSource, loadRatingSource, saveRatingSource, formatLibraryRating, compareLibraryRatings } from "./libraryRatings.js";
@@ -1942,6 +1947,7 @@ function getRaspberryProfiles(videos, collectionType) {
     if (!profileKey) return profiles;
 
     const profile = {};
+    if (item.preferredVideo) profile.preferredVideo = item.preferredVideo;
     if (item.name) {
       profile.name = String(item.name);
     }
@@ -4915,17 +4921,8 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
             ) : (
               <div className="movie-panel tmdb-browser-movie">
                 <div className="movie-panel__card">
-                  <div className="tmdb-browser-movie__trailer">
-                    {selectedItem.trailer ? (
-                      <iframe
-                        key={selectedItem.trailer.key}
-                        src={`https://www.youtube-nocookie.com/embed/${selectedItem.trailer.key}`}
-                        title={`${t("tmdb_browser_trailer")}: ${selectedItem.name}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        allowFullScreen
-                      />
-                    ) : <p>{t("tmdb_browser_no_trailer")}</p>}
+                  <div className="tmdb-browser-movie__media">
+                    <MovieMedia key={selectedItem.id} movie={selectedItem} language={tmdbLanguage} t={t} />
                   </div>
 
                   <div className="movie-panel__content">
@@ -5436,8 +5433,13 @@ function RaspberryPage({
               { key: "general", title: t("dashboard_general_title") },
               { key: "clock", title: t("dashboard_clock_title") },
               { key: "auxiliary", title: t("dashboard_auxiliary_title") },
+              { key: "codex", title: "Codex" },
             ]}
             selected={selectedDashboardSection} onSelect={setSelectedDashboardSection} />
+          <div className="raspberry-dashboard-panel" id="dashboard-codex-panel" role="tabpanel"
+            aria-labelledby="dashboard-codex-tab" hidden={selectedDashboardSection !== "codex"} tabIndex={0}>
+            {selectedDashboardSection === "codex" && <CodexPanel language={raspberryLanguage} />}
+          </div>
           <div className="raspberry-dashboard-panel" id="dashboard-general-panel" role="tabpanel"
             aria-labelledby="dashboard-general-tab" hidden={selectedDashboardSection !== "general"} tabIndex={0}>
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-general-title">
@@ -7068,6 +7070,8 @@ export default function App() {
         key: directory.relativePath,
         id: tmdbSeries?.id || Number(directory.tmdbId) || null,
         directoryPath: directory.relativePath,
+        preferredVideo: profile.preferredVideo || null,
+        trailer: tmdbSeries?.trailer || null,
         name: profile.name || tmdbSeries?.name || directory.name,
         ...seriesArtwork(profile, tmdbSeries || {}, cartellLogo, localTmdbImageUrl),
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
@@ -7098,6 +7102,8 @@ export default function App() {
         name: profile.name || tmdbMovie?.name || movie.name,
         fileRelativePath: movie.fileRelativePath || "",
         fileName: movie.fileName || "",
+        preferredVideo: profile.preferredVideo || null,
+        trailer: tmdbMovie?.trailer || null,
         originalName: tmdbMovie?.originalName || "",
         heroImage: localTmdbImageUrl(profile.heroImage) || tmdbMovie?.heroImage || cartellLogo,
         heroImageCrop: normalizeHeroCrop(profile.heroImageCrop || DEFAULT_HERO_CROP),
@@ -7485,6 +7491,20 @@ export default function App() {
     setAddSeriesOpen(false);
     setUploadLookupOpen(false);
     window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  async function handleSaveSeriesTrailer(video) {
+    const path = selectedSeries.directoryPath;
+    const response = await saveSeriesTrailer(path, video);
+    setSeriesProfiles(current => {
+      const next = { ...current, [path]: { ...current[path], preferredVideo: response.video } };
+      saveSeriesProfiles(next, "series");
+      return next;
+    });
+    setVideos(current => ({ ...current, mediaLibrary: { ...current.mediaLibrary,
+      series: { ...current.mediaLibrary?.series, [path]: {
+        ...current.mediaLibrary?.series?.[path], relativePath: path, preferredVideo: response.video,
+      } } } }));
   }
 
   async function handleSaveSeriesSettings({ subtitleFile, ...updates }) {
@@ -9621,10 +9641,7 @@ export default function App() {
                     disabled={!heroSelectorOptions.length} onChange={handleOpenGameDetails} />
                 </div>}
 
-                {!isMediaDetail && (isOscarView || isBookAwardView) && <div className="catalog-ai-extra-tools">
-                  <CatalogAIButton language={raspberryLanguage} open={catalogAIOpen} active={Boolean(activeAIResult)} onClick={() => setCatalogAIOpen(value => !value)} />
-                </div>}
-                {!isMediaDetail && !isPicturesMode && catalogAIOpen && <CatalogAI key={`${profiles.activeId}:${activeMediaType}:${raspberryLanguage}`} section={activeMediaType} language={raspberryLanguage}
+                {!isMediaDetail && !isPicturesMode && !isOscarView && !isBookAwardView && catalogAIOpen && <CatalogAI key={`${profiles.activeId}:${activeMediaType}:${raspberryLanguage}`} section={activeMediaType} language={raspberryLanguage}
                   user={profiles.ready ? profiles.activeUser : null} onOpenLibrary={handleOpenRecommendedLibrary} onSearchTorrent={handleRecommendedTorrent}
                   initialPrompt={activeAIResult?.prompt || ""} onResult={applyCatalogAI} onClose={() => setCatalogAIOpen(false)} />}
                 {!isMediaDetail && !isPicturesMode && !isOscarView && !isBookAwardView && <CatalogAIResult result={activeAIResult} visible={filterVisible} language={raspberryLanguage}
@@ -9855,9 +9872,9 @@ export default function App() {
                         const rating = formatLibraryRating(series, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
                           <article className="movie-library__card" key={series.directoryPath}>
-                            <button className="movie-library__poster" type="button" onClick={() => handleOpenSeriesDetails(series.directoryPath)} aria-label={`${t("movie_details")}: ${series.name}`}>
+                            <MoviePosterPreview movie={series} enabled={seriesLibraryView === "grid"} onClick={() => handleOpenSeriesDetails(series.directoryPath)} label={`${t("movie_details")}: ${series.name}`}>
                               <LibraryPoster src={poster} name={series.name} />
-                            </button>
+                            </MoviePosterPreview>
                             <div className="movie-library__info">
                               <h2>{series.name}</h2>
                               <div className="movie-library__meta"><span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
@@ -9900,6 +9917,7 @@ export default function App() {
                   <section className="empty-state">
                     <ImdbRating kind="tv" tmdbId={selectedSeries.id} tmdbRating={selectedSeries.voteAverage} tmdbVotes={selectedSeries.voteCount} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
                     <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
+                    <MovieMedia key={selectedSeries.directoryPath} movie={selectedSeries} kind="tv" language={raspberryLanguage} t={t} onSaveVideo={handleSaveSeriesTrailer} />
                     <div className="empty-state__card">
                       <h2>{emptyTitle}</h2>
                       <p>{emptyDescription}</p>
@@ -9909,6 +9927,7 @@ export default function App() {
                   <section className="seasons-section">
                     <ImdbRating kind="tv" tmdbId={selectedSeries.id} tmdbRating={selectedSeries.voteAverage} tmdbVotes={selectedSeries.voteCount} language={raspberryLanguage} onLoad={handleSeriesRatingLoaded} />
                     <MediaCredits mediaType="tv" tmdbId={selectedSeries.id} language={raspberryLanguage} creators={selectedSeries.creators} />
+                    <MovieMedia key={selectedSeries.directoryPath} movie={selectedSeries} kind="tv" language={raspberryLanguage} t={t} onSaveVideo={handleSaveSeriesTrailer} />
                     <div className="seasons-section__label seasons-section__label--inline">
                       {`${seasons.length} ${t("seasons_label")} (${selectedSeries?.episodeCount || 0} ${t("chapters_summary")})`}
                     </div>
@@ -9944,10 +9963,10 @@ export default function App() {
                         const rating = formatLibraryRating(movie, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
                           <article data-library-index className="movie-library__card" key={movie.id}>
-                            <button className="movie-library__poster" type="button" onClick={() => handleOpenMovieDetails(movie.id)} aria-label={[`${t("movie_details")}: ${movie.name}`, ...awards.map(award => award.label)].join(" · ")}>
+                            <MoviePosterPreview movie={movie} enabled={movieLibraryView === "grid"} onClick={() => handleOpenMovieDetails(movie.id)} label={[`${t("movie_details")}: ${movie.name}`, ...awards.map(award => award.label)].join(" · ")}>
                               <LibraryPoster src={poster} name={movie.name} />
                               <MovieAwardBadges awards={awards} />
-                            </button>
+                            </MoviePosterPreview>
                             <div className="movie-library__info">
                               <h2>{movie.name}</h2>
                               <div className="movie-library__meta"><span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
@@ -10046,6 +10065,20 @@ export default function App() {
                         <PlaybackSubtitleControls playbackKey={raspberryHealth.file} t={t} />
                       ) : null}
 
+                      <MovieMedia key={selectedMovie.id} movie={selectedMovie} language={raspberryLanguage} t={t}
+                        onSaveVideo={async video => {
+                          const response = await saveMovieTrailer(selectedMovie.fileRelativePath, video);
+                          setMovieProfiles(current => {
+                            const next = { ...current, [selectedMovie.id]: { ...current[selectedMovie.id], preferredVideo: response.video } };
+                            saveSeriesProfiles(next, "movies");
+                            return next;
+                          });
+                          setVideos(current => ({ ...current, mediaLibrary: { ...current.mediaLibrary,
+                            movies: { ...current.mediaLibrary?.movies, [selectedMovie.fileRelativePath]: {
+                              ...current.mediaLibrary?.movies?.[selectedMovie.fileRelativePath],
+                              relativePath: selectedMovie.fileRelativePath, preferredVideo: response.video,
+                            } } } }));
+                        }}>
                       <MovieImageCarousel
                         title={selectedMovie.name}
                         images={movieImages}
@@ -10065,6 +10098,7 @@ export default function App() {
                         }
                         t={t}
                       />
+                      </MovieMedia>
 
                       <div className="movie-panel__content">
                         <div className="movie-panel__header">
