@@ -37,10 +37,7 @@ export default function YouTubePreview({ videoId, title }) {
   useEffect(() => {
     let cancelled = false;
     let player;
-    let revealTimer;
     function hidePreview() {
-      window.clearTimeout(revealTimer);
-      revealTimer = undefined;
       if (!cancelled) setVisible(false);
     }
     const container = host.current;
@@ -72,12 +69,7 @@ export default function YouTubePreview({ videoId, title }) {
               hidePreview();
               return;
             }
-            // YouTube can briefly display its play/pause animation even with
-            // controls=0. Keep the poster until playback has settled.
-            if (revealTimer !== undefined) return;
-            revealTimer = window.setTimeout(() => {
-              if (!cancelled) setVisible(true);
-            }, 3000);
+            setVisible(true);
           },
           onAutoplayBlocked: hidePreview,
           onError: hidePreview,
@@ -86,7 +78,6 @@ export default function YouTubePreview({ videoId, title }) {
     }).catch(() => { if (!cancelled) setVisible(false); });
     return () => {
       cancelled = true;
-      window.clearTimeout(revealTimer);
       player?.destroy();
       container.replaceChildren();
     };

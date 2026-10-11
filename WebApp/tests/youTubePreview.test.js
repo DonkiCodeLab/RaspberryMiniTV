@@ -41,8 +41,6 @@ test("hover previews request sound, hide controls and show only active playback"
   h.options.events.onReady({ target: h.player });
   assert.deepEqual(h.calls, ["unmute", ["volume", 100], "play"]);
   h.options.events.onStateChange({ data: 1 });
-  assert.equal(h.visibility.at(-1), false);
-  h.flushTimers();
   assert.equal(h.visibility.at(-1), true);
   for (const data of [0, 2, 3, 5, -1]) {
     h.options.events.onStateChange({ data });
@@ -57,8 +55,8 @@ test("hover previews request sound, hide controls and show only active playback"
   assert.equal(h.visibility.length, count);
 });
 
-test("pausing or leaving during startup cancels the pending preview reveal", async () => {
-  for (const end of ["pause", "blocked", "error", "leave"]) {
+test("pausing, blocking or failing playback hides the preview immediately", async () => {
+  for (const end of ["pause", "blocked", "error"]) {
     const h = harness();
     const stop = h.start();
     await Promise.resolve();
@@ -67,10 +65,9 @@ test("pausing or leaving during startup cancels the pending preview reveal", asy
     if (end === "pause") h.options.events.onStateChange({ data: 2 });
     if (end === "blocked") h.options.events.onAutoplayBlocked();
     if (end === "error") h.options.events.onError();
-    if (end === "leave") stop();
     h.flushTimers();
     assert.equal(h.visibility.at(-1), false);
-    if (end !== "leave") stop();
+    stop();
   }
 });
 
