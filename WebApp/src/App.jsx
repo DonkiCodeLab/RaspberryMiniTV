@@ -4953,6 +4953,9 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                       </div>
                     </dl>
 
+                  </div>
+
+                  <div className="tmdb-browser-movie__metadata">
                     <ImdbRating kind="movie" tmdbId={selectedItem.id} tmdbRating={selectedItem.voteAverage} tmdbVotes={selectedItem.voteCount} imdbId={selectedItem.imdbId} language={tmdbLanguage} />
                     <MediaCredits mediaType="movie" tmdbId={selectedItem.id} language={tmdbLanguage} importPreview />
                     <ul className="tmdb-browser-movie__genres" aria-label={t("genres")}>

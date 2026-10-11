@@ -5418,7 +5418,7 @@ img {
 
 .tmdb-browser-movie .movie-panel__card {
   grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
-  grid-template-areas: "details trailer";
+  grid-template-areas: "details trailer" "metadata metadata";
   gap: 1.5rem;
   padding: clamp(1rem, 2.5vw, 1.5rem);
   border-radius: 24px;
@@ -5512,6 +5512,17 @@ img {
   grid-area: details;
   gap: 1.25rem;
   align-content: start;
+}
+
+.tmdb-browser-movie__metadata {
+  grid-area: metadata;
+  display: grid;
+  min-width: 0;
+  gap: 1.25rem;
+}
+
+.tmdb-browser-movie__metadata .imdb-rating__providers {
+  flex-wrap: wrap;
 }
 
 .tmdb-browser-movie .movie-panel__header h2 {
@@ -6030,7 +6041,7 @@ img {
 
   .tmdb-browser-movie .movie-panel__card {
     grid-template-columns: 1fr;
-    grid-template-areas: "details" "trailer";
+    grid-template-areas: "details" "trailer" "metadata";
   }
 
   .game-browser-profile {

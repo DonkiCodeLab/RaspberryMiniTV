@@ -37,6 +37,12 @@ export default function YouTubePreview({ videoId, title }) {
   useEffect(() => {
     let cancelled = false;
     let player;
+    let revealTimer;
+    function hidePreview() {
+      window.clearTimeout(revealTimer);
+      revealTimer = undefined;
+      if (!cancelled) setVisible(false);
+    }
     const container = host.current;
     setVisible(false);
     loadYouTubeApi().then(YT => {
@@ -46,7 +52,7 @@ export default function YouTubePreview({ videoId, title }) {
       player = new YT.Player(target, {
         host: "https://www.youtube-nocookie.com",
         videoId,
-        playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, playsinline: 1,
+        playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, playsinline: 1,
           rel: 0, iv_load_policy: 3, loop: 1, playlist: videoId, origin: window.location.origin },
         events: {
           onReady: event => {
@@ -60,18 +66,31 @@ export default function YouTubePreview({ videoId, title }) {
             event.target.setVolume(100);
             event.target.playVideo();
           },
-          onStateChange: event => { if (!cancelled) setVisible(event.data === YT.PlayerState.PLAYING); },
-          onAutoplayBlocked: () => { if (!cancelled) setVisible(false); },
-          onError: () => { if (!cancelled) setVisible(false); },
+          onStateChange: event => {
+            if (cancelled) return;
+            if (event.data !== YT.PlayerState.PLAYING) {
+              hidePreview();
+              return;
+            }
+            // YouTube can briefly display its play/pause animation even with
+            // controls=0. Keep the poster until playback has settled.
+            if (revealTimer !== undefined) return;
+            revealTimer = window.setTimeout(() => {
+              if (!cancelled) setVisible(true);
+            }, 3000);
+          },
+          onAutoplayBlocked: hidePreview,
+          onError: hidePreview,
         },
       });
     }).catch(() => { if (!cancelled) setVisible(false); });
     return () => {
       cancelled = true;
+      window.clearTimeout(revealTimer);
       player?.destroy();
       container.replaceChildren();
     };
   }, [videoId, title]);
-  return <div ref={host} aria-hidden="true"
+  return <div ref={host} aria-hidden="true" inert
     className={`movie-poster-preview__video${visible ? " movie-poster-preview__video--playing" : ""}`} />;
 }
