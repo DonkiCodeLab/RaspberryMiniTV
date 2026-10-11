@@ -137,7 +137,7 @@ export function useTorrentDownloads(enabled, onLibraryChanged) {
   const [busy, setBusy] = useState("");
   const changed = useRef(onLibraryChanged);
   changed.current = onLibraryChanged;
-  const libraryVersion = useRef("");
+  const libraryVersion = useRef(null);
   useEffect(() => {
     if (!enabled) return;
     let disposed = false, timer;
@@ -147,14 +147,17 @@ export function useTorrentDownloads(enabled, onLibraryChanged) {
       try {
         const next = await getMovieTorrents(controller.signal);
         if (disposed) return;
-        setData(next); setError(""); setLoaded(true);
+        setData(next); setError("");
         const version = torrentLibraryVersion(next.jobs || []);
         if (version !== libraryVersion.current) {
           if (hasTorrentLibraryUpdates(libraryVersion.current, version)) await changed.current?.();
           if (!disposed) libraryVersion.current = version;
         }
       } catch (e) { if (!disposed) setError(e.message); }
-      finally { clearTimeout(timeout); }
+      finally {
+        clearTimeout(timeout);
+        if (!disposed) setLoaded(true);
+      }
       if (!disposed) timer = setTimeout(() => setRevision(value => value + 1), 5000);
     }
     poll();

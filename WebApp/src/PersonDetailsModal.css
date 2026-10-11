@@ -21,3 +21,11 @@
 .person-modal__status { margin-top: 26px; color: #d5dfe8; line-height: 1.6; }
 .person-modal :is(button, a):focus-visible { outline: 2px solid #ffdc00; outline-offset: 4px; }
 @media (max-width: 520px) { .person-modal__content { padding: 24px 20px; } .person-modal__header { gap: 16px; align-items: flex-start; padding-top: 24px; padding-right: 0; } .person-modal__portrait { flex-basis: 98px; height: 142px; } .person-modal h2 { font-size: 24px; } }
+.person-modal__catalog { margin-top: 28px; border-top: 1px solid #ffffff1c; padding-top: 22px; }
+.person-modal__catalog ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.person-modal__catalog button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 10px; border: 1px solid #ffffff26; border-radius: 12px; background: #243949; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.person-modal__catalog button:hover { background: #304657; border-color: #ffdc00; }
+.person-modal__catalog img { width: 44px; height: 66px; border-radius: 5px; object-fit: cover; }
+.person-modal__catalog button > span:first-of-type { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.person-modal__catalog small { display: block; margin-top: 5px; color: #aabac8; }
+.person-modal__catalog p { color: #d5dfe8; font-size: 14px; }

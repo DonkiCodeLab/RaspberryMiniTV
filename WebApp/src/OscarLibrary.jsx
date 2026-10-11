@@ -116,8 +116,8 @@ export default function OscarLibrary({ award = 'oscars', movies, language, editi
           <span aria-hidden="true">▶</span> {words.open}
         </button> : <>
           <button type="button" className="oscar-library__open" onClick={() => onUploadMovie(selected)}>{words.upload}</button>
-          <button type="button" className="oscar-library__open" onClick={() => onSearchTorrent(selected)}>{words.searchTorrent}</button>
         </>}
+        <button type="button" className="oscar-library__open" onClick={() => onSearchTorrent(selected)}>{selected.movie ? words.searchOtherTorrent : words.searchTorrent}</button>
       </div>
     </div>
     <div className="oscar-library__navigation">

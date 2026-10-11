@@ -45,6 +45,8 @@ export function torrentLibraryVersion(jobs) {
 }
 
 export function hasTorrentLibraryUpdates(previousVersion, nextVersion) {
+  // The first snapshot establishes the baseline; history is already in getVideos.
+  if (previousVersion === null) return false;
   const previous = new Set(previousVersion.split("|"));
   return nextVersion.split("|").some(entry => entry && !previous.has(entry));
 }

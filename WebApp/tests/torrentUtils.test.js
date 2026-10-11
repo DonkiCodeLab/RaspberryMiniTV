@@ -62,6 +62,16 @@ test("removing history does not reload the movie library, but a simultaneous com
   assert.equal(hasTorrentLibraryUpdates("", "a:imported"), true);
 });
 
+test("startup history establishes a baseline and only later imports reload the catalog", () => {
+  const history = torrentLibraryVersion([{ id: "old", state: "complete", item: {} }]);
+  assert.equal(hasTorrentLibraryUpdates(null, history), false);
+  assert.equal(hasTorrentLibraryUpdates(history, history), false);
+  assert.equal(hasTorrentLibraryUpdates(history, `${history}|new:imported`), true);
+  assert.equal(hasTorrentLibraryUpdates("new:imported", "new:ready"), true);
+  assert.equal(hasTorrentLibraryUpdates(null, ""), false);
+  assert.equal(hasTorrentLibraryUpdates("", "new:imported"), true);
+});
+
 test("award movie searches use the English title even when the original is not English", () => {
   const movie = { name: "Parásitos", originalName: "기생충", englishName: "Parasite", releaseDate: "2019-05-30" };
   assert.equal(torrentQuery(movie), "Parasite 2019");

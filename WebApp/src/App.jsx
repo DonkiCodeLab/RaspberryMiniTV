@@ -10,6 +10,7 @@ import MovieLibraryItems from "./MovieLibraryItems.jsx";
 import MoviePosterPreview from "./MoviePosterPreview.jsx";
 import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
 import MediaCredits from "./MediaCredits.jsx";
+import { PersonCatalogContext } from "./personCatalog.js";
 import CatalogAI, { CatalogAIButton, CatalogAIResult } from "./CatalogAI.jsx";
 import OpenAISettings from "./OpenAISettings.jsx";
 import CodexPanel from "./CodexPanel.jsx";
@@ -750,6 +751,7 @@ const UI_STRINGS = {
     movie_library: "Todas las películas",
     movie_details: "Ver detalles",
     movie_download: "Descargar",
+    movie_search_other_torrent: "Buscar otro torrent",
     episode_download: "Descargar capítulo",
     movie_view_grid: "Vista mosaico",
     movie_view_list: "Vista listado",
@@ -1208,6 +1210,7 @@ const UI_STRINGS = {
     movie_library: "Totes les pel·lícules",
     movie_details: "Veure detalls",
     movie_download: "Descarregar",
+    movie_search_other_torrent: "Cercar un altre torrent",
     episode_download: "Descarregar capítol",
     movie_view_grid: "Vista mosaic",
     movie_view_list: "Vista llista",
@@ -1666,6 +1669,7 @@ const UI_STRINGS = {
     movie_library: "All movies",
     movie_details: "View details",
     movie_download: "Download",
+    movie_search_other_torrent: "Search for another torrent",
     episode_download: "Download episode",
     movie_view_grid: "Grid view",
     movie_view_list: "List view",
@@ -4532,13 +4536,22 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
     setSelectedEpisode(null);
     setLoadingDetails(true);
     setError("");
+    const fallbackMovie = { ...initialMovie, id: Number(initialMovie.tmdbId) || null };
+    if (!isSeries && !fallbackMovie.id) {
+      setSelectedItem(fallbackMovie);
+      setLoadingDetails(false);
+      return;
+    }
     const getDetails = isSeries ? getTvSeriesById : getMovieById;
     const localized = getDetails(initialMovie.tmdbId, tmdbLanguage, true);
     const english = isSeries || tmdbLanguage === "en-US" ? localized : getDetails(initialMovie.tmdbId, "en-US", true);
     Promise.all([localized, english]).then(([details, englishDetails]) => {
       if (!cancelled) setSelectedItem({ ...details, englishName: englishDetails.name });
     }).catch(nextError => {
-      if (!cancelled) setError(nextError.message || t("tmdb_browser_load_failed"));
+      if (!cancelled) {
+        if (!isSeries) setSelectedItem(fallbackMovie);
+        else setError(nextError.message || t("tmdb_browser_load_failed"));
+      }
     }).finally(() => {
       if (!cancelled) setLoadingDetails(false);
     });
@@ -4937,9 +4950,9 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                           <span>IMDb</span><span aria-hidden="true">↗</span>
                         </a>
                       ) : null}
-                      <a className="tmdb-browser-movie__link tmdb-browser-movie__link--tmdb" href={`https://www.themoviedb.org/movie/${selectedItem.id}`} target="_blank" rel="noopener noreferrer" aria-label={t("tmdb_link")}>
+                      {selectedItem.id ? <a className="tmdb-browser-movie__link tmdb-browser-movie__link--tmdb" href={`https://www.themoviedb.org/movie/${selectedItem.id}`} target="_blank" rel="noopener noreferrer" aria-label={t("tmdb_link")}>
                         <span>TMDB</span><span aria-hidden="true">↗</span>
-                      </a>
+                      </a> : null}
                     </div>
 
                     <dl className="tmdb-browser-movie__facts">
@@ -6708,6 +6721,10 @@ export default function App() {
       return () => {};
     }
 
+    // Establish the download baseline before reading the catalog so an import
+    // completed during startup is included in this single initial load.
+    if (!torrentDownloads.loaded) return;
+
     let cancelled = false;
 
     async function load() {
@@ -6782,7 +6799,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [unlocked]);
+  }, [unlocked, torrentDownloads.loaded]);
 
   useEffect(() => {
     saveStoredRaspberryAlarm(raspberryAlarm);
@@ -6976,7 +6993,8 @@ export default function App() {
   const libraryRequest = useMemo(() => ({ videos, tmdbLanguage, seriesProfiles,
     movies: mockMode ? movieLibrary : null }),
   [videos, tmdbLanguage, seriesProfiles, mockMode ? movieLibrary : null]);
-  const libraryPending = !videos || loading || tmdbLoading || preparedLibrary !== libraryRequest;
+  const libraryPending = !videos || loading || tmdbLoading || preparedLibrary !== libraryRequest
+    || (!profiles.ready && !profiles.error);
 
   useEffect(() => {
     if (!unlocked || loading || !videos) return;
@@ -9146,6 +9164,12 @@ export default function App() {
   }, [directories, raspberryCurrentPlayback, raspberryHealth, seriesOptions]);
 
   return (
+    <PersonCatalogContext.Provider value={{ movies: movieOptions, onSelectMovie: movie => {
+      setActiveMediaType("movies");
+      setCurrentView("series");
+      setTmdbBrowserOpen(false);
+      handleOpenMovieDetails(movie.id);
+    } }}>
     <main
       className="app-shell"
       style={{
@@ -10067,6 +10091,18 @@ export default function App() {
                         <span>{t("play_on_external_monitor")}</span>
                       </button>
 
+                      <button
+                        className="movie-panel__play movie-panel__play--browser"
+                        onClick={() => {
+                          setUploadMediaType("movies");
+                          setTorrentInitialMovie({ ...selectedMovie, mediaType: "movie" });
+                          setTmdbBrowserOpen(true);
+                        }}
+                        type="button"
+                      >
+                        {t("movie_search_other_torrent")}
+                      </button>
+
                       <MovieSubtitleDownload key={`subtitles-${selectedMovie.fileRelativePath || selectedMovie.id}`}
                         relativePath={selectedMovie.fileRelativePath || resolvePlayableMovieEntry(selectedMovie)?.relativePath}
                         language={raspberryLanguage} onConfigure={handleOpenSubtitleSettings} />
@@ -10342,5 +10378,6 @@ export default function App() {
         onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("general"); }} />}
       {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
+    </PersonCatalogContext.Provider>
   );
 }

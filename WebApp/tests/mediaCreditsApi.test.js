@@ -57,13 +57,15 @@ test("person profiles load on demand, reuse cache and fall back to English biogr
   globalThis.fetch = async url => {
     requests.push(url);
     assert.equal(new URL(url).pathname, "/tmdb/import/json/person/42");
+    assert.equal(new URL(url).searchParams.get("append_to_response"), "movie_credits");
     const english = new URL(url).searchParams.get("language") === "en-US";
-    return { ok: true, text: async () => JSON.stringify({ id: 42, name: "Actor", biography: english ? "An actor's biography." : "", imdb_id: "nm0000042" }) };
+    return { ok: true, text: async () => JSON.stringify({ id: 42, name: "Actor", biography: english ? "An actor's biography." : "", imdb_id: "nm0000042", movie_credits: { cast: [{ id: 12 }], crew: [{ id: 13 }] } }) };
   };
   try {
     const tmdb = await loadTmdb();
     const person = await tmdb.getPersonDetails(42, "es-ES");
     assert.equal(person.biography, "An actor's biography.");
+    assert.deepEqual(person.movieCredits, { cast: [{ id: 12 }], crew: [{ id: 13 }] });
     assert.equal(person.imdbUrl, "https://www.imdb.com/name/nm0000042/");
     await tmdb.getPersonDetails(42, "es-ES");
     assert.equal(requests.length, 2);

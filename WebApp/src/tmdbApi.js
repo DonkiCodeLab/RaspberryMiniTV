@@ -574,7 +574,7 @@ export async function getTvEpisodeDetails({ seriesId, seasonNumber, episodeNumbe
 export async function getPersonDetails(personId, language = "es-ES") {
   const id = Number(personId);
   if (!Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid TMDB person ID");
-  const options = { language, importPreview: true };
+  const options = { language, importPreview: true, query: { append_to_response: "movie_credits" } };
   const data = await fetchTmdbJson(`/person/${id}`, options);
   if (Number(data?.id) !== id || !hasText(data?.name)) throw new Error("Invalid TMDB person response");
   let biography = String(data.biography || "").trim();
@@ -583,7 +583,7 @@ export async function getPersonDetails(personId, language = "es-ES") {
     biography = String(fallback?.biography || "").trim();
   }
   const imdbId = String(data.imdb_id || "");
-  return { name: data.name, biography, profilePath: data.profile_path || null,
+  return { movieCredits: data.movie_credits || null, name: data.name, biography, profilePath: data.profile_path || null,
     birthday: data.birthday || "", deathday: data.deathday || "", birthplace: data.place_of_birth || "",
     imdbUrl: /^nm\d+$/.test(imdbId) ? `https://www.imdb.com/name/${imdbId}/` : "",
     tmdbUrl: `https://www.themoviedb.org/person/${id}` };
