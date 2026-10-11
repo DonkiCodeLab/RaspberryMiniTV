@@ -9872,7 +9872,7 @@ export default function App() {
                         const rating = formatLibraryRating(series, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
                           <article className="movie-library__card" key={series.directoryPath}>
-                            <MoviePosterPreview movie={series} enabled={seriesLibraryView === "grid"} onClick={() => handleOpenSeriesDetails(series.directoryPath)} label={`${t("movie_details")}: ${series.name}`}>
+                            <MoviePosterPreview movie={series} kind="tv" enabled={seriesLibraryView === "grid"} onClick={() => handleOpenSeriesDetails(series.directoryPath)} label={`${t("movie_details")}: ${series.name}`}>
                               <LibraryPoster src={poster} name={series.name} />
                             </MoviePosterPreview>
                             <div className="movie-library__info">
@@ -10016,6 +10016,13 @@ export default function App() {
                   <section className="movie-panel seasons-section">
                     <div className="seasons-section__label">{t("movie_file_label")}</div>
                     <div className="movie-panel__card">
+                      <div className="movie-panel__header">
+                        <h2>{selectedMovie.name}</h2>
+                        {selectedMovie.originalName &&
+                        selectedMovie.originalName !== selectedMovie.name ? (
+                          <p>{selectedMovie.originalName}</p>
+                        ) : null}
+                      </div>
                       <div className="movie-panel__file-actions">
                       {getMovieDownloadUrl(selectedMovie) ? (
                         <MovieDownload url={getMovieDownloadUrl(selectedMovie)} name={selectedMovie.fileName || selectedMovie.name} label={t("movie_download")} />
@@ -10101,14 +10108,6 @@ export default function App() {
                       </MovieMedia>
 
                       <div className="movie-panel__content">
-                        <div className="movie-panel__header">
-                          <h2>{selectedMovie.name}</h2>
-                          {selectedMovie.originalName &&
-                          selectedMovie.originalName !== selectedMovie.name ? (
-                            <p>{selectedMovie.originalName}</p>
-                          ) : null}
-                        </div>
-
                         <div className="movie-panel__facts">
                           <div className="movie-panel__fact">
                             <strong>{t("release")}</strong>

@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
+import { findMovieTrailer } from "./api/raspberryApi";
+import YouTubePreview from "./YouTubePreview.jsx";
 
-export default function MoviePosterPreview({ movie, enabled, onClick, label, children }) {
+export default function MoviePosterPreview({ movie, enabled, onClick, label, children, kind = "movie" }) {
   const [hovered, setHovered] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const videoId = [movie.preferredVideo?.id, movie.trailer?.key]
+  const [resolved, setResolved] = useState(null);
+  const mediaKey = `${kind}:${movie.tmdbId ?? movie.id}:${movie.name}`;
+  const videoId = [movie.preferredVideo?.id, movie.trailer?.key, resolved?.key === mediaKey ? resolved.video?.id : null]
     .find(id => typeof id === "string" && /^[A-Za-z0-9_-]{11}$/.test(id));
 
   useEffect(() => {
     setPlaying(false);
-    if (!enabled || !hovered || !videoId) return;
+    if (!enabled || !hovered) return;
     const timer = window.setTimeout(() => setPlaying(true), 450);
     const stop = () => { setHovered(false); setPlaying(false); };
     window.addEventListener("blur", stop);
@@ -18,7 +22,16 @@ export default function MoviePosterPreview({ movie, enabled, onClick, label, chi
       window.removeEventListener("blur", stop);
       document.removeEventListener("visibilitychange", stop);
     };
-  }, [enabled, hovered, videoId]);
+  }, [enabled, hovered, mediaKey]);
+
+  useEffect(() => {
+    if (!enabled || !hovered || !playing || videoId || resolved?.key === mediaKey) return;
+    const controller = new AbortController();
+    findMovieTrailer(movie, controller.signal, kind).then(result => {
+      if (!controller.signal.aborted) setResolved({ key: mediaKey, video: result.video });
+    }).catch(() => {});
+    return () => controller.abort();
+  }, [enabled, hovered, playing, videoId, mediaKey, kind, resolved, movie.id, movie.tmdbId, movie.name]);
 
   function stop() {
     setHovered(false);
@@ -32,14 +45,10 @@ export default function MoviePosterPreview({ movie, enabled, onClick, label, chi
       onClick={() => { stop(); onClick(); }}>
       {children}
     </button>
-    {enabled && hovered && playing && videoId && <iframe
+    {enabled && hovered && playing && videoId && <YouTubePreview
       key={videoId}
-      className="movie-poster-preview__video"
-      src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&playsinline=1&disablekb=1&fs=0&rel=0&loop=1&playlist=${videoId}`}
+      videoId={videoId}
       title={`${movie.name} — ${movie.preferredVideo?.name || movie.trailer?.name || "Tráiler"}`}
-      tabIndex={-1} aria-hidden="true"
-      referrerPolicy="strict-origin-when-cross-origin"
-      allow="autoplay; encrypted-media"
     />}
   </div>;
 }

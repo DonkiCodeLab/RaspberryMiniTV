@@ -23,6 +23,7 @@ if [[ ! -d "${CODEX_RUNTIME}" ]]; then
   "${CODEX_STAGE}/package/vendor/${CODEX_TARGET}/bin/codex" --version
   mv "${CODEX_STAGE}/package" "${CODEX_RUNTIME}"
 fi
+chmod -R a+rX "${CODEX_RUNTIME}"
 ln -sfn "${CODEX_RUNTIME}" "${CODEX_PREFIX}/native"
 
 if [[ "$(getconf LONG_BIT)" == 32 ]]; then
