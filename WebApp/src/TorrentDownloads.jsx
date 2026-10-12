@@ -210,6 +210,7 @@ export default function TorrentDownloads({ downloads, language }) {
       {job.item?.skippedEpisodeIds?.length > 0 && <p className="torrent-job__stats">{s.episodesSkipped}: {job.item.skippedEpisodeIds.length}</p>}
       <p className="torrent-job__stats">{job.progress || 0}% · {torrentSize(job.downloadedBytes, language)} / {torrentSize(job.sizeBytes, language)}{job.state === "downloading" ? ` · ${torrentSize(job.rateBytes, language)}/s${job.eta >= 0 ? ` · ${Math.ceil(job.eta / 60)} min ${s.remaining}` : ""}` : ""}</p>
       {job.error && <p className="dialog-error">{job.error}</p>}
+      {job.artworkWarning && <p className="torrent-artwork-warning">{s.artworkWarning} {job.artworkWarning}</p>}
       <div className="torrent-job__actions">
         {["queued", "downloading"].includes(job.state) && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "pause")} type="button">{s.pause}</button>}
         {job.state === "paused" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "resume")} type="button">{s.resume}</button>}

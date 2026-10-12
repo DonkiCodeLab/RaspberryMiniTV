@@ -601,9 +601,9 @@ class TorrentDownloads:
                 raise ValueError("Solo se pueden reintentar descargas con error.")
             if job.get("item"):
                 if action != "retry":
-                    raise ValueError("El vídeo ya está importado; solo puedes reintentar TMDB.")
-                self._prepare_job_artwork(job)
-                self._update(job, state="metadata", error="")
+                    raise ValueError("El contenido ya está importado; pulsa Reintentar para actualizar su estado.")
+                # Recover queues written before artwork errors became non-fatal.
+                self._complete_with_artwork_warning(job, job.get("error"))
             elif action == "cancel":
                 self._check_ownership(job)
                 # Persist cancellation before removing data so an API restart cannot re-import it.
@@ -649,7 +649,9 @@ class TorrentDownloads:
                 except TorrentError as exc:
                     self.service_error = str(exc)
             for job in list(self.jobs.values()):
-                if job["state"] in {"cancelled", "complete"} or (job["state"] == "failed" and job.get("item")):
+                if job["state"] == "failed" and job.get("item"):
+                    self._complete_with_artwork_warning(job, job.get("error"))
+                if job["state"] in {"cancelled", "complete"}:
                     self._remove_transfer(job)
                     if job.get("hidden") and job.get("transferRemoved"):
                         self._remove_history(job)
@@ -776,9 +778,14 @@ class TorrentDownloads:
             elif status.get("state") == "complete":
                 self._update(job, state="complete", completedAt=time.time(), error="")
             elif status.get("state") in {"failed", "cancelled"}:
-                self._update(job, state="failed", error=status.get("error") or "No se completaron los recursos de TMDB.")
+                self._complete_with_artwork_warning(job, status.get("error"))
         except Exception as exc:
-            self._update(job, state="failed", error=str(exc))
+            self._complete_with_artwork_warning(job, str(exc))
+
+    def _complete_with_artwork_warning(self, job, warning):
+        # An imported library item is usable even if optional TMDB assets fail.
+        self._update(job, state="complete", completedAt=time.time(), progress=100,
+                     rateBytes=0, error="", artworkWarning=warning or "No se completaron los recursos de TMDB.")
 
     def _remove_transfer(self, job):
         # The library has its own hard link; deleting staging data preserves the video.

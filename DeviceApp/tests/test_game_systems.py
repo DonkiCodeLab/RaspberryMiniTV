@@ -4,6 +4,7 @@ import re
 import sys
 import tempfile
 import unittest
+from urllib.parse import parse_qs, urlsplit
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import control_api as api
 import catalog_store
 from game_platforms import resolve_platform, stored_platform
+
+REAL_IS_AUTHORIZED_REQUEST = api.is_authorized_request
 
 
 class GameSystemsTest(unittest.TestCase):
@@ -56,6 +59,41 @@ class GameSystemsTest(unittest.TestCase):
         response = self.upload('arcade', 'sf2.zip')
         self.assertEqual(response.status_code, 200, response.json)
         self.assertEqual(response.json['item']['file'], 'sf2.zip')
+
+    def test_browser_arcade_url_preserves_romset_and_serves_original_archive(self):
+        rom = Path(api.GAMES_DIR) / 'mslug.zip'
+        rom.write_bytes(b'original arcade archive')
+        for system in ['arcade', 'neogeo']:
+            with self.subTest(system=system):
+                response = self.client.get('/games/browser', query_string={
+                    'relativePath': 'Games/mslug.zip', 'system': system, 'pin': '1234',
+                })
+                self.assertEqual(response.status_code, 200)
+                config = json.loads(re.search(r'const game = (.*);', response.get_data(as_text=True))[1])
+                # Match EmulatorJS getBaseFileName(true), used by its arcade loader.
+                self.assertEqual(config['url'].split('/')[-1].split('#')[0].split('?')[0], 'mslug.zip')
+                self.assertEqual(parse_qs(urlsplit(config['url']).query)['pin'], ['1234'])
+                content = self.client.get(config['url'])
+                self.assertEqual(content.status_code, 200)
+                self.assertEqual(content.data, rom.read_bytes())
+                content.close()
+        legacy = self.client.get('/games/content?relativePath=Games/mslug.zip')
+        self.assertEqual(legacy.data, rom.read_bytes())
+        legacy.close()
+        self.assertEqual(self.client.get('/games/content/other.zip?relativePath=Games/mslug.zip').status_code, 404)
+
+    def test_named_game_content_accepts_query_pin_and_requires_authentication(self):
+        # Exercise the real authorization function (setUp mocks it for API tests).
+        with patch.object(api, 'is_authorized_request', REAL_IS_AUTHORIZED_REQUEST), \
+                patch.object(api, 'current_web_pin', return_value='1234'):
+            rom = Path(api.GAMES_DIR) / 'mslug.zip'
+            rom.write_bytes(b'archive')
+            url = '/games/content/mslug.zip?relativePath=Games/mslug.zip'
+            self.assertEqual(self.client.get(url).status_code, 401)
+            self.assertEqual(self.client.get(url + '&pin=wrong').status_code, 401)
+            response = self.client.get(url + '&pin=1234')
+            self.assertEqual(response.status_code, 200)
+            response.close()
 
     def test_artwork_persists_and_can_be_reset(self):
         data = (Path(__file__).resolve().parents[2] / 'WebApp/public/game-systems/iconic/ngp/background.webp').read_bytes()

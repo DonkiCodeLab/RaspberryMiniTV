@@ -57,6 +57,7 @@ export function isTorrentHistory(job) {
 
 const strings = {
   es: {
+    artworkWarning: "El contenido está en la biblioteca, pero faltan algunos recursos de TMDB.",
     title: "Descargas torrent", searchTitle: "Buscar torrents", search: "Buscar torrents", searching: "Buscando torrents…",
     source: "Fuente", sourcesSearched: "Fuentes consultadas", sourcesUnavailable: "No han respondido estas fuentes; los resultados pueden estar incompletos:",
     seriesHint: "Busca capítulos o packs. Se importan los vídeos identificados por temporada y capítulo; los capítulos que ya tienes se conservan.",
@@ -78,6 +79,7 @@ const strings = {
     demo: "Las descargas están disponibles al conectar con la Raspberry.", pending: "Esperando datos de la Raspberry…", remaining: "restantes",
   },
   ca: {
+    artworkWarning: "El contingut és a la biblioteca, però falten alguns recursos de TMDB.",
     title: "Descàrregues torrent", searchTitle: "Cerca torrents", search: "Cerca torrents", searching: "Cercant torrents…",
     source: "Font", sourcesSearched: "Fonts consultades", sourcesUnavailable: "Aquestes fonts no han respost; els resultats poden ser incomplets:",
     seriesHint: "Cerca capítols o packs. S’importen els vídeos identificats per temporada i capítol; els capítols que ja tens es conserven.",
@@ -99,6 +101,7 @@ const strings = {
     demo: "Les descàrregues estan disponibles en connectar amb la Raspberry.", pending: "Esperant dades de la Raspberry…", remaining: "restants",
   },
   en: {
+    artworkWarning: "The content is in the library, but some TMDB resources are missing.",
     title: "Torrent downloads", searchTitle: "Search torrents", search: "Search torrents", searching: "Searching torrents…",
     source: "Source", sourcesSearched: "Sources searched", sourcesUnavailable: "These sources did not respond; results may be incomplete:",
     seriesHint: "Search for episodes or packs. Videos identified by season and episode are imported; episodes you already have are kept.",

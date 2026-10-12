@@ -62,7 +62,9 @@ un enlace duro en Movies (ambas carpetas deben estar en el mismo sistema de
 archivos), se guarda su ficha y **solo entonces** se preparan imágenes y recursos
 TMDB. La copia temporal se elimina sin duplicar espacio. Una película existente
 solo se sobrescribe tras confirmarlo. Los reinicios conservan descargas y pausas; los errores de
-TMDB se pueden reintentar sin descargar de nuevo el vídeo.
+TMDB posteriores a la importación se muestran como avisos en el historial y no
+mantienen la descarga en curso. Al actualizar, las descargas ya importadas que
+quedaron en error pasan automáticamente al historial, conservando el vídeo.
 
 El selector de torrents, el catálogo y el menú comparten los formatos de
 `video_formats.py`: además de MP4/M4V/MOV/MKV, aceptan AVI/DivX, WebM,

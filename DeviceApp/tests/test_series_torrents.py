@@ -167,7 +167,7 @@ class SeriesDownloadTests(unittest.TestCase):
         restarted.tick()
         self.assertEqual([ep["id"] for ep in self.series_import.call_args.args[1]], ["S01E02"])
 
-    def test_cancellation_and_tmdb_retry_use_series_callbacks(self):
+    def test_cancellation_and_tmdb_failure_preserve_imported_series(self):
         self.add()
         self.ready()
         self.manager.action(INFO_HASH, "cancel")
@@ -178,9 +178,9 @@ class SeriesDownloadTests(unittest.TestCase):
         self.series_artwork.return_value = {"state": "failed", "error": "TMDB failed"}
         self.manager.tick()
         self.manager.tick()
-        self.assertEqual(self.manager.jobs[INFO_HASH]["state"], "failed")
-        self.manager.action(INFO_HASH, "retry")
-        self.series_prepare.assert_called_once_with(123)
+        self.assertEqual(self.manager.jobs[INFO_HASH]["state"], "complete")
+        self.assertEqual(self.manager.jobs[INFO_HASH]["artworkWarning"], "TMDB failed")
+        self.series_import.assert_called_once()
         self.movie_prepare.assert_not_called()
 
     def test_two_episodes_of_series_and_movie_with_same_tmdb_id_can_coexist(self):

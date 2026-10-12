@@ -52,3 +52,5 @@
 .movie-torrents__sort .dialog-field { flex: 1 1 180px; min-width: 0; }
 .movie-torrents__sort select { width: 100%; padding: .8rem 1rem; border: 1px solid #ffffff29; border-radius: 16px; background: #23313b; color: #fff; font: inherit; color-scheme: dark; }
 .movie-torrents__sort select:focus-visible { outline: 2px solid #ffdc35; outline-offset: 2px; }
+
+.torrent-artwork-warning { color: #ffe775; overflow-wrap: anywhere; }

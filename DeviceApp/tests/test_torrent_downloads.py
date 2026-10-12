@@ -247,19 +247,49 @@ class TorrentTests(unittest.TestCase):
             self.add(infoHash="file:///etc/passwd")
         self.assertEqual(self.rpc.calls, [])
 
-    def test_failed_tmdb_retries_without_downloading_again(self):
+    def test_failed_tmdb_completes_with_warning_without_downloading_again(self):
         self.add()
         self.ready()
         self.manager.tick()
-        self.artwork.return_value = {"state": "failed", "error": "TMDB offline"}
+        self.artwork.return_value = {"state": "failed", "error": "TMDB HTTP 404"}
         self.manager.tick()
-        self.assertEqual(self.manager.snapshot()["jobs"][0]["state"], "failed")
-        self.manager.action(INFO_HASH, "retry")
-        self.prepare.assert_called_once_with(123)
-        self.artwork.return_value = {"state": "complete"}
-        self.manager.tick()
+        job = self.new_manager().snapshot()["jobs"][0]
+        self.assertEqual(job["state"], "complete")
+        self.assertEqual(job["error"], "")
+        self.assertEqual(job["artworkWarning"], "TMDB HTTP 404")
+        self.assertTrue(job["transferRemoved"])
         self.assertEqual(len([call for call in self.rpc.calls if call[0] == "torrent-add"]), 1)
         self.importer.assert_called_once()
+        self.manager.action(INFO_HASH, "remove")
+        self.assertEqual(self.manager.snapshot()["jobs"], [])
+
+    def test_legacy_imported_failure_recovers_on_tick_or_retry(self):
+        for recovery in ("tick", "retry"):
+            with self.subTest(recovery=recovery):
+                self.add()
+                self.manager._update(self.manager.jobs[INFO_HASH], state="failed",
+                                     item={"relativePath": "Movies/film.mkv"}, error="TMDB HTTP 404")
+                restarted = self.new_manager()
+                if recovery == "retry":
+                    restarted.action(INFO_HASH, "retry")
+                restarted.tick()
+                job = self.new_manager().jobs[INFO_HASH]
+                self.assertEqual(job["state"], "complete")
+                self.assertEqual(job["artworkWarning"], "TMDB HTTP 404")
+                self.assertTrue(job["transferRemoved"])
+                self.importer.assert_not_called()
+                self.prepare.assert_not_called()
+                self.manager = restarted
+
+    def test_artwork_exception_does_not_fail_imported_video(self):
+        self.add()
+        self.ready()
+        self.manager.tick()
+        self.artwork.side_effect = RuntimeError("TMDB unavailable")
+        self.manager.tick()
+        job = self.manager.jobs[INFO_HASH]
+        self.assertEqual(job["state"], "complete")
+        self.assertEqual(job["artworkWarning"], "TMDB unavailable")
 
     def test_video_selection_excludes_samples_archives_and_other_files(self):
         self.assertEqual(video_file([

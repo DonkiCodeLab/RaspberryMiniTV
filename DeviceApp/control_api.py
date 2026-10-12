@@ -966,7 +966,8 @@ def is_public_frontend_request():
 
 def is_authorized_request():
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
-    if request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content", "/games/metadata/image"} and not submitted_pin:
+    if (request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content", "/games/metadata/image"}
+            or request.endpoint == "browser_game_content") and not submitted_pin:
         submitted_pin = str(request.args.get("pin") or "").strip()
     if (request.path.startswith(("/tmdb/images/", "/tmdb/import/images/", "/oscars/images/")) or
             re.fullmatch(r"/awards/(palme|goya|oscars)/images/[^/]+", request.path)) and not submitted_pin:
@@ -3446,10 +3447,13 @@ def emulatorjs_asset(filename):
 
 
 @app.route("/games/content", methods=["GET"])
-def browser_game_content():
+@app.route("/games/content/<filename>", methods=["GET"])
+def browser_game_content(filename=None):
     relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
     game_path = resolve_game_path(relative_path)
     if not game_path or not os.path.isfile(game_path) or not is_game_rom_file(game_path):
+        return jsonify({"error": "Game not found"}), 404
+    if filename is not None and filename != os.path.basename(game_path):
         return jsonify({"error": "Game not found"}), 404
     return send_file(game_path, conditional=True, as_attachment=request.args.get("download") == "1")
 
@@ -3468,7 +3472,10 @@ def browser_game_player():
         return jsonify({"error": "EmulatorJS is not installed. Run npm install in WebApp."}), 503
 
     pin = str(request.args.get("pin") or "")
-    content_url = "/games/content?" + urllib.parse.urlencode({"relativePath": relative_path, "pin": pin})
+    # EmulatorJS derives the arcade romset name from the URL path, not gameName
+    # or Content-Disposition. FBNeo must receive e.g. mslug.zip, not "content".
+    filename = urllib.parse.quote(os.path.basename(game_path), safe="")
+    content_url = "/games/content/" + filename + "?" + urllib.parse.urlencode({"relativePath": relative_path, "pin": pin})
     config = {
         "name": os.path.splitext(os.path.basename(game_path))[0],
         "url": content_url,
