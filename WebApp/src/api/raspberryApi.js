@@ -1,3 +1,4 @@
+import { photoDemo, demoPhotoUrl } from "./photoDemo.js";
 import { requestWithTimeout } from '../requestWithTimeout.js';
 // Admin credentials stay in request headers; never place them in URLs or media links.
 export async function codexRequest(action, token = '', data = null, signal) {
@@ -21,6 +22,7 @@ import { aiRequestWithTimeout } from '../catalogAI.js';
 import { isImdbId, normalizeOmdbRating, omdbRequestWithTimeout, omdbSettingsPayload } from '../omdbRatings.js';
 import { normalizeOmdbLibrary } from '../omdbLibrary.js';
 import { GAME_SYSTEMS } from "../gameSystems";
+import { gameConsoleFrame } from "../gameConsoleFrames.js";
 import { uploadBookBatch } from "./bookUploadBatch.js";
 import { DEFAULT_USER, EMPTY_STATE, mergeProfileState } from "../profileState.js";
 const configuredBaseUrl = (import.meta.env.VITE_RASPBERRY_API_BASE_URL || "").trim();
@@ -1330,7 +1332,7 @@ export function getBrowserGameUrl(relativePath, systemId) {
     relativePath: String(relativePath || "").trim(),
     system: String(systemId || "").trim(),
   });
-  if (systemId === "gb") params.set("frame", "gameboy");
+  if (gameConsoleFrame(systemId)) params.set("frame", systemId === "megadrive" ? "console" : "gameboy");
   const storedPin = getStoredWebPin();
   if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
   return `${getBaseUrl()}/games/browser?${params.toString()}`;
@@ -1372,23 +1374,28 @@ export function getMediaStreamUrl(relativePath) {
   return `${getBaseUrl()}/media/stream?${params.toString()}`;
 }
 
-export function getPictureContentUrl(relativePath) {
+export function getPictureContentUrl(relativePath, render) {
+  if (isMockModeEnabled()) return demoPhotoUrl(relativePath);
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) return "";
   const params = new URLSearchParams({ relativePath: safeRelativePath });
+  if (render) params.set("render", render);
   const storedPin = getStoredWebPin();
   if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
   return `${getBaseUrl()}/pictures/content?${params.toString()}`;
 }
 
-export function uploadPictureFiles({ files, onProgress, signal } = {}) {
+export function uploadPictureFiles({ files, albumName, folderId, parent, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) return Promise.reject(new Error("Missing pictures"));
   if (isMockModeEnabled()) {
-    return Promise.resolve({ ok: true, mock: true, saved: safeFiles.map((file) => file.webkitRelativePath || file.name) });
+    return photoDemo("upload", { files: safeFiles, albumName, folderId, parent });
   }
   return new Promise((resolve, reject) => {
     const formData = new FormData();
+    if (albumName) formData.append("albumName", albumName);
+    if (parent) formData.append("parent", parent);
+    if (folderId) formData.append("folderId", folderId);
     safeFiles.forEach((file) => formData.append("files", file, file.webkitRelativePath || file.name));
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${getBaseUrl()}/pictures/upload`);
@@ -1412,6 +1419,14 @@ export function uploadPictureFiles({ files, onProgress, signal } = {}) {
     xhr.onabort = () => detachAbort();
     xhr.send(formData);
   });
+}
+
+export function photoRequest(action, data, signal) {
+  if (isMockModeEnabled()) return photoDemo(action, data);
+  return aiRequestWithTimeout(activeSignal => request(`/pictures/${action}`, {
+    method: data === undefined ? "GET" : "POST", cache: "no-store", signal: activeSignal,
+    ...(data === undefined ? {} : { body: JSON.stringify(data) }),
+  }), signal, 30000);
 }
 
 export function getBookContentUrl(relativePath, { render } = {}) {

@@ -1,3 +1,4 @@
+from photo_library import PhotoLibrary, PhotoError, create_photo_blueprint
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
 from omdb_ratings import OmdbSettings, OmdbRatings, OmdbError
@@ -169,6 +170,26 @@ SUBTITLE_SETTINGS_PATH = os.path.join(BASE_DIR, "subtitle_settings.json")
 GAME_SETTINGS_PATH = os.path.join(BASE_DIR, "game_settings.json")
 AI_SETTINGS_PATH = os.path.join(BASE_DIR, "ai_settings.json")
 ai_settings_store = AISettings(AI_SETTINGS_PATH)
+photo_library_store = None
+photo_library_init_lock = threading.Lock()
+
+
+def get_photo_library():
+    global photo_library_store
+    with photo_library_init_lock:
+        if photo_library_store is None or photo_library_store.root != Path(PICTURES_DIR).resolve():
+            photo_library_store = PhotoLibrary(PICTURES_DIR, ai_settings_store)
+        return photo_library_store
+
+
+app.register_blueprint(create_photo_blueprint(lambda: get_photo_library()))
+
+
+@app.errorhandler(PhotoError)
+def photo_error(error):
+    return jsonify({"error": str(error)}), error.status
+
+
 OMDB_SETTINGS_PATH = os.path.join(BASE_DIR, "omdb_settings.json")
 omdb_settings_store = OmdbSettings(OMDB_SETTINGS_PATH)
 ai_request_lock = threading.Lock()
@@ -2012,46 +2033,19 @@ def videos():
 
 @app.route("/pictures/upload", methods=["POST"])
 def upload_pictures():
-    ensure_media_directories()
-    uploaded_files = request.files.getlist("files")
-    if not uploaded_files:
-        return jsonify({"error": "Missing pictures"}), 400
-
-    saved = []
-    rejected = []
-    for uploaded in uploaded_files:
-        source_path = str(uploaded.filename or "").replace("\\", "/").strip("/")
-        path_parts = [part for part in source_path.split("/") if part not in {"", ".", ".."}]
-        if not path_parts or not is_picture_file(path_parts[-1]):
-            rejected.append(source_path or "unnamed")
-            continue
-        # Keep a selected folder's relative hierarchy, without trusting absolute/traversal paths.
-        relative_path = os.path.join(*path_parts)
-        target_path = os.path.abspath(os.path.join(PICTURES_DIR, relative_path))
-        pictures_root = os.path.abspath(PICTURES_DIR)
-        if os.path.commonpath([target_path, pictures_root]) != pictures_root:
-            rejected.append(source_path)
-            continue
-        os.makedirs(os.path.dirname(target_path), exist_ok=True)
-        uploaded.save(target_path)
-        saved.append(os.path.relpath(target_path, PICTURES_DIR).replace("\\", "/"))
-
-    if not saved:
-        return jsonify({"error": "No supported pictures", "supported": sorted(PICTURE_EXTENSIONS), "rejected": rejected}), 400
-    return jsonify({"ok": True, "saved": saved, "rejected": rejected, "pictures": list_picture_entries()})
+    return jsonify(get_photo_library().upload(request.files.getlist("files"),
+        request.form.get("albumName", ""), request.form.get("folderId", ""), request.form.get("parent", "uploads")))
 
 
 @app.route("/pictures/content", methods=["GET"])
 def picture_content():
-    relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
-    normalized_path = os.path.normpath(relative_path)
-    if not normalized_path or normalized_path.startswith("..") or os.path.isabs(normalized_path):
-        return jsonify({"error": "Invalid picture path"}), 400
-    target_path = os.path.abspath(os.path.join(PICTURES_DIR, normalized_path))
-    pictures_root = os.path.abspath(PICTURES_DIR)
-    if os.path.commonpath([target_path, pictures_root]) != pictures_root or not os.path.isfile(target_path) or not is_picture_file(target_path):
-        return jsonify({"error": "Picture not found"}), 404
-    return send_file(target_path, conditional=True)
+    store = get_photo_library()
+    relative = request.args.get("relativePath", "")
+    render = request.args.get("render")
+    path = store.preview(relative, full=render == "preview") if render in ("thumb", "preview") else store.safe_file(relative)
+    response = send_file(path, conditional=True)
+    response.headers["Cache-Control"] = "private, max-age=3600"
+    return response
 
 
 @app.route("/game-covers/<path:filename>", methods=["GET"])
@@ -3479,7 +3473,8 @@ def browser_game_player():
         "name": os.path.splitext(os.path.basename(game_path))[0],
         "url": content_url,
         "core": core,
-        "gameboyFrame": system_id == "gb" and request.args.get("frame") == "gameboy",
+        "system": system_id,
+        "gameboyFrame": system_id in {"gb", "gbc", "gba", "megadrive"} and request.args.get("frame") in {"gameboy", "console"},
     }
     page = render_template("browser_game.html", config=config, title=os.path.basename(game_path))
     return Response(page, mimetype="text/html", headers={"Cache-Control": "no-store"})

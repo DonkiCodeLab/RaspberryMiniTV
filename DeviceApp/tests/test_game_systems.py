@@ -76,10 +76,12 @@ class GameSystemsTest(unittest.TestCase):
             with self.assertLogs('game_platforms', level='ERROR'):
                 self.assertEqual(stored_platform('playstation.chd', self.temp.name), {})
 
-    def test_browser_frame_is_opt_in_and_only_for_original_gameboy(self):
+    def test_browser_frame_is_opt_in_and_only_for_supported_consoles(self):
         rom = Path(api.GAMES_DIR) / 'A & B.gb'
         rom.write_bytes(b'test fixture')
-        for system, frame, expected in [('gb', 'gameboy', True), ('gb', '', False), ('gbc', 'gameboy', False), ('gba', 'gameboy', False)]:
+        for system, frame, expected in [('gb', 'gameboy', True), ('gb', '', False), ('gbc', 'gameboy', True),
+                                         ('gba', 'gameboy', True), ('gbc', '', False), ('gba', '', False), ('nes', 'gameboy', False),
+                                         ('megadrive', 'console', True), ('megadrive', '', False), ('nes', 'console', False)]:
             with self.subTest(system=system, frame=frame):
                 response = self.client.get('/games/browser', query_string={
                     'relativePath': 'Games/A & B.gb', 'system': system, 'frame': frame,
@@ -89,7 +91,11 @@ class GameSystemsTest(unittest.TestCase):
                 config = json.loads(re.search(r'const game = (.*);', page)[1])
                 self.assertEqual(config['gameboyFrame'], expected)
                 self.assertEqual('minitv-gameboy' in page, expected)
-                self.assertEqual(config['core'], 'gba' if system == 'gba' else 'gb')
+                self.assertEqual(config['core'], api.WEB_EMULATOR_CORES[system])
+                self.assertEqual(config['system'], system)
+                self.assertEqual('id="gameboy-lcd"' in page, expected and system == 'gb')
+                body = re.search(r'<body([^>]*)>', page)[1]
+                self.assertEqual('gameboy-original' in body, expected and system == 'gb')
                 self.assertIn('<title>A &amp; B.gb</title>', page)
                 self.assertEqual(response.headers['Cache-Control'], 'no-store')
 

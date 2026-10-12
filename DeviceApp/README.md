@@ -1008,3 +1008,41 @@ La pestaña **Dashboard → Codex** permite enviar prompts y ver respuestas, com
 cambios e historial desde la web. Requiere instalar Codex en la Raspberry y
 vincular tu cuenta desde el propio panel. Trabaja con un usuario sin privilegios
 y una copia de desarrollo independiente. [Instalación y uso](CODEX.md).
+
+## Biblioteca de fotos
+
+`photo_library.py` conserva los álbumes en
+`MultimediaContent/photo_library.sqlite3`, los originales y variantes en
+`MultimediaContent/Pictures` y las miniaturas en `MultimediaContent/PhotoCache`.
+Incluye esos tres elementos en la copia de seguridad. Las fotos existentes se
+indexan en segundo plano al abrir Fotos, conservando sus rutas y carpetas bajo
+Uploads. La fecha de subida de fotos anteriores se aproxima con la fecha de
+modificación; la fecha de captura siempre procede del EXIF. Los álbumes son
+lógicos: mover fotos no renombra los ficheros ni pierde las marcas por perfil.
+No muevas archivos manualmente después de indexarlos.
+
+Pillow permite validar las imágenes, leer EXIF y preparar vistas JPEG orientadas
+para el navegador. `pillow-heif` añade HEIC/HEIF. **Personas** requiere además
+`face-recognition` y sus modelos dlib. Instala en la Raspberry:
+
+```bash
+sudo bash DeviceApp/install_photo_support.sh --faces
+```
+
+Omite `--faces` si solo quieres añadir soporte HEIC. El instalador crea un entorno
+Python en `/opt/minitv-photo-python`, conserva los paquetes del sistema y añade
+un override a `minitv-api.service` para usarlo. Reinicia solo la API después de
+comprobar los imports. Compilar dlib puede tardar y necesitar memoria adicional
+en Raspberry antiguas. El reconocimiento usa CPU, imágenes reducidas a 1000 px,
+un solo trabajador y una tolerancia conservadora de 0,48. Puede separar a una
+persona en varios grupos o asociar caras parecidas; las coincidencias se pueden
+revisar y quitar desde la web. No identifica personas por un nombre externo.
+
+En otros entornos instala `requirements-photos.txt` o
+`requirements-photo-faces.txt` con el mismo Python que ejecuta la API. Las rutas
+`/pictures/library`, `/pictures/upload`, `/pictures/folders`, `/pictures/move`,
+`/pictures/generate` y `/pictures/people/...` usan el PIN de la aplicación. Las
+previsualizaciones en `/pictures/content?render=thumb|preview` también requieren
+PIN. Las claves de OpenAI y los vectores faciales nunca aparecen en el catálogo.
+La IA usa la configuración existente del Dashboard; consultar carpetas, mover
+fotos o analizar caras no hace llamadas a OpenAI.

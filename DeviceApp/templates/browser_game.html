@@ -7,15 +7,17 @@
   <style>
     html, body, #game { width: 100%; height: 100%; margin: 0; background: #050505; overflow: hidden; }
     #game { position: absolute; inset: 0; }
-    .gameboy-framed, .gameboy-framed #game { background: #778b19; }
+    .gameboy-framed, .gameboy-framed #game { background: #17232b; }
+    .gameboy-framed.gameboy-original, .gameboy-framed.gameboy-original #game { background: #778b19; }
     .gameboy-framed .ejs_menu_bar,
     .gameboy-framed .ejs_menu_bar_spacer,
     .gameboy-framed .ejs_virtualGamepad_parent { display: none !important; }
-    .gameboy-framed .ejs_canvas { image-rendering: pixelated; filter: url(#gameboy-lcd); }
+    .gameboy-framed .ejs_canvas { image-rendering: pixelated; }
+    .gameboy-framed.gameboy-original .ejs_canvas { filter: url(#gameboy-lcd); }
   </style>
 </head>
-<body{% if config.gameboyFrame %} class="gameboy-framed"{% endif %}>
-  {% if config.gameboyFrame %}
+<body{% if config.gameboyFrame %} class="gameboy-framed{% if config.system == 'gb' %} gameboy-original{% endif %}"{% endif %}>
+  {% if config.gameboyFrame and config.system == 'gb' %}
   <svg width="0" height="0" aria-hidden="true" style="position:absolute">
     <filter id="gameboy-lcd" color-interpolation-filters="sRGB">
       <feColorMatrix type="matrix" values=".1167 .3927 .0396 0 .0588 .1100 .3702 .0374 0 .2196 0 0 0 0 .0588 0 0 0 1 0" />

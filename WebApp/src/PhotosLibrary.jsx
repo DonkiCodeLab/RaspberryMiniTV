@@ -1,0 +1,266 @@
+import React, { lazy, Suspense, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { getPictureContentUrl, photoRequest, uploadPictureFiles } from './api/raspberryApi.js';
+import { descendantIds, folderTrail, hasLocation, pendingVariants, PHOTO_ACCEPT, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
+import { photoStrings } from './photoStrings.js';
+import './PhotosLibrary.css';
+const PhotoMap = lazy(() => import('./PhotoMap.jsx'));
+const blank = { folders: [], photos: [], people: [], jobs: [], faces: {} };
+
+function Icon({ type }) {
+  const shapes = {
+    uploads: <><path d="M12 30V14h14l5 5h21v27H12z" /><path d="M32 39V25m-6 6 6-6 6 6" /></>,
+    map: <><circle cx="32" cy="32" r="22" /><ellipse cx="32" cy="32" rx="10" ry="22" /><path d="M10 32h44M14 20h36M14 44h36" /></>,
+    ai: <><path d="m29 10 6 16 16 6-16 6-6 16-6-16-16-6 16-6zM49 7v12M43 13h12" /></>,
+    people: <><circle cx="25" cy="23" r="9" /><path d="M8 51v-6c0-14 34-14 34 0v6M43 15a9 9 0 0 1 0 18m4 5c7 1 9 5 9 13" /></>,
+    folder: <><path d="M9 22V14h17l7 8h22v29H9z" /><path d="M9 26h46" /></>,
+  };
+  return <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shapes[type] || shapes.folder}</svg>;
+}
+
+function dateLabel(value, language, fallback) {
+  if (!value) return fallback;
+  const date = new Date(typeof value === 'number' ? value * 1000 : /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) + 'T12:00:00' : value);
+  return Number.isNaN(date.getTime()) ? fallback : date.toLocaleDateString(language === 'ca' ? 'ca-ES' : language === 'en' ? 'en-GB' : 'es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function PhotoMeta({ photo, s, language }) {
+  return <div className="photo-meta"><span title={s.taken}>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
+    <span>⌖ {hasLocation(photo) ? `${photo.latitude.toFixed(4)}°, ${photo.longitude.toFixed(4)}°` : s.noGps}</span></div>;
+}
+function PhotoImage({ photo, render = 'thumb', ...props }) {
+  const [error, setError] = useState(false);
+  return error ? <span className="photo-image-error" role="img" aria-label={photo.name}>▧ {photo.name}</span> :
+    <img {...props} src={getPictureContentUrl(photo.relativePath, render)} alt={photo.name} onError={() => setError(true)} />;
+}
+
+function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyDown }) {
+  const ref = useRef(null), titleId = useId();
+  useEffect(() => {
+    const dialog = ref.current, previous = document.activeElement;
+    dialog.showModal();
+    const overflow = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    return () => { dialog.close(); document.body.style.overflow = overflow; previous?.focus?.(); };
+  }, []);
+  return createPortal(<dialog ref={ref} className={`photo-dialog${wide ? ' photo-dialog--wide' : ''}`} aria-labelledby={titleId}
+    onCancel={event => { event.preventDefault(); if (!busy) onClose(); }} onKeyDown={onKeyDown}
+    onClick={event => { if (event.target === event.currentTarget && !busy) onClose(); }}>
+    <div className="photo-dialog__body"><header><h2 id={titleId}>{title}</h2><button type="button" className="photo-close" onClick={onClose} disabled={busy} aria-label={s.close}>×</button></header>{children}</div>
+  </dialog>, document.body);
+}
+
+function AlbumCard({ folder, photos, s, language, onOpen, special }) {
+  const [active, setActive] = useState(false), [step, setStep] = useState(0);
+  const covers = photos.slice(0, 8);
+  useEffect(() => {
+    setStep(0);
+    if (!active || covers.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = setInterval(() => setStep(value => value + 1), 2500);
+    return () => clearInterval(timer);
+  }, [active, covers.length]);
+  const cover = covers.length ? covers[step % covers.length] : null;
+  const latest = photos.reduce((value, photo) => Math.max(value, photo.uploadedAt || 0), 0);
+  return <article className={`movie-library__card photo-album photo-album--${special || 'folder'}`}
+    onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(true); }} onPointerLeave={() => setActive(false)}
+    onFocusCapture={() => setActive(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }}>
+    <button className="movie-library__poster photo-album__cover" type="button" aria-label={`${s.open}: ${folder.name}`} onClick={onOpen}>
+      {cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
+      <span className="photo-album__badge"><Icon type={special || 'folder'} /></span>
+    </button>
+    <div className="movie-library__info"><h2>{folder.name}</h2><div className="movie-library__meta"><span>{photos.length} {s.photos}</span></div>
+      <small className="photo-album__date">{s.uploaded} · {dateLabel(latest || folder.created, language, '—')}</small>
+      <div className="movie-library__actions movie-library__actions--single"><button type="button" onClick={onOpen}>{s.open} <span aria-hidden="true">↗</span></button></div>
+    </div>
+  </article>;
+}
+
+function UploadDialog({ initialFiles = [], folderId, parent, s, onClose, onComplete }) {
+  const [files, setFiles] = useState(initialFiles), [name, setName] = useState(initialFiles[0]?.webkitRelativePath?.split('/').slice(0, -1)[0] || '');
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [progress, setProgress] = useState(0);
+  const working = useRef(false);
+  const pick = items => {
+    const selected = [...items].filter(file => !file.name.startsWith('.'));
+    setFiles(selected); setError('');
+    if (!name) setName(selected[0]?.webkitRelativePath?.split('/').slice(0, -1)[0] || '');
+  };
+  async function submit(event) {
+    event.preventDefault(); if (working.current) return;
+    working.current = true; setBusy(true); setError('');
+    try {
+      if (!files.length || files.length > 500) throw new Error(s.uploadLimit);
+      if (files.some(file => file.size > 50 * 1024 * 1024 || !PHOTO_ACCEPT.split(',').some(ext => file.name.toLowerCase().endsWith(ext)))) throw new Error(s.uploadLimit);
+      const result = await uploadPictureFiles({ files, albumName: name, folderId, parent,
+        onProgress: value => setProgress(value.percent) });
+      onComplete(result);
+    } catch (error) { setError(error.message); }
+    finally { working.current = false; setBusy(false); }
+  }
+  return <Modal title={s.upload} s={s} onClose={onClose} busy={busy}><form onSubmit={submit}>
+    <p>{folderId ? s.uploadHere : parent === 'ai' ? s.aiUploadHint : s.uploadHint}</p>
+    {!folderId && <label>{s.name}<input autoFocus required maxLength={100} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></label>}
+    <div className="photo-file-choices"><label className="dialog-button">＋ {s.chooseFiles}<input type="file" multiple accept={PHOTO_ACCEPT} onChange={event => pick(event.target.files)} disabled={busy} /></label>
+      <label className="dialog-button">▱ {s.chooseFolder}<input type="file" multiple webkitdirectory="" directory="" onChange={event => pick(event.target.files)} disabled={busy} /></label></div>
+    <small>{s.uploadLimit}</small>
+    <div className="photo-upload-summary"><strong>{files.length} {s.photos}</strong><span>{(files.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(1)} MB</span></div>
+    {files.length > 0 && <p className="photo-file-list">{files.slice(0, 4).map(file => file.name).join(' · ')}{files.length > 4 ? ' …' : ''}</p>}
+    {busy && <div role="status"><progress max={100} value={progress} /><p>{s.uploading} {progress}%</p></div>}
+    {error && <p className="dialog-error" role="alert">{error}</p>}
+    <footer><button type="button" className="dialog-button dialog-button--secondary" onClick={onClose} disabled={busy}>{s.cancel}</button>
+      <button className="dialog-button dialog-button--accent" disabled={busy || !files.length || (!folderId && !name.trim())}>{s.upload}</button></footer>
+  </form></Modal>;
+}
+
+function FolderDialog({ mode, folders, current, selected, person, s, onClose, onComplete }) {
+  const [name, setName] = useState(person?.name || ''), [target, setTarget] = useState(''), [parent, setParent] = useState(current || '');
+  const [isNew, setIsNew] = useState(mode === 'create'), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const working = useRef(false);
+  const title = mode === 'rename' ? s.rename : mode === 'move' ? s.moveTitle : s.create;
+  const options = folders.filter(folder => !['uploads', 'ai'].includes(folder.id));
+  const path = id => folderTrail(folders, id).map(folder => s[folder.id] || folder.name).join(' / ');
+  async function submit(event) {
+    event.preventDefault(); if (working.current) return;
+    working.current = true; setBusy(true); setError('');
+    try {
+      const result = mode === 'rename' ? await photoRequest(`people/${person.id}`, { name }) : mode === 'create' ?
+        await photoRequest('folders', { name, parent }) : await photoRequest('move', { ids: [...selected], ...(isNew ? { name, parent } : { folderId: target }) });
+      onComplete(result);
+    } catch (error) { setError(error.message); }
+    finally { working.current = false; setBusy(false); }
+  }
+  return <Modal title={title} s={s} onClose={onClose} busy={busy}><form onSubmit={submit}>
+    {mode === 'move' && <><p>{selected.size} {s.photos}</p><div className="photo-segments"><button type="button" aria-pressed={!isNew} onClick={() => setIsNew(false)}>{s.existing}</button><button type="button" aria-pressed={isNew} onClick={() => setIsNew(true)}>{s.newFolder}</button></div></>}
+    {mode === 'rename' || isNew ? <label>{mode === 'rename' ? s.personName : s.name}<input autoFocus required maxLength={100} value={name} onChange={event => setName(event.target.value)} /></label> :
+      <label>{s.destination}<select value={target} required onChange={event => setTarget(event.target.value)}><option value="">—</option>{options.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
+    {isNew && <label>{s.parent}<select value={parent} onChange={event => setParent(event.target.value)}><option value="">{s.root} /</option>{folders.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
+    {error && <p className="dialog-error" role="alert">{error}</p>}
+    <footer><button type="button" className="dialog-button dialog-button--secondary" onClick={onClose} disabled={busy}>{s.cancel}</button><button className="dialog-button dialog-button--accent" disabled={busy}>{mode === 'move' ? s.move : s.save}</button></footer>
+  </form></Modal>;
+}
+
+function Viewer({ photos, initial, onClose, onViewed, s, language }) {
+  const [index, setIndex] = useState(initial);
+  const photo = photos[index];
+  const change = direction => setIndex(value => (value + direction + photos.length) % photos.length);
+  return <Modal title={photo?.name || s.root} s={s} onClose={onClose} wide onKeyDown={event => {
+    if (event.key === 'ArrowRight') { event.preventDefault(); change(1); }
+    if (event.key === 'ArrowLeft') { event.preventDefault(); change(-1); }
+  }}>
+    <div className="photo-viewer"><button type="button" aria-label={s.previous} onClick={() => change(-1)} disabled={photos.length < 2}>‹</button>
+      <PhotoImage key={photo.id} photo={photo} render="preview" onLoad={() => onViewed?.(photo)} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
+    <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span></div>
+  </Modal>;
+}
+
+export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, initialFiles, onImportDone, matchesPicture }) {
+  const s = photoStrings(language);
+  const [data, setData] = useState(blank), [current, setCurrent] = useState(''), [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
+  const [dialog, setDialog] = useState(null), [viewer, setViewer] = useState(null), [zone, setZone] = useState(null), [busy, setBusy] = useState(false);
+  const requestRef = useRef(0), refreshing = useRef(false), mounted = useRef(true);
+  const [attempt, setAttempt] = useState(0);
+  async function refresh(signal) {
+    const generation = ++requestRef.current;
+    refreshing.current = true;
+    try {
+      const result = await photoRequest('library', undefined, signal);
+      if (!mounted.current || signal?.aborted || generation !== requestRef.current) return;
+      setData(result); setError('');
+    } catch (error) { if (mounted.current && !signal?.aborted && generation === requestRef.current) setError(error.message); }
+    finally { if (generation === requestRef.current) { refreshing.current = false; if (mounted.current && !signal?.aborted) setLoading(false); } }
+  }
+  useEffect(() => {
+    mounted.current = true; const controller = new AbortController();
+    refresh(controller.signal);
+    const timer = setInterval(() => { if (!document.hidden && !refreshing.current) refresh(controller.signal); }, 4000);
+    return () => { mounted.current = false; controller.abort(); clearInterval(timer); };
+  }, [attempt]);
+  useEffect(() => { if (initialFiles?.length) setDialog({ mode: 'upload', files: initialFiles, parent: 'uploads' }); }, [initialFiles]);
+  const person = current.startsWith('person:') ? data.people.find(p => p.id === current.slice(7)) : null;
+  const trail = person ? [{ id: 'people', name: s.people }, { id: current, name: person.name }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
+  const title = person?.name || s[current] || data.folders.find(f => f.id === current)?.name || s.root;
+  const query = search.trim().toLocaleLowerCase();
+  const visible = photo => (!query || photo.name.toLocaleLowerCase().includes(query)) && (!matchesPicture || matchesPicture(photo));
+  const inFolder = id => { const ids = descendantIds(data.folders, id); return data.photos.filter(p => ids.has(p.folderId)); };
+  const mapPhotos = data.photos.filter(p => !p.sourceId && visible(p));
+  const currentPhotos = (person ? data.photos.filter(p => person.photoIds.includes(p.id)) : current === 'map' ? (zone ? mapPhotos.filter(p => zone.includes(p.id)) : []) : data.photos.filter(p => p.folderId === current)).filter(visible);
+  const folders = current === 'people' ? data.people.map(p => ({ ...p, id: `person:${p.id}` })) : data.folders.filter(f => f.parent === current);
+  const displayedFolders = folders.filter(f => !query || (s[f.id] || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
+  const isAi = current !== 'ai' && trail.some(f => f.id === 'ai');
+  const canWrite = !person && !['map', 'people'].includes(current);
+  const albumPhotos = data.photos.filter(p => p.folderId === current);
+  const pending = pendingVariants(data.photos.filter(p => p.folderId === current || (p.sourceId && albumPhotos.some(original => original.id === p.sourceId))));
+  const job = data.jobs.find(j => j.folder === current);
+  const navigate = id => { setCurrent(id); setSearch(''); setSelected(new Set()); setActionMode(false); setZone(null); setNotice(''); };
+  const closeDialog = () => { setDialog(null); onImportDone?.(); };
+  async function complete(result) {
+    const mode = dialog?.mode; closeDialog();
+    await refresh();
+    setSelected(new Set());
+    if (result.folderId || (mode === 'create' && result.id)) navigate(result.folderId || result.id);
+    setNotice(mode === 'upload' ? s.imported : mode === 'move' ? s.moved : mode === 'create' ? s.albumCreated : s.saved);
+  }
+  async function act(action, payload) {
+    if (busy) return;
+    setBusy(true); setError('');
+    try { await photoRequest(action, payload); await refresh(); return true; }
+    catch (error) { setError(error.message); return false; }
+    finally { setBusy(false); }
+  }
+  function toggle(id) { setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }
+  function album(folder, special) {
+    const photos = special === 'map' ? mapPhotos.filter(hasLocation) : special === 'people' ? data.photos.filter(p => data.people.some(person => person.photoIds.includes(p.id))) :
+      folder.id.startsWith('person:') ? data.photos.filter(p => data.people.find(person => `person:${person.id}` === folder.id)?.photoIds.includes(p.id)) : inFolder(folder.id);
+    return <AlbumCard key={folder.id} folder={{ ...folder, name: s[folder.id] || folder.name }} photos={photos.filter(visible)} special={special}
+      s={s} language={language} onOpen={() => navigate(folder.id)} />;
+  }
+  return <section className="pictures-library seasons-section photo-library" aria-label={s.root}>
+    <div className="seasons-section__label">{data.photos.length} {s.photos}</div>
+    <nav className="photo-breadcrumbs" aria-label={s.folders}><button type="button" onClick={() => navigate('')}>{s.root}</button>{trail.map(folder => <React.Fragment key={folder.id}><span>/</span><button type="button" aria-current={folder.id === current ? 'page' : undefined} onClick={() => navigate(folder.id)}>{s[folder.id] || folder.name}</button></React.Fragment>)}</nav>
+    <header className="photo-library__header"><div><h1>{title}</h1><p>{current ? `${currentPhotos.length} ${s.photos} · ${folders.length} ${s.albums}` : s.intro}</p></div>
+      <div className="photo-toolbar">{canWrite && <><button className="dialog-button" type="button" onClick={() => setDialog({ mode: 'create' })}>＋ {s.newFolder}</button>
+        <button className="dialog-button dialog-button--accent" type="button" onClick={() => setDialog({ mode: 'upload', folderId: current && !SPECIAL_FOLDERS.includes(current) ? current : '', parent: current === 'ai' ? 'ai' : 'uploads' })}>↑ {s.upload}</button></>}
+        {person && <button className="dialog-button" type="button" onClick={() => setDialog({ mode: 'rename' })}>{s.rename}</button>}
+        <button className="photo-refresh" type="button" title={s.refresh} aria-label={s.refresh} onClick={() => { setAttempt(n => n + 1); }}>↻</button>
+      </div></header>
+    {data.demo && <p className="photo-note">{s.demo}</p>}
+    {data.scanning && <p role="status">{s.indexing}</p>}{data.scanError && <p role="status">{data.scanError}</p>}
+    {error && <div className="photo-alert" role="alert">{error} <button type="button" onClick={() => setAttempt(n => n + 1)}>{s.retry}</button></div>}
+    {notice && <p role="status">{notice}</p>}
+    {current === 'people' && <div className="photo-note"><p>{s.peopleHint}</p><p>{s.peopleLocal}</p>
+      {!data.faces.available ? <p>{s.peopleSetup}</p> : <><button className="dialog-button" type="button" disabled={busy || data.faces.running} onClick={() => act('people/scan', {})}>{data.faces.running ? s.scanningFaces : s.scan}</button> <small>{data.faces.pending || 0} {s.photos}</small></>}
+      {data.faces.error && <p role="status">{data.faces.error}</p>}
+    </div>}
+    {(current === 'ai' || isAi) && <div className="photo-ai-banner"><Icon type="ai" /><div><p>{s.aiHint}</p>
+      {isAi && <><small>{albumPhotos.filter(p => !p.sourceId).length} {s.originals} · {pending} {s.pending}</small><p>{s.aiSend}</p>
+        {!data.aiReady && <p>{s.aiSetup}</p>}
+        <button className="dialog-button dialog-button--accent" type="button" disabled={busy || !data.aiReady || !pending || data.jobs.some(j => j.state === 'running')}
+          onClick={() => act('generate', { folderId: current })}>{job?.state === 'running' ? s.generating : job ? s.retryGeneration : s.generate}</button>
+        {job && <div className="photo-job" role="status"><progress max={job.total} value={job.done} /><span>{job.done} / {job.total} · {job.state === 'complete' ? s.complete : job.state === 'running' ? s.running : job.error}</span></div>}
+      </>}
+    </div></div>}
+    <div className="photo-browse-tools"><input type="search" aria-label={s.search} placeholder={s.search} value={search} onChange={event => { setSearch(event.target.value); setSelected(new Set()); }} />
+      {currentPhotos.length > 0 && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}</div>
+    {loading && <p role="status">{s.loading}</p>}
+    {!current && <div className="movie-library__items--grid photo-folder-grid">{SPECIAL_FOLDERS.map(id => album({ id, name: s[id], created: null }, id))}</div>}
+    {displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)).length > 0 && <div className="movie-library__items--grid photo-folder-grid">{displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)).map(folder => album(folder))}</div>}
+    {current === 'map' && !zone && <Suspense fallback={<p>{s.loading}</p>}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
+    {zone && <div className="photo-zone"><h2>{s.zone} · {currentPhotos.length}</h2><button type="button" className="dialog-button" onClick={() => { setZone(null); setSelected(new Set()); setActionMode(false); }}>{s.allPlaces}</button></div>}
+    {actionMode && <div className="photo-selection"><strong>{selected.size} {s.selected}</strong>
+      <button type="button" onClick={() => setSelected(new Set(currentPhotos.map(p => p.id)))}>{s.selectAll}</button><button type="button" onClick={() => setSelected(new Set())}>{s.clear}</button>
+      <button type="button" className="dialog-button dialog-button--accent" disabled={!selected.size} onClick={() => setDialog({ mode: 'move' })}>{s.move} →</button>
+      {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
+    </div>}
+    {currentPhotos.length > 0 && <div className="photo-mosaic">{currentPhotos.map((photo, index) => <article key={photo.id} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
+      <button type="button" className="photo-tile__image" aria-label={`${actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={actionMode ? selected.has(photo.id) : undefined}
+        onClick={() => actionMode ? toggle(photo.id) : setViewer({ photos: currentPhotos, initial: index })}>
+        <PhotoImage photo={photo} loading="lazy" />{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
+        {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
+      </button><div className="photo-tile__info"><strong title={photo.name}>{photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
+      {renderMarks?.('picture', photo.relativePath)}
+    </article>)}</div>}
+    {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{s.emptyHint}</p></div>}
+    {dialog?.mode === 'upload' && <UploadDialog key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
+    {dialog && dialog.mode !== 'upload' && <FolderDialog mode={dialog.mode} folders={data.folders} current={canWrite ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
+    {viewer && <Viewer {...viewer} s={s} language={language} onViewed={onViewed} onClose={() => setViewer(null)} />}
+  </section>;
+}

@@ -1,11 +1,37 @@
 # WebApp
 
-Al pulsar **Jugar desde el navegador** en un juego de Game Boy, la partida aparece
-dentro de la pantalla de la fotografía de la consola del header. La cruceta,
+Al pulsar **Jugar desde el navegador** en un juego de Game Boy, Game Boy Color o
+Game Boy Advance, la partida aparece dentro de la pantalla de su consola del header.
+Color y Advance conservan los colores del juego; el tono verde es exclusivo de la
+Game Boy original. La cruceta,
 A/B y Start/Select de la imagen son pulsadores; también funcionan las flechas,
-Z (A), X (B), Enter (Start) y V (Select). **Ampliar pantalla** permite acceder al
+Z (A), X (B), Enter (Start) y V (Select). Advance añade L/R sobre sus gatillos y
+las teclas Q/E. **Ampliar pantalla** permite acceder al
 menú del emulador y volver a la consola sin reiniciar la partida. Requiere actualizar
 WebApp y DeviceApp juntos. Las demás plataformas conservan su reproductor habitual.
+
+Los botones se sombrean mientras están pulsados, también al jugar con el teclado.
+El puente del emulador comunica las pulsaciones simultáneas y suelta la indicación
+al perder el foco o cambiar de vista. Cada control expone `data-console-button`
+(`up`, `down`, `left`, `right`, `a`, `b`, `start`, `select`, `l`, `r`),
+`data-pressed="true|false"` y la clase `is-pressed` para conectar otros diseños.
+Para futuras carcasas SVG, conservar cada botón en un grupo independiente con
+esos nombres, la pantalla en un grupo `screen` y un `viewBox` fijo por consola.
+Insertar el SVG en el documento permite animar sus piezas con el mismo estado;
+una imagen SVG cargada mediante `<img>` no permite seleccionar sus grupos desde
+el componente. Los diseños actuales siguen utilizando las fotografías.
+
+Mega Drive usa una tele morada de tubo dibujada en SVG, como guiño a Los Simpson,
+y debajo la fotografía del mando de seis botones que ya utiliza el catálogo.
+La pantalla mantiene 4:3. Los recortes de los botones de esa misma fotografía se
+hunden y oscurecen al pulsarlos, también desde el teclado: flechas, Z/X/C para
+A/B/C, A/S/D para X/Y/Z, Enter para Start y V para Mode. Ampliar y volver a la
+tele conserva la sesión. X/Y/Z dependen de que el juego admita el mando de seis
+botones; Genesis Plus GX mantiene su detección automática del mando.
+El SVG original está en `src/RetroTelevision.jsx`; la referencia visual de la
+tele es [esta imagen de Los Simpson](https://www.vhv.rs/viewpic/hbbooJm_la-tv-de-los-simpsons-hd-png-download/).
+No se incorpora la imagen de esa web. El mando conserva la procedencia del
+[catálogo Iconic](public/game-systems/iconic/README.md).
 
 ## Puntuaciones de IMDb, Rotten Tomatoes y Metacritic con OMDb
 
@@ -372,3 +398,57 @@ servidor protegen también las ediciones y borrados simultáneos.
 mensajes en directo, historial, aprobaciones y cancelación. El panel tiene una
 clave de administrador separada del PIN familiar, respeta el idioma de la web
 y permanece inactivo en modo demo. [Preparar la Raspberry](../DeviceApp/CODEX.md).
+
+## Fotos: Uploads, Mapa, IA y Personas
+
+La raíz de **Fotos** tiene cuatro fichas fijas y admite carpetas propias. Las
+fichas usan el tamaño de películas/juegos y recorren hasta ocho fotos al pasar
+el ratón o recibir el foco. Muestran el número de fotos (incluidas las subcarpetas)
+y la última fecha de subida. **Subir fotos** permite seleccionar archivos o una
+carpeta, revisar la selección y elegir su nombre antes de guardarla en Uploads.
+Desde un álbum se añaden directamente a él; desde IA se crea un álbum de IA.
+La selección admite 500 imágenes por lote y 50 MB por archivo.
+
+Cada álbum muestra un mosaico con fecha EXIF y coordenadas GPS. Los datos ausentes
+se indican expresamente. Al abrir una foto, el visor admite cerrar con Escape,
+retroceder y avanzar con las flechas. **Modo de acción** permite seleccionar
+varias fotos y moverlas a una carpeta existente o crear una carpeta en la raíz
+o dentro de otra. La organización se guarda en SQLite; el archivo físico y su
+ruta permanecen estables para conservar favoritos y vistos de cada usuario.
+
+**Mapa** utiliza OpenStreetMap y agrupa las fotos originales según la escala.
+Cada pin contiene una miniatura y un contador; al pulsarlo aparece el mosaico de
+esa zona. Acercar el mapa separa las agrupaciones. Las fotos sin GPS se cuentan
+aparte, y las variantes generadas no duplican puntos del mapa. El fondo requiere
+Internet; las fotografías se sirven desde la Raspberry.
+
+**Diviértete con la IA** contiene álbumes de originales. **Generar variantes**
+solicita cuatro ediciones por original: LEGO, gomaespuma, Minecraft y Studio
+Ghibli. Se envían a OpenAI únicamente al pulsar Generar, usando la clave del
+Dashboard y la [API de edición de imágenes](https://developers.openai.com/api/reference/resources/images/methods/edit).
+Requiere OpenAI activado, una cuenta con acceso al modelo y cuota de API. El
+modelo predeterminado es `gpt-image-2`; el servidor permite configurar
+`MINITV_PHOTO_IMAGE_MODEL`. La generación continúa al cerrar la pestaña. Las
+variantes completadas se conservan y no vuelven a generarse al reintentar; una
+interrupción del servicio requiere pulsar Generar pendientes. Una petición
+interrumpida puede haber consumido cuota del proveedor aunque no se recibiera
+su respuesta; no se reintenta automáticamente. El progreso y los errores se
+muestran en el álbum. Las variantes nunca se convierten en nuevas entradas de
+generación. Se respeta el límite de consultas configurado entre imágenes.
+
+**Personas** agrupa caras con `face-recognition` en la Raspberry, sin subirlas a
+un servicio externo. Los nombres iniciales son Persona 1, Persona 2, etc.; se
+pueden renombrar. Las coincidencias son aproximadas: en Modo de acción,
+**Quitar de esta persona** corrige una asociación sin borrar la foto. Los rasgos
+faciales se guardan localmente en el catálogo y no se devuelven al navegador.
+Las fotos nuevas se analizan automáticamente cuando está instalado el motor;
+las anteriores se incorporan al abrir Fotos. La interfaz indica la falta de
+soporte o los errores y permite reintentar los análisis pendientes.
+
+Actualizar WebApp y DeviceApp juntos. Para HEIC y Personas, consulta la
+[instalación del soporte de fotos](../DeviceApp/README.md#biblioteca-de-fotos).
+La maqueta local guarda archivos y carpetas en IndexedDB, y permite probar el
+visor y los movimientos; no simula datos EXIF, personas ni resultados de IA.
+
+Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,
+`python -m unittest discover -s DeviceApp/tests -p 'test_photo_library.py'`.

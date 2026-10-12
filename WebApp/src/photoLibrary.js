@@ -1,0 +1,62 @@
+export const SPECIAL_FOLDERS = ['uploads', 'map', 'ai', 'people'];
+export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
+export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
+
+export function descendantIds(folders, id) {
+  const found = new Set([id]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const folder of folders) if (found.has(folder.parent) && !found.has(folder.id)) { found.add(folder.id); changed = true; }
+  }
+  return found;
+}
+
+export function folderTrail(folders, id) {
+  const result = [], visited = new Set();
+  while (id && !visited.has(id)) {
+    visited.add(id);
+    const folder = folders.find(item => item.id === id);
+    if (!folder) break;
+    result.unshift(folder); id = folder.parent;
+  }
+  return result;
+}
+
+export function hasLocation(photo) {
+  return Number.isFinite(photo.latitude) && Number.isFinite(photo.longitude) && Math.abs(photo.latitude) <= 90 && Math.abs(photo.longitude) <= 180;
+}
+
+// Web Mercator screen-space clustering, including neighbors across the date line.
+export function clusterPhotos(photos, zoom, radius = 76) {
+  const world = 256 * 2 ** zoom;
+  const buckets = new Map(), clusters = [];
+  const columns = Math.ceil(world / radius);
+  const key = (x, y) => `${((x % columns) + columns) % columns}:${y}`;
+  for (const photo of photos.filter(hasLocation)) {
+    const lat = Math.max(-85.0511, Math.min(85.0511, photo.latitude)) * Math.PI / 180;
+    const x = ((photo.longitude + 180) / 360 * world) % world;
+    const y = (1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2 * world;
+    const bx = Math.floor(x / radius), by = Math.floor(y / radius);
+    let match;
+    for (let dx = -1; dx <= 1 && !match; dx++) for (let dy = -1; dy <= 1 && !match; dy++) {
+      match = (buckets.get(key(bx + dx, by + dy)) || []).find(cluster => {
+        const horizontal = Math.min(Math.abs(cluster.x - x), world - Math.abs(cluster.x - x));
+        return Math.hypot(horizontal, cluster.y - y) <= radius;
+      });
+    }
+    if (match) match.photos.push(photo);
+    else {
+      const cluster = { x, y, latitude: photo.latitude, longitude: photo.longitude, photos: [photo] };
+      clusters.push(cluster);
+      const bucket = key(bx, by);
+      buckets.set(bucket, [...(buckets.get(bucket) || []), cluster]);
+    }
+  }
+  return clusters;
+}
+
+export function pendingVariants(photos) {
+  const existing = new Set(photos.filter(p => p.sourceId).map(p => `${p.sourceId}:${p.style}`));
+  return photos.filter(p => !p.sourceId).reduce((total, photo) => total + Object.keys(STYLES).filter(style => !existing.has(`${photo.id}:${style}`)).length, 0);
+}

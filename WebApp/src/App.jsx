@@ -1,3 +1,4 @@
+import PhotosLibrary from "./PhotosLibrary.jsx";
 import { saveSeriesTrailer } from "./api/raspberryApi";
 import MovieMedia from "./MovieMedia.jsx";
 import { saveMovieTrailer } from "./api/raspberryApi";
@@ -169,8 +170,6 @@ import {
   uploadMovieFile,
   uploadMovieSubtitles,
   checkUploadConflicts,
-  uploadPictureFiles,
-  getPictureContentUrl,
   uploadSeriesFiles,
   controlPlaybackSubtitles,
   volumeDown,
@@ -586,8 +585,16 @@ const UI_STRINGS = {
     play_game_in_browser: "Jugar desde el navegador",
     browser_game_player: "Juego en el navegador",
     gameboy_expand_screen: "Ampliar pantalla",
-    gameboy_show_console: "Ver Game Boy",
-    gameboy_controls: "Botones de la Game Boy",
+    gameboy_show_console: "Ver consola",
+    gameboy_controls: "Botones de la consola",
+    megadrive_keyboard_hint: "Pulsa el mando o usa el teclado: flechas · Z/X/C: A/B/C · A/S/D: X/Y/Z · Enter: Start · V: Mode",
+    megadrive_button_a: "A · Z",
+    megadrive_button_b: "B · X",
+    megadrive_button_c: "C · C",
+    megadrive_button_x: "X · A",
+    megadrive_button_y: "Y · S",
+    megadrive_button_z: "Z · D",
+    megadrive_button_mode: "Mode · V",
     gameboy_keyboard_hint: "Pulsa los botones de la consola o usa el teclado: flechas · Z: A · X: B · Enter: Start · V: Select",
     gameboy_button_up: "Arriba",
     gameboy_button_down: "Abajo",
@@ -597,6 +604,8 @@ const UI_STRINGS = {
     gameboy_button_b: "B · X",
     gameboy_button_start: "Start · Enter",
     gameboy_button_select: "Select · V",
+    gameboy_button_l: "L · Q",
+    gameboy_button_r: "R · E",
     browser_game_unsupported: "Esta consola todavía no es compatible con el navegador",
     playing_game: "Abriendo juego...",
     games_upload_title: "Datos del juego",
@@ -1057,8 +1066,16 @@ const UI_STRINGS = {
     play_game_in_browser: "Jugar des del navegador",
     browser_game_player: "Joc al navegador",
     gameboy_expand_screen: "Amplia la pantalla",
-    gameboy_show_console: "Mostra la Game Boy",
-    gameboy_controls: "Botons de la Game Boy",
+    gameboy_show_console: "Mostra la consola",
+    gameboy_controls: "Botons de la consola",
+    megadrive_keyboard_hint: "Prem el comandament o utilitza el teclat: fletxes · Z/X/C: A/B/C · A/S/D: X/Y/Z · Enter: Start · V: Mode",
+    megadrive_button_a: "A · Z",
+    megadrive_button_b: "B · X",
+    megadrive_button_c: "C · C",
+    megadrive_button_x: "X · A",
+    megadrive_button_y: "Y · S",
+    megadrive_button_z: "Z · D",
+    megadrive_button_mode: "Mode · V",
     gameboy_keyboard_hint: "Prem els botons de la consola o utilitza el teclat: fletxes · Z: A · X: B · Enter: Start · V: Select",
     gameboy_button_up: "Amunt",
     gameboy_button_down: "Avall",
@@ -1068,6 +1085,8 @@ const UI_STRINGS = {
     gameboy_button_b: "B · X",
     gameboy_button_start: "Start · Enter",
     gameboy_button_select: "Select · V",
+    gameboy_button_l: "L · Q",
+    gameboy_button_r: "R · E",
     browser_game_unsupported: "Aquesta consola encara no és compatible amb el navegador",
     playing_game: "Obrint joc...",
     games_upload_title: "Dades del joc",
@@ -1528,8 +1547,16 @@ const UI_STRINGS = {
     play_game_in_browser: "Play in browser",
     browser_game_player: "Browser game",
     gameboy_expand_screen: "Expand screen",
-    gameboy_show_console: "Show Game Boy",
-    gameboy_controls: "Game Boy buttons",
+    gameboy_show_console: "Show console",
+    gameboy_controls: "Console buttons",
+    megadrive_keyboard_hint: "Press the controller or use your keyboard: arrows · Z/X/C: A/B/C · A/S/D: X/Y/Z · Enter: Start · V: Mode",
+    megadrive_button_a: "A · Z",
+    megadrive_button_b: "B · X",
+    megadrive_button_c: "C · C",
+    megadrive_button_x: "X · A",
+    megadrive_button_y: "Y · S",
+    megadrive_button_z: "Z · D",
+    megadrive_button_mode: "Mode · V",
     gameboy_keyboard_hint: "Press the console buttons or use your keyboard: arrows · Z: A · X: B · Enter: Start · V: Select",
     gameboy_button_up: "Up",
     gameboy_button_down: "Down",
@@ -1539,6 +1566,8 @@ const UI_STRINGS = {
     gameboy_button_b: "B · X",
     gameboy_button_start: "Start · Enter",
     gameboy_button_select: "Select · V",
+    gameboy_button_l: "L · Q",
+    gameboy_button_r: "R · E",
     browser_game_unsupported: "This console is not supported in the browser yet",
     playing_game: "Opening game...",
     games_upload_title: "Game details",
@@ -6312,42 +6341,6 @@ function BookOpenModal({ book, busy, onClose, onOpenBrowser, onOpenRaspberry, t 
 }
 
 
-function PicturesLibrary({ pictures, onUpload, t, countLabel, renderMarks, onViewed }) {
-  const [openPicture, setOpenPicture] = useState(null);
-  return (
-    <section className="pictures-library seasons-section" aria-label={t("media_pictures")}>
-      <div className="seasons-section__label">{countLabel}</div>
-      <div className="pictures-library__header">
-        <button className="dialog-button dialog-button--accent" type="button" onClick={onUpload}>+ {t("upload_pictures")}</button>
-      </div>
-      {pictures.length ? (
-        <div className="pictures-grid">
-          {pictures.map((picture) => (
-            <div className="picture-profile-tile" key={picture.relativePath}><button className="picture-tile" type="button" onClick={() => setOpenPicture(picture)}>
-              <img src={getPictureContentUrl(picture.relativePath)} alt={picture.name} loading="lazy" />
-              <span>{picture.name}</span>
-            </button>{renderMarks("picture", picture.relativePath)}</div>
-          ))}
-        </div>
-      ) : (
-        <div className="pictures-empty">
-          <img src={picturesIcon} alt="" aria-hidden="true" />
-          <h2>Todavía no hay fotos</h2>
-          <p>Sube una imagen o selecciona una carpeta para crear tu mosaico.</p>
-          <button className="dialog-button dialog-button--accent" type="button" onClick={onUpload}>+ {t("upload_pictures")}</button>
-        </div>
-      )}
-      {openPicture ? createPortal(
-        <div className="modal-backdrop picture-lightbox" onClick={() => setOpenPicture(null)}>
-          <button className="dialog-card__close" type="button" onClick={() => setOpenPicture(null)} aria-label={t("close")}>×</button>
-          <img src={getPictureContentUrl(openPicture.relativePath)} alt={openPicture.name} onLoad={() => onViewed(openPicture)} onClick={(event) => event.stopPropagation()} />
-          <span>{openPicture.name}</span>
-        </div>, document.body
-      ) : null}
-    </section>
-  );
-}
-
 function LibraryLoading({ label, progress, stage }) {
   const [now, setNow] = useState(Date.now());
   const [started] = useState(Date.now());
@@ -6385,6 +6378,7 @@ export default function App() {
   const resumeResolver = useRef(null);
   const openingContent = useRef(false);
   const [videos, setVideos] = useState(null);
+  const [pendingPhotoFiles, setPendingPhotoFiles] = useState(null);
   const [tmdbLoading, setTmdbLoading] = useState(false);
   const [preparedLibrary, setPreparedLibrary] = useState(null);
   const [coverProgress, setCoverProgress] = useState(null);
@@ -8803,27 +8797,9 @@ export default function App() {
     if (!safeFiles.length) return;
 
     if (uploadMediaType === "pictures") {
-      const extensions = new Set(["jpg", "jpeg", "png", "webp", "gif", "bmp", "avif", "heic", "heif"]);
-      const pictureFiles = safeFiles.filter((file) => extensions.has(getFileExtension(file.name)));
-      if (!pictureFiles.length || pictureFiles.length !== safeFiles.length) {
-        setUploadValidationError({ title: "Archivos incompatibles", message: "Selecciona solamente imágenes JPEG, PNG, WebP, GIF, BMP, AVIF o HEIC." });
-        return;
-      }
-      try {
-        setUploadSummary(`Subiendo ${pictureFiles.length} foto(s)…`);
-        const signal = createUploadSignal();
-        const response = await uploadPictureFiles({ files: pictureFiles, signal, onProgress: setUploadProgress });
-        clearUploadAbortController();
-        setUploadProgress(null);
-        setUploadSummary(`${response.saved?.length || pictureFiles.length} foto(s) añadidas al mosaico.`);
-        setVideos(await getVideos());
-        setActiveMediaType("pictures");
-        setCurrentView("series");
-      } catch (nextError) {
-        clearUploadAbortController();
-        setUploadProgress(null);
-        setUploadSummary(nextError?.name === "AbortError" ? t("upload_canceled") : nextError.message || "No se pudieron subir las fotos.");
-      }
+      setPendingPhotoFiles(safeFiles);
+      setActiveMediaType("pictures");
+      setCurrentView("series");
       return;
     }
 
@@ -9750,8 +9726,10 @@ export default function App() {
                       setTorrentInitialMovie(movie);
                       setTmdbBrowserOpen(true);
                     }} />
-                ) : isPicturesMode && !(libraryFiltersActive && !filterVisible) ? (
-                  <PicturesLibrary key={profiles.activeId} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} countLabel={libraryCountLabel} pictures={filteredPictures} onUpload={() => handleOpenUploadsForMedia("pictures")} t={t} />
+                ) : isPicturesMode ? (
+                  <PhotosLibrary key={profiles.activeId} language={raspberryLanguage}
+                    initialFiles={pendingPhotoFiles} onImportDone={() => setPendingPhotoFiles(null)}
+                    matchesPicture={picture => matchesFavorite("picture", picture.relativePath)} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} />
                 ) : !isGamesMode && libraryFiltersActive && !filterVisible ? (
                   <section className="empty-state seasons-section">
                     {!isMediaDetail && !isGamesMode ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}

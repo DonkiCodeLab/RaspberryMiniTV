@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 const source = readFileSync(new URL('../../DeviceApp/templates/gameboy_bridge.js', import.meta.url), 'utf8');
-function bridge() {
+function bridge(system = 'gb') {
   const events = {}, inputs = [], messages = [];
   const timers = new Map();
   const classes = new Set(['gameboy-framed']);
@@ -18,7 +18,7 @@ function bridge() {
     body: { classList: { contains: name => classes.has(name), toggle: (name, value) => value ? classes.add(name) : classes.delete(name) } },
     addEventListener: (name, fn) => { events[name] = fn; },
   };
-  runInNewContext(source, { window, document, URL, Event: class {}, performance: { now: () => 100 },
+  runInNewContext(source, { window, document, game: { system }, URL, Event: class {}, performance: { now: () => 100 },
     setTimeout: fn => { const id = timers.size + 1; timers.set(id, fn); return id; }, clearTimeout: id => timers.delete(id) });
   const message = (data, extra = {}) => events.message({ origin: 'http://minitv.local:5050', source: parent, data: { channel: 'minitv-gameboy', ...data }, ...extra });
   return { events, inputs, messages, window, document, classes, message, flush: () => { timers.forEach(fn => fn()); timers.clear(); } };
@@ -99,4 +99,56 @@ test('a photographed button resumes suspended emulator audio', () => {
   b.window.EJS_emulator.Module = { AL: { currentCtx: { audioCtx: { state: 'suspended', resume: () => { resumed = true; return Promise.resolve(); } } } } };
   b.message({ type: 'input', input: 3, pressed: true });
   assert.equal(resumed, true);
+});
+
+test('GBA shoulder buttons work with the photograph and keyboard, but not on GB/GBC', () => {
+  for (const system of ['gb', 'gbc', 'gba']) {
+    const b = bridge(system);
+    b.message({ type: 'input', input: 10, pressed: true });
+    b.events.keydown({ code: 'KeyE', key: 'e', type: 'keydown', preventDefault() {} });
+    b.message({ type: 'release' });
+    assert.deepEqual(b.inputs, system === 'gba' ? [[0, 10, 1], [0, 11, 1], [0, 10, 0], [0, 11, 0]] : []);
+  }
+});
+
+test('visual states follow simultaneous pointer and iframe keyboard inputs and clear on release', () => {
+  const b = bridge('gba');
+  const states = () => b.messages.filter(([data]) => data.type === 'input-state').map(([data, origin]) => {
+    assert.equal(origin, 'http://minitv.local:5050');
+    return Array.from(data.inputs);
+  });
+  b.message({ type: 'input', input: 7, pressed: true });
+  b.events.keydown({ code: 'KeyZ', type: 'keydown', preventDefault() {} });
+  b.message({ type: 'input', input: 10, pressed: true });
+  assert.deepEqual(states(), [[7], [7, 8], [7, 8, 10]]);
+  b.events.keyup({ code: 'KeyZ', type: 'keyup', preventDefault() {} });
+  assert.deepEqual(states().at(-1), [7, 10]);
+  b.events.blur();
+  assert.deepEqual(states().at(-1), []);
+});
+
+test('visual feedback lasts exactly as long as a short tap sent to the emulator', () => {
+  const b = bridge();
+  b.message({ type: 'input', input: 8, pressed: true });
+  b.message({ type: 'input', input: 8, pressed: false });
+  assert.deepEqual(Array.from(b.messages.at(-1)[0].inputs), [8]);
+  b.flush();
+  assert.deepEqual(Array.from(b.messages.at(-1)[0].inputs), []);
+  assert.deepEqual(b.inputs, [[0, 8, 1], [0, 8, 0]]);
+});
+
+test('Mega Drive keyboard sends the six Sega buttons without triggering native duplicate bindings', () => {
+  const b = bridge('megadrive');
+  for (const [code, input] of [['KeyZ',1],['KeyX',0],['KeyC',8],['KeyA',10],['KeyS',9],['KeyD',11],['KeyV',2]]) {
+    let stopped = false;
+    b.events.keydown({code, type:'keydown', preventDefault() {}, stopImmediatePropagation() {stopped=true;} });
+    assert.equal(stopped, true);
+    assert.deepEqual(b.inputs.at(-1), [0,input,1]);
+    assert.ok(b.messages.at(-1)[0].inputs.includes(input));
+  }
+  b.message({type:'presentation',framed:false});
+  assert.deepEqual(Array.from(b.messages.at(-1)[0].inputs), []);
+  const count = b.inputs.length;
+  b.events.keydown({code:'KeyZ', type:'keydown', preventDefault() {throw Error('Expanded mode uses native controls');} });
+  assert.equal(b.inputs.length, count);
 });
