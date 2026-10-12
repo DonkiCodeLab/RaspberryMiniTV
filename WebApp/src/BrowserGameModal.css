@@ -1,0 +1,105 @@
+dialog.browser-game {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  box-sizing: border-box;
+  overflow: auto;
+}
+dialog.browser-game:not([open]) { display: none; }
+.browser-game__heading { min-width: 0; }
+.browser-game__heading h2 { overflow-wrap: anywhere; }
+.browser-game__actions { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+.browser-game__panel header .browser-game__expand {
+  border: 1px solid #ffffff35;
+  border-radius: 999px;
+  padding: .65rem 1rem;
+  color: #f1eddf;
+  font: inherit;
+  font-size: .8rem;
+}
+.browser-game__actions button:focus-visible { outline: 2px solid #ffd429; outline-offset: 4px; }
+dialog.browser-game--gameboy { background: radial-gradient(ellipse at 50% 42%, #323c32, #111b19 55%, #080e11); }
+.browser-game--gameboy .browser-game__panel { width: min(1100px, 100%); background: transparent; box-shadow: none; overflow: visible; }
+.browser-game--gameboy .browser-game__heading > span { color: #b9c5a8; text-transform: uppercase; letter-spacing: .18em; font-size: .7rem; }
+.browser-game--gameboy .browser-game__heading h2 { font-size: 1rem; }
+.browser-game--gameboy .browser-game__stage { display: grid; place-items: center; }
+.gameboy-device {
+  position: relative;
+  width: min(100%, calc((100dvh - 11rem) * 600 / 957));
+  aspect-ratio: 600 / 957;
+  isolation: isolate;
+  overflow: hidden;
+}
+.gameboy-device__photo {
+  position: absolute;
+  width: 180%;
+  max-width: none;
+  height: 100%;
+  left: -41.666667%;
+  top: 0;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 20px 25px #0008);
+}
+.gameboy-device__screen {
+  position: absolute;
+  left: 24.833333%;
+  top: 14.00209%;
+  width: 50.666667%;
+  height: 28.631139%;
+  background: #778b19;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: 0 0 2px 1px #182b11, inset 0 0 7px #172a1670;
+}
+.browser-game--gameboy .gameboy-device__screen iframe { width: 100%; height: 100%; background: #778b19; }
+.gameboy-device__screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 7px #15270f55;
+  background: linear-gradient(135deg, #d6efa30c, transparent 55%);
+}
+.gameboy-device__button {
+  position: absolute;
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gameboy-device__button--a, .gameboy-device__button--b { border-radius: 50%; }
+.gameboy-device__button--select, .gameboy-device__button--start { transform: rotate(-27deg); border-radius: 999px; }
+.gameboy-device__button:active:not(:disabled) { background: #1117; box-shadow: inset 0 2px 6px #0008; }
+.gameboy-device__button:focus-visible { outline: 3px solid #e7ffc0; outline-offset: 3px; }
+.gameboy-device__button:disabled { cursor: wait; }
+.gameboy-device__power { position: absolute; left: 14.75%; top: 23.2%; width: 2.4%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; }
+.gameboy-device__power.is-on { background: #f95448; box-shadow: 0 0 7px #ff4d46; }
+.gameboy-player__hint { margin: .8rem auto 0; color: #b9c5b6; text-align: center; font-size: .78rem; line-height: 1.6; }
+.browser-game--expanded .gameboy-device { width: min(100%, calc((100dvh - 9rem) * 10 / 9)); aspect-ratio: 10 / 9; }
+.browser-game--expanded .gameboy-device__screen { inset: 0; width: 100%; height: 100%; box-shadow: none; border-radius: 8px; }
+.browser-game--expanded .gameboy-device__photo,
+.browser-game--expanded .gameboy-device__controls,
+.browser-game--expanded .gameboy-device__power,
+.browser-game--expanded .gameboy-device__screen::after { display: none; }
+@media (max-width: 600px) {
+  dialog.browser-game { padding: .75rem; }
+  .browser-game--gameboy .browser-game__panel header { padding: 0 0 1rem; gap: .5rem; }
+  .browser-game--gameboy .browser-game__heading h2 { font-size: .85rem; }
+  .browser-game__actions { gap: .5rem; }
+  .browser-game__panel header .browser-game__expand { padding: .6rem .75rem; font-size: .72rem; }
+  .gameboy-player__hint { max-width: 300px; font-size: .7rem; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .gameboy-device { width: min(100%, calc((100dvh - 8rem) * 600 / 957)); }
+  .gameboy-player__hint { margin-top: .2rem; }
+}

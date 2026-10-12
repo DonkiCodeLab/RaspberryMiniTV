@@ -1,5 +1,12 @@
 # WebApp
 
+Al pulsar **Jugar desde el navegador** en un juego de Game Boy, la partida aparece
+dentro de la pantalla de la fotografía de la consola del header. La cruceta,
+A/B y Start/Select de la imagen son pulsadores; también funcionan las flechas,
+Z (A), X (B), Enter (Start) y V (Select). **Ampliar pantalla** permite acceder al
+menú del emulador y volver a la consola sin reiniciar la partida. Requiere actualizar
+WebApp y DeviceApp juntos. Las demás plataformas conservan su reproductor habitual.
+
 ## Puntuaciones de IMDb, Rotten Tomatoes y Metacritic con OMDb
 
 En **Dashboard → Servicios auxiliares → Puntuaciones · OMDb**, guarda la clave obtenida en

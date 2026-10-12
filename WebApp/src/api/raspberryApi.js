@@ -1330,6 +1330,7 @@ export function getBrowserGameUrl(relativePath, systemId) {
     relativePath: String(relativePath || "").trim(),
     system: String(systemId || "").trim(),
   });
+  if (systemId === "gb") params.set("frame", "gameboy");
   const storedPin = getStoredWebPin();
   if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
   return `${getBaseUrl()}/games/browser?${params.toString()}`;

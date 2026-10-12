@@ -1,5 +1,6 @@
 import io
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -74,6 +75,23 @@ class GameSystemsTest(unittest.TestCase):
         with patch.object(catalog_store, 'read_item', side_effect=catalog_store.CatalogError('corrupt')):
             with self.assertLogs('game_platforms', level='ERROR'):
                 self.assertEqual(stored_platform('playstation.chd', self.temp.name), {})
+
+    def test_browser_frame_is_opt_in_and_only_for_original_gameboy(self):
+        rom = Path(api.GAMES_DIR) / 'A & B.gb'
+        rom.write_bytes(b'test fixture')
+        for system, frame, expected in [('gb', 'gameboy', True), ('gb', '', False), ('gbc', 'gameboy', False), ('gba', 'gameboy', False)]:
+            with self.subTest(system=system, frame=frame):
+                response = self.client.get('/games/browser', query_string={
+                    'relativePath': 'Games/A & B.gb', 'system': system, 'frame': frame,
+                })
+                self.assertEqual(response.status_code, 200)
+                page = response.get_data(as_text=True)
+                config = json.loads(re.search(r'const game = (.*);', page)[1])
+                self.assertEqual(config['gameboyFrame'], expected)
+                self.assertEqual('minitv-gameboy' in page, expected)
+                self.assertEqual(config['core'], 'gba' if system == 'gba' else 'gb')
+                self.assertIn('<title>A &amp; B.gb</title>', page)
+                self.assertEqual(response.headers['Cache-Control'], 'no-store')
 
 
 if __name__ == '__main__':

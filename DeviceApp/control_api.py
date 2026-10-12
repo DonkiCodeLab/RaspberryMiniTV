@@ -49,7 +49,7 @@ import hashlib
 import html
 
 from werkzeug.exceptions import HTTPException
-from flask import Flask, Response, jsonify, request, send_file, send_from_directory
+from flask import Flask, Response, jsonify, render_template, request, send_file, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -3479,18 +3479,9 @@ def browser_game_player():
         "name": os.path.splitext(os.path.basename(game_path))[0],
         "url": content_url,
         "core": core,
+        "gameboyFrame": system_id == "gb" and request.args.get("frame") == "gameboy",
     }
-    config_json = json.dumps(config).replace("</", "<\\/")
-    page = f"""<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>{html.escape(os.path.basename(game_path))}</title>
-<style>html,body,#game{{width:100%;height:100%;margin:0;background:#050505;overflow:hidden}}#game{{position:absolute;inset:0}}</style>
-</head><body><div id="game"></div><script>
-const game={config_json};
-window.EJS_player="#game"; window.EJS_gameName=game.name; window.EJS_gameUrl=game.url;
-window.EJS_core=game.core; window.EJS_pathtodata="/emulatorjs/"; window.EJS_startOnLoaded=true;
-window.EJS_disableDatabases=false; window.EJS_threads=false; window.EJS_language="es-ES";
-</script><script src="/emulatorjs/loader.js"></script></body></html>"""
+    page = render_template("browser_game.html", config=config, title=os.path.basename(game_path))
     return Response(page, mimetype="text/html", headers={"Cache-Control": "no-store"})
 
 

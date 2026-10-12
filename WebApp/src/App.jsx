@@ -30,6 +30,7 @@ import BookReader from "./BookReader.jsx";
 import BookPreviewButton from "./BookPreviewButton.jsx";
 import BookHeaderPreview from "./BookHeaderPreview.jsx";
 import GameHeaderArtwork from "./GameHeaderArtwork.jsx";
+import BrowserGameModal from "./BrowserGameModal.jsx";
 import useUserProfiles from "./useUserProfiles.js";
 import { ProfileMenu, UsersPanel, ResumeDialog, userStrings } from "./UserProfiles.jsx";
 import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
@@ -584,6 +585,18 @@ const UI_STRINGS = {
     play_game_on_raspberry: "Jugar en la Raspberry",
     play_game_in_browser: "Jugar desde el navegador",
     browser_game_player: "Juego en el navegador",
+    gameboy_expand_screen: "Ampliar pantalla",
+    gameboy_show_console: "Ver Game Boy",
+    gameboy_controls: "Botones de la Game Boy",
+    gameboy_keyboard_hint: "Pulsa los botones de la consola o usa el teclado: flechas · Z: A · X: B · Enter: Start · V: Select",
+    gameboy_button_up: "Arriba",
+    gameboy_button_down: "Abajo",
+    gameboy_button_left: "Izquierda",
+    gameboy_button_right: "Derecha",
+    gameboy_button_a: "A · Z",
+    gameboy_button_b: "B · X",
+    gameboy_button_start: "Start · Enter",
+    gameboy_button_select: "Select · V",
     browser_game_unsupported: "Esta consola todavía no es compatible con el navegador",
     playing_game: "Abriendo juego...",
     games_upload_title: "Datos del juego",
@@ -1043,6 +1056,18 @@ const UI_STRINGS = {
     play_game_on_raspberry: "Jugar a la Raspberry",
     play_game_in_browser: "Jugar des del navegador",
     browser_game_player: "Joc al navegador",
+    gameboy_expand_screen: "Amplia la pantalla",
+    gameboy_show_console: "Mostra la Game Boy",
+    gameboy_controls: "Botons de la Game Boy",
+    gameboy_keyboard_hint: "Prem els botons de la consola o utilitza el teclat: fletxes · Z: A · X: B · Enter: Start · V: Select",
+    gameboy_button_up: "Amunt",
+    gameboy_button_down: "Avall",
+    gameboy_button_left: "Esquerra",
+    gameboy_button_right: "Dreta",
+    gameboy_button_a: "A · Z",
+    gameboy_button_b: "B · X",
+    gameboy_button_start: "Start · Enter",
+    gameboy_button_select: "Select · V",
     browser_game_unsupported: "Aquesta consola encara no és compatible amb el navegador",
     playing_game: "Obrint joc...",
     games_upload_title: "Dades del joc",
@@ -1502,6 +1527,18 @@ const UI_STRINGS = {
     play_game_on_raspberry: "Play on Raspberry",
     play_game_in_browser: "Play in browser",
     browser_game_player: "Browser game",
+    gameboy_expand_screen: "Expand screen",
+    gameboy_show_console: "Show Game Boy",
+    gameboy_controls: "Game Boy buttons",
+    gameboy_keyboard_hint: "Press the console buttons or use your keyboard: arrows · Z: A · X: B · Enter: Start · V: Select",
+    gameboy_button_up: "Up",
+    gameboy_button_down: "Down",
+    gameboy_button_left: "Left",
+    gameboy_button_right: "Right",
+    gameboy_button_a: "A · Z",
+    gameboy_button_b: "B · X",
+    gameboy_button_start: "Start · Enter",
+    gameboy_button_select: "Select · V",
     browser_game_unsupported: "This console is not supported in the browser yet",
     playing_game: "Opening game...",
     games_upload_title: "Game details",
@@ -2968,37 +3005,6 @@ function BrowserPlayerModal({ playback, onClose, t }) {
           <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
         </header>
         <BrowserVideo key={`${playback.context?.userId}:${playback.url}`} url={playback.url} t={t} initialProgress={playback.context?.initialProgress} onProgress={playback.context?.onProgress} />
-      </div>
-    </div>,
-    document.body
-  );
-}
-
-function BrowserGameModal({ game, onClose, t }) {
-  useEffect(() => {
-    if (!game) return () => {};
-    const handleKeyDown = (event) => event.key === "Escape" && onClose();
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [game, onClose]);
-
-  if (!game) return null;
-  return createPortal(
-    <div className="browser-player browser-game" role="dialog" aria-modal="true" aria-label={t("browser_game_player")}>
-      <div className="browser-player__panel browser-game__panel">
-        <header>
-          <div>
-            <span>{t("browser_game_player")}</span>
-            <h2>{game.title}</h2>
-          </div>
-          <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
-        </header>
-        <iframe
-          src={game.url}
-          title={`${t("browser_game_player")}: ${game.title}`}
-          allow="autoplay; fullscreen; gamepad"
-          allowFullScreen
-        />
       </div>
     </div>,
     document.body
@@ -7786,6 +7792,7 @@ export default function App() {
     const systemId = systemForGame(selectedGame)?.id || selectedSystemId;
     setBrowserGame({
       title: selectedGame.name || selectedGame.file,
+      systemId,
       url: getBrowserGameUrl(selectedGame.relativePath, systemId),
     });
   }
