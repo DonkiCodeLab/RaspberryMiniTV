@@ -13,6 +13,18 @@
     if (game.system === "gba") Object.assign(keys, { KeyQ: 10, KeyE: 11 });
     if (game.system === "megadrive") Object.assign(keys, { KeyZ: 1, KeyX: 0, KeyC: 8, KeyA: 10, KeyS: 9, KeyD: 11 });
     const notify = (type, detail = {}) => window.parent.postMessage({ channel: "minitv-gameboy", type, ...detail }, parentOrigin);
+    let pendingVolume = null;
+    let wrappedVolume = null;
+    const validVolume = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
+    const setVolume = value => {
+        pendingVolume = value;
+        const emulator = window.EJS_emulator;
+        if (!emulator?.started || typeof emulator.setVolume !== "function") return;
+        emulator.volume = value;
+        emulator.setVolume(value);
+        const audio = emulator.Module?.AL?.currentCtx?.audioCtx;
+        if (value > 0 && audio?.state === "suspended") audio.resume().catch(() => {});
+    };
     const input = (button, pressed) => {
         const emulator = window.EJS_emulator;
         if (!emulator?.started || !allowedInputs.has(button)) return;
@@ -33,11 +45,26 @@
         pressedAt.clear();
         for (const button of held) input(button, false);
     };
-    window.EJS_onGameStart = () => notify("ready");
+    window.EJS_onGameStart = () => {
+        const emulator = window.EJS_emulator;
+        // Keep our slider in sync with the emulator's own expanded-view controls.
+        if (typeof emulator?.setVolume === "function" && emulator.setVolume !== wrappedVolume) {
+            const original = emulator.setVolume;
+            wrappedVolume = function(value) {
+                original.call(this, value);
+                if (validVolume(value)) notify("volume-state", { volume: value });
+            };
+            emulator.setVolume = wrappedVolume;
+        }
+        notify("ready");
+        if (pendingVolume !== null) setVolume(pendingVolume);
+    };
     window.addEventListener("message", event => {
         if (event.source !== window.parent || event.origin !== parentOrigin || event.data?.channel !== "minitv-gameboy") return;
         const data = event.data;
-        if (data.type === "presentation" && typeof data.framed === "boolean") {
+        if (data.type === "volume" && validVolume(data.volume)) {
+            setVolume(data.volume);
+        } else if (data.type === "presentation" && typeof data.framed === "boolean") {
             release();
             document.body.classList.toggle("gameboy-framed", data.framed);
             window.dispatchEvent(new Event("resize"));

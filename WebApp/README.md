@@ -1,7 +1,7 @@
 # WebApp
 
 Al pulsar **Jugar desde el navegador** en un juego de Game Boy, Game Boy Color o
-Game Boy Advance, la partida aparece dentro de la pantalla de su consola del header.
+Game Boy Advance, la partida aparece dentro de la pantalla de su consola.
 Color y Advance conservan los colores del juego; el tono verde es exclusivo de la
 Game Boy original. La cruceta,
 A/B y Start/Select de la imagen son pulsadores; también funcionan las flechas,
@@ -15,11 +15,17 @@ El puente del emulador comunica las pulsaciones simultáneas y suelta la indicac
 al perder el foco o cambiar de vista. Cada control expone `data-console-button`
 (`up`, `down`, `left`, `right`, `a`, `b`, `start`, `select`, `l`, `r`),
 `data-pressed="true|false"` y la clase `is-pressed` para conectar otros diseños.
-Para futuras carcasas SVG, conservar cada botón en un grupo independiente con
-esos nombres, la pantalla en un grupo `screen` y un `viewBox` fijo por consola.
-Insertar el SVG en el documento permite animar sus piezas con el mismo estado;
-una imagen SVG cargada mediante `<img>` no permite seleccionar sus grupos desde
-el componente. Los diseños actuales siguen utilizando las fotografías.
+La Game Boy original utiliza el SVG aportado por el usuario, conservado en
+`src/assets/gameboy-vector.svg`. `GameBoyVector.jsx` lo inserta como vectores:
+los grupos `data-part="a|b|dpad|start|select"` se hunden y oscurecen de forma
+independiente; la cruceta se desplaza según la dirección y el LED indica que la
+partida está lista. Las coordenadas de pantalla y controles están en
+`gameConsoleFrames.js`. Color y Advance siguen utilizando sus fotografías.
+
+Todas las plataformas tienen un control de volumen de 0 a 100 % y un botón para
+silenciar/restaurar el nivel anterior en la cabecera. El nivel se recuerda en el
+navegador y se sincroniza con el menú del emulador en la vista ampliada. Ajusta
+el audio de la partida del navegador, sin cambiar el volumen de la Raspberry.
 
 Mega Drive usa una tele morada de tubo dibujada en SVG, como guiño a Los Simpson,
 y debajo la fotografía del mando de seis botones que ya utiliza el catálogo.

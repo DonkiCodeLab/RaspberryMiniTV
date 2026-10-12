@@ -20,14 +20,14 @@ export const GAME_CONSOLE_FRAMES = {
     ],
   },
   gb: {
-    name: "Nintendo Game Boy", image: [1080, 957], crop: [250, 0, 600, 957],
-    screen: [399, 134, 304, 274], power: [338.5, 222, 14.4, 14.4],
+    name: "Nintendo Game Boy", artwork: "vector", image: [588.30859, 959.73712], crop: [0, 0, 588.30859, 959.73712],
+    screen: [142.379, 120.518, 301.025, 276.782], power: [81.266, 208.149, 15.152, 15.152],
     aspect: 10 / 9, screenColor: "#778b19", powerColor: "#f95448", keys: commonKeys,
     buttons: [
-      button("up", 4, 357, 576, 53, 49), button("down", 5, 357, 665, 53, 51),
-      button("left", 6, 310, 621, 50, 51), button("right", 7, 405, 621, 50, 51),
-      button("A", 8, 721, 582, 72, 72), button("B", 0, 628, 624, 72, 72),
-      button("Select", 2, 435, 766, 77, 34, -27), button("Start", 3, 532, 766, 77, 34, -27),
+      button("up", 4, 99, 565, 49, 47), button("down", 5, 99, 658, 49, 47),
+      button("left", 6, 54.63, 612, 45, 46), button("right", 7, 148, 612, 47, 46),
+      button("A", 8, 465.627, 570.036, 68.69, 68.69), button("B", 0, 371.683, 612.462, 68.69, 68.69),
+      button("Select", 2, 176.1, 755.15, 78, 30, -27.13), button("Start", 3, 272.5, 755.5, 78, 30, -27.13),
     ],
   },
   gbc: {

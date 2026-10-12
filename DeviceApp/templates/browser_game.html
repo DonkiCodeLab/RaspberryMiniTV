@@ -36,9 +36,7 @@
     window.EJS_disableDatabases = false;
     window.EJS_threads = false;
     window.EJS_language = "es-ES";
-    {% if config.gameboyFrame %}
     {% include "gameboy_bridge.js" %}
-    {% endif %}
   </script>
   <script src="/emulatorjs/loader.js"></script>
 </body>

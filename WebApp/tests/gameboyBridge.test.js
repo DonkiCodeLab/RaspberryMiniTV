@@ -5,12 +5,13 @@ import { runInNewContext } from 'node:vm';
 
 const source = readFileSync(new URL('../../DeviceApp/templates/gameboy_bridge.js', import.meta.url), 'utf8');
 function bridge(system = 'gb') {
-  const events = {}, inputs = [], messages = [];
+  const events = {}, inputs = [], messages = [], volumes = [];
   const timers = new Map();
   const classes = new Set(['gameboy-framed']);
   const parent = { postMessage: (...args) => messages.push(args) };
   const window = {
-    parent, EJS_emulator: { started: true, gameManager: { simulateInput: (...args) => inputs.push(args) } },
+    parent, EJS_emulator: { started: true, volume: .5, setVolume(value) { volumes.push(value); this.muted = value === 0; },
+      gameManager: { simulateInput: (...args) => inputs.push(args) } },
     addEventListener: (name, fn) => { events[name] = fn; }, dispatchEvent() {},
   };
   const document = {
@@ -21,7 +22,7 @@ function bridge(system = 'gb') {
   runInNewContext(source, { window, document, game: { system }, URL, Event: class {}, performance: { now: () => 100 },
     setTimeout: fn => { const id = timers.size + 1; timers.set(id, fn); return id; }, clearTimeout: id => timers.delete(id) });
   const message = (data, extra = {}) => events.message({ origin: 'http://minitv.local:5050', source: parent, data: { channel: 'minitv-gameboy', ...data }, ...extra });
-  return { events, inputs, messages, window, document, classes, message, flush: () => { timers.forEach(fn => fn()); timers.clear(); } };
+  return { events, inputs, messages, volumes, window, document, classes, message, flush: () => { timers.forEach(fn => fn()); timers.clear(); } };
 }
 
 test('only accepts controls from the embedding window and exact origin', () => {
@@ -151,4 +152,37 @@ test('Mega Drive keyboard sends the six Sega buttons without triggering native d
   const count = b.inputs.length;
   b.events.keydown({code:'KeyZ', type:'keydown', preventDefault() {throw Error('Expanded mode uses native controls');} });
   assert.equal(b.inputs.length, count);
+});
+
+test('volume accepts only finite levels from the exact embedding window', () => {
+  const b = bridge('nes');
+  b.window.EJS_onGameStart();
+  for (const volume of [-.1, 1.1, NaN, Infinity, '0.5', null]) b.message({type:'volume',volume});
+  b.message({type:'volume',volume:.3}, {origin:'https://unrelated.example'});
+  b.message({type:'volume',volume:.3}, {source:{}});
+  assert.deepEqual(b.volumes, []);
+  for (const volume of [.25, 0, 1]) b.message({type:'volume',volume});
+  assert.deepEqual(b.volumes, [.25, 0, 1]);
+  assert.equal(b.window.EJS_emulator.volume, 1);
+  assert.equal(b.messages.at(-1)[0].type, 'volume-state');
+  assert.equal(b.messages.at(-1)[0].volume, 1);
+});
+
+test('volume chosen during loading is applied on start, and native mute stays synchronized', () => {
+  const b = bridge();
+  b.window.EJS_emulator.started = false;
+  b.message({type:'volume',volume:.2});
+  b.message({type:'volume',volume:.65});
+  assert.deepEqual(b.volumes, []);
+  b.window.EJS_emulator.started = true;
+  b.window.EJS_onGameStart();
+  assert.deepEqual(b.volumes, [.65]);
+  b.window.EJS_emulator.setVolume(0);
+  assert.equal(b.messages.at(-1)[0].volume, 0);
+  b.window.EJS_emulator.setVolume(.4);
+  assert.equal(b.messages.at(-1)[0].volume, .4);
+  b.window.EJS_onGameStart();
+  const count = b.messages.length;
+  b.window.EJS_emulator.setVolume(.3);
+  assert.equal(b.messages.length, count + 1); // Restarts don't install duplicate hooks.
 });

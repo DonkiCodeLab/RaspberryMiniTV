@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gameConsoleFrame, frameRectangle, frameVariables } from "./gameConsoleFrames.js";
 import RetroTelevision from "./RetroTelevision.jsx";
+import GameBoyVector from "./GameBoyVector.jsx";
+import { readGameVolume, saveGameVolume } from "./gameAudio.js";
 import "./BrowserGameModal.css";
 
 function GameSession({ game, onClose, t }) {
@@ -11,9 +13,13 @@ function GameSession({ game, onClose, t }) {
   const [expanded, setExpanded] = useState(false);
   const [ready, setReady] = useState(false);
   const [pressedInputs, setPressedInputs] = useState(() => new Set());
+  const [volume, setVolume] = useState(readGameVolume);
+  const lastAudibleVolume = useRef(volume || 50);
+  const emulatorVolume = useRef(null);
   const consoleFrame = gameConsoleFrame(game.systemId);
   const hasConsoleFrame = Boolean(consoleFrame);
   const isTelevision = consoleFrame?.layout === "television";
+  const isVector = consoleFrame?.artwork === "vector";
   const framed = hasConsoleFrame && !expanded;
   const origin = new URL(game.url, window.location.href).origin;
   const send = useCallback((message) => {
@@ -33,12 +39,17 @@ function GameSession({ game, onClose, t }) {
   }, []);
 
   useEffect(() => {
-    if (!hasConsoleFrame) return;
     const onMessage = (event) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow || event.data?.channel !== "minitv-gameboy") return;
       if (event.data.type === "ready") setReady(true);
       if (event.data.type === "close") onClose();
-      if (event.data.type === "input-state" && Array.isArray(event.data.inputs) &&
+      if (event.data.type === "volume-state" && typeof event.data.volume === "number" &&
+        Number.isFinite(event.data.volume) && event.data.volume >= 0 && event.data.volume <= 1) {
+        const value = Math.round(event.data.volume * 100);
+        emulatorVolume.current = value;
+        setVolume(value);
+      }
+      if (consoleFrame && event.data.type === "input-state" && Array.isArray(event.data.inputs) &&
         event.data.inputs.every(input => consoleFrame.buttons.some(button => button.input === input))) {
         setPressedInputs(new Set(event.data.inputs));
       }
@@ -46,6 +57,16 @@ function GameSession({ game, onClose, t }) {
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [hasConsoleFrame, consoleFrame, origin, onClose]);
+
+  useEffect(() => {
+    if (volume > 0) lastAudibleVolume.current = volume;
+    saveGameVolume(volume);
+    // Do not echo native mute events: EmulatorJS preserves its previous level.
+    if (ready && emulatorVolume.current !== volume) {
+      emulatorVolume.current = volume;
+      send({ type: "volume", volume: volume / 100 });
+    }
+  }, [volume, ready, send]);
 
   useEffect(() => {
     if (hasConsoleFrame) send({ type: "presentation", framed });
@@ -108,7 +129,7 @@ function GameSession({ game, onClose, t }) {
       >{button.name === "Mode" ? "MODE" : null}</span> : ["L", "R"].includes(button.name) ? button.name : null}</button>)}
   </div>;
   return createPortal(
-    <dialog ref={dialog} className={`browser-player browser-game${hasConsoleFrame ? ` browser-game--gameboy browser-game--${game.systemId}` : ""}${expanded ? " browser-game--expanded" : ""}`}
+    <dialog ref={dialog} className={`browser-player browser-game${hasConsoleFrame ? ` browser-game--gameboy browser-game--${game.systemId}` : ""}${isVector ? " browser-game--vector" : ""}${expanded ? " browser-game--expanded" : ""}`}
       style={consoleFrame ? frameVariables(consoleFrame) : undefined}
       aria-label={t("browser_game_player")} onCancel={(event) => { event.preventDefault(); onClose(); }}>
       <div className="browser-player__panel browser-game__panel">
@@ -118,6 +139,19 @@ function GameSession({ game, onClose, t }) {
             <h2>{game.title}</h2>
           </div>
           <div className="browser-game__actions">
+            <div className="browser-game__volume" role="group" aria-label={t("browser_game_volume")}>
+              <button type="button" className="browser-game__mute" disabled={!ready}
+                onClick={() => setVolume(value => value === 0 ? lastAudibleVolume.current : 0)}
+                aria-label={t(volume === 0 ? "browser_game_unmute" : "browser_game_mute")}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5Z" />
+                  {volume === 0 ? <path d="m16 9 6 6m0-6-6 6" /> : <><path d="M15 8c3 2 3 6 0 8" /><path d="M18 4c6 4 6 12 0 16" /></>}
+                </svg>
+              </button>
+              <input type="range" min="0" max="100" step="1" value={volume} disabled={!ready}
+                aria-label={t("browser_game_volume")} aria-valuetext={`${volume}%`}
+                onChange={event => setVolume(Number(event.target.value))} />
+              <output aria-hidden="true">{volume}%</output>
+            </div>
             {hasConsoleFrame && <button type="button" className="browser-game__expand" aria-pressed={expanded}
               onClick={() => { send({ type: "release" }); setExpanded(value => !value); }}>
               {t(expanded ? "gameboy_show_console" : "gameboy_expand_screen")}
@@ -133,12 +167,13 @@ function GameSession({ game, onClose, t }) {
             </div>
           </div> :
           <div className={hasConsoleFrame ? "gameboy-device" : "browser-game__display"}>
-            {hasConsoleFrame && <img className="gameboy-device__photo" src={photoUrl}
-              style={frameRectangle(consoleFrame, [0, 0, ...consoleFrame.image])} alt="" draggable="false" />}
+            {isVector ? <GameBoyVector pressedInputs={pressedInputs} ready={ready} /> : hasConsoleFrame &&
+              <img className="gameboy-device__photo" src={photoUrl}
+                style={frameRectangle(consoleFrame, [0, 0, ...consoleFrame.image])} alt="" draggable="false" />}
             {gameScreen}
             {hasConsoleFrame && <>
-              <span className={`gameboy-device__power${ready ? " is-on" : ""}`}
-                style={frameRectangle(consoleFrame, consoleFrame.power)} aria-hidden="true" />
+              {!isVector && <span className={`gameboy-device__power${ready ? " is-on" : ""}`}
+                style={frameRectangle(consoleFrame, consoleFrame.power)} aria-hidden="true" />}
               {controls}
             </>}
           </div>}

@@ -90,7 +90,8 @@ class GameSystemsTest(unittest.TestCase):
                 page = response.get_data(as_text=True)
                 config = json.loads(re.search(r'const game = (.*);', page)[1])
                 self.assertEqual(config['gameboyFrame'], expected)
-                self.assertEqual('minitv-gameboy' in page, expected)
+                self.assertIn('minitv-gameboy', page)  # Volume is available for every embedded system.
+                self.assertIn('data.type === "volume"', page)
                 self.assertEqual(config['core'], api.WEB_EMULATOR_CORES[system])
                 self.assertEqual(config['system'], system)
                 self.assertEqual('id="gameboy-lcd"' in page, expected and system == 'gb')

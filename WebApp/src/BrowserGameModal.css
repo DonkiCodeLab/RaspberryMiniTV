@@ -21,6 +21,13 @@ dialog.browser-game:not([open]) { display: none; }
   font-size: .8rem;
 }
 .browser-game__actions button:focus-visible { outline: 2px solid #ffd429; outline-offset: 4px; }
+.browser-game__volume { display: flex; align-items: center; gap: .5rem; }
+.browser-game__panel header .browser-game__mute { display: grid; place-items: center; width: 32px; height: 34px; padding: 5px; }
+.browser-game__mute svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.browser-game__volume input[type="range"] { width: 82px; min-width: 0; margin: 0; padding: 0; accent-color: #e5d29c; cursor: pointer; }
+.browser-game__volume input:focus-visible { outline: 2px solid #ffd429; outline-offset: 5px; }
+.browser-game__volume output { width: 4ch; color: #d9ddd1; font: .72rem/1.2 system-ui, sans-serif; font-variant-numeric: tabular-nums; text-align: right; }
+.browser-game__volume :disabled { opacity: .4; cursor: wait; }
 dialog.browser-game--gameboy { background: radial-gradient(ellipse at 50% 42%, #323c32, #111b19 55%, #080e11); }
 dialog.browser-game--gbc { background: radial-gradient(ellipse at 50% 42%, #3e3921, #1d2116 55%, #080e11); }
 dialog.browser-game--gba { background: radial-gradient(ellipse at 50% 42%, #343456, #191b30 55%, #0b0d16); }
@@ -44,6 +51,21 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
   user-select: none;
   filter: drop-shadow(0 20px 25px #0008);
 }
+.gameboy-vector { position: absolute; inset: 0; pointer-events: none; user-select: none; }
+.gameboy-vector > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.gameboy-vector [data-part]:not([data-part="power"]) {
+  transform-box: fill-box; transform-origin: center;
+  transition: transform 65ms ease-out, filter 65ms ease-out;
+}
+.gameboy-vector[data-a="true"] [data-part="a"],
+.gameboy-vector[data-b="true"] [data-part="b"],
+.gameboy-vector[data-start="true"] [data-part="start"],
+.gameboy-vector[data-select="true"] [data-part="select"] { transform: translate(2px, 3px) scale(.95); filter: brightness(.72); }
+.gameboy-vector[data-dpad="true"] [data-part="dpad"] { transform: translate(var(--pad-x), var(--pad-y)) scale(.97); filter: brightness(.78); }
+.gameboy-vector[data-ready="false"] [data-part="power"] { filter: brightness(.35); }
+.gameboy-vector[data-ready="true"] [data-part="power"] { filter: drop-shadow(0 0 4px #ff443b); }
+.browser-game--vector .gameboy-device__screen { border-radius: 3.05% / 3.31%; }
+.browser-game--vector .gameboy-device__button.is-pressed { background: transparent; box-shadow: none; }
 .gameboy-device__screen {
   position: absolute;
   background: var(--screen-color);
@@ -94,6 +116,7 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
 .browser-game--expanded .gameboy-device { width: min(100%, calc((100dvh - 9rem) * var(--screen-ratio))); aspect-ratio: var(--screen-ratio); }
 .browser-game--expanded .gameboy-device__screen { inset: 0; width: 100%; height: 100%; box-shadow: none; border-radius: 8px; }
 .browser-game--expanded .gameboy-device__photo,
+.browser-game--expanded .gameboy-vector,
 .browser-game--expanded .gameboy-device__controls,
 .browser-game--expanded .gameboy-device__power,
 .browser-game--expanded .gameboy-device__screen::after { display: none; }
@@ -104,6 +127,13 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
   .browser-game__actions { gap: .5rem; }
   .browser-game__panel header .browser-game__expand { padding: .6rem .75rem; font-size: .72rem; }
   .gameboy-player__hint { max-width: 300px; font-size: .7rem; }
+  .browser-game__panel header { flex-wrap: wrap; }
+  .browser-game__heading { width: 100%; }
+  .browser-game__actions { width: 100%; justify-content: space-between; }
+  .browser-game__volume { gap: .3rem; }
+  .browser-game__volume input[type="range"] { width: 70px; }
+  .gameboy-device { width: min(100%, calc((100dvh - 13rem) * var(--device-ratio))); }
+  .browser-game--expanded .gameboy-device { width: min(100%, calc((100dvh - 11rem) * var(--screen-ratio))); }
 }
 @media (max-height: 500px) and (orientation: landscape) {
   .gameboy-device { width: min(100%, calc((100dvh - 8rem) * var(--device-ratio))); }
@@ -151,4 +181,5 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
 }
 @media (prefers-reduced-motion: reduce) {
   .mega-drive-controller__surface { transition: none; }
+  .gameboy-vector [data-part] { transition: none; }
 }
