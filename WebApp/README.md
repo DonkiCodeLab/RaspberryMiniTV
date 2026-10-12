@@ -15,29 +15,40 @@ El puente del emulador comunica las pulsaciones simultáneas y suelta la indicac
 al perder el foco o cambiar de vista. Cada control expone `data-console-button`
 (`up`, `down`, `left`, `right`, `a`, `b`, `start`, `select`, `l`, `r`),
 `data-pressed="true|false"` y la clase `is-pressed` para conectar otros diseños.
-La Game Boy original utiliza el SVG aportado por el usuario, conservado en
-`src/assets/gameboy-vector.svg`. `GameBoyVector.jsx` lo inserta como vectores:
+Game Boy, Game Boy Color y Game Boy Advance utilizan los SVG aportados por el
+usuario, conservados en `src/assets/gameboy-vector.svg`,
+`src/assets/gameboy-color-vector.svg` y `src/assets/gameboy-advance-vector.svg`.
+`GameBoyVector.jsx` los inserta como vectores:
 los grupos `data-part="a|b|dpad|start|select"` se hunden y oscurecen de forma
 independiente; la cruceta se desplaza según la dirección y el LED indica que la
 partida está lista. Las coordenadas de pantalla y controles están en
-`gameConsoleFrames.js`. Color y Advance siguen utilizando sus fotografías.
+`gameConsoleFrames.js`. En Color, las letras A/B y las marcas de la cruceta se
+mueven junto con sus botones; la pantalla conserva los colores del juego.
+Advance incluye los grupos `data-part="l|r"` para animar también los gatillos,
+con Q/E o pulsándolos en pantalla; su LED se ilumina en verde al iniciar el juego.
 
 Todas las plataformas tienen un control de volumen de 0 a 100 % y un botón para
 silenciar/restaurar el nivel anterior en la cabecera. El nivel se recuerda en el
 navegador y se sincroniza con el menú del emulador en la vista ampliada. Ajusta
 el audio de la partida del navegador, sin cambiar el volumen de la Raspberry.
 
-Mega Drive usa una tele morada de tubo dibujada en SVG, como guiño a Los Simpson,
-y debajo la fotografía del mando de seis botones que ya utiliza el catálogo.
-La pantalla mantiene 4:3. Los recortes de los botones de esa misma fotografía se
-hunden y oscurecen al pulsarlos, también desde el teclado: flechas, Z/X/C para
-A/B/C, A/S/D para X/Y/Z, Enter para Start y V para Mode. Ampliar y volver a la
-tele conserva la sesión. X/Y/Z dependen de que el juego admita el mando de seis
-botones; Genesis Plus GX mantiene su detección automática del mando.
-El SVG original está en `src/RetroTelevision.jsx`; la referencia visual de la
-tele es [esta imagen de Los Simpson](https://www.vhv.rs/viewpic/hbbooJm_la-tv-de-los-simpsons-hd-png-download/).
-No se incorpora la imagen de esa web. El mando conserva la procedencia del
-[catálogo Iconic](public/game-systems/iconic/README.md).
+Mega Drive utiliza **Tele**, un selector en modo lista con los 25 SVG aportados.
+La numeración corresponde a `SVG (1).svg`–`SVG (25).svg`; el modelo inicial es
+Tele 22. La selección se recuerda en este navegador y se comparte con los futuros
+marcos de consola de sobremesa. Cambiar de tele, ampliar y volver conserva el
+mismo emulador y la partida. Cada cristal tiene una máscara extraída del dibujo
+y un área de juego 4:3 que evita recortar la imagen, incluso en la tele ovalada.
+Los modelos monocromos se muestran en gris claro sobre el fondo oscuro; los de
+color conservan su paleta. El catálogo y las medidas están en `gameTelevisions.js`,
+y los dibujos y máscaras en `public/game-televisions/`.
+
+Debajo aparece el mando SVG de tres botones MK-1650 aportado por el usuario,
+con el logo **SEGA** en plata añadido en una capa independiente. Su archivo está
+en `src/assets/megadrive-controller.svg`; las capas A/B/C, Start y cruceta se
+hunden y oscurecen con ratón, pantalla táctil o teclado. Flechas, Z/X/C para A/B/C
+y Enter para Start. Se conservan A/S/D para X/Y/Z y V para Mode mediante teclado
+para los juegos compatibles con seis botones. La procedencia del logo se detalla
+en `public/game-televisions/README.md`.
 
 ## Puntuaciones de IMDb, Rotten Tomatoes y Metacritic con OMDb
 

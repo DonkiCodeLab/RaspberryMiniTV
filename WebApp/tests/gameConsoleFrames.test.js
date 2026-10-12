@@ -18,12 +18,13 @@ test('each Game Boy uses its own screen and controls, with shoulders only on Adv
   assert.equal(gameConsoleFrame('toString'), null);
 });
 
-test('Mega Drive pairs a 4:3 television with the six-button controller photograph', () => {
+test('Mega Drive pairs a 4:3 television with the supplied three-button vector controller', () => {
   const frame = gameConsoleFrame('megadrive');
   assert.equal(frame.layout, 'television');
   assert.equal(frame.aspect, 4 / 3);
+  assert.equal(frame.artwork, 'vector');
   const buttons = Object.fromEntries(frame.buttons.map(({name,input}) => [name,input]));
-  assert.deepEqual(buttons, {up:4,down:5,left:6,right:7,A:1,B:0,C:8,X:10,Y:9,Z:11,Start:3,Mode:2});
+  assert.deepEqual(buttons, {up:4,down:5,left:6,right:7,A:1,B:0,C:8,Start:3});
   assert.deepEqual(['KeyZ','KeyX','KeyC','KeyA','KeyS','KeyD'].map(key => frame.keys[key]), [1,0,8,10,9,11]);
   for (const button of frame.buttons) {
     assert.ok(button.x >= 0 && button.y >= 0 && button.x + button.w <= frame.image[0] && button.y + button.h <= frame.image[1]);

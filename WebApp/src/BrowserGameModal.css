@@ -29,7 +29,7 @@ dialog.browser-game:not([open]) { display: none; }
 .browser-game__volume output { width: 4ch; color: #d9ddd1; font: .72rem/1.2 system-ui, sans-serif; font-variant-numeric: tabular-nums; text-align: right; }
 .browser-game__volume :disabled { opacity: .4; cursor: wait; }
 dialog.browser-game--gameboy { background: radial-gradient(ellipse at 50% 42%, #323c32, #111b19 55%, #080e11); }
-dialog.browser-game--gbc { background: radial-gradient(ellipse at 50% 42%, #3e3921, #1d2116 55%, #080e11); }
+dialog.browser-game--gbc { background: radial-gradient(ellipse at 50% 42%, #1c4857, #10252d 55%, #080e11); }
 dialog.browser-game--gba { background: radial-gradient(ellipse at 50% 42%, #343456, #191b30 55%, #0b0d16); }
 dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%, #47354a, #211e30 52%, #0d111b); }
 .browser-game--gameboy .browser-game__panel { width: min(1100px, 100%); background: transparent; box-shadow: none; overflow: visible; }
@@ -61,10 +61,15 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
 .gameboy-vector[data-b="true"] [data-part="b"],
 .gameboy-vector[data-start="true"] [data-part="start"],
 .gameboy-vector[data-select="true"] [data-part="select"] { transform: translate(2px, 3px) scale(.95); filter: brightness(.72); }
+.gameboy-vector[data-l="true"] [data-part="l"],
+.gameboy-vector[data-r="true"] [data-part="r"] { transform: translateY(3px); filter: brightness(.72); }
 .gameboy-vector[data-dpad="true"] [data-part="dpad"] { transform: translate(var(--pad-x), var(--pad-y)) scale(.97); filter: brightness(.78); }
 .gameboy-vector[data-ready="false"] [data-part="power"] { filter: brightness(.35); }
-.gameboy-vector[data-ready="true"] [data-part="power"] { filter: drop-shadow(0 0 4px #ff443b); }
+.gameboy-vector[data-ready="true"] [data-part="power"] { filter: drop-shadow(0 0 4px var(--power-color)); }
+.browser-game--gba .gameboy-vector[data-ready="true"] { --gba-power-color: #62dd5a; }
 .browser-game--vector .gameboy-device__screen { border-radius: 3.05% / 3.31%; }
+:is(.browser-game--gbc, .browser-game--gba) .gameboy-device__screen { border-radius: 0; box-shadow: 0 0 1px 1px #242424; }
+.browser-game--gbc .browser-game__heading > span, .browser-game--gbc .gameboy-player__hint { color: #b4d4df; }
 .browser-game--vector .gameboy-device__button.is-pressed { background: transparent; box-shadow: none; }
 .gameboy-device__screen {
   position: absolute;
@@ -140,46 +145,65 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
   .gameboy-player__hint { margin-top: .2rem; }
 }
 
-.mega-drive-setup { width: min(900px, 100%, calc((100dvh - 10rem) / 1.13)); }
-.mega-drive-tv { position: relative; width: 100%; aspect-ratio: 1000 / 720; }
-.retro-television { display: block; width: 100%; height: 100%; filter: drop-shadow(0 12px 14px #0005); }
-.retro-television__led.is-on { filter: drop-shadow(0 0 6px #9fef9a); }
+/* Televisions share the same player and use artwork-specific glass masks. */
+.browser-game__television-picker { display: flex; align-items: center; justify-content: center; gap: .75rem; margin: 0 0 1rem; }
+.browser-game__television-picker label { font-size: .78rem; color: #cdc5d4; }
+.browser-game__television-picker select { color-scheme: dark; min-width: 140px; padding: .5rem 2rem .5rem .75rem; border: 1px solid #c9b7e14a; border-radius: 8px; background: #292435; color: #f4edf8; font: inherit; font-size: .8rem; cursor: pointer; }
+.browser-game__television-picker select:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
+.mega-drive-setup { width: min(900px, 100%, calc((100dvh - 14rem) / var(--setup-ratio))); }
+.mega-drive-tv { position: relative; width: 100%; aspect-ratio: var(--tv-ratio); }
+.retro-television { display: block; width: 100%; height: 100%; filter: drop-shadow(0 12px 14px #0005); pointer-events: none; user-select: none; }
+/* The monochrome cut-out drawings use a light finish against the dark room. */
+.retro-television--monochrome { filter: invert(.8) drop-shadow(0 12px 14px #0005); }
 .mega-drive-tv .gameboy-device__screen {
-  left: 7.8%; top: 20.138889%; width: 64.4%; height: 67.083333%;
-  border-radius: 4% / 5.333%; box-shadow: inset 0 0 12px #000b;
+  border-radius: 0; box-shadow: none; background: transparent;
+}
+/* Mask only the glass background. Masking an iframe ancestor can blank WebGL
+   canvases after a resize in Chromium; the 4:3 iframe fits inside this contour. */
+.mega-drive-tv .gameboy-device__screen::before {
+  content: ""; position: absolute; inset: 0; background: #050505; pointer-events: none;
+  mask-image: var(--tv-mask); mask-size: 100% 100%; mask-repeat: no-repeat;
+  -webkit-mask-image: var(--tv-mask); -webkit-mask-size: 100% 100%; -webkit-mask-repeat: no-repeat;
+}
+.mega-drive-tv .gameboy-device__screen iframe {
+  position: absolute; left: var(--picture-left); top: var(--picture-top);
+  width: var(--picture-width); height: var(--picture-height); background: #050505;
 }
 .mega-drive-tv .gameboy-device__screen::after {
-  border-radius: inherit;
-  background: linear-gradient(135deg, #c3d9ff13, transparent 42%);
+  background: linear-gradient(135deg, #c3d9ff0a, transparent 42%);
   box-shadow: inset 0 0 14px #0007;
+  mask-image: var(--tv-mask); mask-size: 100% 100%; mask-repeat: no-repeat;
+  -webkit-mask-image: var(--tv-mask); -webkit-mask-size: 100% 100%; -webkit-mask-repeat: no-repeat;
 }
 .mega-drive-controller {
-  position: relative; width: 76%; aspect-ratio: 1080 / 564; margin: .2rem auto 0;
+  position: relative; width: 76%; aspect-ratio: var(--device-ratio); margin: .75rem auto 0;
   filter: drop-shadow(0 8px 12px #0007);
 }
-.mega-drive-controller > img { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; }
-.mega-drive-controller .gameboy-device__button { border-radius: 10%; }
-.mega-drive-controller :is(.gameboy-device__button--a, .gameboy-device__button--b, .gameboy-device__button--c,
-  .gameboy-device__button--x, .gameboy-device__button--y, .gameboy-device__button--z) { border-radius: 50%; }
-.mega-drive-controller :is(.gameboy-device__button--start, .gameboy-device__button--mode) { border-radius: 999px; }
-.mega-drive-controller__surface {
-  position: absolute; inset: 0; border-radius: inherit; background-repeat: no-repeat;
-  pointer-events: none; transition: transform 65ms ease-out, filter 65ms ease-out;
-  color: #b1b4bd; font: 600 clamp(5px, .6vw, 9px) sans-serif; letter-spacing: .1em;
-  display: grid; place-items: center;
+.mega-drive-vector, .mega-drive-vector > svg { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.mega-drive-vector [data-part]:not([data-part="logo"]) {
+  transform-box: fill-box; transform-origin: center;
+  transition: transform 65ms ease-out, filter 65ms ease-out;
 }
-.mega-drive-controller .is-pressed { background: #07090d; box-shadow: inset 0 3px 8px #000, 0 0 0 1px #d4b1f980; }
-.mega-drive-controller .is-pressed .mega-drive-controller__surface { transform: translateY(2px) scale(.93); filter: brightness(.67); }
+.mega-drive-vector[data-a="true"] [data-part="a"],
+.mega-drive-vector[data-b="true"] [data-part="b"],
+.mega-drive-vector[data-c="true"] [data-part="c"],
+.mega-drive-vector[data-start="true"] [data-part="start"] { transform: translate(10px, 14px) scale(.95); filter: brightness(.65); }
+.mega-drive-vector[data-dpad="true"] [data-part="dpad"] { transform: translate(var(--pad-x), var(--pad-y)) scale(.97); filter: brightness(.72); }
+.mega-drive-controller .gameboy-device__button--c { border-radius: 50%; }
 .browser-game--expanded .mega-drive-setup { width: min(100%, calc((100dvh - 9rem) * var(--screen-ratio))); }
 .browser-game--expanded .mega-drive-tv { aspect-ratio: var(--screen-ratio); }
-.browser-game--expanded .mega-drive-tv .gameboy-device__screen { inset: 0; width: 100%; height: 100%; border-radius: 8px; }
+.browser-game--expanded .mega-drive-tv .gameboy-device__screen { inset: 0; width: 100%; height: 100%; border-radius: 8px; background: #050505; }
+.browser-game--expanded .mega-drive-tv .gameboy-device__screen::before { display: none; }
+.browser-game--expanded .mega-drive-tv .gameboy-device__screen iframe { inset: 0; width: 100%; height: 100%; }
 .browser-game--expanded .retro-television, .browser-game--expanded .mega-drive-controller { display: none; }
 @media (max-width: 600px) {
-  .mega-drive-setup { width: min(100%, calc((100dvh - 10rem) / 1.25)); }
+  .mega-drive-setup { width: min(100%, max(260px, calc((100dvh - 16rem) / var(--setup-mobile-ratio)))); }
   .mega-drive-controller { width: 100%; }
   .browser-game--megadrive .gameboy-player__hint { max-width: 360px; }
 }
+@media (max-height: 500px) and (orientation: landscape) {
+  .mega-drive-setup { width: min(420px, 100%); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .mega-drive-controller__surface { transition: none; }
-  .gameboy-vector [data-part] { transition: none; }
+  .mega-drive-vector [data-part], .gameboy-vector [data-part] { transition: none; }
 }

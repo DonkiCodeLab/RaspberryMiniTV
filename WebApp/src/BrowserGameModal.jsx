@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gameConsoleFrame, frameRectangle, frameVariables } from "./gameConsoleFrames.js";
 import RetroTelevision from "./RetroTelevision.jsx";
+import MegaDriveController from "./MegaDriveController.jsx";
+import { GAME_TELEVISIONS, gameTelevision, readGameTelevision, saveGameTelevision, televisionVariables } from "./gameTelevisions.js";
 import GameBoyVector from "./GameBoyVector.jsx";
 import { readGameVolume, saveGameVolume } from "./gameAudio.js";
 import "./BrowserGameModal.css";
@@ -14,12 +16,14 @@ function GameSession({ game, onClose, t }) {
   const [ready, setReady] = useState(false);
   const [pressedInputs, setPressedInputs] = useState(() => new Set());
   const [volume, setVolume] = useState(readGameVolume);
+  const [televisionId, setTelevisionId] = useState(readGameTelevision);
   const lastAudibleVolume = useRef(volume || 50);
   const emulatorVolume = useRef(null);
   const consoleFrame = gameConsoleFrame(game.systemId);
   const hasConsoleFrame = Boolean(consoleFrame);
   const isTelevision = consoleFrame?.layout === "television";
   const isVector = consoleFrame?.artwork === "vector";
+  const television = gameTelevision(televisionId);
   const framed = hasConsoleFrame && !expanded;
   const origin = new URL(game.url, window.location.href).origin;
   const send = useCallback((message) => {
@@ -50,7 +54,7 @@ function GameSession({ game, onClose, t }) {
         setVolume(value);
       }
       if (consoleFrame && event.data.type === "input-state" && Array.isArray(event.data.inputs) &&
-        event.data.inputs.every(input => consoleFrame.buttons.some(button => button.input === input))) {
+        event.data.inputs.every(input => Object.values(consoleFrame.keys).includes(input))) {
         setPressedInputs(new Set(event.data.inputs));
       }
     };
@@ -99,7 +103,7 @@ function GameSession({ game, onClose, t }) {
   const input = (button, pressed) => send({ type: "input", input: button.input, pressed });
   const photoUrl = `/game-systems/iconic/${game.systemId}/console.webp`;
   const gameScreen = <div className={hasConsoleFrame ? "gameboy-device__screen" : "browser-game__screen"}
-    style={framed && !isTelevision ? frameRectangle(consoleFrame, consoleFrame.screen) : undefined}>
+    style={framed ? frameRectangle(isTelevision ? television : consoleFrame, isTelevision ? television.screen : consoleFrame.screen) : undefined}>
     <iframe ref={frame} src={game.url} title={`${t("browser_game_player")}: ${game.title}`}
       allow="autoplay; fullscreen; gamepad; screen-wake-lock" allowFullScreen referrerPolicy="origin"
       onLoad={() => { if (hasConsoleFrame) send({ type: "presentation", framed }); }} />
@@ -122,15 +126,11 @@ function GameSession({ game, onClose, t }) {
       }}
       onKeyDown={(event) => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); if (!event.repeat) input(button, true); } }}
       onKeyUp={(event) => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); input(button, false); } }}
-    >{isTelevision ? <span className="mega-drive-controller__surface" aria-hidden="true"
-      style={{ backgroundImage: `url(${photoUrl})`,
-        backgroundSize: `${consoleFrame.image[0] / button.w * 100}% ${consoleFrame.image[1] / button.h * 100}%`,
-        backgroundPosition: `${button.x / (consoleFrame.image[0] - button.w) * 100}% ${button.y / (consoleFrame.image[1] - button.h) * 100}%` }}
-      >{button.name === "Mode" ? "MODE" : null}</span> : ["L", "R"].includes(button.name) ? button.name : null}</button>)}
+    >{!isVector && ["L", "R"].includes(button.name) ? button.name : null}</button>)}
   </div>;
   return createPortal(
     <dialog ref={dialog} className={`browser-player browser-game${hasConsoleFrame ? ` browser-game--gameboy browser-game--${game.systemId}` : ""}${isVector ? " browser-game--vector" : ""}${expanded ? " browser-game--expanded" : ""}`}
-      style={consoleFrame ? frameVariables(consoleFrame) : undefined}
+      style={consoleFrame ? { ...frameVariables(consoleFrame), ...(isTelevision ? televisionVariables(television, consoleFrame.crop[2] / consoleFrame.crop[3]) : {}) } : undefined}
       aria-label={t("browser_game_player")} onCancel={(event) => { event.preventDefault(); onClose(); }}>
       <div className="browser-player__panel browser-game__panel">
         <header>
@@ -159,15 +159,27 @@ function GameSession({ game, onClose, t }) {
             <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
           </div>
         </header>
+        {isTelevision && framed && <div className="browser-game__television-picker">
+          <label htmlFor="game-television">{t("browser_game_television")}</label>
+          <select id="game-television" value={televisionId} onChange={event => {
+            send({ type: "release" });
+            setTelevisionId(event.target.value);
+            saveGameTelevision(event.target.value);
+          }}>
+            {GAME_TELEVISIONS.map(tv => <option key={tv.id} value={tv.id}>
+              {t("browser_game_television")} {String(tv.number).padStart(2, "0")}
+            </option>)}
+          </select>
+        </div>}
         <div className="browser-game__stage">
           {isTelevision ? <div className="mega-drive-setup">
-            <div className="mega-drive-tv"><RetroTelevision ready={ready} />{gameScreen}</div>
+            <div className="mega-drive-tv" data-television={television.id}><RetroTelevision television={television} />{gameScreen}</div>
             <div className="mega-drive-controller">
-              <img src={photoUrl} alt="" draggable="false" />{controls}
+              <MegaDriveController pressedInputs={pressedInputs} />{controls}
             </div>
           </div> :
           <div className={hasConsoleFrame ? "gameboy-device" : "browser-game__display"}>
-            {isVector ? <GameBoyVector pressedInputs={pressedInputs} ready={ready} /> : hasConsoleFrame &&
+            {isVector ? <GameBoyVector systemId={game.systemId} pressedInputs={pressedInputs} ready={ready} /> : hasConsoleFrame &&
               <img className="gameboy-device__photo" src={photoUrl}
                 style={frameRectangle(consoleFrame, [0, 0, ...consoleFrame.image])} alt="" draggable="false" />}
             {gameScreen}

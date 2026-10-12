@@ -1,22 +1,22 @@
-// All rectangles use pixels in the original header photographs. The crop only
-// removes transparent margins; the screen and buttons scale with the photograph.
+// Rectangles use the artwork's coordinates (SVG viewBox or photograph pixels).
+// The crop removes transparent margins; screen and controls scale together.
 const commonKeys = { ArrowUp: 4, ArrowDown: 5, ArrowLeft: 6, ArrowRight: 7, KeyZ: 8, KeyX: 0, KeyV: 2, Enter: 3 };
 const button = (name, input, x, y, w, h, rotation = 0) => ({ name, input, x, y, w, h, rotation });
 
 export const GAME_CONSOLE_FRAMES = {
   megadrive: {
-    name: "SEGA Mega Drive", layout: "television", image: [1080, 564], crop: [0, 0, 1080, 564],
+    name: "SEGA Mega Drive", layout: "television", artwork: "vector",
+    image: [4000, 4000], crop: [80, 864, 3840, 2272],
     aspect: 4 / 3, screenColor: "#11111b", powerColor: "#9ded9d",
     keys: { ArrowUp: 4, ArrowDown: 5, ArrowLeft: 6, ArrowRight: 7,
       KeyZ: 1, KeyX: 0, KeyC: 8, KeyA: 10, KeyS: 9, KeyD: 11, Enter: 3, KeyV: 2 },
     buttons: [
-      button("up", 4, 255, 156, 47, 69), button("down", 5, 255, 269, 47, 62),
-      button("left", 6, 190, 222, 67, 47), button("right", 7, 302, 222, 66, 47),
-      button("A", 1, 675, 292, 82, 82), button("B", 0, 770, 240, 82, 82),
-      button("C", 8, 869, 208, 86, 86), button("X", 10, 650, 194, 66, 66),
-      button("Y", 9, 728, 154, 66, 66), button("Z", 11, 816, 134, 66, 66),
-      button("Start", 3, 484, 205, 85, 33),
-      button("Mode", 2, 490, 17, 100, 32),
+      button("up", 4, 845, 1597, 217, 220), button("down", 5, 845, 2033, 217, 220),
+      button("left", 6, 625, 1817, 220, 216), button("right", 7, 1062, 1817, 220, 216),
+      button("A", 1, 2504.36, 1945.92, 348.43, 348.43),
+      button("B", 0, 2857.94, 1759.25, 348.43, 348.43),
+      button("C", 8, 3228.4, 1608.85, 348.43, 348.44),
+      button("Start", 3, 2615, 1327, 340, 154, -25),
     ],
   },
   gb: {
@@ -31,26 +31,28 @@ export const GAME_CONSOLE_FRAMES = {
     ],
   },
   gbc: {
-    name: "Nintendo Game Boy Color", image: [2048, 1810], crop: [474, 0, 1100, 1810],
-    screen: [733, 197, 543, 510], power: [595, 342, 27, 27],
+    name: "Nintendo Game Boy Color", artwork: "vector", image: [582, 984], crop: [0, 0, 582, 984],
+    screen: [125.947, 91.618, 329.325, 288.956], power: [55.628, 166.681, 15.663, 15.663],
     aspect: 10 / 9, screenColor: "#343e36", powerColor: "#f95448", keys: commonKeys,
     buttons: [
-      button("up", 4, 669, 1053, 92, 88), button("down", 5, 669, 1214, 92, 89),
-      button("left", 6, 590, 1131, 84, 94), button("right", 7, 756, 1131, 84, 94),
-      button("A", 8, 1303, 1083, 132, 132), button("B", 0, 1117, 1139, 137, 137),
-      button("Select", 2, 874, 1442, 110, 61), button("Start", 3, 1023, 1442, 110, 61),
+      button("up", 4, 99.944, 574.958, 44.618, 48.877), button("down", 5, 99.944, 668.451, 44.618, 48.866),
+      button("left", 6, 51.081, 623.835, 48.863, 44.616), button("right", 7, 144.562, 623.835, 48.867, 44.616),
+      button("A", 8, 463.483, 600.298, 67.141, 67.139), button("B", 0, 354.377, 633.865, 67.147, 67.139),
+      // Wider touch targets around the narrow rubber Start/Select buttons.
+      button("Select", 2, 210.128, 790.633, 72, 44), button("Start", 3, 297.459, 790.633, 72, 44),
     ],
   },
   gba: {
-    name: "Nintendo Game Boy Advance", image: [1080, 709], crop: [24, 60, 1032, 600],
-    screen: [330, 193, 410, 270], power: [839, 170, 14, 16],
+    name: "Nintendo Game Boy Advance", artwork: "vector", image: [955, 545], crop: [0, 0, 955, 545],
+    screen: [274.498, 108.18, 407.127, 265.31], power: [771.442, 84.902, 17.562, 17.56],
     aspect: 3 / 2, screenColor: "#17232b", powerColor: "#62dd5a", keys: { ...commonKeys, KeyQ: 10, KeyE: 11 },
     buttons: [
-      button("up", 4, 153, 248, 45, 48), button("down", 5, 153, 326, 45, 46),
-      button("left", 6, 114, 288, 46, 42), button("right", 7, 194, 288, 47, 42),
-      button("A", 8, 900, 260, 70, 71), button("B", 0, 812, 291, 70, 70),
-      button("Select", 2, 222, 479, 42, 43), button("Start", 3, 222, 424, 42, 43),
-      button("L", 10, 91, 108, 176, 47, -13), button("R", 11, 811, 113, 176, 47, 13),
+      button("up", 4, 110.96, 162.178, 41.073, 38.843), button("down", 5, 110.96, 242.095, 41.073, 38.843),
+      button("left", 6, 72.117, 201.02, 38.843, 41.075), button("right", 7, 152.033, 201.02, 38.843, 41.075),
+      button("A", 8, 838.888, 174.618, 59.8, 59.8), button("B", 0, 754.597, 202.712, 59.8, 59.8),
+      // Extend the small Start/Select targets without covering adjacent controls.
+      button("Select", 2, 173.29, 382.108, 44, 44), button("Start", 3, 173.29, 329.231, 44, 44),
+      button("L", 10, 37, 34, 172, 40, -14), button("R", 11, 746, 34, 172, 40, 14),
     ],
   },
 };
