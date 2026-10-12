@@ -10,3 +10,7 @@
 .game-image-dialog__header button { flex-shrink: 0; min-height: 44px; padding: 8px 16px; border: 1px solid #ffffff40; border-radius: 10px; background: #243746; color: #fff; font: inherit; cursor: pointer; }
 .game-image-dialog__header button:focus-visible { outline: 2px solid #ffd429; outline-offset: 2px; }
 .game-image-dialog__content > img { display: block; width: 100%; height: min(72vh, 800px); height: min(72dvh, 800px); object-fit: contain; }
+.game-image-dialog__navigation { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 12px; }
+.game-image-dialog__navigation button { width: 48px; height: 44px; border: 1px solid #ffffff40; border-radius: 10px; background: #243746; color: #fff; font: inherit; font-size: 28px; cursor: pointer; }
+.game-image-dialog__navigation button:focus-visible { outline: 2px solid #ffd429; outline-offset: 2px; }
+.game-image-dialog__content:has(.game-image-dialog__navigation) > img { height: min(62vh, 740px); height: min(62dvh, 740px); }

@@ -1,6 +1,7 @@
 import React, { useId, useState } from "react";
 import GameMetadataDetails from "./GameMetadataDetails.jsx";
 import GameVideo from "./GameVideo.jsx";
+import GameImagePreview from "./GameImagePreview.jsx";
 import { gameVideos } from "./gameVideos.js";
 import { gameScreenshots } from "./gameScreenshots.js";
 import { systemForGame } from "./gameSystems.js";
@@ -16,6 +17,7 @@ export default function GameDetails({ game, t, language, marks, onBack, onEdit, 
   const system = systemForGame(game);
   const platform = game.platformName || system?.name || game.platform;
   const images = gameScreenshots(game);
+  const gallery = images.map((src, index) => ({ src, alt: `${name} — ${t("games_image_number", { number: index + 1 })}` }));
   const videos = gameVideos(metadata, game.preferredVideo);
   const [media, setMedia] = useState(images.length ? "images" : "videos");
   const [imageIndex, setImageIndex] = useState(0);
@@ -99,7 +101,7 @@ export default function GameDetails({ game, t, language, marks, onBack, onEdit, 
       <div id={mediaId}>
         {activeMedia === "images" ? <div className="game-details__gallery">
           <div className="game-details__screenshot">
-            <img src={images[selectedImage]} alt={`${name} — ${t("games_image_number", { number: selectedImage + 1 })}`} />
+            <GameImagePreview src={images[selectedImage]} alt={gallery[selectedImage].alt} images={gallery} t={t} />
             {images.length > 1 && <div className="game-details__gallery-controls">
               <button type="button" onClick={() => changeImage(-1)} aria-label={t("prev_image")}>‹</button>
               <span aria-live="polite">{selectedImage + 1} / {images.length}</span>

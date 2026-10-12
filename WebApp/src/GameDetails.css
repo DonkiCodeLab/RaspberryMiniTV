@@ -54,7 +54,8 @@
 .game-details__media-switch button > span { font-size: .8em; }
 .game-details__media .game-video { padding: 0; margin: 0; border: 0; }
 .game-details__screenshot { position: relative; aspect-ratio: 16 / 9; max-height: 560px; border-radius: 18px; overflow: hidden; background: #0d1820; border: 1px solid #ffffff24; }
-.game-details__screenshot > img { width: 100%; height: 100%; object-fit: contain; }
+.game-details__screenshot > .game-image-preview { height: 100%; }
+.game-details__screenshot > .game-image-preview img { width: 100%; height: 100%; object-fit: contain; }
 .game-details__gallery-controls { position: absolute; bottom: .75rem; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: .8rem; padding: .3rem; border-radius: 999px; background: #0c1824eb; border: 1px solid #ffffff40; font-size: .85rem; }
 .game-details__gallery-controls button { width: 38px; height: 38px; border-radius: 50%; font-size: 1.8rem; color: #ffd429; background: #ffffff12; cursor: pointer; }
 .game-details__thumbnails { display: flex; gap: .65rem; overflow-x: auto; padding: .8rem .2rem .4rem; scrollbar-color: #ffd429 #14232e; }
@@ -80,7 +81,7 @@
   .game-details__media-switch button { justify-content: center; flex: 1; padding: .6rem .65rem; font-size: .85rem; }
   .game-details__gallery-controls { position: static; transform: none; justify-content: center; border: 0; border-radius: 0; }
   .game-details__screenshot { aspect-ratio: auto; }
-  .game-details__screenshot > img { aspect-ratio: 4 / 3; }
+  .game-details__screenshot > .game-image-preview img { aspect-ratio: 4 / 3; }
   .game-details .game-metadata-details__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .game-details .game-metadata-details__facts > div { padding: .85rem; }
 }

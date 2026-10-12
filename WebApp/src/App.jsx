@@ -4045,6 +4045,11 @@ function GameUploadModal({
 
   if (!visible || !file) return null;
 
+  const previewGallery = [
+    ...(metadataSelection?.screenshots || []).map(entry => gameMetadataImageUrl(entry.url)),
+    ...imagePreviewUrls,
+  ].map((src, index) => ({ src, alt: `${gameName || file.name} — ${t("games_image_number", { number: index + 1 })}` }));
+
   async function handleSubmit() {
     if (!platform) { setError(t("game_platform_label")); return; }
     const safeGameName = gameName.trim() || stripFileExtension(file.name);
@@ -4179,12 +4184,12 @@ function GameUploadModal({
                 )}
               </div>
               {metadataSelection?.screenshots?.length > 0 && <div className="game-extra-preview-grid">
-                {metadataSelection.screenshots.map((entry, index) => <GameImagePreview key={entry.url} src={gameMetadataImageUrl(entry.url)} loading="lazy" alt={`${gameName || file.name} — ${t("games_image_number", { number: index + 1 })}`} t={t} />)}
+                {metadataSelection.screenshots.map((entry, index) => <GameImagePreview key={entry.url} images={previewGallery} src={gameMetadataImageUrl(entry.url)} loading="lazy" alt={`${gameName || file.name} — ${t("games_image_number", { number: index + 1 })}`} t={t} />)}
               </div>}
               {imagePreviewUrls.length ? (
                 <div className="game-extra-preview-grid" aria-label={t("games_extra_images_field")}>
                   {imagePreviewUrls.map((previewUrl, index) => (
-                    <GameImagePreview key={previewUrl} src={previewUrl} alt={`${gameName || file.name} — ${t("games_image_number", { number: index + 1 })}`} t={t} />
+                    <GameImagePreview key={previewUrl} images={previewGallery} src={previewUrl} alt={`${gameName || file.name} — ${t("games_image_number", { number: index + 1 })}`} t={t} />
                   ))}
                 </div>
               ) : null}
