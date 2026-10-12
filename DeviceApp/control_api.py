@@ -3446,6 +3446,14 @@ def emulatorjs_asset(filename):
     return send_from_directory(EMULATORJS_DIR, safe_name, conditional=True)
 
 
+def browser_arcade_filename(filename):
+    """Remove download-site numeric prefixes without renaming library files."""
+    if os.path.splitext(filename)[1].lower() != ".zip":
+        return filename
+    match = re.fullmatch(r"(?:[0-9]+_)+([a-zA-Z][a-zA-Z0-9_]*\.zip)", filename, re.IGNORECASE)
+    return match.group(1).lower() if match else filename
+
+
 @app.route("/games/content", methods=["GET"])
 @app.route("/games/content/<filename>", methods=["GET"])
 def browser_game_content(filename=None):
@@ -3453,7 +3461,8 @@ def browser_game_content(filename=None):
     game_path = resolve_game_path(relative_path)
     if not game_path or not os.path.isfile(game_path) or not is_game_rom_file(game_path):
         return jsonify({"error": "Game not found"}), 404
-    if filename is not None and filename != os.path.basename(game_path):
+    original_filename = os.path.basename(game_path)
+    if filename is not None and filename not in {original_filename, browser_arcade_filename(original_filename)}:
         return jsonify({"error": "Game not found"}), 404
     return send_file(game_path, conditional=True, as_attachment=request.args.get("download") == "1")
 
@@ -3474,7 +3483,10 @@ def browser_game_player():
     pin = str(request.args.get("pin") or "")
     # EmulatorJS derives the arcade romset name from the URL path, not gameName
     # or Content-Disposition. FBNeo must receive e.g. mslug.zip, not "content".
-    filename = urllib.parse.quote(os.path.basename(game_path), safe="")
+    rom_filename = os.path.basename(game_path)
+    if system_id in {"arcade", "neogeo"}:
+        rom_filename = browser_arcade_filename(rom_filename)
+    filename = urllib.parse.quote(rom_filename, safe="")
     content_url = "/games/content/" + filename + "?" + urllib.parse.urlencode({"relativePath": relative_path, "pin": pin})
     config = {
         "name": os.path.splitext(os.path.basename(game_path))[0],

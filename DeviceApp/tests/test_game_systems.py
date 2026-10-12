@@ -95,6 +95,26 @@ class GameSystemsTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             response.close()
 
+    def test_browser_removes_numeric_download_prefix_only_for_arcade(self):
+        filename = '136980_5814158053922050853_mslug.zip'
+        rom = Path(api.GAMES_DIR) / filename
+        rom.write_bytes(b'unchanged archive')
+        for system, expected in [('neogeo', 'mslug.zip'), ('arcade', 'mslug.zip'), ('snes', filename)]:
+            response = self.client.get('/games/browser', query_string={
+                'relativePath': 'Games/' + filename, 'system': system,
+            })
+            self.assertEqual(response.status_code, 200)
+            config = json.loads(re.search(r'const game = (.*);', response.get_data(as_text=True))[1])
+            self.assertEqual(urlsplit(config['url']).path.rsplit('/', 1)[1], expected)
+            self.assertEqual(parse_qs(urlsplit(config['url']).query)['relativePath'], ['Games/' + filename])
+            content = self.client.get(config['url'])
+            self.assertEqual(content.status_code, 200)
+            self.assertEqual(content.data, rom.read_bytes())
+            content.close()
+        self.assertEqual([p.name for p in Path(api.GAMES_DIR).iterdir()], [filename])
+        for unchanged in ['1941.zip', 'mslug.zip', 'mslug3h.zip', 'samsho2.zip', 'Metal Slug.zip', '123_game.sfc']:
+            self.assertEqual(api.browser_arcade_filename(unchanged), unchanged)
+
     def test_artwork_persists_and_can_be_reset(self):
         data = (Path(__file__).resolve().parents[2] / 'WebApp/public/game-systems/iconic/ngp/background.webp').read_bytes()
         response = self.client.post('/games/systems/ngp/artwork', data={'image': (io.BytesIO(data), 'art.webp')})
