@@ -15,6 +15,13 @@
 .catalog-ai-panel__examples button { border: 1px solid #ffffff35; border-radius: 12px; padding: 0.45rem 0.65rem; background: #2b4158; color: #fff; font: inherit; cursor: pointer; text-align: left; }
 .catalog-ai-panel button:disabled { opacity: 0.5; cursor: default; }
 .catalog-ai-panel button:focus-visible, .catalog-ai-panel textarea:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
+.catalog-ai-panel .dialog-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.catalog-ai-debug { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ffffff35; min-width: 0; }
+.catalog-ai-debug__heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; }
+.catalog-ai-debug h3 { margin: 0; font-size: 1rem; }
+.catalog-ai-debug h4 { margin: 1rem 0 0.5rem; font-size: 0.9rem; }
+.catalog-ai-debug pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow: auto; max-height: 24rem; box-sizing: border-box; padding: 0.8rem; border: 1px solid #ffffff25; border-radius: 10px; background: #101c29; color: #eff4fa; font: 0.8rem/1.5 monospace; }
+.catalog-ai-debug summary { cursor: pointer; padding: 0.5rem 0; font-weight: 700; }
 .catalog-ai-result { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .catalog-ai-result > div { min-width: 0; overflow-wrap: anywhere; }
 .catalog-ai-result small { display: block; color: #e5edf6bb; line-height: 1.5; }

@@ -959,6 +959,18 @@ se indican en los resultados. Una búsqueda puede devolver hasta 2000 IDs; si la
 respuesta está incompleta se rechaza, sin aplicar un filtro parcial. Las consultas
 por el total de una sección se resuelven sin enumerar sus IDs en la salida del modelo.
 
+El botón **Depurar**, junto a Buscar, muestra el diagnóstico de la última consulta:
+texto original del modelo, cuerpo de respuesta de OpenAI, estado HTTP y de Responses,
+modelo, archivo adjunto, uso de tokens y fase de validación. Los errores de formato
+incluyen el campo y motivo; los IDs desconocidos se enumeran. `/ai/search` devuelve
+este informe en `debug`, también en respuestas de error. Solo está disponible tras
+la misma protección por PIN que la búsqueda, con `Cache-Control: no-store`.
+No se envían cabeceras de autorización y se ocultan las claves en el contenido.
+El cuerpo del proveedor se limita a los primeros 256 KiB y se marca si se recortó.
+No se guarda un historial de diagnóstico en disco ni en el almacenamiento del
+navegador. Abrir el panel o copiar el informe no llama de nuevo a OpenAI. Las
+consultas realizadas antes de esta versión deben repetirse para obtener el informe.
+
 La aplicación admite un archivo de hasta 8 MiB, pero el catálogo también debe
 caber en el contexto del modelo configurado. Si OpenAI rechaza el archivo o el
 contexto, la interfaz informa del problema. **Fotos** mantiene el filtro local por

@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import tempfile
 import threading
+import time
 import urllib.error
 import urllib.request
 
@@ -25,10 +26,38 @@ OPENAI_URL = "https://api.openai.com/v1/responses"
 
 
 class AIError(RuntimeError):
-    def __init__(self, message, code, status=400):
+    def __init__(self, message, code, status=400, details=None):
         super().__init__(message)
         self.code = code
         self.status = status
+        self.details = details
+
+
+def redact_debug(value, api_key=""):
+    """Scrub diagnostic strings without changing normal provider parsing."""
+    if isinstance(value, str):
+        if api_key:
+            value = value.replace(api_key, "[REDACTED]")
+            value = value.replace(json.dumps(api_key)[1:-1], "[REDACTED]")
+        return re.sub(r"sk-[A-Za-z0-9_-]+", "[REDACTED]", value)
+    if isinstance(value, dict):
+        return {redact_debug(key, api_key): redact_debug(item, api_key) for key, item in value.items()}
+    if isinstance(value, list):
+        return [redact_debug(item, api_key) for item in value]
+    return value
+
+
+def _capture_response(diagnostics, data, raw, status, headers, started):
+    if diagnostics is None:
+        return
+    request_id = headers.get("x-request-id") if headers else None
+    diagnostics["provider"].update({
+        "httpStatus": status if type(status) is int else None,
+        "requestId": request_id if isinstance(request_id, str) else None,
+        "elapsedMs": round((time.monotonic() - started) * 1000),
+        "rawResponse": redact_debug(raw[:MAX_RESPONSE_BYTES].decode("utf-8", errors="replace"), data["apiKey"]),
+        "truncated": len(raw) > MAX_RESPONSE_BYTES,
+    })
 
 
 def _has_controls(value):
@@ -212,7 +241,11 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def _request_json(data, url, body=None, method="POST", content_type="application/json", timeout=30,
-                  input_error="AI_MODEL_ERROR"):
+                  input_error="AI_MODEL_ERROR", diagnostics=None):
+    started = time.monotonic()
+    if diagnostics is not None:
+        diagnostics["stage"] = "provider_request"
+        diagnostics["provider"] = {"called": True, "rawResponse": None}
     try:
         request = urllib.request.Request(url, data=body,
                                          headers={"Authorization": "Bearer " + data["apiKey"],
@@ -220,10 +253,20 @@ def _request_json(data, url, body=None, method="POST", content_type="application
         opener = urllib.request.build_opener(_NoRedirect)
         with opener.open(request, timeout=timeout) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)
+            _capture_response(diagnostics, data, raw, getattr(response, "status", None), getattr(response, "headers", None), started)
+        if diagnostics is not None:
+            diagnostics["stage"] = "provider_json"
         if not raw or len(raw) > MAX_RESPONSE_BYTES:
-            raise AIError("La respuesta de OpenAI no se pudo procesar.", "AI_INVALID_RESPONSE", 502)
+            raise AIError("La respuesta de OpenAI no se pudo procesar.", "AI_INVALID_RESPONSE", 502,
+                          details={"reason": "response_too_large" if raw else "empty_response", "maxBytes": MAX_RESPONSE_BYTES})
         payload = json.loads(raw)
     except urllib.error.HTTPError as exc:
+        if diagnostics is not None:
+            try:
+                raw = exc.read(MAX_RESPONSE_BYTES + 1)
+                _capture_response(diagnostics, data, raw, exc.code, exc.headers, started)
+            except (OSError, ValueError):
+                diagnostics["provider"]["httpStatus"] = exc.code
         if exc.code in (401, 403):
             raise AIError("OpenAI rechazó la clave. Revisa las credenciales guardadas.", "AI_AUTH_ERROR", 502) from None
         if exc.code == 429:
@@ -234,19 +277,41 @@ def _request_json(data, url, body=None, method="POST", content_type="application
             raise AIError("OpenAI no pudo usar el modelo configurado. Revisa el modelo y su disponibilidad.", "AI_MODEL_ERROR", 502) from None
         raise AIError("OpenAI no está disponible. Inténtalo más tarde.", "AI_UPSTREAM_ERROR", 502) from None
     except (TimeoutError, urllib.error.URLError, OSError) as exc:
+        if diagnostics is not None:
+            diagnostics["provider"]["elapsedMs"] = round((time.monotonic() - started) * 1000)
         if isinstance(exc, TimeoutError) or isinstance(getattr(exc, "reason", None), TimeoutError):
             raise AIError("OpenAI tardó demasiado en responder. Inténtalo de nuevo.", "AI_TIMEOUT", 504) from None
         raise AIError("No se pudo conectar con OpenAI. Revisa la conexión del dispositivo.", "AI_CONNECTION_ERROR", 502) from None
     except (ValueError, UnicodeError):
-        raise AIError("La respuesta de OpenAI no se pudo procesar.", "AI_INVALID_RESPONSE", 502) from None
+        raise AIError("La respuesta de OpenAI no contiene JSON válido.", "AI_INVALID_RESPONSE", 502,
+                      details={"reason": "invalid_provider_json"}) from None
     return payload
 
 
-def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR"):
-    payload = _request_json(data, OPENAI_URL, json.dumps(body).encode(), timeout=timeout, input_error=input_error)
+def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR", diagnostics=None):
+    if diagnostics is not None:
+        diagnostics.setdefault("request", {}).update({"model": body["model"], "maxOutputTokens": body["max_output_tokens"],
+            "fileIds": [part["file_id"] for item in body.get("input", []) for part in item.get("content", [])
+                        if part.get("type") == "input_file" and "file_id" in part]})
+    payload = _request_json(data, OPENAI_URL, json.dumps(body).encode(), timeout=timeout, input_error=input_error, diagnostics=diagnostics)
+    if diagnostics is not None:
+        diagnostics["stage"] = "provider_status"
+        if isinstance(payload, dict):
+            diagnostics["provider"].update(redact_debug({key: payload.get(key) for key in
+                ("id", "model", "status", "incomplete_details", "usage", "error")}, data["apiKey"]))
+            diagnostics["outputText"] = redact_debug("\n".join(
+                content.get("text", content.get("refusal", ""))
+                for item in payload.get("output", []) if isinstance(item, dict) and isinstance(item.get("content"), list)
+                for content in item["content"] if isinstance(content, dict)
+                and isinstance(content.get("text", content.get("refusal", "")), str)), data["apiKey"]) if isinstance(payload.get("output"), list) else ""
     if (not isinstance(payload, dict) or payload.get("status") != "completed"
             or payload.get("error") or payload.get("incomplete_details")):
-        raise AIError("OpenAI no completó la respuesta. Prueba una consulta más concreta.", "AI_INCOMPLETE_RESPONSE", 502)
+        message = "OpenAI no completó la respuesta."
+        if diagnostics is not None:
+            message += " Abre Depurar para ver el motivo."
+        raise AIError(message, "AI_INCOMPLETE_RESPONSE", 502)
+    if diagnostics is not None:
+        diagnostics["stage"] = "output_format"
     output = payload.get("output")
     if not isinstance(output, list):
         raise AIError("La respuesta de OpenAI no se pudo procesar.", "AI_INVALID_RESPONSE", 502)
@@ -271,6 +336,8 @@ def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR"):
     if len(texts) != 1 or not texts[0].strip():
         raise AIError("La respuesta de OpenAI no se pudo procesar.", "AI_INVALID_RESPONSE", 502)
     try:
+        if diagnostics is not None:
+            diagnostics["stage"] = "model_json"
         def unique_keys(pairs):
             value = {}
             for key, item in pairs:
@@ -278,12 +345,16 @@ def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR"):
                     raise ValueError()
                 value[key] = item
             return value
-        return json.loads(texts[0], object_pairs_hook=unique_keys)
+        result = json.loads(texts[0], object_pairs_hook=unique_keys)
+        if diagnostics is not None:
+            diagnostics["parsedOutput"] = redact_debug(result, data["apiKey"])
+        return result
     except (ValueError, TypeError):
-        raise AIError("La IA no devolvió un filtro válido. Prueba una consulta más concreta.", "AI_INVALID_PLAN", 502) from None
+        raise AIError("La salida de la IA no es JSON válido o contiene claves duplicadas.", "AI_INVALID_PLAN", 502,
+                      details={"reason": "invalid_model_json"}) from None
 
 
-def plan_query(prompt, section, language, settings, options=None):
+def plan_query(prompt, section, language, settings, options=None, diagnostics=None):
     if not isinstance(section, str) or section not in SECTION_FIELDS:
         raise AIError("Esta sección no admite consultas de IA.", "AI_INVALID_SECTION")
     if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 2000 or "\x00" in prompt:
@@ -311,7 +382,10 @@ The message must be a short neutral explanation of the interpreted query in the 
                 {"type": "input_text", "text": json.dumps(user_input, ensure_ascii=False)}]}],
             "text": {"format": {"type": "json_schema", "name": "catalog_query", "strict": True,
                                   "schema": _plan_schema(section)}}}
-    return validate_plan(_post_response(data, body), section)
+    result = _post_response(data, body, diagnostics=diagnostics)
+    if diagnostics is not None:
+        diagnostics["stage"] = "plan_validation"
+    return validate_plan(result, section)
 
 
 def test_connection(settings):

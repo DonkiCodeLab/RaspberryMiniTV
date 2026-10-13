@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { isMockMode, searchCatalogAI } from "./api/raspberryApi";
 import { catalogAIError, catalogAIStrings } from "./catalogAIStrings.js";
-import { validateAIResult } from "./catalogAI.js";
+import { copyAIDebug, validateAIResult } from "./catalogAI.js";
 import Recommendations from "./Recommendations.jsx";
 import { recommendationStrings } from "./recommendationStrings.js";
 import "./CatalogAI.css";
@@ -29,6 +29,35 @@ export function CatalogAIResult({ result, visible, language, onClear }) {
   </div>;
 }
 
+export function CatalogAIDebug({ report, language }) {
+  const s = catalogAIStrings(language);
+  const [copyStatus, setCopyStatus] = useState("");
+  useEffect(() => { setCopyStatus(""); }, [report]);
+  if (!report) return null;
+  const { provider, outputText, parsedOutput, ...context } = report;
+  async function copy() {
+    try { await copyAIDebug(report); setCopyStatus("debugCopied"); }
+    catch (_) { setCopyStatus("debugCopyError"); }
+  }
+  return <section id="catalog-ai-debug" className="catalog-ai-debug" aria-label={s.debugTitle}>
+    <div className="catalog-ai-debug__heading"><h3>{s.debugTitle}</h3>
+      <button type="button" className="dialog-button" onClick={copy}>{s.debugCopy}</button></div>
+    <p>{s.debugHint}</p>
+    {copyStatus && <p role="status">{s[copyStatus]}</p>}
+    <h4>{s.debugOutput}</h4>
+    <pre tabIndex={0}>{outputText || (provider?.called === false ? s.debugNotCalled : s.debugNoOutput)}</pre>
+    <h4>{s.debugContext}</h4>
+    <pre tabIndex={0}>{JSON.stringify({ ...context, provider: provider && {
+      httpStatus: provider.httpStatus, requestId: provider.requestId, status: provider.status,
+      incomplete_details: provider.incomplete_details, usage: provider.usage, elapsedMs: provider.elapsedMs,
+    } }, null, 2)}</pre>
+    <details><summary>{s.debugRaw}</summary>
+      {provider?.truncated && <p>{s.debugTruncated}</p>}
+      <pre tabIndex={0}>{provider?.rawResponse ?? s.debugNoResponse}</pre>
+    </details>
+  </section>;
+}
+
 export default function CatalogAI({ section, language, onResult, onClose, initialPrompt = "", user, onOpenLibrary, onSearchTorrent }) {
   const s = catalogAIStrings(language);
   const rs = recommendationStrings(language);
@@ -38,10 +67,13 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [debug, setDebug] = useState(null);
+  const [debugOpen, setDebugOpen] = useState(false);
   const request = useRef({ generation: 0, controller: null });
   const input = useRef(null);
   const demo = isMockMode();
   useEffect(() => {
+    setDebug(null); setDebugOpen(false); setError(""); setMessage("");
     return () => { request.current.generation += 1; request.current.controller?.abort(); };
   }, [section]);
   function cancel() {
@@ -56,14 +88,20 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     const controller = new AbortController();
     request.current.controller?.abort();
     request.current.controller = controller;
-    setBusy(true); setError(""); setMessage("");
+    setBusy(true); setError(""); setMessage(""); setDebug(null);
     try {
-      const result = validateAIResult(await searchCatalogAI({ section, prompt: prompt.trim(), language }, controller.signal), section);
+      const data = await searchCatalogAI({ section, prompt: prompt.trim(), language }, controller.signal);
       if (request.current.generation !== generation || controller.signal.aborted) return;
+      setDebug(data?.debug || { request: { section, prompt: prompt.trim() }, source: "client", response: data });
+      const result = validateAIResult(data, section);
       if (["filter", "count"].includes(result.intent)) onResult({ ...result, prompt: prompt.trim() });
       else setMessage(result.message + (result.catalogStale ? ` ${s.catalogStale}` : ""));
     } catch (error) {
-      if (request.current.generation === generation && !controller.signal.aborted) setError(catalogAIError(error, language));
+      if (request.current.generation === generation && !controller.signal.aborted) {
+        setError(catalogAIError(error, language));
+        setDebug(current => error.debug || current || { request: { section, prompt: prompt.trim() }, source: "client",
+          result: { ok: false, code: error.code, httpStatus: error.status, error: error.message } });
+      }
     } finally {
       if (request.current.generation === generation) setBusy(false);
     }
@@ -83,11 +121,14 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
       <div className="catalog-ai-panel__examples"><span>{s.examples}</span>{(s.samples[section] || []).map(example => <button type="button" key={example} disabled={busy || demo}
         onClick={() => { setPrompt(example); input.current?.focus(); }}>{example}</button>)}</div>
       <div className="dialog-actions"><button className="dialog-button dialog-button--accent" type="submit" disabled={busy || demo || !prompt.trim()}>{busy ? s.waiting : s.send}</button>
+        <button type="button" className="dialog-button" disabled={busy || !debug} aria-expanded={debugOpen} aria-controls="catalog-ai-debug"
+          onClick={() => setDebugOpen(open => !open)}>{s.debug}</button>
         {busy && <button className="dialog-button" type="button" onClick={cancel}>{s.cancel}</button>}</div>
     </form>
     {busy && <p role="status">{s.waiting}</p>}
     {error && <p className="dialog-error" role="alert">{error}</p>}
     {message && <p role="status">{message}</p>}
+    {debugOpen && <CatalogAIDebug report={debug} language={language} />}
     </>}
   </section>;
 }

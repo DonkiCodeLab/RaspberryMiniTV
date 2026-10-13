@@ -37,6 +37,31 @@ export function aiSettingsPayload(settings, apiKey = "", clearApiKey = false) {
   return payload;
 }
 
+// The Raspberry dashboard commonly runs over plain HTTP, where the modern
+// clipboard API is unavailable. Keep copying diagnostics usable on the LAN.
+export async function copyAIDebug(report) {
+  const text = JSON.stringify(report, null, 2);
+  try {
+    if (globalThis.navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch (_) { /* Fall back to the browser's copy command. */ }
+  const previousFocus = document.activeElement;
+  const input = document.createElement("textarea");
+  input.value = text;
+  input.readOnly = true;
+  input.style.cssText = "position:fixed;left:-9999px;top:0";
+  document.body.appendChild(input);
+  try {
+    input.select();
+    if (!document.execCommand("copy")) throw new Error("Clipboard unavailable");
+  } finally {
+    input.remove();
+    previousFocus?.focus();
+  }
+}
+
 // Use a separate controller so both a section change and the provider timeout
 // cancel the fetch. Race explicitly so even a stalled body cannot hang the UI.
 export async function aiRequestWithTimeout(read, signal, timeoutMs = 50000) {

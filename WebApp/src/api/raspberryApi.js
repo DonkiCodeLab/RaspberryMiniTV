@@ -295,6 +295,7 @@ async function request(path, options = {}) {
     const error = new Error(payload?.error || `HTTP ${response.status}`);
     error.status = response.status;
     error.code = payload?.code;
+    if (path === "/ai/search" && payload?.debug && typeof payload.debug === "object") error.debug = payload.debug;
     throw error;
   }
 

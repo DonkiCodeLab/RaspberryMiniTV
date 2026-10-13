@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { build } from "esbuild";
-import { aiRequestWithTimeout, aiSettingsPayload, catalogAIIds, catalogItemId, filterAICollections, matchesCatalogAI, validateAIResult } from "../src/catalogAI.js";
+import { aiRequestWithTimeout, aiSettingsPayload, catalogAIIds, catalogItemId, copyAIDebug, filterAICollections, matchesCatalogAI, validateAIResult } from "../src/catalogAI.js";
 import { catalogAIError, catalogAIStrings } from "../src/catalogAIStrings.js";
 
 test("AI filters use exact local paths, reject names/TMDB IDs and intersect existing filters", () => {
@@ -82,6 +82,47 @@ test("each section has localized examples and photos promise filename search onl
     assert.equal(catalogAIError({ code: "AI_CATALOG_NOT_UPLOADED" }, language), s.catalogRequired);
     assert.equal(catalogAIError({ code: "AI_CATALOG_QUERY_ERROR" }, language), s.catalogQueryError);
     assert.equal(catalogAIError({ code: "AI_INVALID_PLAN" }, language), s.invalidSelection);
+    assert.equal(catalogAIError({ code: "AI_INVALID_IDS" }, language), s.invalidIds);
+    assert.equal(catalogAIError({ code: "AI_INCOMPLETE_RESPONSE" }, language), s.incompleteSelection);
+    assert.ok(s.debug && s.debugCopy && s.debugRaw);
+  }
+});
+
+test("debug renders actual model output as escaped text with validation and full provider response", async () => {
+  const component = await loadComponent("CatalogAI", {});
+  const html = renderToStaticMarkup(React.createElement(component.CatalogAIDebug, { language: "es", report: {
+    request: { prompt: "películas con bichos", model: "gpt-4.1-mini", fileIds: ["file-example"] },
+    outputText: '<script>alert("test")</script>', stage: "id_validation",
+    validation: { reason: "ids_not_in_uploaded_section", invalidIds: [17] },
+    provider: { called: true, httpStatus: 200, rawResponse: '{"output":"<img src=x onerror=alert(1)>"}' },
+  } }));
+  assert.match(html, /Respuesta de la IA/);
+  assert.match(html, /Respuesta completa de OpenAI/);
+  assert.match(html, /Copiar informe/);
+  assert.match(html, /ids_not_in_uploaded_section/);
+  assert.match(html, /file-example/);
+  assert.match(html, /&lt;script&gt;/);
+  assert.doesNotMatch(html, /<script>|<img/);
+});
+
+test("copy debug works on plain HTTP and restores focus without storing the report", async () => {
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  const previousDocument = globalThis.document;
+  let copied, removed = false, focused = false;
+  const input = { value: "", style: {}, select() { copied = this.value; }, remove() { removed = true; } };
+  Object.defineProperty(globalThis, "navigator", { configurable: true, value: {} });
+  globalThis.document = { activeElement: { focus() { focused = true; } }, createElement: () => input,
+    body: { appendChild() {} }, execCommand(command) { assert.equal(command, "copy"); return true; } };
+  try {
+    const report = { provider: { rawResponse: '{"output":[]}' }, stage: "completed" };
+    await copyAIDebug(report);
+    assert.deepEqual(JSON.parse(copied), report);
+    assert.equal(removed, true);
+    assert.equal(focused, true);
+  } finally {
+    if (navigatorDescriptor) Object.defineProperty(globalThis, "navigator", navigatorDescriptor);
+    else delete globalThis.navigator;
+    globalThis.document = previousDocument;
   }
 });
 

@@ -399,6 +399,14 @@ la subida requieren actualizar el catálogo. La IA puede equivocarse: no analiza
 los vídeos ni las imágenes. Fotos mantiene la búsqueda por nombre de archivo.
 El archivo consume contexto al consultarlo y debe caber en el modelo configurado.
 
+Después de buscar, **Depurar** permite ver la respuesta original de la IA y el
+motivo concreto de un rechazo: formato, IDs incorrectos o respuesta incompleta.
+También muestra el modelo, archivo adjunto, estado y consumo de tokens. **Respuesta
+completa de OpenAI** despliega el cuerpo recibido y **Copiar informe** permite
+compartirlo para diagnosticar el fallo, incluso desde la dirección HTTP de la
+Raspberry. Abrir o copiar el informe no repite la consulta. Las claves se ocultan
+y el informe no se guarda en el almacenamiento del navegador.
+
 En películas y series también aparece **Recomiéndame**. Puedes responder a una
 pregunta sobre tus gustos o pedir algo concreto, como «Una comedia para esta
 noche». Los gustos se guardan para el usuario seleccionado y se pueden editar,

@@ -157,18 +157,35 @@ def delete_catalog_file(file_id, settings):
 
 
 def validate_selection(value):
-    if (not isinstance(value, dict) or set(value) != {"intent", "message", "ids", "all"}
-            or value["intent"] not in ("filter", "count", "clarify", "unsupported")
-            or not isinstance(value["message"], str) or len(value["message"]) > 600 or _has_controls(value["message"])
-            or type(value["all"]) is not bool or not isinstance(value["ids"], list) or len(value["ids"]) > MAX_MATCHES
-            or any(type(item) is not int or not 0 <= item < 2 ** 52 for item in value["ids"])
-            or (value["all"] and value["ids"])
-            or (value["intent"] in ("clarify", "unsupported") and (value["ids"] or value["all"]))):
-        raise AIError("La IA no devolvió una selección válida. Prueba una consulta más concreta.", "AI_INVALID_PLAN", 502)
+    def invalid(field, reason):
+        raise AIError("La respuesta de la IA no cumple el formato del catálogo. Abre Depurar para ver el detalle.",
+                      "AI_INVALID_PLAN", 502, details={"field": field, "reason": reason})
+    if not isinstance(value, dict) or set(value) != {"intent", "message", "ids", "all"}:
+        invalid("response", "expected_exact_keys_intent_message_ids_all")
+    if value["intent"] not in ("filter", "count", "clarify", "unsupported"):
+        invalid("intent", "unknown_intent")
+    if not isinstance(value["message"], str):
+        invalid("message", "expected_string")
+    if len(value["message"]) > 600:
+        invalid("message", "exceeds_600_characters")
+    if _has_controls(value["message"]):
+        invalid("message", "contains_control_characters_or_line_breaks")
+    if type(value["all"]) is not bool:
+        invalid("all", "expected_boolean")
+    if not isinstance(value["ids"], list):
+        invalid("ids", "expected_array")
+    if len(value["ids"]) > MAX_MATCHES:
+        invalid("ids", "exceeds_2000_ids")
+    if any(type(item) is not int or not 0 <= item < 2 ** 52 for item in value["ids"]):
+        invalid("ids", "expected_integers_between_0_and_4503599627370495")
+    if value["all"] and value["ids"]:
+        invalid("ids", "must_be_empty_when_all_is_true")
+    if value["intent"] in ("clarify", "unsupported") and (value["ids"] or value["all"]):
+        invalid("intent", "clarify_or_unsupported_cannot_select_items")
     return value
 
 
-def query_catalog_file(prompt, section, language, settings, saved):
+def query_catalog_file(prompt, section, language, settings, saved, diagnostics=None):
     data = _private_settings(settings, require_enabled=True)
     if section not in SECTIONS or not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 2000 or "\0" in prompt:
         raise AIError("Consulta no válida.", "AI_INVALID_QUERY")
@@ -188,14 +205,26 @@ The message must be a brief explanation in the user's language, at most 600 char
                 {"type": "input_text", "text": _json({"section": section, "language": language,
                  "currentDate": date.today().isoformat(), "prompt": prompt.strip()})}]}],
             "text": {"format": {"type": "json_schema", "name": "catalog_selection", "strict": True, "schema": schema}}}
-    return validate_selection(_post_response(data, body, timeout=60, input_error="AI_CATALOG_QUERY_ERROR"))
+    result = _post_response(data, body, timeout=60, input_error="AI_CATALOG_QUERY_ERROR", diagnostics=diagnostics)
+    if diagnostics is not None:
+        diagnostics["stage"] = "selection_validation"
+    return validate_selection(result)
 
 
-def resolve_selection(selection, saved, section, current):
+def resolve_selection(selection, saved, section, current, diagnostics=None):
     validate_selection(selection)
     uploaded = {item["id"]: item for item in saved["records"] if item["section"] == section}
-    if any(identifier not in uploaded for identifier in selection["ids"]):
-        raise AIError("La IA devolvió identificadores que no pertenecen al catálogo de esta sección.", "AI_INVALID_PLAN", 502)
+    invalid = sorted(set(selection["ids"]) - set(uploaded))
+    if diagnostics is not None:
+        diagnostics["stage"] = "id_validation"
+        diagnostics["matching"] = {"returnedCount": len(selection["ids"]), "invalidIds": invalid}
+    if invalid:
+        raise AIError("La IA devolvió identificadores que no pertenecen al catálogo de esta sección.", "AI_INVALID_IDS", 502,
+                      details={"reason": "ids_not_in_uploaded_section", "section": section, "invalidIds": invalid})
     selected = set(uploaded) if selection["all"] else set(selection["ids"])
     # Never turn a deleted item or an ID from another section into a visible result.
-    return [item["path"] for item in current if item["id"] in selected and uploaded[item["id"]]["path"] == item["path"]]
+    matches = [item for item in current if item["id"] in selected and uploaded[item["id"]]["path"] == item["path"]]
+    if diagnostics is not None:
+        diagnostics["matching"].update({"matchedCount": len(matches),
+                                       "unavailableIds": sorted(selected - {item["id"] for item in matches})})
+    return [item["path"] for item in matches]

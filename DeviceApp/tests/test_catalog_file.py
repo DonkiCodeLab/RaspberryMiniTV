@@ -200,7 +200,7 @@ class CatalogFileApiTests(unittest.TestCase):
         self.assertTrue(status["stale"])
         self.upload.assert_called_once()
         with patch.object(api, "query_catalog_file", return_value=selection([1])):
-            self.assertEqual(self.search().json["code"], "AI_INVALID_PLAN")
+            self.assertEqual(self.search().json["code"], "AI_INVALID_IDS")
         self.assertFalse(api.ai_request_active)
 
     def test_failed_replacement_keeps_previous_snapshot_then_success_cleans_it_up(self):
@@ -240,6 +240,94 @@ class CatalogFileApiTests(unittest.TestCase):
         self.store.path.write_text("broken")
         self.assertEqual(self.post_upload().status_code, 200)
         self.assertEqual(self.store.load(self.settings.credentials())["fileId"], "file-first")
+
+    def provider_payload(self, value):
+        return {"id": "resp-diagnostic", "model": "gpt-4.1-mini", "status": "completed",
+                "usage": {"input_tokens": 450, "output_tokens": 70},
+                "output": [{"type": "message", "status": "completed", "role": "assistant",
+                            "content": [{"type": "output_text", "text": json.dumps(value, ensure_ascii=False)}]}]}
+
+    def provider(self, raw):
+        opener = MagicMock()
+        response = opener.open.return_value.__enter__.return_value
+        response.status = 200
+        response.headers = {"x-request-id": "req-diagnostic"}
+        response.read.return_value = raw
+        return opener
+
+    def test_debug_retains_original_response_when_catalog_rejects_ids(self):
+        self.post_upload()
+        output = selection([1])
+        output["message"] = "Películas con bichos: <script>alert(1)</script>"
+        raw = json.dumps(self.provider_payload(output), ensure_ascii=False).encode()
+        opener = self.provider(raw)
+        with patch("catalog_ai.urllib.request.build_opener", return_value=opener):
+            response = self.search()
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.json["code"], "AI_INVALID_IDS")
+        report = response.json["debug"]
+        self.assertEqual(report["provider"]["rawResponse"], raw.decode())
+        self.assertEqual(json.loads(report["outputText"]), output)
+        self.assertEqual(report["request"]["fileIds"], ["file-first"])
+        self.assertEqual(report["provider"]["requestId"], "req-diagnostic")
+        self.assertEqual(report["stage"], "id_validation")
+        self.assertEqual(report["validation"]["invalidIds"], [1])
+        self.assertEqual(report["matching"]["invalidIds"], [1])
+        self.assertEqual(opener.open.call_count, 1)
+        self.assertEqual(response.headers["Cache-Control"], "no-store")
+        self.assertNotIn("sk-synthetic-test", response.get_data(as_text=True))
+
+    def test_debug_identifies_incomplete_json_and_selection_validation_separately(self):
+        self.post_upload()
+        payload = self.provider_payload(selection())
+        incomplete = {**payload, "status": "incomplete", "incomplete_details": {"reason": "max_output_tokens"}}
+        invalid_json = self.provider_payload(selection())
+        invalid_json["output"][0]["content"][0]["text"] = '{"ids":['
+        cases = [(incomplete, "provider_status", "AI_INCOMPLETE_RESPONSE"),
+                 (invalid_json, "model_json", "AI_INVALID_PLAN"),
+                 (self.provider_payload({**selection(), "message": "first\nsecond"}), "selection_validation", "AI_INVALID_PLAN")]
+        for payload, stage, code in cases:
+            raw = json.dumps(payload).encode()
+            with self.subTest(stage=stage), patch("catalog_ai.urllib.request.build_opener", return_value=self.provider(raw)):
+                response = self.search()
+            self.assertEqual(response.json["code"], code)
+            self.assertEqual(response.json["debug"]["stage"], stage)
+            self.assertEqual(response.json["debug"]["provider"]["rawResponse"], raw.decode())
+        self.assertEqual(response.json["debug"]["validation"]["reason"], "contains_control_characters_or_line_breaks")
+
+    def test_debug_handles_http_errors_and_invalid_or_oversized_payloads_without_exposing_key(self):
+        self.post_upload()
+        from catalog_ai import MAX_RESPONSE_BYTES
+        error_body = b'{"error":{"message":"Rejected sk-synthetic-test", "code":"invalid_api_key"}}'
+        opener = self.provider(b"")
+        opener.open.side_effect = urllib.error.HTTPError(files.FILES_URL, 401, "Unauthorized", {"x-request-id": "req-auth"}, io.BytesIO(error_body))
+        with patch("catalog_ai.urllib.request.build_opener", return_value=opener):
+            response = self.search()
+        self.assertEqual(response.json["debug"]["provider"]["httpStatus"], 401)
+        self.assertIn("invalid_api_key", response.json["debug"]["provider"]["rawResponse"])
+        self.assertNotIn("sk-synthetic-test", response.get_data(as_text=True))
+        self.assertIn("[REDACTED]", response.get_data(as_text=True))
+        for raw, truncated in ((b"<html>Upstream failure</html>", False), (b"x" * (MAX_RESPONSE_BYTES + 1), True)):
+            with patch("catalog_ai.urllib.request.build_opener", return_value=self.provider(raw)):
+                response = self.search()
+            self.assertEqual(response.json["code"], "AI_INVALID_RESPONSE")
+            self.assertEqual(response.json["debug"]["provider"]["truncated"], truncated)
+            self.assertLessEqual(len(response.json["debug"]["provider"]["rawResponse"]), MAX_RESPONSE_BYTES)
+
+    def test_debug_success_does_not_leak_into_a_later_request_without_provider_response(self):
+        self.post_upload()
+        movie = next(item for item in self.store.load(self.settings.credentials())["records"] if item["section"] == "movies")
+        raw = json.dumps(self.provider_payload(selection([movie["id"]]))).encode()
+        with patch("catalog_ai.urllib.request.build_opener", return_value=self.provider(raw)):
+            response = self.search()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["debug"]["matching"]["matchedCount"], 1)
+        self.assertEqual(response.json["debug"]["stage"], "completed")
+        self.settings.update({"enabled": False})
+        response = self.search()
+        self.assertFalse(response.json["debug"]["provider"]["called"])
+        self.assertIsNone(response.json["debug"]["provider"]["rawResponse"])
+        self.assertNotIn("resp-diagnostic", response.get_data(as_text=True))
 
 
 if __name__ == "__main__":

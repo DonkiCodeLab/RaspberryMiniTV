@@ -14,7 +14,7 @@ import catalog_store
 import book_metadata
 import youtube_search
 import movie_trailers
-from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan
+from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan, redact_debug
 from ai_catalog import build_catalog, execute_plan, SECTION_FIELDS
 from catalog_file import (CatalogFileStore, SECTIONS as FILE_CATALOG_SECTIONS, export_catalog,
                           catalog_status, upload_catalog, delete_catalog_file, compact_records,
@@ -4515,13 +4515,22 @@ def ai_search():
             or not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 2000
             or not isinstance(language, str) or language not in SUPPORTED_LANGUAGES):
         return ai_json({"ok": False, "error": "Indica una sección, una consulta de hasta 2000 caracteres y un idioma válido.", "code": "AI_INVALID_QUERY"}, 400)
+    diagnostics = {"request": {"section": section, "prompt": prompt.strip(), "language": language},
+                   "stage": "settings", "provider": {"called": False, "rawResponse": None}}
+    settings = {}
+    def reply(payload, status=200):
+        diagnostics["result"] = {key: payload[key] for key in ("ok", "code", "error", "intent", "count") if key in payload}
+        return ai_json({**payload, "debug": redact_debug(diagnostics, settings.get("apiKey", ""))}, status)
     try:
         settings = ai_settings_store.credentials()
+        diagnostics["request"]["model"] = settings["model"]
         if not settings.get("enabled"):
-            return ai_json({"ok": False, "error": "Activa la búsqueda con IA en el dashboard.", "code": "AI_DISABLED"}, 503)
+            return reply({"ok": False, "error": "Activa la búsqueda con IA en el dashboard.", "code": "AI_DISABLED"}, 503)
         if not settings.get("apiKey"):
-            return ai_json({"ok": False, "error": "Configura la clave de OpenAI en el dashboard.", "code": "AI_NOT_CONFIGURED"}, 503)
+            return reply({"ok": False, "error": "Configura la clave de OpenAI en el dashboard.", "code": "AI_NOT_CONFIGURED"}, 503)
+        diagnostics["stage"] = "request_limit"
         with ai_request_slot(settings["requestsPerMinute"]):
+            diagnostics["stage"] = "local_catalog"
             if section in FILE_CATALOG_SECTIONS:
                 saved = CatalogFileStore(ai_settings_store.path).load(settings)
                 if not saved:
@@ -4529,33 +4538,39 @@ def ai_search():
                 current = compact_records(section, list_video_directories(), tmdb_artwork)
                 uploaded = [item for item in saved["records"] if item["section"] == section]
                 stale = records_hash(current) != records_hash(uploaded)
+                diagnostics["catalog"] = {"fileId": saved["fileId"], "uploadedAt": saved["uploadedAt"],
+                                          "uploadedCount": len(uploaded), "currentCount": len(current), "stale": stale}
                 if current and uploaded:
-                    selection = query_catalog_file(prompt.strip(), section, language, settings, saved)
-                    ids = resolve_selection(selection, saved, section, current)
+                    selection = query_catalog_file(prompt.strip(), section, language, settings, saved, diagnostics=diagnostics)
+                    ids = resolve_selection(selection, saved, section, current, diagnostics=diagnostics)
                 else:
                     selection = {"intent": "filter", "message": {
                         "es": "No hay contenido de esta sección disponible en el catálogo subido.",
                         "ca": "No hi ha contingut d’aquesta secció disponible al catàleg pujat.",
                         "en": "No content from this section is available in the uploaded catalogue."}[language]}
                     ids = []
-                return ai_json({"ok": True, "section": section, "intent": selection["intent"], "message": selection["message"],
+                diagnostics["stage"] = "completed"
+                return reply({"ok": True, "section": section, "intent": selection["intent"], "message": selection["message"],
                                 "ids": ids, "count": len(ids), "total": len(current), "missingMetadata": 0,
                                 "catalogStale": stale, "catalogUploadedAt": saved["uploadedAt"]})
             catalogue = build_catalog(section, list_video_directories(), tmdb_artwork, language)
             records = catalogue["records"]
             if not records:
                 message = {"es": "Esta sección no tiene contenido guardado.", "ca": "Aquesta secció no té contingut desat.", "en": "This section has no saved content."}[language]
-                return ai_json({"ok": True, "section": section, "intent": "filter", "message": message,
+                diagnostics["stage"] = "completed"
+                return reply({"ok": True, "section": section, "intent": "filter", "message": message,
                                 "ids": [], "count": 0, "total": 0, "missingMetadata": 0})
-            plan = validate_plan(plan_query(prompt.strip(), section, language, settings), section)
+            plan = validate_plan(plan_query(prompt.strip(), section, language, settings, diagnostics=diagnostics), section)
             ids = execute_plan(records, plan) if plan["intent"] in {"filter", "count"} else []
-        return ai_json({"ok": True, "section": section, "intent": plan["intent"], "message": plan["message"],
+        diagnostics["stage"] = "completed"
+        return reply({"ok": True, "section": section, "intent": plan["intent"], "message": plan["message"],
                         "ids": ids, "count": len(ids), "total": len(records),
                         "missingMetadata": catalogue["missingMetadata"]})
     except AIError as error:
-        return ai_error_response(error)
+        diagnostics["validation"] = {"code": error.code, "message": str(error), **(error.details or {})}
+        return reply({"ok": False, "error": str(error), "code": error.code}, error.status)
     except (OSError, ValueError, TypeError):
-        return ai_json({"ok": False, "error": "No se ha podido consultar el catálogo local. Inténtalo de nuevo.", "code": "AI_CATALOG_UNAVAILABLE"}, 503)
+        return reply({"ok": False, "error": "No se ha podido consultar el catálogo local. Inténtalo de nuevo.", "code": "AI_CATALOG_UNAVAILABLE"}, 503)
 
 
 @app.route("/ai/recommendations", methods=["GET", "POST", "PATCH", "DELETE"])

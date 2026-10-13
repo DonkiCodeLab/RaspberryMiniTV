@@ -39,6 +39,12 @@ test("AI uses authenticated Raspberry endpoints, keeps keys off storage and test
     assert.equal(calls[5].options.body, undefined);
     globalThis.fetch = async () => ({ ok: false, status: 429, text: async () => '{"ok":false,"code":"AI_RATE_LIMIT","error":"Rate limit"}' });
     await assert.rejects(api.searchCatalogAI({ section: "movies", prompt: "Movies", language: "es" }), error => error.code === "AI_RATE_LIMIT" && error.status === 429);
+    const debug = { stage: "id_validation", provider: { rawResponse: '{"output":[]}' }, validation: { invalidIds: [17] } };
+    globalThis.fetch = async () => ({ ok: false, status: 502, text: async () => JSON.stringify({ ok: false, code: "AI_INVALID_IDS", error: "Invalid IDs", debug }) });
+    await assert.rejects(api.searchCatalogAI({ section: "movies", prompt: "Bichos", language: "es" }), error => {
+      assert.deepEqual(error.debug, debug);
+      return error.code === "AI_INVALID_IDS";
+    });
     const mock = await loadAPI({ VITE_WEB_DEV_MODE: "mock" });
     globalThis.fetch = () => { throw new Error("mock must not call a server"); };
     await assert.rejects(mock.saveAISettings({ apiKey: "sk-synthetic-test" }), error => error.code === "AI_DEMO");
