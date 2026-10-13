@@ -394,8 +394,11 @@ pendientes. Si cambias la clave de OpenAI, vuelve a subir el catálogo.
 El modo **Buscar** adjunta ese archivo a cada consulta y busca exclusivamente
 en la sección activa: libros, películas,
 series o juegos. Las adaptaciones y los títulos compartidos no permiten mezclar
-IDs entre secciones. Para secciones de hasta 996 obras, el formato de respuesta
-solo admite sus IDs del catálogo subido; el servidor valida siempre la sección,
+IDs entre secciones. Dentro de los límites del esquema (996 obras y 15.000 caracteres
+en los IDs), el formato de respuesta solo admite sus IDs del catálogo subido.
+OpenAI devuelve los IDs entre comillas y el servidor los convierte a sus valores
+internos exactos; se evitan así los problemas de generación con enteros largos.
+El servidor valida siempre la sección,
 también en catálogos mayores. **Depurar → scope** muestra esa restricción. No hace
 falta volver a subir el archivo para aplicar este cambio. La IA usa su conocimiento
 de las obras para resolver peticiones abstractas y devuelve IDs; el servidor valida

@@ -952,13 +952,17 @@ La sección activa se fija en las instrucciones: libros solo busca libros, pelí
 solo películas, series solo series y juegos solo juegos. No se mezclan adaptaciones
 ni obras de otras secciones aunque compartan título. Si la petición pide otra
 sección, se indica que hay que cambiar de sección. Para secciones de hasta 996 obras,
-el esquema de respuesta enumera exclusivamente sus IDs del catálogo subido (los otros
+el esquema de respuesta enumera exclusivamente sus IDs del catálogo subido como
+cadenas decimales entre comillas, evitando enumeraciones de enteros largos en la
+generación restringida. El servidor los convierte a los mismos IDs numéricos antes
+de validarlos; el archivo subido y los identificadores guardados no cambian (los otros
 cuatro valores del [límite de 1000 de Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs#limitations-on-enum-size)
 corresponden a `intent`).
-Las secciones mayores conservan el catálogo completo, las instrucciones de ámbito y
+La enumeración respeta también el límite de 15.000 caracteres para enums de texto.
+Las secciones que superan alguno de esos límites conservan el catálogo completo, las instrucciones de ámbito y
 la validación de IDs en el servidor, sin recortar resultados para encajar el esquema.
 **Depurar** muestra la sección, la cantidad de IDs permitidos y el tipo de restricción
-en `scope`. Este refuerzo funciona con los archivos ya subidos.
+en `scope`, incluido `idEncoding: decimal_string`. Este refuerzo funciona con los archivos ya subidos.
 
 El modelo puede usar su conocimiento de las obras para interpretar temas, tonos,
 similitudes, actores y referencias indirectas; puede equivocarse o desconocer

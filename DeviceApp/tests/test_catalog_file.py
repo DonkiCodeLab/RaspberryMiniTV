@@ -143,14 +143,16 @@ class CatalogFileTests(unittest.TestCase):
                 files.query_catalog_file("Dune", section, "es", self.settings, self.saved, diagnostics=report)
                 body = post.call_args.args[1]
                 allowed = body["text"]["format"]["schema"]["properties"]["ids"]["items"]["enum"]
-                expected = sorted(item["id"] for item in self.saved["records"] if item["section"] == section)
+                expected = [str(identifier) for identifier in sorted(item["id"] for item in self.saved["records"] if item["section"] == section)]
                 self.assertEqual(allowed, expected)
-                self.assertTrue(set(allowed).isdisjoint(item["id"] for item in self.saved["records"] if item["section"] != section))
+                self.assertEqual(body["text"]["format"]["schema"]["properties"]["ids"]["items"]["type"], "string")
+                self.assertTrue(set(allowed).isdisjoint(str(item["id"]) for item in self.saved["records"] if item["section"] != section))
                 self.assertIn(f'ACTIVE SECTION: "{section}"', body["instructions"])
                 self.assertIn(f'"section" equals "{section}"', body["instructions"])
                 self.assertIn("asking the user to switch sections", body["instructions"])
                 self.assertEqual(json.loads(body["input"][0]["content"][1]["text"])["section"], section)
-                self.assertEqual(report["scope"], {"section": section, "allowedIdCount": len(expected), "idConstraint": "enum"})
+                self.assertEqual(report["scope"], {"section": section, "allowedIdCount": len(expected),
+                                                  "idConstraint": "enum", "idEncoding": "decimal_string"})
 
     def test_large_sections_do_not_exceed_schema_enum_limit_or_truncate_catalogue(self):
         for count in (files.MAX_SECTION_ID_ENUM, files.MAX_SECTION_ID_ENUM + 1):
@@ -162,10 +164,43 @@ class CatalogFileTests(unittest.TestCase):
                 properties = body["text"]["format"]["schema"]["properties"]
                 allowed = properties["ids"]["items"].get("enum")
                 self.assertLessEqual(len(allowed or []) + len(properties["intent"]["enum"]), 1000)
-                self.assertEqual(allowed, list(range(count)) if count <= files.MAX_SECTION_ID_ENUM else None)
+                self.assertEqual(allowed, [str(index) for index in range(count)] if count <= files.MAX_SECTION_ID_ENUM else None)
                 self.assertEqual(report["scope"]["allowedIdCount"], count)
                 self.assertEqual(body["input"][0]["content"][0]["file_id"], "file-large")
                 self.assertEqual(result["ids"], [count - 1])
+
+    def test_quoted_ids_preserve_exact_values_and_existing_catalogue_mapping(self):
+        for section in files.SECTIONS:
+            current = [item for item in self.saved["records"] if item["section"] == section]
+            identifiers = [item["id"] for item in current]
+            raw = selection([str(identifier) for identifier in identifiers])
+            with self.subTest(section=section), patch.object(files, "_post_response", return_value=raw):
+                result = files.query_catalog_file("Historias sobre poder", section, "es", self.settings, self.saved)
+            self.assertEqual(result["ids"], identifiers)
+            self.assertEqual(files.resolve_selection(result, self.saved, section, current), [item["path"] for item in current])
+            self.assertEqual(raw["ids"], [str(identifier) for identifier in identifiers])
+
+    def test_quoted_ids_reject_rounding_notation_whitespace_and_noncanonical_values(self):
+        for identifier in ("01", " 12", "12 ", "12\n", "+12", "-1", "1e3", "12.0", "１２", "", str(2 ** 52), True, None):
+            with self.subTest(identifier=identifier), patch.object(files, "_post_response", return_value=selection([identifier])):
+                with self.assertRaises(AIError) as error:
+                    files.query_catalog_file("Historias sobre poder", "movies", "es", self.settings, self.saved)
+                self.assertEqual(error.exception.code, "AI_INVALID_PLAN")
+
+    def test_long_string_id_enums_respect_character_budget_without_truncation(self):
+        for count in (900, files.MAX_SECTION_ID_ENUM):
+            saved = {"fileId": "file-large", "records": [{"id": 4_000_000_000_000_000 + index, "section": "books"} for index in range(count)]}
+            last = saved["records"][-1]["id"]
+            with self.subTest(count=count), patch.object(files, "_post_response", return_value=selection([str(last)])) as post:
+                result = files.query_catalog_file("Historias sobre poder", "books", "es", self.settings, saved)
+                items = post.call_args.args[1]["text"]["format"]["schema"]["properties"]["ids"]["items"]
+                self.assertEqual(items["type"], "string")
+                if count == 900:
+                    self.assertEqual(len(items["enum"]), count)
+                    self.assertLessEqual(sum(map(len, items["enum"])), files.MAX_SECTION_ID_ENUM_CHARS)
+                else:
+                    self.assertNotIn("enum", items)
+                self.assertEqual(result["ids"], [last])
 
 
 class CatalogFileApiTests(unittest.TestCase):
@@ -314,7 +349,7 @@ class CatalogFileApiTests(unittest.TestCase):
         records = self.store.load(self.settings.credentials())["records"]
         for section in files.SECTIONS:
             foreign = next(item for item in records if item["section"] != section)
-            opener = self.provider(json.dumps(self.provider_payload(selection([foreign["id"]]))).encode())
+            opener = self.provider(json.dumps(self.provider_payload(selection([str(foreign["id"])]))).encode())
             with self.subTest(section=section), patch("catalog_ai.urllib.request.build_opener", return_value=opener):
                 response = self.search(section)
                 self.assertEqual(response.status_code, 502)
@@ -324,7 +359,7 @@ class CatalogFileApiTests(unittest.TestCase):
                 self.assertEqual(response.json["debug"]["scope"]["idConstraint"], "enum")
                 body = json.loads(opener.open.call_args.args[0].data)
                 allowed = body["text"]["format"]["schema"]["properties"]["ids"]["items"]["enum"]
-                self.assertNotIn(foreign["id"], allowed)
+                self.assertNotIn(str(foreign["id"]), allowed)
 
     def test_debug_identifies_incomplete_json_and_selection_validation_separately(self):
         self.post_upload()
@@ -366,10 +401,12 @@ class CatalogFileApiTests(unittest.TestCase):
     def test_debug_success_does_not_leak_into_a_later_request_without_provider_response(self):
         self.post_upload()
         movie = next(item for item in self.store.load(self.settings.credentials())["records"] if item["section"] == "movies")
-        raw = json.dumps(self.provider_payload(selection([movie["id"]]))).encode()
+        raw = json.dumps(self.provider_payload(selection([str(movie["id"])]))).encode()
         with patch("catalog_ai.urllib.request.build_opener", return_value=self.provider(raw)):
             response = self.search()
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["ids"], [movie["path"]])
+        self.assertEqual(response.json["debug"]["parsedOutput"]["ids"], [str(movie["id"])])
         self.assertEqual(response.json["debug"]["matching"]["matchedCount"], 1)
         self.assertEqual(response.json["debug"]["stage"], "completed")
         self.settings.update({"enabled": False})
