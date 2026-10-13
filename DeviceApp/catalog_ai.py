@@ -211,13 +211,14 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def _post_response(data, body):
+def _request_json(data, url, body=None, method="POST", content_type="application/json", timeout=30,
+                  input_error="AI_MODEL_ERROR"):
     try:
-        request = urllib.request.Request(OPENAI_URL, data=json.dumps(body).encode(),
+        request = urllib.request.Request(url, data=body,
                                          headers={"Authorization": "Bearer " + data["apiKey"],
-                                                  "Content-Type": "application/json", "Accept": "application/json"}, method="POST")
+                                                  "Content-Type": content_type, "Accept": "application/json"}, method=method)
         opener = urllib.request.build_opener(_NoRedirect)
-        with opener.open(request, timeout=30) as response:
+        with opener.open(request, timeout=timeout) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)
         if not raw or len(raw) > MAX_RESPONSE_BYTES:
             raise AIError("La respuesta de OpenAI no se pudo procesar.", "AI_INVALID_RESPONSE", 502)
@@ -228,6 +229,8 @@ def _post_response(data, body):
         if exc.code == 429:
             raise AIError("OpenAI ha alcanzado su límite de uso. Revisa la cuota o inténtalo más tarde.", "AI_UPSTREAM_RATE_LIMIT", 429) from None
         if exc.code in (400, 404, 422):
+            if input_error != "AI_MODEL_ERROR":
+                raise AIError("OpenAI no pudo usar el archivo del catálogo. Vuelve a subirlo desde el dashboard.", input_error, 502) from None
             raise AIError("OpenAI no pudo usar el modelo configurado. Revisa el modelo y su disponibilidad.", "AI_MODEL_ERROR", 502) from None
         raise AIError("OpenAI no está disponible. Inténtalo más tarde.", "AI_UPSTREAM_ERROR", 502) from None
     except (TimeoutError, urllib.error.URLError, OSError) as exc:
@@ -236,6 +239,11 @@ def _post_response(data, body):
         raise AIError("No se pudo conectar con OpenAI. Revisa la conexión del dispositivo.", "AI_CONNECTION_ERROR", 502) from None
     except (ValueError, UnicodeError):
         raise AIError("La respuesta de OpenAI no se pudo procesar.", "AI_INVALID_RESPONSE", 502) from None
+    return payload
+
+
+def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR"):
+    payload = _request_json(data, OPENAI_URL, json.dumps(body).encode(), timeout=timeout, input_error=input_error)
     if (not isinstance(payload, dict) or payload.get("status") != "completed"
             or payload.get("error") or payload.get("incomplete_details")):
         raise AIError("OpenAI no completó la respuesta. Prueba una consulta más concreta.", "AI_INCOMPLETE_RESPONSE", 502)

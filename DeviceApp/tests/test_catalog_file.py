@@ -1,0 +1,246 @@
+import email
+import io
+import json
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+from collections import deque
+from unittest.mock import MagicMock, patch
+import urllib.error
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import catalog_file as files
+import control_api as api
+from catalog_ai import AIError, AISettings
+
+
+def snapshot():
+    return {
+        "movieRootFiles": [{"relativePath": "Movies/Dune.mp4", "name": "Dune"},
+                           {"relativePath": "Movies/Arrival.mp4", "name": "Arrival"}],
+        "directories": [{"relativePath": "TVShows/Dark", "name": "Dark"}],
+        "books": [{"relativePath": "Books/Dune.epub", "name": "Dune", "collection": "Private collection",
+                   "originalMetadata": {"title": "Dune", "author": "Frank Herbert", "year": "1965",
+                                        "description": "Do not upload this synopsis"}}],
+        "games": [{"relativePath": "Games/Dune.sfc", "name": "Dune", "platform": "snes",
+                   "gameMetadata": {"name": "Dune", "developers": ["Cryo"], "releaseDate": "1992-01-01",
+                                    "description": "Do not upload this game synopsis"}}],
+        "pictures": [{"relativePath": "Pictures/private.jpg", "name": "Private photo"}],
+        "mediaLibrary": {"movies": {"Movies/deleted.mp4": {"name": "Deleted movie"}}},
+    }
+
+
+def selection(ids=(), intent="filter", all_items=False):
+    return {"intent": intent, "ids": list(ids), "message": "Selección por temas.", "all": all_items}
+
+
+class CatalogFileTests(unittest.TestCase):
+    def setUp(self):
+        self.settings = {"apiKey": "sk-synthetic-test", "enabled": True}
+        self.exported = files.export_catalog(snapshot(), None)
+        self.saved = {"records": self.exported["records"], "fileId": "file-synthetic"}
+
+    def test_compact_export_excludes_paths_synopses_photos_and_deleted_profiles(self):
+        content = self.exported["content"].decode()
+        for forbidden in (".mp4", ".epub", "Books/", "Movies/", "synopsis", "Private photo", "Private collection", "Deleted movie", "sk-"):
+            self.assertNotIn(forbidden, content)
+        self.assertIn("Frank Herbert", content)
+        self.assertIn("1965", content)
+        self.assertIn("Cryo", content)
+        self.assertEqual(self.exported["counts"], {"movies": 2, "series": 1, "books": 1, "games": 1})
+        reordered = snapshot()
+        reordered["movieRootFiles"].reverse()
+        self.assertEqual(self.exported["checksum"], files.export_catalog(reordered, None)["checksum"])
+        self.assertEqual(self.exported["content"], files.export_catalog(reordered, None)["content"])
+
+    def test_export_is_bounded_without_silent_truncation(self):
+        with patch.object(files, "MAX_FILE_BYTES", 10), self.assertRaises(AIError) as error:
+            files.export_catalog(snapshot(), None)
+        self.assertEqual(error.exception.code, "AI_CATALOG_TOO_LARGE")
+
+    def test_uploaded_snapshot_persists_privately_and_is_bound_to_credentials(self):
+        with tempfile.TemporaryDirectory() as root:
+            store = files.CatalogFileStore(Path(root) / "ai.json")
+            self.assertIsNone(store.load(self.settings))
+            saved = store.save(self.exported, "file-synthetic", self.settings)
+            self.assertEqual(files.CatalogFileStore(Path(root) / "ai.json").load(self.settings), saved)
+            self.assertEqual(store.path.stat().st_mode & 0o777, 0o600)
+            self.assertNotIn(self.settings["apiKey"], store.path.read_text())
+            self.assertIsNone(store.load({"apiKey": "another-key"}))
+            with patch.object(files.os, "replace", side_effect=OSError("failure")), self.assertRaises(AIError):
+                store.save(self.exported, "file-replacement", self.settings)
+            self.assertEqual(store.load(self.settings)["fileId"], "file-synthetic")
+            store.path.write_text('{"version":1}')
+            with self.assertRaises(AIError) as error:
+                store.load(self.settings)
+            self.assertEqual(error.exception.code, "AI_CATALOG_STORAGE_ERROR")
+
+    def test_selection_rejects_invented_cross_section_ids_and_drops_deleted_items(self):
+        movies = [item for item in self.saved["records"] if item["section"] == "movies"]
+        book = next(item for item in self.saved["records"] if item["section"] == "books")
+        for identifier in (-1, 2 ** 52, True, "12", book["id"], 1):
+            with self.subTest(identifier=identifier), self.assertRaises(AIError):
+                files.resolve_selection(selection([identifier]), self.saved, "movies", movies)
+        self.assertEqual(files.resolve_selection(selection([movies[0]["id"], movies[0]["id"], movies[1]["id"]]),
+                                                self.saved, "movies", movies[1:]), [movies[1]["path"]])
+        new = {"id": 42, "section": "movies", "path": "Movies/new.mp4"}
+        self.assertEqual(files.resolve_selection(selection(intent="count", all_items=True), self.saved, "movies", movies + [new]),
+                         [item["path"] for item in movies])
+        for bad in (selection([movies[0]["id"]], intent="clarify"), selection([movies[0]["id"]], all_items=True),
+                    {**selection(), "extra": 1}, {**selection(), "message": "x" * 601},
+                    {**selection(), "ids": [0] * (files.MAX_MATCHES + 1)}):
+            with self.subTest(bad=bad), self.assertRaises(AIError):
+                files.validate_selection(bad)
+
+    def test_upload_is_multipart_user_data_and_query_attaches_only_saved_file(self):
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.read.return_value = b'{"id":"file-uploaded"}'
+        opener = MagicMock()
+        opener.open.return_value = response
+        with patch("catalog_ai.urllib.request.build_opener", return_value=opener):
+            self.assertEqual(files.upload_catalog(self.exported, self.settings), "file-uploaded")
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.full_url, files.FILES_URL)
+        self.assertEqual(request.get_header("Authorization"), "Bearer sk-synthetic-test")
+        message = email.message_from_bytes(("Content-Type: " + request.get_header("Content-type") + "\r\n\r\n").encode() + request.data)
+        parts = message.get_payload()
+        self.assertEqual(parts[0].get_payload(decode=True), b"user_data")
+        self.assertEqual(parts[1].get_filename(), "minitv-catalog.txt")
+        self.assertEqual(parts[1].get_payload(decode=True), self.exported["content"])
+        with patch.object(files, "_post_response", return_value=selection()) as post:
+            files.query_catalog_file("Historias sobre poder", "movies", "es", self.settings, self.saved)
+        body = post.call_args.args[1]
+        self.assertEqual(body["input"][0]["content"][0], {"type": "input_file", "file_id": "file-synthetic"})
+        self.assertIs(body["store"], False)
+        self.assertTrue(body["text"]["format"]["strict"])
+        self.assertNotIn("Movies/", json.dumps(body))
+        self.assertNotIn("sk-synthetic-test", json.dumps(body))
+        self.assertNotIn("tools", body)
+        self.assertIn("abstract requests", body["instructions"])
+
+    def test_file_transport_errors_are_safe_and_do_not_retry(self):
+        opener = MagicMock()
+        opener.open.side_effect = urllib.error.HTTPError(files.FILES_URL, 400, "sk-synthetic-test", {}, io.BytesIO(b"secret"))
+        with patch("catalog_ai.urllib.request.build_opener", return_value=opener), self.assertRaises(AIError) as error:
+            files.upload_catalog(self.exported, self.settings)
+        self.assertEqual(error.exception.code, "AI_CATALOG_FILE_ERROR")
+        self.assertNotIn("sk-synthetic-test", str(error.exception))
+        self.assertEqual(opener.open.call_count, 1)
+        with patch.object(files, "_request_json") as request:
+            with self.assertRaises(AIError):
+                files.delete_catalog_file("../other-file", self.settings)
+            with self.assertRaises(AIError):
+                files.upload_catalog(files.export_catalog({}, None), self.settings)
+            request.assert_not_called()
+
+
+class CatalogFileApiTests(unittest.TestCase):
+    def setUp(self):
+        root = tempfile.TemporaryDirectory()
+        self.addCleanup(root.cleanup)
+        self.settings = AISettings(Path(root.name) / "ai.json")
+        self.settings.update({"enabled": True, "apiKey": "sk-synthetic-test"})
+        self.snapshot = snapshot()
+        for name, value in (("ai_settings_store", self.settings), ("current_web_pin", lambda: "test-pin"),
+                            ("ai_request_times", deque()), ("ai_request_active", False), ("tmdb_artwork", None)):
+            patcher = patch.object(api, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.scan = patch.object(api, "list_video_directories", return_value=self.snapshot).start()
+        self.upload = patch.object(api, "upload_catalog", return_value="file-first").start()
+        self.delete = patch.object(api, "delete_catalog_file").start()
+        self.addCleanup(patch.stopall)
+        self.client = api.app.test_client()
+        self.headers = {"X-Web-Pin": "test-pin"}
+        self.store = files.CatalogFileStore(self.settings.path)
+
+    def post_upload(self):
+        return self.client.post("/settings/ai/catalog", headers=self.headers)
+
+    def search(self, section="movies"):
+        return self.client.post("/ai/search", headers=self.headers, json={"section": section, "language": "es", "prompt": "Sobre poder"})
+
+    def test_manual_upload_only_pin_and_status_no_external_calls(self):
+        for method in ("get", "post"):
+            self.assertEqual(getattr(self.client, method)("/settings/ai/catalog").status_code, 401)
+        self.upload.assert_not_called()
+        response = self.client.get("/settings/ai/catalog", headers=self.headers)
+        self.assertFalse(response.json["catalog"]["uploaded"])
+        self.assertEqual(response.json["catalog"]["currentCount"], 5)
+        self.upload.assert_not_called()
+        self.assertEqual(self.search().json["code"], "AI_CATALOG_NOT_UPLOADED")
+        self.settings.update({"enabled": False})
+        response = self.post_upload()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["catalog"]["fileId"], "file-first")
+        self.assertEqual(response.headers["Cache-Control"], "no-store")
+        self.assertNotIn("sk-synthetic-test", response.get_data(as_text=True))
+        self.assertNotIn("Movies/", response.get_data(as_text=True))
+        self.upload.assert_called_once()
+        self.assertEqual(self.client.post("/settings/ai/catalog", headers=self.headers, json={"fileId": "file-forged"}).status_code, 400)
+
+    def test_queries_use_saved_snapshot_validate_ids_and_detect_pending_changes(self):
+        self.post_upload()
+        saved = self.store.load(self.settings.credentials())
+        movie = next(item for item in saved["records"] if item["section"] == "movies")
+        with patch.object(api, "query_catalog_file", return_value=selection([movie["id"]])) as query:
+            response = self.search()
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json["ids"], [movie["path"]])
+            self.assertEqual(response.json["count"], 1)
+            self.assertFalse(response.json["catalogStale"])
+            self.assertEqual(query.call_args.args[-1]["fileId"], "file-first")
+            self.snapshot["movieRootFiles"] = [{"relativePath": "Movies/new.mp4", "name": "New"}]
+            response = self.search()
+            self.assertEqual(response.json["ids"], [])
+            self.assertTrue(response.json["catalogStale"])
+        status = self.client.get("/settings/ai/catalog", headers=self.headers).json["catalog"]
+        self.assertTrue(status["stale"])
+        self.upload.assert_called_once()
+        with patch.object(api, "query_catalog_file", return_value=selection([1])):
+            self.assertEqual(self.search().json["code"], "AI_INVALID_PLAN")
+        self.assertFalse(api.ai_request_active)
+
+    def test_failed_replacement_keeps_previous_snapshot_then_success_cleans_it_up(self):
+        self.post_upload()
+        self.upload.side_effect = AIError("Upload failed", "AI_TIMEOUT", 504)
+        self.assertEqual(self.post_upload().status_code, 504)
+        self.assertEqual(self.store.load(self.settings.credentials())["fileId"], "file-first")
+        self.delete.assert_not_called()
+        self.upload.side_effect = None
+        self.upload.return_value = "file-second"
+        response = self.post_upload()
+        self.assertEqual(response.json["catalog"]["fileId"], "file-second")
+        self.delete.assert_called_once_with("file-first", self.settings.credentials())
+        self.upload.return_value = "file-third"
+        self.delete.side_effect = AIError("Cleanup failed", "AI_TIMEOUT", 504)
+        self.assertTrue(self.post_upload().json["cleanupPending"])
+        self.assertEqual(self.store.load(self.settings.credentials())["fileId"], "file-third")
+
+    def test_key_changes_and_overlapping_operations_cannot_mix_snapshots(self):
+        self.post_upload()
+        with api.ai_request_slot(10):
+            self.assertEqual(self.post_upload().json["code"], "AI_BUSY")
+        self.upload.assert_called_once()
+        original = self.settings.credentials()
+        def change_key(*args):
+            self.settings.update({"apiKey": "sk-other"})
+            return "file-raced"
+        self.upload.side_effect = change_key
+        response = self.post_upload()
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json["code"], "AI_CATALOG_SETTINGS_CHANGED")
+        self.delete.assert_called_once_with("file-raced", original)
+        self.assertEqual(self.store.load(original)["fileId"], "file-first")
+        self.assertEqual(self.search().json["code"], "AI_CATALOG_NOT_UPLOADED")
+
+    def test_corrupt_manifest_can_be_repaired_with_explicit_upload(self):
+        self.store.path.write_text("broken")
+        self.assertEqual(self.post_upload().status_code, 200)
+        self.assertEqual(self.store.load(self.settings.credentials())["fileId"], "file-first")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -23,6 +23,13 @@
 .openai-settings .openai-settings__enabled { display: flex; flex-direction: row; align-items: center; gap: 0.5rem; grid-column: 1 / -1; }
 .openai-settings .openai-settings__enabled input { width: auto; }
 .openai-settings .dialog-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.openai-settings__catalog { border-top: 1px solid #ffffff30; margin-top: 1.2rem; padding-top: 1rem; }
+.openai-settings__catalog h4 { margin: 0 0 0.5rem; font-size: 1rem; }
+.openai-settings__catalog p { line-height: 1.5; }
+.openai-settings__catalog dl { display: flex; flex-wrap: wrap; gap: 0.7rem 1.5rem; margin: 1rem 0; }
+.openai-settings__catalog dl > div { display: flex; gap: 0.5rem; align-items: baseline; }
+.openai-settings__catalog dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.openai-settings__notice { color: #ffd429; }
 @media (max-width: 600px) {
   .catalog-ai-result { align-items: stretch; flex-direction: column; }
 }

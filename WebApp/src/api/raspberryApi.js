@@ -1759,6 +1759,8 @@ export function saveAISettings(settings, signal) {
   return requestAI("/settings/ai", { method: "POST", body: JSON.stringify(settings) }, signal);
 }
 export function testAISettings(signal) { return requestAI("/settings/ai/test", { method: "POST" }, signal); }
+export function getAICatalog(signal) { return requestAI("/settings/ai/catalog", {}, signal, 90000); }
+export function uploadAICatalog(signal) { return requestAI("/settings/ai/catalog", { method: "POST" }, signal, 120000); }
 
 function requestOmdb(path, options, signal) {
   if (isMockModeEnabled()) return Promise.reject(Object.assign(new Error("Connect to Raspberry to use OMDb"), { code: "OMDB_DEMO" }));
@@ -1830,7 +1832,7 @@ export async function updateOmdbLibrary(action, signal) {
 }
 
 export function searchCatalogAI(query, signal) {
-  return requestAI("/ai/search", { method: "POST", body: JSON.stringify(query) }, signal);
+  return requestAI("/ai/search", { method: "POST", body: JSON.stringify(query) }, signal, 90000);
 }
 
 export function getAIRecommendations(userId, section, signal) {

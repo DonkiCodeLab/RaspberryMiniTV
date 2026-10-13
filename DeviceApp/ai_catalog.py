@@ -1,7 +1,8 @@
 """Read-only catalog projection and deterministic execution of AI filter plans.
 
-The model supplies criteria, never catalog IDs or executable expressions. Every
-result is joined back to the current disk scan, using the same paths as WebApp.
+The legacy planner supplies criteria, never executable expressions. The same
+projection also supplies compact upload records. Every result uses the current
+disk scan and the same paths as WebApp.
 """
 import re
 import unicodedata
@@ -225,7 +226,7 @@ def _game_fields(entry):
     return fields, not (fields["year"] and fields["genre"] and fields["overview"])
 
 
-def build_catalog(section, library_snapshot, tmdb_cache, language="es"):
+def build_catalog(section, library_snapshot, tmdb_cache, language="es", compact=False):
     """Build search records only for items present in the supplied /videos scan.
 
     missingMetadata counts items missing core details/credits, not unavailable
@@ -264,6 +265,11 @@ def build_catalog(section, library_snapshot, tmdb_cache, language="es"):
             fields, incomplete = _video_fields(section, entry, local)
         elif section == "books":
             fields, incomplete = _book_fields(entry, language, _mapping(collections.get(entry.get("collection"))))
+            if compact:
+                original = _mapping(entry.get("originalMetadata")) or entry
+                localized = _mapping(_mapping(original.get("localizedMetadata")).get(_locale(language)))
+                # A collection name or subtitle is not an alternative work title.
+                fields["title"] = _texts(localized.get("title"), original.get("title"), entry.get("name"))
         elif section == "games":
             fields, incomplete = _game_fields(entry)
         else:

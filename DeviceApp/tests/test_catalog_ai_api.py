@@ -25,12 +25,12 @@ class CatalogAIApiTests(unittest.TestCase):
             self.addCleanup(patcher.stop)
         self.client = api.app.test_client()
         self.headers = {"X-Web-Pin": "test-pin"}
-        self.query = {"section": "movies", "prompt": "Películas con Tom Hanks", "language": "es"}
-        self.plan = {"intent": "filter", "message": "Películas con Tom Hanks", "groups": [
-            {"conditions": [{"field": "actor", "op": "contains", "value": "Tom Hanks"}]}]}
+        self.query = {"section": "pictures", "prompt": "Fotos con Apollo en el nombre", "language": "es"}
+        self.plan = {"intent": "filter", "message": "Fotos con Apollo en el nombre", "groups": [
+            {"conditions": [{"field": "title", "op": "contains", "value": "Apollo"}]}]}
         self.records = [
-            {"id": "Movies/apollo.mp4", "fields": {"title": ["Apollo 13"], "actor": ["Tom Hanks"], "year": 1995}},
-            {"id": "Movies/other.mp4", "fields": {"title": ["Other"], "actor": ["Another Actor"], "year": 1995}},
+            {"id": "Pictures/apollo.jpg", "fields": {"title": ["Apollo 13"], "actor": ["Tom Hanks"], "year": 1995}},
+            {"id": "Pictures/other.jpg", "fields": {"title": ["Other"], "actor": ["Another Actor"], "year": 1995}},
         ]
 
     def search(self, **changes):
@@ -86,16 +86,16 @@ class CatalogAIApiTests(unittest.TestCase):
                 patch.object(api, "plan_query", return_value=self.plan) as planner:
             response = self.search()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["ids"], ["Movies/apollo.mp4"])
+        self.assertEqual(response.json["ids"], ["Pictures/apollo.jpg"])
         self.assertEqual(response.json["count"], 1)
         self.assertEqual(response.json["total"], 2)
         self.assertEqual(response.json["missingMetadata"], 1)
         self.assertNotIn("sk-test-secret", response.get_data(as_text=True))
         self.assertEqual(response.headers["Cache-Control"], "no-store")
         scan.assert_called_once_with()
-        catalog.assert_called_once_with("movies", {"local": "snapshot"}, api.tmdb_artwork, "es")
+        catalog.assert_called_once_with("pictures", {"local": "snapshot"}, api.tmdb_artwork, "es")
         # Only the prompt and bounded settings reach the provider; no records or files.
-        self.assertEqual(planner.call_args.args[:3], (self.query["prompt"], "movies", "es"))
+        self.assertEqual(planner.call_args.args[:3], (self.query["prompt"], "pictures", "es"))
         self.assertEqual(len(planner.call_args.args), 4)
         self.assertNotIn("records", planner.call_args.args[3])
 

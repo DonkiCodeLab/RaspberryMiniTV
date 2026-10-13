@@ -927,22 +927,43 @@ Guardar y probar son acciones separadas. La prueba realiza una petición pequeñ
 al modelo guardado, incluso si la búsqueda está desactivada.
 
 El modelo predeterminado es `gpt-4.1-mini`; se puede cambiar por un modelo
-compatible con Responses y Structured Outputs. La integración usa la
-[API Responses de OpenAI](https://developers.openai.com/api/reference/resources/responses/methods/create)
-con `store: false` y un esquema JSON estricto. En el modo **Buscar**, OpenAI recibe la consulta escrita,
-la sección, el idioma y las instrucciones para interpretarla. Los archivos,
-el catálogo completo, las marcas de usuario y los créditos permanecen en la
-Raspberry. La llamada requiere Internet y consume uso de la API de OpenAI.
+compatible con Responses, archivos de texto y Structured Outputs. Pulsa
+**Subir catálogo a OpenAI** para generar un archivo `.txt` con películas, series,
+libros y juegos presentes en la biblioteca. Incluye identificadores numéricos,
+títulos y nombres alternativos, año, autor/director/creador/desarrollador y consola
+cuando están disponibles. No incluye sinopsis, reparto, marcas de usuario ni los
+archivos multimedia. Los datos se leen de las fichas locales sin descargar más
+metadatos. Los identificadores son alias estables de las rutas internas; el mapa
+se guarda en `DeviceApp/ai_settings_catalog.json`, con permisos 0600 y excluido de
+Git y de las copias temporales del actualizador. Las rutas permanecen en el dispositivo.
 
-El servidor valida el plan y filtra las fichas locales por título, personas,
-género, año y otros campos de cada sección. Películas y series consultan los
-créditos TMDB ya descargados; las búsquedas no descargan más fichas. Fotos admite
-nombres de archivo, sin analizar imágenes ni deducir la fecha de captura.
-Las consultas sobre escenas, similitud o valoraciones subjetivas piden concretar
-la búsqueda. Los resultados son rutas de elementos presentes en el catálogo;
-el modelo no genera títulos ni identificadores de resultados. Los recuentos
-se calculan en el servidor. Si faltan metadatos, se informa en la web y un campo
-desconocido nunca satisface un filtro negativo.
+La subida es **manual**. El panel muestra la fecha, cantidades por sección y si
+hay cambios pendientes. Cada búsqueda adjunta el `file_id` guardado mediante la
+[API Responses de OpenAI](https://developers.openai.com/api/docs/guides/file-inputs),
+con `store: false` y un esquema JSON estricto. No usa File Search ni un índice
+vectorial. El archivo subido permanece en OpenAI para reutilizarlo; `store: false`
+no borra ese archivo ni evita el consumo de tokens al consultarlo. El botón de
+actualización sube una nueva versión y, después de guardarla, intenta borrar la
+anterior. Si la subida falla, conserva la versión anterior. Si solo falla la
+limpieza, la nueva versión sigue activa y el panel avisa. Cambiar o eliminar la
+clave desasocia el archivo; para usar otra clave hay que subir de nuevo el catálogo.
+
+El modelo puede usar su conocimiento de las obras para interpretar temas, tonos,
+similitudes, actores y referencias indirectas; puede equivocarse o desconocer
+obras. Devuelve IDs de la sección consultada. El servidor rechaza IDs inventados
+o de otra sección, elimina duplicados y descarta elementos ya borrados del disco.
+Los resultados se cruzan con la vista y filtros existentes. Los recuentos cuentan
+los IDs validados de la instantánea subida que siguen disponibles. Las altas
+posteriores no aparecen hasta volver a subir el catálogo; los cambios pendientes
+se indican en los resultados. Una búsqueda puede devolver hasta 2000 IDs; si la
+respuesta está incompleta se rechaza, sin aplicar un filtro parcial. Las consultas
+por el total de una sección se resuelven sin enumerar sus IDs en la salida del modelo.
+
+La aplicación admite un archivo de hasta 8 MiB, pero el catálogo también debe
+caber en el contexto del modelo configurado. Si OpenAI rechaza el archivo o el
+contexto, la interfaz informa del problema. **Fotos** mantiene el filtro local por
+nombre de archivo y no se incluye en la subida. Las búsquedas no analizan vídeos
+ni imágenes. **Recomiéndame** conserva su flujo independiente.
 
 En películas y series, el modo **Recomiéndame** mantiene una conversación por
 perfil. Si faltan gustos, pregunta por géneros, actores o títulos; una petición
@@ -983,9 +1004,13 @@ Rutas protegidas por el PIN de la web:
 - `GET/POST /settings/ai`: estado y configuración (`enabled`, `model`,
   `requestsPerMinute`, `apiKey` y `clearApiKey`).
 - `POST /settings/ai/test`: comprueba la clave y el modelo guardados.
+- `GET /settings/ai/catalog`: estado de la subida y comparación con la biblioteca.
+- `POST /settings/ai/catalog`: sin cuerpo; genera y sube el catálogo compacto con la
+  clave guardada, incluso si la búsqueda está desactivada.
 - `POST /ai/search`: recibe `section` (`movies`, `series`, `books`, `games` o
   `pictures`), `prompt` (hasta 2000 caracteres) y `language` (`es`, `ca`, `en`).
-  Devuelve intención, explicación, rutas, recuento y cobertura de metadatos.
+  Devuelve intención, explicación, rutas y recuento. Las secciones con archivo
+  incluyen `catalogStale` y `catalogUploadedAt`; fotos incluye cobertura de metadatos.
 - `GET /ai/recommendations?userId=…&section=movies|series`: gustos, historial y
   `revision` del perfil existente; funciona con la IA desactivada.
 - `POST /ai/recommendations`: recibe `userId`, `section`, `revision`, `prompt`
@@ -995,10 +1020,11 @@ Rutas protegidas por el PIN de la web:
   en JSON y borra gustos e historiales. Una revisión antigua devuelve 409.
 
 Se permite una petición simultánea y, por defecto, diez por minuto entre todos
-los navegadores, incluidas las recomendaciones y pruebas de conexión. El límite es configurable
+los navegadores, incluidas las subidas, recomendaciones y pruebas de conexión. El límite es configurable
 entre 1 y 30; se reinicia al arrancar el servidor y no sustituye un presupuesto
-de gasto configurado en OpenAI. Las llamadas tienen 30 segundos de espera,
-salida limitada y no se reintentan automáticamente.
+de gasto configurado en OpenAI. Las subidas y consultas con archivo tienen hasta
+60 segundos de espera del proveedor; el resto de consultas, 30. La salida está
+limitada y las llamadas no se reintentan automáticamente.
 
 Pruebas sin usar una clave real:
 `python -m unittest discover -s DeviceApp/tests -p 'test_*ai*.py'` (requiere Flask).

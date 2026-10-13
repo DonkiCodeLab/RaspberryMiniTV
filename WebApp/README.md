@@ -370,24 +370,34 @@ y las búsquedas vacías se indican en pantalla; no impiden usar los vídeos de 
 ### Buscar con IA
 
 El botón **IA**, junto al filtro de la biblioteca, abre una consulta con ejemplos
-para la sección actual: películas por actor o director, series por creador,
-libros por autor y juegos por género, consola o desarrollador. En fotos se busca
+para la sección actual: películas por actor o temas, series por ambiente o
+similitud, libros por autor y juegos por estilo, consola o desarrollador. En fotos se busca
 por nombre de archivo. La respuesta filtra el listado normal y se combina con
 los filtros manuales, favoritos y la vista actual. **Quitar filtro IA** permite
 volver al listado anterior. Una petición de aclaración conserva el filtro que
 ya estaba aplicado; no sustituye el listado por una respuesta inventada.
 
 Actívala desde **Dashboard → Servicios auxiliares → OpenAI**: introduce la clave,
-guarda y comprueba la conexión. El formulario recupera y muestra la clave y los
+guarda, comprueba la conexión y pulsa **Subir catálogo a OpenAI**. El formulario recupera y muestra la clave y los
 ajustes guardados al acceder con el PIN, sin guardarlos en el almacenamiento del
 navegador; el campo vacío conserva la clave existente.
 La prueba utiliza los ajustes guardados. Requiere actualizar web y API, conexión
 a Internet y acceso a la API de OpenAI. En modo maqueta los controles indican que
 hay que conectarse a la Raspberry y no guardan credenciales ni simulan resultados.
 
-El modo **Buscar** interpreta filtros sobre metadatos y calcula los recuentos con
-el catálogo local. No reconoce imágenes ni busca escenas dentro de los vídeos.
-El panel avisa si hay fichas incompletas.
+El botón genera un archivo de texto compacto con IDs, títulos, año y autor,
+director, creador o desarrollador cuando están disponibles, además de la consola
+de los juegos. No incluye sinopsis ni archivos multimedia. Solo se actualiza al
+pulsarlo. El panel muestra la última subida, cantidades por sección y cambios
+pendientes. Si cambias la clave de OpenAI, vuelve a subir el catálogo.
+
+El modo **Buscar** adjunta ese archivo a cada consulta. La IA aporta su conocimiento
+de las obras para resolver peticiones abstractas y devuelve IDs; el servidor valida
+su pertenencia a la sección y que sigan presentes antes de mostrar las fichas.
+Los recuentos se calculan sobre esos resultados. Los elementos añadidos después de
+la subida requieren actualizar el catálogo. La IA puede equivocarse: no analiza
+los vídeos ni las imágenes. Fotos mantiene la búsqueda por nombre de archivo.
+El archivo consume contexto al consultarlo y debe caber en el modelo configurado.
 
 En películas y series también aparece **Recomiéndame**. Puedes responder a una
 pregunta sobre tus gustos o pedir algo concreto, como «Una comedia para esta

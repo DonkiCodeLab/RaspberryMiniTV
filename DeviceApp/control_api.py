@@ -16,6 +16,9 @@ import youtube_search
 import movie_trailers
 from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan
 from ai_catalog import build_catalog, execute_plan, SECTION_FIELDS
+from catalog_file import (CatalogFileStore, SECTIONS as FILE_CATALOG_SECTIONS, export_catalog,
+                          catalog_status, upload_catalog, delete_catalog_file, compact_records,
+                          records_hash, query_catalog_file, resolve_selection)
 from ai_recommender import recommend
 from recommendation_catalog import augment_catalog, resolve_tmdb_title
 from recommendation_profiles import RecommendationProfiles, PREFERENCE_FIELDS, MAX_HISTORY, empty_preferences, validate_history
@@ -4450,6 +4453,56 @@ def ai_test():
         return ai_json({"ok": False, "error": "No se puede leer la configuración de OpenAI.", "code": "AI_SETTINGS_UNAVAILABLE"}, 503)
 
 
+@app.route("/settings/ai/catalog", methods=["GET", "POST"])
+def ai_catalog_file():
+    try:
+        settings = ai_settings_store.credentials()
+        store = CatalogFileStore(ai_settings_store.path)
+        if request.method == "GET":
+            exported = export_catalog(list_video_directories(), tmdb_artwork)
+            return ai_json({"ok": True, "catalog": catalog_status(store.load(settings), exported)})
+        # The button uploads a server-generated snapshot, never a browser-supplied
+        # file, identifier or destination URL.
+        if request.get_data():
+            return ai_json({"ok": False, "error": "Esta acción no admite datos externos.", "code": "AI_INVALID_QUERY"}, 400)
+        if not settings.get("apiKey"):
+            raise AIError("Guarda primero la clave de OpenAI.", "AI_NOT_CONFIGURED", 409)
+        with ai_request_slot(settings["requestsPerMinute"]):
+            exported = export_catalog(list_video_directories(), tmdb_artwork)
+            try:
+                previous = store.load(settings)
+            except AIError as error:
+                if error.code != "AI_CATALOG_STORAGE_ERROR":
+                    raise
+                previous = None  # Explicit upload also repairs a damaged manifest.
+            file_id = upload_catalog(exported, settings)
+            try:
+                # Keep credentials and manifest paired even if another browser
+                # edits settings while the upload is in progress.
+                with ai_settings_store.lock:
+                    if ai_settings_store.credentials()["apiKey"] != settings["apiKey"]:
+                        raise AIError("La clave ha cambiado durante la subida. Vuelve a subir el catálogo.", "AI_CATALOG_SETTINGS_CHANGED", 409)
+                    saved = store.save(exported, file_id, settings)
+            except (AIError, OSError):
+                try:
+                    delete_catalog_file(file_id, settings)
+                except AIError:
+                    app.logger.warning("Could not remove uncommitted OpenAI catalogue file")
+                raise
+            cleanup_pending = False
+            if previous and previous["fileId"] != file_id:
+                try:
+                    delete_catalog_file(previous["fileId"], settings)
+                except AIError:
+                    cleanup_pending = True
+                    app.logger.warning("Could not remove previous OpenAI catalogue file")
+        return ai_json({"ok": True, "catalog": catalog_status(saved, exported), "cleanupPending": cleanup_pending})
+    except AIError as error:
+        return ai_error_response(error)
+    except (OSError, ValueError, TypeError):
+        return ai_json({"ok": False, "error": "No se pudo preparar el catálogo.", "code": "AI_CATALOG_UNAVAILABLE"}, 503)
+
+
 @app.route("/ai/search", methods=["POST"])
 def ai_search():
     if request.content_length and request.content_length > 16384:
@@ -4469,6 +4522,25 @@ def ai_search():
         if not settings.get("apiKey"):
             return ai_json({"ok": False, "error": "Configura la clave de OpenAI en el dashboard.", "code": "AI_NOT_CONFIGURED"}, 503)
         with ai_request_slot(settings["requestsPerMinute"]):
+            if section in FILE_CATALOG_SECTIONS:
+                saved = CatalogFileStore(ai_settings_store.path).load(settings)
+                if not saved:
+                    raise AIError("Sube el catálogo desde OpenAI en el dashboard para buscar con IA.", "AI_CATALOG_NOT_UPLOADED", 409)
+                current = compact_records(section, list_video_directories(), tmdb_artwork)
+                uploaded = [item for item in saved["records"] if item["section"] == section]
+                stale = records_hash(current) != records_hash(uploaded)
+                if current and uploaded:
+                    selection = query_catalog_file(prompt.strip(), section, language, settings, saved)
+                    ids = resolve_selection(selection, saved, section, current)
+                else:
+                    selection = {"intent": "filter", "message": {
+                        "es": "No hay contenido de esta sección disponible en el catálogo subido.",
+                        "ca": "No hi ha contingut d’aquesta secció disponible al catàleg pujat.",
+                        "en": "No content from this section is available in the uploaded catalogue."}[language]}
+                    ids = []
+                return ai_json({"ok": True, "section": section, "intent": selection["intent"], "message": selection["message"],
+                                "ids": ids, "count": len(ids), "total": len(current), "missingMetadata": 0,
+                                "catalogStale": stale, "catalogUploadedAt": saved["uploadedAt"]})
             catalogue = build_catalog(section, list_video_directories(), tmdb_artwork, language)
             records = catalogue["records"]
             if not records:

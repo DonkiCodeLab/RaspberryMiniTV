@@ -22,7 +22,8 @@ export function CatalogAIResult({ result, visible, language, onClear }) {
     <div><strong>{s.applied}: {result.prompt}</strong><p>{result.message}</p>
       <small>{result.count} {s.matches} · {visible} {s.visible}</small>
       {result.missingMetadata > 0 && <small>{result.missingMetadata} {s.missing}</small>}
-      <small>{s.hint}</small>
+      {result.catalogStale && <small>{s.catalogStale}</small>}
+      <small>{s.resultHint}</small>
     </div>
     <button className="dialog-button" type="button" onClick={onClear}>{s.clear}</button>
   </div>;
@@ -60,7 +61,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
       const result = validateAIResult(await searchCatalogAI({ section, prompt: prompt.trim(), language }, controller.signal), section);
       if (request.current.generation !== generation || controller.signal.aborted) return;
       if (["filter", "count"].includes(result.intent)) onResult({ ...result, prompt: prompt.trim() });
-      else setMessage(result.message);
+      else setMessage(result.message + (result.catalogStale ? ` ${s.catalogStale}` : ""));
     } catch (error) {
       if (request.current.generation === generation && !controller.signal.aborted) setError(catalogAIError(error, language));
     } finally {
@@ -78,7 +79,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     {demo && <p role="status">{s.demo}</p>}
     <form onSubmit={submit}>
       <label htmlFor="catalog-ai-prompt">{s.prompt}</label>
-      <textarea ref={input} id="catalog-ai-prompt" value={prompt} onChange={event => setPrompt(event.target.value)} maxLength={1000} rows={3} disabled={busy || demo} autoFocus />
+      <textarea ref={input} id="catalog-ai-prompt" value={prompt} onChange={event => setPrompt(event.target.value)} maxLength={2000} rows={3} disabled={busy || demo} autoFocus />
       <div className="catalog-ai-panel__examples"><span>{s.examples}</span>{(s.samples[section] || []).map(example => <button type="button" key={example} disabled={busy || demo}
         onClick={() => { setPrompt(example); input.current?.focus(); }}>{example}</button>)}</div>
       <div className="dialog-actions"><button className="dialog-button dialog-button--accent" type="submit" disabled={busy || demo || !prompt.trim()}>{busy ? s.waiting : s.send}</button>

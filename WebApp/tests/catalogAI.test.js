@@ -79,6 +79,9 @@ test("each section has localized examples and photos promise filename search onl
     assert.notEqual(catalogAIError({ code: "AI_RATE_LIMIT" }, language), s.error);
     assert.equal(catalogAIError({ code: "AI_NOT_CONFIGURED" }, language), s.setup);
     assert.equal(catalogAIError({ code: "AI_AUTH_ERROR" }, language), s.authError);
+    assert.equal(catalogAIError({ code: "AI_CATALOG_NOT_UPLOADED" }, language), s.catalogRequired);
+    assert.equal(catalogAIError({ code: "AI_CATALOG_QUERY_ERROR" }, language), s.catalogQueryError);
+    assert.equal(catalogAIError({ code: "AI_INVALID_PLAN" }, language), s.invalidSelection);
   }
 });
 
@@ -105,11 +108,12 @@ test("AI search and settings render localized connection requirements in mock mo
     assert.match(settings, /Connect to your Raspberry/);
     assert.doesNotMatch(settings, /type="password"/);
     const resultHtml = renderToStaticMarkup(React.createElement(component.CatalogAIResult, {
-      result: { intent: "count", prompt: "<script>test</script>", message: "Found", count: 2, missingMetadata: 1 }, visible: 1, language: "en", onClear() {},
+      result: { intent: "count", prompt: "<script>test</script>", message: "Found", count: 2, missingMetadata: 1, catalogStale: true }, visible: 1, language: "en", onClear() {},
     }));
     assert.match(resultHtml, /2 matches/);
     assert.match(resultHtml, /1 visible in this view/);
     assert.match(resultHtml, /Clear AI search/);
+    assert.match(resultHtml, /library has changed since the last upload/);
     assert.doesNotMatch(resultHtml, /<script>/);
   } finally { globalThis.window = previousWindow; }
 });

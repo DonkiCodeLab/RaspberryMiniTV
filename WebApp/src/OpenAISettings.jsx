@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getAISettings, saveAISettings, testAISettings, isMockMode } from "./api/raspberryApi";
+import { getAISettings, saveAISettings, testAISettings, getAICatalog, uploadAICatalog, isMockMode } from "./api/raspberryApi";
 import { aiSettingsPayload } from "./catalogAI.js";
 import { catalogAIError, catalogAIStrings } from "./catalogAIStrings.js";
 import "./CatalogAI.css";
@@ -13,18 +13,24 @@ export default function OpenAISettings({ language }) {
   const [message, setMessage] = useState("");
   const [dirty, setDirty] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [catalog, setCatalog] = useState(null);
+  const [catalogError, setCatalogError] = useState("");
   const request = useRef({ generation: 0, controller: null, busy: false });
   const demo = isMockMode();
   useEffect(() => {
     const controller = new AbortController();
     const generation = ++request.current.generation;
     request.current.controller = controller;
-    setBusy("load"); setError("");
+    setBusy("load"); setError(""); setCatalogError("");
     if (demo) setBusy("");
-    else getAISettings(controller.signal).then(data => {
+    else Promise.all([getAISettings(controller.signal), getAICatalog(controller.signal).catch(error => {
+      if (!controller.signal.aborted) setCatalogError(catalogAIError(error, language, "catalogError"));
+      return null;
+    })]).then(([data, uploaded]) => {
       if (request.current.generation === generation && !controller.signal.aborted) {
         setSettings(data.settings);
         setApiKey(data.settings.apiKey || "");
+        setCatalog(uploaded?.catalog || null);
       }
     }).catch(error => { if (!controller.signal.aborted) setError(catalogAIError(error, language, "settingsError")); })
       .finally(() => { if (!controller.signal.aborted) setBusy(""); });
@@ -40,11 +46,25 @@ export default function OpenAISettings({ language }) {
     request.current.controller = controller;
     setBusy(action); setError(""); setMessage("");
     try {
-      const result = action === "test" ? await testAISettings(controller.signal)
+      const result = action === "upload" ? await uploadAICatalog(controller.signal)
+        : action === "test" ? await testAISettings(controller.signal)
         : await saveAISettings(action === "remove" ? { clearApiKey: true } : aiSettingsPayload(settings, apiKey), controller.signal);
       if (request.current.generation !== generation || controller.signal.aborted) return;
-      if (action !== "test") { setSettings(result.settings); setApiKey(result.settings.apiKey || ""); setDirty(false); }
-      setMessage(action === "test" ? "connected" : action === "remove" ? "removed" : "saved");
+      if (action === "upload") {
+        setCatalog(result.catalog); setCatalogError("");
+      } else if (action !== "test") {
+        setSettings(result.settings); setApiKey(result.settings.apiKey || ""); setDirty(false);
+        try {
+          const uploaded = await getAICatalog(controller.signal);
+          if (request.current.generation !== generation || controller.signal.aborted) return;
+          setCatalog(uploaded.catalog); setCatalogError("");
+        } catch (error) {
+          if (!controller.signal.aborted) { setCatalog(null); setCatalogError(catalogAIError(error, language, "catalogError")); }
+        }
+      }
+      if (request.current.generation !== generation || controller.signal.aborted) return;
+      setMessage(action === "upload" ? (result.cleanupPending ? "uploadedCleanupPending" : "uploaded")
+        : action === "test" ? "connected" : action === "remove" ? "removed" : "saved");
     } catch (error) { if (!controller.signal.aborted) setError(catalogAIError(error, language, "settingsError")); }
     finally { request.current.busy = false; if (request.current.generation === generation) setBusy(""); }
   }
@@ -63,6 +83,20 @@ export default function OpenAISettings({ language }) {
           <button type="button" className="dialog-button dialog-button--secondary" disabled={disabled || !settings?.configured || dirty} onClick={() => act("test")}>{busy === "test" ? s.testing : s.test}</button>
           <button type="button" className="dialog-button" disabled={disabled || !settings?.configured} onClick={() => act("remove")}>{s.remove}</button></div>
       </form>
+      <section className="openai-settings__catalog" aria-labelledby="openai-catalog-title">
+        <h4 id="openai-catalog-title">{s.catalogTitle}</h4>
+        <p>{s.catalogHint}</p>
+        {catalog && <>
+          <p>{catalog.uploaded ? `${s.catalogUpdated}: ${new Date(catalog.uploadedAt).toLocaleString(language === "ca" ? "ca-ES" : language || "es")}` : s.catalogNotUploaded}</p>
+          <dl>{["movies", "series", "books", "games"].map(section => <div key={section}><dt>{s.catalogSections[section]}</dt>
+            <dd>{catalog.uploaded ? catalog.counts[section] : catalog.currentCounts[section]}</dd></div>)}</dl>
+          {catalog.stale && <p className="openai-settings__notice" role="status">{s.catalogStale}</p>}
+        </>}
+        {catalogError && <p className="dialog-error" role="alert">{catalogError}</p>}
+        <button type="button" className="dialog-button dialog-button--accent" disabled={disabled || !settings?.configured || dirty || catalog?.currentCount === 0}
+          onClick={() => act("upload")}>{busy === "upload" ? s.uploading : catalog?.uploaded ? s.updateCatalog : s.uploadCatalog}</button>
+        {catalog?.currentCount === 0 && <p>{s.catalogEmpty}</p>}
+      </section>
       {dirty && <p>{s.saveBeforeTest}</p>}
       {error && <p className="dialog-error" role="alert">{error}</p>}
       {!settings && !busy && <button type="button" className="dialog-button" onClick={() => setAttempt(value => value + 1)}>{s.retry}</button>}

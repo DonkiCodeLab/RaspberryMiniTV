@@ -31,11 +31,18 @@ test("AI uses authenticated Raspberry endpoints, keeps keys off storage and test
     assert.equal(calls[2].options.body, undefined);
     assert.equal(calls[3].options.body.includes("sk-synthetic-test"), false);
     assert.deepEqual(JSON.parse(calls[3].options.body), { section: "books", prompt: "Books by an author", language: "en" });
+    await api.getAICatalog();
+    await api.uploadAICatalog();
+    assert.equal(new URL(calls[4].url).pathname, "/settings/ai/catalog");
+    assert.equal(new URL(calls[5].url).pathname, "/settings/ai/catalog");
+    assert.equal(calls[5].options.method, "POST");
+    assert.equal(calls[5].options.body, undefined);
     globalThis.fetch = async () => ({ ok: false, status: 429, text: async () => '{"ok":false,"code":"AI_RATE_LIMIT","error":"Rate limit"}' });
     await assert.rejects(api.searchCatalogAI({ section: "movies", prompt: "Movies", language: "es" }), error => error.code === "AI_RATE_LIMIT" && error.status === 429);
     const mock = await loadAPI({ VITE_WEB_DEV_MODE: "mock" });
     globalThis.fetch = () => { throw new Error("mock must not call a server"); };
     await assert.rejects(mock.saveAISettings({ apiKey: "sk-synthetic-test" }), error => error.code === "AI_DEMO");
     await assert.rejects(mock.searchCatalogAI({ section: "movies", prompt: "Movies", language: "es" }), error => error.code === "AI_DEMO");
+    await assert.rejects(mock.uploadAICatalog(), error => error.code === "AI_DEMO");
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
