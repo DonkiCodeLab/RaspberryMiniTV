@@ -31,6 +31,7 @@ import BookReader from "./BookReader.jsx";
 import BookPreviewButton from "./BookPreviewButton.jsx";
 import BookHeaderPreview from "./BookHeaderPreview.jsx";
 import GameHeaderArtwork from "./GameHeaderArtwork.jsx";
+import RetroGamesTitle from "./RetroGamesTitle.jsx";
 import BrowserGameModal from "./BrowserGameModal.jsx";
 import useUserProfiles from "./useUserProfiles.js";
 import { ProfileMenu, UsersPanel, ResumeDialog, userStrings } from "./UserProfiles.jsx";
@@ -9491,7 +9492,7 @@ export default function App() {
                       alt={(isBooksMode ? activeBookCollection?.label || (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : selectedItem?.name) || "Cartell principal"}
                     />}
 
-                    {!isMediaDetail ? (
+                    {!isMediaDetail && isGamesMode ? <RetroGamesTitle label={t(activeMediaSection.labelKey)} /> : !isMediaDetail ? (
                       <h1 className={`series-hero__section-title${isBooksMode ? " series-hero__section-title--books" : ""}`} key={activeMediaType}>
                         <svg className="series-hero__section-icon" viewBox={activeMediaSection.headerIcon.viewBox} aria-hidden="true" focusable="false">
                           <image href={activeMediaSection.inactiveIcon} width={activeMediaSection.headerIcon.width} height={activeMediaSection.headerIcon.height} />
