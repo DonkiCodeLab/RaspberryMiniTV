@@ -391,7 +391,13 @@ de los juegos. No incluye sinopsis ni archivos multimedia. Solo se actualiza al
 pulsarlo. El panel muestra la última subida, cantidades por sección y cambios
 pendientes. Si cambias la clave de OpenAI, vuelve a subir el catálogo.
 
-El modo **Buscar** adjunta ese archivo a cada consulta. La IA aporta su conocimiento
+El modo **Buscar** adjunta ese archivo a cada consulta y busca exclusivamente
+en la sección activa: libros, películas,
+series o juegos. Las adaptaciones y los títulos compartidos no permiten mezclar
+IDs entre secciones. Para secciones de hasta 996 obras, el formato de respuesta
+solo admite sus IDs del catálogo subido; el servidor valida siempre la sección,
+también en catálogos mayores. **Depurar → scope** muestra esa restricción. No hace
+falta volver a subir el archivo para aplicar este cambio. La IA usa su conocimiento
 de las obras para resolver peticiones abstractas y devuelve IDs; el servidor valida
 su pertenencia a la sección y que sigan presentes antes de mostrar las fichas.
 Los recuentos se calculan sobre esos resultados. Los elementos añadidos después de

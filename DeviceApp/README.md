@@ -948,6 +948,18 @@ anterior. Si la subida falla, conserva la versión anterior. Si solo falla la
 limpieza, la nueva versión sigue activa y el panel avisa. Cambiar o eliminar la
 clave desasocia el archivo; para usar otra clave hay que subir de nuevo el catálogo.
 
+La sección activa se fija en las instrucciones: libros solo busca libros, películas
+solo películas, series solo series y juegos solo juegos. No se mezclan adaptaciones
+ni obras de otras secciones aunque compartan título. Si la petición pide otra
+sección, se indica que hay que cambiar de sección. Para secciones de hasta 996 obras,
+el esquema de respuesta enumera exclusivamente sus IDs del catálogo subido (los otros
+cuatro valores del [límite de 1000 de Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs#limitations-on-enum-size)
+corresponden a `intent`).
+Las secciones mayores conservan el catálogo completo, las instrucciones de ámbito y
+la validación de IDs en el servidor, sin recortar resultados para encajar el esquema.
+**Depurar** muestra la sección, la cantidad de IDs permitidos y el tipo de restricción
+en `scope`. Este refuerzo funciona con los archivos ya subidos.
+
 El modelo puede usar su conocimiento de las obras para interpretar temas, tonos,
 similitudes, actores y referencias indirectas; puede equivocarse o desconocer
 obras. Devuelve IDs de la sección consultada. El servidor rechaza IDs inventados
