@@ -152,29 +152,21 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
 .browser-game__television-picker select:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
 .mega-drive-setup { width: min(900px, 100%, calc((100dvh - 14rem) / var(--setup-ratio))); }
 .mega-drive-tv { position: relative; width: 100%; aspect-ratio: var(--tv-ratio); }
-.retro-television { display: block; width: 100%; height: 100%; filter: drop-shadow(0 12px 14px #0005); pointer-events: none; user-select: none; }
-/* The monochrome cut-out drawings use a light finish against the dark room. */
-.retro-television--monochrome { filter: invert(.8) drop-shadow(0 12px 14px #0005); }
+.retro-television {
+  position: absolute; inset: 0; z-index: 1;
+  display: block; width: 100%; height: 100%;
+  pointer-events: none; user-select: none;
+}
 .mega-drive-tv .gameboy-device__screen {
-  border-radius: 0; box-shadow: none; background: transparent;
+  z-index: 0; border-radius: 0; box-shadow: none; background: #050505;
 }
-/* Mask only the glass background. Masking an iframe ancestor can blank WebGL
-   canvases after a resize in Chromium; the 4:3 iframe fits inside this contour. */
-.mega-drive-tv .gameboy-device__screen::before {
-  content: ""; position: absolute; inset: 0; background: #050505; pointer-events: none;
-  mask-image: var(--tv-mask); mask-size: 100% 100%; mask-repeat: no-repeat;
-  -webkit-mask-image: var(--tv-mask); -webkit-mask-size: 100% 100%; -webkit-mask-repeat: no-repeat;
-}
+/* Keep WebGL outside CSS masks. The transparent artwork above the iframe
+   provides the original curved aperture, including its slight overscan. */
 .mega-drive-tv .gameboy-device__screen iframe {
   position: absolute; left: var(--picture-left); top: var(--picture-top);
   width: var(--picture-width); height: var(--picture-height); background: #050505;
 }
-.mega-drive-tv .gameboy-device__screen::after {
-  background: linear-gradient(135deg, #c3d9ff0a, transparent 42%);
-  box-shadow: inset 0 0 14px #0007;
-  mask-image: var(--tv-mask); mask-size: 100% 100%; mask-repeat: no-repeat;
-  -webkit-mask-image: var(--tv-mask); -webkit-mask-size: 100% 100%; -webkit-mask-repeat: no-repeat;
-}
+.mega-drive-tv .gameboy-device__screen::after { display: none; }
 .mega-drive-controller {
   position: relative; width: 76%; aspect-ratio: var(--device-ratio); margin: .75rem auto 0;
   filter: drop-shadow(0 8px 12px #0007);

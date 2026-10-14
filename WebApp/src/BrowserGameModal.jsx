@@ -167,7 +167,7 @@ function GameSession({ game, onClose, t }) {
             saveGameTelevision(event.target.value);
           }}>
             {GAME_TELEVISIONS.map(tv => <option key={tv.id} value={tv.id}>
-              {t("browser_game_television")} {String(tv.number).padStart(2, "0")}
+              {tv.name}
             </option>)}
           </select>
         </div>}
