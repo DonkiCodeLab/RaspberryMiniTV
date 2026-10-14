@@ -9492,7 +9492,7 @@ export default function App() {
                       alt={(isBooksMode ? activeBookCollection?.label || (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : selectedItem?.name) || "Cartell principal"}
                     />}
 
-                    {!isMediaDetail && isGamesMode ? <RetroGamesTitle label={t(activeMediaSection.labelKey)} /> : !isMediaDetail ? (
+                    {!isMediaDetail && isGamesMode ? <RetroGamesTitle label={t(activeMediaSection.labelKey)} icon={activeMediaSection.inactiveIcon} headerIcon={activeMediaSection.headerIcon} /> : !isMediaDetail ? (
                       <h1 className={`series-hero__section-title${isBooksMode ? " series-hero__section-title--books" : ""}`} key={activeMediaType}>
                         <svg className="series-hero__section-icon" viewBox={activeMediaSection.headerIcon.viewBox} aria-hidden="true" focusable="false">
                           <image href={activeMediaSection.inactiveIcon} width={activeMediaSection.headerIcon.width} height={activeMediaSection.headerIcon.height} />

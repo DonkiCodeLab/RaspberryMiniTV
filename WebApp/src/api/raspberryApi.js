@@ -1755,6 +1755,7 @@ function requestAI(path, options, signal, timeoutMs = 50000) {
   return aiRequestWithTimeout(activeSignal => request(path, { ...options, signal: activeSignal, cache: "no-store" }), signal, timeoutMs);
 }
 
+export function getAIModels(signal) { return requestAI("/settings/ai/models", {}, signal, 20000); }
 export function getAISettings(signal) { return requestAI("/settings/ai", {}, signal); }
 export function saveAISettings(settings, signal) {
   return requestAI("/settings/ai", { method: "POST", body: JSON.stringify(settings) }, signal);

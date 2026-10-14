@@ -926,8 +926,14 @@ la borra. No hay que introducirla en `.env` del frontend ni en variables `VITE_*
 Guardar y probar son acciones separadas. La prueba realiza una petición pequeña
 al modelo guardado, incluso si la búsqueda está desactivada.
 
-El modelo predeterminado es `gpt-4.1-mini`; se puede cambiar por un modelo
-compatible con Responses, archivos de texto y Structured Outputs. Pulsa
+El selector del dashboard guarda el modelo predeterminado. El selector de **Buscar**
+permite elegir otro solo para esa consulta, sin modificar los ajustes guardados.
+**Actualizar modelos** consulta `/settings/ai/models`, protegido por PIN, que obtiene
+los modelos de texto de tu cuenta desde `/v1/models` sin devolver la clave. Se priorizan
+los alias actuales (`chat-latest`, `gpt-6.1-sol`, `gpt-6-luna`, `gpt-6-astra`) disponibles;
+también permite escribir un ID. Si falla la consulta, se indican las opciones predefinidas.
+Se conserva el modelo que ya tenías guardado. La búsqueda requiere Responses y archivos
+de texto; Fotos y recomendaciones también requieren Structured Outputs. Pulsa
 **Subir catálogo a OpenAI** para generar un archivo `.txt` con películas, series,
 libros y juegos presentes en la biblioteca. Incluye identificadores numéricos,
 títulos y nombres alternativos, año, autor/director/creador/desarrollador y consola
@@ -940,7 +946,7 @@ Git y de las copias temporales del actualizador. Las rutas permanecen en el disp
 La subida es **manual**. El panel muestra la fecha, cantidades por sección y si
 hay cambios pendientes. Cada búsqueda adjunta el `file_id` guardado mediante la
 [API Responses de OpenAI](https://developers.openai.com/api/docs/guides/file-inputs),
-con `store: false` y un esquema JSON estricto. No usa File Search ni un índice
+con `store: false`. No usa File Search ni un índice
 vectorial. El archivo subido permanece en OpenAI para reutilizarlo; `store: false`
 no borra ese archivo ni evita el consumo de tokens al consultarlo. El botón de
 actualización sube una nueva versión y, después de guardarla, intenta borrar la
@@ -948,21 +954,13 @@ anterior. Si la subida falla, conserva la versión anterior. Si solo falla la
 limpieza, la nueva versión sigue activa y el panel avisa. Cambiar o eliminar la
 clave desasocia el archivo; para usar otra clave hay que subir de nuevo el catálogo.
 
-La sección activa se fija en las instrucciones: libros solo busca libros, películas
-solo películas, series solo series y juegos solo juegos. No se mezclan adaptaciones
-ni obras de otras secciones aunque compartan título. Si la petición pide otra
-sección, se indica que hay que cambiar de sección. Para secciones de hasta 996 obras,
-el esquema de respuesta enumera exclusivamente sus IDs del catálogo subido como
-cadenas decimales entre comillas, evitando enumeraciones de enteros largos en la
-generación restringida. El servidor los convierte a los mismos IDs numéricos antes
-de validarlos; el archivo subido y los identificadores guardados no cambian (los otros
-cuatro valores del [límite de 1000 de Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs#limitations-on-enum-size)
-corresponden a `intent`).
-La enumeración respeta también el límite de 15.000 caracteres para enums de texto.
-Las secciones que superan alguno de esos límites conservan el catálogo completo, las instrucciones de ámbito y
-la validación de IDs en el servidor, sin recortar resultados para encajar el esquema.
-**Depurar** muestra la sección, la cantidad de IDs permitidos y el tipo de restricción
-en `scope`, incluido `idEncoding: decimal_string`. Este refuerzo funciona con los archivos ya subidos.
+Las instrucciones se limitan a usar el catálogo adjunto y el conocimiento de las obras,
+buscar solo registros de la sección activa y devolver exclusivamente un array JSON de IDs:
+`[123,456]` o `[]` si no hay coincidencias. No se pide explicación, intención ni recuento,
+y no se añade un esquema con todos los IDs a la petición. El servidor valida el array,
+acepta enteros o cadenas decimales exactas y rechaza IDs de otras secciones o inexistentes.
+**Depurar** muestra las instrucciones exactas, el modelo elegido y `scope` con
+`responseFormat: id_array` e `idConstraint: server_validation`. El archivo ya subido sigue sirviendo.
 
 El modelo puede usar su conocimiento de las obras para interpretar temas, tonos,
 similitudes, actores y referencias indirectas; puede equivocarse o desconocer
@@ -973,7 +971,7 @@ los IDs validados de la instantánea subida que siguen disponibles. Las altas
 posteriores no aparecen hasta volver a subir el catálogo; los cambios pendientes
 se indican en los resultados. Una búsqueda puede devolver hasta 2000 IDs; si la
 respuesta está incompleta se rechaza, sin aplicar un filtro parcial. Las consultas
-por el total de una sección se resuelven sin enumerar sus IDs en la salida del modelo.
+por el total de una sección devuelven sus IDs y el servidor calcula el recuento.
 
 El botón **Depurar**, junto a Buscar, muestra el diagnóstico de la última consulta:
 texto original del modelo, cuerpo de respuesta de OpenAI, estado HTTP y de Responses,
@@ -1031,13 +1029,18 @@ Rutas protegidas por el PIN de la web:
 
 - `GET/POST /settings/ai`: estado y configuración (`enabled`, `model`,
   `requestsPerMinute`, `apiKey` y `clearApiKey`).
+- `GET /settings/ai/models`: modelos de texto disponibles en la cuenta y
+  `defaultModel`, sin credenciales. Espera hasta 15 segundos a OpenAI.
 - `POST /settings/ai/test`: comprueba la clave y el modelo guardados.
 - `GET /settings/ai/catalog`: estado de la subida y comparación con la biblioteca.
 - `POST /settings/ai/catalog`: sin cuerpo; genera y sube el catálogo compacto con la
   clave guardada, incluso si la búsqueda está desactivada.
 - `POST /ai/search`: recibe `section` (`movies`, `series`, `books`, `games` o
-  `pictures`), `prompt` (hasta 2000 caracteres) y `language` (`es`, `ca`, `en`).
-  Devuelve intención, explicación, rutas y recuento. Las secciones con archivo
+  `pictures`), `prompt` (hasta 2000 caracteres), `language` (`es`, `ca`, `en`) y
+  opcionalmente `model`, que solo se aplica a esa búsqueda.
+  Devuelve intención, mensaje, rutas y recuento. En las secciones con archivo el
+  servidor adapta el array de la IA a este formato, con `intent: filter` y mensaje vacío;
+  la IA no genera esos campos. Las secciones con archivo
   incluyen `catalogStale` y `catalogUploadedAt`; fotos incluye cobertura de metadatos.
 - `GET /ai/recommendations?userId=…&section=movies|series`: gustos, historial y
   `revision` del perfil existente; funciona con la IA desactivada.

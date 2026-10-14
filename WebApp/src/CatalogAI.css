@@ -40,3 +40,13 @@
 @media (max-width: 600px) {
   .catalog-ai-result { align-items: stretch; flex-direction: column; }
 }
+
+.ai-model-select { min-width: 0; margin-bottom: 1rem; }
+.ai-model-select > label { display: block; margin-bottom: 0.5rem; font-weight: 700; }
+.ai-model-select__row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.ai-model-select select, .ai-model-select input { box-sizing: border-box; min-width: 0; max-width: 100%; border: 1px solid #fff5; border-radius: 10px; padding: 0.7rem; background: #101c29; color: #fff; font: inherit; }
+.ai-model-select select { flex: 1 1 14rem; }
+.ai-model-select select:focus-visible, .ai-model-select input:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
+.ai-model-select small { display: block; margin-top: 0.5rem; line-height: 1.4; opacity: 0.8; }
+.ai-model-select__custom { margin-top: 0.7rem; }
+.ai-model-select__custom input { display: block; width: 100%; margin-top: 0.4rem; }

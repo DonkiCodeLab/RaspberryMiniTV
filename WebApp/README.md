@@ -394,15 +394,20 @@ pendientes. Si cambias la clave de OpenAI, vuelve a subir el catálogo.
 El modo **Buscar** adjunta ese archivo a cada consulta y busca exclusivamente
 en la sección activa: libros, películas,
 series o juegos. Las adaptaciones y los títulos compartidos no permiten mezclar
-IDs entre secciones. Dentro de los límites del esquema (996 obras y 15.000 caracteres
-en los IDs), el formato de respuesta solo admite sus IDs del catálogo subido.
-OpenAI devuelve los IDs entre comillas y el servidor los convierte a sus valores
-internos exactos; se evitan así los problemas de generación con enteros largos.
-El servidor valida siempre la sección,
-también en catálogos mayores. **Depurar → scope** muestra esa restricción. No hace
-falta volver a subir el archivo para aplicar este cambio. La IA usa su conocimiento
-de las obras para resolver peticiones abstractas y devuelve IDs; el servidor valida
-su pertenencia a la sección y que sigan presentes antes de mostrar las fichas.
+IDs entre secciones. La IA recibe instrucciones breves: usar el catálogo y su conocimiento,
+buscar solo en la sección activa y devolver únicamente un array JSON como `[123,456]`
+o `[]`. No se le piden mensajes ni otros campos y no se envían enumeraciones de IDs.
+El servidor valida la respuesta, la pertenencia de los IDs a la sección y que sigan
+presentes antes de mostrar las fichas. El archivo subido sigue siendo válido.
+
+El selector **Modelo** permite cambiar de modelo antes de cada búsqueda sin alterar
+el predeterminado del dashboard. El dashboard también ofrece un selector para guardar
+ese valor. **Actualizar modelos** carga los modelos de texto de tu cuenta: se priorizan
+los alias actuales disponibles, incluidos `chat-latest`, `gpt-6.1-sol`, `gpt-6-luna`
+y `gpt-6-astra`. También se puede escribir un ID. Si no se puede consultar la cuenta,
+se avisa y se muestran opciones predefinidas cuya disponibilidad depende de la clave.
+Los modelos disponibles pueden tener distintos costes y tiempos de respuesta.
+
 Los recuentos se calculan sobre esos resultados. Los elementos añadidos después de
 la subida requieren actualizar el catálogo. La IA puede equivocarse: no analiza
 los vídeos ni las imágenes. Fotos mantiene la búsqueda por nombre de archivo.
@@ -410,7 +415,7 @@ El archivo consume contexto al consultarlo y debe caber en el modelo configurado
 
 Después de buscar, **Depurar** permite ver la respuesta original de la IA y el
 motivo concreto de un rechazo: formato, IDs incorrectos o respuesta incompleta.
-También muestra el modelo, archivo adjunto, estado y consumo de tokens. **Respuesta
+También muestra las instrucciones exactas, el modelo, archivo adjunto, estado y consumo de tokens. **Respuesta
 completa de OpenAI** despliega el cuerpo recibido y **Copiar informe** permite
 compartirlo para diagnosticar el fallo, incluso desde la dirección HTTP de la
 Raspberry. Abrir o copiar el informe no repite la consulta. Las claves se ocultan

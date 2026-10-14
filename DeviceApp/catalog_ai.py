@@ -288,6 +288,25 @@ def _request_json(data, url, body=None, method="POST", content_type="application
     return payload
 
 
+def list_models(settings):
+    """Discover text models using the saved key, without exposing it to clients."""
+    data = _private_settings(settings)
+    payload = _request_json(data, "https://api.openai.com/v1/models", method="GET", timeout=15)
+    if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
+        raise AIError("OpenAI no devolvió una lista de modelos válida.", "AI_INVALID_RESPONSE", 502)
+    models = {}
+    for item in payload["data"]:
+        if not isinstance(item, dict):
+            continue
+        identifier = item.get("id")
+        if (not isinstance(identifier, str) or not MODEL_RE.fullmatch(identifier)
+                or not re.match(r"^(gpt-(?:4[.o]|[5-9]|[1-9][0-9]+)|chatgpt-|chat-latest$|o[134](?:-|$))", identifier)
+                or any(word in identifier for word in ("audio", "realtime", "transcribe", "tts", "image", "codex", "search", "instruct", "deep-research"))):
+            continue
+        models[identifier] = {"id": identifier, "created": item.get("created") if type(item.get("created")) is int else 0}
+    return sorted(models.values(), key=lambda item: (-item["created"], item["id"]))
+
+
 def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR", diagnostics=None):
     if diagnostics is not None:
         diagnostics.setdefault("request", {}).update({"model": body["model"], "maxOutputTokens": body["max_output_tokens"],

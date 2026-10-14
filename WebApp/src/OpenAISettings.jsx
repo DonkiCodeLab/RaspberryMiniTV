@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { getAISettings, saveAISettings, testAISettings, getAICatalog, uploadAICatalog, isMockMode } from "./api/raspberryApi";
 import { aiSettingsPayload } from "./catalogAI.js";
 import { catalogAIError, catalogAIStrings } from "./catalogAIStrings.js";
+import AIModelSelect from "./AIModelSelect.jsx";
 import "./CatalogAI.css";
 
 export default function OpenAISettings({ language }) {
   const s = catalogAIStrings(language);
+  const [modelRevision, setModelRevision] = useState(0);
   const [settings, setSettings] = useState(null);
   const [apiKey, setApiKey] = useState("");
   const [busy, setBusy] = useState("load");
@@ -53,7 +55,7 @@ export default function OpenAISettings({ language }) {
       if (action === "upload") {
         setCatalog(result.catalog); setCatalogError("");
       } else if (action !== "test") {
-        setSettings(result.settings); setApiKey(result.settings.apiKey || ""); setDirty(false);
+        setSettings(result.settings); setApiKey(result.settings.apiKey || ""); setDirty(false); setModelRevision(n => n + 1);
         try {
           const uploaded = await getAICatalog(controller.signal);
           if (request.current.generation !== generation || controller.signal.aborted) return;
@@ -77,7 +79,7 @@ export default function OpenAISettings({ language }) {
         <label className="openai-settings__enabled"><input type="checkbox" checked={Boolean(settings?.enabled)} disabled={disabled} onChange={event => update("enabled", event.target.checked)} />{s.enabled}</label>
         <label><span>{s.key}</span><input type="text" autoComplete="off" spellCheck={false} autoCapitalize="none" maxLength={512} disabled={disabled} value={apiKey}
           placeholder={settings?.configured ? s.keySaved : s.keyEmpty} onChange={event => { setApiKey(event.target.value); setDirty(true); setMessage(""); }} /></label>
-        <label><span>{s.model}</span><input value={settings?.model || "gpt-4.1-mini"} required maxLength={100} disabled={disabled} onChange={event => update("model", event.target.value)} /></label>
+        <AIModelSelect value={settings?.model || ""} onChange={value => update("model", value)} language={language} disabled={disabled} revision={modelRevision} />
         <label><span>{s.rate}</span><input type="number" min={1} max={30} step={1} required value={settings?.requestsPerMinute ?? 10} disabled={disabled} onChange={event => update("requestsPerMinute", event.target.value)} /></label>
         <div className="dialog-actions"><button type="submit" className="dialog-button" disabled={disabled}>{busy === "save" ? s.saving : s.save}</button>
           <button type="button" className="dialog-button dialog-button--secondary" disabled={disabled || !settings?.configured || dirty} onClick={() => act("test")}>{busy === "test" ? s.testing : s.test}</button>

@@ -23,6 +23,23 @@ def response_for(value):
                                                  "content": [{"type": "output_text", "text": json.dumps(value)}]}]}
 
 
+class ModelDiscoveryTests(unittest.TestCase):
+    def test_models_are_loaded_with_saved_credentials_sorted_and_specialists_excluded(self):
+        ids = ["gpt-4.1-mini", "chat-latest", "gpt-6.1-sol", "gpt-6-luna", "gpt-6-astra",
+               "gpt-image-1", "gpt-4o-audio-preview", "gpt-5-codex", "o3-deep-research",
+               "gpt-4o-mini-search-preview", "text-embedding-3-small", "../model", "gpt-6-astra"]
+        payload = {"data": [{"id": identifier, "created": index} for index, identifier in enumerate(ids)]}
+        with patch.object(ai, "_request_json", return_value=payload) as request:
+            models = ai.list_models({"apiKey": "sk-synthetic-test"})
+        self.assertEqual({item["id"] for item in models}, set(ids[:5]))
+        self.assertEqual(models, sorted(models, key=lambda item: (-item["created"], item["id"])))
+        self.assertEqual(request.call_args.args[1], "https://api.openai.com/v1/models")
+        self.assertEqual(request.call_args.kwargs["method"], "GET")
+        self.assertNotIn("sk-synthetic-test", json.dumps(models))
+        with patch.object(ai, "_request_json", return_value={}), self.assertRaises(ai.AIError):
+            ai.list_models({"apiKey": "sk-synthetic-test"})
+
+
 class SettingsTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

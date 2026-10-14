@@ -158,3 +158,20 @@ test("AI search and settings render localized connection requirements in mock mo
     assert.doesNotMatch(resultHtml, /<script>/);
   } finally { globalThis.window = previousWindow; }
 });
+
+
+test("model selector includes current aliases, preserves custom choices and offers dashboard default", async () => {
+  const component = await loadComponent("AIModelSelect", { VITE_WEB_DEV_MODE: "mock" });
+  assert.deepEqual(component.modelOptions([{ id: "future-model" }, { id: "chat-latest" }, { id: "chat-latest" }], "saved-custom"),
+    ["chat-latest", "future-model", "saved-custom"]);
+  for (const language of ["es", "ca", "en"]) {
+    const html = renderToStaticMarkup(React.createElement(component.default, { value: "", useDefault: true, language, onChange() {} }));
+    assert.match(html, /<select/);
+    assert.match(html, /value="" selected/);
+    assert.match(html, /chat-latest/);
+    assert.match(html, /gpt-6.1-sol/);
+    assert.match(html, /gpt-6-luna/);
+    assert.match(html, /gpt-6-astra/);
+    assert.match(html, /__custom/);
+  }
+});

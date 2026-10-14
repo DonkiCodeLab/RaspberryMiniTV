@@ -14,7 +14,7 @@ import catalog_store
 import book_metadata
 import youtube_search
 import movie_trailers
-from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan, redact_debug
+from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan, redact_debug, list_models, MODEL_RE
 from ai_catalog import build_catalog, execute_plan, SECTION_FIELDS
 from catalog_file import (CatalogFileStore, SECTIONS as FILE_CATALOG_SECTIONS, export_catalog,
                           catalog_status, upload_catalog, delete_catalog_file, compact_records,
@@ -4438,6 +4438,19 @@ def ai_settings():
         return ai_json({"ok": False, "error": "No se puede leer o guardar la configuración de OpenAI.", "code": "AI_SETTINGS_UNAVAILABLE"}, 503)
 
 
+@app.route("/settings/ai/models", methods=["GET"])
+def ai_models():
+    try:
+        settings = ai_settings_store.credentials()
+        models = list_models(settings) if settings.get("apiKey") else []
+        return ai_json({"ok": True, "models": models, "defaultModel": settings["model"],
+                        "configured": bool(settings.get("apiKey"))})
+    except AIError as error:
+        return ai_error_response(error)
+    except (OSError, ValueError):
+        return ai_json({"ok": False, "error": "No se puede leer la configuración de OpenAI.", "code": "AI_SETTINGS_UNAVAILABLE"}, 503)
+
+
 @app.route("/settings/ai/test", methods=["POST"])
 def ai_test():
     try:
@@ -4508,13 +4521,16 @@ def ai_search():
     if request.content_length and request.content_length > 16384:
         return ai_json({"ok": False, "error": "La consulta es demasiado larga.", "code": "AI_INVALID_QUERY"}, 400)
     data = request.get_json(silent=True)
-    if not isinstance(data, dict) or set(data) - {"section", "prompt", "language"}:
+    if not isinstance(data, dict) or set(data) - {"section", "prompt", "language", "model"}:
         return ai_json({"ok": False, "error": "Consulta no válida.", "code": "AI_INVALID_QUERY"}, 400)
     section, prompt, language = data.get("section"), data.get("prompt"), data.get("language", "es")
     if (not isinstance(section, str) or section not in SECTION_FIELDS
             or not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 2000
             or not isinstance(language, str) or language not in SUPPORTED_LANGUAGES):
         return ai_json({"ok": False, "error": "Indica una sección, una consulta de hasta 2000 caracteres y un idioma válido.", "code": "AI_INVALID_QUERY"}, 400)
+    model = data.get("model")
+    if "model" in data and (not isinstance(model, str) or not MODEL_RE.fullmatch(model)):
+        return ai_json({"ok": False, "error": "Modelo no válido.", "code": "AI_INVALID_QUERY"}, 400)
     diagnostics = {"request": {"section": section, "prompt": prompt.strip(), "language": language},
                    "stage": "settings", "provider": {"called": False, "rawResponse": None}}
     settings = {}
@@ -4523,6 +4539,8 @@ def ai_search():
         return ai_json({**payload, "debug": redact_debug(diagnostics, settings.get("apiKey", ""))}, status)
     try:
         settings = ai_settings_store.credentials()
+        if model is not None:
+            settings = {**settings, "model": model}
         diagnostics["request"]["model"] = settings["model"]
         if not settings.get("enabled"):
             return reply({"ok": False, "error": "Activa la búsqueda con IA en el dashboard.", "code": "AI_DISABLED"}, 503)

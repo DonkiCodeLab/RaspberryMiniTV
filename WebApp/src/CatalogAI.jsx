@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { isMockMode, searchCatalogAI } from "./api/raspberryApi";
 import { catalogAIError, catalogAIStrings } from "./catalogAIStrings.js";
 import { copyAIDebug, validateAIResult } from "./catalogAI.js";
+import AIModelSelect from "./AIModelSelect.jsx";
 import Recommendations from "./Recommendations.jsx";
 import { recommendationStrings } from "./recommendationStrings.js";
 import "./CatalogAI.css";
@@ -63,6 +64,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
   const rs = recommendationStrings(language);
   const [mode, setMode] = useState("search");
   const canRecommend = ["movies", "series"].includes(section);
+  const [model, setModel] = useState("");
   const [prompt, setPrompt] = useState(initialPrompt);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -90,16 +92,16 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     request.current.controller = controller;
     setBusy(true); setError(""); setMessage(""); setDebug(null);
     try {
-      const data = await searchCatalogAI({ section, prompt: prompt.trim(), language }, controller.signal);
+      const data = await searchCatalogAI({ section, prompt: prompt.trim(), language, ...(model ? { model } : {}) }, controller.signal);
       if (request.current.generation !== generation || controller.signal.aborted) return;
-      setDebug(data?.debug || { request: { section, prompt: prompt.trim() }, source: "client", response: data });
+      setDebug(data?.debug || { request: { section, prompt: prompt.trim(), model: model || undefined }, source: "client", response: data });
       const result = validateAIResult(data, section);
       if (["filter", "count"].includes(result.intent)) onResult({ ...result, prompt: prompt.trim() });
       else setMessage(result.message + (result.catalogStale ? ` ${s.catalogStale}` : ""));
     } catch (error) {
       if (request.current.generation === generation && !controller.signal.aborted) {
         setError(catalogAIError(error, language));
-        setDebug(current => error.debug || current || { request: { section, prompt: prompt.trim() }, source: "client",
+        setDebug(current => error.debug || current || { request: { section, prompt: prompt.trim(), model: model || undefined }, source: "client",
           result: { ok: false, code: error.code, httpStatus: error.status, error: error.message } });
       }
     } finally {
@@ -116,6 +118,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     <p>{section === "pictures" ? s.picturesHint : s.hint}</p>
     {demo && <p role="status">{s.demo}</p>}
     <form onSubmit={submit}>
+      <AIModelSelect value={model} onChange={setModel} language={language} disabled={busy || demo} useDefault />
       <label htmlFor="catalog-ai-prompt">{s.prompt}</label>
       <textarea ref={input} id="catalog-ai-prompt" value={prompt} onChange={event => setPrompt(event.target.value)} maxLength={2000} rows={3} disabled={busy || demo} autoFocus />
       <div className="catalog-ai-panel__examples"><span>{s.examples}</span>{(s.samples[section] || []).map(example => <button type="button" key={example} disabled={busy || demo}

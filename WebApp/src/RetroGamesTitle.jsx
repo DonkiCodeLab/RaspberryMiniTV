@@ -1,12 +1,15 @@
 import React, { useId } from "react";
 import "./RetroGamesTitle.css";
 
-export default function RetroGamesTitle({ label }) {
+export default function RetroGamesTitle({ label, icon, headerIcon }) {
   const id = useId();
   const words = label.toLocaleUpperCase().split(/\s+/);
 
   return (
     <h1 className="series-hero__section-title series-hero__section-title--games" aria-label={label}>
+      <svg className="series-hero__section-icon" viewBox={headerIcon.viewBox} aria-hidden="true" focusable="false">
+        <image href={icon} width={headerIcon.width} height={headerIcon.height} />
+      </svg>
       <svg className="retro-games-title" viewBox="0 0 460 224" aria-hidden="true" focusable="false">
         <defs>
           <linearGradient id={`${id}-blue`} x1="0" y1="0" x2="0" y2="1">
@@ -32,7 +35,6 @@ export default function RetroGamesTitle({ label }) {
             ))}
           </g>
         </defs>
-        <path d="M43 15 439 5 393 198 11 212Z" fill="#ef2d7c" stroke="#090a11" strokeWidth="9" strokeLinejoin="round" />
         <g transform="translate(28 0) skewX(-11)" strokeLinejoin="round">
           <use href={`#${id}-lettering`} transform="translate(9 10)" fill="#05060b" stroke="#05060b" strokeWidth="19" />
           <use href={`#${id}-lettering`} fill="#05060b" stroke="#05060b" strokeWidth="15" />
