@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>{{ title }}</title>
   <style>
-    html, body, #game { width: 100%; height: 100%; margin: 0; background: #050505; overflow: hidden; }
+    html, body, #game { width: 100%; height: 100%; margin: 0; background: #000; overflow: hidden; }
     #game { position: absolute; inset: 0; }
-    .gameboy-framed, .gameboy-framed #game { background: #17232b; }
-    .gameboy-framed.gameboy-original, .gameboy-framed.gameboy-original #game { background: #778b19; }
     .gameboy-framed .ejs_menu_bar,
     .gameboy-framed .ejs_menu_bar_spacer,
     .gameboy-framed .ejs_virtualGamepad_parent { display: none !important; }
@@ -31,6 +29,7 @@
     window.EJS_gameName = game.name;
     window.EJS_gameUrl = game.url;
     window.EJS_core = game.core;
+    window.EJS_backgroundColor = "#000";
     window.EJS_pathtodata = "/emulatorjs/";
     window.EJS_startOnLoaded = true;
     window.EJS_disableDatabases = false;

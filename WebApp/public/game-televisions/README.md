@@ -1,13 +1,17 @@
 # Televisores del reproductor
 
-Los 25 dibujos proceden de los archivos `SVG (1).svg` a `SVG (25).svg`
-aportados por el usuario, en `retrotvsvg/SVG Files`. No se presupone una licencia
-de distribución distinta de la del material original. Se conservan sus formas
-y colores; se eliminan metadatos de edición y se convierten las clases de estilo
-en estilos locales. Los archivos `tv-NN-screen.svg` contienen únicamente el
-contorno interior del cristal, utilizado como máscara. La presentación aclara
-los modelos monocromos mediante CSS. Las medidas y el rectángulo 4:3 inscrito
-están en `src/gameTelevisions.js`.
+El selector utiliza `simpsons.svg`, `gray.png`, `cream.png` y `green.png`,
+carcasas transparentes aportadas por el usuario. `simpsons.svg` corresponde a
+`tele_simpsons_2.svg` (15 de octubre de 2026), con las antenas reducidas y un
+lienzo de 854 × 1033. Se conserva el dibujo original; el encuadre más bajo
+permite ampliar la pantalla a la misma altura disponible. Las medidas de cada
+carcasa y su abertura están en `src/gameTelevisions.js`. La imagen del juego
+mantiene la proporción 4:3 detrás del cristal transparente.
+
+Los archivos anteriores `tv-NN.svg` y `tv-NN-screen.svg` se conservan como
+recursos del catálogo original, procedentes de `SVG (1).svg` a `SVG (25).svg`
+en `retrotvsvg/SVG Files`. No se presupone una licencia de distribución distinta
+de la del material original.
 
 El mando `src/assets/megadrive-controller.svg` deriva del SVG
 `Genesis_Megadrive_controller.svg` (MK-1650 US 1989 / EU 1990) aportado por el

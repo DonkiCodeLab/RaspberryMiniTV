@@ -42,12 +42,15 @@ selección se recuerda en este navegador. Sin carcasa muestra directamente una
 pantalla 4:3 y permite seguir usando el mando. El catálogo y las medidas están
 en `gameTelevisions.js`, y las imágenes transparentes en `public/game-televisions/`.
 El dibujo del televisor cubre los bordes del juego, respetando la forma del cristal.
+Todo el hueco de la pantalla tiene una base negra, igual que el fondo del emulador,
+para que los juegos que dejan bandas no muestren el color de la página.
 
-**Ocultar mando** retira la franja inferior y la tele aprovecha ese espacio para
-crecer; **Mostrar mando** la recupera. **Ayuda** activa las teclas sobre el mando y
-la guía de la cruceta. Al desactivarla, queda una leyenda a la derecha del mando;
-con el mando oculto, la guía acompaña a la pantalla (debajo en móvil). La preferencia
-de ayuda se recuerda por separado de las portátiles. Cambiar de carcasa, ocultar
+El interruptor **Mostrar mando** activa la franja inferior, con el mando ampliado;
+al desactivarlo, la tele aprovecha ese espacio para crecer. **Ayuda** solo aparece
+con el mando visible y activa las teclas sobre sus botones y la guía de la cruceta.
+La leyenda completa permanece siempre a la derecha de la tele, centrada en vertical,
+con independencia de ambos interruptores. La preferencia de ayuda se recuerda por
+separado de las portátiles. Cambiar de carcasa, ocultar
 el mando o cambiar la ayuda mantiene el mismo emulador, sus controles y la partida.
 
 Debajo aparece el mando SVG de tres botones MK-1650 aportado por el usuario,

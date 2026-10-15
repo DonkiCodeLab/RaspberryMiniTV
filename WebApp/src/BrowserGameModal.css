@@ -73,12 +73,13 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
 .browser-game--vector .gameboy-device__button.is-pressed { background: transparent; box-shadow: none; }
 .gameboy-device__screen {
   position: absolute;
-  background: var(--screen-color);
+  /* Back the whole aperture, including any space the game does not occupy. */
+  background: #000;
   overflow: hidden;
   border-radius: 2px;
   box-shadow: 0 0 2px 1px #182b11, inset 0 0 7px #172a1670;
 }
-.browser-game--gameboy .gameboy-device__screen iframe { width: 100%; height: 100%; background: var(--screen-color); }
+.browser-game--gameboy .gameboy-device__screen iframe { width: 100%; height: 100%; background: #000; }
 .gameboy-device__screen::after {
   content: "";
   position: absolute;
@@ -153,13 +154,13 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
   pointer-events: none; user-select: none;
 }
 .mega-drive-tv .gameboy-device__screen {
-  z-index: 0; border-radius: 0; box-shadow: none; background: #050505;
+  z-index: 0; border-radius: 0; box-shadow: none; background: #000;
 }
 /* Keep WebGL outside CSS masks. The transparent artwork above the iframe
    provides the original curved aperture, including its slight overscan. */
 .mega-drive-tv .gameboy-device__screen iframe {
   position: absolute; left: var(--picture-left); top: var(--picture-top);
-  width: var(--picture-width); height: var(--picture-height); background: #050505;
+  width: var(--picture-width); height: var(--picture-height); background: #000;
 }
 .mega-drive-tv .gameboy-device__screen::after { display: none; }
 .mega-drive-controller {
@@ -371,6 +372,7 @@ dialog.browser-game--handheld {
 /* TV and controller occupy independent rows; hiding the dock gives its height
    directly to the screen without moving or replacing the emulator iframe. */
 dialog.browser-game--television {
+  --controller-dock-height: clamp(196px, 22dvh, 240px);
   display: block;
   padding: 0;
   background:
@@ -383,19 +385,25 @@ dialog.browser-game--television {
 .browser-game--television .browser-game__panel header { grid-template-columns: minmax(0, 1fr) auto auto; background: #14111be6; border-bottom-color: #c4b5dc17; }
 .browser-game--television .browser-game__heading > span { color: #b5abc7; }
 .browser-game--television .browser-game__actions { gap: 10px; }
-.browser-game--television .browser-game__panel header .browser-game__controller-toggle { min-height: 34px; padding: 8px 11px; border: 1px solid #c8bddd36; border-radius: 999px; background: #ffffff05; }
-.browser-game--television .browser-game__panel header .browser-game__controller-toggle[aria-pressed="true"] { border-color: #ffd54280; color: #ffd542; }
 .browser-game__television-picker { position: relative; min-width: 0; }
 .browser-game__television-picker > svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #ffd542; pointer-events: none; }
 .browser-game__television-picker select { display: block; width: 204px; max-width: 100%; min-height: 38px; padding: 8px 24px 8px 36px; border: 1px solid #c8bddd36; border-radius: 10px; background: #27222f; color: #f3ebd3; font: 700 11px/1.3 system-ui, sans-serif; cursor: pointer; color-scheme: dark; }
 .browser-game__television-picker select:focus-visible { outline: 2px solid #ffd542; outline-offset: 3px; }
 .browser-game--television .television-stage { flex: 1; min-height: 0; padding: 20px 24px 16px; container-type: size; }
-.television-player { position: relative; width: min(100cqw, calc(100cqh * var(--tv-ratio))); }
+.television-player {
+  --legend-width: 130px;
+  --legend-gap: 32px;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--legend-width);
+  gap: var(--legend-gap);
+  align-items: center;
+  width: min(100cqw, calc(100cqh * var(--tv-ratio) + var(--legend-width) + var(--legend-gap)));
+}
 .mega-drive-tv[data-television="none"] .gameboy-device__screen { border-radius: 5px; }
-.television-controller-dock { display: flex; flex-shrink: 0; height: 156px; align-items: center; justify-content: center; gap: 28px; padding: 10px 24px; border-top: 1px solid #8580c53b; background: #100d17aa; }
+.television-controller-dock { display: flex; flex-shrink: 0; height: var(--controller-dock-height); align-items: center; justify-content: center; padding: 12px 24px; border-top: 1px solid #8580c53b; background: #100d17aa; }
 .television-controller-dock[hidden] { display: none; }
-.television-controller-dock--annotated { padding-left: 150px; }
-.television-controller-dock .mega-drive-controller { flex-shrink: 0; width: 230px; margin: 0; }
+.television-controller-dock .mega-drive-controller { flex-shrink: 0; width: calc((var(--controller-dock-height) - 28px) * var(--device-ratio)); margin: 0; }
 .television-help { color: #e1dce8; font-size: 10px; pointer-events: none; }
 .television-help h3 { margin: 0 0 8px; color: #a99dbb; font-size: 8px; font-weight: 800; letter-spacing: .14em; line-height: 1.4; text-transform: uppercase; white-space: nowrap; }
 .television-help .game-keycaps kbd { min-width: 24px; height: 20px; padding: 0 5px; font-size: 10px; border-radius: 4px; }
@@ -408,22 +416,17 @@ dialog.browser-game--television {
 .television-help__on-button { position: absolute; }
 .television-help__on-button .game-keycaps { transform: translateX(-50%); }
 .television-help__on-button .game-keycaps kbd { min-width: 15px; height: 14px; padding: 0 3px; border-radius: 2px; font-size: 8px; box-shadow: 0 1px 0 #aaa597; }
-.television-help--legend { display: grid; grid-auto-flow: column; grid-auto-columns: max-content; align-items: center; gap: 24px; }
+.television-help--legend { display: grid; align-items: center; justify-content: start; gap: 20px; }
+.television-help--legend .television-help__dpad { align-items: flex-start; }
+.television-help--legend h3 { white-space: normal; }
 .television-help--legend ul { display: grid; gap: 5px; list-style: none; margin: 0; padding: 0; }
 .television-help--legend li { display: flex; align-items: center; gap: 7px; }
 .television-help__arrow { color: #82758f; font-size: 13px; }
 .television-help__button { display: inline-grid; place-items: center; min-height: 17px; padding: 3px 7px; border-radius: 999px; background: #302d35; color: #e6e0e7; font-size: 8px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
 .television-help__button--round { width: 21px; height: 21px; padding: 0; font-size: 10px; }
-.browser-game--controller-hidden .television-player { display: grid; grid-template-columns: minmax(0, 1fr) 130px; gap: 24px; align-items: center; width: min(100cqw, calc(100cqh * var(--tv-ratio) + 154px)); }
-.browser-game--controller-hidden .television-help--legend { grid-auto-flow: row; grid-auto-columns: auto; justify-content: start; gap: 20px; }
-.browser-game--controller-hidden .television-help__dpad { align-items: flex-start; }
-.browser-game--controller-hidden .television-help h3 { white-space: normal; }
 @media (max-width: 900px) {
   .browser-game--television .browser-game__panel header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
   .browser-game__television-picker { justify-self: start; }
-  .television-controller-dock { gap: 22px; }
-  .television-controller-dock--annotated { padding-left: 118px; }
-  .television-controller-dock .mega-drive-controller { width: 210px; }
   .television-help--legend { gap: 18px; }
 }
 @media (max-width: 600px) {
@@ -432,9 +435,10 @@ dialog.browser-game--television {
   .browser-game__television-picker { width: 100%; }
   .browser-game__television-picker select { width: 100%; }
   .browser-game--television .television-stage { padding: 16px; }
-  .television-controller-dock { display: grid; height: 260px; grid-template-rows: 120px auto; justify-items: center; gap: 12px; padding: 12px 16px; }
-  .television-controller-dock .mega-drive-controller { width: min(200px, calc(100vw - 140px)); }
-  .television-controller-dock--annotated .mega-drive-controller { transform: translateX(24px); }
+  .television-player { --legend-width: 88px; --legend-gap: 16px; }
+  .television-controller-dock { padding: 12px 16px; }
+  .television-controller-dock .mega-drive-controller { width: min(260px, calc(100vw - 112px)); }
+  .television-controller-dock--annotated .mega-drive-controller { transform: translateX(32px); }
   .television-help--annotations .television-help__dpad { right: calc(100% + 20px); }
   .television-help h3 { font-size: 7px; letter-spacing: .09em; }
   .television-help .game-keycaps kbd { min-width: 20px; height: 18px; padding: 0 4px; font-size: 9px; }
@@ -445,20 +449,25 @@ dialog.browser-game--television {
   .television-help--legend ul { gap: 4px; }
   .television-help--legend li { gap: 4px; }
   .television-help--compact .television-help__arrow { display: none; }
-  .browser-game--controller-hidden .television-player { display: flex; flex-direction: column; gap: 24px; width: min(100cqw, calc((100cqh - 134px) * var(--tv-ratio))); }
-  .browser-game--controller-hidden .television-help--legend { grid-auto-flow: column; gap: 16px; }
+}
+@media (max-width: 600px) and (max-height: 700px) and (orientation: portrait) {
+  dialog.browser-game--television { --controller-dock-height: 176px; }
+  .television-controller-dock { padding-block: 10px; }
+  .television-help--legend { gap: 12px; }
+  .television-help--legend h3 { margin-bottom: 6px; }
 }
 @media (max-height: 500px) and (orientation: landscape) {
+  dialog.browser-game--television { --controller-dock-height: 148px; }
   .browser-game--television .browser-game__panel header { grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; }
   .browser-game__television-picker select { width: 174px; min-height: 34px; font-size: 10px; }
   .browser-game--television .browser-game__panel header .browser-game__controller-toggle { font-size: 10px; padding: 7px; }
   .browser-game--television .television-stage { padding: 12px 16px; }
-  .television-controller-dock { height: 130px; gap: 20px; padding-top: 8px; padding-bottom: 8px; }
-  .television-controller-dock .mega-drive-controller { width: 190px; }
+  .television-controller-dock { padding-top: 8px; padding-bottom: 8px; }
   .television-help--legend ul { gap: 3px; }
   .television-help .game-keycaps kbd { height: 18px; font-size: 9px; }
   .television-help__on-button .game-keycaps kbd { height: 13px; font-size: 7px; }
-  .browser-game--controller-hidden .television-help--legend { grid-template-columns: auto auto; align-items: start; gap: 12px; }
-  .browser-game--controller-hidden .television-help__dpad { grid-column: 1 / -1; }
-  .browser-game--controller-hidden .television-player { grid-template-columns: minmax(0, 1fr) 244px; width: min(100cqw, calc(100cqh * var(--tv-ratio) + 268px)); }
+  .television-help--legend { grid-template-columns: auto auto; align-items: start; gap: 12px; }
+  .television-help--legend .television-help__dpad { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px; }
+  .television-help--legend .television-help__dpad h3 { margin: 0; }
+  .television-player { --legend-width: 244px; --legend-gap: 24px; }
 }

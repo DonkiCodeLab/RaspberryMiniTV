@@ -201,16 +201,16 @@ function GameSession({ game, onClose, t }) {
                 onChange={event => setVolume(Number(event.target.value))} />
               <output aria-hidden="true">{volume}%</output>
             </div>
-            {isTelevision && <button type="button" className="browser-game__controller-toggle" aria-pressed={!showController}
+            {isTelevision && <button type="button" className="browser-game__help-switch browser-game__controller-toggle" role="switch" aria-checked={showController}
               aria-controls="television-controller-dock" onClick={event => {
                 send({ type: "release" });
                 setShowController(value => !value);
                 if (event.detail > 0) frame.current?.focus();
               }}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="6" /><path d="M5 12h6m-3-3v6m7-4h1m2 2h1" /></svg>
-              {t(showController ? "browser_game_hide_controller" : "browser_game_show_controller")}
+              <span>{t("browser_game_show_controller")}</span><span className="browser-game__switch-track" aria-hidden="true" />
             </button>}
-            {hasConsoleFrame && <button type="button" className="browser-game__help-switch" role="switch" aria-checked={keyboardHelp}
+            {hasConsoleFrame && (!isTelevision || showController) && <button type="button" className="browser-game__help-switch" role="switch" aria-checked={keyboardHelp}
               aria-label={t(isTelevision ? "browser_game_controller_help" : "gameboy_keyboard_help")} onClick={event => {
                 setKeyboardHelp(value => !value);
                 if (event.detail > 0) frame.current?.focus();
@@ -224,7 +224,7 @@ function GameSession({ game, onClose, t }) {
         <div className={`browser-game__stage${isTelevision ? " television-stage" : ""}`}>
           {isTelevision ? <div className="television-player">
             <div className="mega-drive-tv" data-television={television.id}><RetroTelevision television={television} />{gameScreen}</div>
-            {!showController && <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} compact t={t} />}
+            <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} compact t={t} />
           </div> :
           <div className={isHandheld ? "handheld-player" : "browser-game__display"}>
             <div className={hasConsoleFrame ? "gameboy-device" : "browser-game__display"}>
@@ -248,7 +248,6 @@ function GameSession({ game, onClose, t }) {
             <MegaDriveController pressedInputs={pressedInputs} />{controls}
             {keyboardHelp && <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} annotations t={t} />}
           </div>
-          <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} compact={!keyboardHelp} t={t} />
         </div>}
       </div>
     </dialog>, document.body
