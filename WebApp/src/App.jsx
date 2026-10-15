@@ -1,3 +1,4 @@
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import PhotosLibrary from "./PhotosLibrary.jsx";
 import { saveSeriesTrailer } from "./api/raspberryApi";
 import MovieMedia from "./MovieMedia.jsx";
@@ -2963,7 +2964,7 @@ function EpisodeDetailsModal({
         </header>
 
         <div className="episode-dialog__body">
-          {loading && <p role="status"><span className="tmdb-cache-spinner" /> Cargando información del episodio…</p>}
+          {loading && <p role="status"><LoadingSpinner inline /> Cargando información del episodio…</p>}
           {error && <p role="alert">{error} <button type="button" onClick={onRetry}>Reintentar</button></p>}
           <MediaMarkButtons watched={watched} onWatched={onWatched} favorite={favorite} onFavorite={onFavorite} t={t} />
           <div className="episode-dialog__overview">
@@ -6431,7 +6432,7 @@ function LibraryLoading({ label, progress, stage }) {
   }, []);
   return <div className="library-loading" role="dialog" aria-modal="true" aria-label={label}>
     <div className="library-loading__card" role="status" aria-live="polite">
-      <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
+      <LoadingSpinner />
       <h2>{label}</h2>
       <p className="library-loading__detail">{stage || label} · {Math.max(0, Math.floor((now - started) / 1000))} s</p>
       {progress?.total > 0 ? <>
@@ -9342,7 +9343,7 @@ export default function App() {
             {profiles.error ? createPortal(<div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div>, document.body) : !profiles.ready ? <div className="profile-status" role="status">Users…</div> : null}
             {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
             {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
-              {detailLoading ? <><span className="tmdb-cache-spinner" aria-hidden="true" /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
+              {detailLoading ? <><LoadingSpinner inline /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
             {!error && libraryPending ? (
               <LibraryLoading label={t("loading_library")} stage={libraryStage} progress={tmdbLoading ? coverProgress : null} />
@@ -9497,7 +9498,7 @@ export default function App() {
                 </div>
 
                 {seasonEpisodesLoading ? (
-                  <p role="status"><span className="tmdb-cache-spinner" /> Cargando miniaturas de {selectedSeason.title}…</p>
+                  <p role="status"><LoadingSpinner inline /> Cargando miniaturas de {selectedSeason.title}…</p>
                 ) : (
                   <section className="season-page__episodes">
                     {(seasonEpisodes?.episodes || []).map((episode) => (
@@ -9996,7 +9997,7 @@ export default function App() {
                 ) : isSeriesMode && detailLoading ? (
                   <section className="empty-state" aria-busy="true" role="status" aria-live="polite">
                     <div className="empty-state__card empty-state__card--library">
-                      <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
+                      <LoadingSpinner />
                       <h2>{t("loading_seasons")}</h2>
                     </div>
                   </section>

@@ -1,3 +1,4 @@
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -151,7 +152,7 @@ export default function BookHeaderPreview({ book, cover, language }) {
         <div ref={host} className="book-header-preview__pages" inert aria-hidden="true" />
         {status.error ? <span className="book-header-preview__message" role="status">{t.previewError}</span> : status.busy ? (
           <div className="book-header-preview__message book-header-preview__message--loading" role="status">
-            <div className="library-loading__spinner" aria-hidden="true"><span /><span /><span /></div>
+            <LoadingSpinner />
             <span>{t.previewLoading}</span>
           </div>
         ) : null}

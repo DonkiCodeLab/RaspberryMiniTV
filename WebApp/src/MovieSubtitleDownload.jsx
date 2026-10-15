@@ -1,3 +1,4 @@
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { obtainMovieSubtitles, getMediaSubtitles, getSubtitleSettings } from "./api/raspberryApi";
 import { movieSubtitleStrings } from "./movieSubtitleStrings.js";
@@ -90,7 +91,7 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
       </button>
     </div>
     {disabled && <p>{s.manual}</p>}
-    {busy && <p role="status"><span className="tmdb-cache-spinner" aria-hidden="true" /> {s.searching}</p>}
+    {busy && <p role="status"><LoadingSpinner inline /> {s.searching}</p>}
     {error && <p className="dialog-error" role="alert">{s[error] || s.failed}</p>}
     {result && <div className="movie-subtitle-download__result" role="status">
       <strong>{s.saved}: {result.file}</strong>

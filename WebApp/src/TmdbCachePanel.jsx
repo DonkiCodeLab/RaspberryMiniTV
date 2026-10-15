@@ -1,3 +1,4 @@
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { getTmdbCacheStatus, cancelTmdbCacheDownload, isMockMode } from "./api/raspberryApi";
 
@@ -68,7 +69,7 @@ export default function TmdbCachePanel({ language }) {
   return <section className="tmdb-cache-panel">
     <h3>{t.title}</h3>
     <p>{t.copy}</p>
-    {!isMockMode() && !error && (!status || status.storage?.calculating) && <p className="tmdb-cache-calculating" role="status"><span className="tmdb-cache-spinner" aria-hidden="true" />{t.calculating}</p>}
+    {!isMockMode() && !error && (!status || status.storage?.calculating) && <p className="tmdb-cache-calculating" role="status"><LoadingSpinner inline />{t.calculating}</p>}
     {status?.storage?.available ? <div className="tmdb-cache-storage">
       <strong>{t.storage}: {amount(status.storage.gb)} GB · {amount(status.storage.percent)} % {t.disk}</strong>
     </div> : status?.storage && !status.storage.calculating && <p>{t.storageUnavailable}</p>}

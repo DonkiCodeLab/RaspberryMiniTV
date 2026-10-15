@@ -150,6 +150,7 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
 .mega-drive-tv { position: relative; width: 100%; aspect-ratio: var(--tv-ratio); }
 .mega-drive-tv:not([data-artwork-state="ready"]) > :is(.retro-television, .gameboy-device__screen) { visibility: hidden; }
 .television-artwork-status { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; color: #b5abc7; font: 600 12px/1.5 system-ui, sans-serif; text-align: center; }
+.television-artwork-status .library-loading__spinner { flex-shrink: 0; margin: 0; }
 .television-artwork-status button { padding: 8px 14px; border: 1px solid #c8bddd36; border-radius: 8px; background: #27222f; color: #f3ebd3; font: inherit; cursor: pointer; }
 .television-artwork-status button:focus-visible { outline: 2px solid #ffd542; outline-offset: 3px; }
 .retro-television {

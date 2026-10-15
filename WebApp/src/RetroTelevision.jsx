@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import { observeTelevisionImage } from "./televisionArtwork.js";
 
 export default function RetroTelevision({ television, children, t }) {
@@ -20,6 +21,7 @@ export default function RetroTelevision({ television, children, t }) {
       src={`/game-televisions/${television.image}`} alt="" draggable="false" decoding="async" />}
     {children}
     {artworkState !== "ready" && <div className="television-artwork-status" role="status">
+      {artworkState === "loading" && <LoadingSpinner />}
       <span>{t(artworkState === "error" ? "browser_game_shell_load_error" : "browser_game_loading_shell")}</span>
       {artworkState === "error" && <button type="button" onClick={() => setAttempt(value => value + 1)}>
         {t("browser_game_retry_shell")}
