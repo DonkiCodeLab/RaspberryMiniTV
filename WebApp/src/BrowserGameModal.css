@@ -148,6 +148,10 @@ dialog.browser-game--megadrive { background: radial-gradient(ellipse at 50% 36%,
 
 /* Televisions share the same player and use artwork-specific glass masks. */
 .mega-drive-tv { position: relative; width: 100%; aspect-ratio: var(--tv-ratio); }
+.mega-drive-tv:not([data-artwork-state="ready"]) > :is(.retro-television, .gameboy-device__screen) { visibility: hidden; }
+.television-artwork-status { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; color: #b5abc7; font: 600 12px/1.5 system-ui, sans-serif; text-align: center; }
+.television-artwork-status button { padding: 8px 14px; border: 1px solid #c8bddd36; border-radius: 8px; background: #27222f; color: #f3ebd3; font: inherit; cursor: pointer; }
+.television-artwork-status button:focus-visible { outline: 2px solid #ffd542; outline-offset: 3px; }
 .retro-television {
   position: absolute; inset: 0; z-index: 1;
   display: block; width: 100%; height: 100%;
@@ -390,6 +394,15 @@ dialog.browser-game--television {
 .browser-game__television-picker select { display: block; width: 204px; max-width: 100%; min-height: 38px; padding: 8px 24px 8px 36px; border: 1px solid #c8bddd36; border-radius: 10px; background: #27222f; color: #f3ebd3; font: 700 11px/1.3 system-ui, sans-serif; cursor: pointer; color-scheme: dark; }
 .browser-game__television-picker select:focus-visible { outline: 2px solid #ffd542; outline-offset: 3px; }
 .browser-game--television .television-stage { flex: 1; min-height: 0; padding: 20px 24px 16px; container-type: size; }
+/* Let the taller shell's aerials sit behind the translucent header. The
+   negative margin adds room to the stage without taking it from the controller. */
+.browser-game--television[data-television="simpsons"] .browser-game__panel header {
+  position: relative;
+  z-index: 2;
+  background: #14111b80;
+}
+.browser-game--television[data-television="simpsons"] .television-stage { margin-top: -44px; padding-block: 2px; }
+.browser-game--television[data-television="simpsons"] .television-help--legend { margin-top: 44px; }
 .television-player {
   --legend-width: 130px;
   --legend-gap: 32px;

@@ -2,8 +2,9 @@
 
 El selector utiliza `simpsons.svg`, `gray.png`, `cream.png` y `green.png`,
 carcasas transparentes aportadas por el usuario. `simpsons.svg` corresponde a
-`tele_simpsons_2.svg` (15 de octubre de 2026), con las antenas reducidas y un
-lienzo de 854 × 1033. Se conserva el dibujo original; el encuadre más bajo
+`tele_simpsons_2.svg` (revisión del 15 de octubre de 2026), con el brillo de la
+antena corregido, las antenas reducidas y un lienzo de 854 × 1005. Se conserva
+el dibujo original; el encuadre más bajo
 permite ampliar la pantalla a la misma altura disponible. Las medidas de cada
 carcasa y su abertura están en `src/gameTelevisions.js`. La imagen del juego
 mantiene la proporción 4:3 detrás del cristal transparente.

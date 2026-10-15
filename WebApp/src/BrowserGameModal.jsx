@@ -148,6 +148,7 @@ function GameSession({ game, onClose, t }) {
   </div>;
   return createPortal(
     <dialog ref={dialog} className={`browser-player browser-game${hasConsoleFrame ? ` browser-game--console browser-game--gameboy browser-game--${game.systemId}` : ""}${isHandheld ? " browser-game--handheld" : ""}${isTelevision ? ` browser-game--television${showController ? "" : " browser-game--controller-hidden"}` : ""}${isVector ? " browser-game--vector" : ""}${expanded ? " browser-game--expanded" : ""}`}
+      data-television={isTelevision ? television.id : undefined}
       style={consoleFrame ? { ...frameVariables(consoleFrame), ...(isTelevision ? televisionVariables(television) : {}) } : undefined}
       aria-label={t("browser_game_player")} onCancel={(event) => { event.preventDefault(); onClose(); }}>
       <div className="browser-player__panel browser-game__panel">
@@ -223,7 +224,7 @@ function GameSession({ game, onClose, t }) {
         </header>
         <div className={`browser-game__stage${isTelevision ? " television-stage" : ""}`}>
           {isTelevision ? <div className="television-player">
-            <div className="mega-drive-tv" data-television={television.id}><RetroTelevision television={television} />{gameScreen}</div>
+            <RetroTelevision television={television} t={t}>{gameScreen}</RetroTelevision>
             <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} compact t={t} />
           </div> :
           <div className={isHandheld ? "handheld-player" : "browser-game__display"}>

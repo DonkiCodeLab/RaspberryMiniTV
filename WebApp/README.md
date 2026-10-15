@@ -42,8 +42,13 @@ selección se recuerda en este navegador. Sin carcasa muestra directamente una
 pantalla 4:3 y permite seguir usando el mando. El catálogo y las medidas están
 en `gameTelevisions.js`, y las imágenes transparentes en `public/game-televisions/`.
 El dibujo del televisor cubre los bordes del juego, respetando la forma del cristal.
+La carcasa de Los Simpson aprovecha la altura hasta el borde inferior: las puntas
+de sus antenas quedan detrás de la cabecera semitransparente para ampliar la tele.
 Todo el hueco de la pantalla tiene una base negra, igual que el fondo del emulador,
 para que los juegos que dejan bandas no muestren el color de la página.
+Al cambiar de carcasa, el marco y la pantalla aparecen juntos una vez decodificada
+la imagen. Durante la carga se oculta la pantalla sin desmontar el emulador ni
+interrumpir la partida. Si falla la imagen, se puede reintentar o elegir otra carcasa.
 
 El interruptor **Mostrar mando** activa la franja inferior, con el mando ampliado;
 al desactivarlo, la tele aprovecha ese espacio para crecer. **Ayuda** solo aparece
