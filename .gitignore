@@ -200,3 +200,6 @@ DeviceApp/menu/lock.png
 WebApp/src/legacyCatalog.js
 assets/splashschreen_aux.psd
 MultimediaContent/
+
+# Affinity editor temporary locks
+*.af~lock~

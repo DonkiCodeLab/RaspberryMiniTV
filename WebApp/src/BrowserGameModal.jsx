@@ -5,23 +5,31 @@ import RetroTelevision from "./RetroTelevision.jsx";
 import MegaDriveController from "./MegaDriveController.jsx";
 import { GAME_TELEVISIONS, gameTelevision, readGameTelevision, saveGameTelevision, televisionVariables } from "./gameTelevisions.js";
 import GameBoyVector from "./GameBoyVector.jsx";
+import HandheldKeyboardHelp from "./HandheldKeyboardHelp.jsx";
+import TelevisionKeyboardHelp from "./TelevisionKeyboardHelp.jsx";
 import { readGameVolume, saveGameVolume } from "./gameAudio.js";
 import "./BrowserGameModal.css";
 
 function GameSession({ game, onClose, t }) {
+  const consoleFrame = gameConsoleFrame(game.systemId);
+  const hasConsoleFrame = Boolean(consoleFrame);
+  const isTelevision = consoleFrame?.layout === "television";
+  const helpStorageKey = isTelevision ? "minitv.televisionKeyboardHelp" : "minitv.handheldKeyboardHelp";
   const dialog = useRef(null);
   const frame = useRef(null);
   const clickTimers = useRef(new Map());
   const [expanded, setExpanded] = useState(false);
+  const [showController, setShowController] = useState(true);
+  const [keyboardHelp, setKeyboardHelp] = useState(() => {
+    try { return window.localStorage.getItem(helpStorageKey) !== "false"; } catch { return true; }
+  });
   const [ready, setReady] = useState(false);
   const [pressedInputs, setPressedInputs] = useState(() => new Set());
   const [volume, setVolume] = useState(readGameVolume);
   const [televisionId, setTelevisionId] = useState(readGameTelevision);
   const lastAudibleVolume = useRef(volume || 50);
   const emulatorVolume = useRef(null);
-  const consoleFrame = gameConsoleFrame(game.systemId);
-  const hasConsoleFrame = Boolean(consoleFrame);
-  const isTelevision = consoleFrame?.layout === "television";
+  const isHandheld = hasConsoleFrame && !isTelevision;
   const isVector = consoleFrame?.artwork === "vector";
   const television = gameTelevision(televisionId);
   const framed = hasConsoleFrame && !expanded;
@@ -77,6 +85,11 @@ function GameSession({ game, onClose, t }) {
   }, [hasConsoleFrame, framed, ready, send]);
 
   useEffect(() => {
+    if (!hasConsoleFrame) return;
+    try { window.localStorage.setItem(helpStorageKey, String(keyboardHelp)); } catch { /* Storage is optional. */ }
+  }, [hasConsoleFrame, helpStorageKey, keyboardHelp]);
+
+  useEffect(() => {
     if (!framed) return;
     const key = (event) => {
       const input = consoleFrame.keys[event.code];
@@ -101,6 +114,11 @@ function GameSession({ game, onClose, t }) {
   }, [framed, consoleFrame, send]);
 
   const input = (button, pressed) => send({ type: "input", input: button.input, pressed });
+  const changePresentation = (value, event) => {
+    send({ type: "release" });
+    setExpanded(value);
+    if (event.detail > 0) frame.current?.focus();
+  };
   const photoUrl = `/game-systems/iconic/${game.systemId}/console.webp`;
   const gameScreen = <div className={hasConsoleFrame ? "gameboy-device__screen" : "browser-game__screen"}
     style={framed ? frameRectangle(isTelevision ? television : consoleFrame, isTelevision ? television.screen : consoleFrame.screen) : undefined}>
@@ -129,15 +147,46 @@ function GameSession({ game, onClose, t }) {
     >{!isVector && ["L", "R"].includes(button.name) ? button.name : null}</button>)}
   </div>;
   return createPortal(
-    <dialog ref={dialog} className={`browser-player browser-game${hasConsoleFrame ? ` browser-game--gameboy browser-game--${game.systemId}` : ""}${isVector ? " browser-game--vector" : ""}${expanded ? " browser-game--expanded" : ""}`}
-      style={consoleFrame ? { ...frameVariables(consoleFrame), ...(isTelevision ? televisionVariables(television, consoleFrame.crop[2] / consoleFrame.crop[3]) : {}) } : undefined}
+    <dialog ref={dialog} className={`browser-player browser-game${hasConsoleFrame ? ` browser-game--console browser-game--gameboy browser-game--${game.systemId}` : ""}${isHandheld ? " browser-game--handheld" : ""}${isTelevision ? ` browser-game--television${showController ? "" : " browser-game--controller-hidden"}` : ""}${isVector ? " browser-game--vector" : ""}${expanded ? " browser-game--expanded" : ""}`}
+      style={consoleFrame ? { ...frameVariables(consoleFrame), ...(isTelevision ? televisionVariables(television) : {}) } : undefined}
       aria-label={t("browser_game_player")} onCancel={(event) => { event.preventDefault(); onClose(); }}>
       <div className="browser-player__panel browser-game__panel">
         <header>
-          <div className="browser-game__heading">
+          {hasConsoleFrame && <div className="browser-game__identity">
+            <button type="button" className="browser-game__back" onClick={onClose}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16" /></svg>
+              {t("game_file_label")}
+            </button>
+            {game.coverImage && <img className="browser-game__cover" src={game.coverImage} alt="" />}
+            <div className="browser-game__heading">
+              <span>{consoleFrame.name}{game.year ? ` · ${game.year}` : ""}</span>
+              <h2>{game.title}</h2>
+            </div>
+          </div>}
+          {!hasConsoleFrame && <div className="browser-game__heading">
             <span>{consoleFrame?.name || t("browser_game_player")}</span>
             <h2>{game.title}</h2>
-          </div>
+          </div>}
+          {isHandheld && <div className="browser-game__view-switch" role="group" aria-label={t("gameboy_view")}>
+            <button type="button" aria-pressed={!expanded} onClick={event => changePresentation(false, event)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2" /><path d="M9 5h6v6H9zM8 16h4m-2-2v4m4-3h1m0 3h1" /></svg>
+              {t("gameboy_shell")}
+            </button>
+            <button type="button" aria-pressed={expanded} onClick={event => changePresentation(true, event)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3" /><path d="M7 9h10v6H7z" /></svg>
+              {t("gameboy_large_screen")}
+            </button>
+          </div>}
+          {isTelevision && <div className="browser-game__television-picker">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="15" rx="3" /><path d="m8 2 4 4 4-4M6 10h9v7H6zM18 11v1m0 3v1" /></svg>
+            <select aria-label={t("browser_game_television_shell")} value={televisionId} onChange={event => {
+              send({ type: "release" });
+              setTelevisionId(event.target.value);
+              saveGameTelevision(event.target.value);
+            }}>
+              {GAME_TELEVISIONS.map(tv => <option key={tv.id} value={tv.id}>{t(`browser_game_shell_${tv.id}`)}</option>)}
+            </select>
+          </div>}
           <div className="browser-game__actions">
             <div className="browser-game__volume" role="group" aria-label={t("browser_game_volume")}>
               <button type="button" className="browser-game__mute" disabled={!ready}
@@ -152,45 +201,55 @@ function GameSession({ game, onClose, t }) {
                 onChange={event => setVolume(Number(event.target.value))} />
               <output aria-hidden="true">{volume}%</output>
             </div>
-            {hasConsoleFrame && <button type="button" className="browser-game__expand" aria-pressed={expanded}
-              onClick={() => { send({ type: "release" }); setExpanded(value => !value); }}>
-              {t(expanded ? "gameboy_show_console" : "gameboy_expand_screen")}
+            {isTelevision && <button type="button" className="browser-game__controller-toggle" aria-pressed={!showController}
+              aria-controls="television-controller-dock" onClick={event => {
+                send({ type: "release" });
+                setShowController(value => !value);
+                if (event.detail > 0) frame.current?.focus();
+              }}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="6" /><path d="M5 12h6m-3-3v6m7-4h1m2 2h1" /></svg>
+              {t(showController ? "browser_game_hide_controller" : "browser_game_show_controller")}
             </button>}
-            <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
+            {hasConsoleFrame && <button type="button" className="browser-game__help-switch" role="switch" aria-checked={keyboardHelp}
+              aria-label={t(isTelevision ? "browser_game_controller_help" : "gameboy_keyboard_help")} onClick={event => {
+                setKeyboardHelp(value => !value);
+                if (event.detail > 0) frame.current?.focus();
+              }}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3" /><path d="M6 9h1m4 0h1m4 0h1M6 12h1m4 0h1m4 0h1M7 15h10" /></svg>
+              <span>{t("gameboy_help")}</span><span className="browser-game__switch-track" aria-hidden="true" />
+            </button>}
+            {!hasConsoleFrame && <button type="button" onClick={onClose} aria-label={t("close")}>×</button>}
           </div>
         </header>
-        {isTelevision && framed && <div className="browser-game__television-picker">
-          <label htmlFor="game-television">{t("browser_game_television")}</label>
-          <select id="game-television" value={televisionId} onChange={event => {
-            send({ type: "release" });
-            setTelevisionId(event.target.value);
-            saveGameTelevision(event.target.value);
-          }}>
-            {GAME_TELEVISIONS.map(tv => <option key={tv.id} value={tv.id}>
-              {tv.name}
-            </option>)}
-          </select>
-        </div>}
-        <div className="browser-game__stage">
-          {isTelevision ? <div className="mega-drive-setup">
+        <div className={`browser-game__stage${isTelevision ? " television-stage" : ""}`}>
+          {isTelevision ? <div className="television-player">
             <div className="mega-drive-tv" data-television={television.id}><RetroTelevision television={television} />{gameScreen}</div>
-            <div className="mega-drive-controller">
-              <MegaDriveController pressedInputs={pressedInputs} />{controls}
-            </div>
+            {!showController && <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} compact t={t} />}
           </div> :
-          <div className={hasConsoleFrame ? "gameboy-device" : "browser-game__display"}>
-            {isVector ? <GameBoyVector systemId={game.systemId} pressedInputs={pressedInputs} ready={ready} /> : hasConsoleFrame &&
-              <img className="gameboy-device__photo" src={photoUrl}
-                style={frameRectangle(consoleFrame, [0, 0, ...consoleFrame.image])} alt="" draggable="false" />}
-            {gameScreen}
-            {hasConsoleFrame && <>
-              {!isVector && <span className={`gameboy-device__power${ready ? " is-on" : ""}`}
-                style={frameRectangle(consoleFrame, consoleFrame.power)} aria-hidden="true" />}
-              {controls}
-            </>}
+          <div className={isHandheld ? "handheld-player" : "browser-game__display"}>
+            <div className={hasConsoleFrame ? "gameboy-device" : "browser-game__display"}>
+              {isVector ? <GameBoyVector systemId={game.systemId} pressedInputs={pressedInputs} ready={ready} /> : hasConsoleFrame &&
+                <img className="gameboy-device__photo" src={photoUrl}
+                  style={frameRectangle(consoleFrame, [0, 0, ...consoleFrame.image])} alt="" draggable="false" />}
+              {gameScreen}
+              {hasConsoleFrame && <>
+                {!isVector && <span className={`gameboy-device__power${ready ? " is-on" : ""}`}
+                  style={frameRectangle(consoleFrame, consoleFrame.power)} aria-hidden="true" />}
+                {controls}
+              </>}
+            </div>
+            {isHandheld && <HandheldKeyboardHelp frame={consoleFrame} systemId={game.systemId}
+              annotated={keyboardHelp && framed} pressedInputs={pressedInputs} t={t} />}
           </div>}
         </div>
-        {framed && <p className="gameboy-player__hint">{t(isTelevision ? "megadrive_keyboard_hint" : "gameboy_keyboard_hint")}{game.systemId === "gba" ? " · Q: L · E: R" : ""}</p>}
+        {isTelevision && <div id="television-controller-dock" hidden={!showController}
+          className={`television-controller-dock${keyboardHelp ? " television-controller-dock--annotated" : ""}`}>
+          <div className="mega-drive-controller">
+            <MegaDriveController pressedInputs={pressedInputs} />{controls}
+            {keyboardHelp && <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} annotations t={t} />}
+          </div>
+          <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} compact={!keyboardHelp} t={t} />
+        </div>}
       </div>
     </dialog>, document.body
   );

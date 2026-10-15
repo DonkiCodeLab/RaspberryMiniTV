@@ -6,8 +6,12 @@ Color y Advance conservan los colores del juego; el tono verde es exclusivo de l
 Game Boy original. La cruceta,
 A/B y Start/Select de la imagen son pulsadores; también funcionan las flechas,
 Z (A), X (B), Enter (Start) y V (Select). Advance añade L/R sobre sus gatillos y
-las teclas Q/E. **Ampliar pantalla** permite acceder al
-menú del emulador y volver a la consola sin reiniciar la partida. Requiere actualizar
+las teclas Q/E. El selector **Carcasa / Pantalla grande** permite acceder al
+menú del emulador y volver a la consola sin reiniciar la partida. **Ayuda** muestra
+las teclas junto a cada botón, con líneas amarillas sobre la consola. Al desactivarla,
+queda una guía compacta a la derecha; la preferencia se recuerda en el navegador.
+La vista de pantalla grande también muestra la guía compacta. La cabecera incluye
+la portada, el año disponible y el regreso a la ficha del juego. Requiere actualizar
 WebApp y DeviceApp juntos. Las demás plataformas conservan su reproductor habitual.
 
 Los botones se sombrean mientras están pulsados, también al jugar con el teclado.
@@ -32,15 +36,19 @@ silenciar/restaurar el nivel anterior en la cabecera. El nivel se recuerda en el
 navegador y se sincroniza con el menú del emulador en la vista ampliada. Ajusta
 el audio de la partida del navegador, sin cambiar el volumen de la Raspberry.
 
-Mega Drive utiliza **Tele**, un selector en modo lista con los 25 SVG aportados.
-La numeración corresponde a `SVG (1).svg`–`SVG (25).svg`; el modelo inicial es
-Tele 22. La selección se recuerda en este navegador y se comparte con los futuros
-marcos de consola de sobremesa. Cambiar de tele, ampliar y volver conserva el
-mismo emulador y la partida. Cada cristal tiene una máscara extraída del dibujo
-y un área de juego 4:3 que evita recortar la imagen, incluso en la tele ovalada.
-Los modelos monocromos se muestran en gris claro sobre el fondo oscuro; los de
-color conservan su paleta. El catálogo y las medidas están en `gameTelevisions.js`,
-y los dibujos y máscaras en `public/game-televisions/`.
+Mega Drive utiliza un desplegable de carcasas: **Los Simpson**, **Gray**,
+**Cream**, **Green** y **Sin carcasa**. Los Simpson es la opción inicial; la
+selección se recuerda en este navegador. Sin carcasa muestra directamente una
+pantalla 4:3 y permite seguir usando el mando. El catálogo y las medidas están
+en `gameTelevisions.js`, y las imágenes transparentes en `public/game-televisions/`.
+El dibujo del televisor cubre los bordes del juego, respetando la forma del cristal.
+
+**Ocultar mando** retira la franja inferior y la tele aprovecha ese espacio para
+crecer; **Mostrar mando** la recupera. **Ayuda** activa las teclas sobre el mando y
+la guía de la cruceta. Al desactivarla, queda una leyenda a la derecha del mando;
+con el mando oculto, la guía acompaña a la pantalla (debajo en móvil). La preferencia
+de ayuda se recuerda por separado de las portátiles. Cambiar de carcasa, ocultar
+el mando o cambiar la ayuda mantiene el mismo emulador, sus controles y la partida.
 
 Debajo aparece el mando SVG de tres botones MK-1650 aportado por el usuario,
 con el logo **SEGA** en plata añadido en una capa independiente. Su archivo está
