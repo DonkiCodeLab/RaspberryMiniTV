@@ -1,12 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
+import RetroTelevision from "./RetroTelevision.jsx";
+import { gameTelevision } from "./gameTelevisions.js";
+import { frameRectangle } from "./gameConsoleFrames.js";
 
-export default function BrowserVideo({ url, t, initialProgress, onProgress }) {
+export default function BrowserVideo({ url, t, initialProgress, onProgress, showShell = true }) {
   const videoRef = useRef(null);
+  const subtitleRef = useRef(null);
   const progressRef = useRef(onProgress);
   progressRef.current = onProgress;
   const [subtitleUrl, setSubtitleUrl] = useState("");
   const [status, setStatus] = useState("loading");
   const [enabled, setEnabled] = useState(true);
+  const [videoAspect, setVideoAspect] = useState(16 / 9);
+  const television = gameTelevision(showShell ? "simpsons" : "none");
 
   useEffect(() => {
     const video = videoRef.current;
@@ -20,6 +26,8 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress }) {
         duration: Number.isFinite(video.duration) ? video.duration : 0, completed: video.ended });
     };
     const loaded = () => {
+      if (initialized) return;
+      if (video.videoWidth && video.videoHeight) setVideoAspect(video.videoWidth / video.videoHeight);
       const seconds = Math.max(0, Number(initialProgress?.seconds) || 0);
       if (seconds) video.currentTime = Math.min(seconds, Number.isFinite(video.duration) ? Math.max(0, video.duration - .1) : seconds);
       initialized = true;
@@ -32,6 +40,7 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress }) {
     for (const event of ["pause", "ended", "seeked"]) video.addEventListener(event, flush);
     window.addEventListener("pagehide", flush);
     document.addEventListener("visibilitychange", flush);
+    if (video.readyState >= 1) loaded();
     return () => {
       flush();
       video.removeEventListener("loadedmetadata", loaded);
@@ -41,6 +50,27 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress }) {
       document.removeEventListener("visibilitychange", flush);
     };
   }, [url]);
+
+  useEffect(() => {
+    const track = subtitleRef.current;
+    if (!track) return;
+    const loaded = () => {
+      track.track.mode = "showing";
+      setEnabled(true);
+      setStatus("ready");
+    };
+    const failed = () => setStatus("error");
+    // Track load/error events do not bubble. Observe the element directly,
+    // including cached tracks that loaded before this effect was installed.
+    track.addEventListener("load", loaded);
+    track.addEventListener("error", failed);
+    if (track.readyState === 2) loaded();
+    else if (track.readyState === 3) failed();
+    return () => {
+      track.removeEventListener("load", loaded);
+      track.removeEventListener("error", failed);
+    };
+  }, [subtitleUrl]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -87,14 +117,17 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress }) {
   }
 
   return <>
-    <video ref={videoRef} src={url} controls autoPlay playsInline>
-      {subtitleUrl && <track key={subtitleUrl} kind="subtitles" label={t("subtitle_external")} src={subtitleUrl} default
-        onLoad={event => {
-          event.currentTarget.track.mode = "showing";
-          setEnabled(true);
-          setStatus("ready");
-        }} onError={() => setStatus("error")} />}
-    </video>
+    <div id="browser-video-stage" className="browser-video__stage"
+      style={{ "--tv-ratio": showShell ? television.crop[2] / television.crop[3] : videoAspect }}>
+      <RetroTelevision television={television} t={t}>
+        <div className="browser-video__screen" style={frameRectangle(television, television.screen)}>
+          <video ref={videoRef} src={url} controls autoPlay playsInline>
+            {subtitleUrl && <track ref={subtitleRef} key={subtitleUrl} kind="subtitles"
+              label={t("subtitle_external")} src={subtitleUrl} default />}
+          </video>
+        </div>
+      </RetroTelevision>
+    </div>
     <div className="playback-subtitles">
       {status === "ready" ? <button type="button" className="dialog-button dialog-button--ghost"
         aria-label={t("subtitle_toggle")} aria-pressed={enabled} onClick={toggle}>

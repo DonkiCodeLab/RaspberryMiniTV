@@ -1,10 +1,11 @@
 // Aperture bounds measured from the supplied transparent artwork.
+// Raster apertures include 2px of bleed beneath the antialiased bezel edges.
 // The 4:3 picture covers the aperture; the foreground bezel hides its curved edges.
 export const GAME_TELEVISIONS = [
   { id: "simpsons", name: "Los Simpson", image: "simpsons.svg", crop: [0, 0, 854, 1005], screen: [48, 389, 637, 511] },
-  { id: "gray", name: "Gray TV", image: "gray.png", crop: [0, 0, 3840, 2160], screen: [370, 220, 2266, 1714] },
-  { id: "cream", name: "Cream TV", image: "cream.png", crop: [0, 0, 3840, 2160], screen: [389, 222, 2286, 1719] },
-  { id: "green", name: "Green TV", image: "green.png", crop: [0, 0, 3840, 2160], screen: [907, 91, 2648, 1992] },
+  { id: "gray", name: "Gray TV", image: "gray.png", crop: [0, 0, 3664, 2160], screen: [269, 220, 2266, 1714] },
+  { id: "cream", name: "Cream TV", image: "cream.png", crop: [0, 0, 3563, 2128], screen: [249, 192, 2294, 1719] },
+  { id: "green", name: "Green TV", image: "green.png", crop: [0, 0, 3683, 2160], screen: [828, 91, 2648, 1992] },
   { id: "none", name: "None", image: null, crop: [0, 0, 4, 3], screen: [0, 0, 4, 3] },
 ];
 

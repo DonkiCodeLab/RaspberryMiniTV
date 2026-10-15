@@ -1,5 +1,12 @@
 # WebApp
 
+**Reproducir en navegador** en películas y episodios abre el vídeo dentro de la
+carcasa de Los Simpson, ampliada hasta ocupar el espacio disponible. El interruptor
+**Carcasa** de la cabecera permite pasar al vídeo sin marco, conservando la
+reproducción, el volumen, los subtítulos y la posición. La elección se recuerda en
+ese navegador, de forma independiente a las carcasas de los juegos. El vídeo
+conserva sus proporciones y la vista se adapta al móvil y al escritorio.
+
 Al pulsar **Jugar desde el navegador** en un juego de Game Boy, Game Boy Color o
 Game Boy Advance, la partida aparece dentro de la pantalla de su consola.
 Color y Advance conservan los colores del juego; el tono verde es exclusivo de la

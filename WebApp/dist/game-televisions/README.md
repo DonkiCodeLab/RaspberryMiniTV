@@ -9,6 +9,13 @@ permite ampliar la pantalla a la misma altura disponible. Las medidas de cada
 carcasa y su abertura están en `src/gameTelevisions.js`. La imagen del juego
 mantiene la proporción 4:3 detrás del cristal transparente.
 
+Las tres carcasas PNG corresponden a la revisión del 15 de octubre de 2026:
+`GrayTV_FrameTV (1).png` (3664 × 2160), `Cream_TV_FrameTV (1).png`
+(3563 × 2128) y `GreenTV_FrameTV.png` (3683 × 2160). Se conservan los archivos
+aportados sin recomprimir ni modificar su transparencia. El encuadre utiliza
+sus nuevos tamaños y la posición real de cada abertura, con 2 píxeles de margen
+bajo el borde suavizado para evitar huecos entre el juego y la carcasa.
+
 Los archivos anteriores `tv-NN.svg` y `tv-NN-screen.svg` se conservan como
 recursos del catálogo original, procedentes de `SVG (1).svg` a `SVG (25).svg`
 en `retrotvsvg/SVG Files`. No se presupone una licencia de distribución distinta

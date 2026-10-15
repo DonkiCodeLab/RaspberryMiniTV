@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import { observeTelevisionImage } from "./televisionArtwork.js";
+import "./RetroTelevision.css";
 
 export default function RetroTelevision({ television, children, t }) {
   const image = useRef(null);

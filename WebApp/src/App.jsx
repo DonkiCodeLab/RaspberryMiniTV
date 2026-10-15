@@ -21,7 +21,7 @@ import ImdbRating from "./ImdbRating.jsx";
 import { RATING_SOURCES, ratingSource, loadRatingSource, saveRatingSource, formatLibraryRating, compareLibraryRatings } from "./libraryRatings.js";
 import { catalogAIIds, filterAICollections, matchesCatalogAI } from "./catalogAI.js";
 import { recommendationLibraryTarget, recommendationTorrentTarget } from "./recommendations.js";
-import BrowserVideo from "./BrowserVideo.jsx";
+import BrowserPlayerModal from "./BrowserPlayerModal.jsx";
 import SystemUpdate from "./SystemUpdate.jsx";
 import OpenSubtitlesSettings from "./OpenSubtitlesSettings.jsx";
 import GameProviderSettings from "./GameProviderSettings.jsx";
@@ -407,6 +407,7 @@ const UI_STRINGS = {
     play_in_browser: "Reproducir en navegador",
     play_on_external_monitor: "Reproducir en Monitor Externo",
     browser_player: "Reproductor web",
+    browser_player_shell: "Carcasa",
     playing_now: "Reproduciendo...",
     synopsis_unavailable: "Sinopsis no disponible.",
     games_reserved: "Esta sección de customización todavía no tiene acciones disponibles.",
@@ -913,6 +914,7 @@ const UI_STRINGS = {
     play_in_browser: "Reproduir al navegador",
     play_on_external_monitor: "Reproduir en Monitor Extern",
     browser_player: "Reproductor web",
+    browser_player_shell: "Carcassa",
     playing_now: "Reproduint...",
     synopsis_unavailable: "Sinopsi no disponible.",
     games_reserved: "Aquesta secció de personalització encara no té accions disponibles.",
@@ -1419,6 +1421,7 @@ const UI_STRINGS = {
     play_in_browser: "Play in browser",
     play_on_external_monitor: "Play on External Monitor",
     browser_player: "Web player",
+    browser_player_shell: "TV shell",
     playing_now: "Playing...",
     synopsis_unavailable: "Synopsis unavailable.",
     games_reserved: "This customization section has no actions available yet.",
@@ -3089,32 +3092,6 @@ function PlaybackSubtitleControls({ disabled = false, playbackKey = "", t }) {
       </>}
     </p> : null}
   </div>;
-}
-
-function BrowserPlayerModal({ playback, onClose, t }) {
-  useEffect(() => {
-    if (!playback) return () => {};
-    const handleKeyDown = (event) => event.key === "Escape" && onClose();
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [playback, onClose]);
-
-  if (!playback) return null;
-  return createPortal(
-    <div className="browser-player" role="dialog" aria-modal="true" aria-label={t("browser_player")}>
-      <div className="browser-player__panel">
-        <header>
-          <div>
-            <span>{t("browser_player")}</span>
-            <h2>{playback.title}</h2>
-          </div>
-          <button type="button" onClick={onClose} aria-label={t("close")}>×</button>
-        </header>
-        <BrowserVideo key={`${playback.context?.userId}:${playback.url}`} url={playback.url} t={t} initialProgress={playback.context?.initialProgress} onProgress={playback.context?.onProgress} />
-      </div>
-    </div>,
-    document.body
-  );
 }
 
 function MovieFavoriteConfirmModal({ confirmation, onClose, onConfirm, t }) {
