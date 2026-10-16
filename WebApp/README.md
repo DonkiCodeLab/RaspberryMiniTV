@@ -205,13 +205,20 @@ todos los capítulos identificados de la selección, conservando los que ya exis
 El modo demo no inicia descargas reales. Instalación y funcionamiento:
 [DeviceApp](../DeviceApp/README.md#descargas-de-películas-y-series-por-torrent).
 
-En **Dashboard → Descargas torrent**, cada descarga tiene **Avisarme al terminar**.
+En **Dashboard → Torrents**, junto a **Codex**, se encuentran las descargas en curso,
+el historial y los ajustes de torrents. Cada descarga tiene **Avisarme al terminar**.
 Cuando está lista en la biblioteca, aparece un contador rojo sobre la tele en
 cualquier página que muestre ese acceso, incluidas las temporadas. Al pulsar la
 tele con avisos pendientes, se abre directamente **Historial** y se enfoca la
-primera descarga avisada, resaltada en amarillo. **Desactivar aviso** retira ese
-aviso del contador; abrir el historial no lo desactiva. Las descargas canceladas
-o con error no generan avisos de finalización.
+primera descarga avisada, resaltada en amarillo. **Dejar de avisar** retira ese
+aviso del contador y el botón desaparece del historial. El contador se reduce
+al instante y desaparece al llegar a cero. Abrir el historial no desactiva los
+avisos y no se pueden activar nuevos avisos en descargas ya terminadas. Las
+descargas canceladas o con error no generan avisos de finalización.
+
+Las películas terminadas ofrecen **Ir a la ficha**. Se comprueba el catálogo
+actual antes de abrirla; si la película ya no está, aparece un diálogo y se
+conserva la descarga en el historial. Un fallo de conexión se indica por separado.
 
 La elección se guarda por perfil en la Raspberry y se comparte entre sus
 navegadores. También se detectan las descargas terminadas mientras la web estaba

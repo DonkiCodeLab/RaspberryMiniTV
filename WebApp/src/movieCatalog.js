@@ -27,6 +27,17 @@ export function getMovieTmdbId(movie) {
   return Math.max(0, Number(movie.tmdbId ?? movie.id) || 0);
 }
 
+// Match against files in the current catalog, never the torrent's saved metadata alone.
+export function findTorrentMovie(job, movies = []) {
+  if (job?.state !== 'complete' || (job.mediaType || 'movies') !== 'movies') return null;
+  const downloaded = movies.filter(movie => movie.fileRelativePath);
+  const path = job.item?.relativePath;
+  const exact = path && downloaded.find(movie => movie.fileRelativePath === path);
+  if (exact) return exact;
+  const tmdbId = Number(job.movie?.id) || 0;
+  return tmdbId > 0 ? downloaded.find(movie => getMovieTmdbId(movie) === tmdbId) || null : null;
+}
+
 // One unavailable TMDB title must not discard metadata for the other movies.
 export async function loadMovieDetails(movies, fetchMovie, language) {
   return Object.fromEntries(await Promise.all(movies.map(async (movie) => {

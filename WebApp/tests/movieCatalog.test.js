@@ -1,8 +1,38 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getRaspberryMovieLibraryItems as catalog, loadMovieDetails } from '../src/movieCatalog.js';
+import { getRaspberryMovieLibraryItems as catalog, loadMovieDetails, findTorrentMovie } from '../src/movieCatalog.js';
 
 const file = (path, tmdbId = 0) => ({ relativePath: path, file: path.split('/').pop(), tmdbId });
+
+test('torrent history opens the imported file before another copy with the same TMDB ID', () => {
+  const movies = catalog({ movieRootFiles: [file('Movies/Other.mkv', 10), file('Movies/Imported.mkv', 10)] });
+  const job = { state: 'complete', mediaType: 'movies', movie: { id: 10 }, item: { relativePath: 'Movies/Imported.mkv' } };
+  assert.equal(findTorrentMovie(job, movies), movies[1]);
+  assert.equal(findTorrentMovie({ ...job, movie: {} }, movies), movies[1]);
+});
+
+test('torrent history can find a moved movie or legacy job by TMDB, but not by title alone', () => {
+  const movies = catalog({ movieRootFiles: [file('Movies/Moved.mkv', 10)] });
+  const job = { state: 'complete', movie: { id: '10' }, item: { relativePath: 'Movies/Old.mkv' } };
+  assert.equal(findTorrentMovie(job, movies), movies[0]);
+  assert.equal(findTorrentMovie({ ...job, item: undefined }, movies), movies[0]);
+  assert.equal(findTorrentMovie({ ...job, movie: { name: 'Moved' } }, movies), null);
+});
+
+test('deleted files and metadata-only records cannot open a movie from history', () => {
+  const path = 'Movies/Deleted.mkv';
+  const job = { state: 'complete', movie: { id: 10 }, item: { relativePath: path } };
+  const deleted = catalog({ movieRootFiles: [], mediaLibrary: { movies: { [path]: { tmdbId: 10 } } } });
+  assert.equal(findTorrentMovie(job, deleted), null);
+  assert.equal(findTorrentMovie(job, [{ id: 10, name: 'Deleted' }]), null);
+  const movies = catalog({ movieRootFiles: [file(path, 10)] });
+  for (const state of ['queued', 'downloading', 'failed', 'cancelled']) {
+    assert.equal(findTorrentMovie({ ...job, state }, movies), null);
+  }
+  for (const mediaType of ['series', 'books']) {
+    assert.equal(findTorrentMovie({ ...job, mediaType }, movies), null);
+  }
+});
 
 test('fresh browsers receive all 127 files, including missing and shared TMDB identifiers', () => {
   const files = Array.from({ length: 127 }, (_, i) => file(`Movies/Film ${i}.mp4`, i < 16 ? (i % 15) + 1 : 0));

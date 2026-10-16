@@ -49,7 +49,7 @@ class SettingsTests(unittest.TestCase):
 
     def test_defaults_and_public_settings_do_not_reveal_credentials(self):
         self.assertEqual(self.settings.public(), {'enabled': False, 'configured': False,
-                                                  'model': 'gpt-4.1-mini', 'requestsPerMinute': 10})
+                                                  'model': 'gpt-6.1-sol', 'requestsPerMinute': 10})
         self.assertFalse(self.path.exists())
         public = self.settings.update({'apiKey': 'sk-test-private', 'enabled': True})
         self.assertTrue(public['configured'])
@@ -192,7 +192,7 @@ class PlannerTests(unittest.TestCase):
         self.assertEqual(request.full_url, 'https://api.openai.com/v1/responses')
         self.assertEqual(request.get_method(), 'POST')
         self.assertEqual(request.get_header('Authorization'), 'Bearer sk-private-test')
-        self.assertEqual(body['model'], 'gpt-4.1-mini')
+        self.assertEqual(body['model'], 'gpt-6.1-sol')
         user_input = json.loads(body['input'][0]['content'][0]['text'])
         self.assertEqual(user_input['currentDate'], ai.date.today().isoformat())
         self.assertIs(body['store'], False)
@@ -260,7 +260,7 @@ class PlannerTests(unittest.TestCase):
     def test_connection_works_disabled_and_uses_bounded_strict_response(self):
         self.response.read.return_value = json.dumps(response_for({'ok': True})).encode()
         result = ai.test_connection({**self.settings, 'enabled': False})
-        self.assertEqual(result, {'ok': True, 'model': 'gpt-4.1-mini'})
+        self.assertEqual(result, {'ok': True, 'model': 'gpt-6.1-sol'})
         body = json.loads(self.opener.open.call_args.args[0].data)
         self.assertIs(body['store'], False)
         self.assertEqual(body['max_output_tokens'], 128)

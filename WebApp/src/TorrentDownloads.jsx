@@ -1,5 +1,6 @@
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { controlMovieTorrent, getMovieTorrents, searchMediaTorrents, startMediaTorrent } from "./api/raspberryApi";
 import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents } from "./torrentUtils.js";
 import refreshWhiteIcon from "./assets/refresh_white.png";
@@ -180,12 +181,54 @@ export function useTorrentDownloads(enabled, onLibraryChanged) {
   return { ...data, error, loaded, busy, action, refresh: () => setRevision(value => value + 1) };
 }
 
+function TorrentMovieNotice({ notice, strings: s, onClose }) {
+  const dialogRef = useRef(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const trigger = document.activeElement;
+    const overflow = document.body.style.overflow;
+    dialog.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog.close();
+      document.body.style.overflow = overflow;
+      if (trigger?.isConnected) trigger.focus();
+    };
+  }, []);
+  return createPortal(<dialog ref={dialogRef} className="dialog-card dialog-card--compact torrent-movie-notice"
+    role="alertdialog" aria-modal="true" aria-labelledby="torrent-movie-notice-title" aria-describedby="torrent-movie-notice-copy"
+    onCancel={event => { event.preventDefault(); onClose(); }}>
+    <div className="dialog-card__header"><h2 id="torrent-movie-notice-title">{notice.failed ? s.movieLookupFailed : s.movieMissing}</h2></div>
+    <p className="dialog-copy" id="torrent-movie-notice-copy">{notice.failed ? s.movieLookupFailedCopy : s.movieMissingCopy.replace("{name}", torrentJobTitle(notice.job))}</p>
+    <div className="dialog-card__actions"><button className="dialog-button dialog-button--accent" type="button" autoFocus onClick={onClose}>{s.close}</button></div>
+  </dialog>, document.body);
+}
+
 export default function TorrentDownloads({ downloads, language, notificationPreferences = {}, notificationsReady = false,
-  onNotificationChange, showNotifications = false, onNotificationsShown }) {
+  onNotificationChange, showNotifications = false, onNotificationsShown, onOpenMovie }) {
   const s = torrentStrings(language);
   const [selectedGroup, setSelectedGroup] = useState("active");
   const sectionRef = useRef(null);
   const notificationRef = useRef(null);
+  const movieRequest = useRef(null);
+  const [openingMovie, setOpeningMovie] = useState("");
+  const [movieNotice, setMovieNotice] = useState(null);
+  useEffect(() => () => movieRequest.current?.abort(), []);
+  async function openMovie(job) {
+    if (movieRequest.current) return;
+    const controller = new AbortController();
+    movieRequest.current = controller;
+    setOpeningMovie(job.id);
+    try {
+      const opened = await onOpenMovie(job, controller.signal);
+      if (!controller.signal.aborted && !opened) setMovieNotice({ job, failed: false });
+    } catch {
+      if (!controller.signal.aborted) setMovieNotice({ job, failed: true });
+    } finally {
+      if (!controller.signal.aborted) setOpeningMovie("");
+      movieRequest.current = null;
+    }
+  }
   const { jobs = [], serviceError, error, busy, action, refresh, loaded, demo } = downloads;
   const completedNotifications = completedTorrentNotifications(jobs, notificationPreferences);
   useEffect(() => {
@@ -227,7 +270,7 @@ export default function TorrentDownloads({ downloads, language, notificationPref
         const notifying = wantsTorrentNotification(job, notificationPreferences);
         const notificationReady = notifying && job.state === "complete";
         return <article className={`torrent-job${notificationReady ? " torrent-job--notified" : ""}`} key={job.id}
-          ref={job.id === completedNotifications[0]?.id ? notificationRef : null} tabIndex={notificationReady ? -1 : undefined}>
+          ref={job.id === completedNotifications[0]?.id ? notificationRef : null} tabIndex={-1}>
       <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${job.state}`}>{job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[job.state] || job.state}</span></div>
       {notificationReady && <p className="torrent-job__notification-status">{s.notificationReady}</p>}
       <p className="torrent-job__name">{job.name}</p>
@@ -240,13 +283,21 @@ export default function TorrentDownloads({ downloads, language, notificationPref
       {job.error && <p className="dialog-error">{job.error}</p>}
       {job.artworkWarning && <p className="torrent-artwork-warning">{s.artworkWarning} {job.artworkWarning}</p>}
       <div className="torrent-job__actions">
-        {(job.state !== "cancelled" || notifying) && <button className="dialog-button torrent-job__notify"
-          disabled={!notificationsReady} aria-pressed={notifying} aria-label={`${notifying ? s.stopNotifying : s.notify}: ${torrentJobTitle(job)}`}
+        {(!isTorrentHistory(job) || notifying) && <button className="dialog-button torrent-job__notify"
+          disabled={!notificationsReady} aria-pressed={isTorrentHistory(job) ? undefined : notifying} aria-label={`${notifying ? s.stopNotifying : s.notify}: ${torrentJobTitle(job)}`}
           title={notifying ? s.stopNotifying : s.notify}
-          onClick={() => onNotificationChange?.(torrentNotificationKey(job), !notifying)} type="button">
+          onClick={event => {
+            onNotificationChange?.(torrentNotificationKey(job), !notifying);
+            if (isTorrentHistory(job)) event.currentTarget.closest("article")?.focus({ preventScroll: true });
+          }} type="button">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
           {notifying ? s.stopNotifying : s.notify}
         </button>}
+        {job.state === "complete" && (job.mediaType || "movies") === "movies" && onOpenMovie &&
+          <button className="dialog-button dialog-button--accent" disabled={Boolean(openingMovie)}
+            onClick={() => openMovie(job)} type="button" aria-label={`${s.openMovie}: ${torrentJobTitle(job)}`}>
+            {openingMovie === job.id ? s.openingMovie : s.openMovie}
+          </button>}
         {["queued", "downloading"].includes(job.state) && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "pause")} type="button">{s.pause}</button>}
         {job.state === "paused" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "resume")} type="button">{s.resume}</button>}
         {job.state === "failed" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "retry")} type="button">{s.retry}</button>}
@@ -256,5 +307,6 @@ export default function TorrentDownloads({ downloads, language, notificationPref
     </article>; })}</div>
     </section>)}
     </div>
+    {movieNotice && <TorrentMovieNotice notice={movieNotice} strings={s} onClose={() => setMovieNotice(null)} />}
   </section>;
 }

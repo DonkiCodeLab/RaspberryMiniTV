@@ -3,6 +3,7 @@ import { isMockMode, searchCatalogAI } from "./api/raspberryApi";
 import { catalogAIError, catalogAIStrings } from "./catalogAIStrings.js";
 import { copyAIDebug, validateAIResult } from "./catalogAI.js";
 import AIModelSelect from "./AIModelSelect.jsx";
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import Recommendations from "./Recommendations.jsx";
 import { recommendationStrings } from "./recommendationStrings.js";
 import "./CatalogAI.css";
@@ -64,7 +65,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
   const rs = recommendationStrings(language);
   const [mode, setMode] = useState("search");
   const canRecommend = ["movies", "series"].includes(section);
-  const [model, setModel] = useState("");
+  const [model, setModel] = useState("gpt-6.1-sol");
   const [prompt, setPrompt] = useState(initialPrompt);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -128,7 +129,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
           onClick={() => setDebugOpen(open => !open)}>{s.debug}</button>
         {busy && <button className="dialog-button" type="button" onClick={cancel}>{s.cancel}</button>}</div>
     </form>
-    {busy && <p role="status">{s.waiting}</p>}
+    {busy && <p role="status"><LoadingSpinner inline /> {s.waiting}</p>}
     {error && <p className="dialog-error" role="alert">{error}</p>}
     {message && <p role="status">{message}</p>}
     {debugOpen && <CatalogAIDebug report={debug} language={language} />}

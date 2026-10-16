@@ -937,8 +937,10 @@ la borra. No hay que introducirla en `.env` del frontend ni en variables `VITE_*
 Guardar y probar son acciones separadas. La prueba realiza una petición pequeña
 al modelo guardado, incluso si la búsqueda está desactivada.
 
-El selector del dashboard guarda el modelo predeterminado. El selector de **Buscar**
-permite elegir otro solo para esa consulta, sin modificar los ajustes guardados.
+El selector del dashboard guarda el modelo predeterminado; en una configuración nueva
+es `gpt-6.1-sol`. El selector de **Buscar** se abre con `gpt-6.1-sol` seleccionado y
+permite elegir otro solo para esa consulta, o usar el modelo del dashboard, sin modificar
+los ajustes guardados.
 **Actualizar modelos** consulta `/settings/ai/models`, protegido por PIN, que obtiene
 los modelos de texto de tu cuenta desde `/v1/models` sin devolver la clave. Se priorizan
 los alias actuales (`chat-latest`, `gpt-6.1-sol`, `gpt-6-luna`, `gpt-6-astra`) disponibles;

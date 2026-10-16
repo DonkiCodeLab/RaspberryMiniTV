@@ -57,7 +57,10 @@ export function isTorrentHistory(job) {
 
 const strings = {
   es: {
-    notify: "Avisarme al terminar", stopNotifying: "Desactivar aviso", notificationReady: "Descarga terminada · aviso activado",
+    notify: "Avisarme al terminar", stopNotifying: "Dejar de avisar", notificationReady: "Descarga terminada · aviso activado",
+    openMovie: "Ir a la ficha", openingMovie: "Comprobando catálogo…", close: "Cerrar",
+    movieMissing: "Película fuera del catálogo", movieMissingCopy: "«{name}» se descargó, pero ya no está en el catálogo. La descarga sigue guardada en el historial.",
+    movieLookupFailed: "No se pudo comprobar el catálogo", movieLookupFailedCopy: "Comprueba la conexión con la Raspberry y vuelve a pulsar «Ir a la ficha».",
     notificationsHint: "Activa el aviso en las descargas que te interesan. Al terminar aparecerá un contador en la tele hasta que desactives el aviso aquí.",
     notificationOne: "1 descarga terminada. Ver descargas", notificationMany: "{count} descargas terminadas. Ver descargas",
     artworkWarning: "El contenido está en la biblioteca, pero faltan algunos recursos de TMDB.",
@@ -82,7 +85,10 @@ const strings = {
     demo: "Las descargas están disponibles al conectar con la Raspberry.", pending: "Esperando datos de la Raspberry…", remaining: "restantes",
   },
   ca: {
-    notify: "Avisa’m en acabar", stopNotifying: "Desactiva l’avís", notificationReady: "Descàrrega acabada · avís activat",
+    notify: "Avisa’m en acabar", stopNotifying: "Deixa d’avisar", notificationReady: "Descàrrega acabada · avís activat",
+    openMovie: "Anar a la fitxa", openingMovie: "Comprovant el catàleg…", close: "Tanca",
+    movieMissing: "Pel·lícula fora del catàleg", movieMissingCopy: "«{name}» es va descarregar, però ja no és al catàleg. La descàrrega continua desada a l’historial.",
+    movieLookupFailed: "No s’ha pogut comprovar el catàleg", movieLookupFailedCopy: "Comprova la connexió amb la Raspberry i torna a prémer «Anar a la fitxa».",
     notificationsHint: "Activa l’avís a les descàrregues que t’interessen. En acabar apareixerà un comptador a la tele fins que desactivis l’avís aquí.",
     notificationOne: "1 descàrrega acabada. Veure descàrregues", notificationMany: "{count} descàrregues acabades. Veure descàrregues",
     artworkWarning: "El contingut és a la biblioteca, però falten alguns recursos de TMDB.",
@@ -108,6 +114,9 @@ const strings = {
   },
   en: {
     notify: "Notify me when finished", stopNotifying: "Turn off notification", notificationReady: "Download finished · notification enabled",
+    openMovie: "Open movie details", openingMovie: "Checking catalog…", close: "Close",
+    movieMissing: "Movie no longer in the catalog", movieMissingCopy: "“{name}” was downloaded, but is no longer in the catalog. The download remains in your history.",
+    movieLookupFailed: "Could not check the catalog", movieLookupFailedCopy: "Check the connection to your Raspberry and select “Open movie details” again.",
     notificationsHint: "Enable notifications for the downloads you’re interested in. When they finish, a count will appear on the TV until you turn off the notification here.",
     notificationOne: "1 download finished. View downloads", notificationMany: "{count} downloads finished. View downloads",
     artworkWarning: "The content is in the library, but some TMDB resources are missing.",

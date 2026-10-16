@@ -48,9 +48,11 @@
 .torrent-job__notification-status { color: #ffe775; font-size: 13px; font-weight: 700; }
 .torrent-job__notify { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .torrent-job__notify svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.torrent-job__notify[aria-pressed="true"] { background: #ffdc3524; color: #ffe775; border-color: #ffdc35; }
+.torrent-job__notify[aria-pressed="true"], .torrent-job--notified .torrent-job__notify { background: #ffdc3524; color: #ffe775; border-color: #ffdc35; }
 .torrent-job__notify:focus-visible, .torrent-job--notified:focus-visible, .torrent-dashboard:focus-visible { outline: 2px solid #ffdc35; outline-offset: 4px; }
 .torrent-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.torrent-movie-notice { margin: auto; width: min(520px, calc(100% - 2rem)); }
+.torrent-movie-notice::backdrop { background: rgba(5, 16, 23, .72); }
 @media (max-width: 600px) { .movie-torrents { padding: 16px; } .movie-torrents__search { align-items: stretch; flex-direction: column; } .torrent-job { padding: 16px; } }
 @media (max-width: 600px) { .movie-torrents__search--series > label, .movie-torrents__search .movie-torrents__filter { flex: 0 0 auto; } }
 

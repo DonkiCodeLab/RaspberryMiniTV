@@ -179,7 +179,7 @@ import {
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
-import { getRaspberryMovieLibraryItems, getMovieTmdbId } from "./movieCatalog";
+import { getRaspberryMovieLibraryItems, getMovieTmdbId, findTorrentMovie } from "./movieCatalog";
 import {
   loadMediaLibrary,
   removeMediaLibraryItem,
@@ -5437,13 +5437,14 @@ function RaspberryPage({
   uploadSummary,
   onOpenTmdbBrowser,
   torrentDownloads,
+  onOpenTorrentMovie,
 }) {
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
   const [cameraImageUrl, setCameraImageUrl] = useState("");
   const [cameraBusy, setCameraBusy] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [selectedDashboardSection, setSelectedDashboardSection] = useState(
-    () => dashboardSection === "subtitles" ? "auxiliary" : "general"
+    () => dashboardSection === "subtitles" ? "auxiliary" : dashboardSection === "downloads" ? "torrents" : dashboardSection || "general"
   );
   const [selectedAuxiliaryService, setSelectedAuxiliaryService] = useState(
     () => dashboardSection === "subtitles" ? "subtitles" : "tmdb"
@@ -5452,7 +5453,7 @@ function RaspberryPage({
 
   useEffect(() => {
     if (raspberryTab !== "dashboard" || !dashboardSection) return;
-    const requestedSection = dashboardSection === "subtitles" ? "auxiliary" : dashboardSection === "downloads" ? "general" : dashboardSection;
+    const requestedSection = dashboardSection === "subtitles" ? "auxiliary" : dashboardSection === "downloads" ? "torrents" : dashboardSection;
     if (selectedDashboardSection !== requestedSection) {
       setSelectedDashboardSection(requestedSection);
       return;
@@ -5562,11 +5563,21 @@ function RaspberryPage({
               { key: "clock", title: t("dashboard_clock_title") },
               { key: "auxiliary", title: t("dashboard_auxiliary_title") },
               { key: "codex", title: "Codex" },
+              { key: "torrents", title: "Torrents" },
             ]}
             selected={selectedDashboardSection} onSelect={setSelectedDashboardSection} />
           <div className="raspberry-dashboard-panel" id="dashboard-codex-panel" role="tabpanel"
             aria-labelledby="dashboard-codex-tab" hidden={selectedDashboardSection !== "codex"} tabIndex={0}>
             {selectedDashboardSection === "codex" && <CodexPanel language={raspberryLanguage} />}
+          </div>
+          <div className="raspberry-dashboard-panel" id="dashboard-torrents-panel" role="tabpanel"
+            aria-labelledby="dashboard-torrents-tab" hidden={selectedDashboardSection !== "torrents"} tabIndex={0}>
+            <TorrentDownloads downloads={torrentDownloads} language={raspberryLanguage}
+              notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready}
+              onNotificationChange={profiles.setTorrentNotification}
+              onOpenMovie={onOpenTorrentMovie}
+              showNotifications={dashboardSection === "downloads" && selectedDashboardSection === "torrents"}
+              onNotificationsShown={() => onDashboardSectionShown("")} />
           </div>
           <div className="raspberry-dashboard-panel" id="dashboard-general-panel" role="tabpanel"
             aria-labelledby="dashboard-general-tab" hidden={selectedDashboardSection !== "general"} tabIndex={0}>
@@ -5679,11 +5690,6 @@ function RaspberryPage({
             </div>
           </section>
 
-          <TorrentDownloads downloads={torrentDownloads} language={raspberryLanguage}
-            notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready}
-            onNotificationChange={profiles.setTorrentNotification}
-            showNotifications={dashboardSection === "downloads" && selectedDashboardSection === "general"}
-            onNotificationsShown={() => onDashboardSectionShown("")} />
           <SystemUpdate language={raspberryLanguage} />
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
@@ -8178,6 +8184,24 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function handleOpenTorrentMovie(job, signal) {
+    const nextVideos = await getVideos();
+    if (signal.aborted) return false;
+    const movies = mockMode ? loadMediaLibrary("movies") : getRaspberryMovieLibraryItems(nextVideos);
+    const movie = findTorrentMovie(job, movies);
+    if (!movie) return false;
+    setVideos(nextVideos);
+    setMovieLibrary(movies);
+    handleMediaTypeChange("movies");
+    setCatalogAIResults(current => ({ ...current, movies: null }));
+    setMediaFilterQueries(current => ({ ...current, movies: "" }));
+    setMediaFavoritesOnly(current => ({ ...current, movies: false }));
+    setMovieGenreFilters(current => ({ ...current, [raspberryLanguage]: [] }));
+    setMovieAwardFilters([]);
+    handleOpenMovieDetails(movie.id);
+    return true;
+  }
+
   function handleOpenRecommendedLibrary(item) {
     const target = recommendationLibraryTarget(item, movieOptions, seriesOptions);
     if (!target) return false;
@@ -9454,6 +9478,7 @@ export default function App() {
                 onUploadDragStateChange={handleUploadDragStateChange}
                 uploadSummary={uploadSummary}
                 torrentDownloads={torrentDownloads}
+                onOpenTorrentMovie={handleOpenTorrentMovie}
                 onOpenTmdbBrowser={() => { setTorrentInitialMovie(null); setTmdbBrowserOpen(true); }}
               />
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
@@ -10419,7 +10444,7 @@ export default function App() {
               initialMediaType={uploadMediaType === "movies" ? "movies" : "series"}
               initialMovie={torrentInitialMovie}
               onTorrentStarted={torrentDownloads.refresh}
-              onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("general"); }}
+              onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }}
             />
             <EpisodeDetailsModal
               loading={episodeLoading}
@@ -10458,7 +10483,7 @@ export default function App() {
         )}
       </div>
       {bookTorrentTarget && <BookTorrentModal key={bookTorrentTarget.key} winner={bookTorrentTarget} language={raspberryLanguage} onClose={() => setBookTorrentTarget(null)}
-        onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("general"); }} />}
+        onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }} />}
       {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
     </PersonCatalogContext.Provider>

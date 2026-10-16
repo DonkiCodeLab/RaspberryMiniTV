@@ -3,6 +3,7 @@ import { deleteAIRecommendations, getAIRecommendations, isMockMode, requestAIRec
 import { catalogAIError, catalogAIStrings } from "./catalogAIStrings.js";
 import { draftToTastes, recommendationKey, tastesToDraft, TASTE_FIELDS, validRecommendations, validTastePreferences, validateRecommendationMemory } from "./recommendations.js";
 import { recommendationStrings, recommendationWarning } from "./recommendationStrings.js";
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import "./Recommendations.css";
 
 export function RecommendationCards({ recommendations, language, onOpenLibrary, onSearchTorrent }) {
@@ -155,7 +156,7 @@ export default function Recommendations({ user, section, language, onOpenLibrary
       <div className="dialog-actions"><button className="dialog-button dialog-button--accent" type="submit" disabled={disabled || !prompt.trim()}>{busy === "chat" ? s.waiting : s.send}</button>
         {busy === "chat" && <button className="dialog-button" type="button" onClick={cancel}>{s.cancel}</button>}</div>
     </form>
-    {busy === "chat" && <p role="status">{s.waiting}</p>}
+    {busy === "chat" && <p role="status"><LoadingSpinner inline /> {s.waiting}</p>}
     {["edit", "forget"].includes(busy) && <p role="status">{common.saving}</p>}
     {error && <p className="dialog-error" role="alert">{error}</p>}
     {!demo && !memory && !busy && <button className="dialog-button" type="button" onClick={() => setAttempt(value => value + 1)}>{s.retry}</button>}

@@ -11,7 +11,7 @@ import urllib.error
 import urllib.request
 
 
-DEFAULTS = {"enabled": False, "apiKey": "", "model": "gpt-4.1-mini", "requestsPerMinute": 10}
+DEFAULTS = {"enabled": False, "apiKey": "", "model": "gpt-6.1-sol", "requestsPerMinute": 10}
 SECTION_FIELDS = {
     "movies": ("title", "actor", "director", "writer", "genre", "year", "overview"),
     "series": ("title", "actor", "director", "writer", "creator", "genre", "year", "overview"),
