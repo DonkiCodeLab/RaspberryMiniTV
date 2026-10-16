@@ -207,18 +207,22 @@ El modo demo no inicia descargas reales. Instalación y funcionamiento:
 
 En **Dashboard → Torrents**, junto a **Codex**, se encuentran las descargas en curso,
 el historial y los ajustes de torrents. Cada descarga tiene **Avisarme al terminar**.
-Cuando está lista en la biblioteca, aparece un contador rojo sobre la tele en
-cualquier página que muestre ese acceso, incluidas las temporadas. Al pulsar la
-tele con avisos pendientes, se abre directamente **Historial** y se enfoca la
+Cuando está lista en la biblioteca, aparece un contador amarillo en la campanita
+junto a **Fotos**. El botón circular comparte el fondo oscuro del menú y permite
+abrir las descargas; la tele de la cabecera mantiene su acceso al dashboard.
+En las temporadas, que no muestran ese menú, se conserva el aviso sobre la tele.
+Al pulsar la campanita con avisos pendientes, se abre **Historial** y se enfoca la
 primera descarga avisada, resaltada en amarillo. **Dejar de avisar** retira ese
 aviso del contador y el botón desaparece del historial. El contador se reduce
 al instante y desaparece al llegar a cero. Abrir el historial no desactiva los
 avisos y no se pueden activar nuevos avisos en descargas ya terminadas. Las
 descargas canceladas o con error no generan avisos de finalización.
 
-Las películas terminadas ofrecen **Ir a la ficha**. Se comprueba el catálogo
-actual antes de abrirla; si la película ya no está, aparece un diálogo y se
-conserva la descarga en el historial. Un fallo de conexión se indica por separado.
+Las películas terminadas ofrecen **Ir a la ficha**. Si la película está en el
+catálogo cargado, se abre directamente sin volver a cargar la biblioteca ni sus
+portadas. Solo si no se encuentra se consulta el catálogo de la Raspberry; si
+tampoco está allí, aparece un diálogo y se conserva la descarga en el historial.
+Un fallo de conexión durante esa consulta se indica por separado.
 
 La elección se guarda por perfil en la Raspberry y se comparte entre sus
 navegadores. También se detectan las descargas terminadas mientras la web estaba

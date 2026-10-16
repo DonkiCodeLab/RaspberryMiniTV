@@ -54,7 +54,7 @@ import { bookStrings } from "./bookStrings.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
 import TmdbCreditsCompletion from "./TmdbCreditsCompletion.jsx";
-import TorrentDownloads, { MediaTorrentSearch, TorrentNotificationBadge, useTorrentDownloads } from "./TorrentDownloads.jsx";
+import TorrentDownloads, { MediaTorrentSearch, TorrentNotificationBadge, TorrentNotificationBell, useTorrentDownloads } from "./TorrentDownloads.jsx";
 import { completedTorrentNotifications, torrentNotificationLabel } from "./torrentNotifications.js";
 import { torrentStrings } from "./torrentUtils.js";
 import SectionSwitcher from "./SectionSwitcher.jsx";
@@ -5575,6 +5575,7 @@ function RaspberryPage({
             <TorrentDownloads downloads={torrentDownloads} language={raspberryLanguage}
               notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready}
               onNotificationChange={profiles.setTorrentNotification}
+              onNotificationsDismiss={profiles.dismissTorrentNotifications}
               onOpenMovie={onOpenTorrentMovie}
               showNotifications={dashboardSection === "downloads" && selectedDashboardSection === "torrents"}
               onNotificationsShown={() => onDashboardSectionShown("")} />
@@ -8185,13 +8186,19 @@ export default function App() {
   }
 
   async function handleOpenTorrentMovie(job, signal) {
-    const nextVideos = await getVideos();
     if (signal.aborted) return false;
-    const movies = mockMode ? loadMediaLibrary("movies") : getRaspberryMovieLibraryItems(nextVideos);
-    const movie = findTorrentMovie(job, movies);
-    if (!movie) return false;
-    setVideos(nextVideos);
-    setMovieLibrary(movies);
+    let movie = findTorrentMovie(job, movieLibrary);
+    // Replacing videos also reloads every library summary and cover. Reuse the
+    // loaded catalog for navigation; refresh only for an import not yet present.
+    if (!movie) {
+      const nextVideos = await getVideos();
+      if (signal.aborted) return false;
+      const movies = mockMode ? loadMediaLibrary("movies") : getRaspberryMovieLibraryItems(nextVideos);
+      movie = findTorrentMovie(job, movies);
+      if (!movie) return false;
+      setVideos(nextVideos);
+      setMovieLibrary(movies);
+    }
     handleMediaTypeChange("movies");
     setCatalogAIResults(current => ({ ...current, movies: null }));
     setMediaFilterQueries(current => ({ ...current, movies: "" }));
@@ -9579,6 +9586,7 @@ export default function App() {
                         );
                       })}
                     </div>
+                    <TorrentNotificationBell count={downloadNotificationCount} language={raspberryLanguage} onClick={handleOpenDownloadNotifications} />
                     <ProfileMenu profiles={profiles} onManage={handleManageUsers} language={raspberryLanguage} />
                   </div>
                 </section>
@@ -9748,15 +9756,13 @@ export default function App() {
                     <button
                       className="series-hero__tv-button"
                       onClick={() => {
-                        if (downloadNotificationCount > 0) { handleOpenDownloadNotifications(); return; }
                         if (isPicturesMode) setRaspberryTab("dashboard");
                         handleOpenRaspberryPage();
                       }}
                       type="button"
-                      aria-label={downloadNotificationCount > 0 ? torrentNotificationLabel(downloadNotificationCount, torrentStrings(raspberryLanguage)) : t("raspberry_dashboard")}
+                      aria-label={t("raspberry_dashboard")}
                     >
                       <img className="series-hero__tv" src={tvGreen} alt={t("mini_tv_title")} />
-                      <TorrentNotificationBadge count={downloadNotificationCount} />
                     </button>
                   </div>
                 </header>

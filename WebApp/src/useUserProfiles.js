@@ -122,6 +122,11 @@ export default function useUserProfiles(enabled, initialId = "default") {
     setTorrentNotification(key, enabled) {
       return ready && update(activeId, { torrentNotifications: { [key]: enabled } });
     },
+    dismissTorrentNotifications(keys) {
+      return ready && keys.length > 0 && update(activeId, {
+        torrentNotifications: Object.fromEntries(keys.map(key => [key, false])),
+      });
+    },
     saveProgress(id, descriptor, progress) {
       return update(id, { progress: { [descriptor.key]: { ...progress, opened: true, updatedAt: Date.now() } }, marks: completionMarks(descriptor, progress) });
     },

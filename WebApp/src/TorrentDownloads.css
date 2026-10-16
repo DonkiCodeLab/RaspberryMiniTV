@@ -35,6 +35,9 @@
 .torrent-dashboard__scroll { max-height: min(62vh, 640px); overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #ffdc35 #151c24; padding: 4px 10px 4px 4px; border-radius: 12px; }
 .torrent-dashboard__scroll:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
 .torrent-dashboard__hint { margin: 0 0 14px; color: #e5edf4; font-size: 13px; line-height: 1.5; }
+.torrent-dashboard__history-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 14px; }
+.torrent-dashboard__history-header .torrent-dashboard__hint { flex: 1 1 280px; margin: 0; }
+.torrent-dashboard__dismiss-notifications { flex: 0 0 auto; margin-left: auto; max-width: 100%; }
 .torrent-job { padding: 20px; background: #151c24; color: #fff; border: 1px solid #ffffff24; border-radius: 18px; min-width: 0; }
 .torrent-job h4 { margin: 0; font-size: 18px; }
 .torrent-job__name { overflow-wrap: anywhere; color: #c2cbd4; font-size: 13px; }
@@ -51,8 +54,9 @@
 .torrent-job__notify[aria-pressed="true"], .torrent-job--notified .torrent-job__notify { background: #ffdc3524; color: #ffe775; border-color: #ffdc35; }
 .torrent-job__notify:focus-visible, .torrent-job--notified:focus-visible, .torrent-dashboard:focus-visible { outline: 2px solid #ffdc35; outline-offset: 4px; }
 .torrent-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.torrent-movie-notice { margin: auto; width: min(520px, calc(100% - 2rem)); }
-.torrent-movie-notice::backdrop { background: rgba(5, 16, 23, .72); }
+.torrent-movie-notice, .torrent-notifications-confirm { margin: auto; width: min(520px, calc(100% - 2rem)); }
+.torrent-movie-notice::backdrop, .torrent-notifications-confirm::backdrop { background: rgba(5, 16, 23, .72); }
+.torrent-notifications-confirm .dialog-card__actions { flex-wrap: wrap; }
 @media (max-width: 600px) { .movie-torrents { padding: 16px; } .movie-torrents__search { align-items: stretch; flex-direction: column; } .torrent-job { padding: 16px; } }
 @media (max-width: 600px) { .movie-torrents__search--series > label, .movie-torrents__search .movie-torrents__filter { flex: 0 0 auto; } }
 

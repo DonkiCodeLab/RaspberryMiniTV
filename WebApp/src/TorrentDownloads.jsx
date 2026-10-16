@@ -10,10 +10,21 @@ import SectionSwitcher from "./SectionSwitcher.jsx";
 import TorrentUploadSettings from "./TorrentUploadSettings.jsx";
 import TorrentTraffic from "./TorrentTraffic.jsx";
 import { bookTorrentStrings } from './bookTorrentUtils.js';
-import { completedTorrentNotifications, torrentNotificationKey, wantsTorrentNotification } from "./torrentNotifications.js";
+import { completedTorrentNotifications, torrentNotificationKey, torrentNotificationLabel, wantsTorrentNotification } from "./torrentNotifications.js";
 
-export function TorrentNotificationBadge({ count }) {
-  return count > 0 ? <span className="series-hero__download-badge" aria-hidden="true">{count > 99 ? "99+" : count}</span> : null;
+export function TorrentNotificationBadge({ count, className = "" }) {
+  return count > 0 ? <span className={`series-hero__download-badge ${className}`.trim()} aria-hidden="true">{count > 99 ? "99+" : count}</span> : null;
+}
+
+export function TorrentNotificationBell({ count, language, onClick }) {
+  const strings = torrentStrings(language);
+  const label = count > 0 ? torrentNotificationLabel(count, strings) : strings.dashboard;
+  return <button className="torrent-notification-bell" type="button" onClick={onClick} aria-label={label} title={label}>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 10h18c0-3-3-3-3-10M10 21a2 2 0 0 0 4 0" />
+    </svg>
+    <TorrentNotificationBadge count={count} className="torrent-notification-bell__badge" />
+  </button>;
 }
 
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted }) {
@@ -204,8 +215,35 @@ function TorrentMovieNotice({ notice, strings: s, onClose }) {
   </dialog>, document.body);
 }
 
+function TorrentNotificationsConfirm({ strings: s, disabled, onClose, onConfirm }) {
+  const dialogRef = useRef(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const trigger = document.activeElement;
+    const overflow = document.body.style.overflow;
+    dialog.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog.close();
+      document.body.style.overflow = overflow;
+      const target = trigger?.disabled ? trigger.closest('[role="tabpanel"]') : trigger;
+      if (target?.isConnected) target.focus({ preventScroll: true });
+    };
+  }, []);
+  return createPortal(<dialog ref={dialogRef} className="dialog-card dialog-card--compact torrent-notifications-confirm"
+    role="alertdialog" aria-modal="true" aria-labelledby="torrent-notifications-confirm-title" aria-describedby="torrent-notifications-confirm-copy"
+    onCancel={event => { event.preventDefault(); onClose(); }}>
+    <div className="dialog-card__header"><h2 id="torrent-notifications-confirm-title">{s.stopNotifyingAllTitle}</h2></div>
+    <p className="dialog-copy" id="torrent-notifications-confirm-copy">{s.stopNotifyingAllCopy}</p>
+    <div className="dialog-card__actions">
+      <button className="dialog-button dialog-button--ghost" type="button" autoFocus onClick={onClose}>{s.cancelNotificationChanges}</button>
+      <button className="dialog-button dialog-button--accent" type="button" disabled={disabled} onClick={onConfirm}>{s.stopNotifyingAll}</button>
+    </div>
+  </dialog>, document.body);
+}
+
 export default function TorrentDownloads({ downloads, language, notificationPreferences = {}, notificationsReady = false,
-  onNotificationChange, showNotifications = false, onNotificationsShown, onOpenMovie }) {
+  onNotificationChange, onNotificationsDismiss, showNotifications = false, onNotificationsShown, onOpenMovie }) {
   const s = torrentStrings(language);
   const [selectedGroup, setSelectedGroup] = useState("active");
   const sectionRef = useRef(null);
@@ -213,6 +251,7 @@ export default function TorrentDownloads({ downloads, language, notificationPref
   const movieRequest = useRef(null);
   const [openingMovie, setOpeningMovie] = useState("");
   const [movieNotice, setMovieNotice] = useState(null);
+  const [confirmDismissNotifications, setConfirmDismissNotifications] = useState(false);
   useEffect(() => () => movieRequest.current?.abort(), []);
   async function openMovie(job) {
     if (movieRequest.current) return;
@@ -231,6 +270,9 @@ export default function TorrentDownloads({ downloads, language, notificationPref
   }
   const { jobs = [], serviceError, error, busy, action, refresh, loaded, demo } = downloads;
   const completedNotifications = completedTorrentNotifications(jobs, notificationPreferences);
+  const historyNotificationKeys = jobs.filter(job => isTorrentHistory(job) && wantsTorrentNotification(job, notificationPreferences))
+    .map(torrentNotificationKey);
+  const canDismissNotifications = notificationsReady && historyNotificationKeys.length > 0 && Boolean(onNotificationsDismiss);
   useEffect(() => {
     if (!showNotifications) return;
     if (selectedGroup !== "history") { setSelectedGroup("history"); return; }
@@ -264,7 +306,11 @@ export default function TorrentDownloads({ downloads, language, notificationPref
     {groups.map(group => <section className="torrent-dashboard__scroll" key={group.key}
       id={`torrent-${group.key}-panel`} role="tabpanel" aria-labelledby={`torrent-${group.key}-tab`}
       hidden={selectedGroup !== group.key} tabIndex={0}>
-      {group.key === "history" && <p className="torrent-dashboard__hint">{s.historyHint}</p>}
+      {group.key === "history" && <div className="torrent-dashboard__history-header">
+        <p className="torrent-dashboard__hint">{s.historyHint}</p>
+        <button className="dialog-button torrent-dashboard__dismiss-notifications" type="button"
+          disabled={!canDismissNotifications} onClick={() => setConfirmDismissNotifications(true)}>{s.stopNotifyingAll}</button>
+      </div>}
       {!group.jobs.length && <p>{demo ? s.demo : !loaded && !error ? s.pending : s.noJobs}</p>}
       <div className="torrent-dashboard__jobs">{group.jobs.map(job => {
         const notifying = wantsTorrentNotification(job, notificationPreferences);
@@ -308,5 +354,11 @@ export default function TorrentDownloads({ downloads, language, notificationPref
     </section>)}
     </div>
     {movieNotice && <TorrentMovieNotice notice={movieNotice} strings={s} onClose={() => setMovieNotice(null)} />}
+    {confirmDismissNotifications && <TorrentNotificationsConfirm strings={s} disabled={!canDismissNotifications}
+      onClose={() => setConfirmDismissNotifications(false)} onConfirm={() => {
+        if (!canDismissNotifications) return;
+        onNotificationsDismiss(historyNotificationKeys);
+        setConfirmDismissNotifications(false);
+      }} />}
   </section>;
 }

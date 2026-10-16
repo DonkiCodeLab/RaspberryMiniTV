@@ -35,10 +35,10 @@ test('dismissing completed notifications removes each button and decrements the 
   });
   assert.match(badge(jobs, state.torrentNotifications), />2<\/span>/);
   for (const [index, job] of jobs.entries()) {
-    assert.match(render([job], state.torrentNotifications), /Dejar de avisar/);
+    assert.match(render([job], state.torrentNotifications), /Dejar de avisar:/);
     state = mergeProfileState(state, { torrentNotifications: { [torrentNotificationKey(job)]: false } });
     const html = render([job], state.torrentNotifications);
-    assert.doesNotMatch(html, /torrent-job__notify|Avisarme al terminar|Dejar de avisar/);
+    assert.doesNotMatch(html, /torrent-job__notify|Avisarme al terminar|Dejar de avisar:/);
     assert.match(html, /Ir a la ficha/);
     if (index === 0) assert.match(badge(jobs, state.torrentNotifications), />1<\/span>/);
   }
