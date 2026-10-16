@@ -1,0 +1,50 @@
+.torrent-traffic { --traffic-down: #57d6f7; --traffic-up: #ffba76; margin-bottom: 24px; padding: clamp(16px, 3vw, 28px); border: 1px solid #6bd9f32b; border-radius: 24px; background: radial-gradient(ellipse at 5% 0%, #173542 0, transparent 55%), #101a23; color: #eef5fa; box-shadow: 0 15px 40px #0002; }
+.torrent-traffic__header, .torrent-traffic__toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.torrent-traffic__eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .18em; color: #8eacbc; }
+.torrent-traffic h3 { margin: 6px 0 0; font-size: clamp(19px, 2vw, 25px); letter-spacing: -.035em; }
+.torrent-traffic__live { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: #b8d1cd; padding: 7px 10px; border-radius: 20px; border: 1px solid #b8d1cd20; }
+.torrent-traffic__live i { width: 6px; height: 6px; background: #75e4b8; border-radius: 50%; box-shadow: 0 0 10px #75e4b850; }
+.torrent-traffic__live.is-stale { color: #9aabb7; }
+.torrent-traffic__live.is-stale i { background: #8795a3; box-shadow: none; }
+.torrent-traffic__metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0; }
+.torrent-traffic__metric { min-width: 0; padding: 18px; border: 1px solid #ffffff0e; border-radius: 16px; background: #ffffff03; display: grid; gap: 9px; }
+.torrent-traffic .is-down { color: var(--traffic-down); }
+.torrent-traffic .is-up { color: var(--traffic-up); }
+.torrent-traffic__label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+.torrent-traffic__label > b { font-size: 20px; }
+.torrent-traffic__metric > strong { font-size: clamp(24px, 3vw, 38px); font-variant-numeric: tabular-nums; letter-spacing: -.05em; line-height: 1.15; }
+.torrent-traffic__metric > span:last-child { color: #9aafbd; font-size: 11px; line-height: 1.8; }
+.torrent-traffic__metric > span:last-child b { color: #eaf3f8; margin-left: 6px; white-space: nowrap; }
+.torrent-traffic__periods { display: flex; flex-wrap: wrap; padding: 4px; gap: 3px; background: #080f1680; border-radius: 12px; }
+.torrent-traffic__periods button, .torrent-traffic__expand { border: 0; border-radius: 9px; padding: 10px 12px; min-height: 40px; background: transparent; color: #a9bdc9; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.torrent-traffic__periods button[aria-pressed="true"] { color: #f7fbff; background: #2b414f; box-shadow: 0 2px 8px #0003; }
+.torrent-traffic__periods button:hover, .torrent-traffic__expand:hover { color: #fff; background: #ffffff0c; }
+.torrent-traffic :is(button, input, summary, [tabindex]):focus-visible { outline: 2px solid var(--traffic-down); outline-offset: 3px; }
+.torrent-traffic__plot { width: 100%; min-width: 0; margin-top: 18px; }
+.torrent-traffic__plot svg { display: block; width: 100%; overflow: visible; touch-action: pan-y; }
+.torrent-traffic__plot text { fill: #91a8b8; font-size: 10px; font-family: inherit; }
+.torrent-traffic__grid { stroke: #96b4c51a; stroke-dasharray: 3 5; }
+.torrent-traffic__empty { min-height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #a4bac7; font-size: 13px; text-align: center; padding: 20px; box-sizing: border-box; }
+.torrent-traffic__empty > span { font-size: 38px; color: #57d6f780; }
+.torrent-traffic__readout { display: flex; gap: 12px 20px; flex-wrap: wrap; padding: 12px 0 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.torrent-traffic__readout time { color: #a5bac8; }
+.torrent-traffic__readout b { margin-left: 6px; }
+.torrent-traffic__scrubber { display: block; width: 100%; margin: 14px 0; accent-color: var(--traffic-down); cursor: ew-resize; }
+.torrent-traffic__footer { display: flex; flex-wrap: wrap; gap: 6px 20px; color: #91a8b8; font-size: 11px; line-height: 1.6; }
+.torrent-traffic__footer p { width: 100%; margin: 10px 0 0; }
+.torrent-traffic__details { margin-top: 18px; border-top: 1px solid #ffffff12; padding-top: 14px; font-size: 12px; }
+.torrent-traffic__details summary { cursor: pointer; padding: 8px 0; color: #c5d7e2; }
+.torrent-traffic__details > div { max-height: 240px; overflow: auto; margin-top: 8px; }
+.torrent-traffic__details table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+.torrent-traffic__details th, .torrent-traffic__details td { padding: 10px; text-align: left; border-bottom: 1px solid #ffffff0c; }
+.torrent-traffic__details th { position: sticky; top: 0; background: #16232e; color: #b4cbd8; }
+@media (max-width: 520px) {
+  .torrent-traffic { padding: 14px; border-radius: 18px; }
+  .torrent-traffic__metrics { gap: 8px; margin: 18px 0; }
+  .torrent-traffic__metric { padding: 12px; }
+  .torrent-traffic__metric > span:last-child b { display: block; margin-left: 0; }
+  .torrent-traffic__periods { width: 100%; }
+  .torrent-traffic__periods button { flex: 1; padding: 8px 5px; font-size: 10px; }
+  .torrent-traffic__toolbar { gap: 6px; }
+  .torrent-traffic__expand { margin-left: auto; }
+}

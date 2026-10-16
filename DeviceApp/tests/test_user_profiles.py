@@ -34,7 +34,7 @@ class UserProfileTests(unittest.TestCase):
         response = self.client.get("/users", headers=self.headers)
         self.assertEqual(response.json["users"], [{"id": "default", "name": "default", "avatar": "avatar-01"}])
         self.assertEqual(response.headers["Cache-Control"], "no-store")
-        self.assertEqual(self.store.state("default"), {"marks": {}, "progress": {}})
+        self.assertEqual(self.store.state("default"), {"marks": {}, "progress": {}, "torrentNotifications": {}})
 
     def test_create_edit_isolation_reopen_and_delete(self):
         user = self.client.post("/users", headers=self.headers, json={"name": " Lisa ", "avatar": "avatar-04"}).json["user"]
@@ -42,7 +42,7 @@ class UserProfileTests(unittest.TestCase):
         key = '["movie","1"]'
         self.store.patch(user["id"], {"marks": {key: {"favorite": True, "watched": True}},
                                       "progress": {key: {"kind": "video", "seconds": 42.5, "duration": 600}}})
-        self.assertEqual(self.store.state("default"), {"marks": {}, "progress": {}})
+        self.assertEqual(self.store.state("default"), {"marks": {}, "progress": {}, "torrentNotifications": {}})
         self.assertEqual(ProfileStore(self.path).state(user["id"])["progress"][key]["seconds"], 42.5)
         response = self.client.patch(f'/users/{user["id"]}', headers=self.headers, json={"name": "Bart", "avatar": "avatar-03"})
         self.assertEqual(response.json["user"]["id"], user["id"])
@@ -52,6 +52,31 @@ class UserProfileTests(unittest.TestCase):
         self.assertEqual(self.client.patch(f'/users/{user["id"]}/state', headers=self.headers, json={"marks": {key: {"favorite": True}}}).status_code, 404)
         self.assertEqual(self.client.delete('/users/default', headers=self.headers).status_code, 400)
         self.assertEqual(len(self.store.users()), 1)
+
+    def test_download_notifications_persist_per_profile_and_patch_independently(self):
+        user = self.store.save_user({"name": "Lisa", "avatar": "avatar-04"})
+        path = f'/users/{user["id"]}/state'
+        first = '["torrent-a",123]'
+        second = '["torrent-b",456]'
+        self.assertEqual(self.client.patch(path, json={"torrentNotifications": {first: True}}).status_code, 401)
+        for key in (first, second):
+            response = self.client.patch(path, headers=self.headers, json={"torrentNotifications": {key: True}})
+            self.assertEqual(response.status_code, 200)
+        self.store.patch(user["id"], {"marks": {"movie": {"favorite": True}}})
+        reopened = ProfileStore(self.path)
+        self.assertEqual(reopened.state(user["id"])["torrentNotifications"], {first: True, second: True})
+        self.assertEqual(reopened.state("default")["torrentNotifications"], {})
+        self.client.patch(path, headers=self.headers, json={"torrentNotifications": {first: False}})
+        state = self.client.get(path, headers=self.headers).json
+        self.assertEqual(state["torrentNotifications"], {first: False, second: True})
+        self.assertTrue(state["marks"]["movie"]["favorite"])
+        for invalid in (1, "true", None, {}, []):
+            response = self.client.patch(path, headers=self.headers, json={"torrentNotifications": {second: invalid}})
+            self.assertEqual(response.status_code, 400)
+        self.assertTrue(reopened.state(user["id"])["torrentNotifications"][second])
+        self.store.delete_user(user["id"])
+        with reopened.connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM user_state WHERE user_id=?", (user["id"],)).fetchone()[0], 0)
 
     def test_atomic_partial_marks_and_concurrent_episodes(self):
         self.store.users()

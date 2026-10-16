@@ -54,6 +54,17 @@ Si ya tienes un motor local con acceso a las mismas rutas, puedes definir
 `MINITV_TRANSMISSION_URL`, `MINITV_TRANSMISSION_USER` y
 `MINITV_TRANSMISSION_PASSWORD` en el entorno de la API.
 
+El dashboard registra el tráfico de Transmission cada 30 segundos, incluso sin
+el navegador abierto, en `MultimediaContent/Torrents/traffic.sqlite3`. Conserva
+siete días y ofrece vistas de 3 horas, 24 horas y 7 días mediante
+`GET /torrents/traffic?period=3h` (requiere el PIN web). Las velocidades del gráfico
+son medias por intervalo (1 minuto, 10 minutos y 1 hora, respectivamente), calculadas
+con los contadores de bytes; las tarjetas muestran la última velocidad medida.
+Los totales corresponden al tiempo observado: los reinicios, fallos y pausas de
+monitorización dejan huecos, sin atribuirles tráfico ni inventar ceros. No mide
+el resto del tráfico de red de la Raspberry. El historial comienza al instalar
+esta versión y requiere que el servicio de la API esté funcionando.
+
 La cola persistente, los datos temporales y la configuración están en
 `MultimediaContent/Torrents/`. En películas, tras obtener los metadatos del magnet, se selecciona
 el vídeo compatible de mayor tamaño, excluyendo samples; no se importan archivos

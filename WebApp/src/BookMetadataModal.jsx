@@ -1,3 +1,4 @@
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBookContent, getBookMetadataDetails, searchBookMetadata } from "./api/raspberryApi";
@@ -122,6 +123,7 @@ export default function BookMetadataModal({ book, language, onClose, onSave, onD
     finally { if (!requestSignal.aborted) setBusy(""); }
   }
   async function save() {
+    if (busy) return;
     try {
       setBusy("save"); setError("");
       await onSave({ ...form, coverUrl: useFileCover ? "" : form.coverUrl,
@@ -161,7 +163,7 @@ export default function BookMetadataModal({ book, language, onClose, onSave, onD
           <label className="dialog-field book-metadata__file"><span>{t.localCover}</span><input type="file" disabled={useFileCover} accept="image/jpeg,image/png,image/webp" onChange={event => setCoverFile(event.target.files?.[0] || null)} />{coverFile ? <small>{coverFile.name}</small> : null}</label>
         </fieldset>
       </div>
-      <div className="book-metadata__footer">{!isUpload ? <button className="dialog-button dialog-button--danger book-metadata__delete" disabled={Boolean(busy)} onClick={() => onDelete(book)} type="button">{t.deleteBook}</button> : null}<button className="dialog-button dialog-button--ghost" onClick={close} disabled={busy === "save"} type="button">{t.cancel}</button><button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || !String(displayForm.title || "").trim()} onClick={save} type="button">{busy === "save" ? t.saving : isUpload ? t.confirmUpload : t.confirmSave}</button></div>
+      <div className="book-metadata__footer">{!isUpload ? <button className="dialog-button dialog-button--danger book-metadata__delete" disabled={Boolean(busy)} onClick={() => onDelete(book)} type="button">{t.deleteBook}</button> : null}<button className="dialog-button dialog-button--ghost" onClick={close} disabled={busy === "save"} type="button">{t.cancel}</button><button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || !String(displayForm.title || "").trim()} onClick={save} type="button" aria-busy={busy === "save"}>{busy === "save" ? <><LoadingSpinner inline /> {t.saving}</> : isUpload ? t.confirmUpload : t.confirmSave}</button></div>
     </div>
   </div>, document.body);
 }

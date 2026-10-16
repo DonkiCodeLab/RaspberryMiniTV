@@ -119,6 +119,9 @@ export default function useUserProfiles(enabled, initialId = "default") {
     users, activeId, activeUser: users.find(user => user.id === activeId) || DEFAULT_USER,
     state: states[activeId] || EMPTY_STATE, ready, error, select, reload, refreshState, flush,
     saveMarks(next) { return ready && update(activeId, { marks: marksPatch((states[activeId] || EMPTY_STATE).marks, next) }); },
+    setTorrentNotification(key, enabled) {
+      return ready && update(activeId, { torrentNotifications: { [key]: enabled } });
+    },
     saveProgress(id, descriptor, progress) {
       return update(id, { progress: { [descriptor.key]: { ...progress, opened: true, updatedAt: Date.now() } }, marks: completionMarks(descriptor, progress) });
     },

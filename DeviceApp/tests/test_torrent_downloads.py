@@ -19,10 +19,15 @@ class FakeTransmission:
     def __init__(self):
         self.rows = {}
         self.calls = []
+        self.settings = {"speed-limit-up-enabled": False, "speed-limit-up": 100, "speed-limit-down": 500}
 
     def call(self, method, args=None):
         args = args or {}
         self.calls.append((method, copy.deepcopy(args)))
+        if method == "session-get":
+            return copy.deepcopy(self.settings)
+        if method == "session-set":
+            self.settings.update(args)
         if method == "torrent-add":
             key = args["filename"].split(":")[-1]
             if key in self.rows:
@@ -60,7 +65,9 @@ class TorrentTests(unittest.TestCase):
         self.manager.start = Mock()
 
     def new_manager(self):
-        return TorrentDownloads(self.root / "Torrents", self.importer, self.artwork, self.prepare, self.rpc)
+        manager = TorrentDownloads(self.root / "Torrents", self.importer, self.artwork, self.prepare, self.rpc)
+        manager.traffic.start = Mock()
+        return manager
 
     def add(self, **changes):
         data = {"infoHash": INFO_HASH, "name": "Film release", "sizeBytes": 100,
@@ -76,6 +83,34 @@ class TorrentTests(unittest.TestCase):
             source.parent.mkdir(parents=True, exist_ok=True)
             source.write_bytes(b"v" * completed)
         return source
+
+    def test_upload_limit_applies_to_session_and_survives_manager_restart(self):
+        self.add()
+        result = self.manager.set_upload_settings({"limited": True, "limitKBps": 25})
+        self.assertEqual(result, {"limited": True, "limitKBps": 25, "alternateLimits": False})
+        self.assertEqual(self.new_manager().upload_settings(), result)
+        self.assertEqual(self.rpc.settings["speed-limit-down"], 500)
+        self.assertEqual(self.rpc.rows[INFO_HASH]["status"], 4)
+        result = self.manager.set_upload_settings({"limited": False, "limitKBps": 25})
+        self.assertFalse(result["limited"])
+        self.assertEqual(result["limitKBps"], 25)
+
+    def test_invalid_upload_limits_do_not_mutate_session(self):
+        for value in (0, -1, True, 1.5, "20", None, 1000001):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.manager.set_upload_settings({"limited": True, "limitKBps": value})
+        for data in (None, [], {}, {"limited": "false", "limitKBps": 20}):
+            with self.assertRaises(ValueError):
+                self.manager.set_upload_settings(data)
+        self.assertFalse(any(method == "session-set" for method, _ in self.rpc.calls))
+
+    def test_alternate_upload_limits_are_not_silently_overridden(self):
+        for key in ("alt-speed-enabled", "alt-speed-time-enabled"):
+            self.rpc.settings[key] = True
+            with self.assertRaises(ValueError):
+                self.manager.set_upload_settings({"limited": True, "limitKBps": 20})
+            self.rpc.settings[key] = False
+        self.assertFalse(any(method == "session-set" for method, _ in self.rpc.calls))
 
     def test_metadata_is_not_prepared_before_completed_video(self):
         self.add()
@@ -422,12 +457,26 @@ class TorrentApiTests(unittest.TestCase):
 
     def test_endpoints_require_pin(self):
         with patch.object(api, "is_authorized_request", return_value=False), patch.object(api, "get_movie_torrents") as manager:
-            for path in ("/torrents", "/torrents/search?q=Film"):
+            for path in ("/torrents", "/torrents/search?q=Film", "/torrents/upload-settings"):
                 self.assertEqual(self.client.get(path).status_code, 401)
             self.assertEqual(self.client.post("/torrents", json={}).status_code, 401)
             self.assertEqual(self.client.post("/torrents/abc", json={"action": "cancel"}).status_code, 401)
             self.assertEqual(self.client.post("/torrents/abc", json={"action": "remove"}).status_code, 401)
+            self.assertEqual(self.client.post("/torrents/upload-settings", json={"limited": True, "limitKBps": 10}).status_code, 401)
             manager.assert_not_called()
+
+    def test_upload_settings_endpoint(self):
+        rpc = FakeTransmission()
+        manager = TorrentDownloads(self.root / "Torrents", Mock(), Mock(), Mock(), rpc)
+        with patch.object(api, "is_authorized_request", return_value=True), patch.object(api, "get_movie_torrents", return_value=manager):
+            self.assertFalse(self.client.get("/torrents/upload-settings").json["limited"])
+            response = self.client.post("/torrents/upload-settings", json={"limited": True, "limitKBps": 1})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json["limitKBps"], 1)
+            self.assertEqual(self.client.post("/torrents/upload-settings", json=[]).status_code, 400)
+            with patch.object(rpc, "call", side_effect=TorrentError("Offline")):
+                self.assertEqual(self.client.get("/torrents/upload-settings").status_code, 503)
+                self.assertEqual(self.client.post("/torrents/upload-settings", json={"limited": True, "limitKBps": 20}).status_code, 503)
 
     def test_remove_history_endpoint_and_active_job_protection(self):
         manager = TorrentDownloads(self.root / "Torrents", Mock(), Mock(), Mock(), FakeTransmission())

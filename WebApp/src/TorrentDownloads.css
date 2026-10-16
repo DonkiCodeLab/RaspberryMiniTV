@@ -44,6 +44,12 @@
 .torrent-job progress { width: 100%; height: 10px; accent-color: #ffdc35; }
 .torrent-job__stats { font-size: 13px; line-height: 1.6; }
 .torrent-job__actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.torrent-job--notified { border-color: #ffdc35; box-shadow: inset 3px 0 #ffdc35; }
+.torrent-job__notification-status { color: #ffe775; font-size: 13px; font-weight: 700; }
+.torrent-job__notify { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.torrent-job__notify svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.torrent-job__notify[aria-pressed="true"] { background: #ffdc3524; color: #ffe775; border-color: #ffdc35; }
+.torrent-job__notify:focus-visible, .torrent-job--notified:focus-visible, .torrent-dashboard:focus-visible { outline: 2px solid #ffdc35; outline-offset: 4px; }
 .torrent-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 @media (max-width: 600px) { .movie-torrents { padding: 16px; } .movie-torrents__search { align-items: stretch; flex-direction: column; } .torrent-job { padding: 16px; } }
 @media (max-width: 600px) { .movie-torrents__search--series > label, .movie-torrents__search .movie-torrents__filter { flex: 0 0 auto; } }
@@ -54,3 +60,15 @@
 .movie-torrents__sort select:focus-visible { outline: 2px solid #ffdc35; outline-offset: 2px; }
 
 .torrent-artwork-warning { color: #ffe775; overflow-wrap: anywhere; }
+.torrent-upload { margin-bottom: 20px; padding: 16px; background: #151c24; border: 1px solid #ffffff24; border-radius: 16px; }
+.torrent-upload h3 { margin: 0 0 10px; font-size: 16px; color: #ffdc35; }
+.torrent-upload__controls { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; }
+.torrent-upload__controls .dialog-field { width: 180px; max-width: 100%; }
+.torrent-upload__controls input[type="number"] { width: 100%; box-sizing: border-box; }
+.torrent-upload__switch { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.torrent-upload__switch input { appearance: none; width: 42px; height: 24px; margin: 0; border: 1px solid #ffffff60; border-radius: 20px; background: #59616b; cursor: pointer; flex-shrink: 0; }
+.torrent-upload__switch input::before { content: ""; display: block; width: 18px; height: 18px; margin: 2px; border-radius: 50%; background: white; }
+.torrent-upload__switch input:checked { background: #ffdc35; }
+.torrent-upload__switch input:checked::before { transform: translateX(18px); background: #151c24; }
+.torrent-upload__switch input:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
+.torrent-upload__switch input:disabled { opacity: .5; cursor: not-allowed; }

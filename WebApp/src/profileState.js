@@ -1,5 +1,5 @@
 export const DEFAULT_USER = { id: "default", name: "default", avatar: "avatar-01" };
-export const EMPTY_STATE = { marks: {}, progress: {} };
+export const EMPTY_STATE = { marks: {}, progress: {}, torrentNotifications: {} };
 
 export function mergeProfileState(state = EMPTY_STATE, patch) {
   const marks = { ...state.marks };
@@ -10,7 +10,8 @@ export function mergeProfileState(state = EMPTY_STATE, patch) {
       marks[key].episodes = { ...previous.episodes, ...value.episodes };
     }
   }
-  return { marks, progress: { ...state.progress, ...patch.progress } };
+  return { marks, progress: { ...state.progress, ...patch.progress },
+    torrentNotifications: { ...state.torrentNotifications, ...patch.torrentNotifications } };
 }
 
 // Send only edited fields, so another browser's favorites/progress survive.

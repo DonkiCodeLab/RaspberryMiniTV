@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 
 from tmdb_cache import atomic_write
 from video_formats import VIDEO_EXTENSIONS
+from torrent_traffic import TorrentTraffic
 
 HASH_RE = re.compile(r"[a-fA-F0-9]{40}")
 TERMINAL = {"complete", "cancelled", "failed"}
@@ -449,6 +450,7 @@ class TorrentDownloads:
         self.root = Path(root).resolve()
         self.state_path = self.root / "jobs.json"
         self.rpc = rpc or Transmission()
+        self.traffic = TorrentTraffic(self.root / "traffic.sqlite3", rpc or Transmission())
         self.import_movie = import_movie
         self.artwork_status = artwork_status
         self.prepare_artwork = prepare_artwork
@@ -476,6 +478,24 @@ class TorrentDownloads:
         with self.lock:
             job.update(updates, updatedAt=time.time())
             self._save()
+
+    def upload_settings(self):
+        settings = self.rpc.call("session-get")
+        return {"limited": bool(settings.get("speed-limit-up-enabled")),
+                "limitKBps": settings.get("speed-limit-up", 100),
+                "alternateLimits": bool(settings.get("alt-speed-enabled") or settings.get("alt-speed-time-enabled"))}
+
+    def set_upload_settings(self, data):
+        if not isinstance(data, dict) or type(data.get("limited")) is not bool:
+            raise ValueError("Indica si quieres limitar la subida.")
+        limit = data.get("limitKBps")
+        if type(limit) is not int or not 1 <= limit <= 1000000:
+            raise ValueError("El límite debe ser un entero entre 1 y 1000000 kB/s.")
+        with self.operation:
+            if self.upload_settings()["alternateLimits"]:
+                raise ValueError("Desactiva los límites alternativos y su horario en Transmission antes de cambiar este ajuste.")
+            self.rpc.call("session-set", {"speed-limit-up-enabled": data["limited"], "speed-limit-up": limit})
+            return self.upload_settings()
 
     def snapshot(self):
         with self.lock:
@@ -624,6 +644,7 @@ class TorrentDownloads:
             return copy.deepcopy(job)
 
     def start(self):
+        self.traffic.start()
         with self.lock:
             if self.worker and self.worker.is_alive():
                 return

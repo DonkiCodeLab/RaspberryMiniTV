@@ -2912,6 +2912,28 @@ def movie_torrent_jobs():
         return jsonify({"error": str(exc)}), 400
 
 
+@app.route("/torrents/traffic", methods=["GET"])
+def torrent_traffic_history():
+    try:
+        return jsonify(get_movie_torrents().traffic.snapshot(request.args.get("period", "3h")))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except (OSError, sqlite3.Error):
+        app.logger.exception("No se pudo leer el historial de tráfico torrent")
+        return jsonify({"error": "No se pudo leer el historial de tráfico."}), 503
+
+
+@app.route("/torrents/upload-settings", methods=["GET", "POST"])
+def torrent_upload_settings():
+    manager = get_movie_torrents()
+    try:
+        if request.method == "GET":
+            return jsonify(manager.upload_settings())
+        return jsonify(manager.set_upload_settings(request.get_json(silent=True)))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
 @app.route("/torrents/<job_id>", methods=["POST"])
 def control_movie_torrent(job_id):
     data = request.get_json(silent=True)

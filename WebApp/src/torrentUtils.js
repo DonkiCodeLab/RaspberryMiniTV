@@ -57,6 +57,9 @@ export function isTorrentHistory(job) {
 
 const strings = {
   es: {
+    notify: "Avisarme al terminar", stopNotifying: "Desactivar aviso", notificationReady: "Descarga terminada · aviso activado",
+    notificationsHint: "Activa el aviso en las descargas que te interesan. Al terminar aparecerá un contador en la tele hasta que desactives el aviso aquí.",
+    notificationOne: "1 descarga terminada. Ver descargas", notificationMany: "{count} descargas terminadas. Ver descargas",
     artworkWarning: "El contenido está en la biblioteca, pero faltan algunos recursos de TMDB.",
     title: "Descargas torrent", searchTitle: "Buscar torrents", search: "Buscar torrents", searching: "Buscando torrents…",
     source: "Fuente", sourcesSearched: "Fuentes consultadas", sourcesUnavailable: "No han respondido estas fuentes; los resultados pueden estar incompletos:",
@@ -79,6 +82,9 @@ const strings = {
     demo: "Las descargas están disponibles al conectar con la Raspberry.", pending: "Esperando datos de la Raspberry…", remaining: "restantes",
   },
   ca: {
+    notify: "Avisa’m en acabar", stopNotifying: "Desactiva l’avís", notificationReady: "Descàrrega acabada · avís activat",
+    notificationsHint: "Activa l’avís a les descàrregues que t’interessen. En acabar apareixerà un comptador a la tele fins que desactivis l’avís aquí.",
+    notificationOne: "1 descàrrega acabada. Veure descàrregues", notificationMany: "{count} descàrregues acabades. Veure descàrregues",
     artworkWarning: "El contingut és a la biblioteca, però falten alguns recursos de TMDB.",
     title: "Descàrregues torrent", searchTitle: "Cerca torrents", search: "Cerca torrents", searching: "Cercant torrents…",
     source: "Font", sourcesSearched: "Fonts consultades", sourcesUnavailable: "Aquestes fonts no han respost; els resultats poden ser incomplets:",
@@ -101,6 +107,9 @@ const strings = {
     demo: "Les descàrregues estan disponibles en connectar amb la Raspberry.", pending: "Esperant dades de la Raspberry…", remaining: "restants",
   },
   en: {
+    notify: "Notify me when finished", stopNotifying: "Turn off notification", notificationReady: "Download finished · notification enabled",
+    notificationsHint: "Enable notifications for the downloads you’re interested in. When they finish, a count will appear on the TV until you turn off the notification here.",
+    notificationOne: "1 download finished. View downloads", notificationMany: "{count} downloads finished. View downloads",
     artworkWarning: "The content is in the library, but some TMDB resources are missing.",
     title: "Torrent downloads", searchTitle: "Search torrents", search: "Search torrents", searching: "Searching torrents…",
     source: "Source", sourcesSearched: "Sources searched", sourcesUnavailable: "These sources did not respond; results may be incomplete:",

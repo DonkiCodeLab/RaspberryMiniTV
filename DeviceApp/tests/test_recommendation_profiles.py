@@ -54,7 +54,7 @@ class RecommendationMemoryTests(unittest.TestCase):
         state["preferences"]["genres"].append("Horror")
         state["history"].append({"role": "user", "text": "Extra"})
         self.assertEqual(self.store.get(self.user)["preferences"], empty_preferences())
-        self.assertEqual(self.profiles.state(self.user), {"marks": {}, "progress": {}})
+        self.assertEqual(self.profiles.state(self.user), {"marks": {}, "progress": {}, "torrentNotifications": {}})
         with self.profiles.connect() as db:
             self.assertEqual(db.execute("SELECT count(*) FROM recommendation_profiles").fetchone()[0], 0)
 

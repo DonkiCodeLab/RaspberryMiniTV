@@ -549,6 +549,27 @@ img {
   transition: transform 180ms ease;
 }
 
+.series-hero__download-badge {
+  position: absolute;
+  top: 8%;
+  right: 8%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-width: 1.8em;
+  height: 1.8em;
+  padding: 0 .35em;
+  box-sizing: border-box;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: #c72b37;
+  color: #fff;
+  font-size: clamp(14px, 1.8vw, 24px);
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 3px 10px #0004;
+}
+
 .series-hero__tv-button:not(.series-hero__tv-button--season):not(.series-hero__tv-button--season-fixed):hover .series-hero__tv,
 .series-hero__tv-button:not(.series-hero__tv-button--season):not(.series-hero__tv-button--season-fixed):focus-visible .series-hero__tv {
   transform: scale(1.24);
@@ -4259,6 +4280,14 @@ img {
 .dialog-card__icon-button--danger:hover,
 .dialog-card__icon-button--danger:focus-visible {
   background: rgba(220, 64, 52, 0.18);
+}
+
+.dialog-card__icon-button:disabled,
+.dialog-card__close:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
 }
 
 .settings-delete-confirm {

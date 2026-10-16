@@ -205,6 +205,19 @@ todos los capítulos identificados de la selección, conservando los que ya exis
 El modo demo no inicia descargas reales. Instalación y funcionamiento:
 [DeviceApp](../DeviceApp/README.md#descargas-de-películas-y-series-por-torrent).
 
+En **Dashboard → Descargas torrent**, cada descarga tiene **Avisarme al terminar**.
+Cuando está lista en la biblioteca, aparece un contador rojo sobre la tele en
+cualquier página que muestre ese acceso, incluidas las temporadas. Al pulsar la
+tele con avisos pendientes, se abre directamente **Historial** y se enfoca la
+primera descarga avisada, resaltada en amarillo. **Desactivar aviso** retira ese
+aviso del contador; abrir el historial no lo desactiva. Las descargas canceladas
+o con error no generan avisos de finalización.
+
+La elección se guarda por perfil en la Raspberry y se comparte entre sus
+navegadores. También se detectan las descargas terminadas mientras la web estaba
+cerrada al volver a abrirla. Requiere actualizar WebApp y DeviceApp. Son avisos
+dentro de la app y no requieren permisos de notificaciones del navegador.
+
 Base inicial para migrar la app de React Native a una web React que pueda ejecutarse en una Raspberry Pi dentro de la red local.
 
 ## Si, es viable en Raspberry Pi

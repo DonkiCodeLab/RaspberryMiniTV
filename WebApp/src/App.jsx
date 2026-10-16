@@ -54,7 +54,9 @@ import { bookStrings } from "./bookStrings.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
 import TmdbCreditsCompletion from "./TmdbCreditsCompletion.jsx";
-import TorrentDownloads, { MediaTorrentSearch, useTorrentDownloads } from "./TorrentDownloads.jsx";
+import TorrentDownloads, { MediaTorrentSearch, TorrentNotificationBadge, useTorrentDownloads } from "./TorrentDownloads.jsx";
+import { completedTorrentNotifications, torrentNotificationLabel } from "./torrentNotifications.js";
+import { torrentStrings } from "./torrentUtils.js";
 import SectionSwitcher from "./SectionSwitcher.jsx";
 import { localTmdbImageUrl } from "./api/raspberryApi";
 import { prepareTmdbTitle, clearLocalMetadataCache } from "./api/raspberryApi";
@@ -435,6 +437,7 @@ const UI_STRINGS = {
     delete_season: "Eliminar temporada",
     delete_episode: "Eliminar capítulo",
     save: "Guardar",
+    saving: "Guardando…",
     cancel: "Cancelar",
     name_of_media: "Nombre de la {media}",
     search_write_media: "Escribe una {media} para buscar.",
@@ -942,6 +945,7 @@ const UI_STRINGS = {
     delete_season: "Eliminar temporada",
     delete_episode: "Eliminar capítol",
     save: "Desar",
+    saving: "Desant…",
     cancel: "Cancel·lar",
     name_of_media: "Nom de la {media}",
     search_write_media: "Escriu una {media} per cercar.",
@@ -1449,6 +1453,7 @@ const UI_STRINGS = {
     delete_season: "Delete season",
     delete_episode: "Delete episode",
     save: "Save",
+    saving: "Saving…",
     cancel: "Cancel",
     name_of_media: "{media} name",
     search_write_media: "Type a {media} to search.",
@@ -3208,6 +3213,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [subtitleFile, setSubtitleFile] = useState(null);
   const [subtitleBusy, setSubtitleBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setName(item?.name || "");
@@ -3254,7 +3260,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
   return (
     <div
       className="modal-backdrop"
-      onClick={mediaType === "movies" ? undefined : onClose}
+      onClick={mediaType === "movies" || saving ? undefined : onClose}
     >
         <div className="dialog-card dialog-card--settings" onClick={(event) => event.stopPropagation()}>
           <div className="dialog-card__header">
@@ -3266,7 +3272,7 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
               <button
                 className="dialog-card__icon-button dialog-card__icon-button--danger"
                 onClick={() => setDeleteConfirmOpen(true)}
-                disabled={subtitleBusy}
+                disabled={subtitleBusy || saving}
                 type="button"
                 aria-label={t("delete_media", { media: mediaLabel })}
                 title={t("delete_media", { media: mediaLabel })}
@@ -3275,27 +3281,34 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
               </button>
               <button
                 className="dialog-card__icon-button dialog-card__icon-button--accent"
-                disabled={subtitleBusy}
-                onClick={() =>
-                  onSave({
-                    subtitleFile,
-                    name,
-                    heroImage,
-                    heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop) : null,
-                    imdbUrl: mediaType === "movies" ? normalizeImdbUrl(imdbUrl) : undefined,
-                    rottenTomatoesUrl: mediaType === "movies" ? normalizeRottenTomatoesUrl(rottenTomatoesUrl) : undefined,
-                  })
-                }
+                disabled={subtitleBusy || saving}
+                onClick={async () => {
+                  if (saving || subtitleBusy) return;
+                  setSaving(true);
+                  try {
+                    await onSave({
+                      subtitleFile,
+                      name,
+                      heroImage,
+                      heroImageCrop: heroImage ? clampHeroCrop(heroImageCrop) : null,
+                      imdbUrl: mediaType === "movies" ? normalizeImdbUrl(imdbUrl) : undefined,
+                      rottenTomatoesUrl: mediaType === "movies" ? normalizeRottenTomatoesUrl(rottenTomatoesUrl) : undefined,
+                    });
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
                 type="button"
-                aria-label={t("save")}
-                title={t("save")}
+                aria-label={t(saving ? "saving" : "save")}
+                title={t(saving ? "saving" : "save")}
+                aria-busy={saving}
               >
-                <img className="dialog-card__icon-image" src={saveIcon} alt="" aria-hidden="true" />
+                {saving ? <LoadingSpinner inline /> : <img className="dialog-card__icon-image" src={saveIcon} alt="" aria-hidden="true" />}
               </button>
               <button
                 className="dialog-card__icon-button dialog-card__close"
                 onClick={onClose}
-                disabled={subtitleBusy}
+                disabled={subtitleBusy || saving}
                 type="button"
                 aria-label={t("cancel")}
                 title={t("cancel")}
@@ -3339,10 +3352,11 @@ function SettingsModal({ visible, mediaType, item, imageOptions, onClose, onSave
             </div>
           ) : null}
 
-        <div className="dialog-card__body">
+        {saving ? <p role="status">{t("saving")}</p> : null}
+        <div className="dialog-card__body" inert={saving ? true : undefined}>
           {mediaType === "movies" ? <>
-            <MovieSubtitleField key={`${item.id}-${visible}`} file={subtitleFile} onChange={setSubtitleFile} disabled={subtitleBusy} t={t} />
-            <MovieSubtitleDownload key={`subtitles-${movieRelativePath}`} relativePath={movieRelativePath} language={language} disabled={Boolean(subtitleFile)} onBusyChange={setSubtitleBusy} onConfigure={onConfigureSubtitles} />
+            <MovieSubtitleField key={`${item.id}-${visible}`} file={subtitleFile} onChange={setSubtitleFile} disabled={subtitleBusy || saving} t={t} />
+            <MovieSubtitleDownload key={`subtitles-${movieRelativePath}`} relativePath={movieRelativePath} language={language} disabled={saving || Boolean(subtitleFile)} onBusyChange={setSubtitleBusy} onConfigure={onConfigureSubtitles} />
           </> : null}
           <label className="dialog-field">
             <span>{t("visible_name")}</span>
@@ -3487,6 +3501,7 @@ function GameSettingsModal({ visible, game, onClose, onSave, t }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
     setError("");
     try {
@@ -3515,7 +3530,7 @@ function GameSettingsModal({ visible, game, onClose, onSave, t }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={submitting ? undefined : onClose}>
       <div className="dialog-card dialog-card--add-series game-upload-dialog" onClick={(event) => event.stopPropagation()}>
         <div className="dialog-card__header">
           <div>
@@ -3527,15 +3542,17 @@ function GameSettingsModal({ visible, game, onClose, onSave, t }) {
               className="dialog-card__icon-button dialog-card__icon-button--accent"
               onClick={handleSubmit}
               type="button"
-              aria-label={t("save")}
-              title={t("save")}
+              aria-label={t(submitting ? "saving" : "save")}
+              aria-busy={submitting}
+              title={t(submitting ? "saving" : "save")}
               disabled={submitting}
             >
-              <img className="dialog-card__icon-image" src={saveIcon} alt="" aria-hidden="true" />
+              {submitting ? <LoadingSpinner inline /> : <img className="dialog-card__icon-image" src={saveIcon} alt="" aria-hidden="true" />}
             </button>
             <button
               className="dialog-card__icon-button dialog-card__close"
               onClick={onClose}
+              disabled={submitting}
               type="button"
               aria-label={t("cancel")}
               title={t("cancel")}
@@ -3649,11 +3666,11 @@ function GameSettingsModal({ visible, game, onClose, onSave, t }) {
           {error ? <p className="dialog-error">{error}</p> : null}
 
           <div className="dialog-card__actions">
-            <button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">
+            <button className="dialog-button dialog-button--ghost" onClick={onClose} disabled={submitting} type="button">
               {t("cancel")}
             </button>
             <button className="dialog-button dialog-button--primary" disabled={submitting} type="submit">
-              {submitting ? t("upload_saving") : t("save")}
+              {submitting ? <><LoadingSpinner inline /> {t("saving")}</> : t("save")}
             </button>
           </div>
         </form>
@@ -5435,7 +5452,7 @@ function RaspberryPage({
 
   useEffect(() => {
     if (raspberryTab !== "dashboard" || !dashboardSection) return;
-    const requestedSection = dashboardSection === "subtitles" ? "auxiliary" : dashboardSection;
+    const requestedSection = dashboardSection === "subtitles" ? "auxiliary" : dashboardSection === "downloads" ? "general" : dashboardSection;
     if (selectedDashboardSection !== requestedSection) {
       setSelectedDashboardSection(requestedSection);
       return;
@@ -5448,7 +5465,8 @@ function RaspberryPage({
       subtitleSettingsRef.current?.focus({ preventScroll: true });
       subtitleSettingsRef.current?.scrollIntoView({ behavior: "instant", block: "center" });
     }
-    onDashboardSectionShown("");
+    // Downloads consumes the request once History is visible and focused.
+    if (dashboardSection !== "downloads") onDashboardSectionShown("");
   }, [raspberryTab, dashboardSection, selectedDashboardSection, selectedAuxiliaryService, onDashboardSectionShown]);
 
   useEffect(() => () => {
@@ -5661,7 +5679,11 @@ function RaspberryPage({
             </div>
           </section>
 
-          <TorrentDownloads downloads={torrentDownloads} language={raspberryLanguage} />
+          <TorrentDownloads downloads={torrentDownloads} language={raspberryLanguage}
+            notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready}
+            onNotificationChange={profiles.setTorrentNotification}
+            showNotifications={dashboardSection === "downloads" && selectedDashboardSection === "general"}
+            onNotificationsShown={() => onDashboardSectionShown("")} />
           <SystemUpdate language={raspberryLanguage} />
           <section className="raspberry-dashboard-section" aria-labelledby="dashboard-logout-title">
             <h2 className="raspberry-dashboard-section__title" id="dashboard-logout-title">{t("logout_title")}</h2>
@@ -6458,6 +6480,8 @@ export default function App() {
     setVideos(await getVideos());
     setDetailRetry(value => value + 1);
   });
+  const downloadNotificationCount = profiles.ready
+    ? completedTorrentNotifications(torrentDownloads.jobs, profiles.state.torrentNotifications).length : 0;
   const [episodeLoading, setEpisodeLoading] = useState(false);
   const [episodeError, setEpisodeError] = useState("");
   const [episodeRetry, setEpisodeRetry] = useState(0);
@@ -7556,6 +7580,12 @@ export default function App() {
   function handleOpenSubtitleSettings() {
     setRaspberryTab("dashboard");
     setDashboardSection("subtitles");
+    handleOpenRaspberryPage();
+  }
+
+  function handleOpenDownloadNotifications() {
+    setRaspberryTab("dashboard");
+    setDashboardSection("downloads");
     handleOpenRaspberryPage();
   }
 
@@ -9317,6 +9347,9 @@ export default function App() {
           </div>
         ) : (
           <>
+            <span className="torrent-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+              {downloadNotificationCount > 0 ? torrentNotificationLabel(downloadNotificationCount, torrentStrings(raspberryLanguage)) : ""}
+            </span>
             {profiles.error ? createPortal(<div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div>, document.body) : !profiles.ready ? <div className="profile-status" role="status">Users…</div> : null}
             {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
             {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
@@ -9446,10 +9479,12 @@ export default function App() {
 
                 <button
                   className="series-hero__tv-button series-hero__tv-button--season-fixed"
-                  onClick={handleOpenRaspberryPage}
+                  onClick={downloadNotificationCount > 0 ? handleOpenDownloadNotifications : handleOpenRaspberryPage}
                   type="button"
+                  aria-label={downloadNotificationCount > 0 ? torrentNotificationLabel(downloadNotificationCount, torrentStrings(raspberryLanguage)) : t("raspberry_dashboard")}
                 >
                   <img className="series-hero__tv" src={tvGreen} alt={t("mini_tv_title")} />
+                  <TorrentNotificationBadge count={downloadNotificationCount} />
                 </button>
 
                 <div ref={seasonHeroShellRef} className="season-page__hero-shell">
@@ -9688,13 +9723,15 @@ export default function App() {
                     <button
                       className="series-hero__tv-button"
                       onClick={() => {
+                        if (downloadNotificationCount > 0) { handleOpenDownloadNotifications(); return; }
                         if (isPicturesMode) setRaspberryTab("dashboard");
                         handleOpenRaspberryPage();
                       }}
                       type="button"
-                      aria-label={t("raspberry_dashboard")}
+                      aria-label={downloadNotificationCount > 0 ? torrentNotificationLabel(downloadNotificationCount, torrentStrings(raspberryLanguage)) : t("raspberry_dashboard")}
                     >
                       <img className="series-hero__tv" src={tvGreen} alt={t("mini_tv_title")} />
+                      <TorrentNotificationBadge count={downloadNotificationCount} />
                     </button>
                   </div>
                 </header>

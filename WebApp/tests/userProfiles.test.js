@@ -6,7 +6,7 @@ import { episodeWatched, markEpisode, markSeason } from "../src/mediaMarks.js";
 
 test("fresh profiles are empty; fields and season exceptions merge independently", () => {
   assert.equal(DEFAULT_USER.id, "default");
-  assert.deepEqual(EMPTY_STATE, { marks: {}, progress: {} });
+  assert.deepEqual(EMPTY_STATE, { marks: {}, progress: {}, torrentNotifications: {} });
   const state = mergeProfileState(EMPTY_STATE, { marks: { movie: { favorite: true }, season: { watched: false, episodes: { 1: true } } } });
   const next = mergeProfileState(state, { marks: { movie: { watched: true }, season: { episodes: { 2: true } } } });
   assert.deepEqual(next.marks.movie, { favorite: true, watched: true });

@@ -73,6 +73,12 @@ def validate_progress(value):
     return result
 
 
+def validate_torrent_notification(value):
+    if not isinstance(value, bool):
+        raise ProfileError("Aviso de descarga no válido.")
+    return value
+
+
 class ProfileStore:
     def __init__(self, path):
         self.path = str(path)
@@ -132,13 +138,15 @@ class ProfileStore:
     def state(self, user_id):
         with self.connect() as db:
             self.require(db, user_id)
-            result = {"marks": {}, "progress": {}}
+            result = {"marks": {}, "progress": {}, "torrentNotifications": {}}
             for row in db.execute("SELECT category,key,value FROM user_state WHERE user_id=?", (user_id,)):
                 result[row["category"]][row["key"]] = json.loads(row["value"])
             return result
 
     def patch(self, user_id, data):
-        if not isinstance(data, dict) or set(data) - {"marks", "progress"}:
+        validators = {"marks": validate_marks, "progress": validate_progress,
+                      "torrentNotifications": validate_torrent_notification}
+        if not isinstance(data, dict) or set(data) - validators.keys():
             raise ProfileError("Estado no válido.")
         validated = []
         for category, entries in data.items():
@@ -147,7 +155,7 @@ class ProfileStore:
             for key, value in entries.items():
                 if not isinstance(key, str) or not 1 <= len(key) <= 2048:
                     raise ProfileError("Contenido no válido.")
-                validated.append((category, key, validate_marks(value) if category == "marks" else validate_progress(value)))
+                validated.append((category, key, validators[category](value)))
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             self.require(db, user_id)

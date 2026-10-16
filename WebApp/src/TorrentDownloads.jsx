@@ -6,7 +6,14 @@ import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import "./TorrentDownloads.css";
 import SectionSwitcher from "./SectionSwitcher.jsx";
+import TorrentUploadSettings from "./TorrentUploadSettings.jsx";
+import TorrentTraffic from "./TorrentTraffic.jsx";
 import { bookTorrentStrings } from './bookTorrentUtils.js';
+import { completedTorrentNotifications, torrentNotificationKey, wantsTorrentNotification } from "./torrentNotifications.js";
+
+export function TorrentNotificationBadge({ count }) {
+  return count > 0 ? <span className="series-hero__download-badge" aria-hidden="true">{count > 99 ? "99+" : count}</span> : null;
+}
 
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted }) {
   const s = torrentStrings(language);
@@ -173,15 +180,27 @@ export function useTorrentDownloads(enabled, onLibraryChanged) {
   return { ...data, error, loaded, busy, action, refresh: () => setRevision(value => value + 1) };
 }
 
-export default function TorrentDownloads({ downloads, language }) {
+export default function TorrentDownloads({ downloads, language, notificationPreferences = {}, notificationsReady = false,
+  onNotificationChange, showNotifications = false, onNotificationsShown }) {
   const s = torrentStrings(language);
   const [selectedGroup, setSelectedGroup] = useState("active");
+  const sectionRef = useRef(null);
+  const notificationRef = useRef(null);
   const { jobs = [], serviceError, error, busy, action, refresh, loaded, demo } = downloads;
+  const completedNotifications = completedTorrentNotifications(jobs, notificationPreferences);
+  useEffect(() => {
+    if (!showNotifications) return;
+    if (selectedGroup !== "history") { setSelectedGroup("history"); return; }
+    const target = notificationRef.current || sectionRef.current;
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ behavior: "instant", block: "center" });
+    onNotificationsShown?.();
+  }, [showNotifications, selectedGroup, onNotificationsShown]);
   const groups = [
     { key: "active", title: s.active, jobs: jobs.filter(job => !isTorrentHistory(job)) },
     { key: "history", title: s.history, jobs: jobs.filter(isTorrentHistory) },
   ];
-  return <section className="raspberry-dashboard-section torrent-dashboard" aria-labelledby="torrent-downloads-title">
+  return <section ref={sectionRef} tabIndex={-1} className="raspberry-dashboard-section torrent-dashboard" aria-labelledby="torrent-downloads-title">
     <div className="torrent-dashboard__header">
       <h2 className="raspberry-dashboard-section__title" id="torrent-downloads-title">{s.title}</h2>
       <button className="raspberry-refresh-button torrent-dashboard__refresh" onClick={refresh} type="button" aria-label={s.refresh} title={s.refresh}>
@@ -192,6 +211,9 @@ export default function TorrentDownloads({ downloads, language }) {
       </button>
     </div>
     <div className="raspberry-torrents-card">
+    <TorrentTraffic language={language} />
+    <TorrentUploadSettings language={language} />
+    <p className="torrent-dashboard__hint">{s.notificationsHint}</p>
     <SectionSwitcher idPrefix="torrent" label={s.list}
       tabs={groups.map(group => ({ ...group, count: group.jobs.length }))}
       selected={selectedGroup} onSelect={setSelectedGroup} />
@@ -201,8 +223,13 @@ export default function TorrentDownloads({ downloads, language }) {
       hidden={selectedGroup !== group.key} tabIndex={0}>
       {group.key === "history" && <p className="torrent-dashboard__hint">{s.historyHint}</p>}
       {!group.jobs.length && <p>{demo ? s.demo : !loaded && !error ? s.pending : s.noJobs}</p>}
-      <div className="torrent-dashboard__jobs">{group.jobs.map(job => <article className="torrent-job" key={job.id}>
+      <div className="torrent-dashboard__jobs">{group.jobs.map(job => {
+        const notifying = wantsTorrentNotification(job, notificationPreferences);
+        const notificationReady = notifying && job.state === "complete";
+        return <article className={`torrent-job${notificationReady ? " torrent-job--notified" : ""}`} key={job.id}
+          ref={job.id === completedNotifications[0]?.id ? notificationRef : null} tabIndex={notificationReady ? -1 : undefined}>
       <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${job.state}`}>{job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[job.state] || job.state}</span></div>
+      {notificationReady && <p className="torrent-job__notification-status">{s.notificationReady}</p>}
       <p className="torrent-job__name">{job.name}</p>
       <p className="torrent-job__sources">{job.mediaType === 'books' ? bookTorrentStrings(language).book : job.mediaType === "series" ? s.series : s.movie}</p>
       <p className="torrent-job__sources">{s.source}: {torrentSources(job).join(" · ")}</p>
@@ -213,13 +240,20 @@ export default function TorrentDownloads({ downloads, language }) {
       {job.error && <p className="dialog-error">{job.error}</p>}
       {job.artworkWarning && <p className="torrent-artwork-warning">{s.artworkWarning} {job.artworkWarning}</p>}
       <div className="torrent-job__actions">
+        {(job.state !== "cancelled" || notifying) && <button className="dialog-button torrent-job__notify"
+          disabled={!notificationsReady} aria-pressed={notifying} aria-label={`${notifying ? s.stopNotifying : s.notify}: ${torrentJobTitle(job)}`}
+          title={notifying ? s.stopNotifying : s.notify}
+          onClick={() => onNotificationChange?.(torrentNotificationKey(job), !notifying)} type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+          {notifying ? s.stopNotifying : s.notify}
+        </button>}
         {["queued", "downloading"].includes(job.state) && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "pause")} type="button">{s.pause}</button>}
         {job.state === "paused" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "resume")} type="button">{s.resume}</button>}
         {job.state === "failed" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "retry")} type="button">{s.retry}</button>}
         {!job.item && ["queued", "downloading", "paused", "failed"].includes(job.state) && <button className="dialog-button dialog-button--ghost" disabled={busy === job.id} onClick={() => action(job.id, "cancel")} type="button">{s.cancel}</button>}
         {isTorrentHistory(job) && <button className="dialog-button dialog-button--ghost" disabled={busy === job.id} onClick={() => action(job.id, "remove")} type="button" aria-label={`${s.remove}: ${torrentJobTitle(job)}`}>{s.remove}</button>}
       </div>
-    </article>)}</div>
+    </article>; })}</div>
     </section>)}
     </div>
   </section>;

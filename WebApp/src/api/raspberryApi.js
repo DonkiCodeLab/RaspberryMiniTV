@@ -347,6 +347,21 @@ export function controlMovieTorrent(id, action) {
   return request(`/torrents/${encodeURIComponent(id)}`, { method: "POST", body: JSON.stringify({ action }) });
 }
 
+export function getTorrentUploadSettings(signal) {
+  if (isMockModeEnabled()) return Promise.resolve({ demo: true });
+  return request("/torrents/upload-settings", { signal });
+}
+
+export function getTorrentTraffic(period, signal) {
+  if (isMockModeEnabled()) return Promise.resolve({ demo: true, points: [], totals: {} });
+  return request(`/torrents/traffic?period=${encodeURIComponent(period)}`, { signal });
+}
+
+export function setTorrentUploadSettings(settings) {
+  if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para cambiar la subida."));
+  return request("/torrents/upload-settings", { method: "POST", body: JSON.stringify(settings) });
+}
+
 export function getStoredWebPin() {
   if (isMockModeEnabled()) {
     return "mock-mode";
