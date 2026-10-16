@@ -98,9 +98,15 @@ EZTV aplica los filtros de temporada/capítulo y devuelve páginas de 100 entrad
 
 El motor de series selecciona todos los vídeos compatibles identificados como
 `S01E01` o `1x01` (también en subcarpetas), dentro de los filtros elegidos. Excluye
-samples y extras sin numeración. Las versiones duplicadas de un mismo capítulo y
-los vídeos con varios capítulos unidos se rechazan para evitar asignaciones
-incorrectas. Al completarse todos los vídeos seleccionados, se publican enlaces
+samples y extras sin numeración. Las versiones duplicadas de un mismo capítulo
+se rechazan para evitar asignaciones incorrectas. Si el nombre de un vídeo indica
+varios capítulos unidos (`S01E01E02`, `S01E01-03` o `1x01-02`), aparece un aviso con
+**Descargar igualmente** en lugar de **Reintentar**. La opción también está disponible
+para las descargas bloqueadas por el mensaje antiguo, y se recuerda tras reiniciar.
+Al aceptarla, se descarga cada vídeo una sola vez y cada capítulo seleccionado
+enlaza al vídeo completo, sin cortarlo ni duplicar su espacio en disco. El filtro de
+capítulo también encuentra los capítulos posteriores de un archivo compartido.
+Al completarse todos los vídeos seleccionados, se publican enlaces
 duros en la carpeta de la serie bajo `TVShows`, se actualiza el catálogo y se
 preparan los recursos TMDB de TV. Se reutiliza la serie que tenga el mismo ID TMDB,
 conservando su ficha y los capítulos existentes; el dashboard indica añadidos y

@@ -78,3 +78,28 @@ test('movie lookup, missing catalog entry and dismissal labels exist in every su
     assert.ok(render(jobs, {}, language).includes(s.openMovie));
   }
 });
+
+test('combined episode warning replaces retry with download anyway in every language', () => {
+  const job = { id: 'combined', mediaType: 'series', series: { name: 'Friends' }, state: 'failed',
+    canDownloadAnyway: true, error: 'Old rejection', errorFile: 'Friends.S10E17E18.mkv' };
+  for (const language of ['es', 'ca', 'en']) {
+    const s = torrentStrings(language);
+    const html = render([job], {}, language);
+    assert.ok(html.includes(s.downloadAnyway));
+    assert.ok(html.includes(s.combinedEpisodesWarning));
+    assert.ok(html.includes(`>${s.warning}</span>`));
+    assert.ok(!html.includes(`>${s.retry}</button>`));
+    assert.ok(!html.includes(job.error));
+    assert.ok(html.includes(job.errorFile));
+    const accepted = render([{ ...job, state: 'downloading', canDownloadAnyway: false, error: '', allowCombinedEpisodes: true }], {}, language);
+    assert.ok(accepted.includes(s.combinedEpisodesAccepted));
+    assert.ok(!accepted.includes(s.downloadAnyway));
+  }
+});
+
+test('unrelated download failures retain retry and cannot bypass the error', () => {
+  const html = render([{ id: 'other', state: 'failed', error: 'Disk full' }]);
+  assert.match(html, />Reintentar<\/button>/);
+  assert.match(html, /Disk full/);
+  assert.doesNotMatch(html, /Descargar igualmente/);
+});

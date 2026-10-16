@@ -1,5 +1,5 @@
 import LoadingSpinner from "./LoadingSpinner.jsx";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { controlMovieTorrent, getMovieTorrents, searchMediaTorrents, startMediaTorrent } from "./api/raspberryApi";
 import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents } from "./torrentUtils.js";
@@ -10,21 +10,54 @@ import SectionSwitcher from "./SectionSwitcher.jsx";
 import TorrentUploadSettings from "./TorrentUploadSettings.jsx";
 import TorrentTraffic from "./TorrentTraffic.jsx";
 import { bookTorrentStrings } from './bookTorrentUtils.js';
-import { completedTorrentNotifications, torrentNotificationKey, torrentNotificationLabel, wantsTorrentNotification } from "./torrentNotifications.js";
+import { completedTorrentNotifications, torrentNotificationKey, wantsTorrentNotification } from "./torrentNotifications.js";
 
 export function TorrentNotificationBadge({ count, className = "" }) {
   return count > 0 ? <span className={`series-hero__download-badge ${className}`.trim()} aria-hidden="true">{count > 99 ? "99+" : count}</span> : null;
 }
 
-export function TorrentNotificationBell({ count, language, onClick }) {
+export function TorrentNotificationBell({ notifications = [], language, onViewDownloads }) {
   const strings = torrentStrings(language);
-  const label = count > 0 ? torrentNotificationLabel(count, strings) : strings.dashboard;
-  return <button className="torrent-notification-bell" type="button" onClick={onClick} aria-label={label} title={label}>
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 10h18c0-3-3-3-3-10M10 21a2 2 0 0 0 4 0" />
-    </svg>
-    <TorrentNotificationBadge count={count} className="torrent-notification-bell__badge" />
-  </button>;
+  const [open, setOpen] = useState(false);
+  const host = useRef(null);
+  const trigger = useRef(null);
+  const panelId = useId();
+  const count = notifications.length;
+  const label = count > 0 ? `${strings.notificationsTitle} (${count})` : strings.notificationsTitle;
+  useEffect(() => {
+    if (!open) return;
+    const outside = event => { if (!host.current?.contains(event.target)) setOpen(false); };
+    const keyboard = event => {
+      if (event.key === "Escape") { setOpen(false); trigger.current?.focus(); }
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", keyboard);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", keyboard);
+    };
+  }, [open]);
+  return <div className="torrent-notifications" ref={host} onBlur={event => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+  }}>
+    <button className="torrent-notification-bell" type="button" ref={trigger} onClick={() => setOpen(value => !value)}
+      aria-expanded={open} aria-controls={open ? panelId : undefined} aria-label={label} title={label}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 10h18c0-3-3-3-3-10M10 21a2 2 0 0 0 4 0" />
+      </svg>
+      <TorrentNotificationBadge count={count} className="torrent-notification-bell__badge" />
+    </button>
+    {open && <section className="torrent-notifications__panel" id={panelId} aria-labelledby={`${panelId}-title`}>
+      <h2 id={`${panelId}-title`}>{strings.notificationsTitle}</h2>
+      {count > 0 ? <ul className="torrent-notifications__list" tabIndex={0} aria-label={strings.notificationsTitle}>
+        {notifications.map(job => <li key={torrentNotificationKey(job)}>{torrentJobTitle(job)}</li>)}
+      </ul> : <p className="torrent-notifications__empty">{strings.noNotifications}</p>}
+      <button className="torrent-notifications__view" type="button" onClick={() => {
+        setOpen(false);
+        onViewDownloads();
+      }}>{strings.viewDownloads}</button>
+    </section>}
+  </div>;
 }
 
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted }) {
@@ -315,18 +348,22 @@ export default function TorrentDownloads({ downloads, language, notificationPref
       <div className="torrent-dashboard__jobs">{group.jobs.map(job => {
         const notifying = wantsTorrentNotification(job, notificationPreferences);
         const notificationReady = notifying && job.state === "complete";
+        const canDownloadAnyway = job.state === "failed" && job.canDownloadAnyway === true;
+        const status = canDownloadAnyway ? "warning" : job.state;
         return <article className={`torrent-job${notificationReady ? " torrent-job--notified" : ""}`} key={job.id}
           ref={job.id === completedNotifications[0]?.id ? notificationRef : null} tabIndex={-1}>
-      <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${job.state}`}>{job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[job.state] || job.state}</span></div>
+      <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${status}`}>{job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[status] || status}</span></div>
       {notificationReady && <p className="torrent-job__notification-status">{s.notificationReady}</p>}
       <p className="torrent-job__name">{job.name}</p>
       <p className="torrent-job__sources">{job.mediaType === 'books' ? bookTorrentStrings(language).book : job.mediaType === "series" ? s.series : s.movie}</p>
       <p className="torrent-job__sources">{s.source}: {torrentSources(job).join(" · ")}</p>
-      <progress max={100} value={job.progress || 0} aria-label={`${torrentJobTitle(job)}: ${s[job.state]}`} />
+      <progress max={100} value={job.progress || 0} aria-label={`${torrentJobTitle(job)}: ${s[status]}`} />
       {job.item?.importedEpisodeIds?.length > 0 && <p className="torrent-job__stats">{s.episodesImported}: {job.item.importedEpisodeIds.length}</p>}
       {job.item?.skippedEpisodeIds?.length > 0 && <p className="torrent-job__stats">{s.episodesSkipped}: {job.item.skippedEpisodeIds.length}</p>}
       <p className="torrent-job__stats">{job.progress || 0}% · {torrentSize(job.downloadedBytes, language)} / {torrentSize(job.sizeBytes, language)}{job.state === "downloading" ? ` · ${torrentSize(job.rateBytes, language)}/s${job.eta >= 0 ? ` · ${Math.ceil(job.eta / 60)} min ${s.remaining}` : ""}` : ""}</p>
-      {job.error && <p className="dialog-error">{job.error}</p>}
+      {canDownloadAnyway ? <p className="movie-torrents__warning" role="status">{s.combinedEpisodesWarning}{job.errorFile && <> <span className="torrent-job__name">{job.errorFile}</span></>}</p>
+        : job.error && <p className="dialog-error">{job.error}</p>}
+      {job.allowCombinedEpisodes && job.state !== "cancelled" && <p className="movie-torrents__warning">{s.combinedEpisodesAccepted}</p>}
       {job.artworkWarning && <p className="torrent-artwork-warning">{s.artworkWarning} {job.artworkWarning}</p>}
       <div className="torrent-job__actions">
         {(!isTorrentHistory(job) || notifying) && <button className="dialog-button torrent-job__notify"
@@ -346,7 +383,7 @@ export default function TorrentDownloads({ downloads, language, notificationPref
           </button>}
         {["queued", "downloading"].includes(job.state) && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "pause")} type="button">{s.pause}</button>}
         {job.state === "paused" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "resume")} type="button">{s.resume}</button>}
-        {job.state === "failed" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "retry")} type="button">{s.retry}</button>}
+        {job.state === "failed" && <button className={`dialog-button${canDownloadAnyway ? " dialog-button--accent" : ""}`} disabled={busy === job.id} onClick={() => action(job.id, canDownloadAnyway ? "download_anyway" : "retry")} type="button">{canDownloadAnyway ? s.downloadAnyway : s.retry}</button>}
         {!job.item && ["queued", "downloading", "paused", "failed"].includes(job.state) && <button className="dialog-button dialog-button--ghost" disabled={busy === job.id} onClick={() => action(job.id, "cancel")} type="button">{s.cancel}</button>}
         {isTorrentHistory(job) && <button className="dialog-button dialog-button--ghost" disabled={busy === job.id} onClick={() => action(job.id, "remove")} type="button" aria-label={`${s.remove}: ${torrentJobTitle(job)}`}>{s.remove}</button>}
       </div>

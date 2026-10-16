@@ -200,6 +200,95 @@ class SeriesDownloadTests(unittest.TestCase):
                 torrents.series_video_files([{"name": name, "length": 100} for name in names])
         self.assertEqual(torrents.episode_numbers("Special.S00E01.mkv"), (0, 1))
 
+    def test_combined_episode_lists_ranges_and_resolution_suffixes(self):
+        cases = {
+            "Show.S10E17E18.mkv": [(10, 17), (10, 18)],
+            "Show.S10E17-E19.mkv": [(10, 17), (10, 18), (10, 19)],
+            "Show.S10E17-19.mkv": [(10, 17), (10, 18), (10, 19)],
+            "Show.S10E17-S10E19.mkv": [(10, 17), (10, 18), (10, 19)],
+            "Show.10x17-19.mkv": [(10, 17), (10, 18), (10, 19)],
+            "Show.10x17-10x19.mkv": [(10, 17), (10, 18), (10, 19)],
+            "Show.1x01-1x03.mkv": [(1, 1), (1, 2), (1, 3)],
+            "Show.10x17x18.mkv": [(10, 17), (10, 18)],
+            "Show.S10E17+19.mkv": [(10, 17), (10, 19)],
+            "Show.S10E17E18E19.mkv": [(10, 17), (10, 18), (10, 19)],
+            "Show.S10E17.S11E01.mkv": [(10, 17), (11, 1)],
+            "Show.S10E17-1080p.mkv": [(10, 17)],
+            "Show.S10E17-720p.mkv": [(10, 17)],
+            "Show.S10E17.S10E17.mkv": [(10, 17)],
+        }
+        for filename, expected in cases.items():
+            with self.subTest(filename=filename):
+                self.assertEqual(torrents.episode_number_groups(filename), expected)
+
+    def test_combined_override_respects_filters_and_keeps_other_validation(self):
+        files = [{"name": "Show.S10E17-E18.mkv", "length": 100},
+                 {"name": "Show.S09E01.mkv", "length": 50}]
+        with self.assertRaises(torrents.CombinedEpisodesWarning):
+            torrents.series_video_files(files, 10, 18)
+        selected = torrents.series_video_files(files, 10, 18, allow_combined=True)
+        self.assertEqual([(i, sn, ep) for i, _, sn, ep in selected], [(0, 10, 18)])
+        # An unrelated combined video does not block a different season/episode.
+        self.assertEqual(len(torrents.series_video_files(files, 9, 1)), 1)
+        for names in (["Show.S10E17E18.mkv", "Show.S10E18.mkv"],
+                      ["../Show.S10E17E18.mkv"], ["Show.mkv"]):
+            with self.subTest(names=names), self.assertRaises(torrents.TorrentError):
+                torrents.series_video_files([{"name": name, "length": 100} for name in names], allow_combined=True)
+
+    def ready_combined(self, progress=30):
+        row = self.ready(progress)
+        row["files"] = [{"name": "Pack/Example.S01E01E02.mkv", "length": 100, "bytesCompleted": progress}]
+        (Path(row["downloadDir"]) / row["files"][0]["name"]).write_bytes(b"v" * 100)
+        row["leftUntilDone"] = 100 - progress
+        return row
+
+    def test_download_anyway_survives_restart_and_counts_shared_video_once(self):
+        self.add()
+        self.ready_combined()
+        self.manager.tick()
+        job = self.manager.snapshot()["jobs"][0]
+        self.assertEqual(job["errorCode"], "COMBINED_EPISODES")
+        self.assertEqual(job["errorFile"], "Pack/Example.S01E01E02.mkv")
+        self.assertTrue(job["canDownloadAnyway"])
+        self.assertEqual(self.rpc.rows[INFO_HASH]["status"], 0)
+        self.series_import.assert_not_called()
+        restarted = self.new_manager()
+        restarted.action(INFO_HASH, "download_anyway")
+        restarted = self.new_manager()
+        self.assertTrue(restarted.jobs[INFO_HASH]["allowCombinedEpisodes"])
+        self.assertFalse(restarted.snapshot()["jobs"][0]["canDownloadAnyway"])
+        restarted.tick()
+        restarted.tick()
+        job = restarted.jobs[INFO_HASH]
+        self.assertEqual(job["videoIndices"], [0])
+        self.assertEqual(job["episodeCount"], 2)
+        self.assertEqual((job["sizeBytes"], job["downloadedBytes"], job["progress"]), (100, 30, 30))
+        self.assertEqual(job["errorCode"], "")
+        self.ready_combined(100)
+        restarted.tick()
+        episodes = self.series_import.call_args.args[1]
+        self.assertEqual([ep["id"] for ep in episodes], ["S01E01", "S01E02"])
+        self.assertEqual(episodes[0]["source"], episodes[1]["source"])
+
+    def test_legacy_warning_can_continue_but_unrelated_failures_cannot(self):
+        self.add()
+        job = self.manager.jobs[INFO_HASH]
+        self.manager._update(job, state="failed", error=torrents.LEGACY_COMBINED_EPISODES_ERROR)
+        restarted = self.new_manager()
+        self.assertTrue(restarted.snapshot()["jobs"][0]["canDownloadAnyway"])
+        restarted.action(INFO_HASH, "download_anyway")
+        self.assertEqual(restarted.jobs[INFO_HASH]["state"], "queued")
+        for changes in ({"state": "downloading"}, {"state": "failed", "error": "Disk full"},
+                        {"state": "failed", "mediaType": "movies"}, {"state": "failed", "item": {"relativePath": "TVShows/example"}}):
+            with self.subTest(changes=changes):
+                job = {**self.manager.jobs[INFO_HASH], **changes}
+                restarted.jobs[INFO_HASH] = job
+                before = copy.deepcopy(self.rpc.calls)
+                with self.assertRaises(ValueError):
+                    restarted.action(INFO_HASH, "download_anyway")
+                self.assertEqual(self.rpc.calls, before)
+                self.assertFalse(job.get("allowCombinedEpisodes", False))
+
     def test_missing_downloaded_episode_prevents_entire_import(self):
         self.add()
         row = self.ready()
@@ -254,6 +343,42 @@ class SeriesImportTests(unittest.TestCase):
         self.assertEqual(len(api.load_media_library()["series"]), 1)
         for video in job["item"]["episodes"]:
             self.assertEqual((self.root / video["relativePath"]).read_bytes(), b"complete video")
+
+    def test_combined_download_imports_shared_video_and_preserves_existing_episode(self):
+        old = self.existing_series()
+        rpc = FakeTransmission()
+        manager = torrents.TorrentDownloads(self.root / "Torrents", Mock(), Mock(), Mock(), rpc,
+                                           api.import_torrent_series, lambda _: {"state": "complete"}, Mock())
+        manager.start = Mock()
+        manager.add({"infoHash": INFO_HASH, "mediaType": "series", "series": self.job["series"]})
+        row = rpc.rows[INFO_HASH]
+        filename = "Pack/Example.S01E01-E03.mkv"
+        source = Path(row["downloadDir"]) / filename
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_bytes(b"three combined episodes")
+        inode = source.stat().st_ino
+        row.update(files=[{"name": filename, "length": source.stat().st_size, "bytesCompleted": source.stat().st_size}],
+                   metadataPercentComplete=1, percentDone=1, leftUntilDone=0, status=4)
+        manager.tick()
+        client = api.app.test_client()
+        with patch.object(api, "is_authorized_request", return_value=True), patch.object(api, "get_movie_torrents", return_value=manager):
+            response = client.post(f"/torrents/{INFO_HASH}", json={"action": "download_anyway"})
+        self.assertEqual(response.status_code, 200)
+        with patch.object(api, "queue_tmdb_artwork"):
+            manager.tick()
+            manager.tick()
+        job = manager.snapshot()["jobs"][0]
+        self.assertEqual(job["state"], "complete")
+        self.assertEqual(job["item"]["importedEpisodeIds"], ["S01E02", "S01E03"])
+        self.assertEqual(job["item"]["skippedEpisodeIds"], ["S01E01"])
+        self.assertEqual(old.read_bytes(), b"keep original")
+        self.assertFalse(source.exists())
+        self.assertNotIn(INFO_HASH, rpc.rows)
+        shared = [self.root / ep["relativePath"] for ep in job["item"]["episodes"] if ep["id"] != "S01E01"]
+        self.assertEqual(len(shared), 2)
+        self.assertTrue(os.path.samefile(*shared))
+        self.assertEqual(shared[0].stat().st_ino, inode)
+        self.assertEqual(shared[1].read_bytes(), b"three combined episodes")
 
     def test_pack_is_registered_before_artwork_and_reimport_is_idempotent(self):
         def check(kind, item, refresh=False):

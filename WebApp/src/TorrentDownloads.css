@@ -18,7 +18,7 @@
 .movie-torrents__badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .movie-torrents__badge { display: inline-block; padding: 4px 8px; border: 1px solid #ffdc3540; border-radius: 8px; background: #ffdc3510; color: #ffe775; font-size: 12px; overflow-wrap: anywhere; }
 .movie-torrents .movie-torrents__providers { font-size: 13px; color: #aebcca; }
-.movie-torrents .movie-torrents__warning { padding: 10px 12px; border-left: 3px solid #ffdc35; background: #ffdc3510; color: #ffe775; font-size: 13px; }
+.movie-torrents .movie-torrents__warning, .torrent-job .movie-torrents__warning { padding: 10px 12px; border-left: 3px solid #ffdc35; background: #ffdc3510; color: #ffe775; font-size: 13px; overflow-wrap: anywhere; }
 .torrent-job__sources { color: #e5d78d; font-size: 12px; overflow-wrap: anywhere; }
 .movie-torrents__success { border-left: 3px solid #ffdc35; padding-left: 16px; }
 .movie-torrents__overwrite { margin: 16px 0; padding: 20px; border: 1px solid #ffdc35; border-radius: 16px; background: #242b32; }

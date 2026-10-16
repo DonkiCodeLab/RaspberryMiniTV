@@ -27,17 +27,57 @@ SEARCH_POOL = ThreadPoolExecutor(max_workers=12, thread_name_prefix="torrent-sea
 SEARCH_CACHE = OrderedDict()
 SEARCH_CACHE_LOCK = threading.Lock()
 EPISODE_RE = re.compile(r"(?<![a-z0-9])(?:s(\d{1,2})[ ._-]*e(\d{1,3})|(\d{1,2})x(\d{1,3}))(?!\d)", re.I)
+EPISODE_SUFFIX_RE = re.compile(r"([ ._]*[-+]?[ ._]*[ex]|[ ._]*[-+][ ._]*)(\d{1,3})(?!\d)(?=$|[^a-z0-9]|[ex]\d)", re.I)
+LEGACY_COMBINED_EPISODES_ERROR = "No se admiten varios capítulos unidos en un solo vídeo. Elige otra versión."
+
+
+class CombinedEpisodesWarning(ValueError):
+    code = "COMBINED_EPISODES"
+
+    def __init__(self, filename):
+        self.filename = filename
+        super().__init__("El nombre de un vídeo indica varios capítulos unidos. Puedes descargarlo igualmente; esos capítulos abrirán el mismo vídeo completo.")
+
+
+def episode_number_groups(name):
+    """Read explicit episode lists and ranges without treating resolutions as episodes."""
+    filename = Path(str(name)).name
+    numbers = []
+    previous_end = None
+
+    def append(season, episode, separator=""):
+        if episode <= 0:
+            return
+        if numbers and "-" in separator and numbers[-1][0] == season and numbers[-1][1] < episode:
+            numbers.extend((season, ep) for ep in range(numbers[-1][1] + 1, episode + 1))
+        else:
+            numbers.append((season, episode))
+
+    matches = list(EPISODE_RE.finditer(filename))
+    for index, match in enumerate(matches):
+        season, episode = (int(match[1]), int(match[2])) if match[1] is not None else (int(match[3]), int(match[4]))
+        separator = filename[previous_end:match.start()].strip() if previous_end is not None else ""
+        append(season, episode, separator if separator == "-" else "")
+        previous_end = match.end()
+        next_start = matches[index + 1].start() if index + 1 < len(matches) else len(filename)
+        while suffix := EPISODE_SUFFIX_RE.match(filename, previous_end, next_start):
+            append(season, int(suffix[2]), suffix[1])
+            previous_end = suffix.end()
+    return list(dict.fromkeys(numbers))
 
 
 def episode_numbers(name):
-    matches = list(EPISODE_RE.finditer(Path(str(name)).name))
-    if not matches:
-        return None
-    match = matches[0]
-    if len(matches) != 1 or re.match(r"(?:[ ._-]*e\d|[-+]\d)", Path(str(name)).name[match.end():], re.I):
-        raise ValueError("No se admiten varios capítulos unidos en un solo vídeo. Elige otra versión.")
-    season, episode = (int(match[1]), int(match[2])) if match[1] is not None else (int(match[3]), int(match[4]))
-    return (season, episode) if episode > 0 else None
+    numbers = episode_number_groups(name)
+    if len(numbers) > 1:
+        raise CombinedEpisodesWarning(str(name))
+    return numbers[0] if numbers else None
+
+
+def can_download_combined_episodes(job):
+    return (job.get("mediaType") == "series" and job.get("state") == "failed"
+            and not job.get("item") and not job.get("allowCombinedEpisodes")
+            and (job.get("errorCode") == CombinedEpisodesWarning.code
+                 or job.get("error") == LEGACY_COMBINED_EPISODES_ERROR))
 
 
 def episode_filter(value, label, minimum=0, maximum=99):
@@ -400,19 +440,21 @@ def video_files(files):
     return candidates
 
 
-def series_video_files(files, season=None, episode=None):
+def series_video_files(files, season=None, episode=None, allow_combined=False):
     selected, seen = [], set()
     for index, item in video_files(files):
-        numbers = episode_numbers(item["name"])
-        if numbers is None:
+        groups = episode_number_groups(item["name"])
+        matching = [(sn, ep) for sn, ep in groups
+                    if (season is None or sn == season) and (episode is None or ep == episode)]
+        if not matching:
             continue
-        sn, ep = numbers
-        if (season is not None and sn != season) or (episode is not None and ep != episode):
-            continue
-        if numbers in seen:
-            raise TorrentError("El torrent contiene varias versiones del mismo capítulo. Elige otra versión.")
-        seen.add(numbers)
-        selected.append((index, item, sn, ep))
+        if len(groups) > 1 and not allow_combined:
+            raise CombinedEpisodesWarning(item["name"])
+        for sn, ep in matching:
+            if (sn, ep) in seen:
+                raise TorrentError("El torrent contiene varias versiones del mismo capítulo. Elige otra versión.")
+            seen.add((sn, ep))
+            selected.append((index, item, sn, ep))
     if not selected:
         raise TorrentError("No hay capítulos compatibles con la selección. Los vídeos deben incluir S01E01 o 1x01 en su nombre.")
     return selected
@@ -499,7 +541,8 @@ class TorrentDownloads:
 
     def snapshot(self):
         with self.lock:
-            return {"jobs": sorted(copy.deepcopy([job for job in self.jobs.values() if not job.get("hidden")]), key=lambda j: -j["createdAt"]),
+            return {"jobs": sorted(copy.deepcopy([{**job, "canDownloadAnyway": can_download_combined_episodes(job)}
+                                                   for job in self.jobs.values() if not job.get("hidden")]), key=lambda j: -j["createdAt"]),
                     "serviceError": self.service_error}
 
     def _remove_history(self, job):
@@ -607,7 +650,7 @@ class TorrentDownloads:
             raise TorrentError("Este torrent existe en Transmission fuera de MiniTV; no se modificará.")
 
     def action(self, job_id, action):
-        if not isinstance(action, str) or action not in {"pause", "resume", "cancel", "retry", "remove"}:
+        if not isinstance(action, str) or action not in {"pause", "resume", "cancel", "retry", "remove", "download_anyway"}:
             raise ValueError("Acción no válida.")
         with self.operation:
             job = self.jobs.get(job_id)
@@ -619,6 +662,8 @@ class TorrentDownloads:
                 raise ValueError("Esta descarga ya no admite esa acción.")
             if action == "retry" and job["state"] != "failed":
                 raise ValueError("Solo se pueden reintentar descargas con error.")
+            if action == "download_anyway" and not can_download_combined_episodes(job):
+                raise ValueError("Solo puedes omitir el aviso de capítulos unidos de una descarga de series.")
             if job.get("item"):
                 if action != "retry":
                     raise ValueError("El contenido ya está importado; pulsa Reintentar para actualizar su estado.")
@@ -628,7 +673,7 @@ class TorrentDownloads:
                 self._check_ownership(job)
                 # Persist cancellation before removing data so an API restart cannot re-import it.
                 self.rpc.call("torrent-stop", {"ids": [job_id]})
-                self._update(job, state="cancelled", error="", rateBytes=0)
+                self._update(job, state="cancelled", error="", errorCode="", errorFile="", rateBytes=0)
                 self.rpc.call("torrent-remove", {"ids": [job_id], "delete-local-data": True})
                 self._update(job, transferRemoved=True)
             elif action == "pause":
@@ -637,10 +682,12 @@ class TorrentDownloads:
                 self._update(job, state="paused", rateBytes=0)
             else:
                 self._check_ownership(job)
-                if action == "retry":
+                if action == "download_anyway":
+                    self._update(job, allowCombinedEpisodes=True)
+                if action in {"retry", "download_anyway"}:
                     self._add_transfer(job)
                 self.rpc.call("torrent-start", {"ids": [job_id]})
-                self._update(job, state="queued", error="")
+                self._update(job, state="queued", error="", errorCode="", errorFile="")
             return copy.deepcopy(job)
 
     def start(self):
@@ -699,7 +746,8 @@ class TorrentDownloads:
                         continue
                     self._advance(job, row)
                 except (OSError, TorrentError, ValueError) as exc:
-                    self._update(job, state="failed", error=str(exc), rateBytes=0)
+                    self._update(job, state="failed", error=str(exc), errorCode=getattr(exc, "code", ""),
+                                 errorFile=getattr(exc, "filename", "") if isinstance(exc, CombinedEpisodesWarning) else "", rateBytes=0)
                     try:
                         self._check_ownership(job)
                         self.rpc.call("torrent-stop", {"ids": [job["id"]]})
@@ -750,15 +798,18 @@ class TorrentDownloads:
         self._finish_artwork(job)
 
     def _advance_series(self, job, row, folder):
-        selected = series_video_files(row.get("files", []), job.get("seasonNumber"), job.get("episodeNumber"))
-        indices = [index for index, _, _, _ in selected]
+        selected = series_video_files(row.get("files", []), job.get("seasonNumber"), job.get("episodeNumber"),
+                                      allow_combined=job.get("allowCombinedEpisodes") is True)
+        # Several catalog episodes may share a video, but it is downloaded and counted once.
+        selected_files = {index: item for index, item, _, _ in selected}
+        indices = list(selected_files)
         if job.get("videoIndices") != indices:
             self.rpc.call("torrent-set", {"ids": [job["id"]], "files-wanted": indices,
                                           "files-unwanted": [i for i in range(len(row["files"])) if i not in indices]})
             self._update(job, videoIndices=indices, episodeCount=len(selected))
             return
-        length = sum(positive_int(item["length"]) for _, item, _, _ in selected)
-        downloaded = sum(min(positive_int(item["length"]), positive_int(item.get("bytesCompleted"))) for _, item, _, _ in selected)
+        length = sum(positive_int(item["length"]) for item in selected_files.values())
+        downloaded = sum(min(positive_int(item["length"]), positive_int(item.get("bytesCompleted"))) for item in selected_files.values())
         status = int(row.get("status", 0))
         self._update(job, state="paused" if status == 0 and downloaded < length else "downloading",
                      sizeBytes=length, downloadedBytes=downloaded, progress=round(downloaded * 100 / length, 1),

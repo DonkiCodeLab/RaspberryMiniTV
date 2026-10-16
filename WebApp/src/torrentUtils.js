@@ -57,6 +57,9 @@ export function isTorrentHistory(job) {
 
 const strings = {
   es: {
+    warning: "Aviso", downloadAnyway: "Descargar igualmente",
+    combinedEpisodesWarning: "El nombre de algún vídeo indica varios capítulos unidos. Puedes descargarlo igualmente; esos capítulos abrirán el mismo vídeo completo.",
+    combinedEpisodesAccepted: "Has permitido los capítulos unidos. Los capítulos que compartan vídeo abrirán el archivo completo, sin separarlo.",
     notify: "Avisarme al terminar", stopNotifying: "Dejar de avisar", notificationReady: "Descarga terminada · aviso activado",
     stopNotifyingAll: "Dejar de avisar en todas", stopNotifyingAllTitle: "Desactivar avisos del historial",
     stopNotifyingAllCopy: "¿Quieres desactivar los avisos de todas las descargas del historial que los tienen activados en tu perfil?", cancelNotificationChanges: "Cancelar",
@@ -65,6 +68,7 @@ const strings = {
     movieLookupFailed: "No se pudo comprobar el catálogo", movieLookupFailedCopy: "Comprueba la conexión con la Raspberry y vuelve a pulsar «Ir a la ficha».",
     notificationsHint: "Activa el aviso en las descargas que te interesan. Al terminar aparecerá un contador en la campanita junto a Fotos hasta que desactives el aviso aquí.",
     notificationOne: "1 descarga terminada. Ver descargas", notificationMany: "{count} descargas terminadas. Ver descargas",
+    notificationsTitle: "Descargas terminadas", noNotifications: "No tienes avisos de descargas terminadas.", viewDownloads: "Ver descargas",
     artworkWarning: "El contenido está en la biblioteca, pero faltan algunos recursos de TMDB.",
     title: "Descargas torrent", searchTitle: "Buscar torrents", search: "Buscar torrents", searching: "Buscando torrents…",
     source: "Fuente", sourcesSearched: "Fuentes consultadas", sourcesUnavailable: "No han respondido estas fuentes; los resultados pueden estar incompletos:",
@@ -87,6 +91,9 @@ const strings = {
     demo: "Las descargas están disponibles al conectar con la Raspberry.", pending: "Esperando datos de la Raspberry…", remaining: "restantes",
   },
   ca: {
+    warning: "Avís", downloadAnyway: "Descarrega igualment",
+    combinedEpisodesWarning: "El nom d’algun vídeo indica diversos capítols units. Pots descarregar-lo igualment; aquests capítols obriran el mateix vídeo complet.",
+    combinedEpisodesAccepted: "Has permès els capítols units. Els capítols que comparteixin vídeo obriran l’arxiu complet, sense separar-lo.",
     notify: "Avisa’m en acabar", stopNotifying: "Deixa d’avisar", notificationReady: "Descàrrega acabada · avís activat",
     stopNotifyingAll: "Deixa d’avisar de totes", stopNotifyingAllTitle: "Desactiva els avisos de l’historial",
     stopNotifyingAllCopy: "Vols desactivar els avisos de totes les descàrregues de l’historial que els tenen activats al teu perfil?", cancelNotificationChanges: "Cancel·la",
@@ -95,6 +102,7 @@ const strings = {
     movieLookupFailed: "No s’ha pogut comprovar el catàleg", movieLookupFailedCopy: "Comprova la connexió amb la Raspberry i torna a prémer «Anar a la fitxa».",
     notificationsHint: "Activa l’avís a les descàrregues que t’interessen. En acabar apareixerà un comptador a la campaneta al costat de Fotos fins que desactivis l’avís aquí.",
     notificationOne: "1 descàrrega acabada. Veure descàrregues", notificationMany: "{count} descàrregues acabades. Veure descàrregues",
+    notificationsTitle: "Descàrregues acabades", noNotifications: "No tens avisos de descàrregues acabades.", viewDownloads: "Veure descàrregues",
     artworkWarning: "El contingut és a la biblioteca, però falten alguns recursos de TMDB.",
     title: "Descàrregues torrent", searchTitle: "Cerca torrents", search: "Cerca torrents", searching: "Cercant torrents…",
     source: "Font", sourcesSearched: "Fonts consultades", sourcesUnavailable: "Aquestes fonts no han respost; els resultats poden ser incomplets:",
@@ -117,6 +125,9 @@ const strings = {
     demo: "Les descàrregues estan disponibles en connectar amb la Raspberry.", pending: "Esperant dades de la Raspberry…", remaining: "restants",
   },
   en: {
+    warning: "Warning", downloadAnyway: "Download anyway",
+    combinedEpisodesWarning: "A video filename indicates multiple episodes joined together. You can download it anyway; those episodes will open the same full video.",
+    combinedEpisodesAccepted: "You have allowed combined episodes. Episodes that share a video will open the full file, without splitting it.",
     notify: "Notify me when finished", stopNotifying: "Turn off notification", notificationReady: "Download finished · notification enabled",
     stopNotifyingAll: "Turn off all notifications", stopNotifyingAllTitle: "Turn off history notifications",
     stopNotifyingAllCopy: "Turn off notifications for all downloads in your history that have them enabled for your profile?", cancelNotificationChanges: "Cancel",
@@ -125,6 +136,7 @@ const strings = {
     movieLookupFailed: "Could not check the catalog", movieLookupFailedCopy: "Check the connection to your Raspberry and select “Open movie details” again.",
     notificationsHint: "Enable notifications for the downloads you’re interested in. When they finish, a count will appear on the bell next to Pictures until you turn off the notification here.",
     notificationOne: "1 download finished. View downloads", notificationMany: "{count} downloads finished. View downloads",
+    notificationsTitle: "Completed downloads", noNotifications: "You have no completed download notifications.", viewDownloads: "View downloads",
     artworkWarning: "The content is in the library, but some TMDB resources are missing.",
     title: "Torrent downloads", searchTitle: "Search torrents", search: "Search torrents", searching: "Searching torrents…",
     source: "Source", sourcesSearched: "Sources searched", sourcesUnavailable: "These sources did not respond; results may be incomplete:",

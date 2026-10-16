@@ -6487,8 +6487,9 @@ export default function App() {
     setVideos(await getVideos());
     setDetailRetry(value => value + 1);
   });
-  const downloadNotificationCount = profiles.ready
-    ? completedTorrentNotifications(torrentDownloads.jobs, profiles.state.torrentNotifications).length : 0;
+  const downloadNotifications = profiles.ready
+    ? completedTorrentNotifications(torrentDownloads.jobs, profiles.state.torrentNotifications) : [];
+  const downloadNotificationCount = downloadNotifications.length;
   const [episodeLoading, setEpisodeLoading] = useState(false);
   const [episodeError, setEpisodeError] = useState("");
   const [episodeRetry, setEpisodeRetry] = useState(0);
@@ -9586,7 +9587,7 @@ export default function App() {
                         );
                       })}
                     </div>
-                    <TorrentNotificationBell count={downloadNotificationCount} language={raspberryLanguage} onClick={handleOpenDownloadNotifications} />
+                    <TorrentNotificationBell notifications={downloadNotifications} language={raspberryLanguage} onViewDownloads={handleOpenDownloadNotifications} />
                     <ProfileMenu profiles={profiles} onManage={handleManageUsers} language={raspberryLanguage} />
                   </div>
                 </section>
