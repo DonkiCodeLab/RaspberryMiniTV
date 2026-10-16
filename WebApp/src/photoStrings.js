@@ -19,13 +19,13 @@ const es = {
   aiSetup: 'Activa OpenAI y guarda tu clave en Dashboard → Servicios auxiliares → OpenAI.',
   originals: 'originales', pending: 'variantes pendientes', generated: 'Variante IA', complete: 'Generación terminada',
   retryGeneration: 'Generar pendientes', running: 'Puedes salir de esta carpeta; la generación continúa en la Raspberry.',
-  peopleHint: 'Agrupaciones automáticas por parecido facial. Revisa las coincidencias y pon nombre a cada persona.',
+  peopleHint: 'Personas importadas de Apple Fotos y agrupaciones por parecido facial. Puedes revisar las coincidencias y cambiar los nombres.',
   peopleLocal: 'El reconocimiento se realiza en la Raspberry; las fotos no se envían a OpenAI.',
-  peopleSetup: 'Instala el soporte de Personas en la Raspberry para agrupar las fotos automáticamente.',
+  peopleSetup: 'Las personas importadas ya están disponibles. Para detectar caras nuevas, instala el soporte de Personas en la Raspberry.',
   peopleEmpty: 'Todavía no hay personas detectadas.', scan: 'Analizar fotos pendientes', scanningFaces: 'Buscando coincidencias…',
   rename: 'Cambiar nombre', personName: 'Nombre de la persona', removeMatches: 'Quitar de esta persona',
   removedMatches: 'Coincidencias retiradas. Las fotos se conservan en sus carpetas.', indexing: 'Preparando las fotos anteriores…',
-  demo: 'Maqueta local: las fotos se guardan en este navegador. EXIF, IA y Personas funcionan al conectar la Raspberry.',
+  demo: 'Maqueta local: fotos y metadatos importados se guardan en este navegador. La lectura de EXIF sin JSON, la detección de caras y la IA requieren la Raspberry.',
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
@@ -45,11 +45,11 @@ const en = {
   aiHint: 'Each original gets 4 versions: LEGO, foam, Minecraft and Studio Ghibli.', aiSend: 'Generating sends these photos to OpenAI and uses your paid API quota.',
   aiSetup: 'Enable OpenAI and save your key in Dashboard → Auxiliary services → OpenAI.', originals: 'originals', pending: 'variations pending',
   generated: 'AI variation', complete: 'Generation complete', retryGeneration: 'Generate remaining', running: 'You can leave this folder; generation continues on the Raspberry.',
-  peopleHint: 'Automatic groups based on facial similarity. Review matches and name each person.', peopleLocal: 'Recognition runs on the Raspberry; photos are not sent to OpenAI.',
-  peopleSetup: 'Install People support on the Raspberry to group photos automatically.', peopleEmpty: 'No people detected yet.', scan: 'Analyze pending photos',
+  peopleHint: 'People imported from Apple Photos and groups based on facial similarity. Review matches and edit names.', peopleLocal: 'Recognition runs on the Raspberry; photos are not sent to OpenAI.',
+  peopleSetup: 'Imported people are already available. Install People support on the Raspberry to detect new faces.', peopleEmpty: 'No people detected yet.', scan: 'Analyze pending photos',
   scanningFaces: 'Finding matches…', rename: 'Rename', personName: 'Person name', removeMatches: 'Remove from this person',
   removedMatches: 'Matches removed. Photos remain in their folders.', indexing: 'Preparing existing photos…',
-  demo: 'Local demo: photos are saved in this browser. EXIF, AI and People work when connected to the Raspberry.',
+  demo: 'Local demo: photos and imported metadata are saved in this browser. Reading EXIF without JSON, face detection and AI require the Raspberry.',
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
@@ -69,11 +69,11 @@ const ca = {
   aiHint: 'Cada original tindrà 4 versions: LEGO, gomaescuma, Minecraft i Studio Ghibli.', aiSend: 'En generar s’envien aquestes fotos a OpenAI. S’aplica el cost d’ús del teu compte.',
   aiSetup: 'Activa OpenAI i desa la clau a Dashboard → Serveis auxiliars → OpenAI.', originals: 'originals', pending: 'variants pendents',
   generated: 'Variant IA', complete: 'Generació acabada', retryGeneration: 'Generar les pendents', running: 'Pots sortir de la carpeta; la generació continua a la Raspberry.',
-  peopleHint: 'Agrupacions automàtiques per semblança facial. Revisa les coincidències i posa nom a cada persona.',
-  peopleLocal: 'El reconeixement es fa a la Raspberry; les fotos no s’envien a OpenAI.', peopleSetup: 'Instal·la el suport de Persones a la Raspberry per agrupar les fotos automàticament.',
+  peopleHint: 'Persones importades d’Apple Fotos i agrupacions per semblança facial. Revisa les coincidències i canvia els noms.',
+  peopleLocal: 'El reconeixement es fa a la Raspberry; les fotos no s’envien a OpenAI.', peopleSetup: 'Les persones importades ja estan disponibles. Per detectar cares noves, instal·la el suport de Persones a la Raspberry.',
   peopleEmpty: 'Encara no s’han detectat persones.', scan: 'Analitzar les fotos pendents', scanningFaces: 'Cercant coincidències…', rename: 'Canviar el nom',
   personName: 'Nom de la persona', removeMatches: 'Treure d’aquesta persona', removedMatches: 'Coincidències retirades. Les fotos es conserven a les carpetes.',
-  indexing: 'Preparant les fotos anteriors…', demo: 'Maqueta local: les fotos es desen en aquest navegador. EXIF, IA i Persones funcionen en connectar la Raspberry.',
+  indexing: 'Preparant les fotos anteriors…', demo: 'Maqueta local: fotos i metadades importades es desen en aquest navegador. La lectura d’EXIF sense JSON, la detecció de cares i la IA requereixen la Raspberry.',
   albumCreated: 'Carpeta creada.', folders: 'Carpetes', matches: 'No hi ha coincidències.', noNew: 'Totes les variants estan completes.',
 };
 export const photoStrings = language => ({ ...es, ...(language === 'en' ? en : language === 'ca' ? ca : {}) });

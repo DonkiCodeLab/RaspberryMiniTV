@@ -1,3 +1,4 @@
+import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getBookMetadataDetails, searchBookMetadata, isMockMode } from './api/raspberryApi';
@@ -64,8 +65,7 @@ export default function BookTorrentModal({ winner, language, onClose, onStarted,
   }
   useEffect(() => {
     const previous = document.activeElement;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const releaseScroll = lockBodyScroll();
     close.current?.focus();
     function keydown(event) {
       if (event.key === 'Escape') { event.preventDefault(); closeHandler.current(); }
@@ -77,7 +77,7 @@ export default function BookTorrentModal({ winner, language, onClose, onStarted,
     }
     document.addEventListener('keydown', keydown);
     if (!initialBook) search(true);
-    return () => { request.current?.abort(); document.body.style.overflow = overflow; document.removeEventListener('keydown', keydown); previous?.focus(); };
+    return () => { request.current?.abort(); releaseScroll(); document.removeEventListener('keydown', keydown); previous?.focus(); };
   }, []);
 
   return createPortal(<div className="modal-backdrop modal-backdrop--tmdb-browser">

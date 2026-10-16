@@ -1,3 +1,4 @@
+import { lockBodyScroll } from "./bodyScrollLock.js";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -230,12 +231,11 @@ function TorrentMovieNotice({ notice, strings: s, onClose }) {
   useEffect(() => {
     const dialog = dialogRef.current;
     const trigger = document.activeElement;
-    const overflow = document.body.style.overflow;
     dialog.showModal();
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     return () => {
       dialog.close();
-      document.body.style.overflow = overflow;
+      releaseScroll();
       if (trigger?.isConnected) trigger.focus();
     };
   }, []);
@@ -253,12 +253,11 @@ function TorrentNotificationsConfirm({ strings: s, disabled, onClose, onConfirm 
   useEffect(() => {
     const dialog = dialogRef.current;
     const trigger = document.activeElement;
-    const overflow = document.body.style.overflow;
     dialog.showModal();
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     return () => {
       dialog.close();
-      document.body.style.overflow = overflow;
+      releaseScroll();
       const target = trigger?.disabled ? trigger.closest('[role="tabpanel"]') : trigger;
       if (target?.isConnected) target.focus({ preventScroll: true });
     };

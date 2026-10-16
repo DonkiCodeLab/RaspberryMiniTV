@@ -1095,7 +1095,8 @@ y una copia de desarrollo independiente. [Instalación y uso](CODEX.md).
 Incluye esos tres elementos en la copia de seguridad. Las fotos existentes se
 indexan en segundo plano al abrir Fotos, conservando sus rutas y carpetas bajo
 Uploads. La fecha de subida de fotos anteriores se aproxima con la fecha de
-modificación; la fecha de captura siempre procede del EXIF. Los álbumes son
+modificación; la fecha de captura procede del EXIF o de los metadatos importados
+desde Fotos del Mac. Los álbumes son
 lógicos: mover fotos no renombra los ficheros ni pierde las marcas por perfil.
 No muevas archivos manualmente después de indexarlos.
 
@@ -1124,3 +1125,18 @@ previsualizaciones en `/pictures/content?render=thumb|preview` también requiere
 PIN. Las claves de OpenAI y los vectores faciales nunca aparecen en el catálogo.
 La IA usa la configuración existente del Dashboard; consultar carpetas, mover
 fotos o analizar caras no hace llamadas a OpenAI.
+
+La importación de Apple Fotos requiere también `photo_import.py`. La web envía
+un multipart con las imágenes y un archivo `metadata` JSON que contiene sesión,
+lote, metadatos normalizados y los JSON originales. La API valida límites y campos,
+conserva los archivos originales y guarda los metadatos completos fuera del resumen
+del catálogo. `GET /pictures/metadata/<id>` permite descargarlos con el PIN habitual
+y `Cache-Control: no-store`. Incluye la base SQLite en las copias de seguridad:
+contiene también los metadatos, las asociaciones a álbumes/personas, los hashes
+de deduplicación y los recibos de lotes para reintentar sin repetir guardados.
+
+Los nombres de Apple funcionan sin dlib. Sus asociaciones tienen codificaciones
+vacías y no participan en las comparaciones del motor facial local. Los UUID
+distinguen personas homónimas; con JSON de ExifTool sin UUID, los nombres iguales
+se agrupan. Consulta el [flujo de exportación e importación](../WebApp/README.md#importar-desde-fotos-del-mac)
+para límites, formatos y reanudación.

@@ -2037,8 +2037,15 @@ def videos():
 
 @app.route("/pictures/upload", methods=["POST"])
 def upload_pictures():
+    metadata_file = request.files.get('metadata')
+    import_data = None
+    if metadata_file:
+        raw = metadata_file.stream.read(42 * 1024 * 1024 + 1)
+        if len(raw) > 42 * 1024 * 1024: raise PhotoError('El lote de metadatos es demasiado grande.', 413)
+        try: import_data = json.loads(raw)
+        except (ValueError, UnicodeError, RecursionError): raise PhotoError('El archivo de metadatos no es válido.') from None
     return jsonify(get_photo_library().upload(request.files.getlist("files"),
-        request.form.get("albumName", ""), request.form.get("folderId", ""), request.form.get("parent", "uploads")))
+        request.form.get("albumName", ""), request.form.get("folderId", ""), request.form.get("parent", "uploads"), import_data))
 
 
 @app.route("/pictures/content", methods=["GET"])

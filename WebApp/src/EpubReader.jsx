@@ -1,3 +1,4 @@
+import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBookContent } from "./api/raspberryApi";
@@ -90,12 +91,11 @@ export default function EpubReader({ book, onClose, initialProgress, onProgress 
       resizeObserver.observe(host.current);
     })().catch(fail);
     document.addEventListener("keydown", keydown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     return () => {
       disposed = true; controller.abort(); resizeObserver?.disconnect();
       document.removeEventListener("keydown", keydown);
-      document.body.style.overflow = previousOverflow;
+      releaseScroll();
       renditionRef.current = null;
       // Destroying the book also destroys its rendition and revokes archive URLs.
       if (initialized) epub?.destroy();

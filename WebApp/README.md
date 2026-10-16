@@ -503,7 +503,8 @@ el ratón o recibir el foco. Muestran el número de fotos (incluidas las subcarp
 y la última fecha de subida. **Subir fotos** permite seleccionar archivos o una
 carpeta, revisar la selección y elegir su nombre antes de guardarla en Uploads.
 Desde un álbum se añaden directamente a él; desde IA se crea un álbum de IA.
-La selección admite 500 imágenes por lote y 50 MB por archivo.
+La selección se envía automáticamente en lotes de hasta 20 imágenes y 80 MB;
+cada archivo admite hasta 50 MB.
 
 Cada álbum muestra un mosaico con fecha EXIF y coordenadas GPS. Los datos ausentes
 se indican expresamente. Al abrir una foto, el visor admite cerrar con Escape,
@@ -543,8 +544,56 @@ soporte o los errores y permite reintentar los análisis pendientes.
 
 Actualizar WebApp y DeviceApp juntos. Para HEIC y Personas, consulta la
 [instalación del soporte de fotos](../DeviceApp/README.md#biblioteca-de-fotos).
-La maqueta local guarda archivos y carpetas en IndexedDB, y permite probar el
-visor y los movimientos; no simula datos EXIF, personas ni resultados de IA.
+La maqueta local guarda archivos, carpetas y metadatos importados en IndexedDB,
+y permite probar el visor, los movimientos, los álbumes y las personas importadas.
+No lee EXIF de imágenes sin JSON ni simula reconocimiento facial o resultados de IA.
 
 Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,
 `python -m unittest discover -s DeviceApp/tests -p 'test_photo_library.py'`.
+
+### Importar desde Fotos del Mac
+
+En **Fotos → Subir fotos → Desde Fotos del Mac**, abre **Preparar mis fotos en
+el Mac**. Descarga `Importar-Fotos-MiniTV.command` y ejecuta el comando mostrado
+en Terminal. Requiere Python 3.10 o posterior; instala OSXPhotos 0.77.2 en un
+entorno aislado de `~/Library/Application Support/MiniTV/PhotosExporter`.
+El asistente permite exportar las fotos seleccionadas o toda la fototeca y elegir
+la carpeta de destino. Solo crea copias locales; la subida empieza al pulsar
+**Importar** en la web. Espera a que Fotos sincronice originales, álbumes y personas
+con iCloud. macOS puede pedir permiso a Terminal para acceder a Fotos.
+
+La exportación usa [OSXPhotos](https://rhettbull.github.io/osxphotos/cli.html) y
+acompaña cada imagen de un archivo `nombre.ext.minitv.json` con el volcado completo
+de sus metadatos disponibles. Elige la carpeta completa en la web (también se
+puede arrastrar), revisa miniaturas, tamaño, ubicación, personas y álbumes, y pon
+nombre al destino. También se admiten los JSON de ExifTool/OSXPhotos nombrados
+`nombre.ext.json` o `nombre.json`; se emparejan por ruta, sin adivinar asociaciones
+ambiguas entre HEIC/JPG con el mismo nombre. Los JSON tienen un límite de 2 MB
+por imagen. XMP, vídeos y formatos no compatibles se indican como omitidos.
+
+Se conservan los bytes de las imágenes, las fechas y zonas horarias, la ubicación
+corregida en Fotos, nombres e identificadores de personas, títulos, descripciones,
+etiquetas y el estado de favorita en Apple. Las personas no requieren instalar
+el motor de reconocimiento facial. Si dos personas comparten nombre, sus UUID
+de Apple las mantienen separadas. Los favoritos de Apple se muestran como dato
+de origen, sin alterar los favoritos de los perfiles de MiniTV.
+
+**Recrear los álbumes** crea carpetas dentro del destino y permite que una foto
+aparezca en varios álbumes sin duplicar el archivo. Los nombres de álbumes se
+adaptan a los límites de las carpetas de MiniTV; los originales, identificadores
+y jerarquía de Apple se conservan en el JSON completo, descargable desde el visor.
+No se reconstruye el motor de reconocimiento, Recuerdos ni toda la jerarquía de
+carpetas de Apple. Los vídeos, RAW y el vídeo de Live Photos quedan fuera;
+las versiones editadas compatibles se importan como imágenes independientes.
+Revisa `export-report.csv` para detectar originales que iCloud no haya descargado.
+
+La subida se puede pausar entre lotes y continuar mientras el diálogo siga
+abierto. Ante un corte se reintenta el mismo lote con un identificador estable;
+el servidor no lo duplica aunque se hubiera perdido su respuesta. Si cierras la
+página, vuelve al álbum y selecciona otra vez la exportación: se detectan archivos
+idénticos por SHA-256 entre las nuevas importaciones (no se indexan retroactivamente
+los duplicados de subidas antiguas). Las fotos guardadas antes de un error permanecen
+en su álbum. Actualiza WebApp y DeviceApp juntos antes de usar esta función.
+
+Pruebas: `node --test tests/photoImport.test.js tests/photoLibrary.test.js` y,
+desde la raíz, `python -m unittest discover -s DeviceApp/tests -p 'test_photo*.py'`.

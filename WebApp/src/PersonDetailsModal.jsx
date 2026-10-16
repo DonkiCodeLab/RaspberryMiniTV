@@ -1,3 +1,4 @@
+import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { useContext, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { buildTmdbImageUrl, getPersonDetails } from "./tmdbApi.js";
@@ -22,12 +23,11 @@ export default function PersonDetailsModal({ person, language, onClose }) {
   useEffect(() => {
     const element = dialog.current;
     const previousFocus = document.activeElement;
-    const overflow = document.body.style.overflow;
     element.showModal();
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     return () => {
       element.close();
-      document.body.style.overflow = overflow;
+      releaseScroll();
       if (previousFocus?.isConnected) previousFocus.focus();
     };
   }, []);

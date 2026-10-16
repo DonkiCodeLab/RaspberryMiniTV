@@ -22,6 +22,7 @@ import uuid
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import Blueprint, jsonify, request
+from photo_import import validate_import_records
 
 try:
     from pillow_heif import register_heif_opener
@@ -154,6 +155,13 @@ class PhotoLibrary:
                 total INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0, error TEXT NOT NULL DEFAULT '', created REAL NOT NULL);
               CREATE INDEX IF NOT EXISTS photos_folder ON photos(folder);
               CREATE INDEX IF NOT EXISTS faces_person ON faces(person);
+              CREATE TABLE IF NOT EXISTS photo_import_sessions (id TEXT PRIMARY KEY, folder TEXT NOT NULL REFERENCES folders(id));
+              CREATE TABLE IF NOT EXISTS photo_import_batches (session TEXT NOT NULL, batch TEXT NOT NULL,
+                result TEXT NOT NULL, PRIMARY KEY(session, batch));
+              CREATE TABLE IF NOT EXISTS photo_import_files (digest TEXT PRIMARY KEY, photo TEXT NOT NULL REFERENCES photos(id));
+              CREATE TABLE IF NOT EXISTS photo_metadata (photo TEXT PRIMARY KEY REFERENCES photos(id), data TEXT NOT NULL);
+              CREATE TABLE IF NOT EXISTS photo_albums (photo TEXT NOT NULL REFERENCES photos(id),
+                folder TEXT NOT NULL REFERENCES folders(id), PRIMARY KEY(photo, folder));
             ''')
             for ident, name in [('uploads', 'Uploads'), ('ai', 'Diviértete con la IA')]:
                 db.execute('INSERT OR IGNORE INTO folders VALUES (?, ?, ?, ?)', (ident, '', name, time.time()))
@@ -216,13 +224,27 @@ class PhotoLibrary:
              json.dumps(metadata), source, style, 'skip' if source else 'pending'))
         return ident
 
-    def upload(self, files, album_name='', folder_id='', parent='uploads'):
+    def upload(self, files, album_name='', folder_id='', parent='uploads', import_data=None):
         if not files or len(files) > 500:
             raise PhotoError('Selecciona entre 1 y 500 fotos por subida.')
+        records = None
+        if import_data is not None:
+            try:
+                if not isinstance(import_data, dict) or len(files) > 20: raise ValueError('Lote de importación inválido.')
+                session, batch_id = import_data.get('session'), import_data.get('batch')
+                if any(not isinstance(v, str) or not v or len(v) > 100 for v in (session, batch_id)):
+                    raise ValueError('Identificador de importación inválido.')
+                records = validate_import_records(import_data.get('records'), len(files))
+            except (ValueError, TypeError, OverflowError, RecursionError) as error:
+                raise PhotoError(str(error) or 'Metadatos inválidos.') from None
+            with self.db() as db:
+                previous = db.execute('SELECT result FROM photo_import_batches WHERE session=? AND batch=?', (session, batch_id)).fetchone()
+                if previous: return json.loads(previous['result'])
         # Stage and validate every input before creating the album or committing files.
         batch = self.root / ('batch-' + uuid.uuid4().hex)
         batch.mkdir()
         staged = []
+        committed = False
         try:
             for uploaded in files:
                 name = str(uploaded.filename or '').replace('\\', '/').split('/')[-1]
@@ -245,19 +267,76 @@ class PhotoLibrary:
                     raise PhotoError('No se puede leer ' + name + '. Para HEIC instala pillow-heif.') from None
                 staged.append((path, name))
             with self.db() as db:
-                if folder_id:
+                # A lost response or simultaneous retry must not create a second album.
+                previous = db.execute('SELECT result FROM photo_import_batches WHERE session=? AND batch=?', (session, batch_id)).fetchone() if records is not None else None
+                if previous:
+                    for path, _ in staged: path.unlink()
+                    batch.rmdir()
+                    return json.loads(previous['result'])
+                existing_session = db.execute('SELECT folder FROM photo_import_sessions WHERE id=?', (session,)).fetchone() if records is not None else None
+                if existing_session:
+                    folder = self.folder(db, existing_session['folder'])
+                elif folder_id:
                     folder = self.folder(db, folder_id)
                     if folder_id in ('uploads', 'ai'): raise PhotoError('Selecciona o crea una subcarpeta.')
                 else:
                     if parent not in ('uploads', 'ai'): raise PhotoError('Selecciona Uploads o IA para la nueva carpeta.')
                     folder = self.create_folder(album_name, parent, db)
-                for path, name in staged:
-                    self._insert(db, path.relative_to(self.root).as_posix(), folder['id'], name)
+                if records is not None:
+                    db.execute('INSERT OR IGNORE INTO photo_import_sessions VALUES (?,?)', (session, folder['id']))
+                saved, duplicates, discarded = [], 0, []
+                for index, (path, name) in enumerate(staged):
+                    digest = None
+                    if records is not None:
+                        hasher = hashlib.sha256()
+                        with path.open('rb') as handle:
+                            for chunk in iter(lambda: handle.read(1024 * 1024), b''): hasher.update(chunk)
+                        digest = hasher.hexdigest()
+                    existing = db.execute('SELECT photo FROM photo_import_files WHERE digest=?', (digest,)).fetchone() if digest else None
+                    if existing:
+                        ident = existing['photo']; duplicates += 1; discarded.append(path)
+                        relative = db.execute('SELECT path FROM photos WHERE id=?', (ident,)).fetchone()['path']
+                        db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, folder['id']))
+                    else:
+                        relative = path.relative_to(self.root).as_posix()
+                        ident = self._insert(db, relative, folder['id'], name)
+                        if digest: db.execute('INSERT INTO photo_import_files VALUES (?,?)', (digest, ident))
+                    saved.append(relative)
+                    if records is not None:
+                        metadata, raw, people = records[index]
+                        if raw is not None:
+                            current = json.loads(db.execute('SELECT metadata FROM photos WHERE id=?', (ident,)).fetchone()['metadata'])
+                            current.update(metadata)
+                            db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(current), ident))
+                            db.execute('INSERT OR REPLACE INTO photo_metadata VALUES (?,?)', (ident, raw))
+                            # Empty encodings are imported labels, never face-recognition vectors.
+                            for person in people:
+                                key = person.get('id') or 'name:' + person['name']
+                                person_id = 'apple-' + hashlib.sha256(key.encode()).hexdigest()[:32]
+                                db.execute('INSERT OR IGNORE INTO people VALUES (?,?,?)', (person_id, person['name'], time.time()))
+                                db.execute('INSERT OR IGNORE INTO faces VALUES (?,?,?)', (ident, person_id, '[]'))
+                            if people: db.execute("UPDATE photos SET face_state='imported' WHERE id=?", (ident,))
+                            if import_data.get('preserveAlbums') is True:
+                                for album in metadata['albums']:
+                                    # Keep the full Apple name in metadata; folder names follow app constraints.
+                                    album_name_safe = ''.join(c if c not in '/\\' and ord(c) >= 32 else ' · ' for c in album).strip()[:100]
+                                    if album_name_safe in ('', '.', '..'): continue
+                                    found = db.execute('SELECT id FROM folders WHERE parent=? AND lower(name)=lower(?)', (folder['id'], album_name_safe)).fetchone()
+                                    album_id = found['id'] if found else self.create_folder(album_name_safe, folder['id'], db)['id']
+                                    db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, album_id))
+                result = {'ok': True, 'folderId': folder['id'], 'saved': saved,
+                          'imported': len(staged) - duplicates, 'duplicates': duplicates}
+                if records is not None:
+                    db.execute('INSERT INTO photo_import_batches VALUES (?,?,?)', (session, batch_id, json.dumps(result)))
+            committed = True
+            for path in discarded: path.unlink(missing_ok=True)
+            if not any(batch.iterdir()): batch.rmdir()
             self.start_faces()
-            return {'ok': True, 'folderId': folder['id'], 'saved': [path.relative_to(self.root).as_posix() for path, _ in staged]}
+            return result
         except Exception:
-            for path in batch.iterdir(): path.unlink()
-            batch.rmdir()
+            if not committed and batch.exists():
+                for path in batch.iterdir(): path.unlink()
+                batch.rmdir()
             raise
 
     def sync(self):
@@ -303,8 +382,12 @@ class PhotoLibrary:
         with self.db() as db:
             folders = [dict(row) for row in db.execute('SELECT * FROM folders ORDER BY created, name')]
             photos = []
+            memberships = {}
+            for member in db.execute('SELECT photo, folder FROM photo_albums'):
+                memberships.setdefault(member['photo'], []).append(member['folder'])
             for row in db.execute('SELECT * FROM photos ORDER BY uploaded DESC, name'):
                 photos.append({'id': row['id'], 'relativePath': row['path'], 'folderId': row['folder'],
+                    'folderIds': memberships.get(row['id'], []),
                     'name': row['name'], 'uploadedAt': row['uploaded'], 'modifiedAt': row['modified'],
                     'size': row['size'], 'sourceId': row['source'], 'style': row['style'], **json.loads(row['metadata'])})
             people = [dict(row) for row in db.execute('SELECT * FROM people WHERE id IN (SELECT person FROM faces) ORDER BY created')]
@@ -336,6 +419,7 @@ class PhotoLibrary:
             self.folder(db, target)
             if target in ('uploads', 'ai'): raise PhotoError('Mueve las fotos a una subcarpeta, no a una carpeta especial.')
             db.executemany('UPDATE photos SET folder=? WHERE id=?', [(target, ident) for ident in ids])
+            db.executemany('DELETE FROM photo_albums WHERE photo=?', [(ident,) for ident in ids])
         return {'ok': True, 'folderId': target, 'moved': len(ids)}
 
     def preview(self, relative, full=False):
@@ -391,12 +475,14 @@ class PhotoLibrary:
 
     def group_faces(self, photo_id, encodings):
         with self.db() as db:
+            state = db.execute('SELECT face_state FROM photos WHERE id=?', (photo_id,)).fetchone()
+            if state and state['face_state'] == 'imported': return
             known = [(r['person'], json.loads(r['encoding'])) for r in db.execute('SELECT person, encoding FROM faces')]
             used = set()
             for encoding in encodings:
                 if len(encoding) != 128 or not all(math.isfinite(v) for v in encoding): continue
                 scores = sorted((math.sqrt(sum((a-b)**2 for a, b in zip(vector, encoding))), person)
-                                for person, vector in known if person not in used)
+                                for person, vector in known if person not in used and len(vector) == 128)
                 person = scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
                 if not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
                     count = db.execute('SELECT count(*) FROM people').fetchone()[0]
@@ -436,7 +522,7 @@ class PhotoLibrary:
             if not self._ai_folder(db, folder_id): raise PhotoError('Selecciona una subcarpeta de IA.')
             active = db.execute("SELECT id FROM jobs WHERE state='running'").fetchone()
             if active: raise PhotoError('Ya hay una generación en curso. Espera a que termine.', 409)
-            originals = db.execute('SELECT * FROM photos WHERE folder=? AND source IS NULL', (folder_id,)).fetchall()
+            originals = db.execute('SELECT * FROM photos WHERE (folder=? OR id IN (SELECT photo FROM photo_albums WHERE folder=?)) AND source IS NULL', (folder_id, folder_id)).fetchall()
             pending = [(p['id'], p['path'], p['name'], style) for p in originals for style in STYLES
                        if not db.execute('SELECT 1 FROM photos WHERE source=? AND style=?', (p['id'], style)).fetchone()]
             if not pending: raise PhotoError('No hay variantes pendientes. Añade fotos originales a esta carpeta.')
@@ -496,6 +582,15 @@ def create_photo_blueprint(get_library):
     def folders():
         data = body()
         return jsonify(get_library().create_folder(data.get('name'), data.get('parent', ''))), 201
+
+    @bp.get('/pictures/metadata/<ident>')
+    def metadata(ident):
+        with get_library().db() as db:
+            row = db.execute('SELECT data FROM photo_metadata WHERE photo=?', (ident,)).fetchone()
+        if not row: raise PhotoError('Esta foto no tiene metadatos importados.', 404)
+        response = jsonify(json.loads(row['data']))
+        response.headers['Content-Disposition'] = 'attachment; filename="photo-metadata.json"'
+        return response
 
     @bp.post('/pictures/move')
     def move():

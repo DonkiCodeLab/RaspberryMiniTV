@@ -1,3 +1,4 @@
+import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gameConsoleFrame, frameRectangle, frameVariables } from "./gameConsoleFrames.js";
@@ -40,12 +41,11 @@ function GameSession({ game, onClose, t }) {
 
   useEffect(() => {
     const trigger = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     dialog.current.showModal();
     return () => {
       clickTimers.current.forEach(clearTimeout);
-      document.body.style.overflow = previousOverflow;
+      releaseScroll();
       if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus();
     };
   }, []);

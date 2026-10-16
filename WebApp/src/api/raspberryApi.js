@@ -1401,20 +1401,22 @@ export function getPictureContentUrl(relativePath, render) {
   return `${getBaseUrl()}/pictures/content?${params.toString()}`;
 }
 
-export function uploadPictureFiles({ files, albumName, folderId, parent, onProgress, signal } = {}) {
+export function uploadPictureFiles({ files, albumName, folderId, parent, importData, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) return Promise.reject(new Error("Missing pictures"));
   if (isMockModeEnabled()) {
-    return photoDemo("upload", { files: safeFiles, albumName, folderId, parent });
+    return photoDemo("upload", { files: safeFiles, albumName, folderId, parent, importData });
   }
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     if (albumName) formData.append("albumName", albumName);
     if (parent) formData.append("parent", parent);
     if (folderId) formData.append("folderId", folderId);
-    safeFiles.forEach((file) => formData.append("files", file, file.webkitRelativePath || file.name));
+    if (importData) formData.append("metadata", new Blob([JSON.stringify(importData)], { type: 'application/json' }), 'metadata.json');
+    safeFiles.forEach((file) => formData.append("files", file, file.importPath || file.webkitRelativePath || file.name));
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${getBaseUrl()}/pictures/upload`);
+    xhr.timeout = 10 * 60 * 1000;
     const detachAbort = attachUploadAbort(xhr, signal, reject);
     const storedPin = getStoredWebPin();
     if (storedPin) xhr.setRequestHeader("X-Web-Pin", storedPin);
@@ -1431,6 +1433,7 @@ export function uploadPictureFiles({ files, albumName, folderId, parent, onProgr
       error.status = xhr.status;
       reject(error);
     };
+    xhr.ontimeout = () => { detachAbort(); reject(new Error("La subida ha tardado demasiado. Reintenta para continuar sin duplicar las fotos guardadas.")); };
     xhr.onerror = () => { detachAbort(); reject(new Error("Upload failed")); };
     xhr.onabort = () => detachAbort();
     xhr.send(formData);

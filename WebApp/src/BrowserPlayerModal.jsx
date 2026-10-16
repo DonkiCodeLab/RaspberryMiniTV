@@ -1,3 +1,4 @@
+import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import BrowserVideo from "./BrowserVideo.jsx";
@@ -15,12 +16,11 @@ function VideoSession({ playback, onClose, t }) {
   useEffect(() => {
     const element = dialog.current;
     const trigger = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     element.showModal();
     return () => {
       element.close();
-      document.body.style.overflow = previousOverflow;
+      releaseScroll();
       if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus();
     };
   }, []);

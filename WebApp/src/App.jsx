@@ -1,3 +1,4 @@
+import { lockBodyScroll } from "./bodyScrollLock.js";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import PhotosLibrary from "./PhotosLibrary.jsx";
 import { saveSeriesTrailer } from "./api/raspberryApi";
@@ -54,7 +55,7 @@ import { bookStrings } from "./bookStrings.js";
 import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
 import TmdbCreditsCompletion from "./TmdbCreditsCompletion.jsx";
-import TorrentDownloads, { MediaTorrentSearch, TorrentNotificationBadge, TorrentNotificationBell, useTorrentDownloads } from "./TorrentDownloads.jsx";
+import TorrentDownloads, { MediaTorrentSearch, TorrentNotificationBell, useTorrentDownloads } from "./TorrentDownloads.jsx";
 import { completedTorrentNotifications, torrentNotificationLabel } from "./torrentNotifications.js";
 import { torrentStrings } from "./torrentUtils.js";
 import SectionSwitcher from "./SectionSwitcher.jsx";
@@ -2925,12 +2926,11 @@ function EpisodeDetailsModal({
       }
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      releaseScroll();
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [visible, onClose]);
@@ -4381,12 +4381,11 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
       }
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      releaseScroll();
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [visible]);
@@ -4672,11 +4671,10 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
   useEffect(() => {
     if (!visible) return () => {};
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      releaseScroll();
     };
   }, [visible]);
 
@@ -6505,6 +6503,7 @@ export default function App() {
   const [gameActionsVisible, setGameActionsVisible] = useState(false);
   const [gameLibraryView, setGameLibraryView] = useState("grid");
   const [selectedBookCollection, setSelectedBookCollection] = useState("");
+  const [picturesAtRoot, setPicturesAtRoot] = useState(true);
   const [bookDetailPath, setBookDetailPath] = useState("");
   const [bookLibraryType, setBookLibraryType] = useState("novel");
   const [bookLibrarySort, setBookLibrarySort] = useState("name");
@@ -9512,12 +9511,11 @@ export default function App() {
 
                 <button
                   className="series-hero__tv-button series-hero__tv-button--season-fixed"
-                  onClick={downloadNotificationCount > 0 ? handleOpenDownloadNotifications : handleOpenRaspberryPage}
+                  onClick={handleOpenRaspberryPage}
                   type="button"
-                  aria-label={downloadNotificationCount > 0 ? torrentNotificationLabel(downloadNotificationCount, torrentStrings(raspberryLanguage)) : t("raspberry_dashboard")}
+                  aria-label={t("raspberry_dashboard")}
                 >
                   <img className="series-hero__tv" src={tvGreen} alt={t("mini_tv_title")} />
-                  <TorrentNotificationBadge count={downloadNotificationCount} />
                 </button>
 
                 <div ref={seasonHeroShellRef} className="season-page__hero-shell">
@@ -9587,7 +9585,7 @@ export default function App() {
                         );
                       })}
                     </div>
-                    <TorrentNotificationBell notifications={downloadNotifications} language={raspberryLanguage} onViewDownloads={handleOpenDownloadNotifications} />
+                    {!isMediaDetail && (!isPicturesMode || picturesAtRoot) && <TorrentNotificationBell notifications={downloadNotifications} language={raspberryLanguage} onViewDownloads={handleOpenDownloadNotifications} />}
                     <ProfileMenu profiles={profiles} onManage={handleManageUsers} language={raspberryLanguage} />
                   </div>
                 </section>
@@ -9857,7 +9855,7 @@ export default function App() {
                       setTmdbBrowserOpen(true);
                     }} />
                 ) : isPicturesMode ? (
-                  <PhotosLibrary key={profiles.activeId} language={raspberryLanguage}
+                  <PhotosLibrary key={profiles.activeId} language={raspberryLanguage} onRootChange={setPicturesAtRoot}
                     initialFiles={pendingPhotoFiles} onImportDone={() => setPendingPhotoFiles(null)}
                     matchesPicture={picture => matchesFavorite("picture", picture.relativePath)} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} />
                 ) : !isGamesMode && libraryFiltersActive && !filterVisible ? (
