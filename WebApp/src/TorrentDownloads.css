@@ -78,3 +78,7 @@
 .torrent-upload__switch input:checked::before { transform: translateX(18px); background: #151c24; }
 .torrent-upload__switch input:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
 .torrent-upload__switch input:disabled { opacity: .5; cursor: not-allowed; }
+
+.movie-torrents__notify { display: flex; align-items: center; gap: 10px; width: fit-content; margin: 0 0 16px; cursor: pointer; }
+.movie-torrents__notify input { width: 18px; height: 18px; margin: 0; accent-color: #ffdc35; cursor: pointer; }
+.movie-torrents__notify input:focus-visible { outline: 2px solid #ffdc35; outline-offset: 4px; }

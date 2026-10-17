@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getRaspberryMovieLibraryItems as catalog, loadMovieDetails, findTorrentMovie } from '../src/movieCatalog.js';
+import { getRaspberryMovieLibraryItems as catalog, loadMovieDetails, findTorrentMovie, findTorrentSeries } from '../src/movieCatalog.js';
 
 const file = (path, tmdbId = 0) => ({ relativePath: path, file: path.split('/').pop(), tmdbId });
 
@@ -81,4 +81,17 @@ test('TMDB failures do not discard other metadata or request missing IDs', async
   assert.equal(result['Movies/a.mp4'], null);
   assert.equal(result['Movies/b.mp4'], null);
   assert.equal(result['Movies/c.mp4'].name, 'Movie C');
+});
+
+
+test('torrent series resolve existing directories by path, then TMDB after a move', () => {
+  const directories = [{ relativePath: 'TV/Original', tmdbId: 10 }, { relativePath: 'TV/Moved', tmdbId: 20 }];
+  const job = { state: 'complete', mediaType: 'series', series: { id: 20 }, item: { relativePath: 'TV/Original' } };
+  assert.equal(findTorrentSeries(job, directories), directories[0]);
+  assert.equal(findTorrentSeries({ ...job, item: { relativePath: 'TV/Old' } }, directories), directories[1]);
+  assert.equal(findTorrentSeries({ ...job, item: undefined }, directories), directories[1]);
+  assert.equal(findTorrentSeries(job, []), null);
+  assert.equal(findTorrentSeries({ ...job, state: 'failed' }, directories), null);
+  assert.equal(findTorrentSeries({ ...job, mediaType: 'movies' }, directories), null);
+  assert.equal(findTorrentSeries({ ...job, item: undefined, series: { name: 'Moved' } }, directories), null);
 });

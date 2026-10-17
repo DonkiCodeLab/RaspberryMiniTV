@@ -4,10 +4,13 @@ import { createPortal } from "react-dom";
 import BrowserVideo from "./BrowserVideo.jsx";
 import "./BrowserPlayerModal.css";
 
+import PlayerSizeControl, { usePlayerSize } from "./PlayerSizeControl.jsx";
+
 const SHELL_STORAGE_KEY = "minitv.video.showShell";
 
 function VideoSession({ playback, onClose, t }) {
   const dialog = useRef(null);
+  const [screenSize, setScreenSize] = usePlayerSize("video");
   const [showShell, setShowShell] = useState(() => {
     try { return window.localStorage.getItem(SHELL_STORAGE_KEY) !== "false"; }
     catch { return true; }
@@ -32,6 +35,7 @@ function VideoSession({ playback, onClose, t }) {
 
   return createPortal(
     <dialog ref={dialog} className={`browser-player browser-video-player${showShell ? " browser-video-player--shell" : ""}`}
+      style={{ "--player-screen-scale": screenSize / 100 }}
       aria-label={t("browser_player")} onCancel={event => { event.preventDefault(); onClose(); }}
       onKeyDown={event => { if (event.key === "Escape") event.stopPropagation(); }}>
       <div className="browser-player__panel browser-video-player__panel">
@@ -51,6 +55,7 @@ function VideoSession({ playback, onClose, t }) {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
           </button>
         </header>
+        {!showShell && <PlayerSizeControl size={screenSize} onChange={setScreenSize} t={t} />}
         <BrowserVideo url={playback.url} t={t} showShell={showShell}
           initialProgress={playback.context?.initialProgress} onProgress={playback.context?.onProgress} />
       </div>

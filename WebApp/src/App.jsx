@@ -19,7 +19,7 @@ import OpenAISettings from "./OpenAISettings.jsx";
 import CodexPanel from "./CodexPanel.jsx";
 import OmdbSettings from "./OmdbSettings.jsx";
 import ImdbRating from "./ImdbRating.jsx";
-import { RATING_SOURCES, ratingSource, loadRatingSource, saveRatingSource, formatLibraryRating, compareLibraryRatings } from "./libraryRatings.js";
+import { RATING_SOURCES, ratingSource, loadRatingSource, saveRatingSource, formatLibraryRating } from "./libraryRatings.js";
 import { catalogAIIds, filterAICollections, matchesCatalogAI } from "./catalogAI.js";
 import { recommendationLibraryTarget, recommendationTorrentTarget } from "./recommendations.js";
 import BrowserPlayerModal from "./BrowserPlayerModal.jsx";
@@ -40,7 +40,8 @@ import { ProfileMenu, UsersPanel, ResumeDialog, userStrings } from "./UserProfil
 import BookMetadataModal, { bookSearchQuery } from "./BookMetadataModal";
 import BookLibraryControls, { BookTypeField } from "./BookLibraryControls.jsx";
 import { bookTypeArtwork } from "./bookTypeArtwork.js";
-import { preloadLibraryCovers } from "./preloadLibraryCovers";
+import { preloadBookLibraryCovers } from "./preloadBookLibraryCovers.js";
+import { preloadLibraryCovers, waitForCoverPreview } from "./preloadLibraryCovers";
 import LibraryPoster from "./LibraryPoster";
 import OscarLibrary, { OscarIcon } from "./OscarLibrary";
 import { awardStrings, movieAwards } from "./awardCatalog.js";
@@ -68,7 +69,7 @@ import GameLibraryCard from "./GameLibraryCard.jsx";
 import GameImagePreview from "./GameImagePreview.jsx";
 import { gameMetadataImageUrl } from "./api/raspberryApi";
 import { GAME_SYSTEMS, GAME_EXTENSIONS, compatibleSystems, systemForGame } from "./gameSystems";
-import { mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason } from "./mediaMarks.js";
+import { mediaMarkKey, seasonMarkKey, episodeWatched, markEpisode, markSeason, markSeries, seriesWatched } from "./mediaMarks.js";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import cartellMask from "./assets/cartell_base_black_mask.png";
@@ -180,7 +181,7 @@ import {
   volumeDown,
   volumeUp,
 } from "./api/raspberryApi";
-import { getRaspberryMovieLibraryItems, getMovieTmdbId, findTorrentMovie } from "./movieCatalog";
+import { getRaspberryMovieLibraryItems, getMovieTmdbId, findTorrentMovie, findTorrentSeries } from "./movieCatalog";
 import {
   loadMediaLibrary,
   removeMediaLibraryItem,
@@ -396,6 +397,9 @@ const UI_STRINGS = {
     movie_favorite_remove_confirm: "¿Seguro que quieres quitar «{name}» de favoritos?",
     mark_all_watched: "Marcar todos como vistos",
     mark_all_unwatched: "Marcar todos como no vistos",
+    series_show_options: "Mostrar acciones de series",
+    series_hide_options: "Ocultar acciones de series",
+    mark_series_confirm: "¿Marcar todas las temporadas y todos los capítulos de «{season}» como {state}?",
     mark_season_confirm: "¿Marcar todos los capítulos de «{season}» como {state}?",
     mark_save_error: "No se han podido guardar las marcas en este navegador.",
     episodes: "capítulos",
@@ -411,6 +415,7 @@ const UI_STRINGS = {
     play_on_external_monitor: "Reproducir en Monitor Externo",
     browser_player: "Reproductor web",
     browser_player_shell: "Carcasa",
+    browser_player_size: "Tamaño",
     playing_now: "Reproduciendo...",
     synopsis_unavailable: "Sinopsis no disponible.",
     games_reserved: "Esta sección de customización todavía no tiene acciones disponibles.",
@@ -904,6 +909,9 @@ const UI_STRINGS = {
     movie_favorite_remove_confirm: "Segur que vols treure «{name}» de favorits?",
     mark_all_watched: "Marcar tots com a vistos",
     mark_all_unwatched: "Marcar tots com a no vistos",
+    series_show_options: "Mostrar accions de sèries",
+    series_hide_options: "Amagar accions de sèries",
+    mark_series_confirm: "Vols marcar totes les temporades i tots els capítols de «{season}» com a {state}?",
     mark_season_confirm: "Vols marcar tots els capítols de «{season}» com a {state}?",
     mark_save_error: "No s’han pogut desar les marques en aquest navegador.",
     episodes: "capítols",
@@ -919,6 +927,7 @@ const UI_STRINGS = {
     play_on_external_monitor: "Reproduir en Monitor Extern",
     browser_player: "Reproductor web",
     browser_player_shell: "Carcassa",
+    browser_player_size: "Mida",
     playing_now: "Reproduint...",
     synopsis_unavailable: "Sinopsi no disponible.",
     games_reserved: "Aquesta secció de personalització encara no té accions disponibles.",
@@ -1412,6 +1421,9 @@ const UI_STRINGS = {
     movie_favorite_remove_confirm: "Are you sure you want to remove “{name}” from favorites?",
     mark_all_watched: "Mark all as watched",
     mark_all_unwatched: "Mark all as unwatched",
+    series_show_options: "Show series actions",
+    series_hide_options: "Hide series actions",
+    mark_series_confirm: "Mark every season and every episode of “{season}” as {state}?",
     mark_season_confirm: "Mark all episodes of “{season}” as {state}?",
     mark_save_error: "Could not save your marks in this browser.",
     episodes: "episodes",
@@ -1427,6 +1439,7 @@ const UI_STRINGS = {
     play_on_external_monitor: "Play on External Monitor",
     browser_player: "Web player",
     browser_player_shell: "TV shell",
+    browser_player_size: "Size",
     playing_now: "Playing...",
     synopsis_unavailable: "Synopsis unavailable.",
     games_reserved: "This customization section has no actions available yet.",
@@ -4606,7 +4619,7 @@ function GameMetadataBrowserModal({ visible, initialQuery = "", onClose, t }) {
   );
 }
 
-function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType = "series", initialMovie = null, onTorrentStarted, onTorrentDashboard }) {
+function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType = "series", initialMovie = null, onTorrentStarted, onTorrentDashboard, profiles }) {
   const [mediaType, setMediaType] = useState(initialMediaType);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -5096,6 +5109,8 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
               seasonNumber={mediaType === "series" && browserView !== "seasons" ? selectedSeason?.seasonNumber ?? null : null}
               episodeNumber={mediaType === "series" && browserView === "episode" ? selectedEpisode?.episodeNumber ?? null : null}
               language={tmdbLanguage} onStarted={onTorrentStarted} onDashboard={onTorrentDashboard}
+              notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready}
+              onNotificationChange={profiles.setTorrentNotification}
             />}
           </section>
           ) : null}
@@ -5436,6 +5451,7 @@ function RaspberryPage({
   onOpenTmdbBrowser,
   torrentDownloads,
   onOpenTorrentMovie,
+  onOpenTorrentSeries,
 }) {
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
   const [cameraImageUrl, setCameraImageUrl] = useState("");
@@ -5574,7 +5590,7 @@ function RaspberryPage({
               notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready}
               onNotificationChange={profiles.setTorrentNotification}
               onNotificationsDismiss={profiles.dismissTorrentNotifications}
-              onOpenMovie={onOpenTorrentMovie}
+              onOpenMovie={onOpenTorrentMovie} onOpenSeries={onOpenTorrentSeries}
               showNotifications={dashboardSection === "downloads" && selectedDashboardSection === "torrents"}
               onNotificationsShown={() => onDashboardSectionShown("")} />
           </div>
@@ -6427,7 +6443,7 @@ function BookOpenModal({ book, busy, onClose, onOpenBrowser, onOpenRaspberry, t 
 }
 
 
-function LibraryLoading({ label, progress, stage }) {
+function LibraryLoading({ label, progress, stage, readProgress }) {
   const [now, setNow] = useState(Date.now());
   const [started] = useState(Date.now());
   useEffect(() => {
@@ -6438,11 +6454,12 @@ function LibraryLoading({ label, progress, stage }) {
     <div className="library-loading__card" role="status" aria-live="polite">
       <LoadingSpinner />
       <h2>{label}</h2>
-      <p className="library-loading__detail">{stage || label} · {Math.max(0, Math.floor((now - started) / 1000))} s</p>
+      <p className="library-loading__detail">{stage || label}{readProgress ? (readProgress.total > 0 ? ` · ${Math.floor(readProgress.completed / readProgress.total * 100)} %` : " · Preparando lectura…") : ` · ${Math.max(0, Math.floor((now - started) / 1000))} s`}</p>
       {progress?.total > 0 ? <>
         <p className="library-loading__detail">Portadas: {progress.completed}/{progress.total} revisadas · {progress.loaded || 0} cargadas · {progress.failed || 0} errores · {progress.timedOut || 0} tiempos agotados</p>
         <ul className="library-loading__pending">{progress.active?.map(item => <li key={item.name}>Esperando: {item.name} · {Math.max(0, Math.floor((now - item.started) / 1000))} s</li>)}</ul>
       </> : null}
+      {readProgress?.total > 0 ? <progress className="library-loading__progress" value={readProgress.completed} max={readProgress.total} aria-label={stage || label} /> : null}
       {progress?.total > 0 ? <progress className="library-loading__progress" value={progress.completed} max={progress.total} aria-label={label} /> : null}
     </div>
   </div>;
@@ -6469,6 +6486,7 @@ export default function App() {
   const [preparedLibrary, setPreparedLibrary] = useState(null);
   const [coverProgress, setCoverProgress] = useState(null);
   const [coverWarning, setCoverWarning] = useState("");
+  const [readProgress, setReadProgress] = useState(null);
   const [libraryStage, setLibraryStage] = useState("Conectando con la Raspberry");
   const [detailLoadState, setDetailLoadState] = useState({ key: "", loading: false, error: "" });
   const [detailRetry, setDetailRetry] = useState(0);
@@ -6603,6 +6621,8 @@ export default function App() {
   const [bookActionsVisible, setBookActionsVisible] = useState(false);
   const [seriesLibraryView, setSeriesLibraryView] = useState("grid");
   const [seriesLibrarySort, setSeriesLibrarySort] = useState("name");
+  const [seriesSortDirection, setSeriesSortDirection] = useState("asc");
+  const [seriesActionsVisible, setSeriesActionsVisible] = useState(false);
   const [libraryRatingSource, setLibraryRatingSource] = useState(loadRatingSource);
   const [libraryRatings, setLibraryRatings] = useState({});
   useEffect(() => { saveRatingSource(libraryRatingSource); }, [libraryRatingSource]);
@@ -6819,6 +6839,7 @@ export default function App() {
 
     async function load() {
       setLoading(true);
+      setReadProgress({ completed: 0, total: 0 });
       setCoverProgress(null);
       setError("");
       setRaspberryLanguageError("");
@@ -6845,7 +6866,7 @@ export default function App() {
 
       try {
         const [nextVideos, nextLanguage] = await Promise.all([
-          track("catálogo local", getVideos),
+          track("catálogo local", () => getVideos({ onProgress: progress => { if (!cancelled) setReadProgress(progress); } })),
           track("idioma", getRaspberryLanguage),
         ]);
         if (cancelled) return;
@@ -6881,6 +6902,7 @@ export default function App() {
       } finally {
         if (!cancelled) {
           setLoading(false);
+          setReadProgress(null);
         }
       }
     }
@@ -7094,12 +7116,14 @@ export default function App() {
     setTmdbLoading(true);
     setCoverProgress(null);
     setCoverWarning("");
+    setReadProgress({ completed: 0, total: 0 });
     setLibraryStage("Leyendo resumen local de series y películas");
     const summaryStarted = Date.now();
     console.info("[Biblioteca] Inicio: resumen local", { language: tmdbLanguage });
     setError("");
-    getLibrarySummaries(libraryMovies, directories, tmdbLanguage).then(async summaries => {
+    getLibrarySummaries(libraryMovies, directories, tmdbLanguage, { onProgress: progress => { if (!cancelled) setReadProgress(progress); } }).then(async summaries => {
       if (cancelled) return;
+      setReadProgress(null);
       setLibraryRatings(summaries.ratings || {});
       console.info("[Biblioteca] Completado: resumen local", { ms: Date.now() - summaryStarted });
       setLibraryStage("Cargando miniaturas locales de series y películas");
@@ -7124,6 +7148,13 @@ export default function App() {
         const detail = current[String(movie.id)];
         return [String(movie.id), { ...card, ...(detail?._detailsLanguage === tmdbLanguage ? detail : {}) }];
       })));
+      setLibraryStage("Cargando miniaturas de libros y novelas gráficas");
+      setCoverProgress(null);
+      // Continue warming the remaining covers after opening the library.
+      const bookPreload = preloadBookLibraryCovers(videos.books || [], videos.bookCollections || {},
+        normalizeRaspberryLanguage(raspberryLanguage), getBookDisplayCoverUrl, { signal: controller.signal });
+      await waitForCoverPreview(bookPreload, 2000);
+      if (cancelled) return;
       setPreparedLibrary(libraryRequest);
     }).catch(nextError => {
       console.error("[Biblioteca] Error al preparar biblioteca", { ms: Date.now() - summaryStarted, status: nextError?.status });
@@ -8209,6 +8240,24 @@ export default function App() {
     return true;
   }
 
+  async function handleOpenTorrentSeries(job, signal) {
+    if (signal.aborted) return false;
+    let directory = findTorrentSeries(job, directories);
+    if (!directory) {
+      const nextVideos = await getVideos();
+      if (signal.aborted) return false;
+      directory = findTorrentSeries(job, nextVideos?.directories);
+      if (!directory) return false;
+      setVideos(nextVideos);
+    }
+    handleMediaTypeChange("series");
+    setCatalogAIResults(current => ({ ...current, series: null }));
+    setMediaFilterQueries(current => ({ ...current, series: "" }));
+    setMediaFavoritesOnly(current => ({ ...current, series: false }));
+    handleOpenSeriesDetails(directory.relativePath);
+    return true;
+  }
+
   function handleOpenRecommendedLibrary(item) {
     const target = recommendationLibraryTarget(item, movieOptions, seriesOptions);
     if (!target) return false;
@@ -9147,9 +9196,7 @@ export default function App() {
   ).sort((left, right) => compareLibraryItems(left, right, movieLibrarySort, movieSortDirection, normalizeRaspberryLanguage(raspberryLanguage), libraryRatingSource));
   const filteredSeriesOptions = seriesOptions
     .filter((series) => matchesAI(series) && matchesName(series.name) && matchesFavorite("series", series.id || series.directoryPath))
-    .sort((left, right) => seriesLibrarySort === "rating"
-      ? compareLibraryRatings(left, right, libraryRatingSource, "desc", normalizeRaspberryLanguage(raspberryLanguage))
-      : compareMediaNames(left, right));
+    .sort((left, right) => compareLibraryItems(left, right, seriesLibrarySort, seriesSortDirection, normalizeRaspberryLanguage(raspberryLanguage), libraryRatingSource));
   const filteredGameOptions = consoleGames
     .filter(game => matchesAI(game) && matchesName(game.name || game.file) && matchesFavorite("game", game.relativePath))
     .map(game => ({ ...game, year: gameYear(game) }))
@@ -9387,7 +9434,7 @@ export default function App() {
               {detailLoading ? <><LoadingSpinner inline /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
             {!error && libraryPending ? (
-              <LibraryLoading label={t("loading_library")} stage={libraryStage} progress={tmdbLoading ? coverProgress : null} />
+              <LibraryLoading label={t("loading_library")} stage={libraryStage} readProgress={readProgress} progress={tmdbLoading ? coverProgress : null} />
             ) : error ? (
               <section className="empty-state">
                 <div className="empty-state__card">
@@ -9486,6 +9533,7 @@ export default function App() {
                 uploadSummary={uploadSummary}
                 torrentDownloads={torrentDownloads}
                 onOpenTorrentMovie={handleOpenTorrentMovie}
+                onOpenTorrentSeries={handleOpenTorrentSeries}
                 onOpenTmdbBrowser={() => { setTorrentInitialMovie(null); setTmdbBrowserOpen(true); }}
               />
             ) : isSeriesMode && currentView === "season" && selectedSeason ? (
@@ -10003,15 +10051,20 @@ export default function App() {
                     </div>
                   </section>
                 ) : isSeriesMode && !selectedSeries ? (
-                  <section className="movie-library seasons-section">
+                  <section className="movie-library seasons-section library-with-scroll-rail">
+                    <LibraryScrollRail labels={filteredSeriesOptions.map(item => libraryScrollLabel(item, seriesLibrarySort, normalizeRaspberryLanguage(raspberryLanguage), libraryRatingSource))} language={raspberryLanguage} sort={seriesLibrarySort} ratingSource={libraryRatingSource} direction={seriesSortDirection} onDirectionChange={setSeriesSortDirection} actionsVisible={seriesActionsVisible} onActionsChange={seriesLibraryView === "list" ? undefined : setSeriesActionsVisible} actionLabels={{ showActions: t("series_show_options"), hideActions: t("series_hide_options") }} />
                     <div className="seasons-section__label">{libraryCountLabel}</div>
-                    <div className={`movie-library__items movie-library__items--${seriesLibraryView}`}>
+                    <MovieLibraryItems view={seriesLibraryView} actionsVisible={seriesActionsVisible}>
                       {filteredSeriesOptions.map((series) => {
+                        const seriesId = series.id || series.directoryPath;
+                        const markKey = mediaMarkKey("series", seriesId);
+                        const isFavorite = Boolean(mediaMarks[markKey]?.favorite);
+                        const isWatched = seriesWatched(mediaMarks, seriesId);
                         const poster = series.posterImage;
                         const year = series.firstAirDate?.slice(0, 4) || t("not_available");
                         const rating = formatLibraryRating(series, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
-                          <article className="movie-library__card" key={series.directoryPath}>
+                          <article data-library-index className="movie-library__card" key={series.directoryPath}>
                             <MoviePosterPreview movie={series} kind="tv" enabled={seriesLibraryView === "grid"} onClick={() => handleOpenSeriesDetails(series.directoryPath)} label={`${t("movie_details")}: ${series.name}`}>
                               <LibraryPoster src={poster} name={series.name} />
                             </MoviePosterPreview>
@@ -10032,11 +10085,31 @@ export default function App() {
                                   <dd>{series.totalRuntimeMinutes == null ? "—" : `${series.runtimeIsEstimated ? "≈ " : ""}${new Intl.NumberFormat(normalizeRaspberryLanguage(raspberryLanguage), { maximumFractionDigits: 1 }).format(series.totalRuntimeMinutes / 60)}`}</dd>
                                 </div>
                               </dl>
+                              <div className="movie-library__actions-reveal" inert={seriesLibraryView !== "list" && !seriesActionsVisible} aria-hidden={seriesLibraryView !== "list" && !seriesActionsVisible}>
+                                <div className="movie-library__actions-clip">
+                                  <div className="movie-library__actions movie-library__actions--icons">
+                                    <button className={`movie-watched${isWatched ? " is-watched" : ""}`} type="button" aria-pressed={isWatched}
+                                      aria-label={`${t(isWatched ? "mark_unwatched" : "mark_watched")}: ${series.name}`} title={t(isWatched ? "mark_unwatched" : "mark_watched")}
+                                      onClick={() => {
+                                        if (window.confirm(t("mark_series_confirm", { season: series.name, state: t(isWatched ? "mark_unwatched" : "mark_watched").toLowerCase() }))) {
+                                          saveMarks(markSeries(mediaMarks, seriesId, !isWatched));
+                                        }
+                                      }}><MediaMarkIcon active={isWatched} /></button>
+                                    <button className={`movie-favorite${isFavorite ? " is-favorite" : ""}`} type="button" aria-pressed={isFavorite}
+                                      aria-label={`${t(isFavorite ? "mark_not_favorite" : "mark_favorite")}: ${series.name}`} title={t(isFavorite ? "mark_not_favorite" : "mark_favorite")}
+                                      onClick={() => saveMarks({ ...mediaMarks, [markKey]: { ...mediaMarks[markKey], favorite: !isFavorite } })}><MediaMarkIcon favorite active={isFavorite} /></button>
+                                    <button className="media-delete-button movie-library__delete" type="button" onClick={() => handleDeleteSeries(false, series)}
+                                      aria-label={`${t("delete_media", { media: t("media_series_singular") })}: ${series.name}`} title={t("delete_media", { media: t("media_series_singular") })}>
+                                      <img src={deleteIcon} alt="" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </article>
                         );
                       })}
-                    </div>
+                    </MovieLibraryItems>
                   </section>
                 ) : isSeriesMode && detailLoading ? (
                   <section className="empty-state" aria-busy="true" role="status" aria-live="polite">
@@ -10448,6 +10521,7 @@ export default function App() {
               tmdbLanguage={tmdbLanguage}
               initialMediaType={uploadMediaType === "movies" ? "movies" : "series"}
               initialMovie={torrentInitialMovie}
+              profiles={profiles}
               onTorrentStarted={torrentDownloads.refresh}
               onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }}
             />
@@ -10488,6 +10562,7 @@ export default function App() {
         )}
       </div>
       {bookTorrentTarget && <BookTorrentModal key={bookTorrentTarget.key} winner={bookTorrentTarget} language={raspberryLanguage} onClose={() => setBookTorrentTarget(null)}
+        notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready} onNotificationChange={profiles.setTorrentNotification}
         onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }} />}
       {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>

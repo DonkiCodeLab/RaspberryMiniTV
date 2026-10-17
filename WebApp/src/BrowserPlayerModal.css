@@ -138,3 +138,7 @@ dialog.browser-video-player:not([open]) { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .browser-video-player__switch-track, .browser-video-player__switch-track::after { transition: none; }
 }
+
+.browser-video-player:not(.browser-video-player--shell) .browser-video__stage .mega-drive-tv {
+  scale: var(--player-screen-scale, 1);
+}

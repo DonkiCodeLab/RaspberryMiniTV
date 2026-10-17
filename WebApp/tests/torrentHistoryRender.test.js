@@ -23,7 +23,7 @@ const jobs = ['First movie', 'Second movie'].map((name, index) => ({
 }));
 const render = (rows, preferences = {}, language = 'es') => renderToStaticMarkup(React.createElement(TorrentDownloads, {
   downloads: { jobs: rows, loaded: true }, language, notificationsReady: true,
-  notificationPreferences: preferences, onNotificationChange() {}, onOpenMovie() {},
+  notificationPreferences: preferences, onNotificationChange() {}, onOpenMovie() {}, onOpenSeries() {},
 }));
 const badge = (rows, preferences) => renderToStaticMarkup(React.createElement(TorrentNotificationBadge, {
   count: completedTorrentNotifications(rows, preferences).length,
@@ -57,10 +57,11 @@ test('only unfinished downloads allow enabling notifications; history only allow
   }
 });
 
-test('movie detail links appear for completed movies, including old jobs, and never for other media or incomplete jobs', () => {
+test('detail links appear for completed movies and series, but not books or incomplete jobs', () => {
   assert.match(render(jobs), /Ir a la ficha/);
   assert.match(render([{ ...jobs[0], mediaType: 'movies' }]), /Ir a la ficha/);
-  for (const mediaType of ['series', 'books']) {
+  assert.match(render([{ ...jobs[0], mediaType: 'series' }]), /Ir a la ficha/);
+  for (const mediaType of ['books']) {
     assert.doesNotMatch(render([{ ...jobs[0], mediaType }]), /Ir a la ficha/);
   }
   for (const state of ['queued', 'downloading', 'metadata', 'failed', 'cancelled']) {
@@ -71,7 +72,7 @@ test('movie detail links appear for completed movies, including old jobs, and ne
 test('movie lookup, missing catalog entry and dismissal labels exist in every supported language', () => {
   for (const language of ['es', 'ca', 'en']) {
     const s = torrentStrings(language);
-    for (const key of ['openMovie', 'openingMovie', 'movieMissing', 'movieMissingCopy', 'movieLookupFailed', 'movieLookupFailedCopy', 'close']) {
+    for (const key of ['openMovie', 'openSeries', 'seriesMissing', 'openingMovie', 'movieMissing', 'movieMissingCopy', 'movieLookupFailed', 'movieLookupFailedCopy', 'close']) {
       assert.ok(s[key]);
     }
     assert.ok(s.movieMissingCopy.includes('{name}'));

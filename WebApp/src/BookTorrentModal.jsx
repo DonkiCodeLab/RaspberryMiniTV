@@ -8,7 +8,7 @@ import { MediaTorrentSearch } from './TorrentDownloads.jsx';
 import { bookLanguageName } from './bookMetadata.js';
 import './BookTorrentModal.css';
 
-export default function BookTorrentModal({ winner, language, onClose, onStarted, onDashboard }) {
+export default function BookTorrentModal({ winner, language, onClose, onStarted, onDashboard, notificationPreferences, notificationsReady, onNotificationChange }) {
   const t = bookTorrentStrings(language);
   const [initialBook] = useState(() => awardTorrentBook(winner));
   const [query, setQuery] = useState(() => initialBook?.spanishTitle || `${winner.title} ${winner.author}`);
@@ -105,7 +105,8 @@ export default function BookTorrentModal({ winner, language, onClose, onStarted,
             <button className="dialog-button" type="submit" disabled={!spanishTitle.trim()}>{t.confirm}</button>
             <button className="dialog-button dialog-button--ghost" type="button" onClick={() => { setDetail(null); setMedia(null); }}>{t.change}</button>
           </form>
-          {media && <MediaTorrentSearch key={`${media.openLibraryKey}:${media.spanishTitle}`} media={media} mediaType="books" language={language} onStarted={onStarted} onDashboard={onDashboard} />}
+          {media && <MediaTorrentSearch key={`${media.openLibraryKey}:${media.spanishTitle}`} media={media} mediaType="books" language={language} onStarted={onStarted} onDashboard={onDashboard}
+            notificationPreferences={notificationPreferences} notificationsReady={notificationsReady} onNotificationChange={onNotificationChange} />}
         </>}
       </>}
     </div>

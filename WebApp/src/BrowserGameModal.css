@@ -474,3 +474,10 @@ dialog.browser-game--television {
   .television-help--legend .television-help__dpad h3 { margin: 0; }
   .television-player { --legend-width: 244px; --legend-gap: 24px; }
 }
+
+.browser-game--handheld[data-without-shell] { --handheld-height: calc(100dvh - 130px); }
+.browser-game[data-without-shell] .mega-drive-tv,
+.browser-game[data-without-shell] .gameboy-device,
+.browser-game[data-without-shell] .browser-game__screen {
+  scale: var(--player-screen-scale, 1);
+}

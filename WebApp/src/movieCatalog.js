@@ -49,3 +49,13 @@ export async function loadMovieDetails(movies, fetchMovie, language) {
     return [String(movie.id), details];
   })));
 }
+
+// Series navigation resolves a directory that still exists in the live catalog.
+export function findTorrentSeries(job, directories = []) {
+  if (job?.state !== 'complete' || job.mediaType !== 'series') return null;
+  const available = directories.filter(directory => directory.relativePath);
+  const exact = job.item?.relativePath && available.find(directory => directory.relativePath === job.item.relativePath);
+  if (exact) return exact;
+  const tmdbId = Number(job.series?.id) || 0;
+  return tmdbId > 0 ? available.find(directory => Number(directory.tmdbId) === tmdbId) || null : null;
+}

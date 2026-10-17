@@ -826,9 +826,10 @@ def upsert_media_profile(collection, key, updates):
     return item
 
 
-def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root_files):
+def sync_scanned_media_library(tvshow_directories, movie_directories, movie_root_files, library=None):
     global scanned_media_paths
-    library = load_media_library()
+    if library is None:
+        library = load_media_library()
     series_items = library.setdefault("series", {})
     movie_items = library.setdefault("movies", {})
     game_items = library.setdefault("games", {})
@@ -997,6 +998,11 @@ def log_local_library_request(response):
 
 @app.after_request
 def compress_video_catalog(response):
+    if (request.path in {"/videos", "/tmdb/library"} and response.status_code == 200
+            and not response.is_streamed and not response.headers.get("Content-Encoding")):
+        response.headers["X-Decoded-Content-Length"] = str(len(response.get_data()))
+        exposed = response.headers.get("Access-Control-Expose-Headers", "")
+        response.headers["Access-Control-Expose-Headers"] = ", ".join(filter(None, [exposed, "X-Decoded-Content-Length"]))
     if (request.path == "/videos" and request.method == "GET" and response.status_code == 200
             and response.mimetype == "application/json" and not response.is_streamed
             and not response.headers.get("Content-Encoding")):
@@ -1242,9 +1248,10 @@ def resolve_book_path(relative_path):
     return candidate
 
 
-def list_book_entries():
+def list_book_entries(library=None):
     ensure_media_directories()
-    library = load_media_library()
+    if library is None:
+        library = load_media_library()
     book_profiles = library.get("books") if isinstance(library.get("books"), dict) else {}
     items = []
     for root, _dirs, files in os.walk(BOOKS_DIR):
@@ -1349,9 +1356,10 @@ def extract_book_cover(book_path):
     return None
 
 
-def list_game_entries():
+def list_game_entries(library=None):
     ensure_media_directories()
-    library = load_media_library()
+    if library is None:
+        library = load_media_library()
     game_items = library.get("games") if isinstance(library.get("games"), dict) else {}
     items = []
     if not os.path.isdir(GAMES_DIR):
@@ -1658,12 +1666,13 @@ def iter_video_entries():
     return items
 
 
-def build_media_buckets(category):
+def build_media_buckets(category, media_library=None, video_entries=None):
     grouped = {}
     root_files = []
     root_directory = "Movies" if category == "movies" else "TVShows"
     category_dir = MOVIES_DIR if category == "movies" else TVSHOWS_DIR
-    media_library = load_media_library()
+    if media_library is None:
+        media_library = load_media_library()
     metadata_items = media_library.get("movies" if category == "movies" else "series", {})
 
     def with_movie_metadata(video):
@@ -1693,7 +1702,7 @@ def build_media_buckets(category):
                 },
             )
 
-    for entry in iter_video_entries():
+    for entry in iter_video_entries() if video_entries is None else video_entries:
         if entry.get("category") != category:
             continue
 
@@ -1778,11 +1787,27 @@ def list_episodes(directory=None):
 
 def list_video_directories():
     ensure_media_directories()
-    tvshow_directories, tvshow_root_files = build_media_buckets("tvshows")
-    movie_directories, movie_root_files = build_media_buckets("movies")
-    media_library = sync_scanned_media_library(tvshow_directories, movie_directories, movie_root_files)
+    def stage(name, read):
+        started = time.perf_counter()
+        print(f"[Biblioteca local] Inicio etapa: {name}", flush=True)
+        try:
+            return read()
+        finally:
+            elapsed = (time.perf_counter() - started) * 1000
+            print(f"[Biblioteca local] Fin etapa: {name}, {elapsed:.1f} ms", flush=True)
 
-    book_collections = load_media_library().get("bookCollections", {})
+    # Reuse one catalog snapshot and disk scan across all sections. Uploads can
+    # update the catalog concurrently; re-reading it is costly and mixes revisions.
+    library = stage("catálogo", load_media_library)
+    video_entries = stage("archivos de vídeo", iter_video_entries)
+    tvshow_directories, tvshow_root_files = build_media_buckets("tvshows", library, video_entries)
+    movie_directories, movie_root_files = build_media_buckets("movies", library, video_entries)
+    media_library = stage("perfiles locales", lambda: sync_scanned_media_library(
+        tvshow_directories, movie_directories, movie_root_files, library))
+    games = stage("juegos", lambda: list_game_entries(library))
+    books = stage("libros", lambda: list_book_entries(library))
+    pictures = stage("fotografías", list_picture_entries)
+    book_collections = library.get("bookCollections", {})
     return {
         "ok": True,
         "root": VIDEOS_DIR,
@@ -1793,9 +1818,9 @@ def list_video_directories():
         "picturesRoot": PICTURES_DIR,
         "libraryCounts": get_library_counts(),
         "mediaLibrary": media_library,
-        "games": list_game_entries(),
-        "books": list_book_entries(),
-        "pictures": list_picture_entries(),
+        "games": games,
+        "books": books,
+        "pictures": pictures,
         "bookCollections": book_collections,
         "directories": tvshow_directories,
         "rootFiles": tvshow_root_files,

@@ -1,3 +1,4 @@
+import { readResponseWithProgress } from "./readResponseWithProgress.js";
 import { photoDemo, demoPhotoUrl } from "./photoDemo.js";
 import { requestWithTimeout } from '../requestWithTimeout.js';
 // Admin credentials stay in request headers; never place them in URLs or media links.
@@ -277,6 +278,7 @@ function getBaseUrl() {
 }
 
 async function request(path, options = {}) {
+  const { onProgress, ...fetchOptions } = options;
   const storedPin = getStoredWebPin();
   const isFormDataBody = typeof FormData !== "undefined" && options.body instanceof FormData;
   const response = await fetch(`${getBaseUrl()}${path}`, {
@@ -285,10 +287,10 @@ async function request(path, options = {}) {
       ...(storedPin ? { "X-Web-Pin": storedPin } : {}),
       ...(options.headers || {}),
     },
-    ...options,
+    ...fetchOptions,
   });
 
-  const text = await response.text();
+  const text = await readResponseWithProgress(response, response.ok ? onProgress : null);
   const payload = text ? tryParseJson(text) : null;
 
   if (!response.ok) {
@@ -418,13 +420,13 @@ export function getHealth() {
   return requestWithTimeout(signal => request("/health", { signal }));
 }
 
-export function getVideos() {
+export function getVideos({ onProgress } = {}) {
   if (isMockModeEnabled()) {
     return Promise.resolve(buildMockVideoLibrary());
   }
 
   // The full catalog also travels over remote Raspberry connections.
-  return requestWithTimeout(signal => request("/videos", { signal }), 30000);
+  return requestWithTimeout(signal => request("/videos", { signal, onProgress }), 30000);
 }
 
 export function getRaspberryLanguage() {
@@ -1722,8 +1724,8 @@ export async function gameSystemArtwork(systemId, file, reset = false) {
 }
 
 // TMDB requests go through the Raspberry's persistent cache in connected mode.
-export function getCachedLibrarySummaries(language) {
-  return requestWithTimeout(signal => request(`/tmdb/library?${new URLSearchParams({ language })}`, { signal }));
+export function getCachedLibrarySummaries(language, { onProgress } = {}) {
+  return requestWithTimeout(signal => request(`/tmdb/library?${new URLSearchParams({ language })}`, { signal, onProgress }));
 }
 
 const localMetadataRequests = new Map();

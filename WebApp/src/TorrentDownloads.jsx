@@ -61,7 +61,7 @@ export function TorrentNotificationBell({ notifications = [], language, onViewDo
   </div>;
 }
 
-export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted }) {
+export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted, notificationPreferences = {}, notificationsReady = false, onNotificationChange }) {
   const s = torrentStrings(language);
   const isSeries = mediaType === "series";
   const isBook = mediaType === "books";
@@ -79,6 +79,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [started, setStarted] = useState(false);
+  const [startedJob, setStartedJob] = useState(null);
   const [demo, setDemo] = useState(false);
   const [overwriteTorrent, setOverwriteTorrent] = useState(null);
   const cancelOverwrite = useRef(null);
@@ -92,7 +93,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20000);
     let disposed = false;
-    setLoading(true); setError(""); setDemo(false); setStarted(false);
+    setLoading(true); setError(""); setDemo(false); setStarted(false); setStartedJob(null);
     if (!searchTerm.append) { setResults([]); setSources([]); setNextEztvPage(null); }
     searchMediaTorrents(searchTerm.query, controller.signal, { ...searchTerm, mediaType, imdbId: media.imdbId }).then(payload => {
       if (!disposed) {
@@ -113,6 +114,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
       const response = await startMediaTorrent(torrent, media, { mediaType, overwriteExisting,
         seasonNumber: searchTerm.seasonNumber, episodeNumber: searchTerm.episodeNumber });
       if (response.job?.state === "failed") throw new Error(response.job.error);
+      setStartedJob(response.job ?? null);
       setStarted(true);
       setOverwriteTorrent(null);
       onStarted?.();
@@ -154,7 +156,16 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
         <button ref={cancelOverwrite} className="dialog-button dialog-button--ghost" disabled={Boolean(busy)} onClick={() => { setOverwriteTorrent(null); setError(""); }} type="button">{s.cancel}</button>
       </div>
     </div>}
-    {started ? <div className="movie-torrents__success" role="status"><p>{s.started}</p><button className="dialog-button dialog-button--accent" onClick={onDashboard} type="button">{s.dashboard}</button></div> : <>
+    {started ? <div className="movie-torrents__success">
+      <p role="status">{s.started}</p>
+      {startedJob?.id && <label className="movie-torrents__notify">
+        <input type="checkbox" checked={wantsTorrentNotification(startedJob, notificationPreferences)}
+          disabled={!notificationsReady || !onNotificationChange}
+          onChange={event => onNotificationChange?.(torrentNotificationKey(startedJob), event.target.checked)} />
+        <span>{s.notify}</span>
+      </label>}
+      <button className="dialog-button dialog-button--accent" onClick={onDashboard} type="button">{s.dashboard}</button>
+    </div> : <>
       {loading ? <p role="status"><LoadingSpinner inline /> {s.searching}</p> : demo ? <p>{s.demo}</p> : !results.length && !error ? <p>{isBook ? bs.empty : isSeries ? s.seriesEmpty : s.empty}</p> : null}
       {results.length > 0 && <>
         <div className="movie-torrents__sort">
@@ -242,7 +253,7 @@ function TorrentMovieNotice({ notice, strings: s, onClose }) {
   return createPortal(<dialog ref={dialogRef} className="dialog-card dialog-card--compact torrent-movie-notice"
     role="alertdialog" aria-modal="true" aria-labelledby="torrent-movie-notice-title" aria-describedby="torrent-movie-notice-copy"
     onCancel={event => { event.preventDefault(); onClose(); }}>
-    <div className="dialog-card__header"><h2 id="torrent-movie-notice-title">{notice.failed ? s.movieLookupFailed : s.movieMissing}</h2></div>
+    <div className="dialog-card__header"><h2 id="torrent-movie-notice-title">{notice.failed ? s.movieLookupFailed : notice.job.mediaType === "series" ? s.seriesMissing : s.movieMissing}</h2></div>
     <p className="dialog-copy" id="torrent-movie-notice-copy">{notice.failed ? s.movieLookupFailedCopy : s.movieMissingCopy.replace("{name}", torrentJobTitle(notice.job))}</p>
     <div className="dialog-card__actions"><button className="dialog-button dialog-button--accent" type="button" autoFocus onClick={onClose}>{s.close}</button></div>
   </dialog>, document.body);
@@ -275,7 +286,7 @@ function TorrentNotificationsConfirm({ strings: s, disabled, onClose, onConfirm 
 }
 
 export default function TorrentDownloads({ downloads, language, notificationPreferences = {}, notificationsReady = false,
-  onNotificationChange, onNotificationsDismiss, showNotifications = false, onNotificationsShown, onOpenMovie }) {
+  onNotificationChange, onNotificationsDismiss, showNotifications = false, onNotificationsShown, onOpenMovie, onOpenSeries }) {
   const s = torrentStrings(language);
   const [selectedGroup, setSelectedGroup] = useState("active");
   const sectionRef = useRef(null);
@@ -291,7 +302,7 @@ export default function TorrentDownloads({ downloads, language, notificationPref
     movieRequest.current = controller;
     setOpeningMovie(job.id);
     try {
-      const opened = await onOpenMovie(job, controller.signal);
+      const opened = await (job.mediaType === "series" ? onOpenSeries : onOpenMovie)(job, controller.signal);
       if (!controller.signal.aborted && !opened) setMovieNotice({ job, failed: false });
     } catch {
       if (!controller.signal.aborted) setMovieNotice({ job, failed: true });
@@ -375,10 +386,10 @@ export default function TorrentDownloads({ downloads, language, notificationPref
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
           {notifying ? s.stopNotifying : s.notify}
         </button>}
-        {job.state === "complete" && (job.mediaType || "movies") === "movies" && onOpenMovie &&
+        {job.state === "complete" && ((job.mediaType || "movies") === "movies" ? onOpenMovie : job.mediaType === "series" && onOpenSeries) &&
           <button className="dialog-button dialog-button--accent" disabled={Boolean(openingMovie)}
-            onClick={() => openMovie(job)} type="button" aria-label={`${s.openMovie}: ${torrentJobTitle(job)}`}>
-            {openingMovie === job.id ? s.openingMovie : s.openMovie}
+            onClick={() => openMovie(job)} type="button" aria-label={`${job.mediaType === "series" ? s.openSeries : s.openMovie}: ${torrentJobTitle(job)}`}>
+            {openingMovie === job.id ? s.openingMovie : job.mediaType === "series" ? s.openSeries : s.openMovie}
           </button>}
         {["queued", "downloading"].includes(job.state) && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "pause")} type="button">{s.pause}</button>}
         {job.state === "paused" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "resume")} type="button">{s.resume}</button>}

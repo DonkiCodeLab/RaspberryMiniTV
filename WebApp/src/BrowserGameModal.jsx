@@ -10,8 +10,10 @@ import HandheldKeyboardHelp from "./HandheldKeyboardHelp.jsx";
 import TelevisionKeyboardHelp from "./TelevisionKeyboardHelp.jsx";
 import { readGameVolume, saveGameVolume } from "./gameAudio.js";
 import "./BrowserGameModal.css";
+import PlayerSizeControl, { usePlayerSize } from "./PlayerSizeControl.jsx";
 
 function GameSession({ game, onClose, t }) {
+  const [screenSize, setScreenSize] = usePlayerSize("game");
   const consoleFrame = gameConsoleFrame(game.systemId);
   const hasConsoleFrame = Boolean(consoleFrame);
   const isTelevision = consoleFrame?.layout === "television";
@@ -34,6 +36,7 @@ function GameSession({ game, onClose, t }) {
   const isVector = consoleFrame?.artwork === "vector";
   const television = gameTelevision(televisionId);
   const framed = hasConsoleFrame && !expanded;
+  const withoutShell = !hasConsoleFrame || expanded || (isTelevision && televisionId === "none");
   const origin = new URL(game.url, window.location.href).origin;
   const send = useCallback((message) => {
     if (origin !== "null") frame.current?.contentWindow?.postMessage({ channel: "minitv-gameboy", ...message }, origin);
@@ -149,7 +152,8 @@ function GameSession({ game, onClose, t }) {
   return createPortal(
     <dialog ref={dialog} className={`browser-player browser-game${hasConsoleFrame ? ` browser-game--console browser-game--gameboy browser-game--${game.systemId}` : ""}${isHandheld ? " browser-game--handheld" : ""}${isTelevision ? ` browser-game--television${showController ? "" : " browser-game--controller-hidden"}` : ""}${isVector ? " browser-game--vector" : ""}${expanded ? " browser-game--expanded" : ""}`}
       data-television={isTelevision ? television.id : undefined}
-      style={consoleFrame ? { ...frameVariables(consoleFrame), ...(isTelevision ? televisionVariables(television) : {}) } : undefined}
+      data-without-shell={withoutShell || undefined}
+      style={{ "--player-screen-scale": screenSize / 100, ...(consoleFrame ? frameVariables(consoleFrame) : {}), ...(isTelevision ? televisionVariables(television) : {}) }}
       aria-label={t("browser_game_player")} onCancel={(event) => { event.preventDefault(); onClose(); }}>
       <div className="browser-player__panel browser-game__panel">
         <header>
@@ -222,6 +226,7 @@ function GameSession({ game, onClose, t }) {
             {!hasConsoleFrame && <button type="button" onClick={onClose} aria-label={t("close")}>×</button>}
           </div>
         </header>
+        {withoutShell && <PlayerSizeControl size={screenSize} onChange={setScreenSize} t={t} />}
         <div className={`browser-game__stage${isTelevision ? " television-stage" : ""}`}>
           {isTelevision ? <div className="television-player">
             <RetroTelevision television={television} t={t}>{gameScreen}</RetroTelevision>

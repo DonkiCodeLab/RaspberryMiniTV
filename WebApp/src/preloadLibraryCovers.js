@@ -25,7 +25,7 @@ export function acquireLibraryCover(url, createImage = () => new Image()) {
   if (!prepared) preparedCovers.set(url, image);
   return image;
 }
-export async function preloadLibraryCovers(urls, { signal, createImage = () => new Image(), timeoutMs = 12000, onProgress = () => {}, preserve = false, log = (event, data) => console.info(`[Biblioteca] ${event}`, data) } = {}) {
+export async function preloadLibraryCovers(urls, { signal, createImage = () => new Image(), timeoutMs = 12000, concurrency = 6, onProgress = () => {}, preserve = false, log = (event, data) => console.info(`[Biblioteca] ${event}`, data) } = {}) {
   const parentSignal = signal;
   const controller = new AbortController();
   const cancel = () => controller.abort();
@@ -80,7 +80,7 @@ export async function preloadLibraryCovers(urls, { signal, createImage = () => n
     if (image.decode) image.decode().then(() => finish('cargada'), () => finish('error'));
     else if (image.complete && image.naturalWidth) finish('cargada');
   });
-  await Promise.all(Array.from({ length: Math.min(6, pending.length) }, async () => {
+  await Promise.all(Array.from({ length: Math.min(Math.max(1, concurrency), pending.length) }, async () => {
     while (!signal?.aborted && cursor < pending.length) await load(pending[cursor++]);
   }));
   clearTimeout(deadline);

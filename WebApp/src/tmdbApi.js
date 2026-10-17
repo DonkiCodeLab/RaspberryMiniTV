@@ -383,10 +383,10 @@ function getSeriesSummaryTotals(show) {
   };
 }
 
-export async function getLibrarySummaries(movies, directories, language) {
+export async function getLibrarySummaries(movies, directories, language, options = {}) {
   let summaries;
   if (!isMockMode()) {
-    summaries = await getCachedLibrarySummaries(language);
+    summaries = await getCachedLibrarySummaries(language, options);
   } else {
     // Development mode has no Raspberry cache; request only the main card metadata.
     const read = async (kind, id) => {

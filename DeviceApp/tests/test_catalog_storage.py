@@ -72,6 +72,31 @@ class CatalogStorageTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), original)
         self.assertEqual(api.tmdb_missing_ids(), ["Movies/new.mp4"])
 
+    def test_full_listing_reads_one_snapshot_and_scans_videos_once(self):
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            for setting, folder in (("MOVIES_DIR", "Movies"), ("TVSHOWS_DIR", "TVShows"),
+                                    ("BOOKS_DIR", "Books"), ("PICTURES_DIR", "Pictures"),
+                                    ("VIDEOS_DIR", "")):
+                path = self.root / folder
+                path.mkdir(exist_ok=True)
+                stack.enter_context(patch.object(api, setting, str(path)))
+            (self.root / "Movies" / "alien.mp4").write_bytes(b"video")
+            (self.root / "Games").mkdir()
+            (self.root / "Games" / "tetris.gb").write_bytes(b"rom")
+            (self.root / "Books" / "example.epub").write_bytes(b"book")
+            reader = stack.enter_context(patch.object(api, "load_media_library", wraps=api.load_media_library))
+            scanner = stack.enter_context(patch.object(api, "iter_video_entries", wraps=api.iter_video_entries))
+            stack.enter_context(patch.object(api, "get_library_counts", return_value={}))
+            stack.enter_context(patch.object(api, "save_media_library", side_effect=AssertionError("read-only")))
+            listing = api.list_video_directories()
+            reader.assert_called_once_with()
+            scanner.assert_called_once_with()
+            self.assertEqual(listing["movieRootFiles"][0]["name"], "Alien: mi título")
+            self.assertEqual(listing["games"][0]["relativePath"], "Games/tetris.gb")
+            self.assertEqual(listing["books"][0]["relativePath"], "Books/example.epub")
+            self.assertEqual(api.load_media_library()["games"], {})
+
     def test_sqlite_failure_rolls_back_all_changes_and_history(self):
         before = api.load_media_library()
         original = catalog_store._write_diff

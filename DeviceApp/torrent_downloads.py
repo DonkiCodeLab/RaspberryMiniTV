@@ -442,8 +442,11 @@ def video_files(files):
 
 def series_video_files(files, season=None, episode=None, allow_combined=False):
     selected, seen = [], set()
-    for index, item in video_files(files):
+    candidates = video_files(files)
+    recognized = False
+    for index, item in candidates:
         groups = episode_number_groups(item["name"])
+        recognized = recognized or bool(groups)
         matching = [(sn, ep) for sn, ep in groups
                     if (season is None or sn == season) and (episode is None or ep == episode)]
         if not matching:
@@ -456,7 +459,32 @@ def series_video_files(files, season=None, episode=None, allow_combined=False):
             seen.add((sn, ep))
             selected.append((index, item, sn, ep))
     if not selected:
-        raise TorrentError("No hay capítulos compatibles con la selección. Los vídeos deben incluir S01E01 o 1x01 en su nombre.")
+        explanation = (
+            "Ya se ha obtenido la lista de archivos del torrent: sus nombres se pueden leer "
+            "sin descargar los vídeos, aunque el progreso marque 0 MB. "
+        )
+        if recognized:
+            selection = f"la temporada {season}" if season is not None else "la selección actual"
+            if episode is not None:
+                selection += f", capítulo {episode}"
+            explanation += (
+                f"Se han reconocido capítulos, pero ninguno coincide con {selection}. "
+                "Revisa la selección o elige otro torrent. "
+            )
+        else:
+            explanation += (
+                "MiniTV no puede identificar la temporada y el capítulo en los nombres de los vídeos. "
+                "Necesita una numeración como S01E01 o 1x01 para importarlos a la biblioteca. "
+                "Esto no significa que los vídeos estén dañados o sean incompatibles. "
+                "Elige un torrent con esa numeración. "
+            )
+        names = [Path(item["name"]).name for _, item in candidates[:3]]
+        examples = "; ".join(f'«{name[:160]}{"…" if len(name) > 160 else ""}»' for name in names)
+        remaining = len(candidates) - len(names)
+        explanation += f"Nombres encontrados: {examples}"
+        if remaining:
+            explanation += f" (y {remaining} vídeos más)"
+        raise TorrentError(explanation + ".")
     return selected
 
 
