@@ -4,6 +4,7 @@ from tmdb_cache import TmdbCache, TmdbError
 from omdb_ratings import OmdbSettings, OmdbRatings, OmdbError
 from omdb_backfill import OmdbBackfill, cached_library_ratings
 from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
+from torrent_preview import preview as preview_torrent
 from video_formats import is_video_file
 import movie_subtitles
 import system_update
@@ -2909,6 +2910,14 @@ def find_movie_torrents():
         return jsonify(search_torrents(request.args.get("q"), media_type=request.args.get("mediaType", "movies"),
                                        imdb_id=request.args.get("imdbId"), season=request.args.get("seasonNumber"),
                                        episode=request.args.get("episodeNumber"), eztv_page=request.args.get("eztvPage", 1)))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/torrents/preview", methods=["GET"])
+def torrent_content_preview():
+    try:
+        return jsonify(preview_torrent(request.args.get("infoHash")))
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 

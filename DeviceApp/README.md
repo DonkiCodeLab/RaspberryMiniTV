@@ -1140,3 +1140,19 @@ vacías y no participan en las comparaciones del motor facial local. Los UUID
 distinguen personas homónimas; con JSON de ExifTool sin UUID, los nombres iguales
 se agrupan. Consulta el [flujo de exportación e importación](../WebApp/README.md#importar-desde-fotos-del-mac)
 para límites, formatos y reanudación.
+
+### Inspeccionar un torrent antes de descargar
+
+«Ver contenido» despliega los nombres y tamaños de los archivos del resultado,
+y los capítulos reconocidos por nombres como `S01E02` o `1x02` (incluidos vídeos
+con varios capítulos). Esta identificación no garantiza una temporada completa.
+`GET /torrents/preview?infoHash=…` devuelve `loading` mientras obtiene los metadatos
+y `ready` con `files` al terminar; requiere la misma autenticación que las descargas.
+La consulta usa una sesión aislada de `python3-libtorrent`, con `upload_mode` y
+sin gestión automática para impedir solicitudes de piezas de vídeo
+([documentación de libtorrent](https://www.libtorrent.org/reference-Core.html)).
+No añade tareas a Transmission ni importa contenido. Hay un máximo de dos consultas
+simultáneas, 45 segundos de espera y una caché en memoria de hasta 32 resultados
+por diez minutos. Si ningún peer responde, el visor permite reintentar.
+El instalador de torrents incluye `python3-libtorrent`; en instalaciones existentes,
+ejecuta de nuevo `bash DeviceApp/install_torrent_support.sh` y reinicia la API.

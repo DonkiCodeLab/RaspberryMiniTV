@@ -57,6 +57,7 @@ export function isTorrentHistory(job) {
 
 const strings = {
   es: {
+    viewContent: "Ver contenido", hideContent: "Ocultar contenido", content: "Contenido del torrent", previewHint: "Consulta los archivos sin descargar los vídeos ni añadir una descarga. Puede tardar hasta un minuto.", previewLoading: "Consultando los metadatos a los peers…", previewTimeout: "No se ha podido obtener el contenido a tiempo. Prueba de nuevo o elige otro torrent.", files: "archivos", detectedEpisodes: "capítulos detectados", episodeDetectionHint: "Los capítulos se identifican por el nombre de los archivos; no se comprueba que la temporada esté completa.", noFiles: "No hay archivos en los metadatos.",
     warning: "Aviso", downloadAnyway: "Descargar igualmente",
     combinedEpisodesWarning: "El nombre de algún vídeo indica varios capítulos unidos. Puedes descargarlo igualmente; esos capítulos abrirán el mismo vídeo completo.",
     combinedEpisodesAccepted: "Has permitido los capítulos unidos. Los capítulos que compartan vídeo abrirán el archivo completo, sin separarlo.",
@@ -92,6 +93,7 @@ const strings = {
     demo: "Las descargas están disponibles al conectar con la Raspberry.", pending: "Esperando datos de la Raspberry…", remaining: "restantes",
   },
   ca: {
+    viewContent: "Veure contingut", hideContent: "Amaga el contingut", content: "Contingut del torrent", previewHint: "Consulta els arxius sense descarregar els vídeos ni afegir una descàrrega. Pot trigar fins a un minut.", previewLoading: "Consultant les metadades als peers…", previewTimeout: "No s’ha pogut obtenir el contingut a temps. Torna-ho a provar o tria un altre torrent.", files: "arxius", detectedEpisodes: "capítols detectats", episodeDetectionHint: "Els capítols s’identifiquen pel nom dels arxius; no es comprova que la temporada estigui completa.", noFiles: "No hi ha arxius a les metadades.",
     warning: "Avís", downloadAnyway: "Descarrega igualment",
     combinedEpisodesWarning: "El nom d’algun vídeo indica diversos capítols units. Pots descarregar-lo igualment; aquests capítols obriran el mateix vídeo complet.",
     combinedEpisodesAccepted: "Has permès els capítols units. Els capítols que comparteixin vídeo obriran l’arxiu complet, sense separar-lo.",
@@ -127,6 +129,7 @@ const strings = {
     demo: "Les descàrregues estan disponibles en connectar amb la Raspberry.", pending: "Esperant dades de la Raspberry…", remaining: "restants",
   },
   en: {
+    viewContent: "View contents", hideContent: "Hide contents", content: "Torrent contents", previewHint: "Inspect files without downloading videos or adding a download. This can take up to a minute.", previewLoading: "Fetching metadata from peers…", previewTimeout: "Could not retrieve the contents in time. Retry or choose another torrent.", files: "files", detectedEpisodes: "detected episodes", episodeDetectionHint: "Episodes are identified from filenames; season completeness is not verified.", noFiles: "No files in the metadata.",
     warning: "Warning", downloadAnyway: "Download anyway",
     combinedEpisodesWarning: "A video filename indicates multiple episodes joined together. You can download it anyway; those episodes will open the same full video.",
     combinedEpisodesAccepted: "You have allowed combined episodes. Episodes that share a video will open the full file, without splitting it.",

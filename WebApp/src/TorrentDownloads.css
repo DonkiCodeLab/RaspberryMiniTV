@@ -82,3 +82,12 @@
 .movie-torrents__notify { display: flex; align-items: center; gap: 10px; width: fit-content; margin: 0 0 16px; cursor: pointer; }
 .movie-torrents__notify input { width: 18px; height: 18px; margin: 0; accent-color: #ffdc35; cursor: pointer; }
 .movie-torrents__notify input:focus-visible { outline: 2px solid #ffdc35; outline-offset: 4px; }
+
+.torrent-preview__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.torrent-preview { white-space: normal; padding: 12px; border-left: 3px solid #ffdc35; background: #ffdc3508; }
+.torrent-preview h4 { margin: 0 0 8px; color: #ffdc35; }
+.torrent-preview p { color: #cbd3dc; line-height: 1.5; }
+.torrent-preview__files { max-height: 320px; overflow: auto; padding: 0; list-style: none; overscroll-behavior: contain; }
+.torrent-preview__files li { display: flex; gap: 8px 16px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid #ffffff20; }
+.torrent-preview__name { flex: 1 1 260px; overflow-wrap: anywhere; min-width: 0; }
+.torrent-preview__episodes { flex-basis: 100%; color: #ffe775; overflow-wrap: anywhere; }

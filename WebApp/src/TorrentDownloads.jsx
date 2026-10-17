@@ -2,7 +2,7 @@ import { lockBodyScroll } from "./bodyScrollLock.js";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { controlMovieTorrent, getMovieTorrents, searchMediaTorrents, startMediaTorrent } from "./api/raspberryApi";
+import { controlMovieTorrent, getMovieTorrents, previewTorrent, searchMediaTorrents, startMediaTorrent } from "./api/raspberryApi";
 import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents } from "./torrentUtils.js";
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
@@ -61,6 +61,52 @@ export function TorrentNotificationBell({ notifications = [], language, onViewDo
   </div>;
 }
 
+export function TorrentContentPreview({ torrent, language }) {
+  const s = torrentStrings(language);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    let disposed = false, timer;
+    const deadline = Date.now() + 60000;
+    setData(null); setError("");
+    async function poll() {
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      try {
+        const next = await previewTorrent(torrent.infoHash, controller.signal);
+        if (disposed) return;
+        if (next.status === "ready") setData(next);
+        else if (Date.now() >= deadline) setError(s.previewTimeout);
+        else timer = setTimeout(poll, 1500);
+      } catch (e) {
+        if (!disposed) setError(e.name === "AbortError" ? s.previewTimeout : e.message);
+      } finally { clearTimeout(timeout); }
+    }
+    poll();
+    return () => { disposed = true; clearTimeout(timer); controller.abort(); };
+  }, [torrent.infoHash, attempt, s]);
+  const files = data?.files || [];
+  const episodes = new Set(files.flatMap(file => (file.episodes || []).map(ep => `${ep.season}-${ep.episode}`)));
+  return <section className="torrent-preview" aria-label={`${s.content}: ${torrent.name}`}>
+    <h4>{s.content}</h4>
+    <p>{s.previewHint}</p>
+    {!data && !error && <p role="status"><LoadingSpinner inline /> {s.previewLoading}</p>}
+    {error && <><p className="dialog-error" role="alert">{error}</p><button type="button" className="dialog-button" onClick={() => setAttempt(value => value + 1)}>{s.retry}</button></>}
+    {data && <>
+      <p>{files.length} {s.files} · {torrentSize(data.sizeBytes, language)} · {episodes.size} {s.detectedEpisodes}</p>
+      <p>{s.episodeDetectionHint}</p>
+      {files.length ? <ul className="torrent-preview__files" tabIndex={0} aria-label={s.files}>
+        {files.map((file, index) => <li key={index}>
+          <span className="torrent-preview__name">{file.name}</span>
+          <span>{torrentSize(file.sizeBytes, language)}</span>
+          {file.episodes?.length > 0 && <span className="torrent-preview__episodes">{file.episodes.map(ep => `S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}`).join(" · ")}</span>}
+        </li>)}
+      </ul> : <p>{s.noFiles}</p>}
+    </>}
+  </section>;
+}
+
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted, notificationPreferences = {}, notificationsReady = false, onNotificationChange }) {
   const s = torrentStrings(language);
   const isSeries = mediaType === "series";
@@ -82,6 +128,8 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const [startedJob, setStartedJob] = useState(null);
   const [demo, setDemo] = useState(false);
   const [overwriteTorrent, setOverwriteTorrent] = useState(null);
+  const [previewHash, setPreviewHash] = useState("");
+  const previewId = useId();
   const cancelOverwrite = useRef(null);
   useEffect(() => {
     if (overwriteTorrent) {
@@ -94,7 +142,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
     const timer = setTimeout(() => controller.abort(), 20000);
     let disposed = false;
     setLoading(true); setError(""); setDemo(false); setStarted(false); setStartedJob(null);
-    if (!searchTerm.append) { setResults([]); setSources([]); setNextEztvPage(null); }
+    if (!searchTerm.append) { setPreviewHash(""); setResults([]); setSources([]); setNextEztvPage(null); }
     searchMediaTorrents(searchTerm.query, controller.signal, { ...searchTerm, mediaType, imdbId: media.imdbId }).then(payload => {
       if (!disposed) {
         setResults(current => searchTerm.append ? mergeTorrentResults(current, payload.results || []) : sortTorrents(payload.results));
@@ -182,12 +230,15 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
         </div>
         <div className="movie-torrents__table"><table>
         <thead><tr><th>{s.name}</th><th>{s.source}</th><th aria-sort={sortField === "sizeBytes" ? sortAria : undefined}>{s.size}{sortField === "sizeBytes" ? ` ${sortArrow}` : ""}</th><th aria-sort={sortField === "seeds" ? sortAria : undefined}>Seeds{sortField === "seeds" ? ` ${sortArrow}` : ""}</th><th><span className="torrent-visually-hidden">{s.download}</span></th></tr></thead>
-        <tbody>{sortedResults.map(result => <tr key={result.infoHash}>
+        <tbody>{sortedResults.map(result => <React.Fragment key={result.infoHash}><tr>
           <td>{result.name}</td>
           <td className="movie-torrents__source"><div className="movie-torrents__badges">{torrentSources(result).map(source => <span className="movie-torrents__badge" key={source}>{source}</span>)}</div></td>
           <td>{isBook ? torrentSize(result.sizeBytes, language) : torrentListSize(result.sizeBytes)}</td><td>{result.seeds}</td>
-          <td><button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} onClick={() => start(result)} type="button">{busy === result.infoHash ? s.starting : s.download}</button></td>
-        </tr>)}</tbody>
+          <td><div className="torrent-preview__actions"><button className="dialog-button dialog-button--ghost" type="button"
+            aria-expanded={previewHash === result.infoHash} aria-controls={previewHash === result.infoHash ? previewId : undefined}
+            onClick={() => setPreviewHash(current => current === result.infoHash ? "" : result.infoHash)}>{previewHash === result.infoHash ? s.hideContent : s.viewContent}</button>
+            <button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} onClick={() => start(result)} type="button">{busy === result.infoHash ? s.starting : s.download}</button></div></td>
+        </tr>{previewHash === result.infoHash && <tr><td colSpan={5} id={previewId}><TorrentContentPreview torrent={result} language={language} /></td></tr>}</React.Fragment>)}</tbody>
       </table></div></>}
       {nextEztvPage !== null && <button className="dialog-button movie-torrents__more" disabled={loading || Boolean(busy)} type="button" onClick={() => setSearchTerm(current => ({ ...current, eztvPage: nextEztvPage, append: true }))}>{s.moreEztv}</button>}
     </>}

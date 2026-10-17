@@ -14,6 +14,12 @@ if ! command -v transmission-daemon >/dev/null 2>&1; then
   systemctl disable --now transmission-daemon.service
 fi
 
+# The inspector uses an isolated metadata-only session, without adding downloads.
+if ! /usr/bin/python3 -c 'import libtorrent' >/dev/null 2>&1; then
+  apt-get update
+  apt-get install -y python3-libtorrent
+fi
+
 # Dedicated instance: never edit another Transmission user's settings or queue.
 systemctl stop minitv-torrents.service 2>/dev/null || true
 mkdir -p "${REPO_DIR}/MultimediaContent/Torrents/downloads"

@@ -329,6 +329,11 @@ export function searchMediaTorrents(query, signal, options = {}) {
   return request(`/torrents/search?${params}`, { signal });
 }
 
+export function previewTorrent(infoHash, signal) {
+  if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para inspeccionar torrents."));
+  return request(`/torrents/preview?${new URLSearchParams({ infoHash })}`, { signal });
+}
+
 export function startMediaTorrent(torrent, media, { mediaType = "movies", overwriteExisting = false, seasonNumber, episodeNumber } = {}) {
   if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para descargar torrents."));
   return request("/torrents", { method: "POST", body: JSON.stringify({
