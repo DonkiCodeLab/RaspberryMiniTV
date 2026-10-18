@@ -145,7 +145,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
   const [dialog, setDialog] = useState(null), [viewer, setViewer] = useState(null), [zone, setZone] = useState(null), [busy, setBusy] = useState(false);
-  const requestRef = useRef(0), refreshing = useRef(false), mounted = useRef(true);
+  const requestRef = useRef(0), refreshing = useRef(false), mounted = useRef(true), importing = useRef(false);
+  importing.current = dialog?.mode === 'upload';
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     onRootChange?.(!current);
@@ -164,7 +165,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   useEffect(() => {
     mounted.current = true; const controller = new AbortController();
     refresh(controller.signal);
-    const timer = setInterval(() => { if (!document.hidden && !refreshing.current) refresh(controller.signal); }, 4000);
+    const timer = setInterval(() => { if (!document.hidden && !refreshing.current && !importing.current) refresh(controller.signal); }, 4000);
     return () => { mounted.current = false; controller.abort(); clearInterval(timer); };
   }, [attempt]);
   useEffect(() => { if (initialFiles?.length) setDialog({ mode: 'upload', files: initialFiles, parent: 'uploads' }); }, [initialFiles]);

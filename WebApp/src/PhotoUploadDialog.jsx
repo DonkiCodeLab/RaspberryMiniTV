@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { uploadPictureFiles } from './api/raspberryApi.js';
-import { IMPORT_ACCEPT, createImportId, importBatches, importSummary, preparePhotoImport } from './photoImport.js';
+import { IMPORT_ACCEPT, accumulateImportResult, createImportId, importBatches, importSummary, preparePhotoImport } from './photoImport.js';
 import { photoImportStrings } from './photoImportStrings.js';
 import './PhotoUploadDialog.css';
 
@@ -53,6 +53,21 @@ function Preview({ entry, t, remove }) {
   </article>;
 }
 
+export function ImportFailures({ failures, t }) {
+  if (!failures.length) return null;
+  const path = failure => failure.entry.file.importPath || failure.entry.file.webkitRelativePath || failure.entry.file.name;
+  function download() {
+    const report = failures.map(failure => `${path(failure)}\t${failure.error}`).join('\n');
+    const url = URL.createObjectURL(new Blob([report], { type: 'text/plain;charset=utf-8' }));
+    const link = document.createElement('a'); link.href = url; link.download = 'minitv-import-errors.txt'; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  return <div className="photo-import-failures" role="status"><p><strong>{failures.length} {t.notImported}</strong></p>
+    <p>{t.failedHint}</p><details><summary>{t.showFailures}</summary>
+      <ul>{failures.slice(0, 20).map((failure, index) => <li key={index}><strong>{path(failure)}</strong>: {failure.error}</li>)}</ul>
+    </details><button type="button" className="dialog-button" onClick={download}>{t.downloadFailures}</button></div>;
+}
+
 async function droppedFiles(transfer, onProgress, signal) {
   const roots = [...transfer.items].filter(i => i.kind === 'file').map(i => i.webkitGetAsEntry?.());
   if (!roots.some(Boolean)) return [...transfer.files];
@@ -89,7 +104,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
   const [error, setError] = useState(''), [drag, setDrag] = useState(false), [paused, setPaused] = useState(false);
   const [readProgress, setReadProgress] = useState({ phase: 'indexing', done: 0, total: null, fileName: '', updatedAt: 0 });
   const [progress, setProgress] = useState({ done: 0, batchPercent: 0, batchStart: 0, batchEnd: 0, saving: false, updatedAt: 0 }), [result, setResult] = useState(null);
-  const session = useRef(null), cursor = useRef(0), accumulated = useRef({ imported: 0, duplicates: 0 });
+  const session = useRef(null), cursor = useRef(0), accumulated = useRef({ imported: 0, duplicates: 0, rejected: [] }), targetFolder = useRef(folderId);
   if (!session.current) session.current = createImportId();
   const working = useRef(false), pause = useRef(false), mounted = useRef(true), generation = useRef(0), reader = useRef(null);
   const stats = useMemo(() => importSummary(selection.entries), [selection.entries]), locked = reading || busy || started;
@@ -120,20 +135,20 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
       const [key, ...detail] = err.message.split(':'); setError((t[key] || err.message) + (detail.length ? `: ${detail.join(':')}` : ''));
     } finally { if (mounted.current && id === generation.current) setReading(false); }
   }
-  async function submit(event) {
-    event.preventDefault(); if (working.current || !stats.count) return;
+  async function submit(event, entries = selection.entries) {
+    event?.preventDefault(); if (working.current || !entries.length) return;
     working.current = true; pause.current = false; setBusy(true); setStarted(true); setPaused(false); setError('');
-    const batches = importBatches(selection.entries);
+    const batches = importBatches(entries);
     try {
       for (; cursor.current < batches.length; cursor.current++) {
         const batch = batches[cursor.current], before = batches.slice(0, cursor.current).reduce((n, b) => n + b.length, 0);
         if (mounted.current) setProgress({ done: before, batchPercent: 0, batchStart: before + 1, batchEnd: before + batch.length, saving: false, updatedAt: Date.now() });
-        const response = await uploadPictureFiles({ files: batch.map(e => e.file), albumName: name, folderId, parent,
-          importData: { session: session.current, batch: String(cursor.current), preserveAlbums,
+        const response = await uploadPictureFiles({ files: batch.map(e => e.file), albumName: name, folderId: targetFolder.current, parent,
+          importData: { session: session.current, batch: String(cursor.current), preserveAlbums, continueOnError: true,
             records: batch.map(({ metadata, raw }) => ({ metadata, raw })) },
           onProgress: value => { if (mounted.current) setProgress(current => ({ ...current, batchPercent: value.percent, saving: value.status === 'saving', updatedAt: Date.now() })); } });
-        accumulated.current = { folderId: response.folderId, imported: accumulated.current.imported + (response.imported ?? batch.length),
-          duplicates: accumulated.current.duplicates + (response.duplicates || 0) };
+        accumulated.current = accumulateImportResult(accumulated.current, response, batch);
+        targetFolder.current = response.folderId;
         if (mounted.current) setProgress(current => ({ ...current, done: before + batch.length, batchPercent: 100, saving: false, updatedAt: Date.now() }));
         if (pause.current && cursor.current < batches.length - 1) { cursor.current++; if (mounted.current) setPaused(true); return; }
       }
@@ -146,6 +161,13 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
     }
     finally { working.current = false; if (mounted.current) setBusy(false); }
   }
+  function retryRejected() {
+    const entries = result.rejected.map(failure => failure.entry);
+    session.current = createImportId(); cursor.current = 0;
+    accumulated.current = { imported: 0, duplicates: 0, rejected: [] };
+    setSelection({ entries, warnings: [] }); setResult(null);
+    submit(null, entries);
+  }
   const picker = folder => <label className={`dialog-button ${folder ? 'dialog-button--accent' : ''}`}>
     {folder ? mode === 'mac' ? t.choose : s.chooseFolder : s.chooseFiles}
     <input type="file" aria-label={folder ? t.choose : s.chooseFiles} multiple accept={folder ? undefined : IMPORT_ACCEPT}
@@ -156,8 +178,10 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
     <div className="photo-import">
       <div className="photo-import-heading"><span className="photo-import-mark" aria-hidden="true">✳</span><p>{t.subtitle}</p></div>
       <ol className="photo-import-steps">{[t.prepare, t.review, t.import].map((label, index) => <li key={label} aria-current={(result || started ? 2 : stats.count ? 1 : 0) === index ? 'step' : undefined}><span>{index + 1}</span>{label}</li>)}</ol>
-      {result ? <div className="photo-import-success" role="status"><span aria-hidden="true">✓</span><h3>{t.success}</h3>
+      {result ? <div className="photo-import-success" role="status"><span aria-hidden="true">{result.rejected.length ? '!' : '✓'}</span><h3>{result.rejected.length ? t.finishedWithErrors : t.success}</h3>
         <p><strong>{result.imported}</strong> {t.saved}</p><p>{result.duplicates} {t.duplicates}</p>
+        <ImportFailures failures={result.rejected} t={t} />
+        {result.rejected.length > 0 && <button type="button" className="dialog-button" onClick={retryRejected}>{t.retryFailed}</button>}
         <button className="dialog-button dialog-button--accent" onClick={() => onComplete(result)}>{t.view} →</button></div> : <form onSubmit={submit}>
         {!started && <div className="photo-segments"><button type="button" disabled={reading} aria-pressed={mode === 'mac'} onClick={() => setMode('mac')}>⌘ {t.mac}</button><button type="button" disabled={reading} aria-pressed={mode === 'files'} onClick={() => setMode('files')}>▧ {t.files}</button></div>}
         {mode === 'mac' && !started && <details className="photo-import-guide" open={guide} onToggle={event => setGuide(event.currentTarget.open)}>
@@ -169,7 +193,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
         {reading && <ImportProgress title={readProgress.phase === 'discovering' ? t.discovering : readProgress.phase === 'indexing' ? t.indexing : t.analyzing}
           {...readProgress} countLabel={readProgress.total === null ? t.filesFound : t.photosRead} active t={t} language={language} detail={t.readingHint} />}
         {started && <ImportProgress title={busy ? progress.saving ? t.saving : t.uploading : paused ? t.paused : t.interrupted}
-          {...progress} total={stats.count} countLabel={t.photosProcessed} active={busy} t={t} language={language}
+          {...progress} total={stats.count} countLabel={t.photosAttempted} active={busy} t={t} language={language}
           detail={busy ? `${t.currentBatch}: ${progress.batchStart.toLocaleString(language)}–${progress.batchEnd.toLocaleString(language)} · ${progress.saving ? t.confirming : `${progress.batchPercent}% ${t.batchSent}`}` : t.keepOpen} />}
         {!stats.count && !reading && <div className={`photo-import-drop${drag ? ' is-dragging' : ''}`} onDragOver={event => { event.preventDefault(); if (!locked) setDrag(true); }} onDragLeave={() => setDrag(false)}
           onDrop={event => { event.preventDefault(); setDrag(false); if (!locked) pick(event.dataTransfer, true); }}>
@@ -192,6 +216,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
           </>}
         </>}
         {!started && selection.warnings.map(w => <p key={w.type} className="photo-import-warning">{w.count} {t[w.type]}{w.names ? `: ${w.names.join(', ')}` : ''}.</p>)}
+        {started && <ImportFailures failures={accumulated.current.rejected} t={t} />}
         {error && <p className="dialog-error" role="alert">{error}</p>}
         <footer><button type="button" className="dialog-button dialog-button--secondary" onClick={onClose} disabled={busy || reading}>{s.close}</button>
           {busy ? <button type="button" className="dialog-button" disabled={paused} onClick={() => { pause.current = true; setPaused(true); }}>{paused ? t.pausing : t.pause}</button> :

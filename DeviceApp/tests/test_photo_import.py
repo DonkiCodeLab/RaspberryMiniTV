@@ -1,4 +1,6 @@
 import io
+import errno
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -7,7 +9,8 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from photo_library import PhotoLibrary, PhotoError
+from photo_library import PhotoLibrary, PhotoError, read_metadata
+from werkzeug.datastructures import FileStorage
 import test_photo_library as base
 from test_photo_library import picture
 
@@ -88,8 +91,87 @@ class PhotoImportTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT count(*) FROM photo_import_files').fetchone()[0], 0)
         self.assertEqual(list(self.store.root.iterdir()), [])
 
+    def test_partial_batch_keeps_metadata_aligned_and_replays_rejections_without_duplicates(self):
+        invalid = FileStorage(stream=io.BytesIO(b'bad'), filename='IMG_5851_edited.jpeg')
+        data = {**payload(metadata(title='First'), metadata(title='Broken'), metadata(title='Last')), 'continueOnError': True}
+        result = self.store.upload([picture(), invalid, picture(color='blue')], 'Mac', import_data=data)
+        self.assertEqual((result['imported'], result['duplicates'], len(result['saved'])), (2, 0, 2))
+        self.assertEqual(result['rejected'][0]['index'], 1)
+        self.assertEqual(result['rejected'][0]['name'], 'IMG_5851_edited.jpeg')
+        self.assertNotIn('pillow-heif', result['rejected'][0]['error'])
+        self.assertEqual({photo['title'] for photo in self.store.snapshot()['photos']}, {'First', 'Last'})
+        self.assertEqual(len(list(self.store.root.rglob('*.jpg'))), 2)
+        with patch('photo_library.read_metadata', side_effect=AssertionError('A committed batch must not be reprocessed')):
+            retry = self.store.upload([picture(), picture(), picture()], 'Mac', import_data=data)
+        self.assertEqual(retry, result)
+        # Retrying only the failed photo uses a new receipt and the same destination.
+        fixed = self.store.upload([picture(color='green')], folder_id=result['folderId'],
+            import_data={**payload(metadata(title='Recovered'), session='retry-failed'), 'continueOnError': True})
+        self.assertEqual(fixed['folderId'], result['folderId'])
+        self.assertEqual(fixed['imported'], 1)
+        self.assertEqual(fixed['rejected'], [])
+        self.assertEqual(len(self.store.snapshot()['photos']), 3)
+
+    def test_upload_decodes_once_outside_catalogue_lock_and_hashes_original_bytes(self):
+        original = picture().read()
+        def inspect(path):
+            self.assertFalse(self.store.lock._is_owned())
+            return read_metadata(path)
+        with patch('photo_library.read_metadata', side_effect=inspect) as decode:
+            self.store.upload([picture(), picture(color='blue')], 'Mac', import_data=payload(metadata(), metadata()))
+        self.assertEqual(decode.call_count, 2)
+        with self.store.db() as db:
+            self.assertIsNotNone(db.execute('SELECT photo FROM photo_import_files WHERE digest=?',
+                                           (hashlib.sha256(original).hexdigest(),)).fetchone())
+
+    def test_all_unreadable_batch_can_be_followed_by_valid_batch_in_same_session(self):
+        result = self.store.upload([FileStorage(stream=io.BytesIO(b'bad'), filename='bad.heic')], 'Mac',
+            import_data={**payload(metadata()), 'continueOnError': True})
+        self.assertEqual(result['imported'], 0)
+        self.assertIn('pillow-heif', result['rejected'][0]['error'])
+        self.assertEqual(list(self.store.root.iterdir()), [])
+        next_batch = self.store.upload([picture()], 'Mac', import_data={**payload(metadata(), batch='1'), 'continueOnError': True})
+        self.assertEqual(next_batch['folderId'], result['folderId'])
+        self.assertEqual(next_batch['imported'], 1)
+
+    def test_storage_and_metadata_errors_still_abort_partial_import(self):
+        for error_number in (errno.EIO, errno.ENOSPC, errno.EACCES):
+            with self.subTest(error_number=error_number):
+                with patch('photo_library.read_metadata', side_effect=OSError(error_number, 'storage error')), self.assertRaises(OSError):
+                    self.store.upload([picture()], 'Mac', import_data={**payload(metadata()), 'continueOnError': True})
+                self.assertEqual(list(self.store.root.iterdir()), [])
+        with self.assertRaises(PhotoError):
+            self.store.upload([picture()], 'Mac', import_data={**payload(metadata(latitude=91)), 'continueOnError': True})
+        with self.store.db() as db:
+            self.assertEqual(db.execute('SELECT count(*) FROM photo_import_batches').fetchone()[0], 0)
+        self.assertEqual(self.store.snapshot()['photos'], [])
+
+    def test_people_snapshot_uses_bounded_queries_for_many_imported_people(self):
+        self.store.upload([picture()], 'Mac', import_data=payload(metadata(people=[{'id': str(i), 'name': f'Person {i}'} for i in range(100)])))
+        import sqlite3
+        connect = sqlite3.connect
+        statements = []
+        def traced(*args, **kwargs):
+            db = connect(*args, **kwargs)
+            db.set_trace_callback(statements.append)
+            return db
+        with patch('photo_library.sqlite3.connect', side_effect=traced):
+            snapshot = self.store.snapshot()
+        self.assertEqual(len(snapshot['people']), 100)
+        self.assertTrue(all(person['photoIds'] == [snapshot['photos'][0]['id']] for person in snapshot['people']))
+        self.assertLess(len([sql for sql in statements if sql.startswith('SELECT')]), 15)
+
 
 class PhotoImportAPITests(base.PhotoApiTests):
+    def test_partial_import_reports_unreadable_image_and_saves_valid_file(self):
+        response = self.client.post('/pictures/upload', headers=self.headers, data={
+            'albumName': 'Mac', 'files': [(io.BytesIO(b'bad'), 'bad.jpeg'), (picture().stream, 'good.jpg')],
+            'metadata': (io.BytesIO(json.dumps({**payload(metadata(), metadata()), 'continueOnError': True}).encode()), 'metadata.json')})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(response.json['imported'], 1)
+        self.assertEqual(response.json['rejected'][0]['index'], 0)
+        self.assertEqual(len(self.store.snapshot()['photos']), 1)
+
     def test_multipart_roundtrip_and_metadata_download_require_pin(self):
         response = self.client.post('/pictures/upload', headers=self.headers, data={
             'albumName': 'Mac', 'files': (picture().stream, 'a.jpg'),

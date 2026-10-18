@@ -36,6 +36,9 @@ const es = {
   resume: 'Continuar importación', saving: 'Guardando fotos y metadatos…', uploading: 'Enviando tus recuerdos…',
   keepOpen: 'Mantén esta ventana abierta. Si falla la conexión, reintenta: las fotos guardadas no se duplicarán.',
   success: 'Tus recuerdos ya están en casa', saved: 'fotos nuevas', duplicates: 'fotos ya guardadas, sin duplicar',
+  photosAttempted: 'fotos procesadas', notImported: 'fotos sin importar', finishedWithErrors: 'Importación terminada con fotos pendientes',
+  failedHint: 'Las demás fotos continúan. Los originales siguen en tu Mac. Revisa o vuelve a exportar las fotos pendientes antes de reintentarlas.',
+  showFailures: 'Ver fotos pendientes (hasta 20)', downloadFailures: 'Descargar lista completa de errores', retryFailed: 'Reintentar solo las pendientes',
   view: 'Ver mis fotos', restart: 'Cambiar selección', metadata: 'Descargar metadatos originales',
   appleData: 'Datos de Apple Fotos', description: 'Descripción', keywords: 'Etiquetas',
 };
@@ -68,6 +71,9 @@ const en = {
   pause: 'Pause after this batch', pausing: 'Finishing this batch…', paused: 'Import paused. Continue here when ready.', resume: 'Resume import', saving: 'Saving photos and metadata…',
   uploading: 'Sending your memories…', keepOpen: 'Keep this window open. If the connection fails, retry: saved photos will not be duplicated.',
   success: 'Your memories are home', saved: 'new photos', duplicates: 'previously saved photos, without duplicates', view: 'View my photos', restart: 'Change selection',
+  photosAttempted: 'photos processed', notImported: 'photos not imported', finishedWithErrors: 'Import finished with photos pending',
+  failedHint: 'The other photos continue. Originals remain on your Mac. Check or export pending photos again before retrying them.',
+  showFailures: 'View pending photos (up to 20)', downloadFailures: 'Download full error list', retryFailed: 'Retry pending photos only',
   metadata: 'Download original metadata', appleData: 'Apple Photos data', description: 'Description', keywords: 'Keywords',
 };
 const ca = {
@@ -99,6 +105,9 @@ const ca = {
   pause: 'Pausar després d’aquest lot', pausing: 'Acabant el lot…', paused: 'Importació pausada. Pots continuar des d’aquí.', resume: 'Continuar importació',
   saving: 'Desant fotos i metadades…', uploading: 'Enviant els teus records…', keepOpen: 'Mantén la finestra oberta. Si falla la connexió, torna-ho a provar: les fotos desades no es duplicaran.',
   success: 'Els teus records ja són a casa', saved: 'fotos noves', duplicates: 'fotos ja desades, sense duplicar', view: 'Veure les meves fotos', restart: 'Canviar selecció',
+  photosAttempted: 'fotos processades', notImported: 'fotos sense importar', finishedWithErrors: 'Importació acabada amb fotos pendents',
+  failedHint: 'Les altres fotos continuen. Els originals es conserven al Mac. Revisa o torna a exportar les fotos pendents abans de reintentar-les.',
+  showFailures: 'Veure fotos pendents (fins a 20)', downloadFailures: 'Descarregar la llista completa d’errors', retryFailed: 'Reintentar només les pendents',
   metadata: 'Descarregar metadades originals', appleData: 'Dades d’Apple Fotos', description: 'Descripció', keywords: 'Etiquetes',
 };
 export const photoImportStrings = language => language === 'en' ? en : language === 'ca' ? ca : es;

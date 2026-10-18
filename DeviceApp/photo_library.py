@@ -214,9 +214,10 @@ class PhotoLibrary:
         db.execute('INSERT INTO folders VALUES (?, ?, ?, ?)', (ident, parent, name, time.time()))
         return self.folder(db, ident)
 
-    def _insert(self, db, relative, folder, name, uploaded=None, source=None, style=None):
+    def _insert(self, db, relative, folder, name, uploaded=None, source=None, style=None, metadata=None):
         path = self.safe_file(relative)
-        metadata = read_metadata(path)
+        if metadata is None:
+            metadata = read_metadata(path)
         stat = path.stat()
         ident = uuid.uuid4().hex
         db.execute('INSERT INTO photos VALUES (?,?,?,?,?,?,?,?,?,?,?)',
@@ -240,17 +241,20 @@ class PhotoLibrary:
             with self.db() as db:
                 previous = db.execute('SELECT result FROM photo_import_batches WHERE session=? AND batch=?', (session, batch_id)).fetchone()
                 if previous: return json.loads(previous['result'])
-        # Stage and validate every input before creating the album or committing files.
+        # Only the import wizard opts into per-image failures; other uploads stay atomic.
+        continue_on_error = records is not None and import_data.get('continueOnError') is True
+        # Stage and validate inputs before taking the catalogue lock.
         batch = self.root / ('batch-' + uuid.uuid4().hex)
         batch.mkdir()
-        staged = []
+        staged, rejected = [], []
         committed = False
         try:
-            for uploaded in files:
+            for index, uploaded in enumerate(files):
                 name = str(uploaded.filename or '').replace('\\', '/').split('/')[-1]
                 if not name or Path(name).suffix.lower() not in EXTENSIONS or len(name) > 240:
                     raise PhotoError('La selección contiene un formato no compatible: ' + name[:100])
                 path = batch / (uuid.uuid4().hex + Path(name).suffix.lower())
+                hasher = hashlib.sha256() if records is not None else None
                 with path.open('xb') as handle:
                     count = 0
                     while True:
@@ -259,18 +263,26 @@ class PhotoLibrary:
                         count += len(chunk)
                         if count > MAX_FILE_BYTES: raise PhotoError('Una foto supera el límite de 50 MB.', 413)
                         handle.write(chunk)
+                        if hasher is not None: hasher.update(chunk)
                 try:
-                    read_metadata(path)
-                except PhotoError:
-                    raise
-                except (OSError, ValueError, Image.DecompressionBombError):
-                    raise PhotoError('No se puede leer ' + name + '. Para HEIC instala pillow-heif.') from None
-                staged.append((path, name))
+                    metadata = read_metadata(path)
+                except (OSError, ValueError, Image.DecompressionBombError) as error:
+                    # Storage/permission failures require a retry, not a skipped photo.
+                    if isinstance(error, OSError) and error.errno is not None: raise
+                    message = str(error) if isinstance(error, PhotoError) else 'No se puede leer ' + name + '. El archivo está incompleto, dañado o su formato no es compatible.'
+                    if Path(name).suffix.lower() in {'.heic', '.heif'}:
+                        message += ' Comprueba el soporte HEIC (pillow-heif) en la MiniTV.'
+                    if not continue_on_error:
+                        raise PhotoError(message) from None
+                    rejected.append({'index': index, 'name': name, 'error': message})
+                    path.unlink()
+                    continue
+                staged.append((index, path, name, metadata, hasher.hexdigest() if hasher is not None else None))
             with self.db() as db:
                 # A lost response or simultaneous retry must not create a second album.
                 previous = db.execute('SELECT result FROM photo_import_batches WHERE session=? AND batch=?', (session, batch_id)).fetchone() if records is not None else None
                 if previous:
-                    for path, _ in staged: path.unlink()
+                    for _, path, _, _, _ in staged: path.unlink()
                     batch.rmdir()
                     return json.loads(previous['result'])
                 existing_session = db.execute('SELECT folder FROM photo_import_sessions WHERE id=?', (session,)).fetchone() if records is not None else None
@@ -285,13 +297,7 @@ class PhotoLibrary:
                 if records is not None:
                     db.execute('INSERT OR IGNORE INTO photo_import_sessions VALUES (?,?)', (session, folder['id']))
                 saved, duplicates, discarded = [], 0, []
-                for index, (path, name) in enumerate(staged):
-                    digest = None
-                    if records is not None:
-                        hasher = hashlib.sha256()
-                        with path.open('rb') as handle:
-                            for chunk in iter(lambda: handle.read(1024 * 1024), b''): hasher.update(chunk)
-                        digest = hasher.hexdigest()
+                for index, path, name, image_metadata, digest in staged:
                     existing = db.execute('SELECT photo FROM photo_import_files WHERE digest=?', (digest,)).fetchone() if digest else None
                     if existing:
                         ident = existing['photo']; duplicates += 1; discarded.append(path)
@@ -299,7 +305,7 @@ class PhotoLibrary:
                         db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, folder['id']))
                     else:
                         relative = path.relative_to(self.root).as_posix()
-                        ident = self._insert(db, relative, folder['id'], name)
+                        ident = self._insert(db, relative, folder['id'], name, metadata=image_metadata)
                         if digest: db.execute('INSERT INTO photo_import_files VALUES (?,?)', (digest, ident))
                     saved.append(relative)
                     if records is not None:
@@ -326,6 +332,7 @@ class PhotoLibrary:
                                     db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, album_id))
                 result = {'ok': True, 'folderId': folder['id'], 'saved': saved,
                           'imported': len(staged) - duplicates, 'duplicates': duplicates}
+                if continue_on_error: result['rejected'] = rejected
                 if records is not None:
                     db.execute('INSERT INTO photo_import_batches VALUES (?,?,?)', (session, batch_id, json.dumps(result)))
             committed = True
@@ -391,8 +398,11 @@ class PhotoLibrary:
                     'name': row['name'], 'uploadedAt': row['uploaded'], 'modifiedAt': row['modified'],
                     'size': row['size'], 'sourceId': row['source'], 'style': row['style'], **json.loads(row['metadata'])})
             people = [dict(row) for row in db.execute('SELECT * FROM people WHERE id IN (SELECT person FROM faces) ORDER BY created')]
+            person_photos = {}
+            for row in db.execute('SELECT person, photo FROM faces ORDER BY person, photo'):
+                person_photos.setdefault(row['person'], []).append(row['photo'])
             for person in people:
-                person['photoIds'] = [row[0] for row in db.execute('SELECT photo FROM faces WHERE person=?', (person['id'],))]
+                person['photoIds'] = person_photos.get(person['id'], [])
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             pending = db.execute("SELECT count(*) FROM photos WHERE face_state='pending'").fetchone()[0]
             failed = db.execute("SELECT count(*) FROM photos WHERE face_state='error'").fetchone()[0]

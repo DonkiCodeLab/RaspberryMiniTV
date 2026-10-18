@@ -68,6 +68,12 @@
 .photo-import-success > span { display: grid; place-items: center; margin: auto; width: 65px; height: 65px; border-radius: 50%; border: 1px solid #9fe4d165; background: #9fe4d116; color: #9fe4d1; font-size: 2rem; }
 .photo-import-success h3 { font-size: 1.7rem; margin: 1.3rem 0 1rem; color: #f8e4b0; }
 .photo-import-success .dialog-button { margin-top: 1.5rem; }
+.photo-import-failures { text-align: left; padding: 1rem; border: 1px solid #ffe07955; border-radius: 12px; background: #ffe0790a; }
+.photo-import-failures p { margin: 0 0 .7rem; }
+.photo-import-failures summary { cursor: pointer; color: #ffe079; }
+.photo-import-failures ul { max-height: 180px; overflow: auto; padding-left: 1.2rem; font-size: .8rem; overflow-wrap: anywhere; }
+.photo-import-failures li + li { margin-top: .6rem; }
+.photo-import-failures .dialog-button { margin-top: .7rem; }
 .photo-import-banner { display: flex; align-items: center; gap: 1rem; width: 100%; text-align: left; padding: 1.1rem 1.3rem; border: 1px solid #dac37a55; border-radius: 16px; background: radial-gradient(ellipse at left, #e8d19a13, transparent 75%), #122c3c; color: #f5e4b6; cursor: pointer; margin: 1rem 0; }
 .photo-import-banner:hover { border-color: #ffe079; }
 .photo-import-banner__art { display: grid; place-items: center; flex-shrink: 0; width: 49px; height: 49px; border-radius: 13px; background: #ffe07913; font-size: 2.3rem; }

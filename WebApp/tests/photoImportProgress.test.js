@@ -15,7 +15,7 @@ const result = await build({
 });
 const module = { exports: {} };
 new Function('require', 'module', 'exports', result.outputFiles[0].text)(require, module, module.exports);
-const { ImportProgress } = module.exports;
+const { ImportProgress, ImportFailures } = module.exports;
 const render = (props = {}, language = 'es') => {
   const t = photoImportStrings(language);
   return renderToStaticMarkup(React.createElement(ImportProgress, {
@@ -49,8 +49,22 @@ test('pending work reports missing progress; paused work has no running spinner 
 test('progress is localized in each supported language', () => {
   for (const language of ['es', 'ca', 'en']) {
     const t = photoImportStrings(language), html = render({}, language);
-    for (const key of ['discovering', 'indexing', 'filesFound', 'photosRead', 'readingHint', 'currentBatch', 'batchSent', 'confirming', 'interrupted']) assert.ok(t[key]);
+    for (const key of ['discovering', 'indexing', 'filesFound', 'photosRead', 'readingHint', 'currentBatch', 'batchSent', 'confirming', 'interrupted', 'photosAttempted', 'notImported', 'finishedWithErrors', 'failedHint', 'showFailures', 'downloadFailures', 'retryFailed']) assert.ok(t[key]);
     assert.ok(html.includes(t.elapsed));
     assert.ok(html.includes(t.photosProcessed));
   }
+});
+
+test('unreadable photos remain visible with their full path, reason and downloadable report', () => {
+  const t = photoImportStrings('es');
+  const failures = Array.from({ length: 25 }, (_, index) => ({
+    entry: { file: { name: 'same.jpeg', webkitRelativePath: `Export/${index}/same.jpeg` } }, error: 'Imagen incompleta',
+  }));
+  const html = renderToStaticMarkup(React.createElement(ImportFailures, { failures, t }));
+  assert.match(html, /25 fotos sin importar/);
+  assert.match(html, /Export\/0\/same.jpeg/);
+  assert.match(html, /Imagen incompleta/);
+  assert.ok(html.includes(t.downloadFailures));
+  assert.equal((html.match(/<li>/g) || []).length, 20);
+  assert.equal(renderToStaticMarkup(React.createElement(ImportFailures, { failures: [], t })), '');
 });

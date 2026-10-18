@@ -1175,6 +1175,20 @@ y `Cache-Control: no-store`. Incluye la base SQLite en las copias de seguridad:
 contiene también los metadatos, las asociaciones a álbumes/personas, los hashes
 de deduplicación y los recibos de lotes para reintentar sin repetir guardados.
 
+El asistente envía `continueOnError: true`: una imagen ilegible se devuelve en
+`rejected` con su índice de lote, nombre y motivo; las imágenes válidas se guardan
+y la importación continúa. El recibo del lote incluye esos errores para que una
+respuesta perdida no duplique guardados ni oculte fallos. Los errores de metadatos,
+almacenamiento o conexión siguen interrumpiendo el lote para poder reintentarlo.
+La web muestra las fotos pendientes, permite descargar la lista completa y
+reintentar solo esas fotos en la misma carpeta. Los clientes que no activan esta
+opción conservan la validación atómica del lote completo.
+
+Durante la importación la web suspende la recarga periódica del catálogo. Cada
+foto se valida y descodifica una sola vez antes de bloquear el catálogo, y su
+hash se calcula mientras se escribe. El listado de Personas obtiene todas sus
+asociaciones en una consulta, evitando una consulta por persona en cada refresco.
+
 Los nombres de Apple funcionan sin dlib. Sus asociaciones tienen codificaciones
 vacías y no participan en las comparaciones del motor facial local. Los UUID
 distinguen personas homónimas; con JSON de ExifTool sin UUID, los nombres iguales

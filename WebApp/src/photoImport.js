@@ -135,3 +135,9 @@ export function importBatches(entries) {
   if (batch.length) batches.push(batch);
   return batches;
 }
+
+export function accumulateImportResult(current, response, batch) {
+  const rejected = (response.rejected || []).map(failure => ({ ...failure, entry: batch[failure.index] }));
+  return { folderId: response.folderId, imported: current.imported + (response.imported ?? batch.length - rejected.length),
+    duplicates: current.duplicates + (response.duplicates || 0), rejected: [...current.rejected, ...rejected] };
+}

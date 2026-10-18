@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createImportId, importBatches, importSummary, normalizePhotoMetadata, preparePhotoImport } from '../src/photoImport.js';
+import { accumulateImportResult, createImportId, importBatches, importSummary, normalizePhotoMetadata, preparePhotoImport } from '../src/photoImport.js';
 
 const file = (name, path, content = 'jpeg') => {
   const result = new File([content], name);
@@ -123,4 +123,21 @@ test('a metadata failure never reports the selection as fully read', async () =>
     onProgress: value => updates.push(value),
   }), /invalidSidecar/);
   assert.ok(updates.every(value => value.total === null || value.done < value.total));
+});
+
+test('partial batches count saved and rejected photos separately and retain exact files for retry', () => {
+  const first = [{ file: file('same.jpg', 'A/same.jpg') }, { file: file('same.jpg', 'B/same.jpg') }];
+  const second = [{ file: file('same.jpg', 'C/same.jpg') }];
+  const original = { imported: 0, duplicates: 0, rejected: [] };
+  const a = accumulateImportResult(original, { folderId: 'album', imported: 1, duplicates: 0,
+    rejected: [{ index: 1, name: 'same.jpg', error: 'Invalid image' }] }, first);
+  const b = accumulateImportResult(a, { folderId: 'album', imported: 0, duplicates: 0,
+    rejected: [{ index: 0, name: 'same.jpg', error: 'Unsupported format' }] }, second);
+  assert.equal(b.imported, 1);
+  assert.equal(b.rejected.length, 2);
+  assert.equal(b.rejected[0].entry, first[1]);
+  assert.equal(b.rejected[1].entry, second[0]);
+  assert.deepEqual(original, { imported: 0, duplicates: 0, rejected: [] });
+  const c = accumulateImportResult(b, { folderId: 'album', imported: 0, duplicates: 1 }, first.slice(0, 1));
+  assert.equal(c.imported + c.duplicates + c.rejected.length, 4);
 });
