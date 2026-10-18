@@ -38,7 +38,8 @@ fi
 photo_export=$(mktemp -d "${photo_destination%/}/MiniTV-Fotos-XXXXXX")
 photo_template="$photo_export/.minitv-metadata.mako"
 cat > "$photo_template" <<'MAKO'
-${photo.json(shallow=False, indent=2)}
+<% import json %>\
+${json.dumps(json.loads(photo.json(shallow=False), parse_constant=lambda _: None), ensure_ascii=False, allow_nan=False, indent=2)}
 MAKO
 photo_options=()
 if [[ "$photo_scope" == 'Seleccionadas' ]]; then photo_options+=(--selected); fi

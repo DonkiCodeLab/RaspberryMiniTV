@@ -9,6 +9,17 @@ const strings = value => [...new Set((Array.isArray(value) ? value : typeof valu
   .filter(v => typeof v === 'string' && v.trim()).map(v => v.trim()))];
 const text = value => typeof value === 'string' ? value : '';
 
+function parsePhotoMetadata(content) {
+  try { return JSON.parse(content); }
+  catch {
+    // Older OSXPhotos exports can include Python's non-finite numbers in
+    // media_analysis. Treat these as missing values, leaving quoted text intact.
+    // JSON.parse still rejects any other malformed content.
+    return JSON.parse(content.replace(/"(?:[^"\\]|\\.)*"|\bNaN\b|-?Infinity\b/g,
+      token => token.startsWith('"') ? token : 'null'));
+  }
+}
+
 // Accept the full OSXPhotos dump and its ExifTool JSON sidecars. Never confuse
 // keywords (which may contain names) with explicit person associations.
 export function normalizePhotoMetadata(raw) {
@@ -45,7 +56,15 @@ export function normalizePhotoMetadata(raw) {
   };
 }
 
-export async function preparePhotoImport(files) {
+export async function preparePhotoImport(files, { onProgress, signal } = {}) {
+  const checkCancelled = () => { if (signal?.aborted) throw new DOMException('Import cancelled', 'AbortError'); };
+  const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+  checkCancelled();
+  if (onProgress) {
+    onProgress({ phase: 'indexing', done: 0, total: null, fileName: '' });
+    await yieldToBrowser();
+    checkCancelled();
+  }
   const path = file => (file.importPath || file.webkitRelativePath || file.name).normalize('NFC');
   const visible = [...files].filter(f => !path(f).split('/').some(p => p.startsWith('.')));
   if (visible.some(f => path(f).split('/').some(p => p.endsWith('.photoslibrary')))) throw new Error('libraryPackage');
@@ -62,7 +81,13 @@ export async function preparePhotoImport(files) {
     stems.set(stem, (stems.get(stem) || 0) + 1);
   }
   const entries = [], warnings = [], used = new Set();
+  let lastReport = performance.now();
+  if (onProgress) {
+    onProgress({ phase: 'reading', done: 0, total: photos.length, fileName: photos[0]?.name || '' });
+    await yieldToBrowser();
+  }
   for (const file of photos) {
+    checkCancelled();
     const key = path(file).toLocaleLowerCase(), stem = key.replace(/\.[^.]+$/, '');
     const sidecar = sidecars.get(`${key}.minitv.json`) || sidecars.get(`${key}.json`) ||
       (stems.get(stem) === 1 ? sidecars.get(`${stem}.json`) : null);
@@ -70,12 +95,20 @@ export async function preparePhotoImport(files) {
     if (sidecar) {
       used.add(sidecar);
       if (sidecar.size > MAX_SIDECAR_BYTES) throw new Error(`sidecarTooLarge:${sidecar.name}`);
-      try { raw = JSON.parse(await sidecar.text()); metadata = normalizePhotoMetadata(raw); }
+      try { raw = parsePhotoMetadata(await sidecar.text()); metadata = normalizePhotoMetadata(raw); }
       catch { throw new Error(`invalidSidecar:${sidecar.name}`); }
     }
+    checkCancelled();
     if (file.size > 50 * 1024 * 1024) throw new Error(`photoTooLarge:${file.name}`);
     entries.push({ file, metadata, raw });
+    if (onProgress && (performance.now() - lastReport >= 100 || entries.length === photos.length)) {
+      onProgress({ phase: 'reading', done: entries.length, total: photos.length, fileName: file.name });
+      lastReport = performance.now();
+      // Let React paint even when the selection has no asynchronous sidecars.
+      await yieldToBrowser();
+    }
   }
+  checkCancelled();
   const ignored = visible.filter(f => !isPhotoFile(f) && !used.has(f) && !/\.json$/i.test(f.name));
   if (ignored.length) warnings.push({ type: 'ignored', count: ignored.length, names: ignored.slice(0, 4).map(f => f.name) });
   const unmatched = [...sidecars.values()].filter(f => !used.has(f));

@@ -590,6 +590,9 @@ nombre al destino. También se admiten los JSON de ExifTool/OSXPhotos nombrados
 `nombre.ext.json` o `nombre.json`; se emparejan por ruta, sin adivinar asociaciones
 ambiguas entre HEIC/JPG con el mismo nombre. Los JSON tienen un límite de 2 MB
 por imagen. XMP, vídeos y formatos no compatibles se indican como omitidos.
+Los valores numéricos no finitos (`NaN`, `Infinity`, `-Infinity`) del análisis
+interno de Fotos se guardan como `null`. El importador también acepta estos
+valores en exportaciones anteriores, sin necesidad de volver a copiar las fotos.
 
 Se conservan los bytes de las imágenes, las fechas y zonas horarias, la ubicación
 corregida en Fotos, nombres e identificadores de personas, títulos, descripciones,
@@ -608,12 +611,17 @@ las versiones editadas compatibles se importan como imágenes independientes.
 Revisa `export-report.csv` para detectar originales que iCloud no haya descargado.
 
 La subida se puede pausar entre lotes y continuar mientras el diálogo siga
-abierto. Ante un corte se reintenta el mismo lote con un identificador estable;
+abierto. Tanto la lectura de la selección como la subida muestran el indicador
+animado de MiniTV, contador y tiempo transcurrido. Al conocer el total aparece
+el porcentaje; durante la subida cuenta fotos confirmadas por el servidor y
+muestra por separado el envío del lote actual y la espera de guardado. Si pasan
+30 segundos sin avances, el panel lo indica sin dar la operación por completada.
+Ante un corte se reintenta el mismo lote con un identificador estable;
 el servidor no lo duplica aunque se hubiera perdido su respuesta. Si cierras la
 página, vuelve al álbum y selecciona otra vez la exportación: se detectan archivos
 idénticos por SHA-256 entre las nuevas importaciones (no se indexan retroactivamente
 los duplicados de subidas antiguas). Las fotos guardadas antes de un error permanecen
 en su álbum. Actualiza WebApp y DeviceApp juntos antes de usar esta función.
 
-Pruebas: `node --test tests/photoImport.test.js tests/photoLibrary.test.js` y,
+Pruebas: `node --test tests/photoImport.test.js tests/photoImportProgress.test.js tests/photoLibrary.test.js` y,
 desde la raíz, `python -m unittest discover -s DeviceApp/tests -p 'test_photo*.py'`.
