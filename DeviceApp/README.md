@@ -1184,8 +1184,15 @@ La web muestra las fotos pendientes, permite descargar la lista completa y
 reintentar solo esas fotos en la misma carpeta. Los clientes que no activan esta
 opción conservan la validación atómica del lote completo.
 
-Durante la importación la web suspende la recarga periódica del catálogo. Cada
-foto se valida y descodifica una sola vez antes de bloquear el catálogo, y su
+La biblioteca de fotos no tiene sondeo periódico cuando está en reposo. Al volver
+a la pestaña consulta `GET /pictures/status`, una respuesta pequeña con revisión y
+actividad que no recorre fotos, metadatos ni caras ni inicia una indexación.
+Solo descarga el catálogo si cambia su revisión; las acciones explícitas también
+lo actualizan. Mientras hay indexación, análisis facial o generación en curso,
+consulta ese estado cada 15 segundos y se detiene al terminar. Las consultas se
+suspenden con la pestaña oculta y durante la importación.
+
+Cada foto se valida y descodifica una sola vez antes de bloquear el catálogo, y su
 hash se calcula mientras se escribe. El listado de Personas obtiene todas sus
 asociaciones en una consulta, evitando una consulta por persona en cada refresco.
 

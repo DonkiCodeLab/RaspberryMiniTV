@@ -132,6 +132,7 @@ class PhotoLibrary:
         self.cache.mkdir(exist_ok=True)
         self.path = self.root.parent / 'photo_library.sqlite3'
         self.settings = settings
+        self.revision = uuid.uuid4().hex
         self.lock = threading.RLock()
         self.face_lock = threading.Lock()
         self.scan_lock = threading.Lock()
@@ -177,6 +178,8 @@ class PhotoLibrary:
             try:
                 with connection:
                     yield connection
+                if connection.total_changes:
+                    self.revision = uuid.uuid4().hex
             finally:
                 connection.close()
 
@@ -346,9 +349,9 @@ class PhotoLibrary:
                 batch.rmdir()
             raise
 
-    def sync(self):
+    def sync(self, reserved=False):
         """Adopt pre-existing files without moving or overwriting them."""
-        if not self.scan_lock.acquire(blocking=False): return
+        if not reserved and not self.scan_lock.acquire(blocking=False): return
         self.scanning = True
         self.scan_error = ''
         try:
@@ -382,11 +385,24 @@ class PhotoLibrary:
         self.start_faces()
 
     def start_sync(self):
-        if not self.scanning and time.monotonic() - self.last_scan > 60:
-            threading.Thread(target=self.sync, daemon=True).start()
+        if time.monotonic() - self.last_scan > 60 and self.scan_lock.acquire(blocking=False):
+            # Advertise pending work before the initial library response is sent.
+            self.scanning = True
+            threading.Thread(target=self.sync, kwargs={'reserved': True}, daemon=True).start()
+
+    def status(self, db=None):
+        if db is None:
+            with self.db() as connection:
+                return self.status(connection)
+        # A small state probe: no photo rows, face vectors, JSON metadata or scan.
+        running_job = bool(db.execute("SELECT EXISTS(SELECT 1 FROM jobs WHERE state='running')").fetchone()[0])
+        state = [self.revision, self.scanning, self.scan_error, self.faces_running, self.face_error]
+        return {'revision': hashlib.sha256(json.dumps(state).encode()).hexdigest(),
+                'working': self.scanning or self.faces_running or running_job}
 
     def snapshot(self):
         with self.db() as db:
+            status = self.status(db)
             folders = [dict(row) for row in db.execute('SELECT * FROM folders ORDER BY created, name')]
             photos = []
             memberships = {}
@@ -410,7 +426,7 @@ class PhotoLibrary:
             configured = self.settings.public() if self.settings else {}
         except Exception:
             configured = {}  # A broken AI setting must not hide the photo library.
-        return {'folders': folders, 'photos': photos, 'people': people, 'jobs': jobs,
+        return {**status, 'folders': folders, 'photos': photos, 'people': people, 'jobs': jobs,
                 'scanning': self.scanning, 'scanError': self.scan_error,
                 'aiReady': bool(configured.get('enabled') and configured.get('configured')),
                 'faces': {'available': importlib.util.find_spec('face_recognition') is not None,
@@ -587,6 +603,10 @@ def create_photo_blueprint(get_library):
         store = get_library()
         store.start_sync()
         return jsonify(store.snapshot())
+
+    @bp.get('/pictures/status')
+    def status():
+        return jsonify(get_library().status())
 
     @bp.post('/pictures/folders')
     def folders():

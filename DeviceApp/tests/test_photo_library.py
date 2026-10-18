@@ -54,6 +54,36 @@ class PhotoLibraryTests(unittest.TestCase):
         with self.assertRaises(PhotoError): self.upload()
         self.assertEqual(len(self.store.snapshot()['photos']), 2)
 
+    def test_status_changes_only_after_commits_or_worker_state_changes(self):
+        initial = self.store.status()
+        self.assertEqual(initial, self.store.status())
+        self.assertFalse(initial['working'])
+        self.upload()
+        saved = self.store.status()
+        self.assertNotEqual(initial['revision'], saved['revision'])
+        self.assertEqual(saved['revision'], self.store.snapshot()['revision'])
+        with self.assertRaises(RuntimeError):
+            with self.store.db() as db:
+                db.execute("UPDATE photos SET name='rolled back'")
+                raise RuntimeError('rollback')
+        self.assertEqual(saved, self.store.status())
+        self.store.faces_running = True
+        active = self.store.status()
+        self.assertTrue(active['working'])
+        self.assertNotEqual(saved['revision'], active['revision'])
+        self.store.faces_running = False
+        self.assertEqual(saved, self.store.status())
+        restarted = PhotoLibrary(self.store.root, self.settings)
+        self.assertNotEqual(saved['revision'], restarted.status()['revision'])
+
+    def test_initial_scan_advertises_work_before_thread_starts(self):
+        with patch('photo_library.threading.Thread') as thread:
+            self.store.start_sync(); self.store.start_sync()
+        self.assertEqual(thread.call_count, 1)
+        self.assertTrue(self.store.status()['working'])
+        self.store.sync(reserved=True)
+        self.assertFalse(self.store.status()['working'])
+
     def test_bad_file_rolls_back_whole_upload(self):
         broken = FileStorage(stream=io.BytesIO(b'not a jpeg'), filename='broken.jpg')
         with self.assertRaises(PhotoError): self.store.upload([picture(), broken], 'Broken')
@@ -204,9 +234,18 @@ class PhotoApiTests(unittest.TestCase):
         self.headers = {'X-Web-Pin': 'test'}
 
     def test_all_routes_require_pin(self):
-        for path, method in [('library', 'get'), ('content', 'get'), ('upload', 'post'), ('folders', 'post'), ('move', 'post'),
+        for path, method in [('library', 'get'), ('status', 'get'), ('content', 'get'), ('upload', 'post'), ('folders', 'post'), ('move', 'post'),
                              ('generate', 'post'), ('people/scan', 'post'), ('people/a', 'post'), ('people/a/remove', 'post')]:
             self.assertEqual(getattr(self.client, method)('/pictures/' + path).status_code, 401, path)
+
+    def test_status_is_small_private_and_does_not_build_or_scan_catalogue(self):
+        with patch.object(self.store, 'snapshot', side_effect=AssertionError('Must not serialize the catalogue')):
+            response = self.client.get('/pictures/status', headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.json), {'revision', 'working'})
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        self.assertLess(len(response.data), 150)
+        self.store.start_sync.assert_not_called()
 
     def test_upload_and_thumbnail_roundtrip(self):
         response = self.client.post('/pictures/upload', headers=self.headers, data={'albumName': 'Vacation', 'files': (picture().stream, 'a.jpg')})

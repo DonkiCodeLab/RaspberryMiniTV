@@ -6,6 +6,7 @@ import { descendantIds, folderTrail, hasLocation, pendingVariants, SPECIAL_FOLDE
 import { photoStrings } from './photoStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
 import { photoImportStrings } from './photoImportStrings.js';
+import { watchPhotoLibrary } from './photoLibraryRefresh.js';
 import './PhotosLibrary.css';
 const PhotoMap = lazy(() => import('./PhotoMap.jsx'));
 const blank = { folders: [], photos: [], people: [], jobs: [], faces: {} };
@@ -146,6 +147,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
   const [dialog, setDialog] = useState(null), [viewer, setViewer] = useState(null), [zone, setZone] = useState(null), [busy, setBusy] = useState(false);
   const requestRef = useRef(0), refreshing = useRef(false), mounted = useRef(true), importing = useRef(false);
+  const catalogue = useRef(blank), watcher = useRef(null);
   importing.current = dialog?.mode === 'upload';
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -158,16 +160,31 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
     try {
       const result = await photoRequest('library', undefined, signal);
       if (!mounted.current || signal?.aborted || generation !== requestRef.current) return;
+      catalogue.current = result;
       setData(result); setError('');
     } catch (error) { if (mounted.current && !signal?.aborted && generation === requestRef.current) setError(error.message); }
-    finally { if (generation === requestRef.current) { refreshing.current = false; if (mounted.current && !signal?.aborted) setLoading(false); } }
+    finally { if (generation === requestRef.current) { refreshing.current = false; if (mounted.current && !signal?.aborted) { setLoading(false); watcher.current?.sync(); } } }
   }
   useEffect(() => {
     mounted.current = true; const controller = new AbortController();
+    const updates = watchPhotoLibrary({
+      current: () => catalogue.current,
+      readStatus: () => photoRequest('status', undefined, controller.signal),
+      refresh: () => refresh(controller.signal),
+      canCheck: () => !document.hidden && !refreshing.current && !importing.current,
+      onError: error => { if (!controller.signal.aborted) setError(error.message); },
+    });
+    watcher.current = updates;
     refresh(controller.signal);
-    const timer = setInterval(() => { if (!document.hidden && !refreshing.current && !importing.current) refresh(controller.signal); }, 4000);
-    return () => { mounted.current = false; controller.abort(); clearInterval(timer); };
+    const check = () => { void updates.check(); };
+    window.addEventListener('focus', check);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      mounted.current = false; updates.stop(); controller.abort();
+      window.removeEventListener('focus', check); document.removeEventListener('visibilitychange', check);
+    };
   }, [attempt]);
+  useEffect(() => { watcher.current?.sync(); }, [dialog?.mode]);
   useEffect(() => { if (initialFiles?.length) setDialog({ mode: 'upload', files: initialFiles, parent: 'uploads' }); }, [initialFiles]);
   const person = current.startsWith('person:') ? data.people.find(p => p.id === current.slice(7)) : null;
   const trail = person ? [{ id: 'people', name: s.people }, { id: current, name: person.name }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
@@ -185,10 +202,9 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   const pending = pendingVariants(data.photos.filter(p => p.folderId === current || p.folderIds?.includes(current) || (p.sourceId && albumPhotos.some(original => original.id === p.sourceId))));
   const job = data.jobs.find(j => j.folder === current);
   const navigate = id => { setCurrent(id); setSearch(''); setSelected(new Set()); setActionMode(false); setZone(null); setNotice(''); };
-  const closeDialog = () => { setDialog(null); onImportDone?.(); };
+  const closeDialog = () => { setDialog(null); onImportDone?.(); return refresh(); };
   async function complete(result) {
-    const mode = dialog?.mode; closeDialog();
-    await refresh();
+    const mode = dialog?.mode; await closeDialog();
     setSelected(new Set());
     if (result.folderId || (mode === 'create' && result.id)) navigate(result.folderId || result.id);
     setNotice(mode === 'upload' ? s.imported : mode === 'move' ? s.moved : mode === 'create' ? s.albumCreated : s.saved);

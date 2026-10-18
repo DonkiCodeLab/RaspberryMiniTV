@@ -19,6 +19,8 @@ export function photoDemo(action, data = {}) {
         const query = db.transaction('library').objectStore('library').get('data');
         query.onsuccess = () => resolve(query.result || initial()); query.onerror = () => reject(query.error);
       });
+      library.revision ||= 'demo-empty'; library.working = false;
+      if (action === 'status') return { revision: library.revision, working: false };
       const create = (name, parent = '') => {
         name = String(name || '').trim();
         if (!name || name.length > 100 || /[/\\]/.test(name)) throw new Error('Escribe un nombre válido.');
@@ -89,10 +91,13 @@ export function photoDemo(action, data = {}) {
         if (person) person.photoIds = person.photoIds.filter(id => !data.ids.includes(id));
         result = { ok: true };
       } else if (action !== 'library') throw new Error('Conecta la Raspberry para usar esta función.');
-      if (action !== 'library') await new Promise((resolve, reject) => {
-        const tx = db.transaction('library', 'readwrite'); tx.objectStore('library').put(library, 'data');
-        tx.oncomplete = resolve; tx.onerror = () => reject(new Error('No se ha podido guardar. Revisa el espacio del navegador.')); tx.onabort = tx.onerror;
-      });
+      if (action !== 'library') {
+        library.revision = crypto.randomUUID();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('library', 'readwrite'); tx.objectStore('library').put(library, 'data');
+          tx.oncomplete = resolve; tx.onerror = () => reject(new Error('No se ha podido guardar. Revisa el espacio del navegador.')); tx.onabort = tx.onerror;
+        });
+      }
       const photos = library.photos.map(({ blob, ...photo }) => {
         if (blob && !urls.has(photo.relativePath)) urls.set(photo.relativePath, URL.createObjectURL(blob));
         return photo;
