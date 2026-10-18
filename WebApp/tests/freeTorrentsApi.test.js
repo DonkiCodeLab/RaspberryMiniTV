@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { freeDownloadStrings } from '../src/freeDownloadStrings.js';
-import { hasTorrentLibraryUpdates, torrentLibraryVersion } from '../src/torrentUtils.js';
+import { hasTorrentLibraryUpdates, torrentLibraryVersion, upsertTorrentJob, torrentJobGroup } from '../src/torrentUtils.js';
 
 test('standalone download requests need no title and preserve authenticated nested paths', async () => {
   const buildResult = await build({ entryPoints: [new URL('../src/api/raspberryApi.js', import.meta.url).pathname],
@@ -16,7 +16,9 @@ test('standalone download requests need no title and preserve authenticated nest
     return { ok: true, text: async () => '{"job":{},"entries":[]}' };
   };
   try {
-    await api.startMediaTorrent({ infoHash: 'a'.repeat(40), name: 'Dataset' }, undefined, { mediaType: 'generic' });
+    const controller = new AbortController();
+    await api.startMediaTorrent({ infoHash: 'a'.repeat(40), name: 'Dataset' }, undefined, { mediaType: 'generic', signal: controller.signal });
+    assert.equal(calls[0].options.signal, controller.signal);
     const body = JSON.parse(calls[0].options.body);
     assert.equal(body.mediaType, 'generic');
     for (const key of ['movie', 'series', 'book']) assert.equal(body[key], undefined);
@@ -27,8 +29,28 @@ test('standalone download requests need no title and preserve authenticated nest
     const selection = { action: 'import', path: 'Carpeta/film.mkv', mediaType: 'movies', media: { id: 123, name: 'Film' } };
     await api.changeFreeDownloadContents('a'.repeat(40), selection);
     assert.deepEqual(JSON.parse(calls[3].options.body), selection);
+    await api.getMovieTorrents();
+    assert.equal(calls[4].options.cache, 'no-store');
     for (const call of calls) assert.equal(call.options.headers['X-Web-Pin'], 'fixture-pin');
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
+
+test('confirmed downloads enter the list immediately without duplicating or losing other jobs', () => {
+  const movie = { id: 'movie', mediaType: 'movies', state: 'complete', createdAt: 1 };
+  const free = { id: 'free', name: 'Dataset', mediaType: 'generic', state: 'queued', createdAt: 2 };
+  const original = [movie];
+  const accepted = upsertTorrentJob(original, free);
+  assert.deepEqual(original, [movie]);
+  assert.deepEqual(accepted, [free, movie]);
+  const progressed = { ...free, state: 'downloading', progress: 42 };
+  assert.deepEqual(upsertTorrentJob(accepted, progressed), [progressed, movie]);
+  for (const state of ['queued', 'downloading', 'paused', 'failed']) {
+    assert.equal(torrentJobGroup({ ...free, state }), 'active');
+  }
+  for (const state of ['complete', 'cancelled']) {
+    assert.equal(torrentJobGroup({ ...free, state }), 'generic');
+  }
+  assert.equal(torrentJobGroup(movie), 'history');
 });
 
 test('each later import from a standalone download refreshes the library in other clients', () => {

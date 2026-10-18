@@ -120,6 +120,11 @@ test('standalone downloads use their own history, contents action and completion
   const cancelled = render([{ ...job, state: 'cancelled' }]);
   assert.match(cancelled, /Quitar del historial: Public dataset/);
   const active = render([{ ...job, state: 'downloading' }]);
+  const activePanel = active.slice(active.indexOf('id="torrent-active-panel"'), active.indexOf('id="torrent-history-panel"'));
+  assert.match(activePanel, /Public dataset/);
+  assert.doesNotMatch(activePanel, /hidden=""/);
+  const freePanel = active.slice(active.indexOf('id="torrent-generic-panel"'), active.indexOf('aria-label="Buscar descargas libres"'));
+  assert.doesNotMatch(freePanel, /Public dataset/);
   for (const label of ['Avisarme al terminar', 'Pausar', 'Cancelar descarga']) assert.ok(active.includes(label));
   assert.match(render([{ ...job, state: 'paused' }]), /Reanudar/);
   const preferences = { [torrentNotificationKey(job)]: true };

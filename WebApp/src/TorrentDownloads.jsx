@@ -3,7 +3,7 @@ import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { controlMovieTorrent, getMovieTorrents, previewTorrent, searchMediaTorrents, startMediaTorrent } from "./api/raspberryApi";
-import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents } from "./torrentUtils.js";
+import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents, upsertTorrentJob, torrentJobGroup } from "./torrentUtils.js";
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import "./TorrentDownloads.css";
@@ -109,7 +109,7 @@ export function TorrentContentPreview({ torrent, language, mediaType }) {
   </section>;
 }
 
-export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted, notificationPreferences = {}, notificationsReady = false, onNotificationChange }) {
+export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted, jobs = [], onRefresh, notificationPreferences = {}, notificationsReady = false, onNotificationChange }) {
   const s = torrentStrings(language);
   const fs = freeDownloadStrings(language);
   const isGeneric = mediaType === "generic";
@@ -128,6 +128,8 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const [loading, setLoading] = useState(Boolean(searchTerm.query));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const startRequest = useRef(null);
+  const [startError, setStartError] = useState(null);
   const [started, setStarted] = useState(false);
   const [startedJob, setStartedJob] = useState(null);
   const [demo, setDemo] = useState(false);
@@ -135,6 +137,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const [previewHash, setPreviewHash] = useState("");
   const previewId = useId();
   const cancelOverwrite = useRef(null);
+  useEffect(() => () => startRequest.current?.abort(), []);
   useEffect(() => {
     if (overwriteTorrent) {
       cancelOverwrite.current?.focus();
@@ -146,7 +149,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20000);
     let disposed = false;
-    setLoading(true); setError(""); setDemo(false); setStarted(false); setStartedJob(null);
+    setLoading(true); setError(""); setStartError(null); setDemo(false); setStarted(false); setStartedJob(null);
     if (!searchTerm.append) { setPreviewHash(""); setResults([]); setSources([]); setNextEztvPage(null); }
     searchMediaTorrents(searchTerm.query, controller.signal, { ...searchTerm, mediaType, imdbId: media?.imdbId }).then(payload => {
       if (!disposed) {
@@ -162,27 +165,36 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   }, [searchTerm, s, mediaType, media?.imdbId]);
 
   async function start(torrent, overwriteExisting = false) {
-    setBusy(torrent.infoHash); setError("");
+    if (startRequest.current) return;
+    const existing = isGeneric && jobs.find(job => job.id === torrent.infoHash && job.state !== "cancelled");
+    if (existing) { onDashboard?.(existing); return; }
+    const controller = new AbortController();
+    startRequest.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    setBusy(torrent.infoHash); setError(""); setStartError(null); setStarted(false); setStartedJob(null);
     try {
       const response = await startMediaTorrent(torrent, media, { mediaType, overwriteExisting,
-        seasonNumber: searchTerm.seasonNumber, episodeNumber: searchTerm.episodeNumber });
-      if (response.job?.state === "failed") throw new Error(response.job.error);
-      setStartedJob(response.job ?? null);
+        seasonNumber: searchTerm.seasonNumber, episodeNumber: searchTerm.episodeNumber, signal: controller.signal });
+      if (!response?.job?.id) throw new Error(s.startUnconfirmed);
+      setStartedJob(response.job);
       setStarted(true);
       setOverwriteTorrent(null);
-      onStarted?.();
+      onStarted?.(response.job);
     } catch (e) {
       if (e.code === "MOVIE_ALREADY_DOWNLOADED") setOverwriteTorrent(torrent);
-      else setError(e.message);
+      else {
+        setStartError({ id: torrent.infoHash, message: e.name === "AbortError" ? s.startUnconfirmed : e.message });
+        onRefresh?.();
+      }
     }
-    finally { setBusy(""); }
+    finally { clearTimeout(timeout); startRequest.current = null; setBusy(""); }
   }
 
   const sortedResults = sortTorrents(results, sortField, sortDirection);
   const sortAria = sortDirection === "asc" ? "ascending" : "descending";
   const sortArrow = sortDirection === "asc" ? "↑" : "↓";
   const unavailableSources = sources.filter(source => source.status === "error").map(source => source.name);
-  return <section className="movie-torrents" aria-label={s.searchTitle}>
+  return <section className="movie-torrents" aria-label={isGeneric ? fs.search : s.searchTitle}>
     <h3>{isGeneric ? fs.search : s.searchTitle}</h3>
     <p>{isGeneric ? fs.hint : isBook ? bs.hint : isSeries ? s.seriesHint : s.hint}</p>
     <form className={`movie-torrents__search${isSeries ? " movie-torrents__search--series" : ""}`} onSubmit={event => { event.preventDefault(); if (query.trim()) setSearchTerm({ query: query.trim(),
@@ -209,16 +221,17 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
         <button ref={cancelOverwrite} className="dialog-button dialog-button--ghost" disabled={Boolean(busy)} onClick={() => { setOverwriteTorrent(null); setError(""); }} type="button">{s.cancel}</button>
       </div>
     </div>}
-    {started ? <div className="movie-torrents__success">
-      <p role="status">{s.started}</p>
+    {started && <div className="movie-torrents__success">
+      <p role="status">{startedJob?.state === "failed" ? startedJob.error : isGeneric ? fs.added : s.started} <strong>{startedJob?.name}</strong></p>
       {startedJob?.id && <label className="movie-torrents__notify">
         <input type="checkbox" checked={wantsTorrentNotification(startedJob, notificationPreferences)}
           disabled={!notificationsReady || !onNotificationChange}
           onChange={event => onNotificationChange?.(torrentNotificationKey(startedJob), event.target.checked)} />
         <span>{s.notify}</span>
       </label>}
-      <button className="dialog-button dialog-button--accent" onClick={onDashboard} type="button">{s.dashboard}</button>
-    </div> : <>
+      <button className="dialog-button dialog-button--accent" onClick={() => onDashboard?.(startedJob)} type="button">{s.dashboard}</button>
+    </div>}
+    {(!started || isGeneric) && <>
       {loading ? <p role="status"><LoadingSpinner inline /> {s.searching}</p> : demo ? <p>{s.demo}</p> : !results.length && !error ? <p>{isGeneric ? searchTerm.query ? fs.emptySearch : fs.prompt : isBook ? bs.empty : isSeries ? s.seriesEmpty : s.empty}</p> : null}
       {results.length > 0 && <>
         <div className="movie-torrents__sort">
@@ -235,15 +248,25 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
         </div>
         <div className="movie-torrents__table"><table>
         <thead><tr><th>{s.name}</th><th>{s.source}</th><th aria-sort={sortField === "sizeBytes" ? sortAria : undefined}>{s.size}{sortField === "sizeBytes" ? ` ${sortArrow}` : ""}</th><th aria-sort={sortField === "seeds" ? sortAria : undefined}>Seeds{sortField === "seeds" ? ` ${sortArrow}` : ""}</th><th><span className="torrent-visually-hidden">{s.download}</span></th></tr></thead>
-        <tbody>{sortedResults.map(result => <React.Fragment key={result.infoHash}><tr>
+        <tbody>{sortedResults.map(result => {
+          const existing = isGeneric && jobs.find(job => job.id === result.infoHash && job.state !== "cancelled");
+          const submitting = busy === result.infoHash;
+          const failure = startError?.id === result.infoHash ? startError.message : "";
+          return <React.Fragment key={result.infoHash}><tr>
           <td>{result.name}</td>
           <td className="movie-torrents__source"><div className="movie-torrents__badges">{torrentSources(result).map(source => <span className="movie-torrents__badge" key={source}>{source}</span>)}</div></td>
           <td>{isBook ? torrentSize(result.sizeBytes, language) : torrentListSize(result.sizeBytes)}</td><td>{result.seeds}</td>
           <td><div className="torrent-preview__actions"><button className="dialog-button dialog-button--ghost" type="button"
             aria-expanded={previewHash === result.infoHash} aria-controls={previewHash === result.infoHash ? previewId : undefined}
             onClick={() => setPreviewHash(current => current === result.infoHash ? "" : result.infoHash)}>{previewHash === result.infoHash ? s.hideContent : s.viewContent}</button>
-            <button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} onClick={() => start(result)} type="button">{busy === result.infoHash ? s.starting : s.download}</button></div></td>
-        </tr>{previewHash === result.infoHash && <tr><td colSpan={5} id={previewId}><TorrentContentPreview torrent={result} language={language} mediaType={mediaType} /></td></tr>}</React.Fragment>)}</tbody>
+            <button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} aria-busy={submitting}
+              onClick={() => existing ? onDashboard?.(existing) : start(result)} type="button">{submitting ? <><LoadingSpinner inline /> {s.starting}</> : existing ? s.viewDownloads : s.download}</button></div>
+            {submitting && <p className="movie-torrents__result-status" role="status">{s.sendingDownload}</p>}
+            {existing && <p className="movie-torrents__result-status">{existing.state === "complete" ? fs.ready : s[existing.state]}{existing.state === "downloading" ? ` · ${existing.progress || 0}%` : ""}</p>}
+            {failure && <p className="dialog-error movie-torrents__result-status" role="alert">{failure}</p>}
+          </td>
+        </tr>{previewHash === result.infoHash && <tr><td colSpan={5} id={previewId}><TorrentContentPreview torrent={result} language={language} mediaType={mediaType} /></td></tr>}</React.Fragment>;
+        })}</tbody>
       </table></div></>}
       {nextEztvPage !== null && <button className="dialog-button movie-torrents__more" disabled={loading || Boolean(busy)} type="button" onClick={() => setSearchTerm(current => ({ ...current, eztvPage: nextEztvPage, append: true }))}>{s.moreEztv}</button>}
     </>}
@@ -259,27 +282,30 @@ export function useTorrentDownloads(enabled, onLibraryChanged) {
   const changed = useRef(onLibraryChanged);
   changed.current = onLibraryChanged;
   const libraryVersion = useRef(null);
+  const requestVersion = useRef(0);
   useEffect(() => {
     if (!enabled) return;
     let disposed = false, timer;
+    const version = ++requestVersion.current;
+    const isCurrent = () => !disposed && version === requestVersion.current;
     const controller = new AbortController();
     async function poll() {
       const timeout = setTimeout(() => controller.abort(), 20000);
       try {
         const next = await getMovieTorrents(controller.signal);
-        if (disposed) return;
+        if (!isCurrent()) return;
         setData(next); setError("");
-        const version = torrentLibraryVersion(next.jobs || []);
-        if (version !== libraryVersion.current) {
-          if (hasTorrentLibraryUpdates(libraryVersion.current, version)) await changed.current?.();
-          if (!disposed) libraryVersion.current = version;
+        const nextLibraryVersion = torrentLibraryVersion(next.jobs || []);
+        if (nextLibraryVersion !== libraryVersion.current) {
+          if (hasTorrentLibraryUpdates(libraryVersion.current, nextLibraryVersion)) await changed.current?.();
+          if (isCurrent()) libraryVersion.current = nextLibraryVersion;
         }
-      } catch (e) { if (!disposed) setError(e.message); }
+      } catch (e) { if (isCurrent()) setError(e.message); }
       finally {
         clearTimeout(timeout);
-        if (!disposed) setLoaded(true);
+        if (isCurrent()) setLoaded(true);
       }
-      if (!disposed) timer = setTimeout(() => setRevision(value => value + 1), 5000);
+      if (isCurrent()) timer = setTimeout(() => setRevision(value => value + 1), 5000);
     }
     poll();
     return () => { disposed = true; clearTimeout(timer); controller.abort(); };
@@ -290,7 +316,14 @@ export function useTorrentDownloads(enabled, onLibraryChanged) {
     catch (e) { setError(e.message); }
     finally { setBusy(""); }
   }
-  return { ...data, error, loaded, busy, action, refresh: () => setRevision(value => value + 1) };
+  function recordJob(job) {
+    // The POST response is authoritative. Do not wait for polling to show it or
+    // let a GET started before it replace the list with an older snapshot.
+    requestVersion.current += 1;
+    if (job?.id) setData(current => ({ ...current, jobs: upsertTorrentJob(current.jobs || [], job) }));
+    setRevision(value => value + 1);
+  }
+  return { ...data, error, loaded, busy, action, recordJob, refresh: () => setRevision(value => value + 1) };
 }
 
 function TorrentMovieNotice({ notice, strings: s, onClose }) {
@@ -347,6 +380,10 @@ export default function TorrentDownloads({ downloads, language, notificationPref
   const fs = freeDownloadStrings(language);
   const [contentJob, setContentJob] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState("active");
+  const [focusRequest, setFocusRequest] = useState(null);
+  const focusedJobId = focusRequest?.id;
+  const focusPending = useRef(false);
+  const focusedJobRef = useRef(null);
   const sectionRef = useRef(null);
   const notificationRef = useRef(null);
   const movieRequest = useRef(null);
@@ -369,7 +406,23 @@ export default function TorrentDownloads({ downloads, language, notificationPref
       movieRequest.current = null;
     }
   }
-  const { jobs = [], serviceError, error, busy, action, refresh, loaded, demo } = downloads;
+  const { jobs = [], serviceError, error, busy, action, refresh, recordJob, loaded, demo } = downloads;
+  function showJob(job) {
+    const latest = jobs.find(current => current.id === job?.id) || job;
+    setSelectedGroup(latest ? torrentJobGroup(latest) : "active");
+    setFocusRequest({ id: job?.id });
+    focusPending.current = true;
+  }
+  useEffect(() => {
+    if (!focusPending.current) return;
+    const job = jobs.find(current => current.id === focusedJobId);
+    if (job && selectedGroup !== torrentJobGroup(job)) { setSelectedGroup(torrentJobGroup(job)); return; }
+    const target = focusedJobRef.current;
+    if (!target || target.closest("[hidden]")) return;
+    focusPending.current = false;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusRequest, selectedGroup, jobs]);
   const completedNotifications = completedTorrentNotifications(jobs, notificationPreferences);
   const historyNotificationKeys = jobs.filter(job => isTorrentHistory(job) && wantsTorrentNotification(job, notificationPreferences))
     .map(torrentNotificationKey);
@@ -420,8 +473,11 @@ export default function TorrentDownloads({ downloads, language, notificationPref
         const notificationReady = notifying && job.state === "complete";
         const canDownloadAnyway = job.state === "failed" && job.canDownloadAnyway === true;
         const status = canDownloadAnyway ? "warning" : job.state;
-        return <article className={`torrent-job${notificationReady ? " torrent-job--notified" : ""}`} key={job.id}
-          ref={job.id === completedNotifications[0]?.id ? notificationRef : null} tabIndex={-1}>
+        return <article className={`torrent-job${notificationReady ? " torrent-job--notified" : ""}${job.id === focusedJobId ? " torrent-job--selected" : ""}`} key={job.id}
+          ref={node => {
+            if (job.id === completedNotifications[0]?.id) notificationRef.current = node;
+            if (job.id === focusedJobId) focusedJobRef.current = node;
+          }} tabIndex={-1}>
       <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${status}`}>{job.mediaType === "generic" && status === "complete" ? fs.ready : job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[status] || status}</span></div>
       {notificationReady && <p className="torrent-job__notification-status">{s.notificationReady}</p>}
       {job.mediaType !== "generic" && <p className="torrent-job__name">{job.name}</p>}
@@ -460,8 +516,8 @@ export default function TorrentDownloads({ downloads, language, notificationPref
       </div>
     </article>; })}</div>
     </section>)}
-    <MediaTorrentSearch mediaType="generic" language={language} onStarted={refresh}
-      onDashboard={() => { setSelectedGroup("active"); sectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}
+    <MediaTorrentSearch mediaType="generic" language={language} jobs={jobs} onRefresh={refresh}
+      onStarted={job => { recordJob(job); showJob(job); }} onDashboard={showJob}
       notificationPreferences={notificationPreferences} notificationsReady={notificationsReady} onNotificationChange={onNotificationChange} />
     </div>
     {contentJob && <FreeDownloadDialog jobs={jobs} initialJob={contentJob} language={language} onClose={() => setContentJob(null)} onChanged={refresh} />}

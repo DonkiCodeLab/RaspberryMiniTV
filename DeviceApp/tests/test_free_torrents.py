@@ -49,6 +49,21 @@ class FreeTorrentFixture(unittest.TestCase):
 
 
 class FreeTorrentTests(FreeTorrentFixture):
+    def test_repeated_start_keeps_one_active_transfer_and_its_progress(self):
+        original = self.add()
+        for state in ("queued", "downloading", "paused", "failed"):
+            with self.subTest(state=state):
+                self.manager._update(self.manager.jobs[INFO_HASH], state=state, downloadedBytes=45, progress=45)
+                for _ in range(3):
+                    job = self.add()
+                    self.assertEqual(job["createdAt"], original["createdAt"])
+                    self.assertEqual(job["state"], state)
+                    self.assertEqual(job["progress"], 45)
+                snapshot = self.manager.snapshot()["jobs"]
+                self.assertEqual(len(snapshot), 1)
+                self.assertEqual(snapshot[0]["id"], INFO_HASH)
+        self.assertEqual(sum(method == "torrent-add" for method, _ in self.rpc.calls), 1)
+
     def test_all_files_complete_without_media_import_and_survive_restart(self):
         folder = self.ready()
         self.importer.assert_not_called()

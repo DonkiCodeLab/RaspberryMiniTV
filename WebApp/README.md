@@ -207,7 +207,11 @@ El modo demo no inicia descargas reales. Instalación y funcionamiento:
 
 **Descargas libres** permite buscar torrents sin ficha desde la parte inferior de
 **Dashboard → Torrents**. La búsqueda abarca todas las categorías y conserva la
-ordenación por seeds/tamaño. Las tareas comparten pausa, reanudación, cancelación
+ordenación por seeds/tamaño. Al pulsar **Descargar** se muestra **Iniciando…** y se
+bloquean los clics repetidos. La confirmación añade la tarea inmediatamente al
+listado y abre su tarjeta; los resultados ya añadidos muestran su estado y
+**Ver descargas**. Los errores y la falta de respuesta aparecen junto al resultado.
+Las tareas comparten pausa, reanudación, cancelación
 y avisos con las descargas habituales. Al finalizar o cancelar pasan a la tercera
 pestaña **Descargas libres**; las vinculadas a fichas siguen en **Historial**.
 

@@ -334,9 +334,9 @@ export function previewTorrent(infoHash, signal) {
   return request(`/torrents/preview?${new URLSearchParams({ infoHash })}`, { signal });
 }
 
-export function startMediaTorrent(torrent, media, { mediaType = "movies", overwriteExisting = false, seasonNumber, episodeNumber } = {}) {
+export function startMediaTorrent(torrent, media, { mediaType = "movies", overwriteExisting = false, seasonNumber, episodeNumber, signal } = {}) {
   if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para descargar torrents."));
-  return request("/torrents", { method: "POST", body: JSON.stringify({
+  return request("/torrents", { method: "POST", signal, body: JSON.stringify({
     infoHash: torrent.infoHash, name: torrent.name, sizeBytes: torrent.sizeBytes, sources: torrent.sources, overwriteExisting,
     mediaType, seasonNumber, episodeNumber,
     [mediaType === "generic" ? "generic" : mediaType === "books" ? "book" : mediaType === "series" ? "series" : "movie"]: mediaType === "generic" ? undefined : mediaType === "books"
@@ -347,7 +347,7 @@ export function startMediaTorrent(torrent, media, { mediaType = "movies", overwr
 
 export function getMovieTorrents(signal) {
   if (isMockModeEnabled()) return Promise.resolve({ jobs: [], demo: true });
-  return request("/torrents", { signal });
+  return request("/torrents", { signal, cache: "no-store" });
 }
 
 export function controlMovieTorrent(id, action) {

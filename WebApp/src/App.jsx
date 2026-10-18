@@ -10589,7 +10589,7 @@ export default function App() {
               initialMediaType={uploadMediaType === "movies" ? "movies" : "series"}
               initialMovie={torrentInitialMovie}
               profiles={profiles}
-              onTorrentStarted={torrentDownloads.refresh}
+              onTorrentStarted={torrentDownloads.recordJob}
               onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }}
             />
             <EpisodeDetailsModal
@@ -10630,7 +10630,7 @@ export default function App() {
       </div>
       {bookTorrentTarget && <BookTorrentModal key={bookTorrentTarget.key} winner={bookTorrentTarget} language={raspberryLanguage} onClose={() => setBookTorrentTarget(null)}
         notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready} onNotificationChange={profiles.setTorrentNotification}
-        onStarted={torrentDownloads.refresh} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }} />}
+        onStarted={torrentDownloads.recordJob} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }} />}
       {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
     </PersonCatalogContext.Provider>
