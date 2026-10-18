@@ -3,7 +3,7 @@ from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
 from omdb_ratings import OmdbSettings, OmdbRatings, OmdbError
 from omdb_backfill import OmdbBackfill, cached_library_ratings
-from torrent_downloads import TorrentDownloads, TorrentError, search_torrents
+from torrent_downloads import TorrentDownloads, TorrentError, search_torrents, series_video_files
 from torrent_preview import preview as preview_torrent
 from video_formats import is_video_file
 import movie_subtitles
@@ -1184,6 +1184,7 @@ def _calculate_library_counts():
     games_bytes = get_directory_size(GAMES_DIR)
     books_bytes = get_directory_size(BOOKS_DIR)
     pictures_bytes = get_directory_size(PICTURES_DIR)
+    free_dir = os.path.join(MULTIMEDIA_DIR, "Torrents", "free")
 
     def usage_item(count, used_bytes):
         return {
@@ -1210,6 +1211,7 @@ def _calculate_library_counts():
         ),
         "books": usage_item(len(list_book_entries()), books_bytes),
         "pictures": usage_item(len(list_picture_entries()), pictures_bytes),
+        "generic": usage_item(count_direct_directories(free_dir), get_directory_size(free_dir)),
     }
 
 
@@ -2986,6 +2988,69 @@ def control_movie_torrent(job_id):
         return jsonify({"error": "Descarga no encontrada."}), 404
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    except OSError:
+        app.logger.exception("No se pudo actualizar la descarga torrent")
+        return jsonify({"error": "No se pudo actualizar la descarga. Comprueba el espacio y los permisos e inténtalo de nuevo."}), 503
+
+
+def import_free_media(job, files, data):
+    media_type = data.get("mediaType")
+    media = data.get("media")
+    if media_type not in {"movies", "series"} or not isinstance(media, dict):
+        raise ValueError("Selecciona una película o serie y su ficha TMDB.")
+    if type(media.get("id")) is not int or media["id"] <= 0 or not isinstance(media.get("name"), str) or not media["name"].strip():
+        raise ValueError("Selecciona una ficha TMDB válida.")
+    videos = [file for file in files if is_video_file(file.name)]
+    if not videos:
+        raise ValueError("La selección no contiene vídeos compatibles. Descomprime el contenido primero si es necesario.")
+    if media_type == "movies":
+        if len(videos) != 1:
+            raise ValueError("La carpeta contiene varios vídeos. Selecciona el fichero de la película.")
+        item = import_torrent_movie({"id": job["id"], "movie": media, "overwriteExisting": data.get("overwriteExisting") is True}, videos[0])
+        moved = [(videos[0], Path(VIDEOS_DIR) / item["relativePath"])]
+    else:
+        selected = series_video_files([{"name": file.name, "length": file.stat().st_size} for file in videos])
+        episodes = [{"source": videos[index], "seasonNumber": season, "episodeNumber": episode,
+                     "id": f"S{season:02d}E{episode:02d}"} for index, _, season, episode in selected]
+        item = import_torrent_series({"id": job["id"], "series": media}, episodes)
+        imported = set(item.get("importedEpisodeIds", []))
+        by_id = {episode["id"]: episode for episode in item["episodes"]}
+        moved = [(episode["source"], Path(VIDEOS_DIR) / item["relativePath"] / by_id[episode["id"]]["file"])
+                 for episode in episodes if episode["id"] in imported]
+    return item, list(dict.fromkeys(moved))
+
+
+@app.route("/torrents/<job_id>/contents", methods=["GET", "POST"])
+def free_torrent_contents(job_id):
+    manager = get_movie_torrents()
+    try:
+        if request.method == "GET":
+            return jsonify(manager.free_contents(job_id, request.args.get("path", "")))
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or not isinstance(data.get("path", ""), str):
+            raise ValueError("Solicitud no válida.")
+        if data.get("action") == "extract":
+            return jsonify({"job": manager.extract_free_download(job_id, data.get("path", ""))}), 202
+        if data.get("action") == "import":
+            media = data.get("media")
+            if data.get("mediaType") == "movies" and isinstance(media, dict) and data.get("overwriteExisting") is not True:
+                for entry in load_movie_library().values():
+                    if str(entry.get("tmdbId")) == str(media.get("id")):
+                        existing = resolve_relative_video_path(entry.get("relativePath"), MOVIES_DIR)
+                        if existing and os.path.isfile(existing):
+                            return jsonify({"error": "Esta película ya está descargada. Confirma si quieres sobrescribirla.", "code": "MOVIE_ALREADY_DOWNLOADED"}), 409
+            result = manager.import_free_download(job_id, data.get("path", ""), data, import_free_media)
+            with library_stats.lock:
+                library_stats.checked_at = float("-inf")
+            return jsonify(result)
+        raise ValueError("Acción no válida.")
+    except KeyError:
+        return jsonify({"error": "Descarga no encontrada."}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except OSError:
+        app.logger.exception("No se pudo modificar una descarga libre")
+        return jsonify({"error": "No se pudo acceder al contenido. Comprueba el espacio y los permisos de la descarga."}), 503
 
 
 @app.route("/uploads/check", methods=["POST"])

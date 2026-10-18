@@ -2148,11 +2148,6 @@ img {
   grid-column: span 2;
 }
 
-.raspberry-dashboard-grid > .raspberry-stat-card:nth-of-type(2),
-.raspberry-dashboard-grid > .raspberry-stat-card:nth-of-type(3) {
-  grid-column: span 3;
-}
-
 .raspberry-stat-card,
 .raspberry-language-card,
 .raspberry-tmdb-card,
@@ -4857,9 +4852,7 @@ img {
     grid-template-columns: 1fr;
   }
 
-  .raspberry-dashboard-grid > .raspberry-stat-card,
-  .raspberry-dashboard-grid > .raspberry-stat-card:nth-of-type(2),
-  .raspberry-dashboard-grid > .raspberry-stat-card:nth-of-type(3) {
+  .raspberry-dashboard-grid > .raspberry-stat-card {
     grid-column: 1;
   }
 

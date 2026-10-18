@@ -48,6 +48,37 @@ sudo systemctl restart minitv-api.service
 
 Transmission usa RPC en `127.0.0.1:9092` y el puerto de peers `51414`, con dos
 descargas simultáneas. No modifica la configuración de otras instancias.
+
+Las **Descargas libres** usan `mediaType: "generic"` sin ficha TMDB/Open Library.
+Buscan todas las categorías de The Pirate Bay, Knaben y las fuentes Torznab
+configuradas. Se guardan en `MultimediaContent/Torrents/free/<infoHash>` y se
+descargan todos sus archivos. Al terminar se retira el torrent de Transmission
+sin borrar los datos. El estado persiste en `Torrents/jobs.json`; la pausa,
+cancelación y reintentos usan el mismo gestor que películas, series y libros.
+
+`GET /torrents/<id>/contents?path=…` lista el directorio de una descarga libre
+terminada. `POST` en esa ruta admite `action: "extract"` y `path` para descomprimir,
+o `action: "import"`, `path`, `mediaType: "movies" | "series"` y
+`media: {id, name}` para mover vídeos a la biblioteca. Se publica primero la copia
+de biblioteca y sus metadatos, y después se retiran los originales verificados.
+Los capítulos existentes y los archivos no importados permanecen en origen.
+Una película existente devuelve `MOVIE_ALREADY_DOWNLOADED` (409) y requiere
+`overwriteExisting: true`. `POST /torrents/<id>` con `action: "delete"` borra toda
+la descarga libre y su registro; `remove` solo quita las libres canceladas.
+Todas estas rutas requieren el PIN web y rechazan rutas externas/enlaces.
+
+La descompresión se ejecuta en segundo plano con libarchive (ZIP, TAR y variantes,
+RAR y 7z compatibles, GZ/BZ2/XZ). El instalador de torrents añade
+`libarchive-tools`; vuelve a ejecutarlo en instalaciones previas si falta.
+Se conserva el comprimido y se publica una carpeta nueva solo al terminar,
+sin sobrescribir archivos. No se admiten contraseñas, enlaces ni archivos
+especiales; se limita a 50.000 entradas, 100 GiB y el espacio libre disponible
+menos 64 MiB. El lector sigue el [API de libarchive](https://github.com/libarchive/libarchive/wiki/Examples),
+pero la aplicación valida y escribe cada archivo regular por separado.
+Tras un reinicio, la descompresión interrumpida puede reintentarse.
+
+Pruebas: `python -m unittest discover -s DeviceApp/tests -p 'test_*torrent*.py'`
+(incluye descargas libres, importaciones y comprimidos locales).
 La API usa el protocolo RPC de Transmission 3.x/4.x
 ([especificación oficial](https://github.com/transmission/transmission/blob/4.0.6/docs/rpc-spec.md)).
 Si ya tienes un motor local con acceso a las mismas rutas, puedes definir

@@ -12,6 +12,8 @@ import TorrentUploadSettings from "./TorrentUploadSettings.jsx";
 import TorrentTraffic from "./TorrentTraffic.jsx";
 import { bookTorrentStrings } from './bookTorrentUtils.js';
 import { completedTorrentNotifications, torrentNotificationKey, wantsTorrentNotification } from "./torrentNotifications.js";
+import FreeDownloadDialog from "./FreeDownloadDialog.jsx";
+import { freeDownloadStrings } from "./freeDownloadStrings.js";
 
 export function TorrentNotificationBadge({ count, className = "" }) {
   return count > 0 ? <span className={`series-hero__download-badge ${className}`.trim()} aria-hidden="true">{count > 99 ? "99+" : count}</span> : null;
@@ -61,7 +63,7 @@ export function TorrentNotificationBell({ notifications = [], language, onViewDo
   </div>;
 }
 
-export function TorrentContentPreview({ torrent, language }) {
+export function TorrentContentPreview({ torrent, language, mediaType }) {
   const s = torrentStrings(language);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -94,13 +96,13 @@ export function TorrentContentPreview({ torrent, language }) {
     {!data && !error && <p role="status"><LoadingSpinner inline /> {s.previewLoading}</p>}
     {error && <><p className="dialog-error" role="alert">{error}</p><button type="button" className="dialog-button" onClick={() => setAttempt(value => value + 1)}>{s.retry}</button></>}
     {data && <>
-      <p>{files.length} {s.files} · {torrentSize(data.sizeBytes, language)} · {episodes.size} {s.detectedEpisodes}</p>
-      <p>{s.episodeDetectionHint}</p>
+      <p>{files.length} {s.files} · {torrentSize(data.sizeBytes, language)}{mediaType !== "generic" && <> · {episodes.size} {s.detectedEpisodes}</>}</p>
+      {mediaType !== "generic" && <p>{s.episodeDetectionHint}</p>}
       {files.length ? <ul className="torrent-preview__files" tabIndex={0} aria-label={s.files}>
         {files.map((file, index) => <li key={index}>
           <span className="torrent-preview__name">{file.name}</span>
           <span>{torrentSize(file.sizeBytes, language)}</span>
-          {file.episodes?.length > 0 && <span className="torrent-preview__episodes">{file.episodes.map(ep => `S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}`).join(" · ")}</span>}
+          {mediaType !== "generic" && file.episodes?.length > 0 && <span className="torrent-preview__episodes">{file.episodes.map(ep => `S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}`).join(" · ")}</span>}
         </li>)}
       </ul> : <p>{s.noFiles}</p>}
     </>}
@@ -109,6 +111,8 @@ export function TorrentContentPreview({ torrent, language }) {
 
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted, notificationPreferences = {}, notificationsReady = false, onNotificationChange }) {
   const s = torrentStrings(language);
+  const fs = freeDownloadStrings(language);
+  const isGeneric = mediaType === "generic";
   const isSeries = mediaType === "series";
   const isBook = mediaType === "books";
   const bs = bookTorrentStrings(language);
@@ -121,7 +125,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const [sortField, setSortField] = useState("seeds");
   const [sortDirection, setSortDirection] = useState("desc");
   const [sources, setSources] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(searchTerm.query));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [started, setStarted] = useState(false);
@@ -138,12 +142,13 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
     }
   }, [overwriteTorrent]);
   useEffect(() => {
+    if (!searchTerm.query) { setLoading(false); return; }
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20000);
     let disposed = false;
     setLoading(true); setError(""); setDemo(false); setStarted(false); setStartedJob(null);
     if (!searchTerm.append) { setPreviewHash(""); setResults([]); setSources([]); setNextEztvPage(null); }
-    searchMediaTorrents(searchTerm.query, controller.signal, { ...searchTerm, mediaType, imdbId: media.imdbId }).then(payload => {
+    searchMediaTorrents(searchTerm.query, controller.signal, { ...searchTerm, mediaType, imdbId: media?.imdbId }).then(payload => {
       if (!disposed) {
         setResults(current => searchTerm.append ? mergeTorrentResults(current, payload.results || []) : sortTorrents(payload.results));
         setSources(current => searchTerm.append ? [...new Map([...current, ...(payload.sources || [])].map(source => [source.id, source])).values()] : payload.sources || []);
@@ -154,7 +159,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
       if (!disposed) setError(e.name === "AbortError" ? `${s.searchTitle}: timeout. ${s.retry}.` : e.message);
     }).finally(() => { clearTimeout(timer); if (!disposed) setLoading(false); });
     return () => { disposed = true; clearTimeout(timer); controller.abort(); };
-  }, [searchTerm, s, mediaType, media.imdbId]);
+  }, [searchTerm, s, mediaType, media?.imdbId]);
 
   async function start(torrent, overwriteExisting = false) {
     setBusy(torrent.infoHash); setError("");
@@ -178,8 +183,8 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
   const sortArrow = sortDirection === "asc" ? "↑" : "↓";
   const unavailableSources = sources.filter(source => source.status === "error").map(source => source.name);
   return <section className="movie-torrents" aria-label={s.searchTitle}>
-    <h3>{s.searchTitle}</h3>
-    <p>{isBook ? bs.hint : isSeries ? s.seriesHint : s.hint}</p>
+    <h3>{isGeneric ? fs.search : s.searchTitle}</h3>
+    <p>{isGeneric ? fs.hint : isBook ? bs.hint : isSeries ? s.seriesHint : s.hint}</p>
     <form className={`movie-torrents__search${isSeries ? " movie-torrents__search--series" : ""}`} onSubmit={event => { event.preventDefault(); if (query.trim()) setSearchTerm({ query: query.trim(),
       seasonNumber: isSeries && season !== "" ? Number(season) : null, episodeNumber: isSeries && episode !== "" ? Number(episode) : null, eztvPage: 1 }); }}>
       <label className="dialog-field"><span>{s.search}</span><input value={query} maxLength={200} onChange={e => setQuery(e.target.value)} /></label>
@@ -214,7 +219,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
       </label>}
       <button className="dialog-button dialog-button--accent" onClick={onDashboard} type="button">{s.dashboard}</button>
     </div> : <>
-      {loading ? <p role="status"><LoadingSpinner inline /> {s.searching}</p> : demo ? <p>{s.demo}</p> : !results.length && !error ? <p>{isBook ? bs.empty : isSeries ? s.seriesEmpty : s.empty}</p> : null}
+      {loading ? <p role="status"><LoadingSpinner inline /> {s.searching}</p> : demo ? <p>{s.demo}</p> : !results.length && !error ? <p>{isGeneric ? searchTerm.query ? fs.emptySearch : fs.prompt : isBook ? bs.empty : isSeries ? s.seriesEmpty : s.empty}</p> : null}
       {results.length > 0 && <>
         <div className="movie-torrents__sort">
           <label className="dialog-field"><span>{s.sortBy}</span>
@@ -238,7 +243,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
             aria-expanded={previewHash === result.infoHash} aria-controls={previewHash === result.infoHash ? previewId : undefined}
             onClick={() => setPreviewHash(current => current === result.infoHash ? "" : result.infoHash)}>{previewHash === result.infoHash ? s.hideContent : s.viewContent}</button>
             <button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} onClick={() => start(result)} type="button">{busy === result.infoHash ? s.starting : s.download}</button></div></td>
-        </tr>{previewHash === result.infoHash && <tr><td colSpan={5} id={previewId}><TorrentContentPreview torrent={result} language={language} /></td></tr>}</React.Fragment>)}</tbody>
+        </tr>{previewHash === result.infoHash && <tr><td colSpan={5} id={previewId}><TorrentContentPreview torrent={result} language={language} mediaType={mediaType} /></td></tr>}</React.Fragment>)}</tbody>
       </table></div></>}
       {nextEztvPage !== null && <button className="dialog-button movie-torrents__more" disabled={loading || Boolean(busy)} type="button" onClick={() => setSearchTerm(current => ({ ...current, eztvPage: nextEztvPage, append: true }))}>{s.moreEztv}</button>}
     </>}
@@ -339,6 +344,8 @@ function TorrentNotificationsConfirm({ strings: s, disabled, onClose, onConfirm 
 export default function TorrentDownloads({ downloads, language, notificationPreferences = {}, notificationsReady = false,
   onNotificationChange, onNotificationsDismiss, showNotifications = false, onNotificationsShown, onOpenMovie, onOpenSeries }) {
   const s = torrentStrings(language);
+  const fs = freeDownloadStrings(language);
+  const [contentJob, setContentJob] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState("active");
   const sectionRef = useRef(null);
   const notificationRef = useRef(null);
@@ -369,15 +376,17 @@ export default function TorrentDownloads({ downloads, language, notificationPref
   const canDismissNotifications = notificationsReady && historyNotificationKeys.length > 0 && Boolean(onNotificationsDismiss);
   useEffect(() => {
     if (!showNotifications) return;
-    if (selectedGroup !== "history") { setSelectedGroup("history"); return; }
+    const targetGroup = completedNotifications[0]?.mediaType === "generic" ? "generic" : "history";
+    if (selectedGroup !== targetGroup) { setSelectedGroup(targetGroup); return; }
     const target = notificationRef.current || sectionRef.current;
     target?.focus({ preventScroll: true });
     target?.scrollIntoView({ behavior: "instant", block: "center" });
     onNotificationsShown?.();
-  }, [showNotifications, selectedGroup, onNotificationsShown]);
+  }, [showNotifications, selectedGroup, onNotificationsShown, completedNotifications[0]?.id, completedNotifications[0]?.mediaType]);
   const groups = [
     { key: "active", title: s.active, jobs: jobs.filter(job => !isTorrentHistory(job)) },
-    { key: "history", title: s.history, jobs: jobs.filter(isTorrentHistory) },
+    { key: "history", title: s.history, jobs: jobs.filter(job => isTorrentHistory(job) && job.mediaType !== "generic") },
+    { key: "generic", title: fs.title, jobs: jobs.filter(job => isTorrentHistory(job) && job.mediaType === "generic") },
   ];
   return <section ref={sectionRef} tabIndex={-1} className="raspberry-dashboard-section torrent-dashboard" aria-labelledby="torrent-downloads-title">
     <div className="torrent-dashboard__header">
@@ -400,8 +409,8 @@ export default function TorrentDownloads({ downloads, language, notificationPref
     {groups.map(group => <section className="torrent-dashboard__scroll" key={group.key}
       id={`torrent-${group.key}-panel`} role="tabpanel" aria-labelledby={`torrent-${group.key}-tab`}
       hidden={selectedGroup !== group.key} tabIndex={0}>
-      {group.key === "history" && <div className="torrent-dashboard__history-header">
-        <p className="torrent-dashboard__hint">{s.historyHint}</p>
+      {group.key !== "active" && <div className="torrent-dashboard__history-header">
+        <p className="torrent-dashboard__hint">{group.key === "generic" ? fs.historyHint : s.historyHint}</p>
         <button className="dialog-button torrent-dashboard__dismiss-notifications" type="button"
           disabled={!canDismissNotifications} onClick={() => setConfirmDismissNotifications(true)}>{s.stopNotifyingAll}</button>
       </div>}
@@ -413,10 +422,10 @@ export default function TorrentDownloads({ downloads, language, notificationPref
         const status = canDownloadAnyway ? "warning" : job.state;
         return <article className={`torrent-job${notificationReady ? " torrent-job--notified" : ""}`} key={job.id}
           ref={job.id === completedNotifications[0]?.id ? notificationRef : null} tabIndex={-1}>
-      <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${status}`}>{job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[status] || status}</span></div>
+      <div className="torrent-job__heading"><h4>{torrentJobTitle(job)}</h4><span className={`torrent-job__state torrent-job__state--${status}`}>{job.mediaType === "generic" && status === "complete" ? fs.ready : job.mediaType === 'books' && ['importing', 'metadata'].includes(job.state) ? bookTorrentStrings(language).importing : s[status] || status}</span></div>
       {notificationReady && <p className="torrent-job__notification-status">{s.notificationReady}</p>}
-      <p className="torrent-job__name">{job.name}</p>
-      <p className="torrent-job__sources">{job.mediaType === 'books' ? bookTorrentStrings(language).book : job.mediaType === "series" ? s.series : s.movie}</p>
+      {job.mediaType !== "generic" && <p className="torrent-job__name">{job.name}</p>}
+      <p className="torrent-job__sources">{job.mediaType === "generic" ? fs.kind : job.mediaType === 'books' ? bookTorrentStrings(language).book : job.mediaType === "series" ? s.series : s.movie}</p>
       <p className="torrent-job__sources">{s.source}: {torrentSources(job).join(" · ")}</p>
       <progress max={100} value={job.progress || 0} aria-label={`${torrentJobTitle(job)}: ${s[status]}`} />
       {job.item?.importedEpisodeIds?.length > 0 && <p className="torrent-job__stats">{s.episodesImported}: {job.item.importedEpisodeIds.length}</p>}
@@ -427,6 +436,7 @@ export default function TorrentDownloads({ downloads, language, notificationPref
       {job.allowCombinedEpisodes && job.state !== "cancelled" && <p className="movie-torrents__warning">{s.combinedEpisodesAccepted}</p>}
       {job.artworkWarning && <p className="torrent-artwork-warning">{s.artworkWarning} {job.artworkWarning}</p>}
       <div className="torrent-job__actions">
+        {job.mediaType === "generic" && job.state === "complete" && <button className="dialog-button dialog-button--accent" type="button" onClick={() => setContentJob(job)}>{fs.open}</button>}
         {(!isTorrentHistory(job) || notifying) && <button className="dialog-button torrent-job__notify"
           disabled={!notificationsReady} aria-pressed={isTorrentHistory(job) ? undefined : notifying} aria-label={`${notifying ? s.stopNotifying : s.notify}: ${torrentJobTitle(job)}`}
           title={notifying ? s.stopNotifying : s.notify}
@@ -446,11 +456,15 @@ export default function TorrentDownloads({ downloads, language, notificationPref
         {job.state === "paused" && <button className="dialog-button" disabled={busy === job.id} onClick={() => action(job.id, "resume")} type="button">{s.resume}</button>}
         {job.state === "failed" && <button className={`dialog-button${canDownloadAnyway ? " dialog-button--accent" : ""}`} disabled={busy === job.id} onClick={() => action(job.id, canDownloadAnyway ? "download_anyway" : "retry")} type="button">{canDownloadAnyway ? s.downloadAnyway : s.retry}</button>}
         {!job.item && ["queued", "downloading", "paused", "failed"].includes(job.state) && <button className="dialog-button dialog-button--ghost" disabled={busy === job.id} onClick={() => action(job.id, "cancel")} type="button">{s.cancel}</button>}
-        {isTorrentHistory(job) && <button className="dialog-button dialog-button--ghost" disabled={busy === job.id} onClick={() => action(job.id, "remove")} type="button" aria-label={`${s.remove}: ${torrentJobTitle(job)}`}>{s.remove}</button>}
+        {isTorrentHistory(job) && !(job.mediaType === "generic" && job.state === "complete") && <button className="dialog-button dialog-button--ghost" disabled={busy === job.id} onClick={() => action(job.id, "remove")} type="button" aria-label={`${s.remove}: ${torrentJobTitle(job)}`}>{s.remove}</button>}
       </div>
     </article>; })}</div>
     </section>)}
+    <MediaTorrentSearch mediaType="generic" language={language} onStarted={refresh}
+      onDashboard={() => { setSelectedGroup("active"); sectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}
+      notificationPreferences={notificationPreferences} notificationsReady={notificationsReady} onNotificationChange={onNotificationChange} />
     </div>
+    {contentJob && <FreeDownloadDialog jobs={jobs} initialJob={contentJob} language={language} onClose={() => setContentJob(null)} onChanged={refresh} />}
     {movieNotice && <TorrentMovieNotice notice={movieNotice} strings={s} onClose={() => setMovieNotice(null)} />}
     {confirmDismissNotifications && <TorrentNotificationsConfirm strings={s} disabled={!canDismissNotifications}
       onClose={() => setConfirmDismissNotifications(false)} onConfirm={() => {

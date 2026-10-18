@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import threading
 import time
 import unicodedata
@@ -18,6 +19,7 @@ import xml.etree.ElementTree as ET
 from tmdb_cache import atomic_write
 from video_formats import VIDEO_EXTENSIONS
 from torrent_traffic import TorrentTraffic
+from free_downloads import FreeDownloadsMixin, safe_path
 
 HASH_RE = re.compile(r"[a-fA-F0-9]{40}")
 TERMINAL = {"complete", "cancelled", "failed"}
@@ -116,7 +118,7 @@ def normalize_results(rows, media_type="movies"):
             continue
         info_hash = str(row.get("info_hash") or "").lower()
         categories = {"601"} if media_type == "books" else {"205", "208", "211"} if media_type == "series" else {"201", "207", "209"}
-        if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or str(row.get("category")) not in categories:
+        if not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40 or (media_type != "generic" and str(row.get("category")) not in categories):
             continue
         size = positive_int(row.get("size"))
         if not size or not str(row.get("name") or "").strip():
@@ -139,7 +141,7 @@ def _search_json(url, source):
 
 
 def search_pirate_bay(query, media_type="movies"):
-    url = "https://apibay.org/q.php?" + urllib.parse.urlencode({"q": query, "cat": "601" if media_type == "books" else "200"})
+    url = "https://apibay.org/q.php?" + urllib.parse.urlencode({"q": query, "cat": "0" if media_type == "generic" else "601" if media_type == "books" else "200"})
     return normalize_results(_search_json(url, "The Pirate Bay"), media_type)
 
 
@@ -156,7 +158,7 @@ def normalize_knaben_results(payload, media_type="movies"):
         is_movie = any(3000000 <= cat < 4000000 for cat in ids)
         is_series = any(2000000 <= cat < 3000000 for cat in ids) and not is_movie
         is_book = any(cat in {9000000, 9001000} for cat in ids) and not any(cat in {9002000, 9003000, 9004000} for cat in ids)
-        if not (is_book if media_type == "books" else is_series if media_type == "series" else is_movie):
+        if media_type != "generic" and not (is_book if media_type == "books" else is_series if media_type == "series" else is_movie):
             continue
         info_hash = str(row.get("hash") or "").lower()
         name = row.get("title")
@@ -177,9 +179,10 @@ def search_knaben(query, media_type="movies"):
     # API v2: https://knaben.org/api/v2/ ; categories: https://knaben.org/rss/
     base = 2000000 if media_type == "series" else 3000000
     categories = "9001000" if media_type == "books" else ",".join(str(cat) for cat in range(base, base + 8001, 1000))
-    url = "https://api.knaben.org/v2/search?" + urllib.parse.urlencode({
-        "q": query, "c": categories, "o": "seeders", "d": "desc", "s": 100,
-    })
+    params = {"q": query, "o": "seeders", "d": "desc", "s": 100}
+    if media_type != "generic":
+        params["c"] = categories
+    url = "https://api.knaben.org/v2/search?" + urllib.parse.urlencode(params)
     return normalize_knaben_results(_search_json(url, "Knaben"), media_type)
 
 
@@ -250,7 +253,7 @@ def normalize_torznab_results(raw, source, media_type="movies"):
         attrs = {node.get("name"): node.get("value", "") for node in attributes}
         categories = [positive_int(node.get("value")) for node in attributes if node.get("name") == "category"]
         categories += [positive_int(node.text) for node in item.findall("category")]
-        if not (any(cat in {7000, 7020} for cat in categories) and not any(cat in {7010, 7030, 7040} for cat in categories) if media_type == "books" else any(category_base <= cat < category_base + 1000 for cat in categories)):
+        if media_type != "generic" and not (any(cat in {7000, 7020} for cat in categories) and not any(cat in {7010, 7030, 7040} for cat in categories) if media_type == "books" else any(category_base <= cat < category_base + 1000 for cat in categories)):
             continue
         if attrs.get("private", "0") != "0":
             continue  # Private trackers require their original torrent and passkey.
@@ -283,6 +286,8 @@ def search_torznab(query, media_type, source):
     url = urllib.parse.urlsplit(source["url"])
     params = dict(urllib.parse.parse_qsl(url.query))
     params.update(t="search", q=query, cat="7020" if media_type == "books" else "5000" if media_type == "series" else "2000", limit="100")
+    if media_type == "generic":
+        params.pop("cat", None)
     if source.get("apiKey"):
         params["apikey"] = source["apiKey"]
     endpoint = urllib.parse.urlunsplit(url._replace(query=urllib.parse.urlencode(params)))
@@ -316,7 +321,7 @@ def search_torrents(query, media_type="movies", imdb_id=None, season=None, episo
     query = str(query or "").strip()
     if not query or len(query) > 200:
         raise ValueError("Escribe un título de hasta 200 caracteres.")
-    if not isinstance(media_type, str) or media_type not in {"movies", "series", "books"}:
+    if not isinstance(media_type, str) or media_type not in {"movies", "series", "books", "generic"}:
         raise ValueError("Tipo de contenido no válido.")
     season, episode = series_filters(season, episode)
     eztv_page = episode_filter(eztv_page, "Página de EZTV", 1, 100)
@@ -514,7 +519,7 @@ def book_file(files, book):
     return min(matches, key=lambda entry: (Path(entry[1]["name"]).suffix.lower() != ".epub", entry[0]))
 
 
-class TorrentDownloads:
+class TorrentDownloads(FreeDownloadsMixin):
     def __init__(self, root, import_movie, artwork_status, prepare_artwork, rpc=None,
                  import_series=None, series_artwork_status=None, prepare_series_artwork=None, import_book=None):
         self.root = Path(root).resolve()
@@ -540,6 +545,12 @@ class TorrentDownloads:
         except FileNotFoundError:
             self.jobs = {}
         # Do not silently discard an unreadable queue and orphan its transfers.
+        for job in self.jobs.values():
+            if job.get("extraction", {}).get("state") == "extracting":
+                staging = safe_path(self.root, f"extractions/{job['id']}", must_exist=False)
+                if staging.exists():
+                    shutil.rmtree(staging)
+                self._update(job, extraction={"state": "failed", "error": "La descompresión se interrumpió al reiniciar. Puedes reintentarla."})
 
     def _save(self):
         atomic_write(self.state_path, json.dumps(self.jobs, ensure_ascii=False).encode())
@@ -576,6 +587,9 @@ class TorrentDownloads:
     def _remove_history(self, job):
         if job["state"] not in {"complete", "cancelled"}:
             raise ValueError("Solo puedes quitar del historial descargas finalizadas o canceladas.")
+        if job.get("mediaType") == "generic" and job["state"] == "complete" and not job.get("deleted"):
+            raise ValueError("Borra el contenido de la descarga libre antes de quitarla.")
+        self._cleanup_free_cancelled(job)
         with self.lock:
             previous = copy.deepcopy(job)
             if job.get("transferRemoved"):
@@ -593,12 +607,13 @@ class TorrentDownloads:
     def add(self, data):
         info_hash = str(data.get("infoHash", "")).lower()
         media_type = data.get("mediaType", "movies")
-        if not isinstance(media_type, str) or media_type not in {"movies", "series", "books"}:
+        if not isinstance(media_type, str) or media_type not in {"movies", "series", "books", "generic"}:
             raise ValueError("Tipo de contenido no válido.")
         is_series = media_type == "series"
         is_book = media_type == "books"
-        media_key = "book" if is_book else "series" if is_series else "movie"
-        media = data.get(media_key)
+        is_generic = media_type == "generic"
+        media_key = "generic" if is_generic else "book" if is_book else "series" if is_series else "movie"
+        media = {"id": info_hash, "name": data.get("name")} if is_generic else data.get(media_key)
         if not isinstance(media, dict) or not HASH_RE.fullmatch(info_hash) or info_hash == "0" * 40:
             raise ValueError("Selecciona un torrent y una ficha válidos.")
         if is_series and not all((self.import_series, self.series_artwork_status, self.prepare_series_artwork)):
@@ -606,10 +621,12 @@ class TorrentDownloads:
         if is_book and not self.import_book:
             raise TorrentError("Las descargas de libros no están configuradas.")
         season, episode = series_filters(data.get("seasonNumber"), data.get("episodeNumber"))
-        tmdb_id = str(media.get("openLibraryKey") or "") if is_book else positive_int(media.get("id"))
+        tmdb_id = info_hash if is_generic else str(media.get("openLibraryKey") or "") if is_book else positive_int(media.get("id"))
         name = str(media.get("name") or "").strip()[:250]
         if not tmdb_id or not name:
-            raise ValueError("Falta la ficha de Open Library del libro." if is_book else "Falta la ficha TMDB del contenido.")
+            raise ValueError("Falta el nombre de la descarga." if is_generic else "Falta la ficha de Open Library del libro." if is_book else "Falta la ficha TMDB del contenido.")
+        if is_generic and (season is not None or episode is not None):
+            raise ValueError("Las descargas libres no tienen filtros de capítulos.")
         if is_book and (not re.fullmatch(r"/works/OL\d+W", tmdb_id) or season is not None or episode is not None):
             raise ValueError("Falta una ficha de Open Library válida para el libro.")
         overwrite = data.get("overwriteExisting") is True
@@ -619,6 +636,8 @@ class TorrentDownloads:
                 if existing["id"] == info_hash:
                     if existing.get("mediaType", "movies") != media_type or existing[media_key]["id"] != tmdb_id:
                         raise ValueError("Este torrent ya está asociado a otro contenido.")
+                    if is_generic and existing["state"] == "complete" and not existing.get("deleted"):
+                        return copy.deepcopy(existing)
                     if existing["state"] in {"complete", "cancelled"}:
                         self._remove_transfer(existing)
                         if not existing.get("transferRemoved"):
@@ -634,7 +653,8 @@ class TorrentDownloads:
                 if not is_series and existing.get("mediaType", "movies") == media_type and existing[media_key]["id"] == tmdb_id and existing["state"] not in TERMINAL:
                     raise ValueError("Este contenido ya tiene una descarga en curso.")
             self.rpc.call("session-get")
-            folder = self.root / "downloads" / info_hash
+            folder = self.root / ("free" if is_generic else "downloads") / info_hash
+            safe_path(self.root, folder.relative_to(self.root).as_posix(), must_exist=False)
             folder.mkdir(parents=True, exist_ok=True)
             job = {"id": info_hash, "name": str(data.get("name") or name)[:500],
                    "mediaType": media_type, media_key: {"id": tmdb_id, "name": name}, "state": "queued", "error": "",
@@ -664,7 +684,7 @@ class TorrentDownloads:
             return copy.deepcopy(job)
 
     def _add_transfer(self, job):
-        folder = self.root / "downloads" / job["id"]
+        folder = self.download_folder(job)
         result = self.rpc.call("torrent-add", {"filename": "magnet:?xt=urn:btih:" + job["id"],
                                                "download-dir": str(folder), "paused": False})
         if result.get("torrent-duplicate"):
@@ -674,16 +694,18 @@ class TorrentDownloads:
 
     def _check_ownership(self, job):
         rows = self.rpc.call("torrent-get", {"ids": [job["id"]], "fields": ["downloadDir"]}).get("torrents", [])
-        if rows and Path(rows[0].get("downloadDir", "")).resolve() != self.root / "downloads" / job["id"]:
+        if rows and Path(rows[0].get("downloadDir", "")).resolve() != self.download_folder(job):
             raise TorrentError("Este torrent existe en Transmission fuera de MiniTV; no se modificará.")
 
     def action(self, job_id, action):
-        if not isinstance(action, str) or action not in {"pause", "resume", "cancel", "retry", "remove", "download_anyway"}:
+        if not isinstance(action, str) or action not in {"pause", "resume", "cancel", "retry", "remove", "delete", "download_anyway"}:
             raise ValueError("Acción no válida.")
         with self.operation:
             job = self.jobs.get(job_id)
             if not job:
                 raise KeyError(job_id)
+            if action == "delete":
+                return self.delete_free_download(job)
             if action == "remove":
                 return self._remove_history(job)
             if job["state"] in {"complete", "cancelled", "importing", "metadata"}:
@@ -704,6 +726,7 @@ class TorrentDownloads:
                 self._update(job, state="cancelled", error="", errorCode="", errorFile="", rateBytes=0)
                 self.rpc.call("torrent-remove", {"ids": [job_id], "delete-local-data": True})
                 self._update(job, transferRemoved=True)
+                self._cleanup_free_cancelled(job)
             elif action == "pause":
                 self._check_ownership(job)
                 self.rpc.call("torrent-stop", {"ids": [job_id]})
@@ -745,10 +768,14 @@ class TorrentDownloads:
                 except TorrentError as exc:
                     self.service_error = str(exc)
             for job in list(self.jobs.values()):
+                if job.get("deleteRequested"):
+                    self._finish_free_delete(job)
+                    continue
                 if job["state"] == "failed" and job.get("item"):
                     self._complete_with_artwork_warning(job, job.get("error"))
                 if job["state"] in {"cancelled", "complete"}:
                     self._remove_transfer(job)
+                    self._cleanup_free_cancelled(job)
                     if job.get("hidden") and job.get("transferRemoved"):
                         self._remove_history(job)
             active = [job for job in self.jobs.values() if job["state"] not in TERMINAL]
@@ -783,13 +810,16 @@ class TorrentDownloads:
                         pass
 
     def _advance(self, job, row):
-        folder = self.root / "downloads" / job["id"]
+        folder = self.download_folder(job)
         if Path(row.get("downloadDir", "")).resolve() != folder:
             raise TorrentError("La carpeta de descarga no pertenece a MiniTV.")
         if row.get("error"):
             raise TorrentError(row.get("errorString") or "Transmission no pudo descargar el torrent.")
         if row.get("metadataPercentComplete", 0) < 1:
             self._update(job, state="queued", peers=positive_int(row.get("peersConnected")))
+            return
+        if job.get("mediaType") == "generic":
+            self._advance_free(job, row, folder)
             return
         if job.get("mediaType") == "series":
             self._advance_series(job, row, folder)
@@ -893,7 +923,7 @@ class TorrentDownloads:
             return
         try:
             self._check_ownership(job)
-            self.rpc.call("torrent-remove", {"ids": [job["id"]], "delete-local-data": True})
+            self.rpc.call("torrent-remove", {"ids": [job["id"]], "delete-local-data": not (job.get("mediaType") == "generic" and job["state"] == "complete")})
             self._update(job, transferRemoved=True)
         except TorrentError as exc:
             # Retry cleanup on later ticks without blocking TMDB completion.

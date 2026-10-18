@@ -1,0 +1,20 @@
+.free-download-dialog { width: min(960px, calc(100vw - 2rem)); max-height: 88dvh; overflow-y: auto; border: 1px solid rgba(255, 217, 0, .3); }
+.free-download-dialog::backdrop { background: rgba(4, 12, 18, .8); }
+.free-download-dialog__name, .free-download-dialog__path { overflow-wrap: anywhere; color: #c7d2db; }
+.free-download-dialog__navigation { display: flex; flex-wrap: wrap; gap: .6rem; }
+.free-download-dialog__path { font-family: monospace; }
+.free-download-dialog__entries { display: grid; gap: .5rem; margin: 1rem 0; min-height: 4rem; }
+.free-download-entry { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; align-items: center; gap: .7rem; padding: .85rem; border: 1px solid #ffffff20; border-radius: 12px; background: #09162055; color: #fff; text-align: left; }
+.free-download-entry__folder { background: none; border: 0; color: #ffdc20; text-align: left; font: inherit; cursor: pointer; padding: .3rem 0; overflow-wrap: anywhere; }
+.free-download-entry__name, .free-download-entry strong { overflow-wrap: anywhere; min-width: 0; }
+.free-download-entry__size { color: #c7d2db; font-size: .85rem; }
+.free-download-entry__actions { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: .5rem; }
+.free-download-entry__actions:empty { display: none; }
+.free-download-entry--download { width: 100%; font: inherit; cursor: pointer; }
+.free-download-entry--download:hover, .free-download-entry--download:focus-visible { border-color: #ffdc20; }
+.free-download-dialog__confirm { border: 1px solid #f08080; padding: 1rem; border-radius: 12px; }
+.free-download-upload { margin-top: 1rem; }
+@media (max-width: 600px) {
+  .free-download-entry { grid-template-columns: 1.2rem minmax(0, 1fr); }
+  .free-download-entry__size, .free-download-entry--download > span:last-child { grid-column: 2; }
+}

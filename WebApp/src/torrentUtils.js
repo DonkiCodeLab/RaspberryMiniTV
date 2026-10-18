@@ -41,7 +41,8 @@ export function torrentSources(torrent) {
 }
 
 export function torrentLibraryVersion(jobs) {
-  return jobs.filter(job => job.item).map(job => `${job.id}:${job.state === "complete" ? "ready" : "imported"}`).sort().join("|");
+  return jobs.filter(job => job.item || job.lastImportAt).map(job => job.mediaType === "generic"
+    ? `${job.id}:imported:${job.lastImportAt}` : `${job.id}:${job.state === "complete" ? "ready" : "imported"}`).sort().join("|");
 }
 
 export function hasTorrentLibraryUpdates(previousVersion, nextVersion) {

@@ -57,6 +57,9 @@ import TmdbUploadProgress from "./TmdbUploadProgress";
 import TmdbCachePanel from "./TmdbCachePanel";
 import TmdbCreditsCompletion from "./TmdbCreditsCompletion.jsx";
 import TorrentDownloads, { MediaTorrentSearch, TorrentNotificationBell, useTorrentDownloads } from "./TorrentDownloads.jsx";
+import FreeDownloadDialog from "./FreeDownloadDialog.jsx";
+import { freeDownloadStrings } from "./freeDownloadStrings.js";
+import { changeFreeDownloadContents } from "./api/raspberryApi";
 import { completedTorrentNotifications, torrentNotificationLabel } from "./torrentNotifications.js";
 import { torrentStrings } from "./torrentUtils.js";
 import SectionSwitcher from "./SectionSwitcher.jsx";
@@ -2286,6 +2289,7 @@ function normalizeLibraryCounts(counts) {
     games: normalizeLibraryUsageItem(counts?.games),
     books: normalizeLibraryUsageItem(counts?.books),
     pictures: normalizeLibraryUsageItem(counts?.pictures),
+    generic: normalizeLibraryUsageItem(counts?.generic),
   };
 }
 
@@ -3730,6 +3734,7 @@ function AddMediaModal({
   autoSearch = false,
   uploadFileName = "",
   uploadProgress = null,
+  serverImport = false,
   onClose,
   onCancelUpload,
   onAdd,
@@ -3895,7 +3900,7 @@ function AddMediaModal({
             <p>{t("add_media", { media: mediaLabel })}</p>
             <h2>{t("search_tmdb")}</h2>
           </div>
-          <button className="dialog-card__close" onClick={onClose} type="button">
+          <button className="dialog-card__close" onClick={onClose} type="button" disabled={serverImport && submitting}>
             ×
           </button>
         </div>
@@ -4011,6 +4016,7 @@ function AddMediaModal({
           <button
             className="dialog-button dialog-button--ghost"
             onClick={uploadActive ? onCancelUpload : onClose}
+            disabled={serverImport && submitting}
             type="button"
           >
             {t("cancel")}
@@ -5387,6 +5393,7 @@ function RaspberryPage({
   movieCount,
   movieUsedGb,
   moviePercent,
+  genericUsage,
   gameCount,
   gameUsedGb,
   gamePercent,
@@ -5445,6 +5452,7 @@ function RaspberryPage({
   uploadBookIsGraphicNovel,
   onUploadBookTypeChange,
   onUploadFiles,
+  onOpenFreeDownloads,
   uploadDragActive,
   onUploadDragStateChange,
   uploadSummary,
@@ -5656,6 +5664,15 @@ function RaspberryPage({
               usedGb={movieUsedGb}
               percent={moviePercent}
               icon={movieIconYellow}
+              t={t}
+            />
+            <RaspberryStatCard
+              calculating={statsCalculating}
+              label={freeDownloadStrings(raspberryLanguage).title}
+              value={genericUsage?.count || 0}
+              usedGb={genericUsage?.usedGb || 0}
+              percent={genericUsage?.percentUsed || 0}
+              icon={uploadsIconYellow}
               t={t}
             />
             <RaspberryStatCard
@@ -6153,6 +6170,12 @@ function RaspberryPage({
               <p>{t(uploadDropzoneCopyKey)}</p>
             </label>
 
+            {["movies", "series"].includes(uploadMediaType) && <div className="free-download-upload">
+              <button className="dialog-button dialog-button--accent" type="button" onClick={onOpenFreeDownloads}>
+                {freeDownloadStrings(raspberryLanguage).browse}
+              </button>
+            </div>}
+
             {uploadMediaType === "books" ? (
               <label className="dialog-button dialog-button--ghost books-directory-picker">
                 <input
@@ -6596,6 +6619,8 @@ export default function App() {
   const [uploadLookupOpen, setUploadLookupOpen] = useState(false);
   const [uploadLookupQuery, setUploadLookupQuery] = useState("");
   const [uploadSelectedFiles, setUploadSelectedFiles] = useState([]);
+  const [freeDownloadPickerOpen, setFreeDownloadPickerOpen] = useState(false);
+  const [uploadFreeSelection, setUploadFreeSelection] = useState(null);
   const [uploadDirectoryName, setUploadDirectoryName] = useState("");
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploadSummary, setUploadSummary] = useState("");
@@ -6763,6 +6788,7 @@ export default function App() {
   }
 
   function resetUploadDialogState() {
+    setUploadFreeSelection(null);
     setAddSeriesOpen(false);
     setUploadLookupOpen(false);
     setUploadSelectedFiles([]);
@@ -8316,6 +8342,32 @@ export default function App() {
   }
 
   async function handleAddMediaItem(selectedSeriesResult, targetMediaType = activeMediaType) {
+    if (uploadLookupOpen && uploadFreeSelection) {
+      const request = {
+        action: "import", path: uploadFreeSelection.path, mediaType: targetMediaType,
+        media: { id: selectedSeriesResult.id, name: selectedSeriesResult.name },
+      };
+      let response;
+      try { response = await changeFreeDownloadContents(uploadFreeSelection.jobId, request); }
+      catch (error) {
+        if (error.code !== "MOVIE_ALREADY_DOWNLOADED") throw error;
+        if (await requestSeriesDuplicateAction(1, 1, "movies") !== "overwrite") return;
+        response = await changeFreeDownloadContents(uploadFreeSelection.jobId, { ...request, overwriteExisting: true });
+      }
+      const fs = freeDownloadStrings(raspberryLanguage);
+      setUploadSummary(response.movedFiles ? fs.importDone : fs.nothingMoved);
+      resetUploadDialogState();
+      torrentDownloads.refresh();
+      if (response.movedFiles) setTmdbUpload({ kind: targetMediaType === "movies" ? "movie" : "tv", id: selectedSeriesResult.id, name: selectedSeriesResult.name, videoComplete: true });
+      if (targetMediaType === "movies" && selectedSeriesResult.subtitleFile) {
+        try { await uploadMovieSubtitles({ relativePath: response.item.relativePath, file: selectedSeriesResult.subtitleFile }); }
+        catch (subtitleError) { window.alert(`${t("movie_subtitles_failed")}\n${subtitleError.message}`); }
+      }
+      setVideos(await getVideos());
+      if (targetMediaType === "movies") setSelectedMovieId(response.item.relativePath);
+      else setSelectedDirectoryPath(response.item.relativePath);
+      return;
+    }
     async function prepareUploadArtwork() {
       if (!mockMode && ['movies', 'series'].includes(targetMediaType)) {
         const kind = targetMediaType === 'movies' ? 'movie' : 'tv';
@@ -8964,6 +9016,7 @@ export default function App() {
   }
 
   async function handleUploadFiles(files, confirmedBookProfile = null) {
+    setUploadFreeSelection(null);
     const safeFiles = Array.isArray(files) ? files.filter((file) => file && !isIgnoredUploadFile(file)) : [];
     if (!safeFiles.length) return;
 
@@ -9461,6 +9514,7 @@ export default function App() {
                 seriesUsedGb={raspberryLibraryCounts.series.usedGb}
                 seriesPercent={raspberryLibraryCounts.series.percentUsed}
                 movieCount={installedMovieCount}
+                genericUsage={raspberryLibraryCounts.generic}
                 movieUsedGb={raspberryLibraryCounts.movies.usedGb}
                 moviePercent={raspberryLibraryCounts.movies.percentUsed}
                 gameCount={installedGameCount}
@@ -9528,6 +9582,7 @@ export default function App() {
                 uploadBookIsGraphicNovel={uploadBookIsGraphicNovel}
                 onUploadBookTypeChange={setUploadBookIsGraphicNovel}
                 onUploadFiles={handleUploadFiles}
+                onOpenFreeDownloads={() => { torrentDownloads.refresh(); setFreeDownloadPickerOpen(true); }}
                 uploadDragActive={uploadDragActive}
                 onUploadDragStateChange={handleUploadDragStateChange}
                 uploadSummary={uploadSummary}
@@ -10417,19 +10472,31 @@ export default function App() {
               />
             )}
 
+            {freeDownloadPickerOpen && <FreeDownloadDialog jobs={torrentDownloads.jobs} language={raspberryLanguage}
+              onClose={() => setFreeDownloadPickerOpen(false)} onChanged={torrentDownloads.refresh}
+              onSelect={selection => {
+                setFreeDownloadPickerOpen(false);
+                setUploadFreeSelection(selection);
+                setUploadSelectedFiles([]);
+                setUploadDirectoryName(selection.name);
+                setUploadProgress(null);
+                setUploadLookupQuery(deriveUploadSearchLabel({ name: selection.name }, uploadMediaType) || selection.name);
+                setUploadLookupOpen(true);
+              }} />}
             <AddMediaModal
               visible={addSeriesOpen || uploadLookupOpen}
               mediaType={uploadLookupOpen ? uploadMediaType : activeMediaType}
               initialQuery={uploadLookupOpen ? uploadLookupQuery : ""}
               autoSearch={uploadLookupOpen}
               uploadFileName={
-                uploadLookupOpen
+                uploadLookupOpen && uploadFreeSelection ? uploadFreeSelection.name : uploadLookupOpen
                   ? uploadMediaType === "movies"
                     ? uploadSelectedFiles[0]?.name || ""
                     : `${uploadDirectoryName || uploadLookupQuery} · ${uploadSelectedFiles.length} ${t("episodes")}`
                   : ""
               }
               uploadProgress={uploadProgress}
+              serverImport={Boolean(uploadFreeSelection)}
               onClose={handleCloseUploadDialog}
               onCancelUpload={handleCancelActiveUpload}
               onAdd={(item) =>

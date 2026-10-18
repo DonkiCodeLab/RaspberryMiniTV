@@ -104,3 +104,25 @@ test('unrelated download failures retain retry and cannot bypass the error', () 
   assert.match(html, /Disk full/);
   assert.doesNotMatch(html, /Descargar igualmente/);
 });
+
+test('standalone downloads use their own history, contents action and completion label', () => {
+  const job = { id: 'free', mediaType: 'generic', name: 'Public dataset', state: 'complete', createdAt: 10 };
+  const html = render([job]);
+  assert.match(html, /Descargas libres/);
+  assert.match(html, /Buscar descargas libres/);
+  assert.match(html, /Descarga libre/);
+  assert.match(html, />Descargada<\/span>/);
+  const history = html.slice(html.indexOf('id="torrent-history-panel"'), html.indexOf('id="torrent-generic-panel"'));
+  assert.doesNotMatch(history, /Public dataset/);
+  assert.match(html.slice(html.indexOf('id="torrent-generic-panel"')), /Public dataset/);
+  assert.match(html, />Ver contenido<\/button>/);
+  assert.doesNotMatch(html, /Ir a la ficha|Quitar del historial:/);
+  const cancelled = render([{ ...job, state: 'cancelled' }]);
+  assert.match(cancelled, /Quitar del historial: Public dataset/);
+  const active = render([{ ...job, state: 'downloading' }]);
+  for (const label of ['Avisarme al terminar', 'Pausar', 'Cancelar descarga']) assert.ok(active.includes(label));
+  assert.match(render([{ ...job, state: 'paused' }]), /Reanudar/);
+  const preferences = { [torrentNotificationKey(job)]: true };
+  assert.equal(completedTorrentNotifications([job], preferences).length, 1);
+  assert.match(render([job], preferences), /Dejar de avisar:/);
+});

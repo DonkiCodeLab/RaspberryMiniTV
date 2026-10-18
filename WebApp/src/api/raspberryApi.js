@@ -339,7 +339,7 @@ export function startMediaTorrent(torrent, media, { mediaType = "movies", overwr
   return request("/torrents", { method: "POST", body: JSON.stringify({
     infoHash: torrent.infoHash, name: torrent.name, sizeBytes: torrent.sizeBytes, sources: torrent.sources, overwriteExisting,
     mediaType, seasonNumber, episodeNumber,
-    [mediaType === "books" ? "book" : mediaType === "series" ? "series" : "movie"]: mediaType === "books"
+    [mediaType === "generic" ? "generic" : mediaType === "books" ? "book" : mediaType === "series" ? "series" : "movie"]: mediaType === "generic" ? undefined : mediaType === "books"
       ? { name: media.name, openLibraryKey: media.openLibraryKey, editionKey: media.editionKey }
       : { id: media.id, name: media.name },
   }) });
@@ -352,6 +352,14 @@ export function getMovieTorrents(signal) {
 
 export function controlMovieTorrent(id, action) {
   return request(`/torrents/${encodeURIComponent(id)}`, { method: "POST", body: JSON.stringify({ action }) });
+}
+
+export function getFreeDownloadContents(id, path = "", signal) {
+  return request(`/torrents/${encodeURIComponent(id)}/contents?${new URLSearchParams({ path })}`, { signal });
+}
+
+export function changeFreeDownloadContents(id, data) {
+  return request(`/torrents/${encodeURIComponent(id)}/contents`, { method: "POST", body: JSON.stringify(data) });
 }
 
 export function getTorrentUploadSettings(signal) {

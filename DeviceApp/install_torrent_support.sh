@@ -20,6 +20,12 @@ if ! /usr/bin/python3 -c 'import libtorrent' >/dev/null 2>&1; then
   apt-get install -y python3-libtorrent
 fi
 
+# Reads compressed free downloads without executing their contents.
+if ! command -v bsdtar >/dev/null 2>&1; then
+  apt-get update
+  apt-get install -y libarchive-tools
+fi
+
 # Dedicated instance: never edit another Transmission user's settings or queue.
 systemctl stop minitv-torrents.service 2>/dev/null || true
 mkdir -p "${REPO_DIR}/MultimediaContent/Torrents/downloads"

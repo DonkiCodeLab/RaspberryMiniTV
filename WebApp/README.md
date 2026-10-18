@@ -205,6 +205,22 @@ todos los capítulos identificados de la selección, conservando los que ya exis
 El modo demo no inicia descargas reales. Instalación y funcionamiento:
 [DeviceApp](../DeviceApp/README.md#descargas-de-películas-y-series-por-torrent).
 
+**Descargas libres** permite buscar torrents sin ficha desde la parte inferior de
+**Dashboard → Torrents**. La búsqueda abarca todas las categorías y conserva la
+ordenación por seeds/tamaño. Las tareas comparten pausa, reanudación, cancelación
+y avisos con las descargas habituales. Al finalizar o cancelar pasan a la tercera
+pestaña **Descargas libres**; las vinculadas a fichas siguen en **Historial**.
+
+**Ver contenido** abre un explorador de carpetas y subcarpetas con descompresión
+y borrado de toda la descarga. Las canceladas se pueden quitar del historial.
+En **Uploads → Serie/Película**, **Abrir descargas libres** permite elegir un vídeo
+o carpeta del servidor y confirmar después su ficha TMDB. Se mueven los vídeos
+compatibles sin volver a subirlos desde el navegador; otros archivos y capítulos
+ya instalados se conservan en la descarga. Para películas, una carpeta debe
+contener un único vídeo. Las series pueden tener subcarpetas y necesitan nombres
+de capítulo reconocibles (`S01E01`, `1x01`). Información general muestra cantidad
+y espacio de Descargas libres junto a Series y Películas.
+
 En **Dashboard → Torrents**, junto a **Codex**, se encuentran las descargas en curso,
 el historial y los ajustes de torrents. Cada descarga tiene **Avisarme al terminar**.
 Cuando está lista en la biblioteca, aparece un contador amarillo en la campanita

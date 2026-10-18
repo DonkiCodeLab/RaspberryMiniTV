@@ -1,0 +1,304 @@
+import io
+from pathlib import Path
+import stat
+import sys
+import tarfile
+import tempfile
+import unittest
+from unittest.mock import Mock, patch
+import zipfile
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from torrent_downloads import TorrentDownloads, TorrentError, normalize_results, normalize_knaben_results, normalize_torznab_results, search_torrents
+from safe_archive import extract_archive
+from test_torrent_downloads import FakeTransmission, INFO_HASH
+import control_api as api
+
+
+class FreeTorrentFixture(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+        self.rpc = FakeTransmission()
+        self.importer = Mock()
+        self.manager = self.new_manager()
+
+    def new_manager(self):
+        manager = TorrentDownloads(self.root / "Torrents", self.importer, Mock(), Mock(), self.rpc)
+        manager.start = Mock()
+        return manager
+
+    def add(self):
+        return self.manager.add({"infoHash": INFO_HASH, "mediaType": "generic", "name": "Free files"})
+
+    def ready(self, files=None):
+        self.add()
+        folder = self.manager.download_folder(self.manager.jobs[INFO_HASH])
+        files = files or {"Pack/subfolder/file.txt": b"hello", "Pack/archive.zip": b"zip"}
+        rows = []
+        for name, data in files.items():
+            path = folder / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            rows.append({"name": name, "length": len(data), "bytesCompleted": len(data)})
+        self.rpc.rows[INFO_HASH].update(metadataPercentComplete=1, percentDone=1, leftUntilDone=0, files=rows)
+        self.manager.tick()
+        self.manager.tick()
+        return folder
+
+
+class FreeTorrentTests(FreeTorrentFixture):
+    def test_all_files_complete_without_media_import_and_survive_restart(self):
+        folder = self.ready()
+        self.importer.assert_not_called()
+        self.assertEqual(self.manager.jobs[INFO_HASH]["state"], "complete")
+        self.assertEqual((folder / "Pack/subfolder/file.txt").read_bytes(), b"hello")
+        removal = [args for method, args in self.rpc.calls if method == "torrent-remove"]
+        self.assertEqual(removal, [{"ids": [INFO_HASH], "delete-local-data": False}])
+        self.manager = self.new_manager()
+        self.manager.tick()
+        self.assertEqual(self.manager.free_contents(INFO_HASH)["entries"][0]["name"], "Pack")
+        self.assertEqual(self.manager.free_contents(INFO_HASH, "Pack/subfolder")["entries"][0]["name"], "file.txt")
+        self.assertTrue(self.manager.free_contents(INFO_HASH, "Pack")["entries"][1]["archive"])
+        self.add()  # A duplicate does not restart or overwrite the stored content.
+        self.assertEqual(sum(method == "torrent-add" for method, _ in self.rpc.calls), 1)
+
+    def test_pause_resume_cancel_remove_and_retry(self):
+        self.add()
+        folder = self.manager.download_folder(self.manager.jobs[INFO_HASH])
+        (folder / "partial.txt").write_bytes(b"partial")
+        self.assertEqual(self.manager.action(INFO_HASH, "pause")["state"], "paused")
+        self.assertEqual(self.manager.action(INFO_HASH, "resume")["state"], "queued")
+        self.manager._update(self.manager.jobs[INFO_HASH], state="failed")
+        self.assertEqual(self.manager.action(INFO_HASH, "retry")["state"], "queued")
+        self.assertEqual(self.manager.action(INFO_HASH, "cancel")["state"], "cancelled")
+        self.assertFalse(folder.exists())
+        self.manager.action(INFO_HASH, "remove")
+        self.assertEqual(self.manager.snapshot()["jobs"], [])
+
+    def test_completed_files_require_delete_and_pending_delete_recovers(self):
+        folder = self.ready()
+        with self.assertRaises(ValueError):
+            self.manager.action(INFO_HASH, "remove")
+        with patch("free_downloads.shutil.rmtree", side_effect=OSError("disk busy")):
+            with self.assertRaises(OSError):
+                self.manager.action(INFO_HASH, "delete")
+        self.assertTrue(folder.exists())
+        self.manager = self.new_manager()
+        self.manager.tick()
+        self.assertFalse(folder.exists())
+        self.assertEqual(self.manager.snapshot()["jobs"], [])
+
+    def test_incomplete_and_foreign_downloads_are_not_exposed(self):
+        self.add()
+        with self.assertRaises(ValueError):
+            self.manager.free_contents(INFO_HASH)
+        with self.assertRaises(ValueError):
+            self.manager.action(INFO_HASH, "delete")
+        self.rpc.rows[INFO_HASH]["downloadDir"] = str(self.root / "foreign")
+        with self.assertRaises(TorrentError):
+            self.manager.action(INFO_HASH, "cancel")
+
+    def test_browsing_extraction_and_import_reject_traversal_and_links(self):
+        folder = self.ready()
+        outside = self.root / "private"
+        outside.mkdir()
+        (outside / "secret.txt").write_text("private")
+        (folder / "linked").symlink_to(outside)
+        for path in ("../private", "/etc", "Pack/../../private", "linked", "Pack\\..\\private"):
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                self.manager.free_contents(INFO_HASH, path)
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                self.manager.import_free_download(INFO_HASH, path, {}, Mock())
+        self.assertNotIn("linked", [entry["name"] for entry in self.manager.free_contents(INFO_HASH)["entries"]])
+        self.manager.action(INFO_HASH, "delete")
+        self.assertEqual((outside / "secret.txt").read_text(), "private")
+
+    def test_deferred_engine_cleanup_preserves_completed_files(self):
+        self.add()
+        with patch.object(self.manager, "_remove_transfer"):
+            folder = self.ready()
+        self.assertFalse(self.manager.jobs[INFO_HASH].get("transferRemoved"))
+        self.manager = self.new_manager()
+        self.manager.tick()
+        self.assertTrue((folder / "Pack/subfolder/file.txt").exists())
+        self.assertTrue(self.manager.jobs[INFO_HASH]["transferRemoved"])
+
+    def test_extraction_is_background_and_rejects_conflicting_mutations(self):
+        self.ready()
+        with patch("free_downloads.threading.Thread") as worker:
+            job = self.manager.extract_free_download(INFO_HASH, "Pack/archive.zip")
+            self.assertEqual(job["extraction"]["state"], "extracting")
+            worker.return_value.start.assert_called_once()
+        for action in (lambda: self.manager.action(INFO_HASH, "delete"),
+                       lambda: self.manager.extract_free_download(INFO_HASH, "Pack/archive.zip"),
+                       lambda: self.manager.import_free_download(INFO_HASH, "Pack", {}, Mock())):
+            with self.assertRaises(ValueError):
+                action()
+        self.assertEqual(self.new_manager().jobs[INFO_HASH]["extraction"]["state"], "failed")
+
+    def test_extraction_worker_publishes_nested_files_and_cleans_staging(self):
+        contents = io.BytesIO()
+        with zipfile.ZipFile(contents, "w") as archive:
+            archive.writestr("Nested/film.mkv", b"video")
+        folder = self.ready({"pack.zip": contents.getvalue()})
+        with patch("free_downloads.threading.Thread") as worker:
+            self.manager.extract_free_download(INFO_HASH, "pack.zip")
+        invocation = worker.call_args.kwargs
+        invocation["target"](*invocation["args"])
+        result = self.manager.free_contents(INFO_HASH)
+        self.assertEqual(result["job"]["extraction"]["state"], "complete")
+        output = folder / result["job"]["extraction"]["path"]
+        self.assertEqual((output / "Nested/film.mkv").read_bytes(), b"video")
+        self.assertTrue((folder / "pack.zip").exists())
+        self.assertFalse((self.manager.root / "extractions" / INFO_HASH).exists())
+
+
+class FreeImportApiTests(FreeTorrentFixture):
+    def setUp(self):
+        super().setUp()
+        for name in ("Movies", "TVShows"):
+            (self.root / name).mkdir()
+        for key, value in {"VIDEOS_DIR": str(self.root), "MOVIES_DIR": str(self.root / "Movies"),
+                           "TVSHOWS_DIR": str(self.root / "TVShows"), "MEDIA_LIBRARY_PATH": str(self.root / "library.json"),
+                           "LEGACY_MOVIE_LIBRARY_PATH": str(self.root / "legacy.json")}.items():
+            patched = patch.object(api, key, value); patched.start(); self.addCleanup(patched.stop)
+        for key, value in {"is_authorized_request": True, "get_movie_torrents": self.manager,
+                           "ensure_media_directories": None, "queue_tmdb_artwork": None}.items():
+            patched = patch.object(api, key, return_value=value); patched.start(); self.addCleanup(patched.stop)
+        self.client = api.app.test_client()
+
+    def import_selection(self, path, media_type="movies", **options):
+        return self.client.post(f"/torrents/{INFO_HASH}/contents", json={"action": "import", "path": path,
+                                "mediaType": media_type, "media": {"id": 123, "name": "Test title"}, **options})
+
+    def test_movie_import_moves_only_selected_video_and_delete_keeps_library_copy(self):
+        folder = self.ready({"Pack/film.mkv": b"video", "Pack/readme.txt": b"readme"})
+        response = self.import_selection("Pack")
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(response.json["movedFiles"], 1)
+        target = self.root / response.json["item"]["relativePath"]
+        self.assertEqual(target.read_bytes(), b"video")
+        self.assertFalse((folder / "Pack/film.mkv").exists())
+        self.assertTrue((folder / "Pack/readme.txt").exists())
+        self.manager.action(INFO_HASH, "delete")
+        self.assertEqual(target.read_bytes(), b"video")
+
+    def test_series_import_recurses_and_keeps_duplicate_episodes_in_download(self):
+        folder = self.ready({"Show/Season 1/S01E01.mkv": b"one", "Show/Season 2/S02E01.avi": b"two"})
+        response = self.import_selection("Show", "series")
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(response.json["movedFiles"], 2)
+        self.assertEqual(set(response.json["item"]["importedEpisodeIds"]), {"S01E01", "S02E01"})
+        (folder / "S01E01.mkv").write_bytes(b"different version")
+        response = self.import_selection("S01E01.mkv", "series")
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(response.json["movedFiles"], 0)
+        self.assertTrue((folder / "S01E01.mkv").exists())
+
+    def test_failed_catalog_save_preserves_source(self):
+        folder = self.ready({"film.mkv": b"original"})
+        with patch.object(api, "save_media_library", side_effect=OSError("disk full")), self.assertLogs(api.app.logger, level="ERROR"):
+            response = self.import_selection("film.mkv")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual((folder / "film.mkv").read_bytes(), b"original")
+        self.assertFalse(list((self.root / "Movies").glob("*.mkv")))
+
+    def test_movie_replacement_requires_boolean_confirmation(self):
+        folder = self.ready({"film.mkv": b"first"})
+        response = self.import_selection("film.mkv")
+        self.assertEqual(response.status_code, 200)
+        (folder / "film.mkv").write_bytes(b"replacement")
+        for value in (False, "true"):
+            response = self.import_selection("film.mkv", overwriteExisting=value)
+            self.assertEqual(response.status_code, 409)
+            self.assertEqual(response.json["code"], "MOVIE_ALREADY_DOWNLOADED")
+        response = self.import_selection("film.mkv", overwriteExisting=True)
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual((self.root / response.json["item"]["relativePath"]).read_bytes(), b"replacement")
+
+    def test_contents_routes_require_pin_and_validate_requests(self):
+        self.ready()
+        endpoint = f"/torrents/{INFO_HASH}/contents"
+        with patch.object(api, "is_authorized_request", return_value=False):
+            self.assertEqual(self.client.get(endpoint).status_code, 401)
+            for action in ("extract", "import"):
+                self.assertEqual(self.client.post(endpoint, json={"action": action}).status_code, 401)
+        self.assertEqual(self.client.get(endpoint + "?path=../").status_code, 400)
+        self.assertEqual(self.client.post(endpoint, json=[]).status_code, 400)
+        self.assertEqual(self.client.post(endpoint, json={"action": "oops"}).status_code, 400)
+        self.assertEqual(self.client.get("/torrents/missing/contents").status_code, 404)
+
+
+class ArchiveTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+
+    def test_zip_and_tar_extract_nested_files_keep_archive_and_avoid_overwrites(self):
+        for extension in ("zip", "tar.gz"):
+            archive = self.root / ("content." + extension)
+            if extension == "zip":
+                with zipfile.ZipFile(archive, "w") as handle:
+                    handle.writestr("nested/folder/hello.txt", b"hello")
+            else:
+                with tarfile.open(archive, "w:gz") as handle:
+                    info = tarfile.TarInfo("nested/folder/hello.txt")
+                    info.size = 5
+                    handle.addfile(info, io.BytesIO(b"hello"))
+            output = extract_archive(archive)
+            self.assertEqual((output / "nested/folder/hello.txt").read_bytes(), b"hello")
+            self.assertTrue(archive.exists())
+            self.assertNotEqual(output, extract_archive(archive))
+
+    def test_traversal_symlinks_and_hardlinks_leave_no_partial_output(self):
+        for name, kind in (("../escape", "file"), ("/absolute", "file"), ("linked", "symlink"), ("hard", "hardlink")):
+            archive = self.root / "bad.tar"
+            with tarfile.open(archive, "w") as handle:
+                info = tarfile.TarInfo(name)
+                if kind != "file":
+                    info.type = tarfile.SYMTYPE if kind == "symlink" else tarfile.LNKTYPE
+                    info.linkname = "../../escape"
+                handle.addfile(info)
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                extract_archive(archive)
+            self.assertEqual(list(self.root.iterdir()), [archive])
+
+    def test_zip_symlinks_and_space_limits_are_rejected(self):
+        archive = self.root / "bad.zip"
+        with zipfile.ZipFile(archive, "w") as handle:
+            info = zipfile.ZipInfo("linked")
+            info.create_system = 3
+            info.external_attr = (stat.S_IFLNK | 0o777) << 16
+            handle.writestr(info, "../outside")
+        with self.assertRaises(ValueError):
+            extract_archive(archive)
+        with zipfile.ZipFile(archive, "w") as handle:
+            handle.writestr("large.txt", b"test")
+        with patch("safe_archive.MAX_BYTES", 1), self.assertRaises(ValueError):
+            extract_archive(archive)
+        self.assertEqual(list(self.root.iterdir()), [archive])
+
+
+class FreeSearchTests(unittest.TestCase):
+    def test_generic_search_accepts_non_media_categories_without_weakening_other_searches(self):
+        row = {"info_hash": INFO_HASH, "category": "400", "size": 100, "name": "Dataset", "seeders": 8}
+        self.assertEqual(len(normalize_results([row], "generic")), 1)
+        self.assertEqual(normalize_results([row], "movies"), [])
+        payload = {"hits": [{"hash": INFO_HASH, "bytes": 100, "title": "Dataset", "categoryId": [1000000]}]}
+        self.assertEqual(len(normalize_knaben_results(payload, "generic")), 1)
+        self.assertEqual(normalize_knaben_results(payload, "series"), [])
+        xml = f'<rss><channel><item><title>Dataset</title><size>100</size><category>1000</category><attr name="infohash" value="{INFO_HASH}"/></item></channel></rss>'.encode()
+        self.assertEqual(len(normalize_torznab_results(xml, "Source", "generic")), 1)
+        self.assertEqual(normalize_torznab_results(xml, "Source", "books"), [])
+        with patch("torrent_downloads.search_pirate_bay", return_value=[]) as pirate, patch("torrent_downloads.search_knaben", return_value=[]) as knaben:
+            result = search_torrents("Dataset-free-test", "generic")
+            self.assertEqual(result["results"], [])
+            pirate.assert_called_once_with("Dataset-free-test", "generic")
+            knaben.assert_called_once_with("Dataset-free-test", "generic")
+
+
+if __name__ == "__main__":
+    unittest.main()
