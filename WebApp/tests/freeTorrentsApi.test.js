@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { freeDownloadStrings } from '../src/freeDownloadStrings.js';
-import { hasTorrentLibraryUpdates, torrentLibraryVersion, upsertTorrentJob, torrentJobGroup } from '../src/torrentUtils.js';
+import { canStartFreeTorrent, hasTorrentLibraryUpdates, torrentLibraryVersion, upsertTorrentJob, torrentJobGroup } from '../src/torrentUtils.js';
 
 test('standalone download requests need no title and preserve authenticated nested paths', async () => {
   const buildResult = await build({ entryPoints: [new URL('../src/api/raspberryApi.js', import.meta.url).pathname],
@@ -51,6 +51,19 @@ test('confirmed downloads enter the list immediately without duplicating or losi
     assert.equal(torrentJobGroup({ ...free, state }), 'generic');
   }
   assert.equal(torrentJobGroup(movie), 'history');
+});
+
+test('free search can reuse cancelled history and failed catalog attempts without hijacking active jobs', () => {
+  assert.equal(canStartFreeTorrent(undefined), true);
+  for (const mediaType of ['movies', 'series', 'books', 'generic', undefined]) {
+    assert.equal(canStartFreeTorrent({ mediaType, state: 'cancelled' }), true);
+    assert.equal(canStartFreeTorrent({ mediaType, state: 'complete' }), mediaType !== 'generic');
+    assert.equal(canStartFreeTorrent({ mediaType, state: 'failed' }), mediaType !== 'generic');
+    assert.equal(canStartFreeTorrent({ mediaType, state: 'failed', item: { relativePath: 'existing' } }), false);
+    for (const state of ['queued', 'downloading', 'paused', 'importing', 'metadata']) {
+      assert.equal(canStartFreeTorrent({ mediaType, state }), false);
+    }
+  }
 });
 
 test('each later import from a standalone download refreshes the library in other clients', () => {

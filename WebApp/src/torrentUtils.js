@@ -65,6 +65,11 @@ export function torrentJobGroup(job) {
   return !isTorrentHistory(job) ? "active" : job.mediaType === "generic" ? "generic" : "history";
 }
 
+export function canStartFreeTorrent(job) {
+  return !job || job.state === "cancelled" || (job.mediaType !== "generic" &&
+    (job.state === "complete" || (job.state === "failed" && !job.item)));
+}
+
 const strings = {
   es: {
     sendingDownload: "Enviando la descarga a la Raspberry…",

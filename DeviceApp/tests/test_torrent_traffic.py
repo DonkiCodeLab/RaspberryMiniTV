@@ -60,18 +60,56 @@ class TrafficTests(unittest.TestCase):
         self.sample(0)
         for offset in range(30, 900, 30):
             self.sample(offset, offset * 1000, offset * 100)
-        for period in ('3h', '24h', '7d'):
+        for period in ('3h', '24h', '7d', '30d', '365d'):
             result = self.history.snapshot(period, self.now + 870)
             self.assertEqual(result['totals']['downloadedBytes'], 870000)
             self.assertEqual(result['totals']['observedSeconds'], 870)
-            self.assertLessEqual(len(result['points']), 182)
+            self.assertLessEqual(len(result['points']), 366)
+
+    def test_month_and_year_include_older_history_after_restart(self):
+        for days_ago in (366, 364, 31, 29, 8, 0):
+            offset = -days_ago * 86400
+            self.sample(offset)
+            self.sample(offset + 30, 3000, 300)
+        self.history = TorrentTraffic(self.path, self.rpc)
+        for period, duration, width, total in (
+            ('7d', 7 * 86400, 3600, 3000),
+            ('30d', 30 * 86400, 6 * 3600, 9000),
+            ('365d', 365 * 86400, 86400, 15000),
+        ):
+            with self.subTest(period=period):
+                result = self.history.snapshot(period, self.now + 30)
+                self.assertEqual(result['end'] - result['start'], duration)
+                self.assertEqual(result['bucketSeconds'], width)
+                self.assertEqual(result['totals']['downloadedBytes'], total)
+                self.assertEqual(result['totals']['uploadedBytes'], total / 10)
+                self.assertEqual(result['totals']['observedSeconds'], total / 100)
+                self.assertTrue(any(p['downloadRate'] is None for p in result['points']))
+        with sqlite3.connect(self.path) as db:
+            self.assertEqual(db.execute('SELECT MIN(timestamp) FROM samples').fetchone()[0], self.now - 364 * 86400)
+
+    def test_intervals_crossing_bucket_boundaries_are_counted_once(self):
+        self.now = self.now // 86400 * 86400
+        self.sample(-45)
+        self.sample(45, 9000, 900)
+        for period in ('3h', '24h', '7d', '30d', '365d'):
+            with self.subTest(period=period):
+                result = self.history.snapshot(period, self.now + 45)
+                measured = [p for p in result['points'] if p['downloadRate'] is not None]
+                self.assertEqual(len(measured), 2)
+                self.assertTrue(all(p['downloadedBytes'] == 4500 and p['observedSeconds'] == 45 for p in measured))
+                self.assertEqual(result['totals'], {'downloadedBytes': 9000, 'uploadedBytes': 900, 'observedSeconds': 90})
+                # A later sample must not leak into a snapshot of an earlier time.
+                self.assertEqual(self.history.snapshot(period, self.now)['totals']['observedSeconds'], 0)
 
     def test_window_boundary_prorates_interval_and_retention_is_bounded(self):
         self.sample(0)
         self.sample(30, 30000, 3000)
-        result = self.history.snapshot('3h', self.now + 10815)
-        self.assertEqual(result['totals']['downloadedBytes'], 15000)
-        self.assertEqual(result['totals']['observedSeconds'], 15)
+        for period, duration in (('3h', 10800), ('30d', 30 * 86400), ('365d', 365 * 86400)):
+            with self.subTest(period=period):
+                result = self.history.snapshot(period, self.now + duration + 15)
+                self.assertEqual(result['totals']['downloadedBytes'], 15000)
+                self.assertEqual(result['totals']['observedSeconds'], 15)
         self.sample(RETENTION + 200, 999999, 99999)
         with sqlite3.connect(self.path) as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM samples').fetchone()[0], 1)
@@ -118,7 +156,10 @@ class TrafficTests(unittest.TestCase):
             with patch.object(api, 'is_authorized_request', return_value=False):
                 self.assertEqual(client.get('/torrents/traffic').status_code, 401)
             with patch.object(api, 'is_authorized_request', return_value=True):
-                self.assertEqual(client.get('/torrents/traffic?period=7d').status_code, 200)
+                for period in ('7d', '30d', '365d'):
+                    response = client.get(f'/torrents/traffic?period={period}')
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(response.get_json()['period'], period)
                 self.assertEqual(client.get('/torrents/traffic?period=bad').status_code, 400)
                 with patch.object(self.history, 'snapshot', side_effect=sqlite3.OperationalError('read failure')), patch.object(api.app.logger, 'exception'):
                     self.assertEqual(client.get('/torrents/traffic').status_code, 503)

@@ -2,6 +2,7 @@ const strings = {
   es: {
     title: "Descargas libres", kind: "Descarga libre", search: "Buscar descargas libres",
     added: "Descarga registrada. Su estado aparece en el listado:",
+    retryAsFree: "Descargar como libre", retryAsFreeHint: "El intento para «{name}» falló. Puedes continuar sin asociarlo a su ficha y conservando los archivos parciales.",
     hint: "Busca cualquier torrent sin asociarlo a una ficha. Se descargan todos sus archivos; después podrás explorarlos o añadir sus vídeos a una película o serie.",
     emptySearch: "No se han encontrado torrents. Prueba otra búsqueda.", prompt: "Escribe lo que quieres buscar.",
     ready: "Descargada", open: "Ver contenido", browse: "Abrir descargas libres", empty: "No hay descargas libres terminadas.",
@@ -16,6 +17,7 @@ const strings = {
   ca: {
     title: "Descàrregues lliures", kind: "Descàrrega lliure", search: "Cerca descàrregues lliures",
     added: "Descàrrega registrada. El seu estat apareix a la llista:",
+    retryAsFree: "Descarrega com a lliure", retryAsFreeHint: "L’intent per a «{name}» ha fallat. Pots continuar sense associar-lo a la fitxa i conservant els arxius parcials.",
     hint: "Cerca qualsevol torrent sense associar-lo a una fitxa. Es descarreguen tots els arxius; després podràs explorar-los o afegir els vídeos a una pel·lícula o sèrie.",
     emptySearch: "No s’han trobat torrents. Prova una altra cerca.", prompt: "Escriu què vols cercar.",
     ready: "Descarregada", open: "Veure contingut", browse: "Obre les descàrregues lliures", empty: "No hi ha descàrregues lliures acabades.",
@@ -30,6 +32,7 @@ const strings = {
   en: {
     title: "Standalone downloads", kind: "Standalone download", search: "Search standalone downloads",
     added: "Download registered. Its status is shown in the list:",
+    retryAsFree: "Download as standalone", retryAsFreeHint: "The attempt for “{name}” failed. Continue without linking it to that title, keeping partial files.",
     hint: "Search for any torrent without linking it to a title. All files are downloaded; you can then browse them or add their videos to a movie or series.",
     emptySearch: "No torrents found. Try another search.", prompt: "Enter a search term.",
     ready: "Downloaded", open: "View contents", browse: "Open standalone downloads", empty: "No completed standalone downloads.",

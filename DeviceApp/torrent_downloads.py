@@ -634,17 +634,27 @@ class TorrentDownloads(FreeDownloadsMixin):
             archive = None
             for existing in self.jobs.values():
                 if existing["id"] == info_hash:
-                    if existing.get("mediaType", "movies") != media_type or existing[media_key]["id"] != tmdb_id:
-                        raise ValueError("Este torrent ya está asociado a otro contenido.")
-                    if is_generic and existing["state"] == "complete" and not existing.get("deleted"):
-                        return copy.deepcopy(existing)
+                    same_target = (existing.get("mediaType", "movies") == media_type
+                                   and existing.get(media_key, {}).get("id") == tmdb_id)
+                    if existing.get("mediaType") == "generic" and existing["state"] == "complete" and not existing.get("deleted"):
+                        if same_target:
+                            return copy.deepcopy(existing)
+                        raise ValueError("Este torrent está guardado en Descargas libres. Abre su contenido para añadirlo a una ficha.")
                     if existing["state"] in {"complete", "cancelled"}:
                         self._remove_transfer(existing)
                         if not existing.get("transferRemoved"):
                             raise TorrentError("La descarga anterior sigue finalizando. Inténtalo de nuevo en unos segundos.")
+                        self._cleanup_free_cancelled(existing)
                         archive = copy.deepcopy(existing)
                         archive["id"] = f"{info_hash}-history-{time.time_ns()}"
                     else:
+                        if not same_target:
+                            if is_generic and existing["state"] == "failed" and not existing.get("item"):
+                                return self._retry_as_free(existing)
+                            title = next((existing[key]["name"] for key in ("movie", "series", "book", "generic")
+                                          if existing.get(key, {}).get("name")), existing["name"])
+                            raise ValueError(f"Este torrent tiene un intento de descarga vinculado a «{title}». "
+                                             "Revisa su estado en «Ver descargas». La asociación no significa que se haya descargado.")
                         if is_series and (existing.get("seasonNumber"), existing.get("episodeNumber")) != (season, episode):
                             raise ValueError("Este torrent ya tiene otra selección de capítulos en curso.")
                         if overwrite and not existing.get("overwriteExisting"):
@@ -682,6 +692,35 @@ class TorrentDownloads(FreeDownloadsMixin):
                 raise
             self.start()
             return copy.deepcopy(job)
+
+    def _retry_as_free(self, previous):
+        # Keep the engine and partial files in their original directory. Changing
+        # the destination would orphan data and trip the ownership check.
+        self._check_ownership(previous)
+        job = {**previous, "mediaType": "generic", "reuseMediaFolder": True,
+               "generic": {"id": previous["id"], "name": previous["name"]},
+               "state": "failed", "error": "La descarga libre está pendiente de reanudarse. Pulsa Reintentar.",
+               "rateBytes": 0, "overwriteExisting": False}
+        for key in ("movie", "series", "book", "seasonNumber", "episodeNumber", "allowCombinedEpisodes",
+                    "videoIndex", "videoIndices", "videoName", "episodeCount", "errorCode", "errorFile", "transferRemoved", "hidden"):
+            job.pop(key, None)
+        with self.lock:
+            self.jobs[job["id"]] = job
+            try:
+                self._save()
+            except OSError:
+                self.jobs[job["id"]] = previous
+                raise
+        try:
+            self._add_transfer(job)
+            # Adding a duplicate magnet does not resume a stopped transfer.
+            self.rpc.call("torrent-start", {"ids": [job["id"]]})
+        except TorrentError as exc:
+            self._update(job, error=str(exc))
+            raise
+        self._update(job, state="queued", error="")
+        self.start()
+        return copy.deepcopy(job)
 
     def _add_transfer(self, job):
         folder = self.download_folder(job)

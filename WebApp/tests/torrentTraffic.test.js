@@ -1,6 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { trafficSize, trafficPaths } from '../src/torrentTraffic.js';
+import { trafficSize, trafficPaths, trafficTime } from '../src/torrentTraffic.js';
+
+test('long range labels show dates and distinguish years, with full times in details', () => {
+  const date = new Date(2026, 9, 18, 14, 38);
+  const previousYear = new Date(2025, 9, 18, 14, 38);
+  for (const language of ['es', 'ca', 'en']) {
+    assert.equal(trafficTime(date / 1000, language, '30d'), date.toLocaleString(language, { day: '2-digit', month: 'short' }));
+    assert.equal(trafficTime(date / 1000, language, '365d'), date.toLocaleString(language, { month: 'short', year: 'numeric' }));
+    assert.notEqual(trafficTime(date / 1000, language, '365d'), trafficTime(previousYear / 1000, language, '365d'));
+    assert.equal(trafficTime(date / 1000, language, '365d', true), date.toLocaleString(language, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+    assert.equal(trafficTime(date / 1000, language, '3h'), date.toLocaleString(language, { hour: '2-digit', minute: '2-digit' }));
+  }
+});
 
 test('traffic units distinguish missing readings, zero, speeds and total bytes', () => {
   assert.equal(trafficSize(null), '—');

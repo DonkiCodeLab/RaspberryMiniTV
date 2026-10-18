@@ -6,8 +6,15 @@ import sqlite3
 import threading
 import time
 
-RANGES = {"3h": (3 * 3600, 60), "24h": (24 * 3600, 600), "7d": (7 * 86400, 3600)}
-RETENTION = 7 * 86400
+RANGES = {
+    "3h": (3 * 3600, 60),
+    "24h": (24 * 3600, 600),
+    "7d": (7 * 86400, 3600),
+    "30d": (30 * 86400, 6 * 3600),
+    "365d": (365 * 86400, 86400),
+}
+RETENTION = RANGES["365d"][0]
+MAX_SAMPLE_GAP = 90
 
 
 class TorrentTraffic:
@@ -65,14 +72,14 @@ class TorrentTraffic:
             if self.previous:
                 before, old_down, old_up, old_session = self.previous
                 # Do not spread missing observations or daemon resets over the chart.
-                if 0 < now - before <= 90 and session == old_session and down >= old_down and up >= old_up:
+                if 0 < now - before <= MAX_SAMPLE_GAP and session == old_session and down >= old_down and up >= old_up:
                     since, downloaded, uploaded = before, down - old_down, up - old_up
             db = self._connect()
             try:
                 with db:
                     db.execute("INSERT OR REPLACE INTO samples VALUES (?, ?, ?, ?, ?, ?)",
                                (now, since, downloaded, uploaded, down_rate, up_rate))
-                    db.execute("DELETE FROM samples WHERE timestamp < ?", (now - RETENTION - 90,))
+                    db.execute("DELETE FROM samples WHERE timestamp < ?", (now - RETENTION - MAX_SAMPLE_GAP,))
             finally:
                 db.close()
             self.previous = (now, down, up, session)
@@ -80,42 +87,43 @@ class TorrentTraffic:
 
     def snapshot(self, period="3h", now=None):
         if period not in RANGES:
-            raise ValueError("Elige 3h, 24h o 7d.")
+            raise ValueError("Elige 3h, 24h, 7d, 30d o 365d.")
         now = time.time() if now is None else now
         duration, width = RANGES[period]
         start = now - duration
         first = math.floor(start / width) * width
+        points = []
         with self.lock:
             db = self._connect()
             try:
-                rows = db.execute("SELECT timestamp, since, downloaded, uploaded FROM samples WHERE timestamp > ? AND timestamp <= ? ORDER BY timestamp", (start, now)).fetchall()
+                # Aggregate in SQLite so a year's samples never need to be loaded
+                # into Python memory. Include intervals crossing each bucket edge.
+                for timestamp in range(int(first), int(now) + 1, width):
+                    bucket_start, bucket_end = max(timestamp, start), min(timestamp + width, now)
+                    down, up, seconds = db.execute("""
+                        SELECT COALESCE(SUM(downloaded * seconds / duration), 0),
+                               COALESCE(SUM(uploaded * seconds / duration), 0),
+                               COALESCE(SUM(seconds), 0)
+                        FROM (
+                            SELECT downloaded, uploaded, timestamp - since AS duration,
+                                   MIN(timestamp, :end) - MAX(since, :start) AS seconds
+                            FROM samples
+                            WHERE timestamp > :start AND timestamp <= :scan_end
+                              AND since < :end AND timestamp > since
+                        )
+                    """, {"start": bucket_start, "end": bucket_end,
+                          "scan_end": min(bucket_end + MAX_SAMPLE_GAP, now)}).fetchone()
+                    points.append({"timestamp": timestamp, "downloadedBytes": down,
+                                   "uploadedBytes": up, "observedSeconds": seconds,
+                                   "downloadRate": down / seconds if seconds else None,
+                                   "uploadRate": up / seconds if seconds else None})
                 last = db.execute("SELECT timestamp, down_rate, up_rate FROM samples ORDER BY timestamp DESC LIMIT 1").fetchone()
             finally:
                 db.close()
             unavailable = self.error
-        buckets = {t: {"timestamp": t, "downloadedBytes": 0, "uploadedBytes": 0, "observedSeconds": 0}
-                   for t in range(int(first), int(now) + 1, width)}
-        for end, since, down, up in rows:
-            if end <= since:
-                continue
-            cursor = max(since, start)
-            while cursor < end:
-                key = math.floor(cursor / width) * width
-                stop = min(end, key + width)
-                seconds = stop - cursor
-                bucket = buckets[key]
-                bucket["observedSeconds"] += seconds
-                bucket["downloadedBytes"] += down * seconds / (end - since)
-                bucket["uploadedBytes"] += up * seconds / (end - since)
-                cursor = stop
-        points = list(buckets.values())
-        for point in points:
-            seconds = point["observedSeconds"]
-            point["downloadRate"] = point["downloadedBytes"] / seconds if seconds else None
-            point["uploadRate"] = point["uploadedBytes"] / seconds if seconds else None
         current = {"timestamp": last[0], "downloadRate": last[1], "uploadRate": last[2]} if last else None
         return {"period": period, "start": start, "end": now, "bucketSeconds": width, "points": points,
-                "current": current, "stale": unavailable or not last or not 0 <= now - last[0] <= 90,
+                "current": current, "stale": unavailable or not last or not 0 <= now - last[0] <= MAX_SAMPLE_GAP,
                 "totals": {"downloadedBytes": round(sum(p["downloadedBytes"] for p in points)),
                            "uploadedBytes": round(sum(p["uploadedBytes"] for p in points)),
                            "observedSeconds": sum(p["observedSeconds"] for p in points)}}

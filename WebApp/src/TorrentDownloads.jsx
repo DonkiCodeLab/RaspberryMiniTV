@@ -3,7 +3,7 @@ import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { controlMovieTorrent, getMovieTorrents, previewTorrent, searchMediaTorrents, startMediaTorrent } from "./api/raspberryApi";
-import { hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents, upsertTorrentJob, torrentJobGroup } from "./torrentUtils.js";
+import { canStartFreeTorrent, hasTorrentLibraryUpdates, isTorrentHistory, mergeTorrentResults, torrentJobTitle, torrentLibraryVersion, torrentQuery, torrentListSize, torrentSize, torrentSources, torrentStrings, sortTorrents, upsertTorrentJob, torrentJobGroup } from "./torrentUtils.js";
 import refreshWhiteIcon from "./assets/refresh_white.png";
 import refreshYellowIcon from "./assets/refresh_yellow.png";
 import "./TorrentDownloads.css";
@@ -166,8 +166,8 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
 
   async function start(torrent, overwriteExisting = false) {
     if (startRequest.current) return;
-    const existing = isGeneric && jobs.find(job => job.id === torrent.infoHash && job.state !== "cancelled");
-    if (existing) { onDashboard?.(existing); return; }
+    const existing = isGeneric && jobs.find(job => job.id === torrent.infoHash);
+    if (existing && !canStartFreeTorrent(existing)) { onDashboard?.(existing); return; }
     const controller = new AbortController();
     startRequest.current = controller;
     const timeout = setTimeout(() => controller.abort(), 30000);
@@ -249,7 +249,9 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
         <div className="movie-torrents__table"><table>
         <thead><tr><th>{s.name}</th><th>{s.source}</th><th aria-sort={sortField === "sizeBytes" ? sortAria : undefined}>{s.size}{sortField === "sizeBytes" ? ` ${sortArrow}` : ""}</th><th aria-sort={sortField === "seeds" ? sortAria : undefined}>Seeds{sortField === "seeds" ? ` ${sortArrow}` : ""}</th><th><span className="torrent-visually-hidden">{s.download}</span></th></tr></thead>
         <tbody>{sortedResults.map(result => {
-          const existing = isGeneric && jobs.find(job => job.id === result.infoHash && job.state !== "cancelled");
+          const existing = isGeneric && jobs.find(job => job.id === result.infoHash);
+          const viewExisting = existing && !canStartFreeTorrent(existing);
+          const retryAsFree = existing && !viewExisting && existing.state === "failed";
           const submitting = busy === result.infoHash;
           const failure = startError?.id === result.infoHash ? startError.message : "";
           return <React.Fragment key={result.infoHash}><tr>
@@ -260,9 +262,10 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
             aria-expanded={previewHash === result.infoHash} aria-controls={previewHash === result.infoHash ? previewId : undefined}
             onClick={() => setPreviewHash(current => current === result.infoHash ? "" : result.infoHash)}>{previewHash === result.infoHash ? s.hideContent : s.viewContent}</button>
             <button className="dialog-button dialog-button--accent" disabled={Boolean(busy) || Boolean(overwriteTorrent)} aria-busy={submitting}
-              onClick={() => existing ? onDashboard?.(existing) : start(result)} type="button">{submitting ? <><LoadingSpinner inline /> {s.starting}</> : existing ? s.viewDownloads : s.download}</button></div>
+              onClick={() => viewExisting ? onDashboard?.(existing) : start(result)} type="button">{submitting ? <><LoadingSpinner inline /> {s.starting}</> : viewExisting ? s.viewDownloads : retryAsFree ? fs.retryAsFree : s.download}</button></div>
             {submitting && <p className="movie-torrents__result-status" role="status">{s.sendingDownload}</p>}
-            {existing && <p className="movie-torrents__result-status">{existing.state === "complete" ? fs.ready : s[existing.state]}{existing.state === "downloading" ? ` · ${existing.progress || 0}%` : ""}</p>}
+            {existing && <p className="movie-torrents__result-status">{existing.mediaType === "generic" && existing.state === "complete" ? fs.ready : s[existing.state]}{existing.state === "downloading" ? ` · ${existing.progress || 0}%` : ""}</p>}
+            {retryAsFree && <p className="movie-torrents__result-status">{fs.retryAsFreeHint.replace("{name}", torrentJobTitle(existing))}</p>}
             {failure && <p className="dialog-error movie-torrents__result-status" role="alert">{failure}</p>}
           </td>
         </tr>{previewHash === result.infoHash && <tr><td colSpan={5} id={previewId}><TorrentContentPreview torrent={result} language={language} mediaType={mediaType} /></td></tr>}</React.Fragment>;

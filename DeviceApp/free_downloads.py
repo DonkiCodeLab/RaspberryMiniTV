@@ -34,7 +34,9 @@ class FreeDownloadsMixin:
                 shutil.rmtree(folder)
 
     def download_folder(self, job):
-        return safe_path(self.root, f"{'free' if job.get('mediaType') == 'generic' else 'downloads'}/{job['id']}", must_exist=False)
+        # Failed catalog downloads can continue as free downloads in place.
+        area = "free" if job.get("mediaType") == "generic" and not job.get("reuseMediaFolder") else "downloads"
+        return safe_path(self.root, f"{area}/{job['id']}", must_exist=False)
 
     def _free_job(self, job_id, *, writable=False):
         job = self.jobs.get(job_id)

@@ -1,3 +1,13 @@
+export function trafficTime(timestamp, language = 'es', period = '3h', full = false) {
+  let options = { hour: '2-digit', minute: '2-digit' };
+  if (full || period === '7d') {
+    options = { day: '2-digit', month: 'short', ...options };
+    if (period === '365d') options.year = 'numeric';
+  } else if (period === '30d') options = { day: '2-digit', month: 'short' };
+  else if (period === '365d') options = { month: 'short', year: 'numeric' };
+  return new Date(timestamp * 1000).toLocaleString(language, options);
+}
+
 export function trafficSize(value, language = 'es', rate = false) {
   if (value == null || !Number.isFinite(value)) return '—';
   const units = ['B', 'kB', 'MB', 'GB', 'TB'];

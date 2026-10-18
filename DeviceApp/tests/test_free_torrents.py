@@ -49,6 +49,111 @@ class FreeTorrentFixture(unittest.TestCase):
 
 
 class FreeTorrentTests(FreeTorrentFixture):
+    def catalog_attempt(self):
+        self.manager.import_series = Mock()
+        self.manager.series_artwork_status = Mock()
+        self.manager.prepare_series_artwork = Mock()
+        return self.manager.add({"infoHash": INFO_HASH, "name": "Nature pack", "mediaType": "series",
+                                 "series": {"id": 123, "name": "Nature"}})
+
+    def test_cancelled_catalog_attempt_does_not_block_free_download(self):
+        self.catalog_attempt()
+        self.manager.action(INFO_HASH, "cancel")
+        job = self.add()
+        self.assertEqual(job["mediaType"], "generic")
+        self.assertEqual(job["state"], "queued")
+        history = [item for item in self.manager.snapshot()["jobs"] if item["id"] != INFO_HASH]
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["state"], "cancelled")
+        self.assertEqual(history[0]["series"]["id"], 123)
+        self.assertEqual(Path(self.rpc.rows[INFO_HASH]["downloadDir"]), self.manager.root / "free" / INFO_HASH)
+        self.assertEqual(self.add()["createdAt"], job["createdAt"])
+
+    def test_failed_series_can_continue_as_free_in_place_and_download_every_file(self):
+        self.catalog_attempt()
+        folder = self.manager.download_folder(self.manager.jobs[INFO_HASH])
+        (folder / "episode-one.mkv").write_bytes(b"abc")
+        (folder / "readme.txt").write_bytes(b"text")
+        rows = [{"name": "episode-one.mkv", "length": 6, "bytesCompleted": 3},
+                {"name": "readme.txt", "length": 4, "bytesCompleted": 4}]
+        self.rpc.rows[INFO_HASH].update(metadataPercentComplete=1, files=rows)
+        self.manager.tick()  # No episode numbers: catalog import fails before downloading.
+        self.assertEqual(self.manager.jobs[INFO_HASH]["state"], "failed")
+        self.assertEqual(self.rpc.rows[INFO_HASH]["status"], 0)
+        self.manager._update(self.manager.jobs[INFO_HASH], videoIndices=[0], allowCombinedEpisodes=True)
+        self.rpc.calls.clear()
+        job = self.add()
+        self.assertEqual(job["state"], "queued")
+        self.assertEqual(job["mediaType"], "generic")
+        self.assertNotIn("series", job)
+        self.assertNotIn("videoIndices", job)
+        self.assertNotIn("allowCombinedEpisodes", job)
+        self.assertEqual(self.manager.download_folder(job), folder)
+        self.assertEqual((folder / "episode-one.mkv").read_bytes(), b"abc")
+        self.assertEqual(self.rpc.rows[INFO_HASH]["status"], 4)
+        self.assertFalse(any(method == "torrent-remove" for method, _ in self.rpc.calls))
+        self.manager.tick()
+        self.assertIn(("torrent-set", {"ids": [INFO_HASH], "files-wanted": [0, 1]}), self.rpc.calls)
+        self.manager.import_series.assert_not_called()
+        self.importer.assert_not_called()
+        (folder / "episode-one.mkv").write_bytes(b"abcdef")
+        rows[0]["bytesCompleted"] = 6
+        self.rpc.rows[INFO_HASH].update(leftUntilDone=0, percentDone=1)
+        self.manager.tick()
+        self.assertEqual(self.manager.jobs[INFO_HASH]["state"], "complete")
+        self.assertIn(("torrent-remove", {"ids": [INFO_HASH], "delete-local-data": False}), self.rpc.calls)
+        self.manager = self.new_manager()
+        self.assertEqual(len(self.manager.free_contents(INFO_HASH)["entries"]), 2)
+        self.manager.action(INFO_HASH, "delete")
+        self.assertFalse(folder.exists())
+
+    def test_free_conversion_preserves_foreign_and_imported_or_active_jobs(self):
+        self.catalog_attempt()
+        for state in ("queued", "downloading", "paused", "importing", "metadata"):
+            with self.subTest(state=state):
+                self.manager._update(self.manager.jobs[INFO_HASH], state=state)
+                with self.assertRaisesRegex(ValueError, "Nature.*Ver descargas"):
+                    self.add()
+        self.manager._update(self.manager.jobs[INFO_HASH], state="failed", item={"relativePath": "TVShows/nature"})
+        with self.assertRaises(ValueError):
+            self.add()
+        self.manager.jobs[INFO_HASH].pop("item")
+        self.rpc.rows[INFO_HASH]["downloadDir"] = str(self.root / "foreign")
+        self.rpc.calls.clear()
+        with self.assertRaises(TorrentError):
+            self.add()
+        self.assertEqual(self.manager.jobs[INFO_HASH]["mediaType"], "series")
+        self.assertEqual([method for method, _ in self.rpc.calls], ["torrent-get"])
+
+    def test_interrupted_conversion_remains_retryable_after_restart(self):
+        self.catalog_attempt()
+        self.manager._update(self.manager.jobs[INFO_HASH], state="failed")
+        folder = self.manager.download_folder(self.manager.jobs[INFO_HASH])
+        (folder / "partial.txt").write_bytes(b"keep")
+        call = self.rpc.call
+        def offline_on_start(method, args=None):
+            if method == "torrent-start":
+                raise TorrentError("offline")
+            return call(method, args)
+        with patch.object(self.rpc, "call", side_effect=offline_on_start), self.assertRaises(TorrentError):
+            self.add()
+        self.manager = self.new_manager()
+        job = self.manager.jobs[INFO_HASH]
+        self.assertEqual((job["mediaType"], job["state"]), ("generic", "failed"))
+        self.assertEqual(self.manager.download_folder(job), folder)
+        self.assertEqual(self.manager.action(INFO_HASH, "retry")["state"], "queued")
+        self.assertEqual((folder / "partial.txt").read_bytes(), b"keep")
+        self.manager.action(INFO_HASH, "cancel")
+        self.assertFalse(folder.exists())
+
+    def test_completed_free_contents_cannot_be_replaced_by_catalog_request(self):
+        folder = self.ready()
+        self.rpc.calls.clear()
+        with self.assertRaisesRegex(ValueError, "Abre su contenido"):
+            self.manager.add({"infoHash": INFO_HASH, "movie": {"id": 123, "name": "Nature"}})
+        self.assertEqual(self.rpc.calls, [])
+        self.assertEqual((folder / "Pack/subfolder/file.txt").read_bytes(), b"hello")
+
     def test_repeated_start_keeps_one_active_transfer_and_its_progress(self):
         original = self.add()
         for state in ("queued", "downloading", "paused", "failed"):
@@ -187,6 +292,27 @@ class FreeImportApiTests(FreeTorrentFixture):
     def import_selection(self, path, media_type="movies", **options):
         return self.client.post(f"/torrents/{INFO_HASH}/contents", json={"action": "import", "path": path,
                                 "mediaType": media_type, "media": {"id": 123, "name": "Test title"}, **options})
+
+    def test_hidden_cancelled_record_absent_from_list_no_longer_blocks_free_start(self):
+        self.manager.add({"infoHash": INFO_HASH, "movie": {"id": 123, "name": "Old title"}})
+        self.manager._update(self.manager.jobs[INFO_HASH], state="cancelled")
+        # Removing history while the engine is offline retains a hidden cleanup record.
+        with patch.object(self.rpc, "call", side_effect=TorrentError("offline")):
+            self.manager.action(INFO_HASH, "remove")
+        self.assertEqual(self.client.get("/torrents").json["jobs"], [])
+        payload = {"infoHash": INFO_HASH, "mediaType": "generic", "name": "Free files"}
+        with patch.object(self.rpc, "call", side_effect=TorrentError("offline")):
+            response = self.client.post("/torrents", json=payload)
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("sigue finalizando", response.json["error"])
+        response = self.client.post("/torrents", json=payload)
+        self.assertEqual(response.status_code, 202, response.json)
+        self.assertEqual(response.json["job"]["state"], "queued")
+        jobs = self.client.get("/torrents").json["jobs"]
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["mediaType"], "generic")
+        self.manager.tick()
+        self.assertEqual(len(self.new_manager().snapshot()["jobs"]), 1)
 
     def test_movie_import_moves_only_selected_video_and_delete_keeps_library_copy(self):
         folder = self.ready({"Pack/film.mkv": b"video", "Pack/readme.txt": b"readme"})

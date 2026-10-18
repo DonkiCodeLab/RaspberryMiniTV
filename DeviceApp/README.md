@@ -55,6 +55,13 @@ configuradas. Se guardan en `MultimediaContent/Torrents/free/<infoHash>` y se
 descargan todos sus archivos. Al terminar se retira el torrent de Transmission
 sin borrar los datos. El estado persiste en `Torrents/jobs.json`; la pausa,
 cancelación y reintentos usan el mismo gestor que películas, series y libros.
+Los intentos cancelados o finalizados de una ficha no bloquean una nueva descarga
+libre del mismo torrent; el intento anterior queda en el historial. Esto también
+se aplica a registros ocultos pendientes de limpieza, una vez que Transmission
+confirma su retirada. Un intento de ficha fallido y todavía no importado puede
+continuar con **Descargar como libre**: conserva sus archivos parciales en
+`Torrents/downloads/<infoHash>`, reanuda la transferencia y selecciona todos los
+archivos. Las descargas activas siguen mostrándose con **Ver descargas**.
 
 `GET /torrents/<id>/contents?path=…` lista el directorio de una descarga libre
 terminada. `POST` en esa ruta admite `action: "extract"` y `path` para descomprimir,
@@ -87,14 +94,16 @@ Si ya tienes un motor local con acceso a las mismas rutas, puedes definir
 
 El dashboard registra el tráfico de Transmission cada 30 segundos, incluso sin
 el navegador abierto, en `MultimediaContent/Torrents/traffic.sqlite3`. Conserva
-siete días y ofrece vistas de 3 horas, 24 horas y 7 días mediante
-`GET /torrents/traffic?period=3h` (requiere el PIN web). Las velocidades del gráfico
-son medias por intervalo (1 minuto, 10 minutos y 1 hora, respectivamente), calculadas
+365 días y ofrece vistas de 3 horas, 24 horas, 7 días, último mes (30 días) y
+último año (365 días) mediante `GET /torrents/traffic?period=3h` (requiere el PIN web;
+periodos admitidos: `3h`, `24h`, `7d`, `30d` y `365d`). Las velocidades del gráfico
+son medias por intervalo (1 minuto, 10 minutos, 1 hora, 6 horas y 1 día, respectivamente), calculadas
 con los contadores de bytes; las tarjetas muestran la última velocidad medida.
 Los totales corresponden al tiempo observado: los reinicios, fallos y pausas de
 monitorización dejan huecos, sin atribuirles tráfico ni inventar ceros. No mide
 el resto del tráfico de red de la Raspberry. El historial comienza al instalar
-esta versión y requiere que el servicio de la API esté funcionando.
+esta versión y requiere que el servicio de la API esté funcionando. La ampliación
+a un año conserva los datos existentes, pero no recupera mediciones ya eliminadas.
 
 La cola persistente, los datos temporales y la configuración están en
 `MultimediaContent/Torrents/`. En películas, tras obtener los metadatos del magnet, se selecciona

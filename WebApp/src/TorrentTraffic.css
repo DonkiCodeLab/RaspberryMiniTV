@@ -16,7 +16,7 @@
 .torrent-traffic__metric > span:last-child { color: #9aafbd; font-size: 11px; line-height: 1.8; }
 .torrent-traffic__metric > span:last-child b { color: #eaf3f8; margin-left: 6px; white-space: nowrap; }
 .torrent-traffic__periods { display: flex; flex-wrap: wrap; padding: 4px; gap: 3px; background: #080f1680; border-radius: 12px; }
-.torrent-traffic__periods button, .torrent-traffic__expand { border: 0; border-radius: 9px; padding: 10px 12px; min-height: 40px; background: transparent; color: #a9bdc9; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.torrent-traffic__periods button, .torrent-traffic__expand { border: 0; border-radius: 9px; padding: 10px 12px; min-height: 40px; background: transparent; color: #a9bdc9; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .torrent-traffic__periods button[aria-pressed="true"] { color: #f7fbff; background: #2b414f; box-shadow: 0 2px 8px #0003; }
 .torrent-traffic__periods button:hover, .torrent-traffic__expand:hover { color: #fff; background: #ffffff0c; }
 .torrent-traffic :is(button, input, summary, [tabindex]):focus-visible { outline: 2px solid var(--traffic-down); outline-offset: 3px; }
@@ -44,7 +44,7 @@
   .torrent-traffic__metric { padding: 12px; }
   .torrent-traffic__metric > span:last-child b { display: block; margin-left: 0; }
   .torrent-traffic__periods { width: 100%; }
-  .torrent-traffic__periods button { flex: 1; padding: 8px 5px; font-size: 10px; }
+  .torrent-traffic__periods button { flex: 1 1 90px; padding: 8px 5px; font-size: 10px; }
   .torrent-traffic__toolbar { gap: 6px; }
   .torrent-traffic__expand { margin-left: auto; }
 }
