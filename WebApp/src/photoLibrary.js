@@ -3,6 +3,21 @@ export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
 export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
 export const PHOTO_PAGE_SIZE = 100;
 
+export function sortPhotos(photos, field = 'takenAt', direction = 'desc') {
+  const time = photo => {
+    const value = photo[field];
+    return value == null || value === '' ? NaN : typeof value === 'number' ? value * 1000 : Date.parse(value);
+  };
+  const dated = photos.map(photo => ({ photo, time: time(photo) }));
+  dated.sort((a, b) => {
+    const validA = Number.isFinite(a.time), validB = Number.isFinite(b.time);
+    if (validA !== validB) return validA ? -1 : 1;
+    const order = validA ? (a.time - b.time) * (direction === 'asc' ? 1 : -1) : 0;
+    return order || String(a.photo.name).localeCompare(String(b.photo.name), undefined, { numeric: true }) || String(a.photo.id).localeCompare(String(b.photo.id));
+  });
+  return dated.map(entry => entry.photo);
+}
+
 export function photoPage(items, requested = 1) {
   const pages = Math.max(1, Math.ceil(items.length / PHOTO_PAGE_SIZE));
   const page = Math.min(pages, Math.max(1, Math.trunc(requested) || 1));

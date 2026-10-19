@@ -528,6 +528,13 @@ cada archivo admite hasta 50 MB.
 
 Cada álbum muestra un mosaico de **100 fotos por página**, con fecha EXIF y coordenadas GPS.
 La paginación también se aplica a Personas, carpetas y fotos de una zona del mapa.
+Se puede ordenar por **fecha de la foto** o **fecha de subida**, con las más
+recientes o las más antiguas primero; la preferencia se conserva en el navegador.
+Las fotos sin fecha quedan al final. Las tarjetas mantienen **Favorito** y ya
+no muestran ni actualizan el estado de visto.
+Solo se solicitan miniaturas cerca de la zona visible, con un máximo de dos
+peticiones simultáneas compartido con el mapa. El visor muestra primero la
+miniatura y la sustituye por la vista grande; si falla, permite reintentar.
 Al cambiar de página se desmontan las tarjetas anteriores; **Seleccionar esta página**
 solo selecciona las fotos visibles y la selección se limpia al pasar de página.
 Los datos ausentes
@@ -535,7 +542,7 @@ se indican expresamente. Al abrir una foto, el visor admite cerrar con Escape,
 retroceder y avanzar con las flechas. **Modo de acción** permite seleccionar
 varias fotos y moverlas a una carpeta existente o crear una carpeta en la raíz
 o dentro de otra. La organización se guarda en SQLite; el archivo físico y su
-ruta permanecen estables para conservar favoritos y vistos de cada usuario.
+ruta permanecen estables para conservar los favoritos de cada usuario.
 
 **Mapa** utiliza OpenStreetMap y agrupa las fotos originales según la escala.
 Solo se dibujan grupos dentro de la zona visible, con un máximo de 100 miniaturas;

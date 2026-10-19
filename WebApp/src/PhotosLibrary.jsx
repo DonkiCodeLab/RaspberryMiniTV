@@ -2,7 +2,9 @@ import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
-import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
+import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
+import LoadingSpinner from './LoadingSpinner.jsx';
 import { photoStrings } from './photoStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
 import { photoImportStrings } from './photoImportStrings.js';
@@ -31,10 +33,35 @@ function PhotoMeta({ photo, s, language }) {
   return <div className="photo-meta"><span title={s.taken}>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
     <span>⌖ {hasLocation(photo) ? `${photo.latitude.toFixed(4)}°, ${photo.longitude.toFixed(4)}°` : s.noGps}</span></div>;
 }
-function PhotoImage({ photo, render = 'thumb', ...props }) {
-  const [error, setError] = useState(false);
+function PhotoImage({ photo, ...props }) {
+  const [error, setError] = useState(false), [ready, setReady] = useState(''), [visible, setVisible] = useState(false);
+  const element = useRef(null), url = getPictureContentUrl(photo.relativePath, 'thumb');
+  useEffect(() => {
+    if (!element.current) return;
+    if (typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { rootMargin: '120px' });
+    observer.observe(element.current);
+    return () => observer.disconnect();
+  }, [url]);
+  useEffect(() => {
+    if (!visible || ready === url || !url) return;
+    const controller = new AbortController(); setError(false);
+    requestThumbnail(url, controller.signal).then(value => { if (!controller.signal.aborted) setReady(value); })
+      .catch(error => { if (!controller.signal.aborted) setError(true); });
+    return () => controller.abort();
+  }, [url, visible, ready]);
   return error ? <span className="photo-image-error" role="img" aria-label={photo.name}>▧ {photo.name}</span> :
-    <img {...props} src={getPictureContentUrl(photo.relativePath, render) || undefined} alt={photo.name} onError={() => setError(true)} />;
+    <img {...props} ref={element} src={ready && ready === url ? url : PHOTO_PLACEHOLDER} alt={photo.name} onError={() => setError(true)} />;
+}
+
+function ViewerImage({ photo, s }) {
+  const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
+  return <div className="photo-viewer__image" role="img" aria-label={photo.name} aria-busy={!ready && !error}>
+    <img className="photo-viewer__placeholder" src={getPictureContentUrl(photo.relativePath, 'thumb') || undefined} alt="" aria-hidden="true" />
+    {!error && <img key={attempt} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, 'preview') || undefined}
+      alt="" aria-hidden="true" decoding="async" fetchPriority="high" onLoad={() => setReady(true)} onError={() => setError(true)} />}
+    {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}</div>}
+  </div>;
 }
 
 export function PhotoPagination({ page, onChange, s, label = s.photos }) {
@@ -53,7 +80,7 @@ export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, langu
       <PhotoImage photo={photo} loading="lazy" decoding="async" />{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
       {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
     </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
-    {renderMarks?.('picture', photo.relativePath)}
+    {renderMarks?.('picture', photo.relativePath, false)}
   </article>)}</div>;
 }
 
@@ -124,7 +151,7 @@ function FolderDialog({ mode, folders, current, selected, person, s, onClose, on
   </form></Modal>;
 }
 
-function Viewer({ photos, initial, onClose, onViewed, s, language, people = [] }) {
+function Viewer({ photos, initial, onClose, s, language, people = [] }) {
   const [index, setIndex] = useState(initial);
   const [metadataError, setMetadataError] = useState('');
   const t = photoImportStrings(language);
@@ -145,7 +172,7 @@ function Viewer({ photos, initial, onClose, onViewed, s, language, people = [] }
     if (event.key === 'ArrowLeft') { event.preventDefault(); change(-1); }
   }}>
     <div className="photo-viewer"><button type="button" aria-label={s.previous} onClick={() => change(-1)} disabled={photos.length < 2}>‹</button>
-      <PhotoImage key={photo.id} photo={photo} render="preview" onLoad={() => onViewed?.(photo)} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
+      <ViewerImage key={photo.id} photo={photo} s={s} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
     <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span></div>
     {(photo.metadataSource || names.length > 0) && <div className="photo-import-details">
       {photo.title && <strong>{photo.title}</strong>}
@@ -160,7 +187,7 @@ function Viewer({ photos, initial, onClose, onViewed, s, language, people = [] }
   </Modal>;
 }
 
-export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, initialFiles, onImportDone, matchesPicture, onRootChange }) {
+export default function PhotosLibrary({ language = 'es', renderMarks, initialFiles, onImportDone, matchesPicture, onRootChange }) {
   const s = photoStrings(language), t = photoImportStrings(language);
   const [data, setData] = useState(blank), [current, setCurrent] = useState(''), [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('');
@@ -171,6 +198,12 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   importing.current = dialog?.mode === 'upload';
   const [attempt, setAttempt] = useState(0);
   const [photoNumber, setPhotoNumber] = useState(1), [folderNumber, setFolderNumber] = useState(1);
+  const [order, setOrder] = useState(() => {
+    try { const saved = JSON.parse(localStorage.getItem('minitv-photo-order')); if (['takenAt', 'uploadedAt'].includes(saved?.field) && ['asc', 'desc'].includes(saved?.direction)) return saved; } catch {}
+    return { field: 'takenAt', direction: 'desc' };
+  });
+  useEffect(() => { try { localStorage.setItem('minitv-photo-order', JSON.stringify(order)); } catch {} }, [order]);
+  useEffect(() => { setPhotoNumber(1); setSelected(new Set()); }, [order]);
   const grid = useRef(null);
   const index = useMemo(() => indexPhotos(data.photos, data.people), [data.photos, data.people]);
   useEffect(() => { setPhotoNumber(1); setFolderNumber(1); }, [current, search, zone]);
@@ -219,7 +252,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   const visible = useCallback(photo => (!query || [photo.name, photo.title, photo.description, ...(photo.albums || []), ...(photo.keywords || []), ...(index.namesByPhoto.get(photo.id) || [])].filter(Boolean).join(' ').toLocaleLowerCase().includes(query)) && (!matchesPicture || matchesPicture(photo)), [query, index, matchesPicture]);
   const inFolder = id => [...new Set([...descendantIds(data.folders, id)].flatMap(folder => index.byFolder.get(folder) || []))];
   const mapPhotos = useMemo(() => data.photos.filter(p => !p.sourceId && visible(p)), [data.photos, visible]);
-  const currentPhotos = useMemo(() => (person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), [person, index, current, zone, visible]);
+  const currentPhotos = useMemo(() => sortPhotos((person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), order.field, order.direction), [person, index, current, zone, visible, order]);
   const folders = current === 'people' ? data.people.map(p => ({ ...p, id: `person:${p.id}` })) : data.folders.filter(f => f.parent === current);
   const displayedFolders = folders.filter(f => !query || (s[f.id] || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
   const page = photoPage(currentPhotos, photoNumber);
@@ -289,6 +322,10 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
       <span className="photo-import-banner__art" aria-hidden="true">✳</span><span><strong>{t.banner}</strong><small>{t.bannerText}</small></span><span aria-hidden="true">↗</span>
     </button>}
     <div className="photo-browse-tools"><input type="search" aria-label={s.search} placeholder={s.search} value={search} onChange={event => { setSearch(event.target.value); setSelected(new Set()); }} />
+      {currentPhotos.length > 0 && <div className="photo-sort"><label>{s.sortBy}<select value={order.field} onChange={event => setOrder(value => ({ ...value, field: event.target.value }))}>
+        <option value="takenAt">{s.photoDate}</option><option value="uploadedAt">{s.uploadDate}</option></select></label>
+        <label>{s.sortOrder}<select value={order.direction} onChange={event => setOrder(value => ({ ...value, direction: event.target.value }))}>
+          <option value="desc">{s.newestFirst}</option><option value="asc">{s.oldestFirst}</option></select></label></div>}
       {currentPhotos.length > 0 && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}</div>
     {loading && <p role="status">{s.loading}</p>}
     {!current && <div className="movie-library__items--grid photo-folder-grid">{SPECIAL_FOLDERS.map(id => album({ id, name: s[id], created: null }, id))}</div>}
@@ -309,6 +346,6 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
     {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{s.emptyHint}</p></div>}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog && dialog.mode !== 'upload' && <FolderDialog mode={dialog.mode} folders={data.folders} current={canWrite ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
-    {viewer && <Viewer {...viewer} people={data.people} s={s} language={language} onViewed={onViewed} onClose={() => setViewer(null)} />}
+    {viewer && <Viewer {...viewer} people={data.people} s={s} language={language} onClose={() => setViewer(null)} />}
   </section>;
 }

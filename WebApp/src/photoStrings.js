@@ -1,4 +1,6 @@
 const es = {
+  sortBy: 'Ordenar por', photoDate: 'Fecha de la foto', uploadDate: 'Fecha de subida', sortOrder: 'Orden',
+  newestFirst: 'Más recientes primero', oldestFirst: 'Más antiguas primero', loadingPhoto: 'Cargando vista grande…',
   back: 'Volver',
   page: 'Página', pages: 'Paginación', selectPage: 'Seleccionar esta página',
   root: 'Fotos', uploads: 'Uploads', map: 'Mapa', ai: 'Diviértete con la IA', people: 'Personas',
@@ -31,6 +33,8 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  sortBy: 'Sort by', photoDate: 'Photo date', uploadDate: 'Upload date', sortOrder: 'Order',
+  newestFirst: 'Newest first', oldestFirst: 'Oldest first', loadingPhoto: 'Loading full preview…',
   back: 'Back',
   page: 'Page', pages: 'Pagination', selectPage: 'Select this page',
   root: 'Photos', uploads: 'Uploads', map: 'Map', ai: 'Have fun with AI', people: 'People', intro: 'Your memories, your way.',
@@ -57,6 +61,8 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  sortBy: 'Ordenar per', photoDate: 'Data de la foto', uploadDate: 'Data de pujada', sortOrder: 'Ordre',
+  newestFirst: 'Més recents primer', oldestFirst: 'Més antigues primer', loadingPhoto: 'Carregant la vista gran…',
   back: 'Tornar',
   page: 'Pàgina', pages: 'Paginació', selectPage: 'Seleccionar aquesta pàgina',
   root: 'Fotos', map: 'Mapa', ai: 'Diverteix-te amb la IA', people: 'Persones', intro: 'Els teus records, a la teva manera.',

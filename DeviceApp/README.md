@@ -1191,9 +1191,15 @@ de álbumes y asociaciones de personas y marca el análisis facial como `skip`.
 Los metadatos originales se conservan. Los clientes ordinarios mantienen su
 comportamiento anterior. La web pide `/videos?pictures=0` al arrancar para no
 recorrer ni transferir otra vez toda la colección de fotos con el catálogo general.
-La generación de miniaturas comparte un único turno de descodificación con las
-subidas y el análisis facial; reduce la imagen antes de copiar sus píxeles y
-reutiliza la caché incluso ante peticiones simultáneas de la misma foto.
+Las importaciones preparan una miniatura JPEG de hasta 600 px y una vista de
+hasta 2400 px aprovechando la misma descodificación de validación. El original
+permanece intacto. `photo_previews.py` prepara las fotos existentes en segundo
+plano al abrir la biblioteca, de una en una y empezando por las más recientes.
+Todas las operaciones de imagen comparten un único turno de descodificación:
+el visor tiene prioridad, después las miniaturas visibles y las subidas, y al
+final la preparación en segundo plano. Las dos vistas se generan juntas, se
+escriben de forma atómica y reutilizan los JPEG que ya estuvieran en caché.
+La imagen se reduce antes de copiar sus píxeles para limitar el uso de memoria.
 
 El asistente envía `continueOnError: true`: una imagen ilegible se devuelve en
 `rejected` con su índice de lote, nombre y motivo; las imágenes válidas se guardan

@@ -45,3 +45,10 @@ test('pagination reports ranges and disables unavailable directions', () => {
   assert.match(last, /disabled="">Siguiente/);
   for (const language of ['es', 'ca', 'en']) for (const key of ['pages', 'page', 'selectPage']) assert.ok(photoStrings(language)[key]);
 });
+
+test('photo tiles request favorites without a watched button', () => {
+  const calls = [];
+  renderToStaticMarkup(React.createElement(PhotoGrid, {page: photoPage(photos.slice(0,2)), selected:new Set(), s,
+    language:'es', renderMarks:(...args) => { calls.push(args); return null; }}));
+  assert.deepEqual(calls, [['picture','0.jpg',false], ['picture','1.jpg',false]]);
+});

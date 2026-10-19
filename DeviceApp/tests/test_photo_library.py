@@ -158,7 +158,7 @@ class PhotoLibraryTests(unittest.TestCase):
         transpose = ImageOps.exif_transpose
         def inspect(image, *args, **kwargs):
             self.assertTrue(self.store.image_lock.locked())
-            self.assertLessEqual(max(image.size), 600)
+            self.assertLessEqual(max(image.size), 2400)
             time.sleep(.02)
             return transpose(image, *args, **kwargs)
         with patch('photo_library.ImageOps.exif_transpose', side_effect=inspect) as convert:

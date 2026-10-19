@@ -202,9 +202,9 @@ class PhotoImportTests(unittest.TestCase):
 
     def test_upload_decodes_once_outside_catalogue_lock_and_hashes_original_bytes(self):
         original = picture().read()
-        def inspect(path):
+        def inspect(path, **kwargs):
             self.assertFalse(self.store.lock._is_owned())
-            return read_metadata(path)
+            return read_metadata(path, **kwargs)
         with patch('photo_library.read_metadata', side_effect=inspect) as decode:
             self.store.upload([picture(), picture(color='blue')], 'Mac', import_data=payload(metadata(), metadata()))
         self.assertEqual(decode.call_count, 2)

@@ -9961,7 +9961,7 @@ export default function App() {
                 ) : isPicturesMode ? (
                   <PhotosLibrary key={profiles.activeId} language={raspberryLanguage} onRootChange={setPicturesAtRoot}
                     initialFiles={pendingPhotoFiles} onImportDone={() => setPendingPhotoFiles(null)}
-                    matchesPicture={matchesPicture} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} />
+                    matchesPicture={matchesPicture} renderMarks={renderMarks} />
                 ) : !isGamesMode && libraryFiltersActive && !filterVisible ? (
                   <section className="empty-state seasons-section">
                     {!isMediaDetail && !isGamesMode ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}

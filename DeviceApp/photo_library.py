@@ -24,6 +24,7 @@ import uuid
 from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import Blueprint, jsonify, request
 from photo_import import validate_import_records
+from photo_previews import ImageWorkLock, PhotoPreviews
 
 try:
     from pillow_heif import register_heif_opener
@@ -65,7 +66,7 @@ def clean_name(value):
     return name
 
 
-def read_metadata(path):
+def read_metadata(path, on_image=None):
     """Do not invent capture times or coordinates from filesystem timestamps."""
     with Image.open(path) as image:
         if image.width * image.height > 50_000_000:
@@ -97,8 +98,10 @@ def read_metadata(path):
                 latitude, longitude = lat, lon
         except (ValueError, TypeError, KeyError, IndexError, ZeroDivisionError):
             pass
-        return {'takenAt': taken, 'latitude': latitude, 'longitude': longitude,
-                'width': image.width, 'height': image.height}
+        metadata = {'takenAt': taken, 'latitude': latitude, 'longitude': longitude,
+                    'width': image.width, 'height': image.height}
+        if on_image: on_image(image)
+        return metadata
 
 
 def edit_image(path, style, credentials):
@@ -145,7 +148,8 @@ class PhotoLibrary:
         self.revision = uuid.uuid4().hex
         self.lock = threading.RLock()
         # Full-resolution decoders can consume hundreds of MB per image.
-        self.image_lock = threading.Lock()
+        self.image_lock = ImageWorkLock()
+        self.previews = PhotoPreviews(self.root, self.cache, self.image_lock)
         self.face_lock = threading.Lock()
         self.scan_lock = threading.Lock()
         self.scanning = False
@@ -317,7 +321,7 @@ class PhotoLibrary:
                     raise PhotoError('La foto ha cambiado durante la importación. Vuelve a seleccionar la carpeta.', 422)
                 try:
                     with self.image_lock:
-                        metadata = read_metadata(path)
+                        metadata = read_metadata(path, on_image=lambda image: self.previews.save(path, image))
                 except (OSError, ValueError, Image.DecompressionBombError) as error:
                     # Storage/permission failures require a retry, not a skipped photo.
                     if isinstance(error, OSError) and error.errno is not None: raise
@@ -327,6 +331,7 @@ class PhotoLibrary:
                     if not continue_on_error:
                         raise PhotoError(message) from None
                     rejected.append({'index': index, 'name': name, 'error': message})
+                    self.previews.discard(path)
                     path.unlink()
                     continue
                 staged.append((index, path, name, metadata, digest))
@@ -334,7 +339,9 @@ class PhotoLibrary:
                 # A lost response or simultaneous retry must not create a second album.
                 previous = db.execute('SELECT result FROM photo_import_batches WHERE session=? AND batch=?', (session, batch_id)).fetchone() if records is not None else None
                 if previous:
-                    for _, path, _, _, _ in staged: path.unlink()
+                    for _, path, _, _, _ in staged:
+                        self.previews.discard(path)
+                        path.unlink()
                     batch.rmdir()
                     return json.loads(previous['result'])
                 if digests:
@@ -398,13 +405,17 @@ class PhotoLibrary:
                 if records is not None:
                     db.execute('INSERT INTO photo_import_batches VALUES (?,?,?)', (session, batch_id, json.dumps(result)))
             committed = True
-            for path in discarded: path.unlink(missing_ok=True)
+            for path in discarded:
+                self.previews.discard(path)
+                path.unlink(missing_ok=True)
             if not any(batch.iterdir()): batch.rmdir()
             if not geolocated_only: self.start_faces()
             return result
         except Exception:
             if not committed and batch.exists():
-                for path in batch.iterdir(): path.unlink()
+                for path in batch.iterdir():
+                    self.previews.discard(path)
+                    path.unlink()
                 batch.rmdir()
             raise
 
@@ -424,7 +435,7 @@ class PhotoLibrary:
                     if relative in known or name.startswith('.') or path.suffix.lower() not in EXTENSIONS or path.is_symlink(): continue
                     try:
                         with self.image_lock:
-                            metadata = read_metadata(path)
+                            metadata = read_metadata(path, on_image=lambda image: self.previews.save(path, image))
                         with self.db() as db:
                             if db.execute('SELECT 1 FROM photos WHERE path=?', (relative,)).fetchone(): continue
                             parent = 'uploads'
@@ -510,25 +521,17 @@ class PhotoLibrary:
 
     def preview(self, relative, full=False):
         path = self.safe_file(relative)
-        key = hashlib.sha256((relative + str(path.stat().st_mtime_ns) + str(full)).encode()).hexdigest()
-        cached = self.cache / (key + '.jpg')
-        if cached.exists(): return cached
-        with self.image_lock:
-            if cached.exists(): return cached
-            temporary = self.cache / (uuid.uuid4().hex + '.tmp')
-            try:
-                with Image.open(path) as image:
-                    target = (2400, 2400) if full else (600, 600)
-                    image.draft('RGB', target)
-                    image.thumbnail(target)
-                    image = ImageOps.exif_transpose(image).convert('RGB')
-                    image.save(temporary, 'JPEG', quality=90 if full else 80)
-                os.replace(temporary, cached)
-            except (OSError, ValueError, Image.DecompressionBombError):
-                raise PhotoError('No se puede crear la vista previa de esta foto.', 422) from None
-            finally:
-                temporary.unlink(missing_ok=True)
-        return cached
+        try:
+            return self.previews.get(path, full)
+        except (OSError, ValueError, Image.DecompressionBombError):
+            raise PhotoError('No se puede crear la vista previa de esta foto.', 422) from None
+
+    def start_previews(self):
+        if self.previews.started: return
+        with self.db() as db:
+            rows = db.execute("SELECT path FROM photos ORDER BY json_extract(metadata, '$.takenAt') DESC, uploaded DESC").fetchall()
+        # File stats and decoding happen in the worker, never in the library request.
+        self.previews.start([row['path'] for row in rows], self.safe_file)
 
     def start_faces(self, retry=False):
         if importlib.util.find_spec('face_recognition') is None: return
@@ -667,6 +670,7 @@ def create_photo_blueprint(get_library):
     def library():
         store = get_library()
         store.start_sync()
+        store.start_previews()
         return jsonify(store.snapshot())
 
     @bp.get('/pictures/status')
