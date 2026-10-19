@@ -1,4 +1,5 @@
 const es = {
+  back: 'Volver',
   page: 'Página', pages: 'Paginación', selectPage: 'Seleccionar esta página',
   root: 'Fotos', uploads: 'Uploads', map: 'Mapa', ai: 'Diviértete con la IA', people: 'Personas',
   intro: 'Tus recuerdos, a tu manera.', upload: 'Subir fotos', newFolder: 'Nueva carpeta', actions: 'Modo de acción', done: 'Terminar',
@@ -30,6 +31,7 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  back: 'Back',
   page: 'Page', pages: 'Pagination', selectPage: 'Select this page',
   root: 'Photos', uploads: 'Uploads', map: 'Map', ai: 'Have fun with AI', people: 'People', intro: 'Your memories, your way.',
   upload: 'Upload photos', newFolder: 'New folder', actions: 'Selection mode', done: 'Done', photos: 'photos', albums: 'folders',
@@ -55,6 +57,7 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  back: 'Tornar',
   page: 'Pàgina', pages: 'Paginació', selectPage: 'Seleccionar aquesta pàgina',
   root: 'Fotos', map: 'Mapa', ai: 'Diverteix-te amb la IA', people: 'Persones', intro: 'Els teus records, a la teva manera.',
   upload: 'Pujar fotos', newFolder: 'Carpeta nova', actions: 'Mode d’acció', done: 'Acabar', photos: 'fotos', albums: 'carpetes',
