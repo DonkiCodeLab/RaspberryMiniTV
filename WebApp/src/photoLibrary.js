@@ -1,6 +1,34 @@
 export const SPECIAL_FOLDERS = ['uploads', 'map', 'ai', 'people'];
 export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
 export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
+export const PHOTO_PAGE_SIZE = 100;
+
+export function photoPage(items, requested = 1) {
+  const pages = Math.max(1, Math.ceil(items.length / PHOTO_PAGE_SIZE));
+  const page = Math.min(pages, Math.max(1, Math.trunc(requested) || 1));
+  const offset = (page - 1) * PHOTO_PAGE_SIZE;
+  return { items: items.slice(offset, offset + PHOTO_PAGE_SIZE), page, pages, offset, total: items.length };
+}
+
+// Build associations once per catalogue update, rather than searching every
+// person's photo list for every photo and every render.
+export function indexPhotos(photos, people) {
+  const byId = new Map(photos.map(photo => [photo.id, photo]));
+  const byPerson = new Map(), namesByPhoto = new Map(), byFolder = new Map();
+  for (const person of people) {
+    const ids = new Set(person.photoIds);
+    byPerson.set(person.id, [...ids].map(id => byId.get(id)).filter(Boolean));
+    for (const id of ids) {
+      if (!namesByPhoto.has(id)) namesByPhoto.set(id, []);
+      namesByPhoto.get(id).push(person.name);
+    }
+  }
+  for (const photo of photos) for (const id of new Set([photo.folderId, ...(photo.folderIds || [])])) {
+    if (!byFolder.has(id)) byFolder.set(id, []);
+    byFolder.get(id).push(photo);
+  }
+  return { byId, byPerson, namesByPhoto, byFolder };
+}
 
 export function descendantIds(folders, id) {
   const found = new Set([id]);
@@ -53,6 +81,21 @@ export function clusterPhotos(photos, zoom, radius = 76) {
       buckets.set(bucket, [...(buckets.get(bucket) || []), cluster]);
     }
   }
+  return clusters;
+}
+
+export function visibleMapClusters(photos, zoom, bounds, limit = 100) {
+  const visible = photos.filter(photo => {
+    if (!hasLocation(photo)) return false;
+    const { south, north, west, east } = bounds;
+    if (photo.latitude < south || photo.latitude > north) return false;
+    if (east - west >= 360) return true;
+    const offset = ((photo.longitude - west) % 360 + 360) % 360;
+    return offset <= ((east - west) % 360 + 360) % 360;
+  });
+  // Keep every visible photo represented, coalescing groups at dense zooms.
+  let clusters = clusterPhotos(visible, zoom);
+  while (clusters.length > limit) clusters = clusterPhotos(visible, --zoom);
   return clusters;
 }
 

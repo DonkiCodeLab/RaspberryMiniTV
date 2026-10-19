@@ -1,4 +1,4 @@
-import { PHOTO_ACCEPT } from './photoLibrary.js';
+import { PHOTO_ACCEPT, hasLocation } from './photoLibrary.js';
 
 export const IMPORT_ACCEPT = `${PHOTO_ACCEPT},.json`;
 export const MAX_SIDECAR_BYTES = 2 * 1024 * 1024;
@@ -56,7 +56,7 @@ export function normalizePhotoMetadata(raw) {
   };
 }
 
-export async function preparePhotoImport(files, { onProgress, signal } = {}) {
+export async function preparePhotoImport(files, { onProgress, signal, geolocatedOnly = false } = {}) {
   const checkCancelled = () => { if (signal?.aborted) throw new DOMException('Import cancelled', 'AbortError'); };
   const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
   checkCancelled();
@@ -81,6 +81,7 @@ export async function preparePhotoImport(files, { onProgress, signal } = {}) {
     stems.set(stem, (stems.get(stem) || 0) + 1);
   }
   const entries = [], warnings = [], used = new Set();
+  let reviewed = 0, withoutLocation = 0;
   let lastReport = performance.now();
   if (onProgress) {
     onProgress({ phase: 'reading', done: 0, total: photos.length, fileName: photos[0]?.name || '' });
@@ -99,10 +100,14 @@ export async function preparePhotoImport(files, { onProgress, signal } = {}) {
       catch { throw new Error(`invalidSidecar:${sidecar.name}`); }
     }
     checkCancelled();
-    if (file.size > 50 * 1024 * 1024) throw new Error(`photoTooLarge:${file.name}`);
-    entries.push({ file, metadata, raw });
-    if (onProgress && (performance.now() - lastReport >= 100 || entries.length === photos.length)) {
-      onProgress({ phase: 'reading', done: entries.length, total: photos.length, fileName: file.name });
+    if (geolocatedOnly && !hasLocation(metadata || {})) withoutLocation++;
+    else {
+      if (file.size > 50 * 1024 * 1024) throw new Error(`photoTooLarge:${file.name}`);
+      entries.push({ file, metadata, raw });
+    }
+    reviewed++;
+    if (onProgress && (performance.now() - lastReport >= 100 || reviewed === photos.length)) {
+      onProgress({ phase: 'reading', done: reviewed, total: photos.length, fileName: file.name });
       lastReport = performance.now();
       // Let React paint even when the selection has no asynchronous sidecars.
       await yieldToBrowser();
@@ -113,7 +118,7 @@ export async function preparePhotoImport(files, { onProgress, signal } = {}) {
   if (ignored.length) warnings.push({ type: 'ignored', count: ignored.length, names: ignored.slice(0, 4).map(f => f.name) });
   const unmatched = [...sidecars.values()].filter(f => !used.has(f));
   if (unmatched.length) warnings.push({ type: 'unmatched', count: unmatched.length });
-  return { entries, warnings };
+  return { entries, warnings, geolocatedOnly, withoutLocation, reviewed };
 }
 
 export function importSummary(entries) {

@@ -12,6 +12,26 @@ const dump = { uuid: 'photo-1', title: 'Un día en la playa', description: 'Con 
   person_info: [{ uuid: 'person-1', name: 'Ana' }, { uuid: 'person-2', name: 'Ana' }],
   albums: ['Verano', 'Familia'], keywords: ['playa'], favorite: true, face_info: [{ center: [0.5, 0.4] }] };
 
+test('geolocated import excludes missing, removed, incomplete and invalid GPS before batching', async () => {
+  const inputs = [];
+  for (const [i, location] of [[0, [0, 0]], [1, [41, -3]], [2, [null, null]], [3, [91, 0]], [4, [1, null]], [5, ['', '']]]) {
+    inputs.push(file(`${i}.jpg`), file(`${i}.jpg.minitv.json`, '', JSON.stringify({ ...dump, location })));
+  }
+  inputs.push(file('no-sidecar.jpg'));
+  const updates = [];
+  const selection = await preparePhotoImport(inputs, { geolocatedOnly: true, onProgress: p => updates.push(p) });
+  assert.deepEqual(importBatches(selection.entries).flat().map(e => e.file.name), ['0.jpg', '1.jpg']);
+  assert.equal(selection.withoutLocation, 5);
+  assert.equal(selection.reviewed, 7);
+  assert.equal(selection.geolocatedOnly, true);
+  assert.equal(updates.at(-1).done, 7);
+  assert.equal(updates.at(-1).total, 7);
+  const none = await preparePhotoImport([file('no-sidecar.jpg')], { geolocatedOnly: true });
+  assert.equal(none.entries.length, 0);
+  assert.equal(none.withoutLocation, 1);
+  assert.equal((await preparePhotoImport([file('regular.jpg')])).entries.length, 1);
+});
+
 test('import IDs also work on HTTP LAN origins without randomUUID', () => {
   const id = createImportId(); assert.match(id, /^[a-f0-9]{32}$/); assert.notEqual(id, createImportId());
 });

@@ -1175,6 +1175,17 @@ y `Cache-Control: no-store`. Incluye la base SQLite en las copias de seguridad:
 contiene también los metadatos, las asociaciones a álbumes/personas, los hashes
 de deduplicación y los recibos de lotes para reintentar sin repetir guardados.
 
+El asistente filtra los JSON antes de enviar fotos y marca el lote con
+`geolocatedOnly: true`. La API vuelve a validar que todas las fotos tengan latitud
+y longitud válidas, las guarda directamente en `uploads`, omite la recreación
+de álbumes y asociaciones de personas y marca el análisis facial como `skip`.
+Los metadatos originales se conservan. Los clientes ordinarios mantienen su
+comportamiento anterior. La web pide `/videos?pictures=0` al arrancar para no
+recorrer ni transferir otra vez toda la colección de fotos con el catálogo general.
+La generación de miniaturas comparte un único turno de descodificación con las
+subidas y el análisis facial; reduce la imagen antes de copiar sus píxeles y
+reutiliza la caché incluso ante peticiones simultáneas de la misma foto.
+
 El asistente envía `continueOnError: true`: una imagen ilegible se devuelve en
 `rejected` con su índice de lote, nombre y motivo; las imágenes válidas se guardan
 y la importación continúa. El recibo del lote incluye esos errores para que una

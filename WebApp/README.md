@@ -526,7 +526,11 @@ Desde un álbum se añaden directamente a él; desde IA se crea un álbum de IA.
 La selección se envía automáticamente en lotes de hasta 20 imágenes y 80 MB;
 cada archivo admite hasta 50 MB.
 
-Cada álbum muestra un mosaico con fecha EXIF y coordenadas GPS. Los datos ausentes
+Cada álbum muestra un mosaico de **100 fotos por página**, con fecha EXIF y coordenadas GPS.
+La paginación también se aplica a Personas, carpetas y fotos de una zona del mapa.
+Al cambiar de página se desmontan las tarjetas anteriores; **Seleccionar esta página**
+solo selecciona las fotos visibles y la selección se limpia al pasar de página.
+Los datos ausentes
 se indican expresamente. Al abrir una foto, el visor admite cerrar con Escape,
 retroceder y avanzar con las flechas. **Modo de acción** permite seleccionar
 varias fotos y moverlas a una carpeta existente o crear una carpeta en la raíz
@@ -534,7 +538,8 @@ o dentro de otra. La organización se guarda en SQLite; el archivo físico y su
 ruta permanecen estables para conservar favoritos y vistos de cada usuario.
 
 **Mapa** utiliza OpenStreetMap y agrupa las fotos originales según la escala.
-Cada pin contiene una miniatura y un contador; al pulsarlo aparece el mosaico de
+Solo se dibujan grupos dentro de la zona visible, con un máximo de 100 miniaturas;
+si hay más, se agrupan sin descartar fotos. Cada pin contiene una miniatura y un contador; al pulsarlo aparece el mosaico de
 esa zona. Acercar el mapa separa las agrupaciones. Las fotos sin GPS se cuentan
 aparte, y las variantes generadas no duplican puntos del mapa. El fondo requiere
 Internet; las fotografías se sirven desde la Raspberry.
@@ -594,17 +599,20 @@ Los valores numéricos no finitos (`NaN`, `Infinity`, `-Infinity`) del análisis
 interno de Fotos se guardan como `null`. El importador también acepta estos
 valores en exportaciones anteriores, sin necesidad de volver a copiar las fotos.
 
-Se conservan los bytes de las imágenes, las fechas y zonas horarias, la ubicación
-corregida en Fotos, nombres e identificadores de personas, títulos, descripciones,
-etiquetas y el estado de favorita en Apple. Las personas no requieren instalar
-el motor de reconocimiento facial. Si dos personas comparten nombre, sus UUID
-de Apple las mantienen separadas. Los favoritos de Apple se muestran como dato
-de origen, sin alterar los favoritos de los perfiles de MiniTV.
+La importación del Mac **solo selecciona fotos con latitud y longitud válidas en
+los archivos de metadatos**. Las coordenadas cero son válidas; las ubicaciones
+ausentes, eliminadas, incompletas o fuera de rango se omiten antes de enviar las
+imágenes. El resumen indica cuántas fotos se han descartado. Incluye los JSON del
+asistente al elegir la carpeta; sin ellos no se puede confirmar la ubicación.
+Este filtro también se aplica si eliges una exportación con JSON desde Archivos y carpetas.
 
-**Recrear los álbumes** crea carpetas dentro del destino y permite que una foto
-aparezca en varios álbumes sin duplicar el archivo. Los nombres de álbumes se
-adaptan a los límites de las carpetas de MiniTV; los originales, identificadores
-y jerarquía de Apple se conservan en el JSON completo, descargable desde el visor.
+Las fotos seleccionadas aparecen directamente en **Uploads** y en **Mapa**.
+No se recrean álbumes de Apple ni se inicia reconocimiento facial en esta importación.
+Se conservan los bytes originales, las fechas y zonas horarias, la ubicación
+corregida en Fotos, títulos, descripciones, etiquetas y el estado de favorita en Apple.
+Los nombres de personas, identificadores y jerarquía de Apple siguen conservados
+en el JSON completo, descargable desde el visor. Las subidas ordinarias de imágenes
+sin JSON siguen admitiendo fotos sin GPS en carpetas elegidas por el usuario.
 No se reconstruye el motor de reconocimiento, Recuerdos ni toda la jerarquía de
 carpetas de Apple. Los vídeos, RAW y el vídeo de Live Photos quedan fuera;
 las versiones editadas compatibles se importan como imágenes independientes.

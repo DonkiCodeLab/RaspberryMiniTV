@@ -1,8 +1,8 @@
 import { lockBodyScroll } from "./bodyScrollLock.js";
-import React, { lazy, Suspense, useEffect, useId, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
-import { descendantIds, folderTrail, hasLocation, pendingVariants, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
 import { photoStrings } from './photoStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
 import { photoImportStrings } from './photoImportStrings.js';
@@ -34,7 +34,27 @@ function PhotoMeta({ photo, s, language }) {
 function PhotoImage({ photo, render = 'thumb', ...props }) {
   const [error, setError] = useState(false);
   return error ? <span className="photo-image-error" role="img" aria-label={photo.name}>▧ {photo.name}</span> :
-    <img {...props} src={getPictureContentUrl(photo.relativePath, render)} alt={photo.name} onError={() => setError(true)} />;
+    <img {...props} src={getPictureContentUrl(photo.relativePath, render) || undefined} alt={photo.name} onError={() => setError(true)} />;
+}
+
+export function PhotoPagination({ page, onChange, s, label = s.photos }) {
+  if (!page.total) return null;
+  return <nav className="photo-pagination" aria-label={`${s.pages}: ${label}`}>
+    <button type="button" className="dialog-button" disabled={page.page <= 1} onClick={() => onChange(page.page - 1)}>{s.previous}</button>
+    <span role="status">{page.offset + 1}–{page.offset + page.items.length} / {page.total} {label} · {s.page} {page.page} / {page.pages}</span>
+    <button type="button" className="dialog-button" disabled={page.page >= page.pages} onClick={() => onChange(page.page + 1)}>{s.next}</button>
+  </nav>;
+}
+
+export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks }) {
+  return <div className="photo-mosaic">{page.items.map((photo, index) => <article key={photo.id} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
+    <button type="button" className="photo-tile__image" aria-label={`${actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={actionMode ? selected.has(photo.id) : undefined}
+      onClick={() => actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
+      <PhotoImage photo={photo} loading="lazy" decoding="async" />{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
+      {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
+    </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
+    {renderMarks?.('picture', photo.relativePath)}
+  </article>)}</div>;
 }
 
 function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyDown, className = '' }) {
@@ -150,6 +170,10 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   const catalogue = useRef(blank), watcher = useRef(null);
   importing.current = dialog?.mode === 'upload';
   const [attempt, setAttempt] = useState(0);
+  const [photoNumber, setPhotoNumber] = useState(1), [folderNumber, setFolderNumber] = useState(1);
+  const grid = useRef(null);
+  const index = useMemo(() => indexPhotos(data.photos, data.people), [data.photos, data.people]);
+  useEffect(() => { setPhotoNumber(1); setFolderNumber(1); }, [current, search, zone]);
   useEffect(() => {
     onRootChange?.(!current);
     return () => onRootChange?.(true);
@@ -190,16 +214,20 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   const trail = person ? [{ id: 'people', name: s.people }, { id: current, name: person.name }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
   const title = person?.name || s[current] || data.folders.find(f => f.id === current)?.name || s.root;
   const query = search.trim().toLocaleLowerCase();
-  const visible = photo => (!query || [photo.name, photo.title, photo.description, ...(photo.albums || []), ...(photo.keywords || []), ...data.people.filter(p => p.photoIds.includes(photo.id)).map(p => p.name)].filter(Boolean).join(' ').toLocaleLowerCase().includes(query)) && (!matchesPicture || matchesPicture(photo));
-  const inFolder = id => { const ids = descendantIds(data.folders, id); return data.photos.filter(p => ids.has(p.folderId) || p.folderIds?.some(id => ids.has(id))); };
-  const mapPhotos = data.photos.filter(p => !p.sourceId && visible(p));
-  const currentPhotos = (person ? data.photos.filter(p => person.photoIds.includes(p.id)) : current === 'map' ? (zone ? mapPhotos.filter(p => zone.includes(p.id)) : []) : data.photos.filter(p => p.folderId === current || p.folderIds?.includes(current))).filter(visible);
+  const visible = useCallback(photo => (!query || [photo.name, photo.title, photo.description, ...(photo.albums || []), ...(photo.keywords || []), ...(index.namesByPhoto.get(photo.id) || [])].filter(Boolean).join(' ').toLocaleLowerCase().includes(query)) && (!matchesPicture || matchesPicture(photo)), [query, index, matchesPicture]);
+  const inFolder = id => [...new Set([...descendantIds(data.folders, id)].flatMap(folder => index.byFolder.get(folder) || []))];
+  const mapPhotos = useMemo(() => data.photos.filter(p => !p.sourceId && visible(p)), [data.photos, visible]);
+  const currentPhotos = useMemo(() => (person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), [person, index, current, zone, visible]);
   const folders = current === 'people' ? data.people.map(p => ({ ...p, id: `person:${p.id}` })) : data.folders.filter(f => f.parent === current);
   const displayedFolders = folders.filter(f => !query || (s[f.id] || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
+  const page = photoPage(currentPhotos, photoNumber);
+  const folderPage = photoPage(displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)), folderNumber);
+  const changePage = number => { setPhotoNumber(number); setSelected(new Set()); grid.current?.scrollIntoView({ block: 'start' }); };
   const isAi = current !== 'ai' && trail.some(f => f.id === 'ai');
   const canWrite = !person && !['map', 'people'].includes(current);
-  const albumPhotos = data.photos.filter(p => p.folderId === current || p.folderIds?.includes(current));
-  const pending = pendingVariants(data.photos.filter(p => p.folderId === current || p.folderIds?.includes(current) || (p.sourceId && albumPhotos.some(original => original.id === p.sourceId))));
+  const albumPhotos = index.byFolder.get(current) || [];
+  const originalIds = new Set(albumPhotos.map(p => p.id));
+  const pending = isAi ? pendingVariants(data.photos.filter(p => originalIds.has(p.id) || originalIds.has(p.sourceId))) : 0;
   const job = data.jobs.find(j => j.folder === current);
   const navigate = id => { setCurrent(id); setSearch(''); setSelected(new Set()); setActionMode(false); setZone(null); setNotice(''); };
   const closeDialog = () => { setDialog(null); onImportDone?.(); return refresh(); };
@@ -218,8 +246,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
   }
   function toggle(id) { setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }
   function album(folder, special) {
-    const photos = special === 'map' ? mapPhotos.filter(hasLocation) : special === 'people' ? data.photos.filter(p => data.people.some(person => person.photoIds.includes(p.id))) :
-      folder.id.startsWith('person:') ? data.photos.filter(p => data.people.find(person => `person:${person.id}` === folder.id)?.photoIds.includes(p.id)) : inFolder(folder.id);
+    const photos = special === 'map' ? mapPhotos.filter(hasLocation) : special === 'people' ? data.photos.filter(p => index.namesByPhoto.has(p.id)) :
+      folder.id.startsWith('person:') ? index.byPerson.get(folder.id.slice(7)) || [] : inFolder(folder.id);
     return <AlbumCard key={folder.id} folder={{ ...folder, name: s[folder.id] || folder.name }} photos={photos.filter(visible)} special={special}
       s={s} language={language} onOpen={() => navigate(folder.id)} />;
   }
@@ -255,22 +283,20 @@ export default function PhotosLibrary({ language = 'es', renderMarks, onViewed, 
       {currentPhotos.length > 0 && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}</div>
     {loading && <p role="status">{s.loading}</p>}
     {!current && <div className="movie-library__items--grid photo-folder-grid">{SPECIAL_FOLDERS.map(id => album({ id, name: s[id], created: null }, id))}</div>}
-    {displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)).length > 0 && <div className="movie-library__items--grid photo-folder-grid">{displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)).map(folder => album(folder))}</div>}
+    {folderPage.total > 0 && <><div className="movie-library__items--grid photo-folder-grid">{folderPage.items.map(folder => album(folder))}</div>
+      <PhotoPagination page={folderPage} onChange={setFolderNumber} s={s} label={s.folders} /></>}
     {current === 'map' && !zone && <Suspense fallback={<p>{s.loading}</p>}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
     {zone && <div className="photo-zone"><h2>{s.zone} · {currentPhotos.length}</h2><button type="button" className="dialog-button" onClick={() => { setZone(null); setSelected(new Set()); setActionMode(false); }}>{s.allPlaces}</button></div>}
     {actionMode && <div className="photo-selection"><strong>{selected.size} {s.selected}</strong>
-      <button type="button" onClick={() => setSelected(new Set(currentPhotos.map(p => p.id)))}>{s.selectAll}</button><button type="button" onClick={() => setSelected(new Set())}>{s.clear}</button>
+      <button type="button" onClick={() => setSelected(new Set(page.items.map(p => p.id)))}>{s.selectPage}</button><button type="button" onClick={() => setSelected(new Set())}>{s.clear}</button>
       <button type="button" className="dialog-button dialog-button--accent" disabled={!selected.size} onClick={() => setDialog({ mode: 'move' })}>{s.move} →</button>
       {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
     </div>}
-    {currentPhotos.length > 0 && <div className="photo-mosaic">{currentPhotos.map((photo, index) => <article key={photo.id} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
-      <button type="button" className="photo-tile__image" aria-label={`${actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={actionMode ? selected.has(photo.id) : undefined}
-        onClick={() => actionMode ? toggle(photo.id) : setViewer({ photos: currentPhotos, initial: index })}>
-        <PhotoImage photo={photo} loading="lazy" />{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
-        {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
-      </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
-      {renderMarks?.('picture', photo.relativePath)}
-    </article>)}</div>}
+    {currentPhotos.length > 0 && <div ref={grid} className="photo-page">
+      <PhotoPagination page={page} onChange={changePage} s={s} />
+      <PhotoGrid page={page} actionMode={actionMode} selected={selected} toggle={toggle} onOpen={initial => setViewer({ photos: currentPhotos, initial })} s={s} language={language} renderMarks={renderMarks} />
+      <PhotoPagination page={page} onChange={changePage} s={s} />
+    </div>}
     {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{s.emptyHint}</p></div>}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog && dialog.mode !== 'upload' && <FolderDialog mode={dialog.mode} folders={data.folders} current={canWrite ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}

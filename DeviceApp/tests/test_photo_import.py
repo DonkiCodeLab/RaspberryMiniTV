@@ -34,6 +34,34 @@ class PhotoImportTests(unittest.TestCase):
         self.store = PhotoLibrary(Path(self.temp.name) / 'Pictures')
         worker = patch.object(self.store, 'start_faces'); worker.start(); self.addCleanup(worker.stop)
 
+    def test_geolocated_import_goes_directly_to_uploads_without_albums_or_face_workers(self):
+        data = {**payload(metadata(latitude=0, longitude=0)), 'geolocatedOnly': True}
+        result = self.store.upload([picture()], import_data=data)
+        self.assertEqual(result['folderId'], 'uploads')
+        snap = self.store.snapshot()
+        self.assertEqual(len(snap['photos']), 1)
+        self.assertEqual(snap['photos'][0]['folderId'], 'uploads')
+        self.assertEqual(snap['photos'][0]['latitude'], 0)
+        self.assertEqual(snap['photos'][0]['longitude'], 0)
+        self.assertEqual(snap['photos'][0]['folderIds'], [])
+        self.assertEqual({f['id'] for f in snap['folders']}, {'uploads', 'ai'})
+        self.assertEqual(snap['people'], [])
+        self.store.start_faces.assert_not_called()
+        with self.store.db() as db:
+            self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'skip')
+        self.assertEqual(self.store.upload([picture()], import_data=data), result)
+        again = self.store.upload([picture()], import_data={**data, 'session': 'again'})
+        self.assertEqual(again['duplicates'], 1)
+        self.assertEqual(len(self.store.snapshot()['photos']), 1)
+
+    def test_geolocated_import_rejects_missing_gps_before_writing_or_decoding_files(self):
+        for record in [metadata(latitude=None, longitude=None), metadata(locationKnown=False), {'metadata': None, 'raw': None}]:
+            with patch('photo_library.read_metadata', side_effect=AssertionError('must not decode')):
+                with self.assertRaises(PhotoError):
+                    self.store.upload([picture()], import_data={**payload(record), 'geolocatedOnly': True})
+            self.assertEqual(list(self.store.root.iterdir()), [])
+            self.assertEqual(self.store.snapshot()['photos'], [])
+
     def test_import_preserves_original_bytes_full_metadata_people_and_multi_album_membership(self):
         original = picture().read()
         self.store.upload([picture()], 'Mac', import_data=payload(metadata()))

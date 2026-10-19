@@ -96,6 +96,11 @@ class CatalogStorageTests(unittest.TestCase):
             self.assertEqual(listing["games"][0]["relativePath"], "Games/tetris.gb")
             self.assertEqual(listing["books"][0]["relativePath"], "Books/example.epub")
             self.assertEqual(api.load_media_library()["games"], {})
+            with patch.object(api, 'list_picture_entries', side_effect=AssertionError('Startup must not scan photos')):
+                without_photos = api.list_video_directories(include_pictures=False)
+            self.assertEqual(without_photos['pictures'], [])
+            self.assertEqual(without_photos['books'], listing['books'])
+            self.assertEqual(without_photos['movieRootFiles'], listing['movieRootFiles'])
 
     def test_sqlite_failure_rolls_back_all_changes_and_history(self):
         before = api.load_media_library()

@@ -112,3 +112,7 @@
   .photo-ai-banner { padding: .85rem; gap: .65rem; }
 }
 @media (prefers-reduced-motion: reduce) { .photo-tile__image img { transition: none; } }
+.photo-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 1rem 0; }
+.photo-pagination span { text-align: center; font-variant-numeric: tabular-nums; }
+.photo-pagination button:disabled { opacity: .4; cursor: default; }
+.photo-page { scroll-margin-top: 1rem; }

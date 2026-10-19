@@ -1,3 +1,4 @@
+import { hasLocation } from '../photoLibrary.js';
 // Local demo albums persist in IndexedDB, including image blobs, without network uploads.
 const urls = new Map();
 let operation = Promise.resolve();
@@ -34,10 +35,11 @@ export function photoDemo(action, data = {}) {
       if (action === 'folders') result = create(data.name, data.parent);
       else if (action === 'upload') {
         const info = data.importData;
+        if (info?.geolocatedOnly && info.records.some(record => !hasLocation(record.metadata || {}))) throw new Error('Esta importación solo admite fotos con coordenadas válidas.');
         library.importSessions ||= {}; library.importBatches ||= {}; library.importFiles ||= {}; library.metadata ||= {};
         const batchKey = info ? `${info.session}:${info.batch}` : '';
         if (batchKey && library.importBatches[batchKey]) return library.importBatches[batchKey];
-        const folderId = (info && library.importSessions[info.session]) || data.folderId || create(data.albumName, data.parent || 'uploads').id;
+        const folderId = info?.geolocatedOnly ? 'uploads' : (info && library.importSessions[info.session]) || data.folderId || create(data.albumName, data.parent || 'uploads').id;
         if (info) library.importSessions[info.session] = folderId;
         let imported = 0, duplicates = 0;
         for (const [index, file] of data.files.entries()) {
@@ -57,13 +59,13 @@ export function photoDemo(action, data = {}) {
             const { people, locationKnown, ...metadata } = record.metadata;
             Object.assign(photo, metadata, { metadataSource: metadata.appleId ? 'apple-photos' : 'sidecar' });
             library.metadata[photo.id] = record.raw;
-            for (const person of people) {
+            for (const person of (info.geolocatedOnly ? [] : people)) {
               const key = person.id || `name:${person.name}`;
               let known = library.people.find(p => p.appleKey === key);
               if (!known) { known = { id: crypto.randomUUID(), appleKey: key, name: person.name, photoIds: [] }; library.people.push(known); }
               if (!known.photoIds.includes(photo.id)) known.photoIds.push(photo.id);
             }
-            if (info.preserveAlbums) for (const name of metadata.albums) {
+            if (!info.geolocatedOnly && info.preserveAlbums) for (const name of metadata.albums) {
               const safe = name.replace(/[/\\\x00-\x1f]/g, ' · ').trim().slice(0, 100);
               if (!safe || safe === '.' || safe === '..') continue;
               const folder = library.folders.find(f => f.parent === folderId && f.name.toLowerCase() === safe.toLowerCase()) || create(safe, folderId);

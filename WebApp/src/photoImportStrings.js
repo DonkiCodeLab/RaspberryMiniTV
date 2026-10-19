@@ -1,4 +1,7 @@
 const es = {
+  geoOnly: 'De la exportación del Mac solo se importan fotos con coordenadas válidas en sus metadatos. Aparecerán directamente en Uploads y en el Mapa.',
+  withoutLocation: 'fotos sin ubicación en sus metadatos: se omiten sin subirlas.',
+  noGeolocated: 'No hay fotos con coordenadas válidas. Elige la carpeta exportada junto con sus archivos de metadatos.',
   mac: 'Desde Fotos del Mac', files: 'Archivos y carpetas', title: 'Trae tus recuerdos',
   subtitle: 'Tus fotos, sus lugares y las personas que las hacen especiales.',
   banner: 'Del iPhone a tu MiniTV', bannerText: 'Importa desde tu Mac con fechas, ubicaciones y personas de Apple Fotos.',
@@ -43,6 +46,9 @@ const es = {
   appleData: 'Datos de Apple Fotos', description: 'Descripción', keywords: 'Etiquetas',
 };
 const en = {
+  geoOnly: 'Only photos with valid coordinates in the Mac export metadata are imported. They appear directly in Uploads and on the Map.',
+  withoutLocation: 'photos without a location in their metadata: skipped without uploading.',
+  noGeolocated: 'No photos with valid coordinates. Choose the export folder together with its metadata files.',
   mac: 'From Photos on Mac', files: 'Files and folders', title: 'Bring your memories',
   subtitle: 'Your photos, their places and the people who make them special.', banner: 'From your iPhone to MiniTV',
   bannerText: 'Import from your Mac with dates, locations and people from Apple Photos.', prepare: 'Prepare', review: 'Review', import: 'Import',
@@ -78,6 +84,9 @@ const en = {
 };
 const ca = {
   ...es, mac: 'Des de Fotos del Mac', files: 'Arxius i carpetes', title: 'Porta els teus records',
+  geoOnly: 'De l’exportació del Mac només s’importen fotos amb coordenades vàlides a les metadades. Apareixeran directament a Uploads i al Mapa.',
+  withoutLocation: 'fotos sense ubicació a les metadades: s’ometen sense pujar-les.',
+  noGeolocated: 'No hi ha fotos amb coordenades vàlides. Tria la carpeta exportada amb els arxius de metadades.',
   subtitle: 'Les teves fotos, els seus llocs i les persones que les fan especials.', banner: 'De l’iPhone a la MiniTV',
   bannerText: 'Importa des del Mac amb dates, ubicacions i persones d’Apple Fotos.', prepare: 'Preparar', review: 'Revisar', import: 'Importar',
   guide: 'Preparar les fotos al Mac', guideIntro: 'L’assistent exporta les fotos i les seves dades a una carpeta. Després tria aquesta carpeta aquí.',

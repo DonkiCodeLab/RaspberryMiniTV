@@ -9239,6 +9239,7 @@ export default function App() {
   const favoritesOnly = Boolean(mediaFavoritesOnly[activeMediaType]);
   const matchesName = (name) => !normalizedFilterQuery || normalizeMediaLabel(name).includes(normalizedFilterQuery);
   const matchesFavorite = (type, id) => !favoritesOnly || Boolean(mediaMarks[mediaMarkKey(type, id)]?.favorite);
+  const matchesPicture = useCallback(picture => !favoritesOnly || Boolean(mediaMarks[mediaMarkKey('picture', picture.relativePath)]?.favorite), [favoritesOnly, mediaMarks]);
   const selectedMovieGenres = movieGenreFilters[raspberryLanguage] || [];
   const movieGenreOptions = [...new Set(movieOptions.flatMap((movie) => movie.genres || []))]
     .sort((a, b) => a.localeCompare(b, normalizeRaspberryLanguage(raspberryLanguage)));
@@ -9960,7 +9961,7 @@ export default function App() {
                 ) : isPicturesMode ? (
                   <PhotosLibrary key={profiles.activeId} language={raspberryLanguage} onRootChange={setPicturesAtRoot}
                     initialFiles={pendingPhotoFiles} onImportDone={() => setPendingPhotoFiles(null)}
-                    matchesPicture={picture => matchesFavorite("picture", picture.relativePath)} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} />
+                    matchesPicture={matchesPicture} renderMarks={renderMarks} onViewed={picture => { const key = mediaMarkKey("picture", picture.relativePath); if (!mediaMarks[key]?.watched) saveMarks({ ...mediaMarks, [key]: { ...mediaMarks[key], watched: true } }); }} />
                 ) : !isGamesMode && libraryFiltersActive && !filterVisible ? (
                   <section className="empty-state seasons-section">
                     {!isMediaDetail && !isGamesMode ? <div className="seasons-section__label">{libraryCountLabel}</div> : null}

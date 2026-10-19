@@ -1788,7 +1788,7 @@ def list_episodes(directory=None):
     return items
 
 
-def list_video_directories():
+def list_video_directories(include_pictures=True):
     ensure_media_directories()
     def stage(name, read):
         started = time.perf_counter()
@@ -1809,7 +1809,7 @@ def list_video_directories():
         tvshow_directories, movie_directories, movie_root_files, library))
     games = stage("juegos", lambda: list_game_entries(library))
     books = stage("libros", lambda: list_book_entries(library))
-    pictures = stage("fotografías", list_picture_entries)
+    pictures = stage("fotografías", list_picture_entries) if include_pictures else []
     book_collections = library.get("bookCollections", {})
     return {
         "ok": True,
@@ -2060,7 +2060,7 @@ def episodes():
 
 @app.route("/videos", methods=["GET"])
 def videos():
-    return jsonify(list_video_directories())
+    return jsonify(list_video_directories(include_pictures=request.args.get('pictures') != '0'))
 
 
 @app.route("/pictures/upload", methods=["POST"])

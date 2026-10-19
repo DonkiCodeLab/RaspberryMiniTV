@@ -124,12 +124,13 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
     const onProgress = value => { if (mounted.current && id === generation.current) setReadProgress({ ...value, updatedAt: Date.now() }); };
     try {
       const files = dropped ? await droppedFiles(source, onProgress, controller.signal) : source;
-      const next = await preparePhotoImport(files, { onProgress, signal: controller.signal });
+      const next = await preparePhotoImport(files, { onProgress, signal: controller.signal,
+        geolocatedOnly: mode === 'mac' || [...files].some(file => /\.json$/i.test(file.name)) });
       if (!mounted.current || id !== generation.current) return;
       setSelection(next);
       const first = next.entries[0]?.file;
       if (!name) setName((first?.importPath || first?.webkitRelativePath || '').split('/').slice(0, -1)[0] || (mode === 'mac' ? 'Apple Fotos' : ''));
-      if (!next.entries.length) setError(t.empty);
+      if (!next.entries.length) setError(next.geolocatedOnly ? t.noGeolocated : t.empty);
     } catch (err) {
       if (!mounted.current || id !== generation.current) return;
       const [key, ...detail] = err.message.split(':'); setError((t[key] || err.message) + (detail.length ? `: ${detail.join(':')}` : ''));
@@ -143,8 +144,9 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
       for (; cursor.current < batches.length; cursor.current++) {
         const batch = batches[cursor.current], before = batches.slice(0, cursor.current).reduce((n, b) => n + b.length, 0);
         if (mounted.current) setProgress({ done: before, batchPercent: 0, batchStart: before + 1, batchEnd: before + batch.length, saving: false, updatedAt: Date.now() });
-        const response = await uploadPictureFiles({ files: batch.map(e => e.file), albumName: name, folderId: targetFolder.current, parent,
-          importData: { session: session.current, batch: String(cursor.current), preserveAlbums, continueOnError: true,
+        const response = await uploadPictureFiles({ files: batch.map(e => e.file), albumName: name, folderId: selection.geolocatedOnly ? 'uploads' : targetFolder.current, parent,
+          importData: { session: session.current, batch: String(cursor.current), preserveAlbums: !selection.geolocatedOnly && preserveAlbums,
+            geolocatedOnly: !!selection.geolocatedOnly, continueOnError: true,
             records: batch.map(({ metadata, raw }) => ({ metadata, raw })) },
           onProgress: value => { if (mounted.current) setProgress(current => ({ ...current, batchPercent: value.percent, saving: value.status === 'saving', updatedAt: Date.now() })); } });
         accumulated.current = accumulateImportResult(accumulated.current, response, batch);
@@ -165,7 +167,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
     const entries = result.rejected.map(failure => failure.entry);
     session.current = createImportId(); cursor.current = 0;
     accumulated.current = { imported: 0, duplicates: 0, rejected: [] };
-    setSelection({ entries, warnings: [] }); setResult(null);
+    setSelection(value => ({ ...value, entries, warnings: [] })); setResult(null);
     submit(null, entries);
   }
   const picker = folder => <label className={`dialog-button ${folder ? 'dialog-button--accent' : ''}`}>
@@ -177,6 +179,8 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
   return <Modal title={t.title} s={s} onClose={onClose} busy={busy || reading} className="photo-dialog--import" wide>
     <div className="photo-import">
       <div className="photo-import-heading"><span className="photo-import-mark" aria-hidden="true">✳</span><p>{t.subtitle}</p></div>
+      {(mode === 'mac' || selection.geolocatedOnly) && <p className="photo-note">{t.geoOnly}</p>}
+      {selection.withoutLocation > 0 && <p role="status">{selection.withoutLocation.toLocaleString(language)} {t.withoutLocation}</p>}
       <ol className="photo-import-steps">{[t.prepare, t.review, t.import].map((label, index) => <li key={label} aria-current={(result || started ? 2 : stats.count ? 1 : 0) === index ? 'step' : undefined}><span>{index + 1}</span>{label}</li>)}</ol>
       {result ? <div className="photo-import-success" role="status"><span aria-hidden="true">{result.rejected.length ? '!' : '✓'}</span><h3>{result.rejected.length ? t.finishedWithErrors : t.success}</h3>
         <p><strong>{result.imported}</strong> {t.saved}</p><p>{result.duplicates} {t.duplicates}</p>
@@ -210,8 +214,8 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
           <div className="photo-import-previews">{selection.entries.slice(0, 12).map((entry, index) => <Preview key={`${session.current}-${entry.file.importPath || entry.file.webkitRelativePath || entry.file.name}-${index}`} entry={entry} t={t}
             remove={!locked ? () => setSelection(value => ({ ...value, entries: value.entries.filter(e => e !== entry) })) : null} />)}</div>
           {stats.count > 12 && <small>+ {stats.count - 12} {t.more}</small>}
-          {!folderId && <label>{s.name}<input required maxLength={100} value={name} onChange={event => setName(event.target.value)} disabled={started || busy} /></label>}
-          {stats.albums > 0 && <label className="photo-import-toggle"><input type="checkbox" checked={preserveAlbums} onChange={event => setPreserveAlbums(event.target.checked)} disabled={started || busy} /><span>{t.preserve}<small>{t.preserveHint}</small></span></label>}
+          {!folderId && !selection.geolocatedOnly && <label>{s.name}<input required maxLength={100} value={name} onChange={event => setName(event.target.value)} disabled={started || busy} /></label>}
+          {stats.albums > 0 && !selection.geolocatedOnly && <label className="photo-import-toggle"><input type="checkbox" checked={preserveAlbums} onChange={event => setPreserveAlbums(event.target.checked)} disabled={started || busy} /><span>{t.preserve}<small>{t.preserveHint}</small></span></label>}
           {!started && <button type="button" className="photo-import-reset" onClick={() => { setSelection(empty); setError(''); }}>{t.restart}</button>}
           </>}
         </>}
@@ -220,7 +224,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
         {error && <p className="dialog-error" role="alert">{error}</p>}
         <footer><button type="button" className="dialog-button dialog-button--secondary" onClick={onClose} disabled={busy || reading}>{s.close}</button>
           {busy ? <button type="button" className="dialog-button" disabled={paused} onClick={() => { pause.current = true; setPaused(true); }}>{paused ? t.pausing : t.pause}</button> :
-            <button className="dialog-button dialog-button--accent" disabled={reading || !stats.count || (!folderId && !name.trim())}>{started ? t.resume : `${t.import} ${stats.count || ''} ${s.photos}`} →</button>}</footer>
+            <button className="dialog-button dialog-button--accent" disabled={reading || !stats.count || (!selection.geolocatedOnly && !folderId && !name.trim())}>{started ? t.resume : `${t.import} ${stats.count || ''} ${s.photos}`} →</button>}</footer>
       </form>}
     </div>
   </Modal>;

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { clusterPhotos, hasLocation } from './photoLibrary.js';
+import { visibleMapClusters, hasLocation } from './photoLibrary.js';
 import { getPictureContentUrl } from './api/raspberryApi.js';
 
 export default function PhotoMap({ photos, onCluster, s }) {
@@ -19,16 +19,19 @@ export default function PhotoMap({ photos, onCluster, s }) {
     layer.current = L.layerGroup().addTo(view);
     draw.current = () => {
       layer.current.clearLayers();
-      for (const cluster of clusterPhotos(latest.current.photos, view.getZoom())) {
+      const bounds = view.getBounds();
+      for (const cluster of visibleMapClusters(latest.current.photos, view.getZoom(), {
+        south: bounds.getSouth(), north: bounds.getNorth(), west: bounds.getWest(), east: bounds.getEast(),
+      })) {
         const content = document.createElement('div'); content.className = 'photo-map-pin';
-        const img = document.createElement('img'); img.src = getPictureContentUrl(cluster.photos[0].relativePath, 'thumb'); img.alt = ''; content.append(img);
+        const img = document.createElement('img'); img.loading = 'lazy'; img.decoding = 'async'; img.src = getPictureContentUrl(cluster.photos[0].relativePath, 'thumb'); img.alt = ''; content.append(img);
         const count = document.createElement('span'); count.textContent = cluster.photos.length; content.append(count);
         const label = `${cluster.photos.length} ${latest.current.s.photos}`;
         L.marker([cluster.latitude, cluster.longitude], { icon: L.divIcon({ html: content, className: 'photo-map-marker', iconSize: [58, 66], iconAnchor: [29, 64] }),
           keyboard: true, title: label, alt: label }).addTo(layer.current).on('click', () => latest.current.onCluster(cluster.photos));
       }
     };
-    view.on('zoomend', () => draw.current?.()); draw.current();
+    view.on('moveend', () => draw.current?.()); draw.current();
     const located = latest.current.photos.filter(hasLocation);
     if (located.length) view.fitBounds(located.map(p => [p.latitude, p.longitude]), { padding: [50, 50], maxZoom: 10 });
     const observer = new ResizeObserver(() => view.invalidateSize()); observer.observe(element.current);

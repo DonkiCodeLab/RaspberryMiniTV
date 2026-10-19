@@ -439,7 +439,8 @@ export function getVideos({ onProgress } = {}) {
   }
 
   // The full catalog also travels over remote Raspberry connections.
-  return requestWithTimeout(signal => request("/videos", { signal, onProgress }), 30000);
+  // Photos have their own catalogue; scanning them must not delay app startup.
+  return requestWithTimeout(signal => request("/videos?pictures=0", { signal, onProgress }), 30000);
 }
 
 export function getRaspberryLanguage() {

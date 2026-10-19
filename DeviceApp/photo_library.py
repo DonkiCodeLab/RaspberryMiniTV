@@ -134,6 +134,8 @@ class PhotoLibrary:
         self.settings = settings
         self.revision = uuid.uuid4().hex
         self.lock = threading.RLock()
+        # Full-resolution decoders can consume hundreds of MB per image.
+        self.image_lock = threading.Lock()
         self.face_lock = threading.Lock()
         self.scan_lock = threading.Lock()
         self.scanning = False
@@ -246,6 +248,13 @@ class PhotoLibrary:
                 if previous: return json.loads(previous['result'])
         # Only the import wizard opts into per-image failures; other uploads stay atomic.
         continue_on_error = records is not None and import_data.get('continueOnError') is True
+        geolocated_only = records is not None and import_data.get('geolocatedOnly') is True
+        if geolocated_only:
+            if any(not all(isinstance(meta.get(key), (int, float)) and not isinstance(meta.get(key), bool)
+                           and math.isfinite(meta[key]) and abs(meta[key]) <= limit
+                           for key, limit in [('latitude', 90), ('longitude', 180)]) for meta, _, _ in records):
+                raise PhotoError('Esta importación solo admite fotos con coordenadas válidas en sus metadatos.', 422)
+            folder_id = 'uploads'
         # Stage and validate inputs before taking the catalogue lock.
         batch = self.root / ('batch-' + uuid.uuid4().hex)
         batch.mkdir()
@@ -268,7 +277,8 @@ class PhotoLibrary:
                         handle.write(chunk)
                         if hasher is not None: hasher.update(chunk)
                 try:
-                    metadata = read_metadata(path)
+                    with self.image_lock:
+                        metadata = read_metadata(path)
                 except (OSError, ValueError, Image.DecompressionBombError) as error:
                     # Storage/permission failures require a retry, not a skipped photo.
                     if isinstance(error, OSError) and error.errno is not None: raise
@@ -293,7 +303,7 @@ class PhotoLibrary:
                     folder = self.folder(db, existing_session['folder'])
                 elif folder_id:
                     folder = self.folder(db, folder_id)
-                    if folder_id in ('uploads', 'ai'): raise PhotoError('Selecciona o crea una subcarpeta.')
+                    if folder_id in ('uploads', 'ai') and not geolocated_only: raise PhotoError('Selecciona o crea una subcarpeta.')
                 else:
                     if parent not in ('uploads', 'ai'): raise PhotoError('Selecciona Uploads o IA para la nueva carpeta.')
                     folder = self.create_folder(album_name, parent, db)
@@ -319,13 +329,14 @@ class PhotoLibrary:
                             db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(current), ident))
                             db.execute('INSERT OR REPLACE INTO photo_metadata VALUES (?,?)', (ident, raw))
                             # Empty encodings are imported labels, never face-recognition vectors.
-                            for person in people:
+                            for person in ([] if geolocated_only else people):
                                 key = person.get('id') or 'name:' + person['name']
                                 person_id = 'apple-' + hashlib.sha256(key.encode()).hexdigest()[:32]
                                 db.execute('INSERT OR IGNORE INTO people VALUES (?,?,?)', (person_id, person['name'], time.time()))
                                 db.execute('INSERT OR IGNORE INTO faces VALUES (?,?,?)', (ident, person_id, '[]'))
-                            if people: db.execute("UPDATE photos SET face_state='imported' WHERE id=?", (ident,))
-                            if import_data.get('preserveAlbums') is True:
+                            if geolocated_only: db.execute("UPDATE photos SET face_state='skip' WHERE id=?", (ident,))
+                            elif people: db.execute("UPDATE photos SET face_state='imported' WHERE id=?", (ident,))
+                            if not geolocated_only and import_data.get('preserveAlbums') is True:
                                 for album in metadata['albums']:
                                     # Keep the full Apple name in metadata; folder names follow app constraints.
                                     album_name_safe = ''.join(c if c not in '/\\' and ord(c) >= 32 else ' · ' for c in album).strip()[:100]
@@ -341,7 +352,7 @@ class PhotoLibrary:
             committed = True
             for path in discarded: path.unlink(missing_ok=True)
             if not any(batch.iterdir()): batch.rmdir()
-            self.start_faces()
+            if not geolocated_only: self.start_faces()
             return result
         except Exception:
             if not committed and batch.exists():
@@ -364,7 +375,8 @@ class PhotoLibrary:
                     relative = path.relative_to(self.root).as_posix()
                     if relative in known or name.startswith('.') or path.suffix.lower() not in EXTENSIONS or path.is_symlink(): continue
                     try:
-                        metadata = read_metadata(path)
+                        with self.image_lock:
+                            metadata = read_metadata(path)
                         with self.db() as db:
                             if db.execute('SELECT 1 FROM photos WHERE path=?', (relative,)).fetchone(): continue
                             parent = 'uploads'
@@ -452,12 +464,16 @@ class PhotoLibrary:
         path = self.safe_file(relative)
         key = hashlib.sha256((relative + str(path.stat().st_mtime_ns) + str(full)).encode()).hexdigest()
         cached = self.cache / (key + '.jpg')
-        if not cached.exists():
+        if cached.exists(): return cached
+        with self.image_lock:
+            if cached.exists(): return cached
             temporary = self.cache / (uuid.uuid4().hex + '.tmp')
             try:
                 with Image.open(path) as image:
+                    target = (2400, 2400) if full else (600, 600)
+                    image.draft('RGB', target)
+                    image.thumbnail(target)
                     image = ImageOps.exif_transpose(image).convert('RGB')
-                    image.thumbnail((2400, 2400) if full else (600, 600))
                     image.save(temporary, 'JPEG', quality=90 if full else 80)
                 os.replace(temporary, cached)
             except (OSError, ValueError, Image.DecompressionBombError):
@@ -485,9 +501,10 @@ class PhotoLibrary:
                     photo = db.execute("SELECT * FROM photos WHERE face_state='pending' LIMIT 1").fetchone()
                 if not photo: break
                 try:
-                    with Image.open(self.safe_file(photo['path'])) as source:
+                    with self.image_lock, Image.open(self.safe_file(photo['path'])) as source:
+                        source.draft('RGB', (1000, 1000))
+                        source.thumbnail((1000, 1000))
                         image = ImageOps.exif_transpose(source).convert('RGB')
-                        image.thumbnail((1000, 1000))
                         encodings = face_recognition.face_encodings(np.asarray(image))
                     self.group_faces(photo['id'], [encoding.tolist() for encoding in encodings])
                 except (OSError, ValueError, RuntimeError):

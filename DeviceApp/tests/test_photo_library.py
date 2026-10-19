@@ -148,6 +148,28 @@ class PhotoLibraryTests(unittest.TestCase):
             self.assertEqual(preview.size, (60, 100))
             self.assertFalse(preview.getexif())
 
+    def test_concurrent_previews_decode_once_and_resize_before_copying_pixels(self):
+        from concurrent.futures import ThreadPoolExecutor
+        import time
+        path = self.store.root / 'large.jpg'
+        exif = Image.Exif(); exif[274] = 6
+        Image.new('RGB', (4000, 3000), 'blue').save(path, 'JPEG', exif=exif)
+        from PIL import ImageOps
+        transpose = ImageOps.exif_transpose
+        def inspect(image, *args, **kwargs):
+            self.assertTrue(self.store.image_lock.locked())
+            self.assertLessEqual(max(image.size), 600)
+            time.sleep(.02)
+            return transpose(image, *args, **kwargs)
+        with patch('photo_library.ImageOps.exif_transpose', side_effect=inspect) as convert:
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                paths = list(pool.map(lambda _: self.store.preview('large.jpg'), range(8)))
+        self.assertEqual(convert.call_count, 1)
+        self.assertEqual(len(set(paths)), 1)
+        with Image.open(paths[0]) as image:
+            self.assertEqual(image.size, (450, 600))
+        self.assertEqual(list(self.store.cache.glob('*.tmp')), [])
+
     def test_faces_group_locally_rename_and_remove_without_deleting_photo(self):
         self.store.upload([picture(), picture()], 'Personas del viaje')
         photos = self.store.snapshot()['photos']
