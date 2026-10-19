@@ -104,8 +104,8 @@ if ! command -v unrar >/dev/null 2>&1 || ! command -v bsdtar >/dev/null 2>&1 || 
   bash "${SCRIPT_DIR}/DeviceApp/install_comic_support.sh"
 fi
 
-if ! command -v ffprobe >/dev/null 2>&1; then
-  log "Instalando la detección de pistas de subtítulos"
+if ! command -v ffprobe >/dev/null 2>&1 || ! command -v ffmpeg >/dev/null 2>&1; then
+  log "Instalando el soporte de audio web y pistas de subtítulos"
   sudo apt-get update
   sudo apt-get install -y ffmpeg
 fi

@@ -355,7 +355,7 @@ export function controlMovieTorrent(id, action) {
 }
 
 export function getFreeDownloadContents(id, path = "", signal) {
-  return request(`/torrents/${encodeURIComponent(id)}/contents?${new URLSearchParams({ path })}`, { signal });
+  return request(`/torrents/${encodeURIComponent(id)}/contents?${new URLSearchParams({ path })}`, { signal, cache: "no-store" });
 }
 
 export function changeFreeDownloadContents(id, data) {

@@ -1,5 +1,39 @@
 # DeviceApp
 
+## Audio compatible al reproducir desde la web
+
+Al pulsar **Reproducir en navegador**, `POST /media/playback` comprueba las pistas
+con FFprobe y las capacidades de audio declaradas por el navegador. Los vídeos
+compatibles se reproducen directamente. Si hace falta adaptar el audio, FFmpeg
+crea un MP4 con la pista predeterminada en AAC estéreo a 192 kb/s y copia el vídeo
+sin recodificar. Conserva los subtítulos `mov_text`; los SRT externos se siguen
+leyendo junto al original. No convierte códecs de vídeo incompatibles con MP4.
+
+`GET /media/playback?id=…` devuelve el estado, porcentaje real, tiempo transcurrido,
+estimación restante y posición en cola. Ambas rutas requieren `X-Web-Pin`.
+Solo hay una conversión simultánea; las comprobaciones de archivos compatibles
+se atienden por separado. Se admiten hasta 16 preparaciones pendientes. Cerrar
+el navegador no detiene la tarea; volver a abrir el mismo vídeo recupera su estado.
+Los errores admiten reintento explícito y nunca reproducen silenciosamente el
+original como alternativa. Un reinicio de la API permite reintentar las tareas
+interrumpidas y conserva las copias terminadas.
+
+Las copias se guardan en `MultimediaContent/BrowserPlayback`, fuera del catálogo.
+El límite es de 20 GiB: se eliminan las menos recientes cuando hace falta espacio,
+respetando las utilizadas en las últimas 12 horas. También se reserva un margen
+de 256 MiB de disco libre. Si no se puede liberar espacio, se muestra el error.
+Los archivos parciales nunca se sirven; se publican tras comprobar el resultado.
+La huella del original invalida las copias cuando cambia o se reemplaza el vídeo.
+`/media/stream?relativePath=…&browserCopy=…` admite peticiones Range y exige el PIN;
+las descargas siguen entregando el original. Se puede vaciar esta carpeta con
+las reproducciones cerradas para recuperar espacio: se regenerará bajo demanda.
+
+Actualiza web y API juntas. `update_minitv.sh` e `install_services.sh` instalan
+FFmpeg y FFprobe si faltan. Pruebas: `python -m unittest discover -s DeviceApp/tests
+-p 'test_browser*.py'` y `node --test WebApp/tests/browserPlayback.test.js`.
+La prueba de conversión real necesita FFmpeg/FFprobe y comprueba audio, subtítulos,
+identidad de los paquetes de vídeo y reutilización de la caché tras reiniciar.
+
 ## Perfiles de usuario y reanudación
 
 Los perfiles y sus estados viven en `MultimediaContent/user_profiles.sqlite3`.
@@ -64,7 +98,11 @@ continuar con **Descargar como libre**: conserva sus archivos parciales en
 archivos. Las descargas activas siguen mostrándose con **Ver descargas**.
 
 `GET /torrents/<id>/contents?path=…` lista el directorio de una descarga libre
-terminada. `POST` en esa ruta admite `action: "extract"` y `path` para descomprimir,
+terminada e incluye su ruta absoluta en `fullPath`. `POST` con `action: "rename"`,
+`path` y `name` renombra un archivo o carpeta dentro de su directorio actual,
+sin sobrescribir destinos existentes ni admitir rutas o enlaces simbólicos.
+Requiere que la descarga esté terminada, retirada de Transmission y sin una
+descompresión en curso. `POST` también admite `action: "extract"` y `path` para descomprimir,
 o `action: "import"`, `path`, `mediaType: "movies" | "series"` y
 `media: {id, name}` para mover vídeos a la biblioteca. Se publica primero la copia
 de biblioteca y sus metadatos, y después se retiran los originales verificados.

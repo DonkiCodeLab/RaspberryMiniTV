@@ -1,5 +1,18 @@
 # WebApp
 
+Al pulsar **Reproducir en navegador**, se comprueba el audio antes de abrir el
+vídeo. Si el navegador no admite la pista (por ejemplo, AC-3), la MiniTV prepara
+una copia con AAC estéreo, conservando la imagen sin recodificar y el original
+intacto. El reproductor muestra la cola, el porcentaje real, el tiempo transcurrido
+y una estimación del restante; al finalizar intenta comenzar automáticamente.
+Si el navegador bloquea la reproducción automática, aparece un botón **Reproducir**.
+Se conservan el perfil, la posición de reanudación y los subtítulos externos.
+
+Puedes cerrar la ventana durante la preparación y abrirla después para recuperar
+el avance. La copia se reutiliza en las siguientes reproducciones. Los fallos
+de conexión, conversión, herramientas o espacio se indican con **Reintentar**.
+Actualiza también DeviceApp; consulta [la caché y los requisitos](../DeviceApp/README.md#audio-compatible-al-reproducir-desde-la-web).
+
 **Reproducir en navegador** en películas y episodios abre el vídeo dentro de la
 carcasa de Los Simpson, ampliada hasta ocupar el espacio disponible. El interruptor
 **Carcasa** de la cabecera permite pasar al vídeo sin marco, conservando la
@@ -217,6 +230,12 @@ pestaña **Descargas libres**; las vinculadas a fichas siguen en **Historial**.
 
 **Ver contenido** abre un explorador de carpetas y subcarpetas con descompresión
 y borrado de toda la descarga. Las canceladas se pueden quitar del historial.
+El explorador muestra la ruta completa del servidor y permite volver a cualquier
+carpeta superior desde la ruta o con **Subir una carpeta**. El lápiz a la izquierda
+de cada archivo o carpeta permite editar su nombre: **Enter** guarda y **Esc**
+cancela. El icono de flechas circulares actualiza el listado. Los nombres duplicados
+se rechazan sin sobrescribir contenido; durante la descompresión se desactiva el
+renombrado. Esta función requiere actualizar también DeviceApp.
 En **Uploads → Serie/Película**, **Abrir descargas libres** permite elegir un vídeo
 o carpeta del servidor y confirmar después su ficha TMDB. Se mueven los vídeos
 compatibles sin volver a subirlos desde el navegador; otros archivos y capítulos

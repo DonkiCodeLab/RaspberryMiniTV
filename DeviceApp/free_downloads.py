@@ -92,8 +92,39 @@ class FreeDownloadsMixin:
                 entries.append({"name": child.name, "path": child.relative_to(folder).as_posix(),
                                 "directory": child.is_dir(), "sizeBytes": child.stat().st_size if child.is_file() else None,
                                 "archive": child.is_file() and is_archive(child)})
-            return {"job": copy.deepcopy(job), "path": relative,
+            return {"job": copy.deepcopy(job), "path": relative, "fullPath": str(current),
                     "entries": sorted(entries, key=lambda item: (not item["directory"], item["name"].casefold()))}
+
+    def rename_free_download(self, job_id, relative, name):
+        with self.operation:
+            job = self._free_job(job_id, writable=True)
+            if (not isinstance(name, str) or not name.strip() or name in {".", ".."}
+                    or any(character in name for character in "/\\:")
+                    or any(ord(character) < 32 or ord(character) == 127 for character in name)):
+                raise ValueError("Indica un nombre válido sin separadores de carpetas.")
+            folder = self.download_folder(job)
+            source = safe_path(folder, relative)
+            if source == folder or not (source.is_file() or source.is_dir()):
+                raise ValueError("Selecciona un archivo o carpeta de la descarga.")
+            target_relative = (source.parent.relative_to(folder) / name).as_posix()
+            target = safe_path(folder, target_relative, must_exist=False)
+            if source != target:
+                # Allow a case-only rename on case-insensitive filesystems, but
+                # never replace a different entry (including another hard link).
+                if target.exists() and (name in os.listdir(source.parent)
+                                        or not os.path.samefile(source, target)):
+                    raise ValueError("Ya existe un archivo o carpeta con ese nombre.")
+                self._remove_transfer(job)
+                if not job.get("transferRemoved"):
+                    raise ValueError("No se pudo desconectar la descarga del motor. Inténtalo de nuevo.")
+                source.rename(target)
+                extraction = copy.deepcopy(job.get("extraction", {}))
+                previous = source.relative_to(folder).as_posix()
+                extracted_path = extraction.get("path", "")
+                if extracted_path == previous or extracted_path.startswith(previous + "/"):
+                    extraction["path"] = target_relative + extracted_path[len(previous):]
+                    self._update(job, extraction=extraction)
+            return {"job": copy.deepcopy(job), "path": target_relative, "name": name}
 
     def delete_free_download(self, job):
         self._free_job(job["id"], writable=True)

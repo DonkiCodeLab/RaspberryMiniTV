@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import RetroTelevision from "./RetroTelevision.jsx";
 import { gameTelevision } from "./gameTelevisions.js";
 import { frameRectangle } from "./gameConsoleFrames.js";
+import { browserPlaybackStrings } from "./browserPlaybackStrings.js";
 
-export default function BrowserVideo({ url, t, initialProgress, onProgress, showShell = true }) {
+export default function BrowserVideo({ url, subtitleSourceUrl = url, t, language, initialProgress, onProgress, onPlaybackError, showShell = true }) {
   const videoRef = useRef(null);
   const subtitleRef = useRef(null);
   const progressRef = useRef(onProgress);
@@ -12,7 +13,31 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress, show
   const [status, setStatus] = useState("loading");
   const [enabled, setEnabled] = useState(true);
   const [videoAspect, setVideoAspect] = useState(16 / 9);
+  const [needsPlay, setNeedsPlay] = useState(false);
   const television = gameTelevision(showShell ? "simpsons" : "none");
+
+  useEffect(() => {
+    const video = videoRef.current;
+    let alive = true;
+    let attempted = false;
+    setNeedsPlay(false);
+    const playing = () => setNeedsPlay(false);
+    const start = () => {
+      if (attempted) return;
+      attempted = true;
+      video.play()?.catch(error => {
+        if (alive && error.name === "NotAllowedError") setNeedsPlay(true);
+      });
+    };
+    video.addEventListener("canplay", start);
+    video.addEventListener("play", playing);
+    if (video.readyState >= 3) start();
+    return () => {
+      alive = false;
+      video.removeEventListener("canplay", start);
+      video.removeEventListener("play", playing);
+    };
+  }, [url]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -78,7 +103,7 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress, show
     setSubtitleUrl("");
     setStatus("loading");
     setEnabled(true);
-    const source = new URL(url, window.location.href);
+    const source = new URL(subtitleSourceUrl, window.location.href);
     source.searchParams.set("subtitles", "1");
     fetch(source, { signal: controller.signal, cache: "no-store" })
       .then(async response => {
@@ -98,7 +123,7 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress, show
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [url]);
+  }, [subtitleSourceUrl]);
 
   useEffect(() => {
     const tracks = videoRef.current?.textTracks;
@@ -121,10 +146,14 @@ export default function BrowserVideo({ url, t, initialProgress, onProgress, show
       style={{ "--tv-ratio": showShell ? television.crop[2] / television.crop[3] : videoAspect }}>
       <RetroTelevision television={television} t={t}>
         <div className="browser-video__screen" style={frameRectangle(television, television.screen)}>
-          <video ref={videoRef} src={url} controls autoPlay playsInline>
+          <video ref={videoRef} src={url} controls autoPlay playsInline onError={onPlaybackError}>
             {subtitleUrl && <track ref={subtitleRef} key={subtitleUrl} kind="subtitles"
               label={t("subtitle_external")} src={subtitleUrl} default />}
           </video>
+          {needsPlay && <button type="button" className="browser-video__start"
+            onClick={() => { videoRef.current.play()?.catch(() => setNeedsPlay(true)); }}>
+            <span aria-hidden="true">▶</span> {browserPlaybackStrings(language).play}
+          </button>}
         </div>
       </RetroTelevision>
     </div>

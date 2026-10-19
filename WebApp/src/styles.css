@@ -3379,7 +3379,7 @@ img {
   margin: 0.35rem 0 0;
 }
 
-.raspberry-upload-summary--tmdb {
+.raspberry-upload-summary--option {
   display: grid;
   gap: 1rem;
 }
@@ -3397,7 +3397,7 @@ img {
   color: #fff;
 }
 
-.raspberry-upload-summary__torrent-content {
+.raspberry-upload-summary__content {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3406,12 +3406,12 @@ img {
   gap: 1rem;
 }
 
-.raspberry-upload-summary__torrent-content p {
+.raspberry-upload-summary__content p {
   flex: 1 1 260px;
   margin: 0;
 }
 
-.raspberry-upload-summary--tmdb strong {
+.raspberry-upload-summary--option strong {
   font-size: clamp(1.2rem, 2vw, 1.55rem);
 }
 
@@ -4964,7 +4964,7 @@ img {
     gap: 0.45rem;
   }
 
-  .raspberry-upload-summary--tmdb {
+  .raspberry-upload-summary--option {
     display: grid;
   }
 
@@ -6756,6 +6756,8 @@ img {
 .library-loading__pending { margin: .8rem 0 0; padding: 0; list-style: none; text-align: left; font-size: .82rem; line-height: 1.6; color: #ffd429; overflow-wrap: anywhere; }
 .tmdb-cache-calculating { display: flex; align-items: center; gap: .7rem; }
 .detail-load-status { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: .8rem; max-width: calc(100vw - 2rem); padding: .8rem 1.2rem; border: 1px solid #ffd429; border-radius: 16px; background: #172f3e; color: white; box-shadow: 0 4px 18px #0005; }
+.detail-load-status--dismissible { width: max-content; }
+.detail-load-status__close { flex-shrink: 0; }
 .tmdb-upload-progress { position: fixed; right: 1rem; bottom: 1rem; z-index: 10000; padding: 1rem; width: min(360px, calc(100vw - 2rem)); box-sizing: border-box; border: 1px solid #ffd429; border-radius: 16px; background: #172f3e; color: white; box-shadow: 0 4px 18px #0005; overflow-wrap: anywhere; }
 .tmdb-upload-progress progress { width: 100%; accent-color: #ffd429; }
 

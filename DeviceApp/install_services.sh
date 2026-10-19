@@ -46,7 +46,7 @@ install_service() {
 
 require_root
 
-if ! command -v ffprobe >/dev/null 2>&1; then
+if ! command -v ffprobe >/dev/null 2>&1 || ! command -v ffmpeg >/dev/null 2>&1; then
   apt-get update
   apt-get install -y ffmpeg
 fi

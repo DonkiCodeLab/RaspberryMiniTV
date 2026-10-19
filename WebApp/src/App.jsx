@@ -6170,10 +6170,14 @@ function RaspberryPage({
               <p>{t(uploadDropzoneCopyKey)}</p>
             </label>
 
-            {["movies", "series"].includes(uploadMediaType) && <div className="free-download-upload">
-              <button className="dialog-button dialog-button--accent" type="button" onClick={onOpenFreeDownloads}>
-                {freeDownloadStrings(raspberryLanguage).browse}
-              </button>
+            {["movies", "series"].includes(uploadMediaType) && <div className="raspberry-upload-summary raspberry-upload-summary--option">
+              <strong>{freeDownloadStrings(raspberryLanguage).importTitle}</strong>
+              <div className="raspberry-upload-summary__content">
+                <p>{freeDownloadStrings(raspberryLanguage).importHint}</p>
+                <button className="dialog-button dialog-button--accent raspberry-upload-summary__action" type="button" onClick={onOpenFreeDownloads}>
+                  {freeDownloadStrings(raspberryLanguage).browse}
+                </button>
+              </div>
             </div>}
 
             {uploadMediaType === "books" ? (
@@ -6212,7 +6216,7 @@ function RaspberryPage({
             ) : null}
 
             {!['games', 'books', 'pictures'].includes(uploadMediaType) ? (
-              <div className="raspberry-upload-summary raspberry-upload-summary--tmdb">
+              <div className="raspberry-upload-summary raspberry-upload-summary--option">
                 <strong>{t("tmdb_browser_title")}</strong>
                 <div className="raspberry-upload-summary__torrent-body">
                   <svg className="raspberry-upload-summary__pirate" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false">
@@ -6226,7 +6230,7 @@ function RaspberryPage({
                       <path d="m50 47-6 11h12ZM41 63h4v10h-4zm14 0h4v10h-4z" />
                     </g>
                   </svg>
-                  <div className="raspberry-upload-summary__torrent-content">
+                  <div className="raspberry-upload-summary__content">
                     <p>{t("tmdb_browser_copy")}</p>
                     <button
                       className="dialog-button dialog-button--accent raspberry-upload-summary__action"
@@ -9483,7 +9487,19 @@ export default function App() {
               {downloadNotificationCount > 0 ? torrentNotificationLabel(downloadNotificationCount, torrentStrings(raspberryLanguage)) : ""}
             </span>
             {profiles.error ? createPortal(<div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div>, document.body) : !profiles.ready ? <div className="profile-status" role="status">Users…</div> : null}
-            {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? <div className="detail-load-status" role="status">{coverWarning}</div> : null}
+            {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? (
+              <div className="detail-load-status detail-load-status--dismissible" role="status">
+                <span>{coverWarning}</span>
+                <button
+                  className="dialog-card__close detail-load-status__close"
+                  type="button"
+                  aria-label={t("close")}
+                  onClick={() => setCoverWarning("")}
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+            ) : null}
             {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><LoadingSpinner inline /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
@@ -10618,6 +10634,7 @@ export default function App() {
             />
             <BrowserPlayerModal
               playback={browserPlayback}
+              language={raspberryLanguage}
               onClose={() => setBrowserPlayback(null)}
               t={t}
             />

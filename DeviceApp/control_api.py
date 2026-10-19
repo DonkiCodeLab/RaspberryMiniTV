@@ -6,6 +6,7 @@ from omdb_backfill import OmdbBackfill, cached_library_ratings
 from torrent_downloads import TorrentDownloads, TorrentError, search_torrents, series_video_files
 from torrent_preview import preview as preview_torrent
 from video_formats import is_video_file
+from browser_playback import BrowserPlayback, PlaybackError, AUDIO_CODECS
 import movie_subtitles
 import system_update
 from codex_bridge import create_codex_blueprint
@@ -176,6 +177,21 @@ AI_SETTINGS_PATH = os.path.join(BASE_DIR, "ai_settings.json")
 ai_settings_store = AISettings(AI_SETTINGS_PATH)
 photo_library_store = None
 photo_library_init_lock = threading.Lock()
+browser_playback_store = None
+browser_playback_init_lock = threading.Lock()
+
+
+def get_browser_playback():
+    global browser_playback_store
+    with browser_playback_init_lock:
+        if browser_playback_store is None:
+            browser_playback_store = BrowserPlayback(os.path.join(MULTIMEDIA_DIR, "BrowserPlayback"))
+        return browser_playback_store
+
+
+@app.errorhandler(PlaybackError)
+def browser_playback_error(error):
+    return jsonify({"error": error.code, "errorCode": error.code}), error.status
 
 
 def get_photo_library():
@@ -3040,6 +3056,8 @@ def free_torrent_contents(job_id):
             raise ValueError("Solicitud no válida.")
         if data.get("action") == "extract":
             return jsonify({"job": manager.extract_free_download(job_id, data.get("path", ""))}), 202
+        if data.get("action") == "rename":
+            return jsonify(manager.rename_free_download(job_id, data.get("path", ""), data.get("name")))
         if data.get("action") == "import":
             media = data.get("media")
             if data.get("mediaType") == "movies" and isinstance(media, dict) and data.get("overwriteExisting") is not True:
@@ -3938,6 +3956,33 @@ def play():
     )
 
 
+@app.route("/media/playback", methods=["GET", "POST"])
+def prepare_browser_playback():
+    manager = get_browser_playback()
+    if request.method == "GET":
+        result = manager.status(str(request.args.get("id") or ""))
+    else:
+        data = request.get_json(silent=True)
+        if (not isinstance(data, dict) or not isinstance(data.get("relativePath"), str) or
+                not 0 < len(data["relativePath"]) <= 4096 or "\x00" in data["relativePath"]):
+            return jsonify({"errorCode": "INVALID_REQUEST"}), 400
+        supported = data.get("supportedAudio")
+        if (not isinstance(supported, dict) or set(supported) != {"mp4", "webm"} or
+                any(not isinstance(values, list) or len(values) > len(AUDIO_CODECS) or
+                    any(not isinstance(value, str) or value not in AUDIO_CODECS for value in values)
+                    for values in supported.values())):
+            return jsonify({"errorCode": "INVALID_REQUEST"}), 400
+        target = resolve_relative_video_path(data["relativePath"], VIDEOS_DIR)
+        if (not target or not os.path.isfile(target) or not is_video_file(target) or
+                os.path.commonpath([os.path.realpath(VIDEOS_DIR), os.path.realpath(target)]) != os.path.realpath(VIDEOS_DIR)):
+            return jsonify({"errorCode": "SOURCE_NOT_FOUND"}), 404
+        supported = {key: sorted(set(values)) for key, values in supported.items()}
+        result = manager.prepare(target, supported, retry=data.get("retry") is True)
+    response = jsonify(result)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/media/stream", methods=["GET"])
 def stream_media():
     relative_path = str(request.args.get("relativePath") or "").strip().strip("/\\")
@@ -3945,7 +3990,8 @@ def stream_media():
         return jsonify({"error": "Missing relativePath"}), 400
 
     target_path = resolve_relative_video_path(relative_path, VIDEOS_DIR)
-    if not target_path or not os.path.isfile(target_path) or not is_video_file(target_path):
+    if (not target_path or not os.path.isfile(target_path) or not is_video_file(target_path) or
+            os.path.commonpath([os.path.realpath(VIDEOS_DIR), os.path.realpath(target_path)]) != os.path.realpath(VIDEOS_DIR)):
         return jsonify({"error": "Video not found"}), 404
 
     if request.args.get("subtitles") == "1":
@@ -3965,6 +4011,9 @@ def stream_media():
 
     # conditional=True enables HTTP range requests, which browsers need for seeking.
     download = str(request.args.get("download") or "").strip().lower() in {"1", "true", "yes"}
+    if request.args.get("browserCopy") and not download:
+        compatible = get_browser_playback().cached_path(target_path, request.args["browserCopy"])
+        return send_file(compatible, conditional=True, mimetype="video/mp4")
     return send_file(
         target_path,
         conditional=True,

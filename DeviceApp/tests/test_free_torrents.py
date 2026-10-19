@@ -253,6 +253,7 @@ class FreeTorrentTests(FreeTorrentFixture):
             worker.return_value.start.assert_called_once()
         for action in (lambda: self.manager.action(INFO_HASH, "delete"),
                        lambda: self.manager.extract_free_download(INFO_HASH, "Pack/archive.zip"),
+                       lambda: self.manager.rename_free_download(INFO_HASH, "Pack", "Renamed"),
                        lambda: self.manager.import_free_download(INFO_HASH, "Pack", {}, Mock())):
             with self.assertRaises(ValueError):
                 action()
@@ -273,6 +274,82 @@ class FreeTorrentTests(FreeTorrentFixture):
         self.assertEqual((output / "Nested/film.mkv").read_bytes(), b"video")
         self.assertTrue((folder / "pack.zip").exists())
         self.assertFalse((self.manager.root / "extractions" / INFO_HASH).exists())
+
+
+class FreeRenameTests(FreeTorrentFixture):
+    def test_rename_file_and_directory_preserves_contents_and_full_path_after_restart(self):
+        folder = self.ready()
+        result = self.manager.rename_free_download(INFO_HASH, "Pack/subfolder/file.txt", "Capítulo ñ.txt")
+        self.assertEqual(result["path"], "Pack/subfolder/Capítulo ñ.txt")
+        self.assertEqual((folder / result["path"]).read_bytes(), b"hello")
+        self.assertFalse((folder / "Pack/subfolder/file.txt").exists())
+        self.manager.rename_free_download(INFO_HASH, "Pack/subfolder", "Temporada 1")
+        listing = self.new_manager().free_contents(INFO_HASH, "Pack/Temporada 1")
+        self.assertEqual(listing["fullPath"], str(folder / "Pack/Temporada 1"))
+        self.assertEqual(listing["entries"][0]["path"], "Pack/Temporada 1/Capítulo ñ.txt")
+        self.assertEqual((folder / listing["entries"][0]["path"]).read_bytes(), b"hello")
+
+    def test_rename_to_same_name_and_case_only_changes_work(self):
+        folder = self.ready({"film.mkv": b"video"})
+        self.manager.rename_free_download(INFO_HASH, "film.mkv", "film.mkv")
+        self.manager.rename_free_download(INFO_HASH, "film.mkv", "Film.mkv")
+        self.assertIn("Film.mkv", [entry.name for entry in folder.iterdir()])
+        self.assertEqual((folder / "Film.mkv").read_bytes(), b"video")
+
+    def test_rename_rejects_invalid_names_root_and_existing_entries(self):
+        folder = self.ready({"film.mkv": b"original", "other.mkv": b"other", "Pack/readme.txt": b"readme"})
+        for name in (None, 123, "", " ", ".", "..", "../escape", "/tmp/escape", "sub/file", "sub\\file", "file:stream", "nul\0", "line\nbreak"):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.manager.rename_free_download(INFO_HASH, "film.mkv", name)
+        (folder / "linked-copy.mkv").hardlink_to(folder / "film.mkv")
+        for name in ("other.mkv", "Pack", "linked-copy.mkv"):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.manager.rename_free_download(INFO_HASH, "film.mkv", name)
+        for path in ("", ".", "../", "Pack/../../", "missing"):
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                self.manager.rename_free_download(INFO_HASH, path, "new")
+        (folder / "Empty").mkdir()
+        with self.assertRaises(ValueError):
+            self.manager.rename_free_download(INFO_HASH, "Pack", "Empty")
+        self.assertEqual((folder / "film.mkv").read_bytes(), b"original")
+        self.assertEqual((folder / "other.mkv").read_bytes(), b"other")
+        self.assertEqual((folder / "Pack/readme.txt").read_bytes(), b"readme")
+
+    def test_rename_rejects_source_and_destination_symlinks(self):
+        folder = self.ready()
+        outside = self.root / "outside"
+        outside.mkdir()
+        (outside / "file.txt").write_bytes(b"private")
+        (folder / "linked").symlink_to(outside)
+        (folder / "Pack/subfolder/link.txt").symlink_to(outside / "file.txt")
+        (folder / "Pack/subfolder/broken.txt").symlink_to(outside / "missing")
+        for path, name in (("linked/file.txt", "new.txt"), ("linked", "new"),
+                           ("Pack/subfolder/link.txt", "new.txt"),
+                           ("Pack/subfolder/file.txt", "link.txt"),
+                           ("Pack/subfolder/file.txt", "broken.txt")):
+            with self.subTest(path=path, name=name), self.assertRaises(ValueError):
+                self.manager.rename_free_download(INFO_HASH, path, name)
+        self.assertEqual((outside / "file.txt").read_bytes(), b"private")
+        self.assertEqual((folder / "Pack/subfolder/file.txt").read_bytes(), b"hello")
+
+    def test_rename_waits_for_engine_detach_and_rejects_incomplete_jobs(self):
+        self.add()
+        with self.assertRaises(ValueError):
+            self.manager.rename_free_download(INFO_HASH, "Pack", "New")
+        with patch.object(self.manager, "_remove_transfer"):
+            folder = self.ready()
+            with self.assertRaises(ValueError):
+                self.manager.rename_free_download(INFO_HASH, "Pack", "New")
+        self.assertTrue((folder / "Pack").is_dir())
+        self.manager.rename_free_download(INFO_HASH, "Pack", "New")
+        self.assertEqual((folder / "New/subfolder/file.txt").read_bytes(), b"hello")
+        self.assertTrue(self.manager.jobs[INFO_HASH]["transferRemoved"])
+
+    def test_rename_updates_extraction_location_for_nested_content(self):
+        self.ready()
+        self.manager._update(self.manager.jobs[INFO_HASH], extraction={"state": "complete", "path": "Pack/subfolder"})
+        self.manager.rename_free_download(INFO_HASH, "Pack", "New pack")
+        self.assertEqual(self.new_manager().jobs[INFO_HASH]["extraction"]["path"], "New pack/subfolder")
 
 
 class FreeImportApiTests(FreeTorrentFixture):
@@ -364,12 +441,28 @@ class FreeImportApiTests(FreeTorrentFixture):
         endpoint = f"/torrents/{INFO_HASH}/contents"
         with patch.object(api, "is_authorized_request", return_value=False):
             self.assertEqual(self.client.get(endpoint).status_code, 401)
-            for action in ("extract", "import"):
+            for action in ("extract", "import", "rename"):
                 self.assertEqual(self.client.post(endpoint, json={"action": action}).status_code, 401)
         self.assertEqual(self.client.get(endpoint + "?path=../").status_code, 400)
         self.assertEqual(self.client.post(endpoint, json=[]).status_code, 400)
         self.assertEqual(self.client.post(endpoint, json={"action": "oops"}).status_code, 400)
         self.assertEqual(self.client.get("/torrents/missing/contents").status_code, 404)
+
+    def test_rename_api_refreshes_listing_and_allows_import_with_new_name(self):
+        folder = self.ready({"Pack/film.mkv": b"video", "Pack/other.mkv": b"other"})
+        endpoint = f"/torrents/{INFO_HASH}/contents"
+        response = self.client.post(endpoint, json={"action": "rename", "path": "Pack/film.mkv", "name": "Película.mkv"})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(response.json["path"], "Pack/Película.mkv")
+        listing = self.client.get(endpoint, query_string={"path": "Pack"}).json
+        self.assertEqual(listing["fullPath"], str(folder / "Pack"))
+        self.assertIn("Película.mkv", [entry["name"] for entry in listing["entries"]])
+        response = self.client.post(endpoint, json={"action": "rename", "path": "Pack/Película.mkv", "name": "other.mkv"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Ya existe", response.json["error"])
+        self.assertEqual(self.client.post(endpoint, json={"action": "rename", "path": "Pack/Película.mkv"}).status_code, 400)
+        self.assertEqual(self.import_selection("Pack/Película.mkv").status_code, 200)
+        self.assertEqual((folder / "Pack/other.mkv").read_bytes(), b"other")
 
 
 class ArchiveTests(unittest.TestCase):

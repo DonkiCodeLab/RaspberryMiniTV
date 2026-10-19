@@ -1,14 +1,14 @@
 import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import BrowserVideo from "./BrowserVideo.jsx";
+import PreparedBrowserVideo from "./PreparedBrowserVideo.jsx";
 import "./BrowserPlayerModal.css";
 
 import PlayerSizeControl, { usePlayerSize } from "./PlayerSizeControl.jsx";
 
 const SHELL_STORAGE_KEY = "minitv.video.showShell";
 
-function VideoSession({ playback, onClose, t }) {
+function VideoSession({ playback, onClose, t, language }) {
   const dialog = useRef(null);
   const [screenSize, setScreenSize] = usePlayerSize("video");
   const [showShell, setShowShell] = useState(() => {
@@ -56,7 +56,7 @@ function VideoSession({ playback, onClose, t }) {
           </button>
         </header>
         {!showShell && <PlayerSizeControl size={screenSize} onChange={setScreenSize} t={t} />}
-        <BrowserVideo url={playback.url} t={t} showShell={showShell}
+        <PreparedBrowserVideo url={playback.url} t={t} showShell={showShell} language={language}
           initialProgress={playback.context?.initialProgress} onProgress={playback.context?.onProgress} />
       </div>
     </dialog>, document.body

@@ -26,11 +26,16 @@ test('standalone download requests need no title and preserve authenticated nest
     assert.equal(calls[1].url.searchParams.get('mediaType'), 'generic');
     await api.getFreeDownloadContents('a'.repeat(40), 'Carpeta/Temporada 1/ñ');
     assert.equal(calls[2].url.searchParams.get('path'), 'Carpeta/Temporada 1/ñ');
+    assert.equal(calls[2].options.cache, 'no-store');
     const selection = { action: 'import', path: 'Carpeta/film.mkv', mediaType: 'movies', media: { id: 123, name: 'Film' } };
     await api.changeFreeDownloadContents('a'.repeat(40), selection);
     assert.deepEqual(JSON.parse(calls[3].options.body), selection);
     await api.getMovieTorrents();
     assert.equal(calls[4].options.cache, 'no-store');
+    const rename = { action: 'rename', path: 'Carpeta/Temporada 1/ñ.mkv', name: 'Capítulo 1.mkv' };
+    await api.changeFreeDownloadContents('a'.repeat(40), rename);
+    assert.deepEqual(JSON.parse(calls[5].options.body), rename);
+    assert.equal(calls[5].url.pathname, `/torrents/${'a'.repeat(40)}/contents`);
     for (const call of calls) assert.equal(call.options.headers['X-Web-Pin'], 'fixture-pin');
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });

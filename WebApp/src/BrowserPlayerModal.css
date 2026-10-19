@@ -142,3 +142,21 @@ dialog.browser-video-player:not([open]) { display: none; }
 .browser-video-player:not(.browser-video-player--shell) .browser-video__stage .mega-drive-tv {
   scale: var(--player-screen-scale, 1);
 }
+
+.browser-preparation { flex: 1; min-height: 0; overflow: auto; display: grid; place-items: center; padding: 24px; }
+.browser-preparation__card { width: min(100%, 540px); box-sizing: border-box; padding: clamp(22px, 5vw, 40px); border: 1px solid #c4b5dc30; border-radius: 24px; background: #211b2b; text-align: center; box-shadow: 0 24px 80px #0004; }
+.browser-preparation__card .library-loading__spinner { margin: 0 auto 18px; }
+.browser-preparation__eyebrow { color: #ffd542; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.browser-preparation__card h2 { margin: 12px 0; font-size: clamp(20px, 4vw, 28px); line-height: 1.25; }
+.browser-preparation__percent { margin: 22px 0 12px; color: #ffd542; font-size: 48px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.browser-preparation progress { display: block; width: 100%; height: 10px; overflow: hidden; border: 0; border-radius: 99px; background: #ffffff14; accent-color: #ffd542; }
+.browser-preparation progress::-webkit-progress-bar { background: #ffffff14; border-radius: 99px; }
+.browser-preparation progress::-webkit-progress-value { background: #ffd542; border-radius: 99px; }
+.browser-preparation progress::-moz-progress-bar { background: #ffd542; border-radius: 99px; }
+.browser-preparation dl { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 16px 0 26px; font-size: 12px; }
+.browser-preparation dt { color: #b5abc7; }
+.browser-preparation dd { margin: 5px 0 0; font-size: 16px; font-variant-numeric: tabular-nums; }
+.browser-preparation__card > p:not(.browser-preparation__eyebrow) { color: #d2c9dc; line-height: 1.6; font-size: 14px; }
+.browser-preparation__card small { display: block; color: #a99bb9; line-height: 1.5; }
+.browser-video__start { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 10px; padding: 14px 24px; border: 0; border-radius: 999px; background: #ffd542; color: #211b2b; font: 800 16px/1.2 system-ui, sans-serif; box-shadow: 0 8px 30px #0006; cursor: pointer; }
+.browser-video__start:focus-visible { outline: 3px solid white; outline-offset: 4px; }
