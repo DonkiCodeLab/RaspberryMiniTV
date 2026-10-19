@@ -1,4 +1,6 @@
 const es = {
+  checking: 'Comprobando fotos ya guardadas…',
+  checkingHint: 'Comprobamos las fotos en tu equipo antes de enviarlas. Solo se suben las que faltan; las ya guardadas conservan sus metadatos sin reenviar la imagen.',
   geoOnly: 'De la exportación del Mac solo se importan fotos con coordenadas válidas en sus metadatos. Aparecerán directamente en Uploads y en el Mapa.',
   withoutLocation: 'fotos sin ubicación en sus metadatos: se omiten sin subirlas.',
   noGeolocated: 'No hay fotos con coordenadas válidas. Elige la carpeta exportada junto con sus archivos de metadatos.',
@@ -46,6 +48,8 @@ const es = {
   appleData: 'Datos de Apple Fotos', description: 'Descripción', keywords: 'Etiquetas',
 };
 const en = {
+  checking: 'Checking photos already saved…',
+  checkingHint: 'Photos are checked on your device before uploading. Only missing photos are sent; saved photos keep their metadata without sending the image again.',
   geoOnly: 'Only photos with valid coordinates in the Mac export metadata are imported. They appear directly in Uploads and on the Map.',
   withoutLocation: 'photos without a location in their metadata: skipped without uploading.',
   noGeolocated: 'No photos with valid coordinates. Choose the export folder together with its metadata files.',
@@ -84,6 +88,8 @@ const en = {
 };
 const ca = {
   ...es, mac: 'Des de Fotos del Mac', files: 'Arxius i carpetes', title: 'Porta els teus records',
+  checking: 'Comprovant fotos ja desades…',
+  checkingHint: 'Comprovem les fotos al teu equip abans d’enviar-les. Només es pugen les que falten; les ja desades conserven les metadades sense reenviar la imatge.',
   geoOnly: 'De l’exportació del Mac només s’importen fotos amb coordenades vàlides a les metadades. Apareixeran directament a Uploads i al Mapa.',
   withoutLocation: 'fotos sense ubicació a les metadades: s’ometen sense pujar-les.',
   noGeolocated: 'No hi ha fotos amb coordenades vàlides. Tria la carpeta exportada amb els arxius de metadades.',

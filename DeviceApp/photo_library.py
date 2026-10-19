@@ -12,6 +12,7 @@ import io
 import json
 import math
 import os
+import re
 from pathlib import Path
 import sqlite3
 import threading
@@ -32,6 +33,15 @@ except ImportError:
 
 EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif', '.heic', '.heif'}
 MAX_FILE_BYTES = 50 * 1024 * 1024
+
+
+def validate_import_digests(digests):
+    if not isinstance(digests, list) or not 1 <= len(digests) <= 20 or any(
+            not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{64}', value) for value in digests):
+        raise PhotoError('Huellas de importación inválidas.')
+    return digests
+
+
 STYLES = {
     'lego': 'a detailed scene built entirely from LEGO bricks and minifigures',
     'foam': 'a handmade foam puppet scene, with soft colorful foam textures',
@@ -230,17 +240,43 @@ class PhotoLibrary:
              json.dumps(metadata), source, style, 'skip' if source else 'pending'))
         return ident
 
+    def _imported_file(self, db, digest):
+        row = db.execute('SELECT p.* FROM photo_import_files f JOIN photos p ON p.id=f.photo WHERE f.digest=?', (digest,)).fetchone()
+        if row:
+            try:
+                stat = self.safe_file(row['path']).stat()
+                if stat.st_size == row['size'] and stat.st_mtime == row['modified']: return row
+            except (FileNotFoundError, PhotoError):
+                pass
+        return None
+
+    def check_import(self, digests):
+        validate_import_digests(digests)
+        with self.db() as db:
+            # Indexed lookups and file stats only; never decode photos or load the library.
+            return {'missing': [index for index, digest in enumerate(digests) if not self._imported_file(db, digest)]}
+
     def upload(self, files, album_name='', folder_id='', parent='uploads', import_data=None):
-        if not files or len(files) > 500:
+        if len(files) > 500 or (not files and import_data is None):
             raise PhotoError('Selecciona entre 1 y 500 fotos por subida.')
-        records = None
+        records, digests = None, None
+        file_indices = list(range(len(files)))
         if import_data is not None:
             try:
                 if not isinstance(import_data, dict) or len(files) > 20: raise ValueError('Lote de importación inválido.')
                 session, batch_id = import_data.get('session'), import_data.get('batch')
                 if any(not isinstance(v, str) or not v or len(v) > 100 for v in (session, batch_id)):
                     raise ValueError('Identificador de importación inválido.')
-                records = validate_import_records(import_data.get('records'), len(files))
+                if 'digests' in import_data:
+                    digests = validate_import_digests(import_data['digests'])
+                    file_indices = import_data.get('fileIndices')
+                    if (not isinstance(file_indices, list) or len(file_indices) != len(files)
+                            or any(type(index) is not int or not 0 <= index < len(digests) for index in file_indices)
+                            or len(set(file_indices)) != len(file_indices)):
+                        raise ValueError('Índices de archivos inválidos.')
+                elif not files:
+                    raise ValueError('Selecciona las fotos que quieres importar.')
+                records = validate_import_records(import_data.get('records'), len(digests) if digests else len(files))
             except (ValueError, TypeError, OverflowError, RecursionError) as error:
                 raise PhotoError(str(error) or 'Metadatos inválidos.') from None
             with self.db() as db:
@@ -261,7 +297,7 @@ class PhotoLibrary:
         staged, rejected = [], []
         committed = False
         try:
-            for index, uploaded in enumerate(files):
+            for index, uploaded in zip(file_indices, files):
                 name = str(uploaded.filename or '').replace('\\', '/').split('/')[-1]
                 if not name or Path(name).suffix.lower() not in EXTENSIONS or len(name) > 240:
                     raise PhotoError('La selección contiene un formato no compatible: ' + name[:100])
@@ -276,6 +312,9 @@ class PhotoLibrary:
                         if count > MAX_FILE_BYTES: raise PhotoError('Una foto supera el límite de 50 MB.', 413)
                         handle.write(chunk)
                         if hasher is not None: hasher.update(chunk)
+                digest = hasher.hexdigest() if hasher is not None else None
+                if digests and digest != digests[index]:
+                    raise PhotoError('La foto ha cambiado durante la importación. Vuelve a seleccionar la carpeta.', 422)
                 try:
                     with self.image_lock:
                         metadata = read_metadata(path)
@@ -290,7 +329,7 @@ class PhotoLibrary:
                     rejected.append({'index': index, 'name': name, 'error': message})
                     path.unlink()
                     continue
-                staged.append((index, path, name, metadata, hasher.hexdigest() if hasher is not None else None))
+                staged.append((index, path, name, metadata, digest))
             with self.db() as db:
                 # A lost response or simultaneous retry must not create a second album.
                 previous = db.execute('SELECT result FROM photo_import_batches WHERE session=? AND batch=?', (session, batch_id)).fetchone() if records is not None else None
@@ -298,6 +337,13 @@ class PhotoLibrary:
                     for _, path, _, _, _ in staged: path.unlink()
                     batch.rmdir()
                     return json.loads(previous['result'])
+                if digests:
+                    for index, digest in enumerate(digests):
+                        if index in file_indices: continue
+                        if not self._imported_file(db, digest):
+                            raise PhotoError('Una foto ya no está guardada. Reintenta para enviarla.', 409)
+                        staged.append((index, None, None, None, digest))
+                    staged.sort(key=lambda item: item[0])
                 existing_session = db.execute('SELECT folder FROM photo_import_sessions WHERE id=?', (session,)).fetchone() if records is not None else None
                 if existing_session:
                     folder = self.folder(db, existing_session['folder'])
@@ -311,15 +357,17 @@ class PhotoLibrary:
                     db.execute('INSERT OR IGNORE INTO photo_import_sessions VALUES (?,?)', (session, folder['id']))
                 saved, duplicates, discarded = [], 0, []
                 for index, path, name, image_metadata, digest in staged:
-                    existing = db.execute('SELECT photo FROM photo_import_files WHERE digest=?', (digest,)).fetchone() if digest else None
+                    existing = self._imported_file(db, digest) if digest else None
                     if existing:
-                        ident = existing['photo']; duplicates += 1; discarded.append(path)
-                        relative = db.execute('SELECT path FROM photos WHERE id=?', (ident,)).fetchone()['path']
+                        ident = existing['id']; duplicates += 1
+                        if path is not None: discarded.append(path)
+                        relative = existing['path']
                         db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, folder['id']))
                     else:
+                        if path is None: raise PhotoError('Una foto ya no está guardada. Reintenta para enviarla.', 409)
                         relative = path.relative_to(self.root).as_posix()
                         ident = self._insert(db, relative, folder['id'], name, metadata=image_metadata)
-                        if digest: db.execute('INSERT INTO photo_import_files VALUES (?,?)', (digest, ident))
+                        if digest: db.execute('INSERT OR REPLACE INTO photo_import_files VALUES (?,?)', (digest, ident))
                     saved.append(relative)
                     if records is not None:
                         metadata, raw, people = records[index]
@@ -624,6 +672,12 @@ def create_photo_blueprint(get_library):
     @bp.get('/pictures/status')
     def status():
         return jsonify(get_library().status())
+
+    @bp.post('/pictures/import/check')
+    def check_import():
+        if request.content_length is None or request.content_length > 4096:
+            raise PhotoError('Consulta de importación demasiado grande.', 413)
+        return jsonify(get_library().check_import(body().get('digests')))
 
     @bp.post('/pictures/folders')
     def folders():

@@ -34,6 +34,66 @@ class PhotoImportTests(unittest.TestCase):
         self.store = PhotoLibrary(Path(self.temp.name) / 'Pictures')
         worker = patch.object(self.store, 'start_faces'); worker.start(); self.addCleanup(worker.stop)
 
+    def test_preflight_and_metadata_only_reimport_do_not_read_or_decode_image_bytes(self):
+        digest = hashlib.sha256(picture().read()).hexdigest()
+        self.assertEqual(self.store.check_import([digest]), {'missing': [0]})
+        original = self.store.upload([picture()], 'Mac', import_data=payload(metadata()))
+        data = {**payload(metadata(title='Actualizado'), session='again'), 'digests': [digest], 'fileIndices': []}
+        revision = self.store.status()['revision']
+        with patch('photo_library.read_metadata', side_effect=AssertionError('must not decode')), patch.object(Path, 'open', side_effect=AssertionError('must not read image')):
+            self.assertEqual(self.store.check_import([digest]), {'missing': []})
+            self.assertEqual(self.store.status()['revision'], revision)
+            result = self.store.upload([], folder_id=original['folderId'], import_data=data)
+            self.assertEqual(self.store.upload([], folder_id=original['folderId'], import_data=data), result)
+        self.assertEqual((result['imported'], result['duplicates']), (0, 1))
+        self.assertEqual(result['saved'], original['saved'])
+        self.assertEqual(self.store.snapshot()['photos'][0]['title'], 'Actualizado')
+        self.assertEqual(len(list(self.store.root.rglob('*.jpg'))), 1)
+
+    def test_mixed_manifest_preserves_full_record_indices_for_metadata_and_rejections(self):
+        digest = hashlib.sha256(picture().read()).hexdigest()
+        blue = hashlib.sha256(picture(color='blue').read()).hexdigest()
+        invalid = hashlib.sha256(b'bad').hexdigest()
+        self.store.upload([picture()], import_data={**payload(metadata()), 'geolocatedOnly': True})
+        data = {**payload(metadata(title='Existing'), metadata(title='Broken'), metadata(title='New'), session='mixed'),
+                'digests': [digest, invalid, blue], 'fileIndices': [1, 2], 'continueOnError': True, 'geolocatedOnly': True}
+        result = self.store.upload([FileStorage(stream=io.BytesIO(b'bad'), filename='bad.jpg'), picture(color='blue')], import_data=data)
+        self.assertEqual((result['imported'], result['duplicates']), (1, 1))
+        self.assertEqual(result['rejected'][0]['index'], 1)
+        self.assertEqual({photo['title'] for photo in self.store.snapshot()['photos']}, {'Existing', 'New'})
+        self.assertTrue(all(photo['folderId'] == 'uploads' for photo in self.store.snapshot()['photos']))
+        self.store.start_faces.assert_not_called()
+
+    def test_stale_hashes_are_reported_missing_and_metadata_only_commit_is_atomic(self):
+        digest = hashlib.sha256(picture().read()).hexdigest()
+        original = self.store.upload([picture()], 'Mac', import_data=payload(metadata()))
+        path = self.store.safe_file(original['saved'][0])
+        path.write_bytes(b'changed')
+        self.assertEqual(self.store.check_import([digest]), {'missing': [0]})
+        path.unlink()
+        self.assertEqual(self.store.check_import([digest]), {'missing': [0]})
+        data = {**payload(metadata(), session='again'), 'digests': [digest], 'fileIndices': []}
+        with self.assertRaises(PhotoError) as error: self.store.upload([], 'Retry', import_data=data)
+        self.assertEqual(error.exception.status, 409)
+        with self.store.db() as db:
+            self.assertIsNone(db.execute("SELECT 1 FROM photo_import_sessions WHERE id='again'").fetchone())
+        result = self.store.upload([picture()], 'Retry', import_data={**data, 'fileIndices': [0]})
+        self.assertEqual(result['imported'], 1)
+        self.assertEqual(self.store.check_import([digest]), {'missing': []})
+
+    def test_manifest_rejects_malformed_indices_and_forged_content_hashes(self):
+        digest = hashlib.sha256(picture().read()).hexdigest()
+        for hashes, indices in [([], []), ([digest] * 21, [0]), (['invalid'], [0]), ([digest], [True]),
+                                ([digest], [1]), ([digest], [0, 0]), ([digest], []), ([digest], None)]:
+            with self.subTest(indices=indices), self.assertRaises(PhotoError):
+                self.store.upload([picture()], 'Mac', import_data={**payload(metadata()), 'digests': hashes, 'fileIndices': indices})
+        with patch('photo_library.read_metadata', side_effect=AssertionError('verify before decoding')):
+            with self.assertRaises(PhotoError) as error:
+                self.store.upload([picture(color='blue')], 'Mac', import_data={**payload(metadata()), 'digests': [digest], 'fileIndices': [0]})
+        self.assertEqual(error.exception.status, 422)
+        self.assertEqual(list(self.store.root.iterdir()), [])
+        self.assertEqual(self.store.snapshot()['photos'], [])
+
     def test_geolocated_import_goes_directly_to_uploads_without_albums_or_face_workers(self):
         data = {**payload(metadata(latitude=0, longitude=0)), 'geolocatedOnly': True}
         result = self.store.upload([picture()], import_data=data)
@@ -191,6 +251,24 @@ class PhotoImportTests(unittest.TestCase):
 
 
 class PhotoImportAPITests(base.PhotoApiTests):
+    def test_preflight_requires_pin_validates_limits_and_accepts_metadata_only_upload(self):
+        digest = hashlib.sha256(picture().read()).hexdigest()
+        route = '/pictures/import/check'
+        self.assertEqual(self.client.post(route, json={'digests': [digest]}).status_code, 401)
+        for invalid in [None, [], ['bad'], [digest] * 21]:
+            self.assertEqual(self.client.post(route, headers=self.headers, json={'digests': invalid}).status_code, 400)
+        self.assertEqual(self.client.post(route, headers=self.headers, json={'digests': [digest], 'extra': 'x' * 5000}).status_code, 413)
+        data = {**payload(metadata()), 'geolocatedOnly': True, 'digests': [digest], 'fileIndices': [0]}
+        self.store.upload([picture()], import_data=data)
+        checked = self.client.post(route, headers=self.headers, json={'digests': [digest]})
+        self.assertEqual(checked.json, {'missing': []})
+        self.assertEqual(checked.headers['Cache-Control'], 'no-store')
+        data.update(session='again', fileIndices=[])
+        response = self.client.post('/pictures/upload', headers=self.headers, data={
+            'metadata': (io.BytesIO(json.dumps(data).encode()), 'metadata.json')})
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual((response.json['imported'], response.json['duplicates']), (0, 1))
+
     def test_partial_import_reports_unreadable_image_and_saves_valid_file(self):
         response = self.client.post('/pictures/upload', headers=self.headers, data={
             'albumName': 'Mac', 'files': [(io.BytesIO(b'bad'), 'bad.jpeg'), (picture().stream, 'good.jpg')],

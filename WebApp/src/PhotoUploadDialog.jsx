@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import LoadingSpinner from './LoadingSpinner.jsx';
-import { uploadPictureFiles } from './api/raspberryApi.js';
+import { photoRequest, uploadPictureFiles } from './api/raspberryApi.js';
+import { createPhotoHasher, transferPhotoBatch } from './photoImportTransfer.js';
 import { IMPORT_ACCEPT, accumulateImportResult, createImportId, importBatches, importSummary, preparePhotoImport } from './photoImport.js';
 import { photoImportStrings } from './photoImportStrings.js';
 import './PhotoUploadDialog.css';
@@ -103,7 +104,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
   const [reading, setReading] = useState(false), [busy, setBusy] = useState(false), [started, setStarted] = useState(false);
   const [error, setError] = useState(''), [drag, setDrag] = useState(false), [paused, setPaused] = useState(false);
   const [readProgress, setReadProgress] = useState({ phase: 'indexing', done: 0, total: null, fileName: '', updatedAt: 0 });
-  const [progress, setProgress] = useState({ done: 0, batchPercent: 0, batchStart: 0, batchEnd: 0, saving: false, updatedAt: 0 }), [result, setResult] = useState(null);
+  const [progress, setProgress] = useState({ done: 0, batchPercent: 0, batchStart: 0, batchEnd: 0, status: 'hashing', fileName: '', updatedAt: 0 }), [result, setResult] = useState(null);
   const session = useRef(null), cursor = useRef(0), accumulated = useRef({ imported: 0, duplicates: 0, rejected: [] }), targetFolder = useRef(folderId);
   if (!session.current) session.current = createImportId();
   const working = useRef(false), pause = useRef(false), mounted = useRef(true), generation = useRef(0), reader = useRef(null);
@@ -140,18 +141,20 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
     event?.preventDefault(); if (working.current || !entries.length) return;
     working.current = true; pause.current = false; setBusy(true); setStarted(true); setPaused(false); setError('');
     const batches = importBatches(entries);
+    const controller = new AbortController(); reader.current = controller;
+    const hasher = createPhotoHasher(controller.signal);
     try {
       for (; cursor.current < batches.length; cursor.current++) {
         const batch = batches[cursor.current], before = batches.slice(0, cursor.current).reduce((n, b) => n + b.length, 0);
-        if (mounted.current) setProgress({ done: before, batchPercent: 0, batchStart: before + 1, batchEnd: before + batch.length, saving: false, updatedAt: Date.now() });
-        const response = await uploadPictureFiles({ files: batch.map(e => e.file), albumName: name, folderId: selection.geolocatedOnly ? 'uploads' : targetFolder.current, parent,
+        if (mounted.current) setProgress({ done: before, batchPercent: 0, batchStart: before + 1, batchEnd: before + batch.length, status: 'hashing', fileName: '', updatedAt: Date.now() });
+        const response = await transferPhotoBatch(batch, { albumName: name, folderId: selection.geolocatedOnly ? 'uploads' : targetFolder.current, parent, signal: controller.signal,
           importData: { session: session.current, batch: String(cursor.current), preserveAlbums: !selection.geolocatedOnly && preserveAlbums,
-            geolocatedOnly: !!selection.geolocatedOnly, continueOnError: true,
-            records: batch.map(({ metadata, raw }) => ({ metadata, raw })) },
-          onProgress: value => { if (mounted.current) setProgress(current => ({ ...current, batchPercent: value.percent, saving: value.status === 'saving', updatedAt: Date.now() })); } });
+            geolocatedOnly: !!selection.geolocatedOnly, continueOnError: true },
+          onProgress: value => { if (mounted.current) setProgress(current => ({ ...current, batchPercent: value.percent, status: value.status, fileName: value.fileName || '', updatedAt: Date.now() })); } },
+          { hash: hasher.hash, check: (digests, signal) => photoRequest('import/check', { digests }, signal), upload: uploadPictureFiles });
         accumulated.current = accumulateImportResult(accumulated.current, response, batch);
         targetFolder.current = response.folderId;
-        if (mounted.current) setProgress(current => ({ ...current, done: before + batch.length, batchPercent: 100, saving: false, updatedAt: Date.now() }));
+        if (mounted.current) setProgress(current => ({ ...current, done: before + batch.length, batchPercent: 100, fileName: '', updatedAt: Date.now() }));
         if (pause.current && cursor.current < batches.length - 1) { cursor.current++; if (mounted.current) setPaused(true); return; }
       }
       if (mounted.current) setResult({ ...accumulated.current });
@@ -161,7 +164,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
         if (cursor.current === 0 && [400, 409, 413, 422].includes(err.status)) setStarted(false);
       }
     }
-    finally { working.current = false; if (mounted.current) setBusy(false); }
+    finally { hasher.close(); working.current = false; if (mounted.current) setBusy(false); }
   }
   function retryRejected() {
     const entries = result.rejected.map(failure => failure.entry);
@@ -196,9 +199,9 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
         </details>}
         {reading && <ImportProgress title={readProgress.phase === 'discovering' ? t.discovering : readProgress.phase === 'indexing' ? t.indexing : t.analyzing}
           {...readProgress} countLabel={readProgress.total === null ? t.filesFound : t.photosRead} active t={t} language={language} detail={t.readingHint} />}
-        {started && <ImportProgress title={busy ? progress.saving ? t.saving : t.uploading : paused ? t.paused : t.interrupted}
+        {started && <ImportProgress title={busy ? ['hashing', 'checking'].includes(progress.status) ? t.checking : progress.status === 'saving' ? t.saving : t.uploading : paused ? t.paused : t.interrupted}
           {...progress} total={stats.count} countLabel={t.photosAttempted} active={busy} t={t} language={language}
-          detail={busy ? `${t.currentBatch}: ${progress.batchStart.toLocaleString(language)}–${progress.batchEnd.toLocaleString(language)} · ${progress.saving ? t.confirming : `${progress.batchPercent}% ${t.batchSent}`}` : t.keepOpen} />}
+          detail={busy ? `${t.currentBatch}: ${progress.batchStart.toLocaleString(language)}–${progress.batchEnd.toLocaleString(language)} · ${['hashing', 'checking'].includes(progress.status) ? t.checkingHint : progress.status === 'saving' ? t.confirming : `${progress.batchPercent}% ${t.batchSent}`}` : t.keepOpen} />}
         {!stats.count && !reading && <div className={`photo-import-drop${drag ? ' is-dragging' : ''}`} onDragOver={event => { event.preventDefault(); if (!locked) setDrag(true); }} onDragLeave={() => setDrag(false)}
           onDrop={event => { event.preventDefault(); setDrag(false); if (!locked) pick(event.dataTransfer, true); }}>
           <div className="photo-import-stack" aria-hidden="true"><span>⌖</span><span>♡</span><span>▧</span></div>
@@ -209,6 +212,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
           <div className="photo-import-stats"><div><strong>{stats.count.toLocaleString()}</strong><span>{s.photos} · {size(stats.bytes)}</span></div>
             <div><strong>{stats.locations}</strong><span>{t.locations}</span></div><div><strong>{stats.people}</strong><span>{t.people}</span></div><div><strong>{stats.albums}</strong><span>{t.albums}</span></div></div>
           {!started && <>
+          <p className="photo-note">{t.checkingHint}</p>
           <p className="photo-import-data-note">{stats.enriched ? `✓ ${stats.enriched} / ${stats.count} ${t.enriched}` : t.plainStats}</p>
           {mode === 'mac' && stats.enriched < stats.count && <p className="photo-import-warning">{stats.enriched ? t.partialSidecars : t.noSidecars}</p>}
           <div className="photo-import-previews">{selection.entries.slice(0, 12).map((entry, index) => <Preview key={`${session.current}-${entry.file.importPath || entry.file.webkitRelativePath || entry.file.name}-${index}`} entry={entry} t={t}

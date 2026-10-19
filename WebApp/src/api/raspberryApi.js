@@ -1419,7 +1419,7 @@ export function getPictureContentUrl(relativePath, render) {
 
 export function uploadPictureFiles({ files, albumName, folderId, parent, importData, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
-  if (!safeFiles.length) return Promise.reject(new Error("Missing pictures"));
+  if (!safeFiles.length && !importData?.digests?.length) return Promise.reject(new Error("Missing pictures"));
   if (isMockModeEnabled()) {
     return photoDemo("upload", { files: safeFiles, albumName, folderId, parent, importData });
   }

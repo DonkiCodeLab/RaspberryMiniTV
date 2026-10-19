@@ -1175,6 +1175,15 @@ y `Cache-Control: no-store`. Incluye la base SQLite en las copias de seguridad:
 contiene también los metadatos, las asociaciones a álbumes/personas, los hashes
 de deduplicación y los recibos de lotes para reintentar sin repetir guardados.
 
+`POST /pictures/import/check` recibe `digests` (1–20 SHA-256 hexadecimales) y
+devuelve los índices `missing`, con PIN y sin caché. Consulta el índice y comprueba
+existencia, tamaño y fecha del archivo, sin descodificar ni recorrer la biblioteca.
+El multipart puede enviar solo esos archivos, indicando `fileIndices`, junto con
+los `digests` y `records` del lote completo; admite cero imágenes cuando todas
+existen. La API verifica las huellas de los archivos recibidos y conserva los
+metadatos de las referencias. Una referencia desaparecida produce 409 y la web
+consulta de nuevo una vez. Los recibos siguen evitando repetir lotes confirmados.
+
 El asistente filtra los JSON antes de enviar fotos y marca el lote con
 `geolocatedOnly: true`. La API vuelve a validar que todas las fotos tengan latitud
 y longitud válidas, las guarda directamente en `uploads`, omite la recreación

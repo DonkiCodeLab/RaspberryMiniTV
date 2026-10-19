@@ -627,9 +627,13 @@ muestra por separado el envío del lote actual y la espera de guardado. Si pasan
 Ante un corte se reintenta el mismo lote con un identificador estable;
 el servidor no lo duplica aunque se hubiera perdido su respuesta. Si cierras la
 página, vuelve al álbum y selecciona otra vez la exportación: se detectan archivos
-idénticos por SHA-256 entre las nuevas importaciones (no se indexan retroactivamente
-los duplicados de subidas antiguas). Las fotos guardadas antes de un error permanecen
+idénticos por SHA-256 **antes de transferir las imágenes**. Un worker del navegador
+lee cada archivo en bloques de 2 MB, también sobre HTTP, y consulta las huellas
+en lotes de hasta 20. Solo envía los archivos que faltan; los existentes reciben
+sus metadatos sin reenviar la imagen. El nombre no determina si son iguales.
+No se indexan retroactivamente subidas anteriores al importador con huellas.
+Las fotos guardadas antes de un error permanecen
 en su álbum. Actualiza WebApp y DeviceApp juntos antes de usar esta función.
 
-Pruebas: `node --test tests/photoImport.test.js tests/photoImportProgress.test.js tests/photoLibrary.test.js` y,
+Pruebas: `node --test tests/photo*.test.js` y,
 desde la raíz, `python -m unittest discover -s DeviceApp/tests -p 'test_photo*.py'`.

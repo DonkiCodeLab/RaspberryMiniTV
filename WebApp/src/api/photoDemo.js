@@ -1,4 +1,5 @@
 import { hasLocation } from '../photoLibrary.js';
+import { hashPhoto } from '../photoHash.js';
 // Local demo albums persist in IndexedDB, including image blobs, without network uploads.
 const urls = new Map();
 let operation = Promise.resolve();
@@ -22,6 +23,8 @@ export function photoDemo(action, data = {}) {
       });
       library.revision ||= 'demo-empty'; library.working = false;
       if (action === 'status') return { revision: library.revision, working: false };
+      if (action === 'import/check') return { missing: data.digests.flatMap((digest, index) =>
+        library.photos.some(photo => photo.id === library.importFiles?.[digest] && photo.blob) ? [] : [index]) };
       const create = (name, parent = '') => {
         name = String(name || '').trim();
         if (!name || name.length > 100 || /[/\\]/.test(name)) throw new Error('Escribe un nombre válido.');
@@ -42,9 +45,14 @@ export function photoDemo(action, data = {}) {
         const folderId = info?.geolocatedOnly ? 'uploads' : (info && library.importSessions[info.session]) || data.folderId || create(data.albumName, data.parent || 'uploads').id;
         if (info) library.importSessions[info.session] = folderId;
         let imported = 0, duplicates = 0;
-        for (const [index, file] of data.files.entries()) {
-          const digest = info ? [...new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))].map(b => b.toString(16).padStart(2, '0')).join('') : '';
+        const saved = [];
+        const filesByIndex = new Map(data.files.map((file, index) => [info?.fileIndices?.[index] ?? index, file]));
+        for (let index = 0; index < (info?.digests?.length ?? data.files.length); index++) {
+          const file = filesByIndex.get(index);
+          const digest = info?.digests?.[index] || (info && file ? await hashPhoto(file) : '');
+          if (file && info?.digests && await hashPhoto(file) !== digest) throw new Error('La foto ha cambiado durante la importación.');
           let photo = digest && library.photos.find(p => p.id === library.importFiles[digest]);
+          if (!photo && !file) throw Object.assign(new Error('Una foto ya no está guardada. Reintenta para enviarla.'), { status: 409 });
           const id = crypto.randomUUID();
           if (photo) { duplicates++; photo.folderIds = [...new Set([...(photo.folderIds || []), folderId])]; }
           else {
@@ -54,6 +62,7 @@ export function photoDemo(action, data = {}) {
             library.photos.push(photo);
             if (digest) library.importFiles[digest] = photo.id;
           }
+          saved.push(photo.relativePath);
           const record = info?.records[index];
           if (record?.metadata) {
             const { people, locationKnown, ...metadata } = record.metadata;
@@ -73,7 +82,7 @@ export function photoDemo(action, data = {}) {
             }
           }
         }
-        result = { ok: true, folderId, saved: data.files.map(file => file.name), imported, duplicates };
+        result = { ok: true, folderId, saved, imported, duplicates, rejected: [] };
         if (batchKey) library.importBatches[batchKey] = result;
       } else if (action === 'move') {
         const folderId = data.name ? create(data.name, data.parent).id : data.folderId;
