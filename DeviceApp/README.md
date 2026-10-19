@@ -1201,6 +1201,12 @@ final la preparación en segundo plano. Las dos vistas se generan juntas, se
 escriben de forma atómica y reutilizan los JPEG que ya estuvieran en caché.
 La imagen se reduce antes de copiar sus píxeles para limitar el uso de memoria.
 
+`GET /pictures/content?relativePath=…&download=1` descarga el original del catálogo
+con su nombre y extensión originales mediante `Content-Disposition: attachment`.
+Mantiene la autenticación del endpoint, valida la ruta y admite peticiones Range;
+no descodifica ni convierte la imagen, aunque se envíe además `render=thumb`.
+Las peticiones normales de miniatura y vista grande siguen mostrándose inline.
+
 El asistente envía `continueOnError: true`: una imagen ilegible se devuelve en
 `rejected` con su índice de lote, nombre y motivo; las imágenes válidas se guardan
 y la importación continúa. El recibo del lote incluye esos errores para que una

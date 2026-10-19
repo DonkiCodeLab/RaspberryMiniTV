@@ -2081,8 +2081,17 @@ def picture_content():
     store = get_photo_library()
     relative = request.args.get("relativePath", "")
     render = request.args.get("render")
-    path = store.preview(relative, full=render == "preview") if render in ("thumb", "preview") else store.safe_file(relative)
-    response = send_file(path, conditional=True)
+    download = request.args.get("download") == "1"
+    name = None
+    if download:
+        path = store.safe_file(relative)
+        with store.db() as db:
+            row = db.execute("SELECT name FROM photos WHERE path=?", (relative,)).fetchone()
+        if not row: raise PhotoError('No se encuentra la foto en la biblioteca.', 404)
+        name = row['name'].replace('\r', '').replace('\n', '') or path.name
+    else:
+        path = store.preview(relative, full=render == "preview") if render in ("thumb", "preview") else store.safe_file(relative)
+    response = send_file(path, conditional=True, as_attachment=download, download_name=name)
     response.headers["Cache-Control"] = "private, max-age=3600"
     return response
 

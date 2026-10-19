@@ -1,4 +1,7 @@
 const es = {
+  zoom: 'Zoom de la foto', zoomIn: 'Acercar', zoomOut: 'Alejar', fitPhoto: 'Ajustar foto al encuadre',
+  zoomHint: 'Pellizca para ampliar y arrastra para moverte. Doble toque para ampliar o ajustar.',
+  original: 'Original', downloadOriginal: 'Descargar foto original', downloadMetadata: 'Descargar metadatos JSON',
   sortBy: 'Ordenar por', photoDate: 'Fecha de la foto', uploadDate: 'Fecha de subida', sortOrder: 'Orden',
   newestFirst: 'Más recientes primero', oldestFirst: 'Más antiguas primero', loadingPhoto: 'Cargando vista grande…',
   back: 'Volver',
@@ -33,6 +36,9 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  zoom: 'Photo zoom', zoomIn: 'Zoom in', zoomOut: 'Zoom out', fitPhoto: 'Fit photo to view',
+  zoomHint: 'Pinch to zoom and drag to move. Double tap to zoom or fit.',
+  original: 'Original', downloadOriginal: 'Download original photo', downloadMetadata: 'Download JSON metadata',
   sortBy: 'Sort by', photoDate: 'Photo date', uploadDate: 'Upload date', sortOrder: 'Order',
   newestFirst: 'Newest first', oldestFirst: 'Oldest first', loadingPhoto: 'Loading full preview…',
   back: 'Back',
@@ -61,6 +67,9 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  zoom: 'Zoom de la foto', zoomIn: 'Apropar', zoomOut: 'Allunyar', fitPhoto: 'Ajustar la foto a l’enquadrament',
+  zoomHint: 'Pessiga per ampliar i arrossega per moure’t. Doble toc per ampliar o ajustar.',
+  original: 'Original', downloadOriginal: 'Descarregar la foto original', downloadMetadata: 'Descarregar metadades JSON',
   sortBy: 'Ordenar per', photoDate: 'Data de la foto', uploadDate: 'Data de pujada', sortOrder: 'Ordre',
   newestFirst: 'Més recents primer', oldestFirst: 'Més antigues primer', loadingPhoto: 'Carregant la vista gran…',
   back: 'Tornar',

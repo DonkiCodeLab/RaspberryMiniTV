@@ -1406,12 +1406,13 @@ export function getMediaStreamUrl(relativePath) {
   return `${getBaseUrl()}/media/stream?${params.toString()}`;
 }
 
-export function getPictureContentUrl(relativePath, render) {
+export function getPictureContentUrl(relativePath, render, { download = false } = {}) {
   if (isMockModeEnabled()) return demoPhotoUrl(relativePath);
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) return "";
   const params = new URLSearchParams({ relativePath: safeRelativePath });
-  if (render) params.set("render", render);
+  if (download) params.set("download", "1");
+  else if (render) params.set("render", render);
   const storedPin = getStoredWebPin();
   if (storedPin && !isMockModeEnabled()) params.set("pin", storedPin);
   return `${getBaseUrl()}/pictures/content?${params.toString()}`;

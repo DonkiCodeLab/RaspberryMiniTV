@@ -535,6 +535,16 @@ no muestran ni actualizan el estado de visto.
 Solo se solicitan miniaturas cerca de la zona visible, con un máximo de dos
 peticiones simultáneas compartido con el mapa. El visor muestra primero la
 miniatura y la sustituye por la vista grande; si falla, permite reintentar.
+El visor permite pellizcar con dos dedos, arrastrar la imagen ampliada y hacer
+zoom con el trackpad (incluidos los gestos de Safari). El doble toque/clic alterna
+entre ampliar y ajustar. Los controles −, porcentaje y + ofrecen la misma función;
+con el foco en la imagen, +/− amplían, 0 ajusta y las flechas desplazan mientras
+haya zoom. El encuadre limita el movimiento a los bordes de la foto y se restablece
+al cambiar de imagen. El zoom utiliza el JPEG existente, sin pedir conversiones.
+Dos iconos compactos, **Original** y **JSON**, descargan el archivo original sin
+recomprimir y los metadatos importados. El JSON solo aparece cuando hay metadatos.
+Las descargas conservan el nombre de la foto; el original se sirve directamente
+como archivo adjunto, sin cargarlo entero en memoria del navegador.
 Al cambiar de página se desmontan las tarjetas anteriores; **Seleccionar esta página**
 solo selecciona las fotos visibles y la selección se limpia al pasar de página.
 Los datos ausentes

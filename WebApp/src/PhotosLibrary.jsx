@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
 import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
-import LoadingSpinner from './LoadingSpinner.jsx';
+import PhotoViewerImage from './PhotoViewerImage.jsx';
+import PhotoDownloads from './PhotoDownloads.jsx';
 import { photoStrings } from './photoStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
 import { photoImportStrings } from './photoImportStrings.js';
@@ -52,16 +53,6 @@ function PhotoImage({ photo, ...props }) {
   }, [url, visible, ready]);
   return error ? <span className="photo-image-error" role="img" aria-label={photo.name}>▧ {photo.name}</span> :
     <img {...props} ref={element} src={ready && ready === url ? url : PHOTO_PLACEHOLDER} alt={photo.name} onError={() => setError(true)} />;
-}
-
-function ViewerImage({ photo, s }) {
-  const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
-  return <div className="photo-viewer__image" role="img" aria-label={photo.name} aria-busy={!ready && !error}>
-    <img className="photo-viewer__placeholder" src={getPictureContentUrl(photo.relativePath, 'thumb') || undefined} alt="" aria-hidden="true" />
-    {!error && <img key={attempt} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, 'preview') || undefined}
-      alt="" aria-hidden="true" decoding="async" fetchPriority="high" onLoad={() => setReady(true)} onError={() => setError(true)} />}
-    {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}</div>}
-  </div>;
 }
 
 export function PhotoPagination({ page, onChange, s, label = s.photos }) {
@@ -153,36 +144,24 @@ function FolderDialog({ mode, folders, current, selected, person, s, onClose, on
 
 function Viewer({ photos, initial, onClose, s, language, people = [] }) {
   const [index, setIndex] = useState(initial);
-  const [metadataError, setMetadataError] = useState('');
   const t = photoImportStrings(language);
   const photo = photos[index];
   const names = people.filter(person => person.photoIds.includes(photo.id)).map(person => person.name);
-  async function downloadMetadata() {
-    setMetadataError('');
-    try {
-      const data = await photoRequest(`metadata/${photo.id}`);
-      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-      const link = document.createElement('a'); link.href = url; link.download = `${photo.name}.json`; link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (error) { setMetadataError(error.message); }
-  }
   const change = direction => setIndex(value => (value + direction + photos.length) % photos.length);
-  return <Modal title={photo?.name || s.root} s={s} onClose={onClose} wide onKeyDown={event => {
+  return <Modal title={photo?.name || s.root} s={s} onClose={onClose} wide className="photo-dialog--viewer" onKeyDown={event => {
     if (event.key === 'ArrowRight') { event.preventDefault(); change(1); }
     if (event.key === 'ArrowLeft') { event.preventDefault(); change(-1); }
   }}>
     <div className="photo-viewer"><button type="button" aria-label={s.previous} onClick={() => change(-1)} disabled={photos.length < 2}>‹</button>
-      <ViewerImage key={photo.id} photo={photo} s={s} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
-    <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span></div>
-    {(photo.metadataSource || names.length > 0) && <div className="photo-import-details">
+      <PhotoViewerImage key={photo.id} photo={photo} s={s} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
+    <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span><PhotoDownloads key={photo.id} photo={photo} s={s} /></div>
+    {(photo.title || photo.appleFavorite || photo.description || names.length > 0 || photo.albums?.length > 0 || photo.keywords?.length > 0) && <div className="photo-import-details">
       {photo.title && <strong>{photo.title}</strong>}
       {photo.appleFavorite && <small>♥ {t.favorite}</small>}
       {photo.description && <p>{photo.description}</p>}
       {names.length > 0 && <div className="photo-import-tags" aria-label={s.people}>{names.map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</div>}
       {photo.albums?.length > 0 && <p>{t.albums}: {photo.albums.join(' · ')}</p>}
       {photo.keywords?.length > 0 && <p>{t.keywords}: {photo.keywords.join(' · ')}</p>}
-      {photo.metadataSource && <button type="button" className="dialog-button" onClick={downloadMetadata}>{t.metadata} ↓</button>}
-      {metadataError && <p role="alert">{metadataError}</p>}
     </div>}
   </Modal>;
 }
