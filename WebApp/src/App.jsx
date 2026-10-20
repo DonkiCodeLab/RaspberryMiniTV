@@ -5447,6 +5447,7 @@ function RaspberryPage({
   tmdbSettingsSaving,
   onTmdbSettingsChange,
   onTmdbSettingsSave,
+  onTmdbArtworkChange,
   uploadMediaType,
   onUploadMediaTypeChange,
   uploadBookIsGraphicNovel,
@@ -5923,7 +5924,7 @@ function RaspberryPage({
               ) : null}
               <ServiceCredentialTest provider="tmdb" language={raspberryLanguage} credentials={tmdbSettings}
                 configured={!!(tmdbSettings.apiKey?.trim() || tmdbSettings.bearerToken?.trim())} disabled={tmdbSettingsSaving} />
-              <TmdbCachePanel language={raspberryLanguage} />
+              <TmdbCachePanel language={raspberryLanguage} onArtworkChange={onTmdbArtworkChange} />
               <TmdbCreditsCompletion language={raspberryLanguage} />
             </article>
             </div>
@@ -9503,7 +9504,7 @@ export default function App() {
             {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
               {detailLoading ? <><LoadingSpinner inline /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
             </div> : null}
-            {!error && libraryPending ? (
+            {!error && libraryPending && !(currentView === "raspberry" && videos) ? (
               <LibraryLoading label={t("loading_library")} stage={libraryStage} readProgress={readProgress} progress={tmdbLoading ? coverProgress : null} />
             ) : error ? (
               <section className="empty-state">
@@ -9594,6 +9595,13 @@ export default function App() {
                   setTmdbSettingsStatus("");
                 }}
                 onTmdbSettingsSave={handleTmdbSettingsSave}
+                onTmdbArtworkChange={async () => {
+                  clearLocalMetadataCache();
+                  detailCache.current.clear();
+                  seasonCache.current.clear(); readySeasons.current.clear(); episodeCache.current.clear();
+                  setVideos(await getVideos());
+                  setDetailRetry(value => value + 1);
+                }}
                 uploadMediaType={uploadMediaType}
                 onUploadMediaTypeChange={setUploadMediaType}
                 uploadBookIsGraphicNovel={uploadBookIsGraphicNovel}

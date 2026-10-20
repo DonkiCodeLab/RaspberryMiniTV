@@ -3,6 +3,10 @@ export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
 export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
 export const PHOTO_PAGE_SIZE = 100;
 
+export function photosWithoutPeople(photos) {
+  return photos.filter(photo => !photo.sourceId && photo.faceState === 'done' && photo.faceCount === 0);
+}
+
 export function sortPhotos(photos, field = 'takenAt', direction = 'desc') {
   const time = photo => {
     const value = photo[field];

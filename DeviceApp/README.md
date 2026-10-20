@@ -626,13 +626,23 @@ Para el catálogo existente:
    compilada (`cd WebApp && npm run build`). No basta con actualizar solo la web.
 2. Abrir los ajustes de la Raspberry en la web y comprobar las credenciales de TMDB.
 3. En **Contenido TMDB en local**, pulsar **Descargar catálogo / reintentar pendientes**.
-4. Consultar completados, pendientes y errores. Puede cerrarse el navegador: la cola
+4. Consultar completados, pendientes y el listado desplazable de errores, con el título,
+   temporada/episodio y tipo de imagen (cartel, fondo, logo, fotograma, extra o retrato).
+   Los fallos del original y sus miniaturas se agrupan por imagen. **Descartar imagen**
+   cancela sus reintentos y la excluye de las portadas y galerías; el resto del título
+   se conserva. La decisión se guarda en `ignored-images.json`, también para los
+   reinicios y las actualizaciones de fichas. Si ya no quedan fallos sin resolver, el
+   título pasa a completado; los fallos de datos o de otras imágenes siguen pendientes.
+   Los errores de versiones anteriores se identifican con las fichas locales disponibles,
+   sin descargar el catálogo de nuevo.
+   Puede cerrarse el navegador: la cola
    sigue en la API. Al reiniciar el servicio, los trabajos interrumpidos se retoman.
 5. Los títulos sin ID aparecen en una lista; asociarlos a su ficha TMDB desde la web
    y repetir. No se asignan resultados por similitud de nombres automáticamente.
 
 La migración es idempotente: repetirla omite trabajos completos y reintenta fallidos,
-reutilizando los archivos ya descargados. Un error parcial nunca se marca completado.
+reutilizando los archivos ya descargados. Un error parcial sin resolver nunca se marca completado;
+las imágenes descartadas expresamente dejan de ser recursos requeridos.
 La cola se persiste en `jobs.json`, los archivos se publican mediante reemplazo atómico
 y las descargas tienen tiempo límite y reintentos para errores transitorios/429.
 No se borran vídeos, perfiles ni imágenes al migrar. Los trabajos se deduplican por
@@ -1210,7 +1220,8 @@ Las miniaturas `render=tiny` son JPEG de 24 px hechos a partir de la caché de 6
 
 Pillow permite validar las imágenes, leer EXIF y preparar vistas JPEG orientadas
 para el navegador. `pillow-heif` añade HEIC/HEIF. **Personas** requiere además
-`face-recognition` y sus modelos dlib. Instala en la Raspberry:
+el detector HOG y la red neuronal ResNet de dlib. Instala en la Raspberry, desde
+la carpeta del proyecto actualizado:
 
 ```bash
 sudo bash DeviceApp/install_photo_support.sh --faces
@@ -1219,25 +1230,60 @@ sudo bash DeviceApp/install_photo_support.sh --faces
 Omite `--faces` si solo quieres añadir soporte HEIC. El instalador crea un entorno
 Python en `/opt/minitv-photo-python`, conserva los paquetes del sistema y añade
 un override a `minitv-api.service` para usarlo. Reinicia solo la API después de
-comprobar los imports. Compilar dlib puede tardar y necesitar memoria adicional
-en Raspberry antiguas. El reconocimiento usa CPU, imágenes reducidas a 1000 px,
-un solo trabajador y una tolerancia conservadora de 0,48. Puede separar a una
+comprobar los imports y ejecutar ambos modelos con una imagen de prueba.
+`update_minitv.sh` también prepara este soporte y difiere el reinicio al final de
+la actualización (`--no-restart`). El instalador es idempotente; si el motor pasa
+la comprobación, no vuelve a instalar dependencias. Compila dlib con un único
+proceso y prioridad baja. La primera instalación descarga paquetes y modelos,
+puede tardar y necesitar memoria adicional en Raspberry antiguas. No analiza fotos.
+
+`photo_faces.py` usa CPU, imágenes reducidas a 800 px, un proceso separado con
+prioridad baja y afinidad a un solo núcleo en Linux, y limita los hilos de BLAS/OpenMP
+a uno. Solo carga el predictor de cinco puntos y ResNet; no carga modelos CNN ni
+el predictor de 68 puntos. Entre fotos descansa tanto tiempo como ha trabajado
+(mínimo 250 ms); las vistas y subidas tienen prioridad para descodificar imágenes.
+Al alcanzar 75 °C se pausa y pide continuar explícitamente después de enfriar.
+Se mantiene una tolerancia conservadora de 0,48. Puede separar a una
 persona en varios grupos o asociar caras parecidas; las coincidencias se pueden
 revisar y quitar desde la web. No identifica personas por un nombre externo.
 
-El análisis se inicia explícitamente desde **Personas → Analizar**. La cola y el
+El análisis se inicia explícitamente desde **Personas → Analizar** y revisa
+como máximo **100 fotos por lote**. Al terminar se detiene y libera los modelos;
+**Analizar siguientes 100** inicia otro lote cuando lo decidas. La cola y el
 avance se guardan en SQLite (`face_analysis` y `face_analysis_items`); **Pausar**
-termina la foto en curso y **Continuar analizando** retoma las pendientes. Cerrar
-la página no detiene el trabajo; reiniciar la API lo deja pausado. Cada pasada
-incluye originales pendientes, fallidos e importados con estado `skip`; conserva
-las asociaciones ya importadas de Apple (`imported`) y excluye variantes de IA.
-Las fotos añadidas durante una pasada quedan disponibles para la siguiente.
+interrumpe el proceso incluso durante una foto y libera sus modelos; esa foto
+permanece pendiente. **Continuar analizando** retoma las pendientes. Cerrar
+la página no detiene el lote actual; reiniciar la API lo deja pausado. Cada lote
+incluye originales pendientes, fallidos e importados con estado `skip` o
+`imported`, y excluye variantes de IA. No consulta iCloud ni ningún servicio
+externo. Los nombres de Apple no se usan para crear o nombrar grupos. Las
+asociaciones antiguas con codificaciones vacías se conservan en SQLite pero no
+aparecen en Personas; los metadatos originales siguen disponibles para descargar.
+Las fotos añadidas durante un lote quedan disponibles para el siguiente.
 El porcentaje cuenta fotos revisadas, incluidas las fallidas, que se muestran
 por separado y pueden reintentarse. Los grupos se publican tras cada foto.
 Se puede renombrar una persona y guardar su portada durante el análisis; la
 portada debe pertenecer al grupo y se retira si se quita esa asociación o foto.
 Las rutas con PIN son `POST /pictures/people/scan`, `/pictures/people/pause` y
 `/pictures/people/<id>/cover` (JSON `{ "photoId": "..." }`).
+
+Cada detección guarda su rectángulo normalizado sobre la imagen orientada,
+vector y persona en `face_detections`. El visor dibuja todas las caras y resalta
+la persona cuya carpeta se está viendo. Al pulsar una cara puedes asignarla a
+una persona existente o crear un nombre; la corrección solo afecta a esa cara
+y se conserva al volver a detectar. **Personas → Sin personas** reúne únicamente
+originales revisados sin ninguna cara; excluye pendientes y errores.
+
+**Detectar personas** en el visor analiza una sola foto y puede pausarse. Comparte
+los límites de CPU y temperatura con los lotes, no ejecuta otro detector en
+paralelo y conserva cualquier lote pausado. Su estado se guarda en
+`face_photo_jobs`. Las rutas con PIN son `GET /pictures/photos/<id>/faces`,
+`POST /pictures/photos/<id>/detect` y
+`POST /pictures/photos/<id>/faces/<faceId>/assign` (JSON con `personId` o `name`).
+Solo se devuelven rectángulos y nombres, nunca vectores. Al actualizar, los grupos
+locales anteriores conservan sus nombres y sus fotos quedan pendientes para
+obtener los rectángulos en un lote nuevo. Las colas antiguas de más de 100 fotos
+se reinician sin descartar resultados ya guardados.
 
 En otros entornos instala `requirements-photos.txt` o
 `requirements-photo-faces.txt` con el mismo Python que ejecuta la API. Las rutas
@@ -1269,7 +1315,7 @@ consulta de nuevo una vez. Los recibos siguen evitando repetir lotes confirmados
 El asistente filtra los JSON antes de enviar fotos y marca el lote con
 `geolocatedOnly: true`. La API vuelve a validar que todas las fotos tengan latitud
 y longitud válidas, las guarda directamente en `gallery`, omite la recreación
-de álbumes y asociaciones de personas y marca el análisis facial como `skip`.
+de álbumes y asociaciones de personas y deja el análisis facial como `pending`.
 Los metadatos originales se conservan. Las subidas ordinarias también guardan el original en Galería y, cuando se
 elige un álbum, añaden una referencia. La web pide `/videos?pictures=0` al arrancar para no
 recorrer ni transferir otra vez toda la colección de fotos con el catálogo general.
@@ -1310,10 +1356,10 @@ Cada foto se valida y descodifica una sola vez antes de bloquear el catálogo, y
 hash se calcula mientras se escribe. El listado de Personas obtiene todas sus
 asociaciones en una consulta, evitando una consulta por persona en cada refresco.
 
-Los nombres de Apple funcionan sin dlib. Sus asociaciones tienen codificaciones
-vacías y no participan en las comparaciones del motor facial local. Los UUID
-distinguen personas homónimas; con JSON de ExifTool sin UUID, los nombres iguales
-se agrupan. Consulta el [flujo de exportación e importación](../WebApp/README.md#importar-desde-fotos-del-mac)
+Los nombres de Apple se conservan únicamente en el JSON de metadatos original;
+Personas muestra los grupos calculados localmente. Reimportar una foto conserva
+el análisis local ya completado y no añade asociaciones de Apple.
+Consulta el [flujo de exportación e importación](../WebApp/README.md#importar-desde-fotos-del-mac)
 para límites, formatos y reanudación.
 
 ### Inspeccionar un torrent antes de descargar

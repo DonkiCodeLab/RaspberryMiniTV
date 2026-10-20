@@ -113,6 +113,9 @@ fi
 log "Preparando el motor de descargas torrent"
 bash "${SCRIPT_DIR}/DeviceApp/install_torrent_support.sh"
 
+log "Preparando el reconocimiento local de Personas"
+sudo bash "${SCRIPT_DIR}/DeviceApp/install_photo_support.sh" --faces --no-restart
+
 if [[ -f "${WEB_DIR}/package.json" ]]; then
   type -P npm >/dev/null 2>&1 || fail "npm no está instalado y no se puede compilar la web."
 

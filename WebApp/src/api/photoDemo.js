@@ -91,12 +91,6 @@ export function photoDemo(action, data = {}) {
             const { people, locationKnown, ...metadata } = record.metadata;
             Object.assign(photo, metadata, { metadataSource: metadata.appleId ? 'apple-photos' : 'sidecar' });
             library.metadata[photo.id] = record.raw;
-            for (const person of (info.geolocatedOnly ? [] : people)) {
-              const key = person.id || `name:${person.name}`;
-              let known = library.people.find(p => p.appleKey === key);
-              if (!known) { known = { id: crypto.randomUUID(), appleKey: key, name: person.name, photoIds: [] }; library.people.push(known); }
-              if (!known.photoIds.includes(photo.id)) known.photoIds.push(photo.id);
-            }
             if (!info.geolocatedOnly && info.preserveAlbums) for (const name of metadata.albums) {
               const safe = name.replace(/[/\\\x00-\x1f]/g, ' · ').trim().slice(0, 100);
               if (!safe || safe === '.' || safe === '..') continue;
@@ -136,7 +130,11 @@ export function photoDemo(action, data = {}) {
         const raw = library.metadata?.[action.slice('metadata/'.length)];
         if (!raw) throw new Error('Esta foto no tiene metadatos importados.');
         return raw;
-      } else if (action === 'people/scan' || action === 'people/pause') {
+      } else if (/^photos\/[^/]+\/faces$/.test(action)) {
+        const photo = library.photos.find(photo => photo.id === action.split('/')[1]);
+        if (!photo) throw new Error('No se encuentra la foto.');
+        return { photoId: photo.id, faces: [], state: 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
+      } else if (action === 'people/scan' || action === 'people/pause' || /^photos\/[^/]+\/detect$/.test(action)) {
         throw new Error('Conecta la Raspberry para analizar las fotos.');
       } else if (/^people\/[^/]+\/cover$/.test(action)) {
         const person = library.people.find(p => p.id === action.split('/')[1]);
@@ -166,7 +164,7 @@ export function photoDemo(action, data = {}) {
         return photo;
       });
       const { metadata, importSessions, importBatches, importFiles, ...publicLibrary } = library;
-      return result || { ...publicLibrary, people: library.people.filter(p => p.photoIds.length), photos };
+      return result || { ...publicLibrary, people: library.people.filter(p => !p.appleKey && p.photoIds.length), photos };
     } finally { db.close(); }
   };
   const next = operation.then(run, run); operation = next.catch(() => {}); return next;

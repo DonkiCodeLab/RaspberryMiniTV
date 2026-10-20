@@ -24,6 +24,7 @@ class GalleryTests(unittest.TestCase):
 
     def test_nested_albums_add_and_remove_references_without_moving_unique_photo(self):
         photo = self.photo()
+        self.store.group_faces(photo['id'], [[0.] * 128])
         first = self.store.create_folder('Mi familia')
         second = self.store.create_folder('Vacaciones', first['id'])
         for folder in (first, second): self.store.move([photo['id']], folder['id'])

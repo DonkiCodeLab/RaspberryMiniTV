@@ -15,15 +15,19 @@ class ImageWorkLock:
         self.active = False
         self.waiting = [0, 0, 0]  # Viewer, visible thumbnails/imports, background.
 
-    def acquire(self, priority=1):
+    def acquire(self, priority=1, cancel=None):
         with self.condition:
             self.waiting[priority] += 1
             try:
                 while self.active or any(self.waiting[:priority]):
-                    self.condition.wait()
+                    if cancel is not None and cancel.is_set(): return False
+                    self.condition.wait(timeout=.1 if cancel is not None else None)
+                if cancel is not None and cancel.is_set(): return False
                 self.active = True
+                return True
             finally:
                 self.waiting[priority] -= 1
+                self.condition.notify_all()
 
     def release(self):
         with self.condition:
@@ -41,10 +45,11 @@ class ImageWorkLock:
         self.release()
 
     @contextmanager
-    def priority(self, value):
-        self.acquire(value)
-        try: yield
-        finally: self.release()
+    def priority(self, value, cancel=None):
+        acquired = self.acquire(value, cancel=cancel)
+        try: yield acquired
+        finally:
+            if acquired: self.release()
 
 
 class PhotoPreviews:

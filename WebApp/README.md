@@ -622,28 +622,46 @@ su respuesta; no se reintenta automáticamente. El progreso y los errores se
 muestran en el álbum. Las variantes nunca se convierten en nuevas entradas de
 generación. Se respeta el límite de consultas configurado entre imágenes.
 
-**Personas** agrupa caras con `face-recognition` en la Raspberry, sin subirlas a
-un servicio externo. Los nombres iniciales son Persona 1, Persona 2, etc.; se
+**Personas** agrupa caras con el detector HOG y la red neuronal ResNet de dlib en
+la Raspberry, sin consultar iCloud ni subirlas a un servicio externo. Los nombres iniciales son Persona 1, Persona 2, etc.; se
 pueden renombrar. Las coincidencias son aproximadas: en Modo de acción,
 **Quitar de esta persona** corrige una asociación sin borrar la foto. Los rasgos
 faciales se guardan localmente en el catálogo y no se devuelven al navegador.
-**Analizar** inicia una pasada sobre los originales pendientes, incluidos los
-importados con GPS que antes se omitían. Una franja superior muestra porcentaje,
+**Analizar** inicia un lote de como máximo **100 originales pendientes**, incluidos
+los importados con GPS que antes se omitían. Al terminar se detiene automáticamente;
+**Analizar siguientes 100** inicia otro lote bajo petición. Una franja superior muestra porcentaje,
 fotos revisadas y errores, con **Pausar** y **Continuar analizando**, sin diálogo
-bloqueante. Al pausar se termina la foto actual; el avance se conserva al cerrar
+bloqueante. Al pausar se interrumpe el proceso incluso en mitad de una foto, que
+queda pendiente para reintentar; el avance ya guardado se conserva al cerrar
 la página y queda pausado tras reiniciar la API. Las fotos nuevas añadidas durante
-una pasada se analizan en la siguiente. Se conservan las personas importadas de
-Apple y no se analizan las variantes de IA.
+un lote se analizan en el siguiente. Las etiquetas de personas de Apple se
+conservan como metadatos originales, pero no se utilizan en Personas. Las fotos
+antes marcadas como `imported` también se analizan localmente. No se analizan las
+variantes de IA. El modo de bajo consumo usa un núcleo, prioridad baja, fotos de
+800 px y descansos entre imágenes; se pausa automáticamente a 75 °C.
 Las carpetas se actualizan durante el análisis. Al entrar en una persona, su
 nombre se edita directamente y **Elegir portada** permite pulsar cualquiera de
 sus fotos, también usando búsqueda y paginación. La portada elegida permanece
 fija al pasar el ratón y se conserva al volver a abrir la biblioteca. La interfaz
 indica si falta instalar el motor en la Raspberry y permite reintentar errores.
 
+El visor grande de Galería y Personas muestra rectángulos sobre todas las caras;
+al entrar desde la carpeta de una persona se resalta su cara. Pulsa un rectángulo
+para elegir un nombre existente o crear uno nuevo. Las correcciones se guardan
+por cara y se conservan al repetir el análisis. **Detectar personas** vuelve a
+analizar solo esa foto, con la posibilidad de pausarlo y sin ejecutar dos
+detectores a la vez.
+
+**Personas → Sin personas** contiene fotos ya revisadas sin caras detectadas,
+no las pendientes ni las fallidas. Desde su visor se puede volver a detectar y
+asignar nombres igual que en Galería. Si aparecen caras, la foto sale de esta
+carpeta y entra en los grupos correspondientes; el original sigue en Galería.
+
 Actualizar WebApp y DeviceApp juntos. Para HEIC y Personas, consulta la
 [instalación del soporte de fotos](../DeviceApp/README.md#biblioteca-de-fotos).
 La maqueta local guarda archivos, carpetas y metadatos importados en IndexedDB,
-y permite probar el visor, los movimientos, los álbumes y las personas importadas.
+y permite probar el visor, los movimientos y los álbumes. Personas necesita el
+motor local de la Raspberry. Si falta, se muestra el comando de instalación.
 No lee EXIF de imágenes sin JSON ni simula reconocimiento facial o resultados de IA.
 
 Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,

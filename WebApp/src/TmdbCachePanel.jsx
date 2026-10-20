@@ -1,9 +1,11 @@
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
-import { getTmdbCacheStatus, cancelTmdbCacheDownload, isMockMode } from "./api/raspberryApi";
+import { getTmdbCacheStatus, cancelTmdbCacheDownload, discardTmdbCacheImage, isMockMode } from "./api/raspberryApi";
+import TmdbFailureList, { tmdbFailureKey } from "./TmdbFailureList.jsx";
 
 const labels = {
   es: {
+    ignored: "imágenes descartadas", ignoredOne: "imagen descartada", discarded: "Imagen descartada. No volverá a descargarse ni a utilizarse.",
     calculating: "Calculando el espacio de TMDB en segundo plano…",
     storage: "Espacio de la caché", disk: "del disco", storageUnavailable: "No se pudo consultar el espacio de la caché.",
     downloading: "Descarga en curso…", cancel: "Cancelar descarga", cancelling: "Cancelando…", cancelled: "cancelados", resume: "Reanudar descarga", stopped: "Descarga cancelada. Se conserva todo lo descargado. Una petición en curso puede tardar unos segundos en detenerse.",
@@ -11,6 +13,7 @@ const labels = {
     start: "Descargar catálogo / reintentar pendientes", busy: "Preparando…", complete: "completados", pending: "pendientes", failed: "con errores", missing: "Sin ID de TMDB: asigna su ficha para poder descargarlos.", errors: "Detalles de errores", mock: "Conecta con la Raspberry para descargar el catálogo.",
   },
   ca: {
+    ignored: "imatges descartades", ignoredOne: "imatge descartada", discarded: "Imatge descartada. No es tornarà a descarregar ni a utilitzar.",
     calculating: "Calculant l’espai de TMDB en segon pla…",
     storage: "Espai de la memòria cau", disk: "del disc", storageUnavailable: "No s’ha pogut consultar l’espai de la memòria cau.",
     downloading: "Descàrrega en curs…", cancel: "Cancel·lar descàrrega", cancelling: "Cancel·lant…", cancelled: "cancel·lats", resume: "Reprendre descàrrega", stopped: "Descàrrega cancel·lada. Es conserva tot el que s’ha descarregat. Una petició en curs pot trigar uns segons a aturar-se.",
@@ -18,6 +21,7 @@ const labels = {
     start: "Descarregar catàleg / reintentar pendents", busy: "Preparant…", complete: "completats", pending: "pendents", failed: "amb errors", missing: "Sense ID de TMDB: assigna la seva fitxa per descarregar-los.", errors: "Detalls dels errors", mock: "Connecta amb la Raspberry per descarregar el catàleg.",
   },
   en: {
+    ignored: "discarded images", ignoredOne: "discarded image", discarded: "Image discarded. It will no longer be downloaded or used.",
     calculating: "Calculating TMDB storage in the background…",
     storage: "Cache storage", disk: "of disk", storageUnavailable: "Cache storage usage is unavailable.",
     downloading: "Download in progress…", cancel: "Cancel download", cancelling: "Cancelling…", cancelled: "cancelled", resume: "Resume download", stopped: "Download cancelled. Downloaded files are retained. An in-flight request may take a few seconds to stop.",
@@ -26,11 +30,12 @@ const labels = {
   },
 };
 
-export default function TmdbCachePanel({ language }) {
+export default function TmdbCachePanel({ language, onArtworkChange }) {
   const t = labels[language] || labels.es;
   const [status, setStatus] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const [notice, setNotice] = useState("");
   const action = useRef({ revision: 0, busy: false });
   const number = (value) => Number(value).toLocaleString(language === "en" ? "en-US" : language === "ca" ? "ca-ES" : "es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const amount = (value) => value > 0 && value < 0.01 ? `< ${number(0.01)}` : number(value);
@@ -62,8 +67,22 @@ export default function TmdbCachePanel({ language }) {
     if (action.current.busy) return;
     action.current = { revision: action.current.revision + 1, busy: true };
     setBusy(cancel ? "cancel" : "start");
+    setNotice("");
     try { setStatus(await (cancel ? cancelTmdbCacheDownload() : getTmdbCacheStatus(true))); setError(""); }
     catch (e) { setError(e.message); }
+    finally { action.current.revision += 1; action.current.busy = false; setBusy(""); }
+  }
+  async function discard(item) {
+    if (action.current.busy) return;
+    action.current = { revision: action.current.revision + 1, busy: true };
+    setBusy(tmdbFailureKey(item));
+    setNotice("");
+    try {
+      setStatus(await discardTmdbCacheImage(item.media, item.path));
+      setError("");
+      setNotice(t.discarded);
+      await onArtworkChange?.();
+    } catch (e) { setError(e.message); }
     finally { action.current.revision += 1; action.current.busy = false; setBusy(""); }
   }
   return <section className="tmdb-cache-panel">
@@ -78,11 +97,13 @@ export default function TmdbCachePanel({ language }) {
     {!active && status?.cancelled > 0 && <p role="status">{t.stopped}</p>}
     {isMockMode() && <p>{t.mock}</p>}
     {error && <p role="alert">{error}</p>}
+    {notice && <p role="status">{notice}</p>}
     {status && <div aria-live="polite">
       <p>{status.complete}/{status.total} {t.complete} · {status.pending + status.running} {t.pending} · {status.failed} {t.failed}{status.cancelled > 0 && <> · {status.cancelled} {t.cancelled}</>}</p>
       {status.total > 0 && <progress value={status.complete} max={status.total} aria-label={t.title} />}
+      {status.ignoredImages > 0 && <p>{status.ignoredImages} {status.ignoredImages === 1 ? t.ignoredOne : t.ignored}</p>}
       {status.current && <p>{status.current}</p>}
-      {status.errors?.length > 0 && <details><summary>{t.errors}</summary><ul>{status.errors.map(item => <li key={item.media}>{item.media}: {item.error}</li>)}</ul></details>}
+      <TmdbFailureList errors={status.errors} language={language} busy={busy} onDiscard={discard} />
       {status.missingIds?.length > 0 && <details><summary>{status.missingIds.length} — {t.missing}</summary><ul>{status.missingIds.map(path => <li key={path}>{path}</li>)}</ul></details>}
     </div>}
   </section>;

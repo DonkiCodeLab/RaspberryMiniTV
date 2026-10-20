@@ -9,7 +9,7 @@ export function watchPhotoLibrary({ current, readStatus, refresh, canCheck, onEr
   function sync() {
     clear();
     if (!stopped && current().working && canCheck()) {
-      timer = schedule(() => { timer = null; void check(); }, current().faces?.running ? 2000 : 15000);
+      timer = schedule(() => { timer = null; void check(); }, current().faces?.running || current().faces?.singleRunning ? 2000 : 15000);
     }
   }
   async function check() {

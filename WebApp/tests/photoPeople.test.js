@@ -25,11 +25,34 @@ test('analysis displays actual progress with Pause inline and no blocking dialog
 
 test('paused work can continue, finishing a photo disables its control, and unavailable engines cannot start', () => {
   assert.match(render({ available: true, state: 'paused', remaining: 3 }), />Continuar analizando<\/button>/);
-  assert.match(render({ available: true, state: 'paused', running: true, pausing: true }), /disabled="">Terminando la foto actual…/);
+  assert.match(render({ available: true, state: 'paused', running: true, pausing: true }), /disabled="">Pausando análisis…/);
   assert.match(render({ available: false, pending: 3 }), /disabled="">Analizar/);
   assert.match(render({ available: true, state: 'complete', percent: 100, total: 3, done: 3, failed: 1, pending: 1 }), /1 con error/);
 });
 
+test('setup explains local installation and low power mode without Apple labels', () => {
+  const html = render({ available: false, pending: 4570, total: 100, done: 0 });
+  assert.match(html, /0 \/ 100 fotos revisadas/);
+  assert.match(html, /Fotos pendientes: 4570/);
+  assert.match(html, /sudo bash DeviceApp\/install_photo_support.sh --faces/);
+  assert.match(html, /sin consultar iCloud/);
+  assert.match(html, /un núcleo/);
+  assert.doesNotMatch(html, /Las personas importadas/);
+  const running = render({ available: false, state: 'running', running: true });
+  assert.match(running, />Pausar<\/button>/);
+  assert.doesNotMatch(running, /disabled=""/);
+});
+
+test('completed batches stop and offer an explicit next batch, while a single photo has Pause', () => {
+  const html = render({ available: true, state: 'complete', done: 100, total: 100, percent: 100, pending: 4470 });
+  assert.match(html, /Lote terminado/);
+  assert.match(html, />Analizar siguientes 100<\/button>/);
+  assert.match(html, /como máximo 100 fotos/);
+  const single = render({ available: true, state: 'paused', singleRunning: true, remaining: 70 });
+  assert.match(single, />Pausar<\/button>/);
+  assert.match(single, /Analizando esta foto/);
+  assert.doesNotMatch(single, /fotos revisadas/);
+});
 test('person details remain editable while analysis is running and localize in all three languages', () => {
   for (const language of ['es', 'ca', 'en']) {
     const strings = photoStrings(language);

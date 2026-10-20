@@ -2,9 +2,9 @@ import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
-import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, photosWithoutPeople, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
-import PhotoViewerImage from './PhotoViewerImage.jsx';
+import PhotoFaceViewer from './PhotoFaceViewer.jsx';
 import PhotoDownloads from './PhotoDownloads.jsx';
 import PhotoGallery from './PhotoGallery.jsx';
 import { PeopleAnalysis, PersonEditor } from './PhotoPeople.jsx';
@@ -172,18 +172,20 @@ function DeleteDialog({ selected, album, current, s, onClose, onComplete }) {
   </Modal>;
 }
 
-function Viewer({ photos, initial, onClose, s, language, people = [] }) {
+function Viewer({ photos, initial, onClose, s, language, people = [], knownPeople = people, livePhotos, faces, revision, onChanged, highlightPersonId }) {
   const [index, setIndex] = useState(initial);
   const t = photoImportStrings(language);
-  const photo = photos[index];
+  const photo = livePhotos?.get(photos[index].id) || photos[index];
   const names = people.filter(person => person.photoIds.includes(photo.id)).map(person => person.name);
   const change = direction => setIndex(value => (value + direction + photos.length) % photos.length);
   return <Modal title={photo?.name || s.root} s={s} onClose={onClose} wide className="photo-dialog--viewer" onKeyDown={event => {
+    if (event.defaultPrevented || event.target.closest?.('input, select, textarea, [contenteditable="true"]')) return;
     if (event.key === 'ArrowRight') { event.preventDefault(); change(1); }
     if (event.key === 'ArrowLeft') { event.preventDefault(); change(-1); }
   }}>
     <div className="photo-viewer"><button type="button" aria-label={s.previous} onClick={() => change(-1)} disabled={photos.length < 2}>‹</button>
-      <PhotoViewerImage key={photo.id} photo={photo} s={s} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
+      <PhotoFaceViewer key={photo.id} photo={photo} s={s} people={knownPeople} globalFaces={faces} revision={revision}
+        onChanged={onChanged} highlightPersonId={highlightPersonId} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
     <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span><PhotoDownloads key={photo.id} photo={photo} s={s} /></div>
     {(photo.title || photo.appleFavorite || photo.description || names.length > 0 || photo.albums?.length > 0 || photo.keywords?.length > 0) && <div className="photo-import-details">
       {photo.title && <strong>{photo.title}</strong>}
@@ -258,24 +260,31 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   useEffect(() => { watcher.current?.sync(); }, [dialog?.mode]);
   useEffect(() => { if (initialFiles?.length) setDialog({ mode: 'upload', files: initialFiles, folderId: 'gallery', parent: 'gallery' }); }, [initialFiles]);
   const person = current.startsWith('person:') ? data.people.find(p => p.id === current.slice(7)) : null;
-  const trail = person ? [{ id: 'people', name: s.people }, { id: current, name: person.name }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
-  const parentId = current.startsWith('person:') ? 'people' : trail.at(-2)?.id || '';
+  useEffect(() => {
+    // A face correction can move the last photo out of the open person.
+    if (!loading && current.startsWith('person:') && !person) {
+      setCurrent('people'); setSearch(''); setSelected(new Set()); setActionMode(false); setChoosingCover(false);
+    }
+  }, [current, person, loading]);
+  const noPeople = useMemo(() => photosWithoutPeople(data.photos), [data.photos]);
+  const trail = person || current === 'withoutPeople' ? [{ id: 'people', name: s.people }, { id: current, name: person?.name || s.withoutPeople }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
+  const parentId = current.startsWith('person:') || current === 'withoutPeople' ? 'people' : trail.at(-2)?.id || '';
   const backLabel = zone ? s.map : (parentId === 'albums' ? s.personalAlbums : s[parentId]) || data.folders.find(folder => folder.id === parentId)?.name || s.root;
   const title = person?.name || (current === 'albums' ? s.personalAlbums : s[current]) || data.folders.find(f => f.id === current)?.name || s.root;
   const query = search.trim().toLocaleLowerCase();
   const visible = useCallback(photo => (!query || [photo.name, photo.title, photo.description, ...(photo.albums || []), ...(photo.keywords || []), ...(index.namesByPhoto.get(photo.id) || [])].filter(Boolean).join(' ').toLocaleLowerCase().includes(query)) && (!matchesPicture || matchesPicture(photo)), [query, index, matchesPicture]);
   const inFolder = id => [...new Set([...descendantIds(data.folders, id)].flatMap(folder => index.byFolder.get(folder) || []))];
   const mapPhotos = useMemo(() => data.photos.filter(visible), [data.photos, visible]);
-  const currentPhotos = useMemo(() => sortPhotos((current === 'gallery' ? data.photos : person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), current === 'gallery' ? 'takenAt' : order.field, order.direction), [data.photos, person, index, current, zone, visible, order]);
-  const folders = current === 'gallery' ? [] : current === 'people' ? data.people.map(p => ({ ...p, id: `person:${p.id}` })) : data.folders.filter(f => f.parent === current);
+  const currentPhotos = useMemo(() => sortPhotos((current === 'gallery' ? data.photos : current === 'withoutPeople' ? noPeople : person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), current === 'gallery' ? 'takenAt' : order.field, order.direction), [data.photos, noPeople, person, index, current, zone, visible, order]);
+  const folders = current === 'gallery' ? [] : current === 'people' ? [{ id: 'withoutPeople', name: s.withoutPeople }, ...data.people.map(p => ({ ...p, id: `person:${p.id}` }))] : data.folders.filter(f => f.parent === current);
   const displayedFolders = folders.filter(f => !query || ((f.id === 'albums' ? s.personalAlbums : s[f.id]) || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
   const page = current === 'gallery' ? galleryWindow(currentPhotos, galleryPosition) : photoPage(currentPhotos, photoNumber);
   const folderPage = photoPage(displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)), folderNumber);
   const changePage = number => { setPhotoNumber(number); setSelected(new Set()); grid.current?.scrollIntoView({ block: 'start' }); };
   const isAi = current !== 'ai' && trail.some(f => f.id === 'ai');
-  const canWrite = !person && !['map', 'people'].includes(current);
+  const canWrite = !person && !['map', 'people', 'withoutPeople'].includes(current);
   const canCreate = canWrite && current !== 'gallery';
-  const isAlbum = current && !SPECIAL_FOLDERS.includes(current) && !person;
+  const isAlbum = current && !SPECIAL_FOLDERS.includes(current) && current !== 'withoutPeople' && !person;
   const albumPhotos = index.byFolder.get(current) || [];
   const originalIds = new Set(albumPhotos.map(p => p.id));
   const pending = isAi ? pendingVariants(data.photos.filter(p => originalIds.has(p.id) || originalIds.has(p.sourceId))) : 0;
@@ -313,7 +322,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   function toggle(id) { setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }
   function album(folder, special) {
     const photos = special === 'gallery' ? data.photos : special === 'map' ? mapPhotos.filter(hasLocation) : special === 'people' ? data.photos.filter(p => index.namesByPhoto.has(p.id)) :
-      folder.id.startsWith('person:') ? index.byPerson.get(folder.id.slice(7)) || [] : inFolder(folder.id);
+      folder.id === 'withoutPeople' ? noPeople : folder.id.startsWith('person:') ? index.byPerson.get(folder.id.slice(7)) || [] : inFolder(folder.id);
     return <AlbumCard key={folder.id} folder={{ ...folder, name: (folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name }} photos={photos.filter(visible)} special={special}
       s={s} language={language} onOpen={() => navigate(folder.id)} />;
   }
@@ -333,7 +342,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {error && <div className="photo-alert" role="alert">{error} <button type="button" onClick={() => setAttempt(n => n + 1)}>{s.retry}</button></div>}
     {notice && <p role="status">{notice}</p>}
     {(current === 'albums' || isAlbum && !isAi) && <p className="photo-note">{s.referenceHint}</p>}
-    {(current === 'people' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.length} s={s} busy={faceBusy} onAction={faceAction} />}
+    {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.length} s={s} busy={faceBusy} onAction={faceAction} />}
+    {current === 'withoutPeople' && <p className="photo-note">{s.withoutPeopleHint}</p>}
     {person && <PersonEditor key={person.id} person={person} cover={index.byId.get(person.coverPhotoId || person.photoIds[0])} s={s} busy={busy}
       choosingCover={choosingCover} onChooseCover={() => { setChoosingCover(value => !value); setActionMode(false); setSelected(new Set()); }}
       onSave={async name => { if (await act(`people/${person.id}`, { name })) setNotice(s.saved); }}
@@ -380,6 +390,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'delete' && <DeleteDialog selected={selected} album={isAlbum} current={current} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog && !['upload', 'delete'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
-    {viewer && <Viewer {...viewer} people={data.people} s={s} language={language} onClose={() => setViewer(null)} />}
+    {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} livePhotos={index.byId}
+      faces={data.faces} revision={data.revision} onChanged={() => refresh()} highlightPersonId={person?.id}
+      s={s} language={language} onClose={() => setViewer(null)} />}
   </section>;
 }

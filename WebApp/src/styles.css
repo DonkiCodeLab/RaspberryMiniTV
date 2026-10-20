@@ -6697,6 +6697,29 @@ img {
 .tmdb-cache-panel progress { width: 100%; accent-color: #ffd90f; }
 .tmdb-cache-panel details { margin-top: 12px; }
 .tmdb-cache-panel details ul { max-height: 240px; overflow-y: auto; }
+.tmdb-failures { margin-top: 24px; }
+.tmdb-failures h4 { margin-bottom: 8px; }
+.tmdb-failures__help { font-size: .95em; opacity: .85; }
+.tmdb-failures__scroll {
+  max-height: min(520px, 65vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 16px;
+}
+.tmdb-failures__scroll:focus-visible { outline: 3px solid #ffd90f; outline-offset: 3px; }
+.tmdb-failures__list { list-style: none; margin: 0; padding: 0; }
+.tmdb-failure { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; padding: 20px; background: rgba(0, 0, 0, .15); }
+.tmdb-failure + .tmdb-failure { border-top: 1px solid rgba(255, 255, 255, .18); }
+.tmdb-failure__body { flex: 1 1 260px; min-width: 0; }
+.tmdb-failure__kind { display: block; color: #ffd90f; font-size: .85em; }
+.tmdb-failure__title { display: block; margin: 4px 0 10px; font-size: 1.1em; }
+.tmdb-failure__usage, .tmdb-failure__stages { display: block; margin-top: 4px; }
+.tmdb-failure__stages, .tmdb-failure details { opacity: .8; font-size: .9em; }
+.tmdb-failure .tmdb-failure__reason { margin: 10px 0; }
+.tmdb-failure__discard { flex-shrink: 0; }
+.tmdb-failure code { display: block; margin-top: 8px; white-space: normal; overflow-wrap: anywhere; }
 
 .tmdb-cache-panel > .dialog-button { margin: 0 12px 12px 0; }
 

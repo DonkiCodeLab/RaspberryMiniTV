@@ -1928,6 +1928,14 @@ export function cancelTmdbCacheDownload() {
   return request("/tmdb/cache", { method: "DELETE" });
 }
 
+export async function discardTmdbCacheImage(media, path) {
+  const status = await request("/tmdb/cache/discard-image", {
+    method: "POST", body: JSON.stringify({ media, path }),
+  });
+  clearLocalMetadataCache();
+  return status;
+}
+
 export function getSystemUpdate(signal) {
   if (isMockModeEnabled()) return Promise.resolve({ state: "unavailable" });
   return request("/system/update", { signal, cache: "no-store" });

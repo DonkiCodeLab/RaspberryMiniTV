@@ -2076,7 +2076,8 @@ def episodes():
 
 @app.route("/videos", methods=["GET"])
 def videos():
-    return jsonify(list_video_directories(include_pictures=request.args.get('pictures') != '0'))
+    return jsonify(tmdb_artwork.without_ignored_images(
+        list_video_directories(include_pictures=request.args.get('pictures') != '0')))
 
 
 @app.route("/pictures/upload", methods=["POST"])
@@ -4414,6 +4415,8 @@ def cached_tmdb_library():
             summary = tmdb_artwork.library_summary(kind, tmdb_id, language)
             if kind == "movie" and not summary.get("name"):
                 summary = oscar_artwork.library_summary(kind, tmdb_id, language)
+            if summary.get("posterPath") in tmdb_artwork.ignored_images:
+                summary["posterPath"] = ""
             result[collection][str(tmdb_id)] = summary
     return jsonify(result)
 
@@ -4430,7 +4433,7 @@ def cached_tmdb_json(tmdb_path):
             data = oscar_artwork.json("/" + tmdb_path, request.args.to_dict(), local_only=True)
         if request.args.get("level") == "cards" and re.fullmatch(r"tv/\d+/season/\d+", tmdb_path):
             data = {**data, "episodes": [{key: episode.get(key) for key in ("id", "episode_number", "name", "still_path", "air_date", "runtime")} for episode in data.get("episodes", [])]}
-        return jsonify(data)
+        return jsonify(tmdb_artwork.without_ignored_images(data))
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except TmdbError as exc:
@@ -4573,7 +4576,33 @@ def tmdb_cache_status():
                     for item in library.get(collection, {}).values():
                         queue_tmdb_artwork(kind, item)
         tmdb_artwork.start()
-        return jsonify({**tmdb_artwork.status(), "missingIds": tmdb_missing_ids(), "storage": tmdb_artwork.storage_background()})
+        return jsonify(tmdb_cache_snapshot())
+
+
+def tmdb_cache_snapshot():
+    status = tmdb_artwork.status(detailed=True)
+    library = load_media_library()
+    titles = {f"{kind}/{int(item['tmdbId'])}": item.get("name") or path
+              for collection, kind in (("movies", "movie"), ("series", "tv"))
+              for path, item in library.get(collection, {}).items() if item.get("tmdbId")}
+    for item in status["errors"]:
+        item["title"] = titles.get(item["media"]) or item["title"] or item["media"]
+    return {**status, "missingIds": tmdb_missing_ids(), "storage": tmdb_artwork.storage_background()}
+
+
+@app.route("/tmdb/cache/discard-image", methods=["POST"])
+def discard_tmdb_image():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not isinstance(data.get("media"), str):
+        return jsonify({"error": "Indica el título y la imagen con errores."}), 400
+    try:
+        with tmdb_cache_action_lock:
+            tmdb_artwork.discard_image(data["media"], data.get("path"))
+            return jsonify(tmdb_cache_snapshot())
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except OSError:
+        return jsonify({"error": "No se pudo guardar el descarte en la Raspberry. Revisa espacio y permisos."}), 500
 
 
 @contextmanager

@@ -7,7 +7,6 @@ import base64
 from contextlib import contextmanager
 from datetime import datetime
 import hashlib
-import importlib.util
 import io
 import json
 import math
@@ -25,6 +24,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import Blueprint, jsonify, request
 from photo_import import validate_import_records
 from photo_previews import ImageWorkLock, PhotoPreviews
+from photo_faces import FacePaused, LocalFaceEngine, INSTALL_COMMAND
 
 try:
     from pillow_heif import register_heif_opener
@@ -34,6 +34,7 @@ except ImportError:
 
 EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif', '.heic', '.heif'}
 MAX_FILE_BYTES = 50 * 1024 * 1024
+FACE_BATCH_SIZE = 100
 
 
 def validate_import_digests(digests):
@@ -151,11 +152,13 @@ class PhotoLibrary:
         self.image_lock = ImageWorkLock()
         self.previews = PhotoPreviews(self.root, self.cache, self.image_lock)
         self.face_lock = threading.Lock()
+        self.face_stop = threading.Event()
         self.scan_lock = threading.Lock()
         self.scanning = False
         self.scan_error = ''
         self.last_scan = 0
         self.faces_running = False
+        self.single_face_running = False
         self.face_error = ''
         with self.db() as db:
             db.executescript('''
@@ -188,14 +191,37 @@ class PhotoLibrary:
               INSERT OR IGNORE INTO face_analysis (id, state) VALUES (1, 'idle');
               CREATE TABLE IF NOT EXISTS face_analysis_items (photo TEXT PRIMARY KEY, state TEXT NOT NULL);
               CREATE INDEX IF NOT EXISTS face_analysis_state ON face_analysis_items(state);
+              CREATE TABLE IF NOT EXISTS face_detections (
+                id TEXT PRIMARY KEY, photo TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+                person TEXT REFERENCES people(id), encoding TEXT NOT NULL, box TEXT,
+                manual INTEGER NOT NULL DEFAULT 0);
+              CREATE INDEX IF NOT EXISTS face_detections_photo ON face_detections(photo);
+              CREATE TABLE IF NOT EXISTS face_photo_jobs (
+                photo TEXT PRIMARY KEY REFERENCES photos(id) ON DELETE CASCADE,
+                state TEXT NOT NULL, error TEXT NOT NULL DEFAULT '');
             ''')
             for ident, name in [('gallery', 'Galería'), ('albums', 'Álbumes personales'), ('ai', 'Diviértete con la IA')]:
                 db.execute('INSERT OR IGNORE INTO folders VALUES (?, ?, ?, ?)', (ident, '', name, time.time()))
             self._migrate_gallery(db)
             # An interrupted scan is resumed explicitly, preserving its queue and progress.
             db.execute("UPDATE face_analysis SET state='paused' WHERE state='running'")
+            db.execute("UPDATE face_photo_jobs SET state='paused' WHERE state='running'")
+            self._migrate_face_boxes(db)
             db.execute("UPDATE jobs SET state='interrupted', error='Se interrumpió la generación. Reintenta las variantes pendientes.' WHERE state='running'")
         self.cleanup_deleted()
+
+    def _migrate_face_boxes(self, db):
+        if db.execute("SELECT 1 FROM photo_library_migrations WHERE name='face-boxes-v1'").fetchone(): return
+        for face in db.execute("SELECT * FROM faces WHERE encoding!='[]'").fetchall():
+            db.execute('INSERT INTO face_detections (id, photo, person, encoding) VALUES (?,?,?,?)',
+                       (uuid.uuid4().hex, face['photo'], face['person'], face['encoding']))
+        # Old detections have no location. A future explicit batch obtains boxes,
+        # while the existing groups/names remain available until then.
+        db.execute("UPDATE photos SET face_state='pending' WHERE source IS NULL AND id IN (SELECT photo FROM face_detections WHERE box IS NULL)")
+        if db.execute('SELECT count(*) FROM face_analysis_items').fetchone()[0] > FACE_BATCH_SIZE:
+            db.execute('DELETE FROM face_analysis_items')
+            db.execute("UPDATE face_analysis SET state='idle', error='' WHERE id=1")
+        db.execute("INSERT INTO photo_library_migrations VALUES ('face-boxes-v1')")
 
     def _migrate_gallery(self, db):
         if db.execute("SELECT 1 FROM photo_library_migrations WHERE name='gallery-v1'").fetchone(): return
@@ -436,20 +462,14 @@ class PhotoLibrary:
                         if digest: db.execute('INSERT OR REPLACE INTO photo_import_files VALUES (?,?)', (digest, ident))
                     saved.append(relative)
                     if records is not None:
-                        metadata, raw, people = records[index]
+                        metadata, raw, _people = records[index]
                         if raw is not None:
                             current = json.loads(db.execute('SELECT metadata FROM photos WHERE id=?', (ident,)).fetchone()['metadata'])
                             current.update(metadata)
                             db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(current), ident))
                             db.execute('INSERT OR REPLACE INTO photo_metadata VALUES (?,?)', (ident, raw))
-                            # Empty encodings are imported labels, never face-recognition vectors.
-                            for person in ([] if geolocated_only else people):
-                                key = person.get('id') or 'name:' + person['name']
-                                person_id = 'apple-' + hashlib.sha256(key.encode()).hexdigest()[:32]
-                                db.execute('INSERT OR IGNORE INTO people VALUES (?,?,?)', (person_id, person['name'], time.time()))
-                                db.execute('INSERT OR IGNORE INTO faces VALUES (?,?,?)', (ident, person_id, '[]'))
-                            if geolocated_only: db.execute("UPDATE photos SET face_state='skip' WHERE id=? AND face_state='pending'", (ident,))
-                            elif people: db.execute("UPDATE photos SET face_state='imported' WHERE id=?", (ident,))
+                            # Apple labels remain in the original metadata only. People
+                            # always comes from local analysis, including reimports.
                             if not geolocated_only and import_data.get('preserveAlbums') is True:
                                 for album in metadata['albums']:
                                     # Keep the full Apple name in metadata; folder names follow app constraints.
@@ -522,9 +542,9 @@ class PhotoLibrary:
                 return self.status(connection)
         # A small state probe: no photo rows, face vectors, JSON metadata or scan.
         running_job = bool(db.execute("SELECT EXISTS(SELECT 1 FROM jobs WHERE state='running')").fetchone()[0])
-        state = [self.revision, self.scanning, self.scan_error, self.faces_running, self.face_error]
+        state = [self.revision, self.scanning, self.scan_error, self.faces_running, self.single_face_running, self.face_error]
         return {'revision': hashlib.sha256(json.dumps(state).encode()).hexdigest(),
-                'working': self.scanning or self.faces_running or running_job}
+                'working': self.scanning or self.faces_running or self.single_face_running or running_job}
 
     def snapshot(self):
         with self.db() as db:
@@ -532,16 +552,18 @@ class PhotoLibrary:
             folders = [dict(row) for row in db.execute('SELECT * FROM folders ORDER BY created, name')]
             photos = []
             memberships = {}
+            face_counts = dict(db.execute('SELECT photo, count(*) FROM face_detections GROUP BY photo').fetchall())
             for member in db.execute('SELECT photo, folder FROM photo_albums'):
                 memberships.setdefault(member['photo'], []).append(member['folder'])
             for row in db.execute('SELECT * FROM photos ORDER BY uploaded DESC, name'):
                 photos.append({'id': row['id'], 'relativePath': row['path'], 'folderId': row['folder'],
                     'folderIds': memberships.get(row['id'], []),
                     'name': row['name'], 'uploadedAt': row['uploaded'], 'modifiedAt': row['modified'],
-                    'size': row['size'], 'sourceId': row['source'], 'style': row['style'], **json.loads(row['metadata'])})
-            people = [dict(row) for row in db.execute('SELECT * FROM people WHERE id IN (SELECT person FROM faces) ORDER BY created')]
+                    'size': row['size'], 'sourceId': row['source'], 'style': row['style'], **json.loads(row['metadata']),
+                    'faceState': row['face_state'], 'faceCount': face_counts.get(row['id'], 0)})
+            people = [dict(row) for row in db.execute("SELECT * FROM people WHERE id IN (SELECT person FROM faces WHERE encoding!='[]') ORDER BY created")]
             person_photos = {}
-            for row in db.execute('SELECT person, photo FROM faces ORDER BY person, photo'):
+            for row in db.execute("SELECT person, photo FROM faces WHERE encoding!='[]' ORDER BY person, photo"):
                 person_photos.setdefault(row['person'], []).append(row['photo'])
             for person in people:
                 person['photoIds'] = person_photos.get(person['id'], [])
@@ -550,6 +572,7 @@ class PhotoLibrary:
                 person['coverPhotoId'] = covers.get(person['id']) if covers.get(person['id']) in person['photoIds'] else None
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
+            known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY name, id")]
         try:
             configured = self.settings.public() if self.settings else {}
         except Exception:
@@ -557,7 +580,7 @@ class PhotoLibrary:
         return {**status, 'folders': folders, 'photos': photos, 'people': people, 'jobs': jobs,
                 'scanning': self.scanning, 'scanError': self.scan_error,
                 'aiReady': bool(configured.get('enabled') and configured.get('configured')),
-                'faces': faces}
+                'faces': faces, 'knownPeople': known_people}
 
     def move(self, ids, target='', new_name=None, parent=''):
         """Compatibility endpoint: adding an album reference never moves an original."""
@@ -641,8 +664,12 @@ class PhotoLibrary:
         counts = dict(db.execute('SELECT state, count(*) FROM face_analysis_items GROUP BY state').fetchall())
         total = sum(counts.values())
         done = total - counts.get('pending', 0)
-        pending = db.execute("SELECT count(*) FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','error')").fetchone()[0]
-        return {'available': importlib.util.find_spec('face_recognition') is not None,
+        pending = db.execute("SELECT count(*) FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','imported','error')").fetchone()[0]
+        if scan['state'] == 'idle' and not total:
+            total = min(FACE_BATCH_SIZE, pending)
+        return {'available': LocalFaceEngine.available(), 'engine': 'dlib-local',
+                'installCommand': INSTALL_COMMAND, 'lowPower': True, 'batchSize': FACE_BATCH_SIZE,
+                'singleRunning': self.single_face_running,
                 'state': scan['state'], 'running': self.faces_running,
                 'pausing': scan['state'] == 'paused' and self.faces_running,
                 'total': total, 'done': done, 'percent': int(done * 100 / total) if total else 0,
@@ -650,25 +677,29 @@ class PhotoLibrary:
                 'error': scan['error']}
 
     def start_faces(self):
-        if importlib.util.find_spec('face_recognition') is None:
-            raise PhotoError('Instala el soporte de Personas en la Raspberry (face-recognition).', 503)
+        if not LocalFaceEngine.available():
+            raise PhotoError('Instala el motor local de Personas: ' + INSTALL_COMMAND, 503)
         # Serialize transitions with worker exit, including a quick pause/resume.
         with self.lock:
+            if self.single_face_running:
+                raise PhotoError('Espera a que termine la foto seleccionada o pausa su análisis.', 409)
             with self.db() as db:
                 scan = db.execute('SELECT state FROM face_analysis WHERE id=1').fetchone()
                 remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
                 if not self.faces_running and not (scan['state'] in ('running', 'paused', 'error') and remaining):
-                    if not db.execute("SELECT 1 FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','error') LIMIT 1").fetchone():
+                    if not db.execute("SELECT 1 FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','imported','error') LIMIT 1").fetchone():
                         if scan['state'] == 'idle': db.execute("UPDATE face_analysis SET state='complete' WHERE id=1")
                         return {'ok': True}
                     db.execute('DELETE FROM face_analysis_items')
                     db.execute("""INSERT INTO face_analysis_items SELECT id, 'pending' FROM photos
-                        WHERE source IS NULL AND face_state IN ('pending','skip','error')""")
+                        WHERE source IS NULL AND face_state IN ('pending','skip','imported','error')
+                        ORDER BY (face_state='error'), uploaded, id LIMIT ?""", (FACE_BATCH_SIZE,))
                 remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
                 db.execute("UPDATE face_analysis SET state=?, error='' WHERE id=1", ('running' if remaining else 'complete',))
             self.face_error = ''
             if not remaining or self.faces_running: return {'ok': True}
             self.face_lock.acquire()
+            self.face_stop.clear()
             self.faces_running = True
             try:
                 threading.Thread(target=self._faces_worker, daemon=True).start()
@@ -680,41 +711,132 @@ class PhotoLibrary:
         return {'ok': True}
 
     def pause_faces(self):
-        with self.db() as db:
-            db.execute("UPDATE face_analysis SET state='paused' WHERE id=1 AND state='running'")
+        with self.lock:
+            self.face_stop.set()
+            with self.db() as db:
+                db.execute("UPDATE face_analysis SET state='paused' WHERE id=1 AND state='running'")
+                db.execute("UPDATE face_photo_jobs SET state='paused' WHERE state='running'")
         return {'ok': True}
 
-    def _faces_worker(self):
+    def photo_faces(self, photo_id):
+        with self.db() as db:
+            photo = db.execute('SELECT face_state, source FROM photos WHERE id=?', (photo_id,)).fetchone()
+            if not photo: raise PhotoError('No se encuentra la foto.', 404)
+            detections = [dict(row) for row in db.execute('''SELECT f.id, f.person AS personId, p.name, f.box, f.manual
+                FROM face_detections f LEFT JOIN people p ON p.id=f.person WHERE f.photo=? ORDER BY f.rowid''', (photo_id,))]
+            for face in detections:
+                face['box'] = json.loads(face['box']) if face['box'] else None
+                face['manual'] = bool(face['manual'])
+            job = db.execute('SELECT state, error FROM face_photo_jobs WHERE photo=?', (photo_id,)).fetchone()
+            batch = db.execute("SELECT 1 FROM face_analysis_items WHERE photo=? AND state='pending'", (photo_id,)).fetchone()
+            return {'photoId': photo_id, 'faces': detections, 'state': photo['face_state'],
+                    'canDetect': photo['source'] is None and LocalFaceEngine.available(),
+                    'scan': dict(job) if job else {'state': 'idle', 'error': ''},
+                    'batchRunning': self.faces_running, 'queued': bool(batch)}
+
+    def start_photo_faces(self, photo_id):
+        if not LocalFaceEngine.available():
+            raise PhotoError('Instala el motor local de Personas: ' + INSTALL_COMMAND, 503)
+        with self.lock:
+            if self.faces_running or self.single_face_running:
+                raise PhotoError('Pausa el análisis en curso antes de detectar personas en esta foto.', 409)
+            with self.db() as db:
+                photo = db.execute('SELECT * FROM photos WHERE id=?', (photo_id,)).fetchone()
+                if not photo: raise PhotoError('No se encuentra la foto.', 404)
+                if photo['source'] is not None: raise PhotoError('Analiza la foto original.', 409)
+                db.execute("""INSERT INTO face_photo_jobs VALUES (?,'running','')
+                    ON CONFLICT(photo) DO UPDATE SET state='running', error=''""", (photo_id,))
+            self.face_stop.clear()
+            self.face_lock.acquire()
+            self.single_face_running = True
+            try:
+                threading.Thread(target=self._single_faces_worker, args=(dict(photo),), daemon=True).start()
+            except Exception:
+                self.single_face_running = False
+                self.face_lock.release()
+                with self.db() as db: db.execute("UPDATE face_photo_jobs SET state='paused' WHERE photo=?", (photo_id,))
+                raise
+        return {'ok': True}
+
+    def _single_faces_worker(self, photo):
+        engine = LocalFaceEngine()
         try:
-            import face_recognition
-            import numpy as np
-            while True:
+            temperature = self._face_temperature()
+            if temperature is not None and temperature >= 75:
+                raise PhotoError('Deja enfriar la Raspberry por debajo de 75 °C antes de continuar.')
+            with self.image_lock.priority(2, cancel=self.face_stop) as acquired:
+                if not acquired: raise FacePaused()
+                detections = engine.encode(self.safe_file(photo['path']), self.face_stop)
+            with self.db() as db:
+                if self.face_stop.is_set(): raise FacePaused()
+                self.group_faces(photo['id'], detections, db)
+                db.execute("UPDATE face_photo_jobs SET state='complete', error='' WHERE photo=?", (photo['id'],))
+                updated = db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (photo['id'],)).rowcount
+                if updated and not db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone():
+                    db.execute("UPDATE face_analysis SET state='complete', error='' WHERE id=1")
+        except FacePaused:
+            with self.db() as db: db.execute("UPDATE face_photo_jobs SET state='paused' WHERE photo=?", (photo['id'],))
+        except Exception as error:
+            message = str(error) if isinstance(error, PhotoError) else 'No se pudo analizar esta foto. Revisa el archivo y el motor local.'
+            with self.db() as db:
+                db.execute("UPDATE face_photo_jobs SET state='error', error=? WHERE photo=?", (message, photo['id']))
+        finally:
+            engine.close()
+            with self.lock:
+                self.single_face_running = False
+                self.face_lock.release()
+
+    def _face_rest(self, elapsed):
+        # At most half of one core on average, with an interruptible idle period.
+        self.face_stop.wait(max(.25, elapsed))
+
+    def _face_temperature(self):
+        try:
+            return int(Path('/sys/class/thermal/thermal_zone0/temp').read_text()) / 1000
+        except (OSError, ValueError):
+            return None
+
+    def _faces_worker(self):
+        engine = LocalFaceEngine()
+        try:
+            while not self.face_stop.is_set():
+                temperature = self._face_temperature()
+                if temperature is not None and temperature >= 75:
+                    self.pause_faces()
+                    with self.db() as db:
+                        db.execute("UPDATE face_analysis SET error=? WHERE id=1",
+                                   ('Pausa por temperatura (75 °C). Deja enfriar la Raspberry antes de continuar.',))
+                    break
                 with self.db() as db:
                     if db.execute('SELECT state FROM face_analysis WHERE id=1').fetchone()[0] != 'running': break
                     item = db.execute("SELECT photo FROM face_analysis_items WHERE state='pending' ORDER BY rowid LIMIT 1").fetchone()
                     if not item: break
                     photo = db.execute('SELECT * FROM photos WHERE id=?', (item['photo'],)).fetchone()
-                    if not photo or photo['face_state'] in ('done', 'imported'):
+                    if not photo or photo['face_state'] == 'done':
                         db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (item['photo'],))
                         continue
                 try:
-                    with self.image_lock, Image.open(self.safe_file(photo['path'])) as source:
-                        source.draft('RGB', (1000, 1000))
-                        source.thumbnail((1000, 1000))
-                        image = ImageOps.exif_transpose(source).convert('RGB')
-                        encodings = face_recognition.face_encodings(np.asarray(image))
+                    started = time.monotonic()
+                    with self.image_lock.priority(2, cancel=self.face_stop) as acquired:
+                        if not acquired or self.face_stop.is_set(): break
+                        encodings = engine.encode(self.safe_file(photo['path']), self.face_stop)
+                    if self.face_stop.is_set(): break
                     with self.db() as db:
-                        self.group_faces(photo['id'], [encoding.tolist() for encoding in encodings], db)
+                        self.group_faces(photo['id'], encodings, db)
                         db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (photo['id'],))
+                except FacePaused:
+                    break
                 except (OSError, ValueError, RuntimeError):
                     with self.db() as db:
                         db.execute("UPDATE photos SET face_state='error' WHERE id=?", (photo['id'],))
                         db.execute("UPDATE face_analysis_items SET state='error' WHERE photo=?", (photo['id'],))
+                self._face_rest(time.monotonic() - started)
         except Exception:
-            self.face_error = 'No se pudo iniciar el reconocimiento local. Revisa la instalación de face-recognition.'
+            self.face_error = 'No se pudo ejecutar el motor local. Revisa la instalación: ' + INSTALL_COMMAND
             with self.db() as db:
                 db.execute("UPDATE face_analysis SET state='error', error=? WHERE id=1", (self.face_error,))
         finally:
+            engine.close()
             with self.lock:
                 with self.db() as db:
                     remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
@@ -731,20 +853,84 @@ class PhotoLibrary:
             with self.db() as connection:
                 return self.group_faces(photo_id, encodings, connection)
         state = db.execute('SELECT face_state FROM photos WHERE id=?', (photo_id,)).fetchone()
-        if not state or state['face_state'] == 'imported': return
-        known = [(r['person'], json.loads(r['encoding'])) for r in db.execute('SELECT person, encoding FROM faces')]
+        if not state: return
+        known = [(r['person'], json.loads(r['encoding'])) for r in db.execute("SELECT person, encoding FROM faces WHERE encoding!='[]'")]
+        previous = [dict(row) for row in db.execute('SELECT * FROM face_detections WHERE photo=?', (photo_id,))]
+        for face in previous:
+            face['encoding'] = json.loads(face['encoding'])
+            face['box'] = json.loads(face['box']) if face['box'] else None
+        def distance(a, b):
+            return math.sqrt(sum((x-y)**2 for x, y in zip(a, b))) if len(a) == len(b) == 128 else float('inf')
+        def overlap(a, b):
+            if not a or not b: return 0
+            intersection = max(0, min(a['x'] + a['width'], b['x'] + b['width']) - max(a['x'], b['x'])) * \
+                max(0, min(a['y'] + a['height'], b['y'] + b['height']) - max(a['y'], b['y']))
+            return intersection / (a['width'] * a['height'] + b['width'] * b['height'] - intersection)
+        detections, matched = [], set()
         used = set()
-        for encoding in encodings:
+        for detection in encodings:
+            # Lists also support catalogues/tests from before boxes were stored.
+            encoding = detection.get('encoding', []) if isinstance(detection, dict) else detection
+            box = detection.get('box') if isinstance(detection, dict) else None
             if len(encoding) != 128 or not all(math.isfinite(v) for v in encoding): continue
+            if box is not None and (not isinstance(box, dict) or
+                    any(not isinstance(box.get(key), (int, float)) or isinstance(box[key], bool) or not math.isfinite(box[key])
+                        for key in ('x', 'y', 'width', 'height')) or
+                    not (0 <= box['x'] < 1 and 0 <= box['y'] < 1 and box['width'] > 0 and box['height'] > 0
+                         and box['x'] + box['width'] <= 1.000001 and box['y'] + box['height'] <= 1.000001)):
+                raise ValueError('Rectángulo de cara inválido.')
+            candidates = [(distance(face['encoding'], encoding), face) for face in previous
+                          if face['id'] not in matched and (overlap(face['box'], box) > .3 or face['box'] is None)]
+            candidates.sort(key=lambda item: item[0])
+            old = candidates[0][1] if candidates and candidates[0][0] < .48 else None
+            if old: matched.add(old['id'])
             scores = sorted((math.sqrt(sum((a-b)**2 for a, b in zip(vector, encoding))), person)
                             for person, vector in known if person not in used and len(vector) == 128)
-            person = scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
-            if not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
+            person = old['person'] if old else scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
+            if person and not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
                 count = db.execute('SELECT count(*) FROM people').fetchone()[0]
                 db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(count + 1), time.time()))
-            db.execute('INSERT OR IGNORE INTO faces VALUES (?,?,?)', (photo_id, person, json.dumps(encoding)))
+            detections.append({'id': old['id'] if old else uuid.uuid4().hex, 'person': person,
+                               'encoding': encoding, 'box': box, 'manual': old['manual'] if old else 0})
             used.add(person)
+        # A second detection must never erase the user's confirmed assignments,
+        # even when a difficult face is missed this time.
+        detections.extend(face for face in previous if face['manual'] and face['id'] not in matched)
+        db.execute('DELETE FROM face_detections WHERE photo=?', (photo_id,))
+        for face in detections:
+            db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,?)', (face['id'], photo_id, face['person'],
+                       json.dumps(face['encoding']), json.dumps(face['box']) if face['box'] else None, face['manual']))
+        self._sync_face_links(photo_id, db)
         db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photo_id,))
+
+    def _sync_face_links(self, photo_id, db):
+        db.execute("DELETE FROM faces WHERE photo=? AND encoding!='[]'", (photo_id,))
+        db.execute('''INSERT OR IGNORE INTO faces SELECT photo, person, encoding FROM face_detections
+            WHERE photo=? AND person IS NOT NULL ORDER BY manual DESC, rowid''', (photo_id,))
+        db.execute('''DELETE FROM person_covers WHERE photo=? AND NOT EXISTS
+            (SELECT 1 FROM faces WHERE person=person_covers.person AND photo=person_covers.photo)''', (photo_id,))
+
+    def assign_face(self, photo_id, face_id, data):
+        if set(data) not in ({'personId'}, {'name'}):
+            raise PhotoError('Selecciona una persona existente o escribe un nombre nuevo.')
+        with self.db() as db:
+            face = db.execute('SELECT * FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).fetchone()
+            if not face: raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
+            if 'personId' in data:
+                person_id = data['personId']
+                if not isinstance(person_id, str) or person_id.startswith('apple-') or not db.execute('SELECT 1 FROM people WHERE id=?', (person_id,)).fetchone():
+                    raise PhotoError('Selecciona una persona existente.', 400)
+            else:
+                name = clean_name(data['name'])
+                # Reuse names regardless of case; an explicit ID disambiguates homonyms.
+                existing = next((row for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%'")
+                                 if row['name'].casefold() == name.casefold()), None)
+                person_id = existing['id'] if existing else uuid.uuid4().hex
+                if not existing:
+                    db.execute('INSERT INTO people VALUES (?,?,?)', (person_id, name, time.time()))
+            db.execute('UPDATE face_detections SET person=?, manual=1 WHERE id=?', (person_id, face_id))
+            self._sync_face_links(photo_id, db)
+        return {'ok': True, 'personId': person_id}
 
     def rename_person(self, ident, name):
         name = clean_name(name)
@@ -757,6 +943,7 @@ class PhotoLibrary:
         if not isinstance(ids, list) or not ids or any(not isinstance(i, str) for i in ids):
             raise PhotoError('Selecciona las coincidencias que quieres quitar.')
         with self.db() as db:
+            db.executemany('UPDATE face_detections SET person=NULL, manual=1 WHERE person=? AND photo=?', [(person, ident) for ident in ids])
             db.executemany('DELETE FROM faces WHERE person=? AND photo=?', [(person, ident) for ident in ids])
             db.execute('DELETE FROM person_covers WHERE person=? AND NOT EXISTS (SELECT 1 FROM faces WHERE person=? AND photo=person_covers.photo)', (person, person))
         return {'ok': True}
@@ -888,6 +1075,19 @@ def create_photo_blueprint(get_library):
     def pause():
         body()
         return jsonify(get_library().pause_faces())
+
+    @bp.get('/pictures/photos/<ident>/faces')
+    def photo_faces(ident):
+        return jsonify(get_library().photo_faces(ident))
+
+    @bp.post('/pictures/photos/<ident>/detect')
+    def detect_photo(ident):
+        body()
+        return jsonify(get_library().start_photo_faces(ident)), 202
+
+    @bp.post('/pictures/photos/<ident>/faces/<face>/assign')
+    def assign_face(ident, face):
+        return jsonify(get_library().assign_face(ident, face, body()))
 
     @bp.post('/pictures/people/<ident>/cover')
     def cover(ident):

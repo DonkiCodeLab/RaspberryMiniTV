@@ -261,7 +261,8 @@ class PhotoApiTests(unittest.TestCase):
 
     def test_all_routes_require_pin(self):
         for path, method in [('library', 'get'), ('status', 'get'), ('content', 'get'), ('upload', 'post'), ('folders', 'post'), ('move', 'post'),
-                             ('albums/add', 'post'), ('photos/delete', 'post'), ('generate', 'post'), ('people/scan', 'post'), ('people/pause', 'post'), ('people/a/cover', 'post'), ('people/a', 'post'), ('people/a/remove', 'post')]:
+                             ('albums/add', 'post'), ('photos/delete', 'post'), ('generate', 'post'), ('people/scan', 'post'), ('people/pause', 'post'), ('people/a/cover', 'post'), ('people/a', 'post'), ('people/a/remove', 'post'),
+                             ('photos/a/faces', 'get'), ('photos/a/detect', 'post'), ('photos/a/faces/b/assign', 'post')]:
             self.assertEqual(getattr(self.client, method)('/pictures/' + path).status_code, 401, path)
 
     def test_status_is_small_private_and_does_not_build_or_scan_catalogue(self):

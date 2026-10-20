@@ -108,7 +108,7 @@ class PhotoImportTests(unittest.TestCase):
         self.assertEqual(snap['people'], [])
         self.store.start_faces.assert_not_called()
         with self.store.db() as db:
-            self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'skip')
+            self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'pending')
         self.assertEqual(self.store.upload([picture()], import_data=data), result)
         again = self.store.upload([picture()], import_data={**data, 'session': 'again'})
         self.assertEqual(again['duplicates'], 1)
@@ -122,7 +122,7 @@ class PhotoImportTests(unittest.TestCase):
             self.assertEqual(list(self.store.root.iterdir()), [])
             self.assertEqual(self.store.snapshot()['photos'], [])
 
-    def test_import_preserves_original_bytes_full_metadata_people_and_multi_album_membership(self):
+    def test_import_preserves_original_bytes_metadata_and_albums_without_using_apple_people(self):
         original = picture().read()
         self.store.upload([picture()], 'Mac', import_data=payload(metadata()))
         snap = self.store.snapshot(); photo = snap['photos'][0]
@@ -130,9 +130,9 @@ class PhotoImportTests(unittest.TestCase):
         self.assertEqual(photo['latitude'], 0); self.assertEqual(photo['longitude'], -3.7)
         self.assertEqual(photo['takenAt'], '2024-08-02T17:25:00+02:00')
         self.assertEqual(len(photo['folderIds']), 2); self.assertTrue(photo['appleFavorite'])
-        self.assertEqual(snap['people'][0]['name'], 'Ana'); self.assertEqual(snap['people'][0]['photoIds'], [photo['id']])
+        self.assertEqual(snap['people'], [])
         with self.store.db() as db:
-            self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'imported')
+            self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'pending')
             raw = json.loads(db.execute('SELECT data FROM photo_metadata').fetchone()[0])
         self.assertEqual(raw, metadata()['raw'])
         self.assertNotIn('face_info', json.dumps(snap))
@@ -148,13 +148,27 @@ class PhotoImportTests(unittest.TestCase):
         self.assertEqual(len(self.store.snapshot()['photos']), 2)
         self.assertEqual(len(list(self.store.root.rglob('*.jpg'))), 2)
 
-    def test_same_names_different_apple_ids_remain_distinct_and_never_match_empty_encodings(self):
+    def test_imported_names_do_not_create_people_or_name_local_face_matches(self):
         self.store.upload([picture()], 'Mac', import_data=payload(metadata(people=[{'id': 'a', 'name': 'Ana'}, {'id': 'b', 'name': 'Ana'}])))
         self.store.upload([picture(color='blue')], 'Ordinary')
         photo = next(p for p in self.store.snapshot()['photos'] if not p.get('appleId'))
         self.store.group_faces(photo['id'], [[0.0] * 128])
-        self.assertEqual(len(self.store.snapshot()['people']), 3)
+        self.assertEqual(len(self.store.snapshot()['people']), 1)
         self.assertFalse(any(photo['id'] in p['photoIds'] for p in self.store.snapshot()['people'] if p['name'] == 'Ana'))
+
+    def test_reimport_preserves_local_person_name_cover_and_completed_analysis(self):
+        self.store.upload([picture()], 'Mac', import_data=payload(metadata()))
+        photo = self.store.snapshot()['photos'][0]
+        self.store.group_faces(photo['id'], [[0.] * 128])
+        person = self.store.snapshot()['people'][0]
+        self.store.rename_person(person['id'], 'Nombre local')
+        self.store.set_person_cover(person['id'], photo['id'])
+        self.store.upload([picture()], 'Mac', import_data=payload(metadata(), session='reimport'))
+        people = self.store.snapshot()['people']
+        self.assertEqual(len(people), 1)
+        self.assertEqual((people[0]['name'], people[0]['coverPhotoId']), ('Nombre local', photo['id']))
+        with self.store.db() as db:
+            self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'done')
 
     def test_invalid_metadata_rolls_back_all_inputs(self):
         for invalid in [metadata(latitude=91), metadata(people='Ana'), metadata(takenAt='invalid'),
@@ -234,8 +248,9 @@ class PhotoImportTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT count(*) FROM photo_import_batches').fetchone()[0], 0)
         self.assertEqual(self.store.snapshot()['photos'], [])
 
-    def test_people_snapshot_uses_bounded_queries_for_many_imported_people(self):
-        self.store.upload([picture()], 'Mac', import_data=payload(metadata(people=[{'id': str(i), 'name': f'Person {i}'} for i in range(100)])))
+    def test_people_snapshot_uses_bounded_queries_for_many_local_people(self):
+        self.store.upload([picture()], 'Mac', import_data=payload(metadata()))
+        self.store.group_faces(self.store.snapshot()['photos'][0]['id'], [[i * .5] * 128 for i in range(100)])
         import sqlite3
         connect = sqlite3.connect
         statements = []

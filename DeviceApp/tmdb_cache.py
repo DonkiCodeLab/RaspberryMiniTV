@@ -16,6 +16,7 @@ import urllib.request
 
 from tmdb_resources import (IMAGE_DOWNLOADS, METADATA_DOWNLOADS, THUMBNAILS,
                             DOWNLOAD_BYTES_PER_SECOND, DOWNLOAD_CHUNK_BYTES)
+from tmdb_failures import PreparationError, failure, image_contexts, legacy_failures, merge_failures
 
 IMAGE_RE = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg)")
 DETAIL_RE = re.compile(r"/(?:person/[1-9]\d*|movie/\d+(?:/images|/credits)?|tv/\d+(?:/images|/aggregate_credits|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
@@ -59,6 +60,10 @@ class TmdbCache:
         self.state_lock = threading.RLock()
         self.generations = {}
         self.worker_context = threading.local()
+        try:
+            self.ignored_images = set(json.loads((self.root / "ignored-images.json").read_text()))
+        except (OSError, ValueError):
+            self.ignored_images = set()
         try:
             self.index = json.loads((self.root / "index.json").read_text())
         except (OSError, ValueError):
@@ -147,7 +152,7 @@ class TmdbCache:
         except (OSError, ValueError):
             return {"id": int(tmdb_id), "creditsReady": credits_ready}
         summary = {"id": int(tmdb_id), "name": data.get("title") or data.get("name") or "",
-                "posterPath": data.get("poster_path") or "", "voteAverage": data.get("vote_average") or 0,
+                "posterPath": "" if data.get("poster_path") in self.ignored_images else data.get("poster_path") or "", "voteAverage": data.get("vote_average") or 0,
                 "releaseDate": data.get("release_date") or "", "firstAirDate": data.get("first_air_date") or "",
                 "genres": [genre.get("name", "") for genre in data.get("genres", [])],
                 "creditsReady": credits_ready}
@@ -357,7 +362,7 @@ class TmdbCache:
         if not saved[1]:
             return False
         if include_portraits:
-            for portrait in saved[2] | self._credit_portrait_paths(kind, tmdb_id, {}):
+            for portrait in (saved[2] | self._credit_portrait_paths(kind, tmdb_id, {})) - self.ignored_images:
                 try:
                     self.display_image(portrait, 185, local_only=True)
                 except (TmdbError, ValueError):
@@ -395,20 +400,27 @@ class TmdbCache:
                     pass
         return {person["profile_path"] for person in people if isinstance(person, dict)
                 and isinstance(person.get("profile_path"), str)
-                and re.fullmatch(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp)", person["profile_path"])}
+                and re.fullmatch(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp)", person["profile_path"])
+                and person["profile_path"] not in self.ignored_images}
 
     def warm_credit_portraits(self, kind, tmdb_id, data):
         portraits = self._credit_portrait_paths(kind, tmdb_id, data)
         errors = []
+        contexts = image_contexts(data)
         for count, portrait in enumerate(sorted(portraits), 1):
             self._check_worker()
             try:
+                self.worker_context.image = portrait
                 self.display_image(portrait, 185)
             except Exception as exc:
-                errors.append(f"{portrait}: {exc}")
+                if portrait not in self.ignored_images:
+                    errors.append(failure(portrait, exc, phase="thumbnails", width=185,
+                                          contexts=contexts.get(portrait) or [{"type": "profile"}]))
+            finally:
+                self.worker_context.image = None
             self._progress("thumbnails", count, len(portraits), portrait)
         if errors:
-            raise RuntimeError("; ".join(errors)[:4000])
+            raise PreparationError(errors)
 
     def _with_movie_links(self, path, data, refresh=False, lookup=False, lookup_results=None):
         """Persist movie links once, shared by languages, browsers and restarts."""
@@ -474,6 +486,7 @@ class TmdbCache:
         return results
 
     def display_image(self, path, width=None, local_only=False, *, preview=False):
+        self._check_image(path)
         if local_only:
             if not IMAGE_RE.fullmatch(path) or width not in (None, 185, 342, 500, 780, 1280):
                 raise ValueError("Imagen o tamaño no permitido")
@@ -517,6 +530,7 @@ class TmdbCache:
                 resized.save(buffer, "WEBP", quality=82, method=3)
             with self.state_lock:
                 self._check_worker()
+                self._check_image(path)
                 if generation != self.generations.get("image:" + path, 0):
                     raise RuntimeError("Miniatura cancelada por borrado del catálogo")
                 atomic_write(target, buffer.getvalue())
@@ -527,6 +541,7 @@ class TmdbCache:
             raise ValueError("Ruta de imagen no permitida")
         target = self.root / "images" / path.lstrip("/")
         with self.state_lock:
+            self._check_image(path)
             generation = self.generations.get("image:" + path, 0)
             self._check_worker()
         with self.io_locks[hash(str(target)) % len(self.io_locks)]:
@@ -545,6 +560,7 @@ class TmdbCache:
                 raise ValueError("TMDB no devolvió una imagen")
             with self.state_lock:
                 self._check_worker()
+                self._check_image(path)
                 if generation != self.generations.get("image:" + path, 0):
                     raise RuntimeError("Imagen cancelada por borrado del catálogo")
                 atomic_write(target, raw)
@@ -554,6 +570,24 @@ class TmdbCache:
         context = getattr(self.worker_context, "job", None)
         if context and self.generations.get(context[0], 0) != context[1]:
             raise RuntimeError("Descarga cancelada por borrado del catálogo")
+        self._check_image(getattr(self.worker_context, "image", None))
+
+    def _check_image(self, path):
+        if path in self.ignored_images:
+            raise TmdbError("Imagen descartada: no se descargará ni se utilizará.", "TMDB_IMAGE_IGNORED")
+
+    def without_ignored_images(self, data):
+        """Filter outgoing metadata without changing the original cached TMDB response."""
+        if not self.ignored_images:
+            return data
+        if isinstance(data, list):
+            return [self.without_ignored_images(item) for item in data
+                    if not (isinstance(item, dict) and item.get("file_path") in self.ignored_images)]
+        if isinstance(data, dict):
+            return {key: (None if isinstance(value, str) and
+                          (value in self.ignored_images or self.profile_image(value) in self.ignored_images)
+                          else self.without_ignored_images(value)) for key, value in data.items()}
+        return data
 
     def _index_metadata(self, filename, owner, data):
         entry = {"owner": owner, "images": sorted(self._images_in(data) | set(self.index.get(filename, {}).get("images", [])))}
@@ -582,6 +616,7 @@ class TmdbCache:
         thumbnails = {(path, 1280) for path in extra_images}
         errors = []
         collected = {}
+        contexts = {path: [{"type": "selected", "extra": False}] for path in extra_images}
         self._progress("metadata", 0, 0, base)
         def collect_thumbnails(data):
             # Match the sizes used by library cards, seasons and detail galleries.
@@ -611,12 +646,14 @@ class TmdbCache:
                     return collected[key]
                 data = self.json(path, params, refresh=refresh)
                 collected[key] = data
+                for image, usages in image_contexts(data, path).items():
+                    contexts.setdefault(image, []).extend(usage for usage in usages if usage not in contexts.get(image, []))
                 self._progress("metadata", len(collected), 0, path)
                 images.update(self._images_in(data, include_profiles=False))
                 collect_thumbnails(data)
                 return data
             except Exception as exc:
-                errors.append(f"{path}: {exc}")
+                errors.append(failure(path, exc))
                 return {}
         collect(base + "/images")
         for language in LANGUAGES:
@@ -638,31 +675,49 @@ class TmdbCache:
                         if isinstance(episode_number, int) and episode_number > 0:
                             collect(season_path + f"/episode/{episode_number}/images")
                     collect(season_path + "/images")
-        errors.extend(self._warm_images(images, thumbnails))
+        errors.extend(self._warm_images(images, thumbnails, contexts))
         if self.include_credits:
             try:
                 credits = self.warm_credits(kind, tmdb_id, refresh=refresh)
                 self.warm_credit_portraits(kind, tmdb_id, credits)
+            except PreparationError as exc:
+                errors.extend(exc.failures)
             except Exception as exc:
-                errors.append(f"Créditos {base}: {exc}")
+                errors.append(failure(self._credits_path(kind, tmdb_id), exc, phase="credits"))
         if errors:
-            raise RuntimeError("; ".join(errors)[:4000])
+            raise PreparationError(errors)
 
-    def _warm_images(self, images, thumbnails):
+    def _warm_images(self, images, thumbnails, contexts=None):
         errors = []
+        contexts = contexts or {}
+        failed_originals = set()
         for count, path in enumerate(sorted(images), 1):
             self._check_worker()
+            if path in self.ignored_images:
+                continue
             try:
+                self.worker_context.image = path
                 self.image(path)
             except Exception as exc:
-                errors.append(f"{path}: {exc}")
+                if path not in self.ignored_images:
+                    failed_originals.add(path)
+                    errors.append(failure(path, exc, phase="images", contexts=contexts.get(path) or [{"type": "unknown"}]))
+            finally:
+                self.worker_context.image = None
             self._progress("images", count, len(images), path)
         for count, (path, width) in enumerate(sorted(thumbnails, key=lambda item: (item[1], item[0])), 1):
             self._check_worker()
+            if path in self.ignored_images or path in failed_originals:
+                continue
             try:
+                self.worker_context.image = path
                 self.display_image(path, width)
             except Exception as exc:
-                errors.append(f"Miniatura {path} ({width}): {exc}")
+                if path not in self.ignored_images:
+                    errors.append(failure(path, exc, phase="thumbnails", width=width,
+                                          contexts=contexts.get(path) or [{"type": "unknown"}]))
+            finally:
+                self.worker_context.image = None
             self._progress("thumbnails", count, len(thumbnails), path)
         self._check_worker()
         return errors
@@ -773,13 +828,24 @@ class TmdbCache:
                 else:
                     self.warm(job["kind"], job["id"], job["images"], job.get("refresh", False))
                 state, error = "complete", ""
+                failures = []
+            except PreparationError as exc:
+                failures = [item for item in exc.failures if item["path"] not in self.ignored_images]
+                state, error = ("failed", str(PreparationError(failures))) if failures else ("complete", "")
             except Exception as exc:
                 state, error = "failed", str(exc)
+                failures = [failure("", exc)]
             finally:
                 self.worker_context.job = None
             with self.jobs_lock:
                 if self.jobs.get(key) is job and job["state"] == "running":
-                    job.update(state=state, error=error)
+                    # A discard can arrive after the last network operation.
+                    failures = [item for item in failures if item["path"] not in self.ignored_images]
+                    if state == "failed" and not failures:
+                        state, error = "complete", ""
+                    elif failures:
+                        error = str(PreparationError(failures))
+                    job.update(state=state, error=error, failures=merge_failures(failures))
                     if not job.get("creditsOnly"):
                         job["thumbnailsReady"] = state == "complete"
                     job["creditsReady"] = self.credits_ready(job["kind"], job["id"], include_portraits=True)
@@ -930,10 +996,103 @@ class TmdbCache:
             self.storage_checked_at = now
             return dict(snapshot)
 
-    def status(self):
+    def _describe_failures(self, job):
+        """Enrich pre-upgrade errors using local metadata only, once per job."""
+        if "failures" in job and "title" in job:
+            return
+        base = f"/{job['kind']}/{job['id']}"
+        legacy = "failures" not in job
+        paths = [base, base + "/images", self._credits_path(job["kind"], job["id"])] if legacy else [base]
+        contexts = {path: [{"type": "selected"}] for path in job.get("images", [])}
+        title = ""
+        seen = set()
+        for path in paths:
+            if path in seen:
+                continue
+            seen.add(path)
+            variants = [{}] if path.endswith(("/images", "/credits", "/aggregate_credits")) else [
+                {"language": language, **({"append_to_response": "external_ids"} if job["kind"] == "movie" else {})}
+                for language in LANGUAGES]
+            for params in variants:
+                try:
+                    data = self.json(path, params, local_only=True)
+                except (TmdbError, ValueError, OSError):
+                    continue
+                if path == base:
+                    title = title or data.get("title") or data.get("name") or ""
+                if not legacy:
+                    continue
+                for image, usages in image_contexts(data, path).items():
+                    contexts.setdefault(image, []).extend(usage for usage in usages if usage not in contexts.get(image, []))
+                for season in data.get("seasons", []):
+                    number = season.get("season_number")
+                    if isinstance(number, int) and number >= 0:
+                        paths.extend([base + f"/season/{number}", base + f"/season/{number}/images"])
+                for episode in data.get("episodes", []):
+                    number = episode.get("episode_number")
+                    if isinstance(number, int) and number > 0:
+                        paths.append(path + f"/episode/{number}/images")
+        job["title"] = title
+        if "failures" not in job:
+            job["failures"] = legacy_failures(job.get("error", ""), contexts)
+
+    def discard_image(self, media, path):
+        if not isinstance(path, str) or not IMAGE_RE.fullmatch(path):
+            raise ValueError("Imagen no válida")
+        with self.state_lock, self.jobs_lock:
+            job = self.jobs.get(media)
+            if not job or job["state"] != "failed":
+                raise ValueError("El fallo ya no está disponible. Actualiza la lista.")
+            self._describe_failures(job)
+            if not any(item["resource"] == "image" and item["path"] == path for item in job["failures"]):
+                raise ValueError("La imagen no pertenece a los fallos de este título")
+            ignored = self.ignored_images | {path}
+            atomic_write(self.root / "ignored-images.json", json.dumps(sorted(ignored)).encode())
+            self.ignored_images = ignored
+            self.generations["image:" + path] = self.generations.get("image:" + path, 0) + 1
+            self._remove_discarded_failures()
+            self._save_jobs()
+
+    def _remove_discarded_failures(self):
+        changed = False
+        for job in self.jobs.values():
+            if job["state"] != "failed":
+                continue
+            changed = changed or "failures" not in job or "title" not in job
+            self._describe_failures(job)
+            previous = job["failures"]
+            remaining = [item for item in previous if item["resource"] != "image" or item["path"] not in self.ignored_images]
+            if len(previous) == len(remaining):
+                continue
+            changed = True
+            job.update(failures=remaining, error=str(PreparationError(remaining)) if remaining else "")
+            if not remaining:
+                job["state"] = "complete"
+                if not job.get("creditsOnly"):
+                    job["thumbnailsReady"] = True
+                job["creditsReady"] = self.credits_ready(job["kind"], job["id"], include_portraits=True)
+                job["creditsVersion"] = CREDITS_VERSION if job["creditsReady"] else 0
+        return changed
+
+    def status(self, detailed=False):
+        if detailed:
+            with self.state_lock, self.jobs_lock:
+                # Also reconcile a restart between saving the discard and jobs.json.
+                if self._remove_discarded_failures():
+                    self._save_jobs()
         with self.jobs_lock:
             jobs = [dict(job) for job in self.jobs.values()]
+        errors = []
+        for job in jobs:
+            if job["state"] != "failed":
+                continue
+            media = f'{job["kind"]}/{job["id"]}'
+            if detailed:
+                errors.extend({**item, "media": media, "kind": job["kind"], "id": job["id"],
+                               "title": job.get("title", "")} for item in job.get("failures", []))
+            else:
+                errors.append({"media": media, "error": job["error"]})
         return {"total": len(jobs), **{state: sum(j["state"] == state for j in jobs) for state in ("pending", "running", "complete", "failed", "cancelled")},
                 "jobs": {f'{j["kind"]}/{j["id"]}': {key: j.get(key) for key in ("state", "progress", "error", "creditsOnly", "creditsReady", "creditsVersion", "thumbnailsReady")} for j in jobs},
-                "errors": [{"media": f'{j["kind"]}/{j["id"]}', "error": j["error"]} for j in jobs if j["state"] == "failed"],
+                "errors": errors, "ignoredImages": len(self.ignored_images),
                 "current": next((f'{j["kind"]}/{j["id"]}' for j in jobs if j["state"] == "running"), "")}

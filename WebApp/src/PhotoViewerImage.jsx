@@ -3,7 +3,17 @@ import { getPictureContentUrl } from './api/raspberryApi.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { attachPhotoZoom, MAX_PHOTO_ZOOM } from './photoZoom.js';
 
-export default function PhotoViewerImage({ photo, s }) {
+export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s }) {
+  return faces.filter(face => face.box).map(face => <button type="button" key={face.id}
+    className={`photo-face-box${face.personId === highlightPersonId ? ' is-highlighted' : ''}${face.id === selectedFaceId ? ' is-selected' : ''}`}
+    aria-label={`${s.editFace}: ${face.name || s.unnamedFace}`} aria-pressed={face.id === selectedFaceId}
+    style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}
+    onClick={event => { event.stopPropagation(); onSelect?.(face.id); }}>
+    <span>{face.name || s.unnamedFace}</span>
+  </button>);
+}
+
+export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
@@ -25,6 +35,7 @@ export default function PhotoViewerImage({ photo, s }) {
           onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />
         {!error && <img key={attempt} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, 'preview') || undefined}
           alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
+        <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} />
       </div>
       {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}</div>}
     </div>
