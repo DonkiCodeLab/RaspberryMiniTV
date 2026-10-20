@@ -534,26 +534,39 @@ mensajes en directo, historial, aprobaciones y cancelación. El panel tiene una
 clave de administrador separada del PIN familiar, respeta el idioma de la web
 y permanece inactivo en modo demo. [Preparar la Raspberry](../DeviceApp/CODEX.md).
 
-## Fotos: Uploads, Mapa, IA y Personas
+## Fotos: Galería, Mapa, Personas y Álbumes personales
 
-La raíz de **Fotos** tiene cuatro fichas fijas y admite carpetas propias. Las
-fichas usan el tamaño de películas/juegos y recorren hasta ocho fotos al pasar
-el ratón o recibir el foco. Muestran el número de fotos (incluidas las subcarpetas)
-y la última fecha de subida. **Subir fotos** permite seleccionar archivos o una
-carpeta, revisar la selección y elegir su nombre antes de guardarla en Uploads.
-Desde un álbum se añaden directamente a él; desde IA se crea un álbum de IA.
-La selección se envía automáticamente en lotes de hasta 20 imágenes y 80 MB;
-cada archivo admite hasta 50 MB.
+**Galería** contiene todas las fotos una sola vez y no admite subcarpetas.
+**Mapa**, **Personas**, **Álbumes personales** e **IA** muestran referencias a esas
+mismas imágenes. Álbumes personales admite carpetas y subcarpetas sin límite de
+profundidad. **Añadir a álbum** conserva las referencias que ya existen.
+Las antiguas subcarpetas de Uploads se eliminan del catálogo al actualizar la API,
+conservando sus fotos en Galería y sus archivos originales. Las carpetas propias
+que estaban en la raíz pasan a Álbumes personales.
 
-Cada álbum muestra un mosaico de **100 fotos por página**, con fecha EXIF y coordenadas GPS.
-La paginación también se aplica a Personas, carpetas y fotos de una zona del mapa.
-Se puede ordenar por **fecha de la foto** o **fecha de subida**, con las más
-recientes o las más antiguas primero; la preferencia se conserva en el navegador.
-Las fotos sin fecha quedan al final. Las tarjetas mantienen **Favorito** y ya
-no muestran ni actualizan el estado de visto.
-Solo se solicitan miniaturas cerca de la zona visible, con un máximo de dos
-peticiones simultáneas compartido con el mapa. El visor muestra primero la
-miniatura y la sustituye por la vista grande; si falla, permite reintentar.
+En **Modo de acción → Borrar fotos**, Galería avisa de que se borrará el original y
+todas sus referencias en el mapa, personas y álbumes. Desde un álbum se ofrecen
+**Quitar solo de este álbum** y **Borrar la imagen de Galería**, con sus consecuencias.
+Quitar una referencia conserva la imagen y el resto de sus asociaciones.
+
+Galería se recorre mediante un deslizador de **años** y otro de **meses**. El segundo
+permite avanzar también dentro de un mes con muchas fotos. La tira de miniaturas
+es desplazable y representa toda la colección; solo monta el tramo visible.
+Al detenerse durante 220 ms, las 100 fotos de la posición elegida se amplían con
+una animación, respetando la preferencia de movimiento reducido. Las fotos sin
+fecha tienen su propia posición al final. Buscar filtra también la línea temporal.
+Los demás álbumes, Personas y las zonas del mapa mantienen 100 fotos por página.
+
+**Subir fotos** guarda los originales en Galería; desde un álbum añade también
+una referencia, y desde IA permite crear su álbum. La selección se envía en lotes
+de hasta 20 imágenes y 80 MB; cada archivo admite hasta 50 MB. Los archivos
+idénticos se reutilizan por SHA-256. Los álbumes importados, si se solicitan,
+se crean en Álbumes personales cuando el destino es Galería.
+
+Las tarjetas mantienen **Favorito**. Solo se solicitan miniaturas cercanas a la
+zona visible, con un máximo de dos peticiones simultáneas. Las fotos ampliadas
+tienen prioridad sobre las miniaturas de 24 px de la tira. El visor muestra
+primero la miniatura y después la vista grande, con opción de reintentar.
 El visor permite pellizcar con dos dedos, arrastrar la imagen ampliada y hacer
 zoom con el trackpad (incluidos los gestos de Safari). El doble toque/clic alterna
 entre ampliar y ajustar. Los controles −, porcentaje y + ofrecen la misma función;
@@ -569,15 +582,18 @@ solo selecciona las fotos visibles y la selección se limpia al pasar de página
 Los datos ausentes
 se indican expresamente. Al abrir una foto, el visor admite cerrar con Escape,
 retroceder y avanzar con las flechas. **Modo de acción** permite seleccionar
-varias fotos y moverlas a una carpeta existente o crear una carpeta en la raíz
-o dentro de otra. La organización se guarda en SQLite; el archivo físico y su
+varias fotos y añadir referencias a un álbum existente o crear uno en Álbumes
+personales o dentro de otro álbum. La organización se guarda en SQLite; el archivo físico y su
 ruta permanecen estables para conservar los favoritos de cada usuario.
 
-**Mapa** utiliza OpenStreetMap y agrupa las fotos originales según la escala.
+**Mapa** utiliza OpenStreetMap y agrupa las fotos de Galería con GPS según la escala.
 Solo se dibujan grupos dentro de la zona visible, con un máximo de 100 miniaturas;
 si hay más, se agrupan sin descartar fotos. Cada pin contiene una miniatura y un contador; al pulsarlo aparece el mosaico de
-esa zona. Acercar el mapa separa las agrupaciones. Las fotos sin GPS se cuentan
-aparte, y las variantes generadas no duplican puntos del mapa. El fondo requiere
+esa zona. Acercar el mapa separa las agrupaciones. El pellizco del touchpad
+(también en Safari) permite acercar y alejar de forma continua alrededor del cursor;
+el desplazamiento normal con dos dedos sigue desplazando la página. También se
+puede pellizcar la pantalla táctil o usar los botones +/−. Las fotos sin GPS se cuentan
+aparte; las referencias de los álbumes no duplican puntos del mapa. El fondo requiere
 Internet; las fotografías se sirven desde la Raspberry.
 
 **Diviértete con la IA** contiene álbumes de originales. **Generar variantes**
@@ -599,9 +615,18 @@ un servicio externo. Los nombres iniciales son Persona 1, Persona 2, etc.; se
 pueden renombrar. Las coincidencias son aproximadas: en Modo de acción,
 **Quitar de esta persona** corrige una asociación sin borrar la foto. Los rasgos
 faciales se guardan localmente en el catálogo y no se devuelven al navegador.
-Las fotos nuevas se analizan automáticamente cuando está instalado el motor;
-las anteriores se incorporan al abrir Fotos. La interfaz indica la falta de
-soporte o los errores y permite reintentar los análisis pendientes.
+**Analizar** inicia una pasada sobre los originales pendientes, incluidos los
+importados con GPS que antes se omitían. Una franja superior muestra porcentaje,
+fotos revisadas y errores, con **Pausar** y **Continuar analizando**, sin diálogo
+bloqueante. Al pausar se termina la foto actual; el avance se conserva al cerrar
+la página y queda pausado tras reiniciar la API. Las fotos nuevas añadidas durante
+una pasada se analizan en la siguiente. Se conservan las personas importadas de
+Apple y no se analizan las variantes de IA.
+Las carpetas se actualizan durante el análisis. Al entrar en una persona, su
+nombre se edita directamente y **Elegir portada** permite pulsar cualquiera de
+sus fotos, también usando búsqueda y paginación. La portada elegida permanece
+fija al pasar el ratón y se conserva al volver a abrir la biblioteca. La interfaz
+indica si falta instalar el motor en la Raspberry y permite reintentar errores.
 
 Actualizar WebApp y DeviceApp juntos. Para HEIC y Personas, consulta la
 [instalación del soporte de fotos](../DeviceApp/README.md#biblioteca-de-fotos).
@@ -642,13 +667,13 @@ imágenes. El resumen indica cuántas fotos se han descartado. Incluye los JSON 
 asistente al elegir la carpeta; sin ellos no se puede confirmar la ubicación.
 Este filtro también se aplica si eliges una exportación con JSON desde Archivos y carpetas.
 
-Las fotos seleccionadas aparecen directamente en **Uploads** y en **Mapa**.
+Las fotos seleccionadas aparecen directamente en **Galería** y en **Mapa**.
 No se recrean álbumes de Apple ni se inicia reconocimiento facial en esta importación.
 Se conservan los bytes originales, las fechas y zonas horarias, la ubicación
 corregida en Fotos, títulos, descripciones, etiquetas y el estado de favorita en Apple.
 Los nombres de personas, identificadores y jerarquía de Apple siguen conservados
 en el JSON completo, descargable desde el visor. Las subidas ordinarias de imágenes
-sin JSON siguen admitiendo fotos sin GPS en carpetas elegidas por el usuario.
+sin JSON admiten fotos sin GPS en Galería, con referencias opcionales en álbumes.
 No se reconstruye el motor de reconocimiento, Recuerdos ni toda la jerarquía de
 carpetas de Apple. Los vídeos, RAW y el vídeo de Live Photos quedan fuera;
 las versiones editadas compatibles se importan como imágenes independientes.

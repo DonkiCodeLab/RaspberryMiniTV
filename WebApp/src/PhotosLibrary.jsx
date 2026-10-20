@@ -6,6 +6,9 @@ import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendin
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import PhotoViewerImage from './PhotoViewerImage.jsx';
 import PhotoDownloads from './PhotoDownloads.jsx';
+import PhotoGallery from './PhotoGallery.jsx';
+import { PeopleAnalysis, PersonEditor } from './PhotoPeople.jsx';
+import { galleryWindow } from './photoTimeline.js';
 import { photoStrings } from './photoStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
 import { photoImportStrings } from './photoImportStrings.js';
@@ -16,7 +19,7 @@ const blank = { folders: [], photos: [], people: [], jobs: [], faces: {} };
 
 function Icon({ type }) {
   const shapes = {
-    uploads: <><path d="M12 30V14h14l5 5h21v27H12z" /><path d="M32 39V25m-6 6 6-6 6 6" /></>,
+    gallery: <><rect x="9" y="12" width="46" height="40" rx="5" /><circle cx="23" cy="25" r="5" /><path d="m10 44 13-12 10 9 9-15 13 18" /></>,
     map: <><circle cx="32" cy="32" r="22" /><ellipse cx="32" cy="32" rx="10" ry="22" /><path d="M10 32h44M14 20h36M14 44h36" /></>,
     ai: <><path d="m29 10 6 16 16 6-16 6-6 16-6-16-16-6 16-6zM49 7v12M43 13h12" /></>,
     people: <><circle cx="25" cy="23" r="9" /><path d="M8 51v-6c0-14 34-14 34 0v6M43 15a9 9 0 0 1 0 18m4 5c7 1 9 5 9 13" /></>,
@@ -34,9 +37,9 @@ function PhotoMeta({ photo, s, language }) {
   return <div className="photo-meta"><span title={s.taken}>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
     <span>⌖ {hasLocation(photo) ? `${photo.latitude.toFixed(4)}°, ${photo.longitude.toFixed(4)}°` : s.noGps}</span></div>;
 }
-function PhotoImage({ photo, ...props }) {
+function PhotoImage({ photo, tiny = false, ...props }) {
   const [error, setError] = useState(false), [ready, setReady] = useState(''), [visible, setVisible] = useState(false);
-  const element = useRef(null), url = getPictureContentUrl(photo.relativePath, 'thumb');
+  const element = useRef(null), url = getPictureContentUrl(photo.relativePath, tiny ? 'tiny' : 'thumb');
   useEffect(() => {
     if (!element.current) return;
     if (typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
@@ -47,10 +50,10 @@ function PhotoImage({ photo, ...props }) {
   useEffect(() => {
     if (!visible || ready === url || !url) return;
     const controller = new AbortController(); setError(false);
-    requestThumbnail(url, controller.signal).then(value => { if (!controller.signal.aborted) setReady(value); })
+    requestThumbnail(url, controller.signal, tiny ? 1 : 0).then(value => { if (!controller.signal.aborted) setReady(value); })
       .catch(error => { if (!controller.signal.aborted) setError(true); });
     return () => controller.abort();
-  }, [url, visible, ready]);
+  }, [url, visible, ready, tiny]);
   return error ? <span className="photo-image-error" role="img" aria-label={photo.name}>▧ {photo.name}</span> :
     <img {...props} ref={element} src={ready && ready === url ? url : PHOTO_PLACEHOLDER} alt={photo.name} onError={() => setError(true)} />;
 }
@@ -64,12 +67,13 @@ export function PhotoPagination({ page, onChange, s, label = s.photos }) {
   </nav>;
 }
 
-export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks }) {
+export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks, coverMode = false, coverPhotoId, onCover, coverBusy = false }) {
   return <div className="photo-mosaic">{page.items.map((photo, index) => <article key={photo.id} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
-    <button type="button" className="photo-tile__image" aria-label={`${actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={actionMode ? selected.has(photo.id) : undefined}
-      onClick={() => actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
+    <button type="button" className="photo-tile__image" aria-label={`${coverMode ? s.useCover : actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={coverMode ? coverPhotoId === photo.id : actionMode ? selected.has(photo.id) : undefined}
+      disabled={coverMode && coverBusy} onClick={() => coverMode ? onCover(photo.id) : actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
       <PhotoImage photo={photo} loading="lazy" decoding="async" />{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
       {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
+      {coverPhotoId === photo.id && <span className="photo-cover-label">{s.cover}</span>}
     </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
     {renderMarks?.('picture', photo.relativePath, false)}
   </article>)}</div>;
@@ -90,9 +94,10 @@ function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyD
   </dialog>, document.body);
 }
 
-function AlbumCard({ folder, photos, s, language, onOpen, special }) {
+export function AlbumCard({ folder, photos, s, language, onOpen, special }) {
   const [active, setActive] = useState(false), [step, setStep] = useState(0);
-  const covers = photos.slice(0, 8);
+  const chosenCover = photos.find(photo => photo.id === folder.coverPhotoId);
+  const covers = chosenCover ? [chosenCover] : photos.slice(0, 8);
   useEffect(() => {
     setStep(0);
     if (!active || covers.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -116,30 +121,55 @@ function AlbumCard({ folder, photos, s, language, onOpen, special }) {
 }
 
 function FolderDialog({ mode, folders, current, selected, person, s, onClose, onComplete }) {
-  const [name, setName] = useState(person?.name || ''), [target, setTarget] = useState(''), [parent, setParent] = useState(current || '');
+  const [name, setName] = useState(person?.name || ''), [target, setTarget] = useState(''), [parent, setParent] = useState(current || 'albums');
   const [isNew, setIsNew] = useState(mode === 'create'), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const working = useRef(false);
   const title = mode === 'rename' ? s.rename : mode === 'move' ? s.moveTitle : s.create;
-  const options = folders.filter(folder => !['uploads', 'ai'].includes(folder.id));
-  const path = id => folderTrail(folders, id).map(folder => s[folder.id] || folder.name).join(' / ');
+  const parents = folders.filter(folder => ['albums', 'ai'].includes(folderTrail(folders, folder.id)[0]?.id));
+  const options = parents.filter(folder => !['albums', 'ai'].includes(folder.id));
+  const path = id => folderTrail(folders, id).map(folder => (folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name).join(' / ');
   async function submit(event) {
     event.preventDefault(); if (working.current) return;
     working.current = true; setBusy(true); setError('');
     try {
       const result = mode === 'rename' ? await photoRequest(`people/${person.id}`, { name }) : mode === 'create' ?
-        await photoRequest('folders', { name, parent }) : await photoRequest('move', { ids: [...selected], ...(isNew ? { name, parent } : { folderId: target }) });
+        await photoRequest('folders', { name, parent }) : await photoRequest('albums/add', { ids: [...selected], ...(isNew ? { name, parent } : { folderId: target }) });
       onComplete(result);
     } catch (error) { setError(error.message); }
     finally { working.current = false; setBusy(false); }
   }
   return <Modal title={title} s={s} onClose={onClose} busy={busy}><form onSubmit={submit}>
-    {mode === 'move' && <><p>{selected.size} {s.photos}</p><div className="photo-segments"><button type="button" aria-pressed={!isNew} onClick={() => setIsNew(false)}>{s.existing}</button><button type="button" aria-pressed={isNew} onClick={() => setIsNew(true)}>{s.newFolder}</button></div></>}
+    {mode === 'move' && <><p>{selected.size} {s.photos} · {s.referenceHint}</p><div className="photo-segments"><button type="button" aria-pressed={!isNew} onClick={() => setIsNew(false)}>{s.existing}</button><button type="button" aria-pressed={isNew} onClick={() => setIsNew(true)}>{s.newFolder}</button></div></>}
     {mode === 'rename' || isNew ? <label>{mode === 'rename' ? s.personName : s.name}<input autoFocus required maxLength={100} value={name} onChange={event => setName(event.target.value)} /></label> :
       <label>{s.destination}<select value={target} required onChange={event => setTarget(event.target.value)}><option value="">—</option>{options.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
-    {isNew && <label>{s.parent}<select value={parent} onChange={event => setParent(event.target.value)}><option value="">{s.root} /</option>{folders.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
+    {isNew && <label>{s.parent}<select value={parent} onChange={event => setParent(event.target.value)}>{parents.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
     {error && <p className="dialog-error" role="alert">{error}</p>}
     <footer><button type="button" className="dialog-button dialog-button--secondary" onClick={onClose} disabled={busy}>{s.cancel}</button><button className="dialog-button dialog-button--accent" disabled={busy}>{mode === 'move' ? s.move : s.save}</button></footer>
   </form></Modal>;
+}
+
+export function DeletePhotoChoices({ album, s, busy, onDelete }) {
+  return <div className="photo-delete-choices">
+    {album && <button type="button" className="photo-delete-choice" disabled={busy} onClick={() => onDelete('album')}><strong>{s.removeReference}</strong><span>{s.removeReferenceHint}</span></button>}
+    <button type="button" className="photo-delete-choice photo-delete-choice--permanent" disabled={busy} onClick={() => onDelete('gallery')}><strong>{s.deleteGallery}</strong><span>{s.deleteGalleryHint}</span></button>
+  </div>;
+}
+
+function DeleteDialog({ selected, album, current, s, onClose, onComplete }) {
+  const [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const working = useRef(false);
+  async function remove(scope) {
+    if (working.current) return;
+    working.current = true; setBusy(true); setError('');
+    try { onComplete(await photoRequest('photos/delete', { ids: [...selected], scope, ...(scope === 'album' ? { folderId: current } : {}) })); }
+    catch (error) { setError(error.message); working.current = false; setBusy(false); }
+  }
+  return <Modal title={s.deletePhotos} s={s} onClose={onClose} busy={busy}>
+    <p className="photo-delete-summary">{selected.size} {s.photos} · {album ? s.deleteQuestion : s.deleteGalleryHint}</p>
+    <DeletePhotoChoices album={album} s={s} busy={busy} onDelete={remove} />
+    {error && <p role="alert" className="dialog-error">{error}</p>}
+    <footer><button type="button" className="dialog-button" disabled={busy} onClick={onClose}>{s.cancel}</button></footer>
+  </Modal>;
 }
 
 function Viewer({ photos, initial, onClose, s, language, people = [] }) {
@@ -171,21 +201,26 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const [data, setData] = useState(blank), [current, setCurrent] = useState(''), [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
+  const [choosingCover, setChoosingCover] = useState(false);
+  const [faceBusy, setFaceBusy] = useState(false);
+  const faceActionPending = useRef(false);
+  const actionPending = useRef(false);
   const [dialog, setDialog] = useState(null), [viewer, setViewer] = useState(null), [zone, setZone] = useState(null), [busy, setBusy] = useState(false);
   const requestRef = useRef(0), refreshing = useRef(false), mounted = useRef(true), importing = useRef(false);
   const catalogue = useRef(blank), watcher = useRef(null);
   importing.current = dialog?.mode === 'upload';
   const [attempt, setAttempt] = useState(0);
   const [photoNumber, setPhotoNumber] = useState(1), [folderNumber, setFolderNumber] = useState(1);
+  const [galleryPosition, setGalleryPosition] = useState(0);
   const [order, setOrder] = useState(() => {
     try { const saved = JSON.parse(localStorage.getItem('minitv-photo-order')); if (['takenAt', 'uploadedAt'].includes(saved?.field) && ['asc', 'desc'].includes(saved?.direction)) return saved; } catch {}
     return { field: 'takenAt', direction: 'desc' };
   });
   useEffect(() => { try { localStorage.setItem('minitv-photo-order', JSON.stringify(order)); } catch {} }, [order]);
-  useEffect(() => { setPhotoNumber(1); setSelected(new Set()); }, [order]);
+  useEffect(() => { setPhotoNumber(1); setGalleryPosition(0); setSelected(new Set()); }, [order]);
   const grid = useRef(null);
   const index = useMemo(() => indexPhotos(data.photos, data.people), [data.photos, data.people]);
-  useEffect(() => { setPhotoNumber(1); setFolderNumber(1); }, [current, search, zone]);
+  useEffect(() => { setPhotoNumber(1); setFolderNumber(1); setGalleryPosition(0); }, [current, search, zone]);
   useEffect(() => {
     onRootChange?.(!current);
     return () => onRootChange?.(true);
@@ -221,29 +256,31 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     };
   }, [attempt]);
   useEffect(() => { watcher.current?.sync(); }, [dialog?.mode]);
-  useEffect(() => { if (initialFiles?.length) setDialog({ mode: 'upload', files: initialFiles, parent: 'uploads' }); }, [initialFiles]);
+  useEffect(() => { if (initialFiles?.length) setDialog({ mode: 'upload', files: initialFiles, folderId: 'gallery', parent: 'gallery' }); }, [initialFiles]);
   const person = current.startsWith('person:') ? data.people.find(p => p.id === current.slice(7)) : null;
   const trail = person ? [{ id: 'people', name: s.people }, { id: current, name: person.name }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
   const parentId = current.startsWith('person:') ? 'people' : trail.at(-2)?.id || '';
-  const backLabel = zone ? s.map : s[parentId] || data.folders.find(folder => folder.id === parentId)?.name || s.root;
-  const title = person?.name || s[current] || data.folders.find(f => f.id === current)?.name || s.root;
+  const backLabel = zone ? s.map : (parentId === 'albums' ? s.personalAlbums : s[parentId]) || data.folders.find(folder => folder.id === parentId)?.name || s.root;
+  const title = person?.name || (current === 'albums' ? s.personalAlbums : s[current]) || data.folders.find(f => f.id === current)?.name || s.root;
   const query = search.trim().toLocaleLowerCase();
   const visible = useCallback(photo => (!query || [photo.name, photo.title, photo.description, ...(photo.albums || []), ...(photo.keywords || []), ...(index.namesByPhoto.get(photo.id) || [])].filter(Boolean).join(' ').toLocaleLowerCase().includes(query)) && (!matchesPicture || matchesPicture(photo)), [query, index, matchesPicture]);
   const inFolder = id => [...new Set([...descendantIds(data.folders, id)].flatMap(folder => index.byFolder.get(folder) || []))];
-  const mapPhotos = useMemo(() => data.photos.filter(p => !p.sourceId && visible(p)), [data.photos, visible]);
-  const currentPhotos = useMemo(() => sortPhotos((person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), order.field, order.direction), [person, index, current, zone, visible, order]);
-  const folders = current === 'people' ? data.people.map(p => ({ ...p, id: `person:${p.id}` })) : data.folders.filter(f => f.parent === current);
-  const displayedFolders = folders.filter(f => !query || (s[f.id] || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
-  const page = photoPage(currentPhotos, photoNumber);
+  const mapPhotos = useMemo(() => data.photos.filter(visible), [data.photos, visible]);
+  const currentPhotos = useMemo(() => sortPhotos((current === 'gallery' ? data.photos : person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), current === 'gallery' ? 'takenAt' : order.field, order.direction), [data.photos, person, index, current, zone, visible, order]);
+  const folders = current === 'gallery' ? [] : current === 'people' ? data.people.map(p => ({ ...p, id: `person:${p.id}` })) : data.folders.filter(f => f.parent === current);
+  const displayedFolders = folders.filter(f => !query || ((f.id === 'albums' ? s.personalAlbums : s[f.id]) || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
+  const page = current === 'gallery' ? galleryWindow(currentPhotos, galleryPosition) : photoPage(currentPhotos, photoNumber);
   const folderPage = photoPage(displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)), folderNumber);
   const changePage = number => { setPhotoNumber(number); setSelected(new Set()); grid.current?.scrollIntoView({ block: 'start' }); };
   const isAi = current !== 'ai' && trail.some(f => f.id === 'ai');
   const canWrite = !person && !['map', 'people'].includes(current);
+  const canCreate = canWrite && current !== 'gallery';
+  const isAlbum = current && !SPECIAL_FOLDERS.includes(current) && !person;
   const albumPhotos = index.byFolder.get(current) || [];
   const originalIds = new Set(albumPhotos.map(p => p.id));
   const pending = isAi ? pendingVariants(data.photos.filter(p => originalIds.has(p.id) || originalIds.has(p.sourceId))) : 0;
   const job = data.jobs.find(j => j.folder === current);
-  const navigate = id => { setCurrent(id); setSearch(''); setSelected(new Set()); setActionMode(false); setZone(null); setNotice(''); };
+  const navigate = id => { setCurrent(id); setSearch(''); setSelected(new Set()); setActionMode(false); setChoosingCover(false); setZone(null); setNotice(''); };
   const goBack = () => {
     if (zone) { setZone(null); setSelected(new Set()); setActionMode(false); }
     else navigate(parentId);
@@ -252,43 +289,55 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   async function complete(result) {
     const mode = dialog?.mode; await closeDialog();
     setSelected(new Set());
+    if (mode === 'delete') { setViewer(null); setNotice(result.cleanupPending ? s.cleanupPending : result.removed ? s.referencesRemoved : s.photosDeleted); return; }
     if (result.folderId || (mode === 'create' && result.id)) navigate(result.folderId || result.id);
     setNotice(mode === 'upload' ? s.imported : mode === 'move' ? s.moved : mode === 'create' ? s.albumCreated : s.saved);
   }
   async function act(action, payload) {
-    if (busy) return;
-    setBusy(true); setError('');
+    if (actionPending.current) return;
+    actionPending.current = true; setBusy(true); setError('');
     try { await photoRequest(action, payload); await refresh(); return true; }
     catch (error) { setError(error.message); return false; }
-    finally { setBusy(false); }
+    finally { actionPending.current = false; setBusy(false); }
+  }
+  async function faceAction(action, payload) {
+    if (faceActionPending.current) return;
+    faceActionPending.current = true; setFaceBusy(true); setError('');
+    try { await photoRequest(action, payload); await refresh(); }
+    catch (error) { setError(error.message); }
+    finally { faceActionPending.current = false; setFaceBusy(false); }
+  }
+  async function chooseCover(photoId) {
+    if (await act(`people/${person.id}/cover`, { photoId })) { setChoosingCover(false); setNotice(s.coverSaved); }
   }
   function toggle(id) { setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }
   function album(folder, special) {
-    const photos = special === 'map' ? mapPhotos.filter(hasLocation) : special === 'people' ? data.photos.filter(p => index.namesByPhoto.has(p.id)) :
+    const photos = special === 'gallery' ? data.photos : special === 'map' ? mapPhotos.filter(hasLocation) : special === 'people' ? data.photos.filter(p => index.namesByPhoto.has(p.id)) :
       folder.id.startsWith('person:') ? index.byPerson.get(folder.id.slice(7)) || [] : inFolder(folder.id);
-    return <AlbumCard key={folder.id} folder={{ ...folder, name: s[folder.id] || folder.name }} photos={photos.filter(visible)} special={special}
+    return <AlbumCard key={folder.id} folder={{ ...folder, name: (folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name }} photos={photos.filter(visible)} special={special}
       s={s} language={language} onOpen={() => navigate(folder.id)} />;
   }
   return <section className="pictures-library seasons-section photo-library" aria-label={s.root}>
     <div className="seasons-section__label">{data.photos.length} {s.photos}</div>
     <div className="photo-navigation">
       {current && <button type="button" className="dialog-button photo-back" onClick={goBack} aria-label={`${s.back}: ${backLabel}`} title={`${s.back}: ${backLabel}`}><span aria-hidden="true">←</span> {s.back}</button>}
-      <nav className="photo-breadcrumbs" aria-label={s.folders}><button type="button" onClick={() => navigate('')}>{s.root}</button>{trail.map(folder => <React.Fragment key={folder.id}><span>/</span><button type="button" aria-current={folder.id === current ? 'page' : undefined} onClick={() => navigate(folder.id)}>{s[folder.id] || folder.name}</button></React.Fragment>)}</nav>
+      <nav className="photo-breadcrumbs" aria-label={s.folders}><button type="button" onClick={() => navigate('')}>{s.root}</button>{trail.map(folder => <React.Fragment key={folder.id}><span>/</span><button type="button" aria-current={folder.id === current ? 'page' : undefined} onClick={() => navigate(folder.id)}>{(folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name}</button></React.Fragment>)}</nav>
     </div>
-    <header className="photo-library__header"><div><h1>{title}</h1><p>{current ? `${currentPhotos.length} ${s.photos} · ${folders.length} ${s.albums}` : s.intro}</p></div>
-      <div className="photo-toolbar">{canWrite && <><button className="dialog-button" type="button" onClick={() => setDialog({ mode: 'create' })}>＋ {s.newFolder}</button>
-        <button className="dialog-button dialog-button--accent" type="button" onClick={() => setDialog({ mode: 'upload', folderId: current && !SPECIAL_FOLDERS.includes(current) ? current : '', parent: current === 'ai' ? 'ai' : 'uploads' })}>↑ {s.upload}</button></>}
-        {person && <button className="dialog-button" type="button" onClick={() => setDialog({ mode: 'rename' })}>{s.rename}</button>}
+    <header className="photo-library__header"><div><h1>{title}</h1><p>{current === 'gallery' ? `${currentPhotos.length} ${s.photos} · ${s.galleryHint}` : current ? `${currentPhotos.length} ${s.photos} · ${folders.length} ${s.albums}` : s.intro}</p></div>
+      <div className="photo-toolbar">{canCreate && <button className="dialog-button" type="button" onClick={() => setDialog({ mode: 'create' })}>＋ {s.newFolder}</button>}
+        {canWrite && <button className="dialog-button dialog-button--accent" type="button" onClick={() => setDialog({ mode: 'upload', folderId: isAlbum ? current : current === 'ai' ? '' : 'gallery', parent: current === 'ai' ? 'ai' : 'gallery' })}>↑ {s.upload}</button>}
         <button className="photo-refresh" type="button" title={s.refresh} aria-label={s.refresh} onClick={() => { setAttempt(n => n + 1); }}>↻</button>
       </div></header>
     {data.demo && <p className="photo-note">{s.demo}</p>}
     {data.scanning && <p role="status">{s.indexing}</p>}{data.scanError && <p role="status">{data.scanError}</p>}
     {error && <div className="photo-alert" role="alert">{error} <button type="button" onClick={() => setAttempt(n => n + 1)}>{s.retry}</button></div>}
     {notice && <p role="status">{notice}</p>}
-    {current === 'people' && <div className="photo-note"><p>{s.peopleHint}</p><p>{s.peopleLocal}</p>
-      {!data.faces.available ? <p>{s.peopleSetup}</p> : <><button className="dialog-button" type="button" disabled={busy || data.faces.running} onClick={() => act('people/scan', {})}>{data.faces.running ? s.scanningFaces : s.scan}</button> <small>{data.faces.pending || 0} {s.photos}</small></>}
-      {data.faces.error && <p role="status">{data.faces.error}</p>}
-    </div>}
+    {(current === 'albums' || isAlbum && !isAi) && <p className="photo-note">{s.referenceHint}</p>}
+    {(current === 'people' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.length} s={s} busy={faceBusy} onAction={faceAction} />}
+    {person && <PersonEditor key={person.id} person={person} cover={index.byId.get(person.coverPhotoId || person.photoIds[0])} s={s} busy={busy}
+      choosingCover={choosingCover} onChooseCover={() => { setChoosingCover(value => !value); setActionMode(false); setSelected(new Set()); }}
+      onSave={async name => { if (await act(`people/${person.id}`, { name })) setNotice(s.saved); }}
+      renderImage={photo => <PhotoImage photo={photo} />} />}
     {(current === 'ai' || isAi) && <div className="photo-ai-banner"><Icon type="ai" /><div><p>{s.aiHint}</p>
       {isAi && <><small>{albumPhotos.filter(p => !p.sourceId).length} {s.originals} · {pending} {s.pending}</small><p>{s.aiSend}</p>
         {!data.aiReady && <p>{s.aiSetup}</p>}
@@ -297,17 +346,17 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
         {job && <div className="photo-job" role="status"><progress max={job.total} value={job.done} /><span>{job.done} / {job.total} · {job.state === 'complete' ? s.complete : job.state === 'running' ? s.running : job.error}</span></div>}
       </>}
     </div></div>}
-    {!current && <button type="button" className="photo-import-banner" onClick={() => setDialog({ mode: 'upload', parent: 'uploads' })}>
+    {!current && <button type="button" className="photo-import-banner" onClick={() => setDialog({ mode: 'upload', folderId: 'gallery', parent: 'gallery' })}>
       <span className="photo-import-banner__art" aria-hidden="true">✳</span><span><strong>{t.banner}</strong><small>{t.bannerText}</small></span><span aria-hidden="true">↗</span>
     </button>}
     <div className="photo-browse-tools"><input type="search" aria-label={s.search} placeholder={s.search} value={search} onChange={event => { setSearch(event.target.value); setSelected(new Set()); }} />
-      {currentPhotos.length > 0 && <div className="photo-sort"><label>{s.sortBy}<select value={order.field} onChange={event => setOrder(value => ({ ...value, field: event.target.value }))}>
-        <option value="takenAt">{s.photoDate}</option><option value="uploadedAt">{s.uploadDate}</option></select></label>
+      {currentPhotos.length > 0 && <div className="photo-sort">{current !== 'gallery' && <label>{s.sortBy}<select value={order.field} onChange={event => setOrder(value => ({ ...value, field: event.target.value }))}>
+        <option value="takenAt">{s.photoDate}</option><option value="uploadedAt">{s.uploadDate}</option></select></label>}
         <label>{s.sortOrder}<select value={order.direction} onChange={event => setOrder(value => ({ ...value, direction: event.target.value }))}>
           <option value="desc">{s.newestFirst}</option><option value="asc">{s.oldestFirst}</option></select></label></div>}
-      {currentPhotos.length > 0 && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}</div>
+      {currentPhotos.length > 0 && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}</div>
     {loading && <p role="status">{s.loading}</p>}
-    {!current && <div className="movie-library__items--grid photo-folder-grid">{SPECIAL_FOLDERS.map(id => album({ id, name: s[id], created: null }, id))}</div>}
+    {!current && <div className="movie-library__items--grid photo-folder-grid">{SPECIAL_FOLDERS.map(id => album({ id, name: id === 'albums' ? s.personalAlbums : s[id], created: null }, id))}</div>}
     {folderPage.total > 0 && <><div className="movie-library__items--grid photo-folder-grid">{folderPage.items.map(folder => album(folder))}</div>
       <PhotoPagination page={folderPage} onChange={setFolderNumber} s={s} label={s.folders} /></>}
     {current === 'map' && !zone && <Suspense fallback={<p>{s.loading}</p>}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
@@ -315,16 +364,22 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {actionMode && <div className="photo-selection"><strong>{selected.size} {s.selected}</strong>
       <button type="button" onClick={() => setSelected(new Set(page.items.map(p => p.id)))}>{s.selectPage}</button><button type="button" onClick={() => setSelected(new Set())}>{s.clear}</button>
       <button type="button" className="dialog-button dialog-button--accent" disabled={!selected.size} onClick={() => setDialog({ mode: 'move' })}>{s.move} →</button>
+      <button type="button" className="dialog-button photo-delete-button" disabled={!selected.size} onClick={() => setDialog({ mode: 'delete' })}>{s.deletePhotos}</button>
       {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
     </div>}
     {currentPhotos.length > 0 && <div ref={grid} className="photo-page">
+      {current === 'gallery' ? <PhotoGallery key={`${search}-${order.direction}`} photos={currentPhotos} position={galleryPosition} onPosition={position => { setGalleryPosition(position); setSelected(new Set()); }} s={s} language={language}
+        renderTiny={photo => <PhotoImage photo={photo} tiny loading="lazy" decoding="async" />}
+        renderGrid={page => <PhotoGrid page={page} actionMode={actionMode} selected={selected} toggle={toggle} onOpen={initial => setViewer({ photos: currentPhotos, initial })} s={s} language={language} renderMarks={renderMarks} />} /> : <>
       <PhotoPagination page={page} onChange={changePage} s={s} />
-      <PhotoGrid page={page} actionMode={actionMode} selected={selected} toggle={toggle} onOpen={initial => setViewer({ photos: currentPhotos, initial })} s={s} language={language} renderMarks={renderMarks} />
-      <PhotoPagination page={page} onChange={changePage} s={s} />
+      <PhotoGrid page={page} actionMode={actionMode} selected={selected} toggle={toggle} onOpen={initial => setViewer({ photos: currentPhotos, initial })} s={s} language={language} renderMarks={renderMarks}
+        coverMode={choosingCover && !!person} coverPhotoId={person?.coverPhotoId} onCover={chooseCover} coverBusy={busy} />
+      <PhotoPagination page={page} onChange={changePage} s={s} /></>}
     </div>}
-    {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{s.emptyHint}</p></div>}
+    {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{current === 'gallery' ? s.uploadHint : s.emptyHint}</p></div>}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
-    {dialog && dialog.mode !== 'upload' && <FolderDialog mode={dialog.mode} folders={data.folders} current={canWrite ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
+    {dialog?.mode === 'delete' && <DeleteDialog selected={selected} album={isAlbum} current={current} s={s} onClose={closeDialog} onComplete={complete} />}
+    {dialog && !['upload', 'delete'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
     {viewer && <Viewer {...viewer} people={data.people} s={s} language={language} onClose={() => setViewer(null)} />}
   </section>;
 }

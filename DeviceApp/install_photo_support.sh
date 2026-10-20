@@ -37,4 +37,4 @@ ExecStart=${PHOTO_RUNTIME}/bin/python "${PHOTO_SCRIPT_DIR}/control_api.py"
 EOF
 systemctl daemon-reload
 systemctl restart minitv-api.service
-echo 'Soporte de fotos instalado. Personas analiza las fotos pendientes al abrir la biblioteca o subir fotos.'
+echo 'Soporte de fotos instalado. Abre Fotos → Personas y pulsa Analizar; puedes pausar y continuar el análisis.'

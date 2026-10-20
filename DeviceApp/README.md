@@ -1171,12 +1171,26 @@ y una copia de desarrollo independiente. [Instalación y uso](CODEX.md).
 `MultimediaContent/photo_library.sqlite3`, los originales y variantes en
 `MultimediaContent/Pictures` y las miniaturas en `MultimediaContent/PhotoCache`.
 Incluye esos tres elementos en la copia de seguridad. Las fotos existentes se
-indexan en segundo plano al abrir Fotos, conservando sus rutas y carpetas bajo
-Uploads. La fecha de subida de fotos anteriores se aproxima con la fecha de
+indexan en segundo plano al abrir Fotos, conservando sus rutas físicas y
+apareciendo en la Galería plana. La fecha de subida de fotos anteriores se aproxima con la fecha de
 modificación; la fecha de captura procede del EXIF o de los metadatos importados
 desde Fotos del Mac. Los álbumes son
-lógicos: mover fotos no renombra los ficheros ni pierde las marcas por perfil.
+lógicos: añadir una referencia no renombra los ficheros ni pierde las marcas por perfil.
 No muevas archivos manualmente después de indexarlos.
+
+La migración `gallery-v1` cambia la pertenencia principal de todas las fotos a
+`gallery`. Elimina la jerarquía antigua de Uploads sin tocar archivos, fechas,
+GPS o personas, y lleva las carpetas propias de la raíz a `albums`. Las
+asociaciones se guardan en `photo_albums`; Galería no permite subcarpetas.
+`POST /pictures/albums/add` (y el alias antiguo `/pictures/move`) añade referencias
+sin retirar las anteriores. `POST /pictures/photos/delete` requiere `ids` y un
+`scope` explícito: `album` exige `folderId` y solo elimina esas asociaciones;
+`gallery` elimina la foto y todas sus asociaciones, metadatos y huellas.
+Ambas rutas requieren el PIN. Una selección obsoleta falla sin borrar parcialmente.
+El borrado registra primero las rutas en `photo_deleted_files`: aunque falle la
+limpieza del disco, las fotos no se sirven ni vuelven a indexarse. La API reintenta
+la limpieza al reiniciarse y comunica `cleanupPending` si queda algún archivo.
+Las miniaturas `render=tiny` son JPEG de 24 px hechos a partir de la caché de 600 px.
 
 Pillow permite validar las imágenes, leer EXIF y preparar vistas JPEG orientadas
 para el navegador. `pillow-heif` añade HEIC/HEIF. **Personas** requiere además
@@ -1195,14 +1209,28 @@ un solo trabajador y una tolerancia conservadora de 0,48. Puede separar a una
 persona en varios grupos o asociar caras parecidas; las coincidencias se pueden
 revisar y quitar desde la web. No identifica personas por un nombre externo.
 
+El análisis se inicia explícitamente desde **Personas → Analizar**. La cola y el
+avance se guardan en SQLite (`face_analysis` y `face_analysis_items`); **Pausar**
+termina la foto en curso y **Continuar analizando** retoma las pendientes. Cerrar
+la página no detiene el trabajo; reiniciar la API lo deja pausado. Cada pasada
+incluye originales pendientes, fallidos e importados con estado `skip`; conserva
+las asociaciones ya importadas de Apple (`imported`) y excluye variantes de IA.
+Las fotos añadidas durante una pasada quedan disponibles para la siguiente.
+El porcentaje cuenta fotos revisadas, incluidas las fallidas, que se muestran
+por separado y pueden reintentarse. Los grupos se publican tras cada foto.
+Se puede renombrar una persona y guardar su portada durante el análisis; la
+portada debe pertenecer al grupo y se retira si se quita esa asociación o foto.
+Las rutas con PIN son `POST /pictures/people/scan`, `/pictures/people/pause` y
+`/pictures/people/<id>/cover` (JSON `{ "photoId": "..." }`).
+
 En otros entornos instala `requirements-photos.txt` o
 `requirements-photo-faces.txt` con el mismo Python que ejecuta la API. Las rutas
 `/pictures/library`, `/pictures/upload`, `/pictures/folders`, `/pictures/move`,
 `/pictures/generate` y `/pictures/people/...` usan el PIN de la aplicación. Las
-previsualizaciones en `/pictures/content?render=thumb|preview` también requieren
+previsualizaciones en `/pictures/content?render=tiny|thumb|preview` también requieren
 PIN. Las claves de OpenAI y los vectores faciales nunca aparecen en el catálogo.
-La IA usa la configuración existente del Dashboard; consultar carpetas, mover
-fotos o analizar caras no hace llamadas a OpenAI.
+La IA usa la configuración existente del Dashboard; consultar carpetas, añadir
+referencias o analizar caras no hace llamadas a OpenAI.
 
 La importación de Apple Fotos requiere también `photo_import.py`. La web envía
 un multipart con las imágenes y un archivo `metadata` JSON que contiene sesión,
@@ -1224,10 +1252,10 @@ consulta de nuevo una vez. Los recibos siguen evitando repetir lotes confirmados
 
 El asistente filtra los JSON antes de enviar fotos y marca el lote con
 `geolocatedOnly: true`. La API vuelve a validar que todas las fotos tengan latitud
-y longitud válidas, las guarda directamente en `uploads`, omite la recreación
+y longitud válidas, las guarda directamente en `gallery`, omite la recreación
 de álbumes y asociaciones de personas y marca el análisis facial como `skip`.
-Los metadatos originales se conservan. Los clientes ordinarios mantienen su
-comportamiento anterior. La web pide `/videos?pictures=0` al arrancar para no
+Los metadatos originales se conservan. Las subidas ordinarias también guardan el original en Galería y, cuando se
+elige un álbum, añaden una referencia. La web pide `/videos?pictures=0` al arrancar para no
 recorrer ni transferir otra vez toda la colección de fotos con el catálogo general.
 Las importaciones preparan una miniatura JPEG de hasta 600 px y una vista de
 hasta 2400 px aprovechando la misma descodificación de validación. El original

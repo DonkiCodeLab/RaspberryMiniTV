@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { visibleMapClusters, hasLocation } from './photoLibrary.js';
 import { getPictureContentUrl } from './api/raspberryApi.js';
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
+import { attachPhotoMapZoom } from './photoMapZoom.js';
 
 export default function PhotoMap({ photos, onCluster, s }) {
   const element = useRef(null), map = useRef(null), layer = useRef(null), latest = useRef({ photos, onCluster, s });
@@ -11,7 +12,7 @@ export default function PhotoMap({ photos, onCluster, s }) {
   const [offline, setOffline] = useState(false);
   const draw = useRef(null);
   useEffect(() => {
-    const view = L.map(element.current, { minZoom: 2, maxZoom: 18, worldCopyJump: true, scrollWheelZoom: false }).setView([22, 0], 2);
+    const view = L.map(element.current, { minZoom: 2, maxZoom: 18, zoomSnap: 0, worldCopyJump: true, scrollWheelZoom: false }).setView([22, 0], 2);
     map.current = view;
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
@@ -36,11 +37,17 @@ export default function PhotoMap({ photos, onCluster, s }) {
           keyboard: true, title: label, alt: label }).addTo(layer.current).on('click', () => latest.current.onCluster(cluster.photos));
       }
     };
-    view.on('moveend', () => draw.current?.()); draw.current();
+    // Continuous trackpad zoom must not rebuild pins and abort thumbnails every frame.
+    let redrawTimer;
+    view.on('moveend', () => {
+      clearTimeout(redrawTimer);
+      redrawTimer = setTimeout(() => draw.current?.(), 100);
+    }); draw.current();
     const located = latest.current.photos.filter(hasLocation);
     if (located.length) view.fitBounds(located.map(p => [p.latitude, p.longitude]), { padding: [50, 50], maxZoom: 10 });
+    const detachZoom = attachPhotoMapZoom(view);
     const observer = new ResizeObserver(() => view.invalidateSize()); observer.observe(element.current);
-    return () => { thumbnails?.abort(); observer.disconnect(); view.remove(); map.current = null; draw.current = null; };
+    return () => { detachZoom(); clearTimeout(redrawTimer); thumbnails?.abort(); observer.disconnect(); view.remove(); map.current = null; draw.current = null; };
   }, []);
   useEffect(() => { draw.current?.(); }, [photos]);
   return <div className="photo-map"><p>{s.mapHint}</p><div ref={element} className="photo-map__canvas" role="region" aria-label={s.map} />

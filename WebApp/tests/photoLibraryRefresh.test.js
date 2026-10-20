@@ -60,3 +60,14 @@ test('concurrent events share one probe and unmount prevents late refreshes', as
   resolve({ revision: 'b', working: false }); await pending;
   assert.equal(reads, 1); assert.equal(refreshes, 0);
 });
+
+test('face analysis refreshes progress frequently, then stops polling once paused', async () => {
+  let current = { revision: 'a', working: true, faces: { running: true } }, scheduled;
+  const updates = watchPhotoLibrary({ current: () => current, canCheck: () => true,
+    readStatus: async () => ({ revision: 'b', working: false }),
+    refresh: async () => { current = { revision: 'b', working: false, faces: { state: 'paused', running: false } }; },
+    onError: assert.fail, schedule: (callback, delay) => { scheduled = delay; return 1; }, cancel: () => { scheduled = null; } });
+  updates.sync(); assert.equal(scheduled, 2000);
+  await updates.check(); assert.equal(scheduled, null);
+  updates.stop();
+});

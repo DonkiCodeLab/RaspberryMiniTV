@@ -147,7 +147,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
       for (; cursor.current < batches.length; cursor.current++) {
         const batch = batches[cursor.current], before = batches.slice(0, cursor.current).reduce((n, b) => n + b.length, 0);
         if (mounted.current) setProgress({ done: before, batchPercent: 0, batchStart: before + 1, batchEnd: before + batch.length, status: 'hashing', fileName: '', updatedAt: Date.now() });
-        const response = await transferPhotoBatch(batch, { albumName: name, folderId: selection.geolocatedOnly ? 'uploads' : targetFolder.current, parent, signal: controller.signal,
+        const response = await transferPhotoBatch(batch, { albumName: name, folderId: selection.geolocatedOnly ? 'gallery' : targetFolder.current, parent, signal: controller.signal,
           importData: { session: session.current, batch: String(cursor.current), preserveAlbums: !selection.geolocatedOnly && preserveAlbums,
             geolocatedOnly: !!selection.geolocatedOnly, continueOnError: true },
           onProgress: value => { if (mounted.current) setProgress(current => ({ ...current, batchPercent: value.percent, status: value.status, fileName: value.fileName || '', updatedAt: Date.now() })); } },
@@ -157,7 +157,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
         if (mounted.current) setProgress(current => ({ ...current, done: before + batch.length, batchPercent: 100, fileName: '', updatedAt: Date.now() }));
         if (pause.current && cursor.current < batches.length - 1) { cursor.current++; if (mounted.current) setPaused(true); return; }
       }
-      if (mounted.current) setResult({ ...accumulated.current });
+      if (mounted.current) setResult({ ...accumulated.current, folderId: targetFolder.current || 'gallery' });
     } catch (err) {
       if (mounted.current) {
         setError(err.message);

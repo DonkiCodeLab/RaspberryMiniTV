@@ -48,3 +48,15 @@ test('cancelling an in-flight thumbnail releases a slot for the new page', async
   await new Promise(setImmediate); controller.abort(); await rejection;
   assert.equal(await next, 'new'); assert.deepEqual(started, ['old','new']);
 });
+
+test('expanded photos take priority over a queued miniature strip without exceeding concurrency', async () => {
+  const started = [], resolvers = new Map();
+  const request = createThumbnailQueue(url => new Promise(resolve => { started.push(url); resolvers.set(url, resolve); }), 1);
+  const first = request('tiny-1', undefined, 1), queued = request('tiny-2', undefined, 1), expanded = request('expanded');
+  await new Promise(setImmediate);
+  resolvers.get('tiny-1')(); await first; await new Promise(setImmediate);
+  assert.deepEqual(started, ['tiny-1', 'expanded']);
+  resolvers.get('expanded')(); await expanded; await new Promise(setImmediate);
+  assert.deepEqual(started, ['tiny-1', 'expanded', 'tiny-2']);
+  resolvers.get('tiny-2')(); await queued;
+});

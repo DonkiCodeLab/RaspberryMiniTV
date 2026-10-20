@@ -16,7 +16,7 @@ const result = await build({
 });
 const module = { exports: {} };
 new Function('require', 'module', 'exports', result.outputFiles[0].text)(require, module, module.exports);
-const { PhotoGrid, PhotoPagination } = module.exports;
+const { PhotoGrid, PhotoPagination, DeletePhotoChoices } = module.exports;
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `Photo ${id}`, relativePath: `${id}.jpg` }));
 const s = photoStrings('es');
 
@@ -51,4 +51,30 @@ test('photo tiles request favorites without a watched button', () => {
   renderToStaticMarkup(React.createElement(PhotoGrid, {page: photoPage(photos.slice(0,2)), selected:new Set(), s,
     language:'es', renderMarks:(...args) => { calls.push(args); return null; }}));
   assert.deepEqual(calls, [['picture','0.jpg',false], ['picture','1.jpg',false]]);
+});
+
+test('album deletion explicitly offers reference-only or global deletion; Gallery only offers global deletion', () => {
+  const album = renderToStaticMarkup(React.createElement(DeletePhotoChoices, { album: true, s }));
+  const gallery = renderToStaticMarkup(React.createElement(DeletePhotoChoices, { album: false, s }));
+  assert.match(album, /Quitar solo de este álbum/);
+  assert.match(album, /Borrar la imagen de Galería/);
+  assert.doesNotMatch(gallery, /Quitar solo/);
+  assert.match(gallery, /No se puede deshacer/);
+  const actions = [];
+  const choices = DeletePhotoChoices({ album: true, s, onDelete: scope => actions.push(scope) });
+  choices.props.children[0].props.onClick();
+  choices.props.children[1].props.onClick();
+  assert.deepEqual(actions, ['album', 'gallery']);
+});
+
+test('choosing a person cover uses the selected image instead of opening a blocking viewer', () => {
+  const chosen = [];
+  const props = { page: photoPage(photos.slice(0, 2)), selected: new Set(), s, language: 'es',
+    coverMode: true, coverPhotoId: '0', onCover: id => chosen.push(id), onOpen: () => assert.fail('Must not open the viewer') };
+  const html = renderToStaticMarkup(React.createElement(PhotoGrid, props));
+  assert.match(html, /Usar como portada: Photo 1/);
+  assert.match(html, /photo-cover-label">Portada/);
+  const grid = PhotoGrid(props);
+  grid.props.children[1].props.children[0].props.onClick();
+  assert.deepEqual(chosen, ['1']);
 });

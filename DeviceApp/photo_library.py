@@ -179,10 +179,55 @@ class PhotoLibrary:
               CREATE TABLE IF NOT EXISTS photo_metadata (photo TEXT PRIMARY KEY REFERENCES photos(id), data TEXT NOT NULL);
               CREATE TABLE IF NOT EXISTS photo_albums (photo TEXT NOT NULL REFERENCES photos(id),
                 folder TEXT NOT NULL REFERENCES folders(id), PRIMARY KEY(photo, folder));
+              CREATE TABLE IF NOT EXISTS photo_library_migrations (name TEXT PRIMARY KEY);
+              CREATE TABLE IF NOT EXISTS photo_deleted_files (path TEXT PRIMARY KEY);
+              CREATE TABLE IF NOT EXISTS person_covers (person TEXT PRIMARY KEY REFERENCES people(id) ON DELETE CASCADE,
+                photo TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE);
+              CREATE TABLE IF NOT EXISTS face_analysis (id INTEGER PRIMARY KEY CHECK(id=1), state TEXT NOT NULL,
+                error TEXT NOT NULL DEFAULT '');
+              INSERT OR IGNORE INTO face_analysis (id, state) VALUES (1, 'idle');
+              CREATE TABLE IF NOT EXISTS face_analysis_items (photo TEXT PRIMARY KEY, state TEXT NOT NULL);
+              CREATE INDEX IF NOT EXISTS face_analysis_state ON face_analysis_items(state);
             ''')
-            for ident, name in [('uploads', 'Uploads'), ('ai', 'Diviértete con la IA')]:
+            for ident, name in [('gallery', 'Galería'), ('albums', 'Álbumes personales'), ('ai', 'Diviértete con la IA')]:
                 db.execute('INSERT OR IGNORE INTO folders VALUES (?, ?, ?, ?)', (ident, '', name, time.time()))
+            self._migrate_gallery(db)
+            # An interrupted scan is resumed explicitly, preserving its queue and progress.
+            db.execute("UPDATE face_analysis SET state='paused' WHERE state='running'")
             db.execute("UPDATE jobs SET state='interrupted', error='Se interrumpió la generación. Reintenta las variantes pendientes.' WHERE state='running'")
+        self.cleanup_deleted()
+
+    def _migrate_gallery(self, db):
+        if db.execute("SELECT 1 FROM photo_library_migrations WHERE name='gallery-v1'").fetchone(): return
+        folders = [dict(row) for row in db.execute('SELECT * FROM folders')]
+        removed = {'uploads'}
+        # Flatten Uploads and any old Gallery hierarchy without deleting image bytes.
+        while True:
+            children = {f['id'] for f in folders if f['parent'] in removed | {'gallery'}}
+            if children <= removed: break
+            removed |= children
+        for folder in folders:
+            if folder['id'] in removed or folder['id'] in {'gallery', 'albums', 'ai'}: continue
+            if not folder['parent']:
+                name, suffix = folder['name'], 1
+                while db.execute('SELECT 1 FROM folders WHERE parent=? AND name=?', ('albums', name)).fetchone():
+                    suffix += 1; name = folder['name'][:90] + ' (' + str(suffix) + ')'
+                db.execute('UPDATE folders SET parent=?, name=? WHERE id=?', ('albums', name, folder['id']))
+            db.execute('INSERT OR IGNORE INTO photo_albums SELECT id, folder FROM photos WHERE folder=?', (folder['id'],))
+        db.execute("UPDATE photos SET folder='gallery'")
+        for ident in removed | {'gallery'}:
+            db.execute('DELETE FROM photo_albums WHERE folder=?', (ident,))
+            db.execute("UPDATE photo_import_sessions SET folder='gallery' WHERE folder=?", (ident,))
+        for row in db.execute('SELECT session, batch, result FROM photo_import_batches').fetchall():
+            result = json.loads(row['result'])
+            if result.get('folderId') in removed:
+                result['folderId'] = 'gallery'
+                db.execute('UPDATE photo_import_batches SET result=? WHERE session=? AND batch=?',
+                           (json.dumps(result), row['session'], row['batch']))
+        for ident in removed:
+            db.execute('DELETE FROM jobs WHERE folder=?', (ident,))
+            db.execute('DELETE FROM folders WHERE id=?', (ident,))
+        db.execute("INSERT INTO photo_library_migrations VALUES ('gallery-v1')")
 
     @contextmanager
     def db(self):
@@ -210,6 +255,9 @@ class PhotoLibrary:
             raise PhotoError('Ruta de foto inválida.')
         if not target.is_file():
             raise PhotoError('No se encuentra la foto.', 404)
+        with self.db() as db:
+            if db.execute('SELECT 1 FROM photo_deleted_files WHERE path=?', (target.relative_to(self.root).as_posix(),)).fetchone():
+                raise PhotoError('No se encuentra la foto.', 404)
         return target
 
     def folder(self, db, ident):
@@ -218,20 +266,29 @@ class PhotoLibrary:
         if not row: raise PhotoError('No se encuentra la carpeta.', 404)
         return dict(row)
 
-    def create_folder(self, name, parent='', db=None):
+    def create_folder(self, name, parent='albums', db=None):
         if db is None:
             with self.db() as connection:
                 return self.create_folder(name, parent, connection)
         name = clean_name(name)
-        if parent: self.folder(db, parent)
-        elif parent != '': raise PhotoError('Carpeta inválida.')
-        if parent == '' and name.casefold() in {'uploads', 'upload', 'mapa', 'map', 'ia', 'ai', 'personas', 'people', 'diviértete con la ia'}:
-            raise PhotoError('Ese nombre está reservado para una carpeta especial.')
+        if parent == '': parent = 'albums'
+        self.folder(db, parent)
+        if self.folder_root(db, parent) not in {'albums', 'ai'}:
+            raise PhotoError('Crea las carpetas en Álbumes personales. Galería no tiene subcarpetas.')
         if db.execute('SELECT 1 FROM folders WHERE parent=? AND lower(name)=lower(?)', (parent, name)).fetchone():
             raise PhotoError('Ya existe una carpeta con ese nombre.', 409)
         ident = uuid.uuid4().hex
         db.execute('INSERT INTO folders VALUES (?, ?, ?, ?)', (ident, parent, name, time.time()))
         return self.folder(db, ident)
+
+    def folder_root(self, db, ident):
+        visited = set()
+        while ident not in visited:
+            visited.add(ident)
+            folder = self.folder(db, ident)
+            if not folder['parent']: return ident
+            ident = folder['parent']
+        raise PhotoError('La jerarquía de carpetas no es válida.')
 
     def _insert(self, db, relative, folder, name, uploaded=None, source=None, style=None, metadata=None):
         path = self.safe_file(relative)
@@ -240,8 +297,9 @@ class PhotoLibrary:
         stat = path.stat()
         ident = uuid.uuid4().hex
         db.execute('INSERT INTO photos VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-            (ident, relative, folder, name, uploaded or time.time(), stat.st_mtime, stat.st_size,
+            (ident, relative, 'gallery', name, uploaded or time.time(), stat.st_mtime, stat.st_size,
              json.dumps(metadata), source, style, 'skip' if source else 'pending'))
+        if folder != 'gallery': db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, folder))
         return ident
 
     def _imported_file(self, db, digest):
@@ -260,7 +318,7 @@ class PhotoLibrary:
             # Indexed lookups and file stats only; never decode photos or load the library.
             return {'missing': [index for index, digest in enumerate(digests) if not self._imported_file(db, digest)]}
 
-    def upload(self, files, album_name='', folder_id='', parent='uploads', import_data=None):
+    def upload(self, files, album_name='', folder_id='', parent='gallery', import_data=None):
         if len(files) > 500 or (not files and import_data is None):
             raise PhotoError('Selecciona entre 1 y 500 fotos por subida.')
         records, digests = None, None
@@ -294,7 +352,9 @@ class PhotoLibrary:
                            and math.isfinite(meta[key]) and abs(meta[key]) <= limit
                            for key, limit in [('latitude', 90), ('longitude', 180)]) for meta, _, _ in records):
                 raise PhotoError('Esta importación solo admite fotos con coordenadas válidas en sus metadatos.', 422)
-            folder_id = 'uploads'
+            folder_id = 'gallery'
+        if folder_id == 'uploads': folder_id = 'gallery'
+        if parent == 'uploads': parent = 'gallery'
         # Stage and validate inputs before taking the catalogue lock.
         batch = self.root / ('batch-' + uuid.uuid4().hex)
         batch.mkdir()
@@ -306,7 +366,7 @@ class PhotoLibrary:
                 if not name or Path(name).suffix.lower() not in EXTENSIONS or len(name) > 240:
                     raise PhotoError('La selección contiene un formato no compatible: ' + name[:100])
                 path = batch / (uuid.uuid4().hex + Path(name).suffix.lower())
-                hasher = hashlib.sha256() if records is not None else None
+                hasher = hashlib.sha256()
                 with path.open('xb') as handle:
                     count = 0
                     while True:
@@ -356,10 +416,9 @@ class PhotoLibrary:
                     folder = self.folder(db, existing_session['folder'])
                 elif folder_id:
                     folder = self.folder(db, folder_id)
-                    if folder_id in ('uploads', 'ai') and not geolocated_only: raise PhotoError('Selecciona o crea una subcarpeta.')
+                    if folder_id in ('albums', 'ai'): raise PhotoError('Selecciona o crea un álbum.')
                 else:
-                    if parent not in ('uploads', 'ai'): raise PhotoError('Selecciona Uploads o IA para la nueva carpeta.')
-                    folder = self.create_folder(album_name, parent, db)
+                    folder = self.folder(db, 'gallery') if parent == 'gallery' else self.create_folder(album_name, parent, db)
                 if records is not None:
                     db.execute('INSERT OR IGNORE INTO photo_import_sessions VALUES (?,?)', (session, folder['id']))
                 saved, duplicates, discarded = [], 0, []
@@ -369,7 +428,7 @@ class PhotoLibrary:
                         ident = existing['id']; duplicates += 1
                         if path is not None: discarded.append(path)
                         relative = existing['path']
-                        db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, folder['id']))
+                        if folder['id'] != 'gallery': db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, folder['id']))
                     else:
                         if path is None: raise PhotoError('Una foto ya no está guardada. Reintenta para enviarla.', 409)
                         relative = path.relative_to(self.root).as_posix()
@@ -389,15 +448,16 @@ class PhotoLibrary:
                                 person_id = 'apple-' + hashlib.sha256(key.encode()).hexdigest()[:32]
                                 db.execute('INSERT OR IGNORE INTO people VALUES (?,?,?)', (person_id, person['name'], time.time()))
                                 db.execute('INSERT OR IGNORE INTO faces VALUES (?,?,?)', (ident, person_id, '[]'))
-                            if geolocated_only: db.execute("UPDATE photos SET face_state='skip' WHERE id=?", (ident,))
+                            if geolocated_only: db.execute("UPDATE photos SET face_state='skip' WHERE id=? AND face_state='pending'", (ident,))
                             elif people: db.execute("UPDATE photos SET face_state='imported' WHERE id=?", (ident,))
                             if not geolocated_only and import_data.get('preserveAlbums') is True:
                                 for album in metadata['albums']:
                                     # Keep the full Apple name in metadata; folder names follow app constraints.
                                     album_name_safe = ''.join(c if c not in '/\\' and ord(c) >= 32 else ' · ' for c in album).strip()[:100]
                                     if album_name_safe in ('', '.', '..'): continue
-                                    found = db.execute('SELECT id FROM folders WHERE parent=? AND lower(name)=lower(?)', (folder['id'], album_name_safe)).fetchone()
-                                    album_id = found['id'] if found else self.create_folder(album_name_safe, folder['id'], db)['id']
+                                    album_parent = 'albums' if folder['id'] == 'gallery' else folder['id']
+                                    found = db.execute('SELECT id FROM folders WHERE parent=? AND lower(name)=lower(?)', (album_parent, album_name_safe)).fetchone()
+                                    album_id = found['id'] if found else self.create_folder(album_name_safe, album_parent, db)['id']
                                     db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (ident, album_id))
                 result = {'ok': True, 'folderId': folder['id'], 'saved': saved,
                           'imported': len(staged) - duplicates, 'duplicates': duplicates}
@@ -409,7 +469,6 @@ class PhotoLibrary:
                 self.previews.discard(path)
                 path.unlink(missing_ok=True)
             if not any(batch.iterdir()): batch.rmdir()
-            if not geolocated_only: self.start_faces()
             return result
         except Exception:
             if not committed and batch.exists():
@@ -427,6 +486,7 @@ class PhotoLibrary:
         try:
             with self.db() as db:
                 known = {row['path'] for row in db.execute('SELECT path FROM photos')}
+                known.update(row['path'] for row in db.execute('SELECT path FROM photo_deleted_files'))
             for root, dirs, files in os.walk(self.root, followlinks=False):
                 dirs[:] = sorted(d for d in dirs if not d.startswith(('.', 'batch-', 'generated-')) and not (Path(root) / d).is_symlink())
                 for name in sorted(files):
@@ -438,14 +498,10 @@ class PhotoLibrary:
                             metadata = read_metadata(path, on_image=lambda image: self.previews.save(path, image))
                         with self.db() as db:
                             if db.execute('SELECT 1 FROM photos WHERE path=?', (relative,)).fetchone(): continue
-                            parent = 'uploads'
-                            parts = Path(relative).parts[:-1] or ('Fotos anteriores',)
-                            for part in parts:
-                                existing = db.execute('SELECT id FROM folders WHERE parent=? AND name=?', (parent, part)).fetchone()
-                                parent = existing['id'] if existing else self.create_folder(part, parent, db)['id']
+                            if db.execute('SELECT 1 FROM photo_deleted_files WHERE path=?', (relative,)).fetchone(): continue
                             stat = path.stat()
                             db.execute('INSERT INTO photos VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                                (uuid.uuid4().hex, relative, parent, name, stat.st_mtime, stat.st_mtime, stat.st_size,
+                                (uuid.uuid4().hex, relative, 'gallery', name, stat.st_mtime, stat.st_mtime, stat.st_size,
                                  json.dumps(metadata), None, None, 'pending'))
                     except (OSError, ValueError, Image.DecompressionBombError):
                         self.scan_error = 'Algunas fotos no se pudieron leer. Revisa sus formatos y el soporte HEIC.'
@@ -453,7 +509,6 @@ class PhotoLibrary:
         finally:
             self.scanning = False
             self.scan_lock.release()
-        self.start_faces()
 
     def start_sync(self):
         if time.monotonic() - self.last_scan > 60 and self.scan_lock.acquire(blocking=False):
@@ -490,9 +545,11 @@ class PhotoLibrary:
                 person_photos.setdefault(row['person'], []).append(row['photo'])
             for person in people:
                 person['photoIds'] = person_photos.get(person['id'], [])
+            covers = {row['person']: row['photo'] for row in db.execute('SELECT person, photo FROM person_covers')}
+            for person in people:
+                person['coverPhotoId'] = covers.get(person['id']) if covers.get(person['id']) in person['photoIds'] else None
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
-            pending = db.execute("SELECT count(*) FROM photos WHERE face_state='pending'").fetchone()[0]
-            failed = db.execute("SELECT count(*) FROM photos WHERE face_state='error'").fetchone()[0]
+            faces = self.face_status(db)
         try:
             configured = self.settings.public() if self.settings else {}
         except Exception:
@@ -500,29 +557,75 @@ class PhotoLibrary:
         return {**status, 'folders': folders, 'photos': photos, 'people': people, 'jobs': jobs,
                 'scanning': self.scanning, 'scanError': self.scan_error,
                 'aiReady': bool(configured.get('enabled') and configured.get('configured')),
-                'faces': {'available': importlib.util.find_spec('face_recognition') is not None,
-                          'running': self.faces_running, 'pending': pending, 'failed': failed, 'error': self.face_error}}
+                'faces': faces}
 
     def move(self, ids, target='', new_name=None, parent=''):
-        if not isinstance(ids, list) or not ids or len(ids) > 5000 or any(not isinstance(i, str) for i in ids):
-            raise PhotoError('Selecciona las fotos que quieres mover.')
-        ids = list(dict.fromkeys(ids))
+        """Compatibility endpoint: adding an album reference never moves an original."""
         with self.db() as db:
-            # All-or-nothing even if a stale client sends one missing photo.
-            for ident in ids:
-                if not db.execute('SELECT 1 FROM photos WHERE id=?', (ident,)).fetchone():
-                    raise PhotoError('Una foto ya no está disponible. Actualiza la biblioteca.', 409)
+            ids = self.validate_photo_ids(db, ids)
             if new_name is not None: target = self.create_folder(new_name, parent, db)['id']
             self.folder(db, target)
-            if target in ('uploads', 'ai'): raise PhotoError('Mueve las fotos a una subcarpeta, no a una carpeta especial.')
-            db.executemany('UPDATE photos SET folder=? WHERE id=?', [(target, ident) for ident in ids])
-            db.executemany('DELETE FROM photo_albums WHERE photo=?', [(ident,) for ident in ids])
-        return {'ok': True, 'folderId': target, 'moved': len(ids)}
+            if target in ('gallery', 'albums', 'ai') or self.folder_root(db, target) not in {'albums', 'ai'}:
+                raise PhotoError('Selecciona un álbum para añadir las referencias.')
+            db.executemany('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', [(ident, target) for ident in ids])
+        return {'ok': True, 'folderId': target, 'added': len(ids)}
 
-    def preview(self, relative, full=False):
+    def validate_photo_ids(self, db, ids):
+        if not isinstance(ids, list) or not ids or len(ids) > 5000 or any(not isinstance(i, str) for i in ids):
+            raise PhotoError('Selecciona entre 1 y 5000 fotos.')
+        ids = list(dict.fromkeys(ids))
+        for ident in ids:
+            if not db.execute('SELECT 1 FROM photos WHERE id=?', (ident,)).fetchone():
+                raise PhotoError('Una foto ya no está disponible. Actualiza la biblioteca.', 409)
+        return ids
+
+    def delete_photos(self, ids, scope, folder_id=None):
+        if not isinstance(scope, str) or scope not in {'gallery', 'album'}:
+            raise PhotoError('Indica si quieres quitar referencias o borrar de Galería.')
+        # Serialize with preview decoders. The tombstones survive failed unlinks or
+        # a power loss, so scans and old content URLs cannot resurrect deleted photos.
+        with self.image_lock:
+            with self.db() as db:
+                ids = self.validate_photo_ids(db, ids)
+                if scope == 'album':
+                    self.folder(db, folder_id)
+                    if folder_id in {'gallery', 'albums', 'ai'}: raise PhotoError('Selecciona un álbum.')
+                    for ident in ids:
+                        if not db.execute('SELECT 1 FROM photo_albums WHERE photo=? AND folder=?', (ident, folder_id)).fetchone():
+                            raise PhotoError('Una referencia ya no está en este álbum. Actualiza la biblioteca.', 409)
+                    db.executemany('DELETE FROM photo_albums WHERE photo=? AND folder=?', [(ident, folder_id) for ident in ids])
+                    return {'ok': True, 'removed': len(ids)}
+                for ident in ids:
+                    db.execute('INSERT OR IGNORE INTO photo_deleted_files SELECT path FROM photos WHERE id=?', (ident,))
+                    for table in ('photo_albums', 'photo_metadata', 'photo_import_files'):
+                        db.execute('DELETE FROM ' + table + ' WHERE photo=?', (ident,))
+                    db.execute('DELETE FROM photos WHERE id=?', (ident,))  # Cascades to faces.
+                db.execute('''DELETE FROM photo_import_batches WHERE EXISTS (
+                    SELECT 1 FROM json_each(photo_import_batches.result, '$.saved') saved
+                    JOIN photo_deleted_files deleted ON deleted.path=saved.value)''')
+            pending = self.cleanup_deleted()
+        return {'ok': True, 'deleted': len(ids), 'cleanupPending': pending}
+
+    def cleanup_deleted(self):
+        with self.db() as db:
+            paths = [row['path'] for row in db.execute('SELECT path FROM photo_deleted_files')]
+        pending = 0
+        for relative in paths:
+            path = self.root / relative
+            try:
+                if not path.resolve().is_relative_to(self.root) or path.is_symlink():
+                    pending += 1; continue
+                if path.exists():
+                    self.previews.discard(path)
+                    path.unlink()
+            except OSError:
+                pending += 1
+        return pending
+
+    def preview(self, relative, full=False, tiny=False):
         path = self.safe_file(relative)
         try:
-            return self.previews.get(path, full)
+            return self.previews.tiny(path) if tiny else self.previews.get(path, full)
         except (OSError, ValueError, Image.DecompressionBombError):
             raise PhotoError('No se puede crear la vista previa de esta foto.', 422) from None
 
@@ -533,15 +636,53 @@ class PhotoLibrary:
         # File stats and decoding happen in the worker, never in the library request.
         self.previews.start([row['path'] for row in rows], self.safe_file)
 
-    def start_faces(self, retry=False):
-        if importlib.util.find_spec('face_recognition') is None: return
-        # Reserve synchronously so a burst of uploads cannot enqueue duplicate workers.
-        if not self.face_lock.acquire(blocking=False): return
-        self.faces_running = True
-        self.face_error = ''
-        if retry:
-            with self.db() as db: db.execute("UPDATE photos SET face_state='pending' WHERE face_state='error'")
-        threading.Thread(target=self._faces_worker, daemon=True).start()
+    def face_status(self, db):
+        scan = db.execute('SELECT state, error FROM face_analysis WHERE id=1').fetchone()
+        counts = dict(db.execute('SELECT state, count(*) FROM face_analysis_items GROUP BY state').fetchall())
+        total = sum(counts.values())
+        done = total - counts.get('pending', 0)
+        pending = db.execute("SELECT count(*) FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','error')").fetchone()[0]
+        return {'available': importlib.util.find_spec('face_recognition') is not None,
+                'state': scan['state'], 'running': self.faces_running,
+                'pausing': scan['state'] == 'paused' and self.faces_running,
+                'total': total, 'done': done, 'percent': int(done * 100 / total) if total else 0,
+                'pending': pending, 'remaining': counts.get('pending', 0), 'failed': counts.get('error', 0),
+                'error': scan['error']}
+
+    def start_faces(self):
+        if importlib.util.find_spec('face_recognition') is None:
+            raise PhotoError('Instala el soporte de Personas en la Raspberry (face-recognition).', 503)
+        # Serialize transitions with worker exit, including a quick pause/resume.
+        with self.lock:
+            with self.db() as db:
+                scan = db.execute('SELECT state FROM face_analysis WHERE id=1').fetchone()
+                remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
+                if not self.faces_running and not (scan['state'] in ('running', 'paused', 'error') and remaining):
+                    if not db.execute("SELECT 1 FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','error') LIMIT 1").fetchone():
+                        if scan['state'] == 'idle': db.execute("UPDATE face_analysis SET state='complete' WHERE id=1")
+                        return {'ok': True}
+                    db.execute('DELETE FROM face_analysis_items')
+                    db.execute("""INSERT INTO face_analysis_items SELECT id, 'pending' FROM photos
+                        WHERE source IS NULL AND face_state IN ('pending','skip','error')""")
+                remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
+                db.execute("UPDATE face_analysis SET state=?, error='' WHERE id=1", ('running' if remaining else 'complete',))
+            self.face_error = ''
+            if not remaining or self.faces_running: return {'ok': True}
+            self.face_lock.acquire()
+            self.faces_running = True
+            try:
+                threading.Thread(target=self._faces_worker, daemon=True).start()
+            except Exception:
+                self.faces_running = False
+                self.face_lock.release()
+                with self.db() as db: db.execute("UPDATE face_analysis SET state='paused' WHERE id=1")
+                raise
+        return {'ok': True}
+
+    def pause_faces(self):
+        with self.db() as db:
+            db.execute("UPDATE face_analysis SET state='paused' WHERE id=1 AND state='running'")
+        return {'ok': True}
 
     def _faces_worker(self):
         try:
@@ -549,41 +690,61 @@ class PhotoLibrary:
             import numpy as np
             while True:
                 with self.db() as db:
-                    photo = db.execute("SELECT * FROM photos WHERE face_state='pending' LIMIT 1").fetchone()
-                if not photo: break
+                    if db.execute('SELECT state FROM face_analysis WHERE id=1').fetchone()[0] != 'running': break
+                    item = db.execute("SELECT photo FROM face_analysis_items WHERE state='pending' ORDER BY rowid LIMIT 1").fetchone()
+                    if not item: break
+                    photo = db.execute('SELECT * FROM photos WHERE id=?', (item['photo'],)).fetchone()
+                    if not photo or photo['face_state'] in ('done', 'imported'):
+                        db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (item['photo'],))
+                        continue
                 try:
                     with self.image_lock, Image.open(self.safe_file(photo['path'])) as source:
                         source.draft('RGB', (1000, 1000))
                         source.thumbnail((1000, 1000))
                         image = ImageOps.exif_transpose(source).convert('RGB')
                         encodings = face_recognition.face_encodings(np.asarray(image))
-                    self.group_faces(photo['id'], [encoding.tolist() for encoding in encodings])
+                    with self.db() as db:
+                        self.group_faces(photo['id'], [encoding.tolist() for encoding in encodings], db)
+                        db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (photo['id'],))
                 except (OSError, ValueError, RuntimeError):
-                    with self.db() as db: db.execute("UPDATE photos SET face_state='error' WHERE id=?", (photo['id'],))
-                    self.face_error = 'No se pudieron analizar algunas fotos. Puedes reintentar.'
+                    with self.db() as db:
+                        db.execute("UPDATE photos SET face_state='error' WHERE id=?", (photo['id'],))
+                        db.execute("UPDATE face_analysis_items SET state='error' WHERE photo=?", (photo['id'],))
         except Exception:
             self.face_error = 'No se pudo iniciar el reconocimiento local. Revisa la instalación de face-recognition.'
+            with self.db() as db:
+                db.execute("UPDATE face_analysis SET state='error', error=? WHERE id=1", (self.face_error,))
         finally:
-            self.faces_running = False
-            self.face_lock.release()
+            with self.lock:
+                with self.db() as db:
+                    remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
+                    if not remaining:
+                        db.execute("UPDATE face_analysis SET state='complete' WHERE id=1 AND state!='error'")
+                    resume = remaining and db.execute('SELECT state FROM face_analysis WHERE id=1').fetchone()[0] == 'running'
+                self.faces_running = False
+                self.face_lock.release()
+                # Resume may arrive after the loop observes a pause but before exit.
+                if resume: self.start_faces()
 
-    def group_faces(self, photo_id, encodings):
-        with self.db() as db:
-            state = db.execute('SELECT face_state FROM photos WHERE id=?', (photo_id,)).fetchone()
-            if state and state['face_state'] == 'imported': return
-            known = [(r['person'], json.loads(r['encoding'])) for r in db.execute('SELECT person, encoding FROM faces')]
-            used = set()
-            for encoding in encodings:
-                if len(encoding) != 128 or not all(math.isfinite(v) for v in encoding): continue
-                scores = sorted((math.sqrt(sum((a-b)**2 for a, b in zip(vector, encoding))), person)
-                                for person, vector in known if person not in used and len(vector) == 128)
-                person = scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
-                if not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
-                    count = db.execute('SELECT count(*) FROM people').fetchone()[0]
-                    db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(count + 1), time.time()))
-                db.execute('INSERT OR IGNORE INTO faces VALUES (?,?,?)', (photo_id, person, json.dumps(encoding)))
-                used.add(person)
-            db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photo_id,))
+    def group_faces(self, photo_id, encodings, db=None):
+        if db is None:
+            with self.db() as connection:
+                return self.group_faces(photo_id, encodings, connection)
+        state = db.execute('SELECT face_state FROM photos WHERE id=?', (photo_id,)).fetchone()
+        if not state or state['face_state'] == 'imported': return
+        known = [(r['person'], json.loads(r['encoding'])) for r in db.execute('SELECT person, encoding FROM faces')]
+        used = set()
+        for encoding in encodings:
+            if len(encoding) != 128 or not all(math.isfinite(v) for v in encoding): continue
+            scores = sorted((math.sqrt(sum((a-b)**2 for a, b in zip(vector, encoding))), person)
+                            for person, vector in known if person not in used and len(vector) == 128)
+            person = scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
+            if not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
+                count = db.execute('SELECT count(*) FROM people').fetchone()[0]
+                db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(count + 1), time.time()))
+            db.execute('INSERT OR IGNORE INTO faces VALUES (?,?,?)', (photo_id, person, json.dumps(encoding)))
+            used.add(person)
+        db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photo_id,))
 
     def rename_person(self, ident, name):
         name = clean_name(name)
@@ -597,16 +758,19 @@ class PhotoLibrary:
             raise PhotoError('Selecciona las coincidencias que quieres quitar.')
         with self.db() as db:
             db.executemany('DELETE FROM faces WHERE person=? AND photo=?', [(person, ident) for ident in ids])
+            db.execute('DELETE FROM person_covers WHERE person=? AND NOT EXISTS (SELECT 1 FROM faces WHERE person=? AND photo=person_covers.photo)', (person, person))
+        return {'ok': True}
+
+    def set_person_cover(self, person, photo):
+        if not isinstance(photo, str): raise PhotoError('Selecciona una foto de esta persona.')
+        with self.db() as db:
+            if not db.execute('SELECT 1 FROM faces WHERE person=? AND photo=?', (person, photo)).fetchone():
+                raise PhotoError('La portada debe ser una foto de esta persona.', 409)
+            db.execute('INSERT INTO person_covers VALUES (?,?) ON CONFLICT(person) DO UPDATE SET photo=excluded.photo', (person, photo))
         return {'ok': True}
 
     def _ai_folder(self, db, ident):
-        current = self.folder(db, ident)
-        if ident == 'ai': return False
-        for _ in range(100):
-            if current['parent'] == 'ai': return True
-            if not current['parent']: return False
-            current = self.folder(db, current['parent'])
-        return False
+        return ident != 'ai' and self.folder_root(db, ident) == 'ai'
 
     def start_generation(self, folder_id):
         credentials = self.settings.credentials() if self.settings else {}
@@ -637,6 +801,8 @@ class PhotoLibrary:
                 path.write_bytes(content)
                 try:
                     with self.db() as db:
+                        if not db.execute('SELECT 1 FROM photos WHERE id=?', (source,)).fetchone():
+                            raise PhotoError('La foto original se ha borrado de Galería.')
                         self._insert(db, path.relative_to(self.root).as_posix(), folder,
                                      Path(name).stem + ' · ' + style + '.png', source=source, style=style)
                         db.execute('UPDATE jobs SET done=done+1 WHERE id=?', (ident,))
@@ -698,9 +864,15 @@ def create_photo_blueprint(get_library):
         return response
 
     @bp.post('/pictures/move')
+    @bp.post('/pictures/albums/add')
     def move():
         data = body()
         return jsonify(get_library().move(data.get('ids'), data.get('folderId', ''), data.get('name'), data.get('parent', '')))
+
+    @bp.post('/pictures/photos/delete')
+    def delete():
+        data = body()
+        return jsonify(get_library().delete_photos(data.get('ids'), data.get('scope'), data.get('folderId')))
 
     @bp.post('/pictures/generate')
     def generate():
@@ -708,11 +880,18 @@ def create_photo_blueprint(get_library):
 
     @bp.post('/pictures/people/scan')
     def scan():
-        store = get_library()
-        if importlib.util.find_spec('face_recognition') is None:
-            raise PhotoError('Instala el soporte de Personas en la Raspberry (face-recognition).', 503)
-        store.start_faces(retry=True)
+        body()
+        get_library().start_faces()
         return jsonify({'ok': True}), 202
+
+    @bp.post('/pictures/people/pause')
+    def pause():
+        body()
+        return jsonify(get_library().pause_faces())
+
+    @bp.post('/pictures/people/<ident>/cover')
+    def cover(ident):
+        return jsonify(get_library().set_person_cover(ident, body().get('photoId')))
 
     @bp.post('/pictures/people/<ident>')
     def rename(ident):

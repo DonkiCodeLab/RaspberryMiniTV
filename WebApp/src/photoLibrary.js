@@ -1,4 +1,4 @@
-export const SPECIAL_FOLDERS = ['uploads', 'map', 'ai', 'people'];
+export const SPECIAL_FOLDERS = ['gallery', 'map', 'people', 'albums', 'ai'];
 export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
 export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
 export const PHOTO_PAGE_SIZE = 100;

@@ -91,7 +91,25 @@ class PhotoPreviews:
         return requested
 
     def discard(self, path):
-        for cached in self.paths(path): cached.unlink(missing_ok=True)
+        thumb, large = self.paths(path)
+        for cached in (thumb, large, thumb.with_suffix('.tiny.jpg')): cached.unlink(missing_ok=True)
+
+    def tiny(self, path):
+        thumb, _ = self.paths(path)
+        destination = thumb.with_suffix('.tiny.jpg')
+        if destination.exists(): return destination
+        self.get(path)
+        with self.image_lock:
+            if not destination.exists():
+                temporary = self.cache / (uuid.uuid4().hex + '.tmp')
+                try:
+                    with Image.open(thumb) as source:
+                        image = ImageOps.fit(source, (24, 24))
+                        image.save(temporary, 'JPEG', quality=55)
+                    os.replace(temporary, destination)
+                finally:
+                    temporary.unlink(missing_ok=True)
+        return destination
 
     def start(self, paths, resolve=lambda path: path):
         with self.start_lock:

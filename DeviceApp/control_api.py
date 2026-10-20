@@ -2089,7 +2089,7 @@ def upload_pictures():
         try: import_data = json.loads(raw)
         except (ValueError, UnicodeError, RecursionError): raise PhotoError('El archivo de metadatos no es válido.') from None
     return jsonify(get_photo_library().upload(request.files.getlist("files"),
-        request.form.get("albumName", ""), request.form.get("folderId", ""), request.form.get("parent", "uploads"), import_data))
+        request.form.get("albumName", ""), request.form.get("folderId", ""), request.form.get("parent", "gallery"), import_data))
 
 
 @app.route("/pictures/content", methods=["GET"])
@@ -2106,7 +2106,7 @@ def picture_content():
         if not row: raise PhotoError('No se encuentra la foto en la biblioteca.', 404)
         name = row['name'].replace('\r', '').replace('\n', '') or path.name
     else:
-        path = store.preview(relative, full=render == "preview") if render in ("thumb", "preview") else store.safe_file(relative)
+        path = store.preview(relative, full=render == "preview", tiny=render == "tiny") if render in ("thumb", "preview", "tiny") else store.safe_file(relative)
     response = send_file(path, conditional=True, as_attachment=download, download_name=name)
     response.headers["Cache-Control"] = "private, max-age=3600"
     return response

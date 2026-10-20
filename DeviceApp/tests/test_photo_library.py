@@ -35,11 +35,11 @@ class PhotoLibraryTests(unittest.TestCase):
     def upload(self, name='Viaje', **kwargs):
         return self.store.upload([picture()], name, **kwargs)
 
-    def test_upload_named_album_metadata_and_reload(self):
+    def test_upload_goes_to_flat_gallery_and_survives_reload(self):
         result = self.upload()
         snap = self.store.snapshot()
         album = next(f for f in snap['folders'] if f['id'] == result['folderId'])
-        self.assertEqual((album['name'], album['parent']), ('Viaje', 'uploads'))
+        self.assertEqual((album['name'], album['parent']), ('Galería', ''))
         photo = snap['photos'][0]
         self.assertIsNone(photo['takenAt'])
         self.assertIsNone(photo['latitude'])
@@ -47,11 +47,13 @@ class PhotoLibraryTests(unittest.TestCase):
         self.assertEqual(photo['width'], 100)
         self.assertEqual(PhotoLibrary(self.store.root, self.settings).snapshot()['photos'], snap['photos'])
 
-    def test_same_filenames_are_preserved_and_album_conflict_does_not_overwrite(self):
+    def test_distinct_content_is_preserved_and_duplicate_content_is_referenced(self):
         result = self.store.upload([picture(color='red'), picture(color='blue')], 'Viaje')
         self.assertEqual(len(set(result['saved'])), 2)
         self.assertTrue(all(self.store.safe_file(path).exists() for path in result['saved']))
-        with self.assertRaises(PhotoError): self.upload()
+        self.assertEqual(self.upload()['duplicates'], 1)
+        album = self.store.create_folder('Viaje')
+        with self.assertRaises(PhotoError): self.store.create_folder('Viaje')
         self.assertEqual(len(self.store.snapshot()['photos']), 2)
 
     def test_status_changes_only_after_commits_or_worker_state_changes(self):
@@ -97,9 +99,10 @@ class PhotoLibraryTests(unittest.TestCase):
         result = self.store.move([photo['id']], new_name='Vacaciones')
         updated = self.store.snapshot()['photos'][0]
         self.assertEqual(updated['relativePath'], photo['relativePath'])
-        self.assertEqual(updated['folderId'], result['folderId'])
+        self.assertEqual(updated['folderId'], 'gallery')
+        self.assertIn(result['folderId'], updated['folderIds'])
         sub = self.store.move([photo['id']], new_name='Playa', parent=result['folderId'])
-        self.assertEqual(self.store.snapshot()['photos'][0]['folderId'], sub['folderId'])
+        self.assertEqual(set(self.store.snapshot()['photos'][0]['folderIds']), {result['folderId'], sub['folderId']})
         self.assertEqual(self.store.safe_file(photo['relativePath']).read_bytes(), picture().read())
 
     def test_move_is_atomic_and_virtual_roots_cannot_receive_photos(self):
@@ -107,15 +110,15 @@ class PhotoLibraryTests(unittest.TestCase):
         photo = self.store.snapshot()['photos'][0]
         with self.assertRaises(PhotoError): self.store.move([photo['id'], 'missing'], new_name='Should not exist')
         self.assertFalse(any(f['name'] == 'Should not exist' for f in self.store.snapshot()['folders']))
-        for target in ('map', 'people', 'uploads', 'ai', None, []):
+        for target in ('map', 'people', 'gallery', 'albums', 'uploads', 'ai', None, []):
             with self.assertRaises(PhotoError): self.store.move([photo['id']], target)
         self.assertEqual(self.store.snapshot()['photos'][0]['folderId'], original)
 
     def test_folder_input_validation(self):
         for name in ('', '../escape', 'a/b', 'a\\b', 'x\nq', 'x' * 101, None, []):
             with self.assertRaises(PhotoError): self.store.create_folder(name)
-        for name in ('Uploads', 'Mapa', 'IA', 'Personas'):
-            with self.assertRaises(PhotoError): self.store.create_folder(name)
+        for parent in ('gallery', 'uploads', 'map', 'people'):
+            with self.assertRaises(PhotoError): self.store.create_folder('Forbidden', parent)
         with self.assertRaises(PhotoError): self.store.create_folder('test', 'missing')
 
     def test_content_rejects_traversal_and_symlinks(self):
@@ -131,7 +134,8 @@ class PhotoLibraryTests(unittest.TestCase):
         photos = self.store.snapshot()['photos']
         self.assertEqual(len(photos), 1)
         self.assertEqual(photos[0]['relativePath'], 'Paris/Day 1/old.jpg')
-        self.assertTrue(any(f['name'] == 'Paris' and f['parent'] == 'uploads' for f in self.store.snapshot()['folders']))
+        self.assertEqual(photos[0]['folderId'], 'gallery')
+        self.assertFalse(any(f['parent'] == 'gallery' for f in self.store.snapshot()['folders']))
 
     def test_exif_date_gps_and_orientation(self):
         exif = Image.Exif()
@@ -171,7 +175,7 @@ class PhotoLibraryTests(unittest.TestCase):
         self.assertEqual(list(self.store.cache.glob('*.tmp')), [])
 
     def test_faces_group_locally_rename_and_remove_without_deleting_photo(self):
-        self.store.upload([picture(), picture()], 'Personas del viaje')
+        self.store.upload([picture(), picture(color='blue')], 'Personas del viaje')
         photos = self.store.snapshot()['photos']
         self.store.group_faces(photos[0]['id'], [[0.] * 128, [1.] * 128])
         self.store.group_faces(photos[1]['id'], [[.001] * 128])
@@ -257,7 +261,7 @@ class PhotoApiTests(unittest.TestCase):
 
     def test_all_routes_require_pin(self):
         for path, method in [('library', 'get'), ('status', 'get'), ('content', 'get'), ('upload', 'post'), ('folders', 'post'), ('move', 'post'),
-                             ('generate', 'post'), ('people/scan', 'post'), ('people/a', 'post'), ('people/a/remove', 'post')]:
+                             ('albums/add', 'post'), ('photos/delete', 'post'), ('generate', 'post'), ('people/scan', 'post'), ('people/pause', 'post'), ('people/a/cover', 'post'), ('people/a', 'post'), ('people/a/remove', 'post')]:
             self.assertEqual(getattr(self.client, method)('/pictures/' + path).status_code, 401, path)
 
     def test_status_is_small_private_and_does_not_build_or_scan_catalogue(self):

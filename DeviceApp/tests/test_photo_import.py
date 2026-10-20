@@ -61,7 +61,7 @@ class PhotoImportTests(unittest.TestCase):
         self.assertEqual((result['imported'], result['duplicates']), (1, 1))
         self.assertEqual(result['rejected'][0]['index'], 1)
         self.assertEqual({photo['title'] for photo in self.store.snapshot()['photos']}, {'Existing', 'New'})
-        self.assertTrue(all(photo['folderId'] == 'uploads' for photo in self.store.snapshot()['photos']))
+        self.assertTrue(all(photo['folderId'] == 'gallery' for photo in self.store.snapshot()['photos']))
         self.store.start_faces.assert_not_called()
 
     def test_stale_hashes_are_reported_missing_and_metadata_only_commit_is_atomic(self):
@@ -94,17 +94,17 @@ class PhotoImportTests(unittest.TestCase):
         self.assertEqual(list(self.store.root.iterdir()), [])
         self.assertEqual(self.store.snapshot()['photos'], [])
 
-    def test_geolocated_import_goes_directly_to_uploads_without_albums_or_face_workers(self):
+    def test_geolocated_import_goes_directly_to_gallery_without_albums_or_face_workers(self):
         data = {**payload(metadata(latitude=0, longitude=0)), 'geolocatedOnly': True}
         result = self.store.upload([picture()], import_data=data)
-        self.assertEqual(result['folderId'], 'uploads')
+        self.assertEqual(result['folderId'], 'gallery')
         snap = self.store.snapshot()
         self.assertEqual(len(snap['photos']), 1)
-        self.assertEqual(snap['photos'][0]['folderId'], 'uploads')
+        self.assertEqual(snap['photos'][0]['folderId'], 'gallery')
         self.assertEqual(snap['photos'][0]['latitude'], 0)
         self.assertEqual(snap['photos'][0]['longitude'], 0)
         self.assertEqual(snap['photos'][0]['folderIds'], [])
-        self.assertEqual({f['id'] for f in snap['folders']}, {'uploads', 'ai'})
+        self.assertEqual({f['id'] for f in snap['folders']}, {'gallery', 'albums', 'ai'})
         self.assertEqual(snap['people'], [])
         self.store.start_faces.assert_not_called()
         with self.store.db() as db:

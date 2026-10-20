@@ -28,15 +28,17 @@ export function createThumbnailQueue(load = loadImage, limit = 2) {
         .finally(() => { running--; drain(); });
     }
   }
-  return (url, signal) => new Promise((resolve, reject) => {
+  return (url, signal, priority = 0) => new Promise((resolve, reject) => {
     if (signal?.aborted) { reject(cancelled()); return; }
-    const job = { url, signal, resolve, reject, abort: null };
+    const job = { url, signal, priority, resolve, reject, abort: null };
     job.abort = () => {
       const index = waiting.indexOf(job);
       if (index >= 0) { waiting.splice(index, 1); reject(cancelled()); }
     };
     signal?.addEventListener('abort', job.abort, { once: true });
-    waiting.push(job); drain();
+    const before = waiting.findIndex(queued => queued.priority > priority);
+    if (before < 0) waiting.push(job); else waiting.splice(before, 0, job);
+    drain();
   });
 }
 
