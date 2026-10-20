@@ -5,6 +5,9 @@ import { prepareBrowserPlayback, playbackTime } from "./browserPlayback.js";
 import { browserPlaybackStrings } from "./browserPlaybackStrings.js";
 
 export function PlaybackPreparation({ status, error, onRetry, language = "es" }) {
+  // Checking compatibility does not mean a conversion is needed. Only show
+  // progress once the backend has queued a real conversion; keep errors visible.
+  if (!error && !["queued", "converting", "finalizing"].includes(status.state)) return null;
   const s = browserPlaybackStrings(language);
   const playbackFailed = error?.startsWith("PLAYBACK_");
   const label = playbackFailed ? s.playback : s.converting;

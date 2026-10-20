@@ -1,7 +1,10 @@
 # WebApp
 
-Al pulsar **Reproducir en navegador**, se comprueba el audio antes de abrir el
-vídeo. Si el navegador no admite la pista (por ejemplo, AC-3), la MiniTV prepara
+Al pulsar **Reproducir en navegador**, se comprueba el audio de forma silenciosa
+antes de abrir el vídeo. Los archivos compatibles y las copias ya preparadas se
+abren sin mostrar el diálogo de conversión. Este solo aparece cuando hay una
+conversión confirmada en cola o en curso. Si el navegador no admite la pista
+(por ejemplo, AC-3), la MiniTV prepara
 una copia con AAC estéreo, conservando la imagen sin recodificar y el original
 intacto. El reproductor muestra la cola, el porcentaje real, el tiempo transcurrido
 y una estimación del restante; al finalizar intenta comenzar automáticamente.
