@@ -231,9 +231,12 @@ pestaña **Descargas libres**; las vinculadas a fichas siguen en **Historial**.
 **Ver contenido** abre un explorador de carpetas y subcarpetas con descompresión
 y borrado de toda la descarga. Las canceladas se pueden quitar del historial.
 El explorador muestra la ruta completa del servidor y permite volver a cualquier
-carpeta superior desde la ruta o con **Subir una carpeta**. El lápiz a la izquierda
-de cada archivo o carpeta permite editar su nombre: **Enter** guarda y **Esc**
-cancela. El icono de flechas circulares actualiza el listado. Los nombres duplicados
+carpeta superior desde la ruta o con **Subir una carpeta**. El lápiz de la barra
+activa la edición de todos los nombres del directorio actual. A su lado, **✓**
+o **Enter** guarda los cambios y **×** o **Esc** cancela los cambios pendientes.
+Solo se envían los nombres modificados; si alguno falla, su error aparece en la
+fila y se conserva el borrador para corregirlo o reintentarlo. Los nombres ya
+guardados se mantienen. El icono de flechas circulares actualiza el listado. Los nombres duplicados
 se rechazan sin sobrescribir contenido; durante la descompresión se desactiva el
 renombrado. Esta función requiere actualizar también DeviceApp.
 En **Uploads → Serie/Película**, **Abrir descargas libres** permite elegir un vídeo
