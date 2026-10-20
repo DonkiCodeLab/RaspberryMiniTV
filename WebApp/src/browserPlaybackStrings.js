@@ -1,6 +1,7 @@
 const strings = {
   es: {
     play: "Reproducir",
+    playback: "Reproducción de vídeo", playbackFailed: "Se ha interrumpido la reproducción",
     checking: "Comprobando el audio", queued: "En espera", converting: "Preparando audio compatible", finalizing: "Terminando la preparación",
     hint: "El vídeo conserva su calidad. La copia compatible se guardará para la próxima vez.",
     background: "Puedes cerrar esta ventana. La preparación continuará en la MiniTV.",
@@ -9,6 +10,7 @@ const strings = {
   },
   ca: {
     play: "Reprodueix",
+    playback: "Reproducció de vídeo", playbackFailed: "S’ha interromput la reproducció",
     checking: "Comprovant l’àudio", queued: "En espera", converting: "Preparant àudio compatible", finalizing: "Acabant la preparació",
     hint: "El vídeo conserva la qualitat. La còpia compatible es desarà per a la pròxima vegada.",
     background: "Pots tancar aquesta finestra. La preparació continuarà a la MiniTV.",
@@ -17,6 +19,7 @@ const strings = {
   },
   en: {
     play: "Play",
+    playback: "Video playback", playbackFailed: "Playback was interrupted",
     checking: "Checking audio", queued: "Waiting", converting: "Preparing compatible audio", finalizing: "Finishing preparation",
     hint: "Video quality is preserved. The compatible copy will be saved for next time.",
     background: "You can close this window. Preparation will continue on the MiniTV.",
@@ -26,6 +29,24 @@ const strings = {
 };
 export const browserPlaybackStrings = language => strings[language] || strings.es;
 
-strings.es.errors.PLAYBACK_FAILED = "No se ha podido reproducir el vídeo. Reintenta para comprobar la copia y la conexión, o reproduce el original en la MiniTV.";
-strings.ca.errors.PLAYBACK_FAILED = "No s’ha pogut reproduir el vídeo. Torna-ho a provar per comprovar la còpia i la connexió, o reprodueix l’original a la MiniTV.";
-strings.en.errors.PLAYBACK_FAILED = "The video could not be played. Retry to check the copy and connection, or play the original on the MiniTV.";
+Object.assign(strings.es.errors, {
+  PLAYBACK_ABORTED: "Se ha cancelado la carga del vídeo. Pulsa Reintentar para continuar desde el punto guardado.",
+  PLAYBACK_NETWORK: "Se ha interrumpido la descarga del vídeo. Comprueba la conexión con la MiniTV y pulsa Reintentar para continuar desde el punto guardado.",
+  PLAYBACK_DECODE: "El navegador no ha podido decodificar una parte del vídeo o del audio. Pulsa Reintentar para continuar desde el punto guardado. Si vuelve a fallar en el mismo punto, prueba otro navegador o reproduce el original en la MiniTV.",
+  PLAYBACK_UNSUPPORTED: "El navegador no puede reproducir el archivo recibido. Pulsa Reintentar para comprobar el acceso al vídeo, o prueba otro navegador.",
+  PLAYBACK_FAILED: "Se ha producido un error al reproducir el vídeo. Pulsa Reintentar para continuar desde el punto guardado, o reproduce el original en la MiniTV.",
+});
+Object.assign(strings.ca.errors, {
+  PLAYBACK_ABORTED: "S’ha cancel·lat la càrrega del vídeo. Torna-ho a provar per continuar des del punt desat.",
+  PLAYBACK_NETWORK: "S’ha interromput la descàrrega del vídeo. Comprova la connexió amb la MiniTV i torna-ho a provar per continuar des del punt desat.",
+  PLAYBACK_DECODE: "El navegador no ha pogut descodificar una part del vídeo o de l’àudio. Torna-ho a provar per continuar des del punt desat. Si torna a fallar al mateix punt, prova un altre navegador o reprodueix l’original a la MiniTV.",
+  PLAYBACK_UNSUPPORTED: "El navegador no pot reproduir el fitxer rebut. Torna-ho a provar per comprovar l’accés al vídeo, o prova un altre navegador.",
+  PLAYBACK_FAILED: "S’ha produït un error en reproduir el vídeo. Torna-ho a provar per continuar des del punt desat, o reprodueix l’original a la MiniTV.",
+});
+Object.assign(strings.en.errors, {
+  PLAYBACK_ABORTED: "Video loading was cancelled. Retry to continue from the saved position.",
+  PLAYBACK_NETWORK: "The video download was interrupted. Check the connection to the MiniTV and retry to continue from the saved position.",
+  PLAYBACK_DECODE: "The browser could not decode part of the video or audio. Retry to continue from the saved position. If it fails again at the same point, try another browser or play the original on the MiniTV.",
+  PLAYBACK_UNSUPPORTED: "The browser cannot play the received file. Retry to check access to the video, or try another browser.",
+  PLAYBACK_FAILED: "An error occurred while playing the video. Retry to continue from the saved position, or play the original on the MiniTV.",
+});

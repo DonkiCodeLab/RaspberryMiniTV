@@ -129,7 +129,7 @@ class OscarCatalogTests(unittest.TestCase):
             self.cache.warm('movie', self.movie_id)
             self.assertEqual(len(calls), 6)
 
-    def test_parallel_artwork_obeys_cancellation_and_cannot_write_late_images(self):
+    def test_artwork_obeys_cancellation_and_cannot_write_late_images(self):
         key = f'movie/{self.movie_id}'
         with patch.object(self.cache, 'start'):
             self.cache.enqueue('movie', self.movie_id)

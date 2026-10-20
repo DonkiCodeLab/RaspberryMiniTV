@@ -1,5 +1,19 @@
 const codecs = { aac: "mp4a.40.2", mp3: "mp3", opus: "opus", vorbis: "vorbis", flac: "flac", ac3: "ac-3", eac3: "ec-3" };
 
+export function browserVideoError(event) {
+  const video = event.currentTarget;
+  // Resource errors can propagate through React. A subtitle failure must not
+  // replace a healthy video with the playback error screen.
+  if (event.target !== video || !video?.error) return null;
+  const code = {
+    1: "PLAYBACK_ABORTED",
+    2: "PLAYBACK_NETWORK",
+    3: "PLAYBACK_DECODE",
+    4: "PLAYBACK_UNSUPPORTED",
+  }[video.error.code] || "PLAYBACK_FAILED";
+  return { code, seconds: Number.isFinite(video.currentTime) ? video.currentTime : null };
+}
+
 export function supportedBrowserAudio(video = document.createElement("video")) {
   return Object.fromEntries(["mp4", "webm"].map(container => [container,
     Object.entries(codecs).filter(([, codec]) => Boolean(video.canPlayType(`audio/${container}; codecs="${codec}"`)))

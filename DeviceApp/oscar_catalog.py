@@ -1,6 +1,5 @@
 """Permanent Best Picture collection, isolated from deletable library artwork."""
 import json
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import threading
 
@@ -81,32 +80,6 @@ class OscarCatalog(TmdbCache):
         # Includes original artwork, full image inventories, details in all three
         # languages and display thumbnails. Interrupted jobs resume from disk.
         super().warm(kind, tmdb_id, extra_images, refresh)
-
-    def _warm_images(self, images, thumbnails):
-        # A century of artwork is large. Keep just three transfers in flight;
-        # generation checks and atomic writes still apply to every worker.
-        context = getattr(self.worker_context, "job", None)
-        errors = []
-        def prepare(item):
-            path, width = item
-            self.worker_context.job = context
-            try:
-                self._check_worker()
-                self.display_image(path, width) if width else self.image(path)
-                return ""
-            except Exception as exc:
-                return f"{path} ({width or 'original'}): {exc}"
-            finally:
-                self.worker_context.job = None
-        with ThreadPoolExecutor(max_workers=3, thread_name_prefix="oscars-artwork") as pool:
-            for phase, items in (("images", [(path, None) for path in sorted(images)]),
-                                 ("thumbnails", sorted(thumbnails))):
-                for count, error in enumerate(pool.map(prepare, items), 1):
-                    self._check_worker()
-                    if error:
-                        errors.append(error)
-                    self._progress(phase, count, len(items), items[count - 1][0])
-        return errors
 
     def snapshot(self, language):
         if language not in LANGUAGES:

@@ -3,6 +3,7 @@ import RetroTelevision from "./RetroTelevision.jsx";
 import { gameTelevision } from "./gameTelevisions.js";
 import { frameRectangle } from "./gameConsoleFrames.js";
 import { browserPlaybackStrings } from "./browserPlaybackStrings.js";
+import { browserVideoError } from "./browserPlayback.js";
 
 export default function BrowserVideo({ url, subtitleSourceUrl = url, t, language, initialProgress, onProgress, onPlaybackError, showShell = true }) {
   const videoRef = useRef(null);
@@ -146,7 +147,10 @@ export default function BrowserVideo({ url, subtitleSourceUrl = url, t, language
       style={{ "--tv-ratio": showShell ? television.crop[2] / television.crop[3] : videoAspect }}>
       <RetroTelevision television={television} t={t}>
         <div className="browser-video__screen" style={frameRectangle(television, television.screen)}>
-          <video ref={videoRef} src={url} controls autoPlay playsInline onError={onPlaybackError}>
+          <video ref={videoRef} src={url} controls autoPlay playsInline onError={event => {
+            const error = browserVideoError(event);
+            if (error) onPlaybackError?.(error);
+          }}>
             {subtitleUrl && <track ref={subtitleRef} key={subtitleUrl} kind="subtitles"
               label={t("subtitle_external")} src={subtitleUrl} default />}
           </video>

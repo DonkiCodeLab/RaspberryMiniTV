@@ -4466,7 +4466,7 @@ def cached_tmdb_image(filename):
 def import_tmdb_preview(filename):
     """Explicit import/search previews, never used by library navigation."""
     try:
-        return send_file(tmdb_artwork.display_image("/" + filename, int(request.args.get("width", 342))), max_age=31536000, conditional=True)
+        return send_file(tmdb_artwork.display_image("/" + filename, int(request.args.get("width", 342)), preview=True), max_age=31536000, conditional=True)
     except Exception:
         return jsonify({"error": "No se pudo preparar la vista previa"}), 502
 

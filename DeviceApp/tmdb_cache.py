@@ -14,6 +14,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from tmdb_resources import (IMAGE_DOWNLOADS, METADATA_DOWNLOADS, THUMBNAILS,
+                            DOWNLOAD_BYTES_PER_SECOND, DOWNLOAD_CHUNK_BYTES)
+
 IMAGE_RE = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg)")
 DETAIL_RE = re.compile(r"/(?:person/[1-9]\d*|movie/\d+(?:/images|/credits)?|tv/\d+(?:/images|/aggregate_credits|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
 LANGUAGES = ("es-ES", "ca-ES", "en-US")
@@ -47,8 +50,6 @@ class TmdbCache:
         self.credits_snapshots = {}
         self.io_locks = [threading.RLock() for _ in range(64)]
         self.link_locks = [threading.RLock() for _ in range(64)]
-        self.thumbnail_slots = threading.BoundedSemaphore(2)
-        self.network_slots = threading.BoundedSemaphore(3)
         self.jobs_lock = threading.RLock()
         self.storage_lock = threading.Lock()
         self.storage_snapshot = None
@@ -73,8 +74,38 @@ class TmdbCache:
                 job["refresh"] = False
 
     def _download(self, url, headers, limit):
-        with self.network_slots:
-            return self._download_with_retries(url, headers, limit)
+        return self._download_with_retries(url, headers, limit)
+
+    def _resource(self, resource):
+        return resource.acquire(background=bool(getattr(self.worker_context, "job", None)),
+                                check_cancelled=self._check_worker)
+
+    def _wait(self, seconds):
+        deadline = time.monotonic() + max(0, seconds)
+        while True:
+            self._check_worker()
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            time.sleep(min(0.1, remaining))
+
+    def _read_response(self, response, limit):
+        """Pace actual bytes, not just request count; cancellation also stops reads."""
+        data = io.BytesIO()
+        while True:
+            self._check_worker()
+            started = time.monotonic()
+            chunk = response.read(min(DOWNLOAD_CHUNK_BYTES, limit + 1 - data.tell()))
+            if not chunk:
+                break
+            data.write(chunk)
+            if data.tell() > limit:
+                raise ValueError("Respuesta TMDB demasiado grande")
+            # A slow chunk must not build up credit for a later download burst.
+            self._wait(len(chunk) / DOWNLOAD_BYTES_PER_SECOND - (time.monotonic() - started))
+        if not data.tell():
+            raise ValueError("Respuesta TMDB vacía")
+        return data.getvalue()
 
     def _download_with_retries(self, url, headers, limit):
         # Fixed upstreams; do not follow redirects to arbitrary hosts.
@@ -82,14 +113,13 @@ class TmdbCache:
             def redirect_request(self, req, fp, code, msg, headers, newurl):
                 return None
         opener = urllib.request.build_opener(NoRedirect)
+        resource = IMAGE_DOWNLOADS if urllib.parse.urlsplit(url).hostname == "image.tmdb.org" else METADATA_DOWNLOADS
         for attempt in range(3):
             self._check_worker()
             try:
-                with opener.open(urllib.request.Request(url, headers=headers), timeout=30) as response:
-                    data = response.read(limit + 1)
-                    if not data or len(data) > limit:
-                        raise ValueError("Respuesta TMDB vacía o demasiado grande")
-                    return data, response.headers.get_content_type()
+                with self._resource(resource):
+                    with opener.open(urllib.request.Request(url, headers=headers), timeout=10) as response:
+                        return self._read_response(response, limit), response.headers.get_content_type()
             except urllib.error.HTTPError as exc:
                 if attempt == 2 or exc.code not in (429, 500, 502, 503, 504):
                     raise TmdbError(
@@ -98,11 +128,11 @@ class TmdbCache:
                         "TMDB_AUTH_ERROR" if exc.code in (401, 403) else "TMDB_HTTP_ERROR",
                     ) from None
                 delay = exc.headers.get("Retry-After", "")
-                time.sleep(min(30, int(delay)) if delay.isdigit() else 2 ** attempt)
+                self._wait(min(30, int(delay)) if delay.isdigit() else 2 ** attempt)
             except (OSError, TimeoutError):
                 if attempt == 2:
                     raise TmdbError("La Raspberry no puede conectar con TMDB. Revisa su conexión a Internet, DNS y certificados.", "TMDB_CONNECTION_ERROR") from None
-                time.sleep(2 ** attempt)
+                self._wait(2 ** attempt)
 
     def library_summary(self, kind, tmdb_id, language):
         """Read only local metadata and return the fields needed by library cards."""
@@ -427,10 +457,8 @@ class TmdbCache:
                                        "props": "claims", "format": "json"})
         request = urllib.request.Request("https://www.wikidata.org/w/api.php?" + query,
                                          headers={"User-Agent": "DonkiCodeMiniTV/1.0", "Accept": "application/json"})
-        with self.network_slots, urllib.request.urlopen(request, timeout=4 if len(wikidata_ids) == 1 else 15) as response:
-            raw = response.read(4 * 1024 * 1024 + 1)
-            if len(raw) > 4 * 1024 * 1024:
-                raise ValueError("Respuesta Wikidata demasiado grande")
+        with self._resource(METADATA_DOWNLOADS), urllib.request.urlopen(request, timeout=4 if len(wikidata_ids) == 1 else 15) as response:
+            raw = self._read_response(response, 4 * 1024 * 1024)
             payload = json.loads(raw)
             if "error" in payload:
                 raise ValueError("No se pudo consultar Wikidata")
@@ -445,7 +473,7 @@ class TmdbCache:
                     break
         return results
 
-    def display_image(self, path, width=None, local_only=False):
+    def display_image(self, path, width=None, local_only=False, *, preview=False):
         if local_only:
             if not IMAGE_RE.fullmatch(path) or width not in (None, 185, 342, 500, 780, 1280):
                 raise ValueError("Imagen o tamaño no permitido")
@@ -462,7 +490,11 @@ class TmdbCache:
         target = self.root / "thumbnails" / str(width) / (path.lstrip("/") + ".webp")
         if target.is_file() and target.stat().st_size:
             return target
-        source = None if width == 185 else self.image(path)
+        # Search previews need only the requested size. Keep full originals for
+        # library preparation, and reuse an existing original when it is available.
+        original_path = self.root / "images" / path.lstrip("/")
+        small_download = width == 185 or (preview and not original_path.is_file() and not path.endswith(".svg"))
+        source = None if small_download else self.image(path)
         if source is not None and source.suffix == ".svg":
             return source
         with self.state_lock:
@@ -470,12 +502,12 @@ class TmdbCache:
         with self.io_locks[hash(str(target)) % len(self.io_locks)]:
             if target.is_file() and target.stat().st_size:
                 return target
-            if width == 185:
-                # Avatars do not need an original multi-megapixel portrait.
-                raw, _ = self._download("https://image.tmdb.org/t/p/w185" + path, {}, 4 * 1024 * 1024)
+            if small_download:
+                raw, _ = self._download(f"https://image.tmdb.org/t/p/w{width}" + path, {},
+                                        (4 if width == 185 else 8) * 1024 * 1024)
                 source = io.BytesIO(raw)
             from PIL import Image, ImageOps
-            with self.thumbnail_slots, Image.open(source) as original:
+            with self._resource(THUMBNAILS), Image.open(source) as original:
                 original.draft("RGB", (width, width * 2))
                 resized = ImageOps.exif_transpose(original)
                 resized.thumbnail((width, max(1, round(width * resized.height / resized.width))))
@@ -632,6 +664,7 @@ class TmdbCache:
             except Exception as exc:
                 errors.append(f"Miniatura {path} ({width}): {exc}")
             self._progress("thumbnails", count, len(thumbnails), path)
+        self._check_worker()
         return errors
 
     def _progress(self, phase, completed, total, current):

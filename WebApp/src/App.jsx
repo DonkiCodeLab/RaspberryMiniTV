@@ -3975,7 +3975,7 @@ function AddMediaModal({
                     type="button"
                   >
                     <div className="add-series-result__poster">
-                      {result.posterImage ? <img src={result.posterImage} alt={result.name} /> : <span>{t("no_images_available")}</span>}
+                      {result.posterImage ? <img src={result.posterImage} alt={result.name} loading="lazy" decoding="async" fetchPriority="low" /> : <span>{t("no_images_available")}</span>}
                     </div>
 
                     <div className="add-series-result__body">
@@ -4943,7 +4943,7 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
                       className={`add-series-result tmdb-browser-result${isSelected ? " active" : ""}`}
                     >
                       <div className="add-series-result__poster">
-                        {result.posterImage ? <img src={result.posterImage} alt={result.name} /> : <span>{t("no_images_available")}</span>}
+                        {result.posterImage ? <img src={result.posterImage} alt={result.name} loading="lazy" decoding="async" fetchPriority="low" /> : <span>{t("no_images_available")}</span>}
                       </div>
                       <div className="add-series-result__body">
                         <h3>{result.name}</h3>

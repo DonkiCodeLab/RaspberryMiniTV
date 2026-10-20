@@ -1,12 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { prepareBrowserPlayback, supportedBrowserAudio, playbackTime } from "../src/browserPlayback.js";
+import { browserVideoError, prepareBrowserPlayback, supportedBrowserAudio, playbackTime } from "../src/browserPlayback.js";
 import { browserPlaybackStrings } from "../src/browserPlaybackStrings.js";
 
 const url = "http://minitv.test/media/stream?relativePath=TVShows%2FAlien%2FS01E01.mp4&pin=fixture";
 const supportedAudio = { mp4: ["aac"], webm: ["opus"] };
 const key = "a".repeat(64);
 const response = (body, status = 200) => new Response(JSON.stringify(body), { status });
+
+test("a video that already played reports the actual media error and its interruption position", () => {
+  for (const [code, expected] of [[1, "PLAYBACK_ABORTED"], [2, "PLAYBACK_NETWORK"], [3, "PLAYBACK_DECODE"], [4, "PLAYBACK_UNSUPPORTED"], [99, "PLAYBACK_FAILED"]]) {
+    const video = { error: { code }, currentTime: 367.25 };
+    assert.deepEqual(browserVideoError({ target: video, currentTarget: video }), { code: expected, seconds: 367.25 });
+    for (const language of ["es", "ca", "en"]) assert.ok(browserPlaybackStrings(language).errors[expected]);
+  }
+});
+
+test("subtitle errors and events without a media error do not terminate video playback", () => {
+  const video = { error: null, currentTime: 90 };
+  assert.equal(browserVideoError({ target: video, currentTarget: video }), null);
+  const track = { tagName: "TRACK" };
+  assert.equal(browserVideoError({ target: track, currentTarget: video }), null);
+  video.error = { code: 3 };
+  assert.equal(browserVideoError({ target: track, currentTarget: video }), null);
+  video.currentTime = NaN;
+  assert.deepEqual(browserVideoError({ target: video, currentTarget: video }), { code: "PLAYBACK_DECODE", seconds: null });
+});
 
 test("checks the browser's codec support separately for each container", () => {
   assert.deepEqual(supportedBrowserAudio({ canPlayType: type => type === 'audio/mp4; codecs="mp4a.40.2"' || type === 'audio/webm; codecs="opus"' ? "probably" : "" }), supportedAudio);

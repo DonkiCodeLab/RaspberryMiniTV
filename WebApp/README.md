@@ -13,6 +13,12 @@ el avance. La copia se reutiliza en las siguientes reproducciones. Los fallos
 de conexión, conversión, herramientas o espacio se indican con **Reintentar**.
 Actualiza también DeviceApp; consulta [la caché y los requisitos](../DeviceApp/README.md#audio-compatible-al-reproducir-desde-la-web).
 
+Si la reproducción se interrumpe después de comenzar, el aviso distingue entre
+un fallo de descarga, de decodificación y un archivo que el navegador no puede
+reproducir. Estos errores no se presentan como fallos de preparación del audio.
+**Reintentar** conserva el punto alcanzado en esta sesión y comprueba de nuevo
+la disponibilidad del vídeo. Un error de los subtítulos no cierra el reproductor.
+
 **Reproducir en navegador** en películas y episodios abre el vídeo dentro de la
 carcasa de Los Simpson, ampliada hasta ocupar el espacio disponible. El interruptor
 **Carcasa** de la cabecera permite pasar al vídeo sin marco, conservando la

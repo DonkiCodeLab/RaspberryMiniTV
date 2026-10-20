@@ -807,6 +807,22 @@ aprovechando la caché. Las peticiones repetidas de inicio durante una descarga 
 vuelven a encolar el catálogo. `DELETE /tmdb/cache` cancela la descarga y requiere PIN.
 Las descargas bajo demanda para navegar por la web siguen funcionando.
 
+Las descargas TMDB comparten un ritmo moderado en todo el proceso de la API,
+incluidas la biblioteca y las colecciones de premios: una transferencia de imagen
+y una consulta de metadatos simultáneas, cada una limitada a 256 KiB/s. Se dejan
+250 ms entre imágenes y 500 ms entre consultas; los reintentos también respetan
+estos límites. Las consultas interactivas pasan antes que los trabajos de catálogo
+que aún estén esperando. Una operación ya iniciada termina o alcanza su timeout
+de red de 10 segundos; cancelar interrumpe también las esperas y la lectura por
+bloques. La conversión de miniaturas se hace de una en una, con pausas de 200 ms.
+Estos límites no se aplican a la lectura de recursos ya guardados.
+
+En el buscador, los carteles, temporadas y episodios se solicitan al acercarse a
+la zona visible. Las vistas previas descargan de TMDB el tamaño reducido solicitado
+cuando falta el original local; no descargan el original solo para mostrar una
+miniatura. La preparación de la biblioteca sigue conservando los originales.
+El formato de estas URLs sigue la [documentación de imágenes de TMDB](https://developer.themoviedb.org/docs/image-basics).
+
 El panel TMDB muestra el tamaño de toda la caché (imágenes, JSON, índice y cola) en GB decimales y su porcentaje respecto a la capacidad total del disco que contiene la caché. La medición se renueva cada 10 segundos mientras se consulta el progreso.
 
 ### Miniaturas de la biblioteca

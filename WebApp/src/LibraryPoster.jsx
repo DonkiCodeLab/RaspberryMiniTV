@@ -1,7 +1,15 @@
 import React, { useLayoutEffect, useRef } from 'react';
 import { acquireLibraryCover, coverPreloadResults } from './preloadLibraryCovers';
 
-export default function LibraryPoster({ src, name, className = '', style, alt }) {
+export default function LibraryPoster(props) {
+  if (props.src.includes('/tmdb/import/images/')) {
+    return <img src={props.src} alt={props.alt ?? `Portada de ${props.name}`}
+      className={props.className} style={props.style} loading="lazy" decoding="async" fetchPriority="low" />;
+  }
+  return <StoredLibraryPoster {...props} />;
+}
+
+function StoredLibraryPoster({ src, name, className = '', style, alt }) {
   const ref = useRef(null);
   const styleKey = JSON.stringify(style || {});
   useLayoutEffect(() => {
