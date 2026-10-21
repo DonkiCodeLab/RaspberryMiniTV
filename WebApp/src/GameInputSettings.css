@@ -1,0 +1,37 @@
+dialog.game-input-settings { box-sizing: border-box; display: flex; flex-direction: column; width: min(720px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); margin: auto; padding: 24px; overflow: hidden; border: 1px solid #66717d; border-radius: 18px; background: #202632; color: #f4f0e7; box-shadow: 0 24px 100px #0009; font: 14px/1.5 system-ui, sans-serif; }
+dialog.game-input-settings:not([open]) { display: none; }
+.game-input-settings > :not(.game-input-settings__list) { flex-shrink: 0; }
+.game-input-settings::backdrop { background: #080b13bd; }
+.game-input-settings__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.game-input-settings h2 { margin: 0; font-size: 23px; }
+.game-input-settings p { color: #c5ccd6; }
+.game-input-settings__header p { margin: 4px 0; font-size: 12px; }
+.game-input-settings button { padding: 8px 12px; border: 1px solid #68717d; border-radius: 8px; background: #303a49; color: #fff; cursor: pointer; font: inherit; }
+.game-input-settings button:focus-visible { outline: 3px solid #ffd542; outline-offset: 3px; }
+.game-input-settings button:hover:not(:disabled) { border-color: #ffd542; background: #414c5b; }
+.game-input-settings button:disabled { opacity: .5; cursor: default; }
+.game-input-settings__header > button { font-size: 24px; padding: 0 10px; }
+.game-input-settings__list { min-height: 48px; overflow-y: auto; border-block: 1px solid #4d5666; margin-top: 12px; }
+.game-input-settings__row { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(0, 3fr); align-items: center; gap: 16px; padding: 10px 0; }
+.game-input-settings__row + .game-input-settings__row { border-top: 1px solid #ffffff12; }
+.game-input-settings__bindings { display: flex; flex-wrap: wrap; gap: 8px; }
+.game-input-settings__bindings > span { display: inline-flex; min-width: 0; }
+.game-input-settings__bindings > span > button:first-child { border-radius: 8px 0 0 8px; overflow-wrap: anywhere; }
+.game-input-settings__bindings button.game-input-settings__remove { border-radius: 0 8px 8px 0; border-left: 0; padding-inline: 9px; color: #b9c4d2; }
+.game-input-settings button.game-input-settings__add { border-style: dashed; }
+.game-input-settings__status { min-height: 3em; font-size: 12px; }
+.game-input-settings footer { display: flex; justify-content: space-between; gap: 12px; }
+.game-input-settings button.game-input-settings__done { background: #ffd542; color: #24210e; border-color: #ffd542; font-weight: 800; }
+.game-input-settings__capture { position: fixed; inset: 0; margin: auto; box-sizing: border-box; width: min(480px, calc(100vw - 48px)); height: fit-content; max-height: calc(100dvh - 48px); overflow: auto; padding: 32px; border: 2px solid #ffd542; outline: none; border-radius: 18px; background: #202632; box-shadow: 0 0 0 100vmax #080b13e8; text-align: center; z-index: 1; }
+.game-input-settings__capture > span { font-size: 40px; color: #ffd542; }
+.game-input-settings__capture h3 { margin: 4px 0; font-size: 25px; }
+.game-input-settings__capture small { display: block; color: #c5ccd6; }
+.game-input-settings__capture button { margin-top: 24px; }
+.game-keycaps--mapped { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 3px; max-width: 140px; }
+.game-keycaps--mapped kbd { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.game-keycaps--directions { display: grid; grid-template-columns: 1fr; gap: 4px; }
+.game-keycaps__direction { display: flex; align-items: center; gap: 5px; }
+.game-keycaps__direction > b { color: #ffd542; }
+.game-keycaps__direction .game-keycaps--mapped { flex-direction: row; flex-wrap: wrap; }
+.browser-game__actions { flex-wrap: wrap; }
+@media (max-width: 600px) { dialog.game-input-settings { padding: 16px; }.game-input-settings h2 { font-size: 20px; }.game-input-settings__row { grid-template-columns: 76px minmax(0, 1fr); gap: 8px; }.game-input-settings button { font-size: 12px; padding: 8px; }.game-keycaps--mapped { max-width: 76px; } }

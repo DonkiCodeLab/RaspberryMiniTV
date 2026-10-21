@@ -1,5 +1,5 @@
-import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { galleryWindow, miniatureWindow, MINI_ROWS, MINI_SIZE, photoPeriods } from './photoTimeline.js';
+import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { galleryWindow, miniaturePosition, miniatureScrollLeft, miniatureWindow, MINI_IMAGE_SIZE, MINI_ROWS, MINI_SIZE, photoPeriods } from './photoTimeline.js';
 
 export default function PhotoGallery({ photos, position, onPosition, s, language, renderGrid, renderTiny }) {
   const [draft, setDraft] = useState(position), [seeking, setSeeking] = useState(false);
@@ -14,23 +14,35 @@ export default function PhotoGallery({ photos, position, onPosition, s, language
   const monthName = value => value == null ? s.undated : new Intl.DateTimeFormat(language, { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, value, 1)));
   const miniature = miniatureWindow(photos.length, viewport.left, viewport.width);
   const page = galleryWindow(photos, position);
+  const preview = galleryWindow(photos, draft);
   useEffect(() => {
     const element = rail.current;
+    if (!element) return;
     const resize = () => setViewport({ left: element.scrollLeft, width: element.clientWidth });
     resize();
     const observer = new ResizeObserver(resize); observer.observe(element);
     return () => { observer.disconnect(); clearTimeout(timer.current); };
   }, []);
-  useEffect(() => { setDraft(position); }, [position]);
+  useEffect(() => {
+    clearTimeout(timer.current);
+    setDraft(position); setSeeking(false);
+  }, [position, photos]);
+  useLayoutEffect(() => {
+    if (!seeking) alignPosition(draft);
+  }, [draft, seeking, viewport.width, photos.length]);
+  function alignPosition(value) {
+    const element = rail.current;
+    if (!element) return;
+    const left = miniatureScrollLeft(photos.length, value, element.clientWidth);
+    if (Math.abs(element.scrollLeft - left) < 1) return;
+    element.scrollLeft = left;
+    programmatic.current = element.scrollLeft;
+    setViewport({ left: element.scrollLeft, width: element.clientWidth });
+  }
   function seek(value, align = true) {
     const next = Math.max(0, Math.min(photos.length - 1, Math.round(value)));
     setDraft(next); setSeeking(true); clearTimeout(timer.current);
-    if (align && rail.current) {
-      const element = rail.current;
-      const left = Math.max(0, Math.min(element.scrollWidth - element.clientWidth, Math.floor(next / MINI_ROWS) * MINI_SIZE));
-      programmatic.current = left; element.scrollLeft = left;
-      setViewport({ left, width: element.clientWidth });
-    }
+    if (align) alignPosition(next);
     timer.current = setTimeout(() => { onPosition(next); setSeeking(false); }, 220);
   }
   if (!year) return null;
@@ -51,7 +63,7 @@ export default function PhotoGallery({ photos, position, onPosition, s, language
           <datalist id={`${labels}-months`}>{year.months.map(period => <option key={period.start} value={period.start - year.start} label={monthName(period.month)} />)}</datalist>
           <div className="photo-timeline__months">{year.months.map(period => <button key={period.start} type="button" aria-pressed={period === month} onClick={() => seek(period.start)}>{monthName(period.month)}</button>)}</div></label>
       </div>
-      <div className="photo-miniatures" ref={rail} tabIndex="0" role="region" aria-label={s.miniatures}
+      <div className="photo-miniatures" ref={rail} tabIndex="0" role="region" aria-label={s.miniatures} style={{ '--photo-miniature-size': `${MINI_IMAGE_SIZE}px` }}
         onKeyDown={event => {
           const step = event.key === 'ArrowRight' ? 100 : event.key === 'ArrowLeft' ? -100 : 0;
           if (step) { event.preventDefault(); seek(anchor + step); }
@@ -61,14 +73,14 @@ export default function PhotoGallery({ photos, position, onPosition, s, language
           setViewport({ left: element.scrollLeft, width: element.clientWidth });
           if (programmatic.current !== null && Math.abs(element.scrollLeft - programmatic.current) < 1) { programmatic.current = null; return; }
           programmatic.current = null;
-          seek(Math.floor(element.scrollLeft / MINI_SIZE) * MINI_ROWS, false);
+          seek(miniaturePosition(photos.length, element.scrollLeft, element.clientWidth), false);
         }}>
-        <div className="photo-miniatures__track" style={{ width: miniature.width }}>
+        <div className="photo-miniatures__track" style={{ width: miniature.width, height: MINI_ROWS * MINI_SIZE }}>
           {photos.slice(miniature.start, miniature.end).map((photo, index) => {
             const absolute = miniature.start + index;
             return <button key={photo.id} type="button" tabIndex={-1} title={photo.title || photo.name} aria-label={`${s.open}: ${photo.name}`}
-              className={`photo-miniature${absolute >= page.offset && absolute < page.offset + page.items.length ? ' is-active' : ''}`}
-              style={{ left: Math.floor(absolute / MINI_ROWS) * MINI_SIZE, top: (absolute % MINI_ROWS) * MINI_SIZE }} onClick={() => seek(absolute)}>
+              className={`photo-miniature${absolute >= preview.offset && absolute < preview.offset + preview.items.length ? ' is-active' : ''}`}
+              style={{ left: miniature.padding + Math.floor(absolute / MINI_ROWS) * MINI_SIZE, top: (absolute % MINI_ROWS) * MINI_SIZE }} onClick={() => seek(absolute)}>
               {!seeking && renderTiny(photo)}
             </button>;
           })}

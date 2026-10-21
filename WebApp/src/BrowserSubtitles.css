@@ -1,0 +1,15 @@
+.browser-subtitles__selectors { display: flex; flex-wrap: wrap; justify-content: center; align-items: start; gap: 12px 20px; }
+.browser-subtitles__selectors label { display: grid; gap: 6px; width: min(100%, 320px); min-width: 0; color: #ede8f5; text-align: left; font-size: 12px; font-weight: 700; }
+.browser-subtitles__selectors select { width: 100%; min-width: 0; min-height: 40px; border-radius: 10px; border: 1px solid #ffffff40; padding: 8px 12px; background: #24202e; color: #fff; font: inherit; text-overflow: ellipsis; }
+.browser-subtitles__selectors select:focus-visible { outline: 2px solid #ffdc46; outline-offset: 2px; }
+.browser-subtitles__selectors .browser-subtitles__auxiliary { color: #ffdc46; }
+.browser-subtitles__selectors small { font-size: 11px; font-weight: 400; }
+.browser-video__screen video::cue(.auxiliary) { color: #ffdc46; background-color: rgba(0,0,0,.78); }
+.browser-video__screen video::cue(.primary) { color: #fff; background-color: rgba(0,0,0,.78); }
+.browser-video-player__panel .playback-subtitles > p { margin: 6px 0; }
+@media (max-width:560px) {
+  .browser-subtitles__selectors { flex-wrap: nowrap; gap: 8px; }
+  .browser-subtitles__selectors label { width: 50%; }
+  .browser-subtitles__selectors label:only-child { width: 100%; }
+  .browser-subtitles__selectors small { display: none; }
+}

@@ -8,6 +8,9 @@ from torrent_preview import preview as preview_torrent
 from video_formats import is_video_file
 from browser_playback import BrowserPlayback, PlaybackError, AUDIO_CODECS
 import movie_subtitles
+import browser_subtitles
+import subtitle_translation
+import media_file_info
 import system_update
 from codex_bridge import create_codex_blueprint
 from oscar_catalog import OscarCatalog
@@ -170,6 +173,7 @@ camera_lock = threading.Lock()
 # scan placeholders or rescanning the disk on every TMDB progress poll.
 scanned_media_paths = {}
 subtitle_provider = movie_subtitles.OpenSubtitles()
+subtitle_translations = subtitle_translation.SubtitleTranslations()
 subtitle_download_lock = threading.Lock()
 SUBTITLE_SETTINGS_PATH = os.path.join(BASE_DIR, "subtitle_settings.json")
 GAME_SETTINGS_PATH = os.path.join(BASE_DIR, "game_settings.json")
@@ -496,7 +500,7 @@ def save_movie_library(items):
 
 
 @media_library_transaction
-def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
+def upsert_movie_metadata(relative_path, name, tmdb_id, filename="", original_filename=None):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
         return None
@@ -510,6 +514,8 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename=""):
         "tmdbId": int(tmdb_id or 0),
         "file": str(filename or os.path.basename(safe_relative_path)).strip(),
     }
+    if original_filename is not None:
+        item["originalFileName"] = os.path.basename(original_filename)
     items[safe_relative_path] = item
     save_media_library(library)
     queue_tmdb_artwork('movie', item)
@@ -2828,7 +2834,8 @@ def import_torrent_movie(job, source):
                     os.replace(staged, target)
                     published = True
                 item = {**previous, "relativePath": relative, "name": movie["name"],
-                        "tmdbId": movie["id"], "file": os.path.basename(target)}
+                        "tmdbId": movie["id"], "file": os.path.basename(target),
+                        "originalFileName": source.name}
                 if previous.get("relativePath") != relative:
                     library["movies"].pop(previous.get("relativePath"), None)
                 library["movies"][relative] = item
@@ -3145,6 +3152,7 @@ def upload_movie():
         name or os.path.splitext(original_filename)[0],
         tmdb_id,
         target_filename,
+        original_filename=original_filename,
     )
     log_upload_event(f"movie saved relative={relative_path} target={target_path} size={saved_size}")
     return jsonify(
@@ -3246,6 +3254,7 @@ def upload_movie_raw():
         name or os.path.splitext(original_filename)[0],
         tmdb_id,
         target_filename,
+        original_filename=original_filename,
     )
     log_upload_event(f"movie raw saved relative={relative_path} target={target_path} size={saved_size}")
     return jsonify(
@@ -3694,6 +3703,26 @@ def play_game():
     )
 
 
+@app.route("/media/file-info", methods=["GET"])
+def media_file_details():
+    relative = request.args.get("relativePath")
+    target = resolve_relative_video_path(relative, VIDEOS_DIR)
+    root = os.path.realpath(VIDEOS_DIR)
+    if (not target or not os.path.isfile(target) or not is_video_file(target)
+            or os.path.commonpath([root, os.path.realpath(target)]) != root):
+        return jsonify({"error": "Video not found"}), 404
+    try:
+        details = media_file_info.inspect_file(target)
+    except OSError:
+        return jsonify({"error": "Video not found"}), 404
+    relative = os.path.relpath(target, VIDEOS_DIR).replace("\\", "/")
+    metadata = load_movie_library().get(relative, {})
+    details["originalFileName"] = metadata.get("originalFileName") or None
+    response = jsonify(details)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/media/subtitles", methods=["GET"])
 def media_subtitle_info():
     target = resolve_relative_video_path(request.args.get("relativePath"), VIDEOS_DIR)
@@ -3701,7 +3730,9 @@ def media_subtitle_info():
     if (not target or not os.path.isfile(target) or not is_video_file(target)
             or os.path.commonpath([root, os.path.realpath(target)]) != root):
         return jsonify({"error": "Video not found"}), 404
-    response = jsonify(movie_subtitles.inspect_subtitles(target, root))
+    inventory = movie_subtitles.inspect_subtitles(target, root)
+    inventory["tracks"] = browser_subtitles.inventory(target, root, subtitle_info=inventory)["tracks"]
+    response = jsonify(inventory)
     response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -3742,6 +3773,32 @@ def subtitle_settings():
         return jsonify({"error": error.code, "code": error.code}), error.status
     except OSError:
         return jsonify({"error": "Cannot save subtitle settings", "code": "SUBTITLE_SAVE_FAILED"}), 500
+
+
+@app.route("/movies/subtitles/translate", methods=["GET", "POST"])
+def translate_movie_subtitle():
+    try:
+        if request.method == "GET":
+            job = subtitle_translations.status(request.args.get("id", ""))
+        else:
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return ai_json({"code": "SUBTITLE_TRANSLATION_REQUEST"}, 400)
+            relative = data.get("relativePath")
+            if not isinstance(relative, str) or not relative or len(relative) > 4096 or "\x00" in relative:
+                return ai_json({"code": "SUBTITLE_TRANSLATION_REQUEST"}, 400)
+            path = resolve_relative_video_path(relative, MOVIES_DIR)
+            root = os.path.realpath(MOVIES_DIR)
+            if (not path or not os.path.isfile(path) or not is_video_file(path)
+                    or not browser_subtitles.contained(path, root)):
+                return ai_json({"code": "SUBTITLE_MOVIE_CHANGED"}, 404)
+            job = subtitle_translations.start(path, root, data.get("sourceId"), data.get("language"),
+                                               ai_settings_store, ai_request_slot)
+        return ai_json(subtitle_translations.public(job))
+    except AIError as error:
+        return ai_error_response(error)
+    except (OSError, movie_subtitles.SubtitleError):
+        return ai_json({"code": "SUBTITLE_SAVE_FAILED"}, 500)
 
 
 @app.route("/movies/subtitles/obtain", methods=["POST"])
@@ -3994,6 +4051,20 @@ def stream_media():
     if (not target_path or not os.path.isfile(target_path) or not is_video_file(target_path) or
             os.path.commonpath([os.path.realpath(VIDEOS_DIR), os.path.realpath(target_path)]) != os.path.realpath(VIDEOS_DIR)):
         return jsonify({"error": "Video not found"}), 404
+
+    subtitle_id = request.args.get("subtitles", "")
+    if subtitle_id == "list":
+        response = jsonify(browser_subtitles.inventory(target_path, VIDEOS_DIR))
+        response.headers["Cache-Control"] = "no-store"
+        return response
+    if subtitle_id and subtitle_id not in {"0", "1"}:
+        try:
+            vtt = browser_subtitles.read_track(target_path, VIDEOS_DIR, subtitle_id)
+        except browser_subtitles.BrowserSubtitleError as error:
+            return jsonify({"errorCode": error.code}), error.status
+        except (OSError, movie_subtitles.SubtitleError, UnicodeError):
+            return jsonify({"errorCode": "SUBTITLE_INVALID_DOWNLOAD"}), 422
+        return Response(vtt, content_type="text/vtt; charset=utf-8", headers={"Cache-Control": "no-store"})
 
     if request.args.get("subtitles") == "1":
         subtitle_path = os.path.splitext(target_path)[0] + ".srt"

@@ -178,6 +178,51 @@ class PeopleAnalysisTests(unittest.TestCase):
         with self.store.db() as db:
             self.assertEqual(db.execute('SELECT count(*) FROM person_covers').fetchone()[0], 0)
 
+    def test_person_portraits_use_their_own_rectangle_in_the_first_album_photo(self):
+        photos = self.upload(2)
+        detections = [{'encoding': [float(i)] * 128, 'box': {'x': i * .25, 'y': .2, 'width': .2, 'height': .3}}
+                      for i in range(4)]
+        for photo in photos: self.store.group_faces(photo['id'], detections)
+        people = self.store.snapshot()['people']
+        self.assertEqual(len(people), 4)
+        for person in people:
+            cover = person['coverFace']
+            self.assertEqual(cover['photoId'], person['photoIds'][0])
+            self.assertIsNone(person['coverPhotoId'])  # Automatic crop is not a saved cover choice.
+            face = next(face for face in self.store.photo_faces(cover['photoId'])['faces'] if face['personId'] == person['id'])
+            self.assertEqual(cover, {'id': face['id'], 'photoId': cover['photoId'], 'box': face['box']})
+            self.assertNotIn('encoding', str(cover))
+        self.assertEqual(len({person['coverFace']['box']['x'] for person in people}), 4)
+
+    def test_chosen_portrait_updates_after_face_correction_and_photo_deletion(self):
+        photos = self.upload(3)
+        for photo in photos: self.store.group_faces(photo['id'], self.detections())
+        person = self.store.snapshot()['people'][0]
+        chosen = person['photoIds'][-1]
+        self.store.set_person_cover(person['id'], chosen)
+        saved = next(p for p in PhotoLibrary(self.store.root).snapshot()['people'] if p['id'] == person['id'])
+        self.assertEqual(saved['coverFace']['photoId'], chosen)
+        assigned = self.store.assign_face(chosen, saved['coverFace']['id'], {'name': 'Otra persona'})['personId']
+        people = {p['id']: p for p in self.store.snapshot()['people']}
+        self.assertEqual(people[assigned]['coverFace'], saved['coverFace'])
+        self.assertNotEqual(people[person['id']]['coverFace']['photoId'], chosen)
+        next_cover = people[person['id']]['coverFace']['photoId']
+        self.store.delete_photos([next_cover], 'gallery')
+        remaining = next(p for p in self.store.snapshot()['people'] if p['id'] == person['id'])
+        self.assertEqual(remaining['coverFace']['photoId'], remaining['photoIds'][0])
+        self.assertNotEqual(remaining['coverFace']['photoId'], next_cover)
+
+    def test_legacy_person_portrait_falls_back_only_to_a_known_rectangle(self):
+        photos = self.upload(2)
+        self.store.group_faces(photos[0]['id'], [[0.] * 128])
+        person = self.store.snapshot()['people'][0]
+        self.assertIsNone(person['coverFace'])
+        self.store.set_person_cover(person['id'], photos[0]['id'])
+        self.store.group_faces(photos[1]['id'], self.detections()[:1])
+        person = self.store.snapshot()['people'][0]
+        self.assertEqual(person['coverPhotoId'], photos[0]['id'])
+        self.assertEqual(person['coverFace']['photoId'], photos[1]['id'])
+
     def test_engine_failure_preserves_pending_work_for_an_explicit_retry(self):
         self.upload()
         self.engine.encode.side_effect = FaceEngineError('Incomplete engine installation')
@@ -292,6 +337,98 @@ class PeopleAnalysisTests(unittest.TestCase):
                             (second['id'], {'name': ''}), (second['id'], {'name': 'Luis', 'personId': person})]:
             with self.assertRaises(PhotoError):
                 self.store.assign_face(photos[1]['id'], ident, data)
+
+    def test_merge_unites_shared_photos_preserves_faces_and_destination_cover_after_restart(self):
+        photos = self.upload(3)
+        self.store.group_faces(photos[0]['id'], self.detections())
+        self.store.group_faces(photos[1]['id'], self.detections()[:1])
+        self.store.group_faces(photos[2]['id'], self.detections()[1:])
+        a, b = self.store.photo_faces(photos[0]['id'])['faces']
+        source, target = a['personId'], b['personId']
+        self.store.rename_person(target, 'Ana')
+        self.store.set_person_cover(source, photos[1]['id'])
+        self.store.set_person_cover(target, photos[2]['id'])
+        original_faces = {photo['id']: self.store.photo_faces(photo['id'])['faces'] for photo in photos}
+        self.assertEqual(self.store.merge_people(source, target), {'ok': True, 'personId': target})
+        restored = PhotoLibrary(self.store.root)
+        result = restored.snapshot()
+        self.assertEqual(len(result['people']), 1)
+        person = result['people'][0]
+        self.assertEqual((person['id'], person['name'], person['coverPhotoId']), (target, 'Ana', photos[2]['id']))
+        self.assertEqual(set(person['photoIds']), {photo['id'] for photo in photos})
+        self.assertNotIn(source, [person['id'] for person in result['knownPeople']])
+        for photo in photos:
+            faces = restored.photo_faces(photo['id'])['faces']
+            self.assertEqual([(f['id'], f['box']) for f in faces], [(f['id'], f['box']) for f in original_faces[photo['id']]])
+            self.assertEqual({f['personId'] for f in faces}, {target})
+            self.assertTrue(restored.safe_file(photo['relativePath']).is_file())
+        restored.group_faces(photos[0]['id'], self.detections())
+        self.assertEqual({f['personId'] for f in restored.photo_faces(photos[0]['id'])['faces']}, {target})
+        restored.group_faces(photos[1]['id'], [])
+        self.assertEqual(restored.photo_faces(photos[1]['id'])['faces'][0]['personId'], target)
+        with restored.db() as db:
+            self.assertEqual(db.execute('PRAGMA foreign_key_check').fetchall(), [])
+
+    def test_merge_inherits_source_cover_and_can_target_a_known_person_without_photos(self):
+        photo = self.upload(1)[0]
+        self.store.group_faces(photo['id'], self.detections()[:1])
+        source = self.store.photo_faces(photo['id'])['faces'][0]['personId']
+        self.store.set_person_cover(source, photo['id'])
+        with self.store.db() as db: db.execute("INSERT INTO people VALUES ('ana','Ana',0)")
+        self.store.merge_people(source, 'ana')
+        person = self.store.snapshot()['people'][0]
+        self.assertEqual((person['id'], person['coverPhotoId'], person['photoIds']), ('ana', photo['id'], [photo['id']]))
+
+    def test_merge_during_scan_applies_to_results_that_arrive_later(self):
+        photos = self.upload(2)
+        self.store.group_faces(photos[0]['id'], self.detections())
+        source, target = [face['personId'] for face in self.store.photo_faces(photos[0]['id'])['faces']]
+        entered = threading.Event()
+        def encode(path, stop):
+            entered.set(); self.assertTrue(self.release.wait(5))
+            # The shared photo's album link only holds the source vector after merging.
+            # Matching must still retain the destination's other detected face vector.
+            return self.detections()[1:]
+        self.engine.encode.side_effect = encode
+        self.store.start_faces(); self.assertTrue(entered.wait(5))
+        self.store.merge_people(source, target)
+        self.release.set(); self.wait_idle()
+        self.assertEqual(self.store.photo_faces(photos[1]['id'])['faces'][0]['personId'], target)
+        self.assertEqual(len(self.store.snapshot()['people']), 1)
+
+    def test_correction_after_merge_moves_only_one_face_and_preserves_other_album_members(self):
+        photos = self.upload(2)
+        for photo in photos: self.store.group_faces(photo['id'], self.detections())
+        a, b = self.store.photo_faces(photos[0]['id'])['faces']
+        self.store.merge_people(a['personId'], b['personId'])
+        new = self.store.assign_face(photos[0]['id'], a['id'], {'name': 'Otra persona'})['personId']
+        faces = self.store.photo_faces(photos[0]['id'])['faces']
+        self.assertEqual([face['personId'] for face in faces], [new, b['personId']])
+        self.assertEqual({face['personId'] for face in self.store.photo_faces(photos[1]['id'])['faces']}, {b['personId']})
+        self.store.group_faces(photos[0]['id'], self.detections())
+        self.assertEqual([face['personId'] for face in self.store.photo_faces(photos[0]['id'])['faces']], [new, b['personId']])
+
+    def test_merge_api_rejects_invalid_targets_without_changing_library(self):
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        client = app.test_client()
+        photo = self.upload(1)[0]
+        self.store.group_faces(photo['id'], self.detections())
+        source, target = [face['personId'] for face in self.store.photo_faces(photo['id'])['faces']]
+        path = f'/pictures/people/{source}/merge'
+        before = self.store.snapshot()
+        for data, code in [([], 400), ({}, 400), ({'personId': []}, 400), ({'personId': source}, 400),
+                           ({'personId': 'missing'}, 409), ({'personId': 'apple-old'}, 400)]:
+            self.assertEqual(client.post(path, json=data).status_code, code)
+            self.assertEqual(self.store.snapshot()['people'], before['people'])
+            self.assertEqual(self.store.snapshot()['revision'], before['revision'])
+        response = client.post(path, json={'personId': target})
+        self.assertEqual((response.status_code, response.json['personId']), (200, target))
+        self.assertEqual(client.post(path, json={'personId': target}).status_code, 409)
+        # Deleting a duplicate must not cause new auto names to collide.
+        self.store.group_faces(photo['id'], self.detections() + [[2.] * 128])
+        names = [person['name'] for person in self.store.snapshot()['people']]
+        self.assertEqual(len(names), len(set(names)))
 
     def test_no_face_results_distinguish_reviewed_photos_from_pending_errors_and_unassigned_faces(self):
         photos = self.upload(4)

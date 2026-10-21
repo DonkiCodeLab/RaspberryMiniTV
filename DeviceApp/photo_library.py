@@ -568,8 +568,18 @@ class PhotoLibrary:
             for person in people:
                 person['photoIds'] = person_photos.get(person['id'], [])
             covers = {row['person']: row['photo'] for row in db.execute('SELECT person, photo FROM person_covers')}
+            portraits = {}
+            # One lightweight crop per person, preferring the chosen cover and then
+            # the first album photo with a rectangle. Never send facial encodings.
+            for row in db.execute('''SELECT f.id, f.person, f.photo, f.box FROM face_detections f
+                    LEFT JOIN person_covers c ON c.person=f.person
+                    WHERE f.person IS NOT NULL AND f.box IS NOT NULL
+                    ORDER BY f.person, (f.photo=c.photo) DESC, f.photo, f.manual DESC, f.rowid'''):
+                if row['person'] not in portraits:
+                    portraits[row['person']] = {'id': row['id'], 'photoId': row['photo'], 'box': json.loads(row['box'])}
             for person in people:
                 person['coverPhotoId'] = covers.get(person['id']) if covers.get(person['id']) in person['photoIds'] else None
+                person['coverFace'] = portraits.get(person['id'])
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
             known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY name, id")]
@@ -854,7 +864,10 @@ class PhotoLibrary:
                 return self.group_faces(photo_id, encodings, connection)
         state = db.execute('SELECT face_state FROM photos WHERE id=?', (photo_id,)).fetchone()
         if not state: return
-        known = [(r['person'], json.loads(r['encoding'])) for r in db.execute("SELECT person, encoding FROM faces WHERE encoding!='[]'")]
+        # A merged person can have several faces in one photo (for example a collage).
+        # The album link keeps one row per photo, but matching needs every face vector.
+        known = [(r['person'], json.loads(r['encoding'])) for r in db.execute(
+            "SELECT person, encoding FROM face_detections WHERE person IS NOT NULL AND encoding!='[]'")]
         previous = [dict(row) for row in db.execute('SELECT * FROM face_detections WHERE photo=?', (photo_id,))]
         for face in previous:
             face['encoding'] = json.loads(face['encoding'])
@@ -889,7 +902,10 @@ class PhotoLibrary:
             person = old['person'] if old else scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
             if person and not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
                 count = db.execute('SELECT count(*) FROM people').fetchone()[0]
-                db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(count + 1), time.time()))
+                number = count + 1
+                while db.execute('SELECT 1 FROM people WHERE name=?', ('Persona ' + str(number),)).fetchone():
+                    number += 1
+                db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(number), time.time()))
             detections.append({'id': old['id'] if old else uuid.uuid4().hex, 'person': person,
                                'encoding': encoding, 'box': box, 'manual': old['manual'] if old else 0})
             used.add(person)
@@ -938,6 +954,25 @@ class PhotoLibrary:
             if not db.execute('UPDATE people SET name=? WHERE id=?', (name, ident)).rowcount:
                 raise PhotoError('No se encuentra esta persona.', 404)
         return {'ok': True}
+
+    def merge_people(self, source, target):
+        if not isinstance(target, str) or not target or source == target or source.startswith('apple-') or target.startswith('apple-'):
+            raise PhotoError('Selecciona otra persona existente para unir los álbumes.')
+        with self.db() as db:
+            for ident in (source, target):
+                if not db.execute('SELECT 1 FROM people WHERE id=?', (ident,)).fetchone():
+                    raise PhotoError('Esta persona ya no está disponible. Actualiza la biblioteca.', 409)
+            photos = [row[0] for row in db.execute('SELECT DISTINCT photo FROM face_detections WHERE person=?', (source,))]
+            # Keep the destination cover, or inherit the source cover if none was chosen.
+            db.execute('INSERT OR IGNORE INTO person_covers SELECT ?, photo FROM person_covers WHERE person=?', (target, source))
+            db.execute('UPDATE face_detections SET person=?, manual=1 WHERE person=?', (target, source))
+            # Also retain legacy links; shared photos appear only once in the album.
+            db.execute('INSERT OR IGNORE INTO faces SELECT photo, ?, encoding FROM faces WHERE person=?', (target, source))
+            db.execute('DELETE FROM faces WHERE person=?', (source,))
+            for photo in photos:
+                self._sync_face_links(photo, db)
+            db.execute('DELETE FROM people WHERE id=?', (source,))
+        return {'ok': True, 'personId': target}
 
     def remove_matches(self, person, ids):
         if not isinstance(ids, list) or not ids or any(not isinstance(i, str) for i in ids):
@@ -1096,6 +1131,10 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/people/<ident>')
     def rename(ident):
         return jsonify(get_library().rename_person(ident, body().get('name')))
+
+    @bp.post('/pictures/people/<ident>/merge')
+    def merge(ident):
+        return jsonify(get_library().merge_people(ident, body().get('personId')))
 
     @bp.post('/pictures/people/<ident>/remove')
     def remove(ident):

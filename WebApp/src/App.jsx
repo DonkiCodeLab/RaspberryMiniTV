@@ -10,8 +10,10 @@ import { seriesArtwork } from "./seriesArtwork.js";
 import LibraryScrollRail from "./LibraryScrollRail.jsx";
 import BackToTop from "./BackToTop.jsx";
 import MovieLibraryItems from "./MovieLibraryItems.jsx";
+import MovieListTitle from "./MovieListTitle.jsx";
 import MoviePosterPreview from "./MoviePosterPreview.jsx";
 import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
+import MovieFileInfo from "./MovieFileInfo.jsx";
 import MediaCredits from "./MediaCredits.jsx";
 import { PersonCatalogContext } from "./personCatalog.js";
 import CatalogAI, { CatalogAIButton, CatalogAIResult } from "./CatalogAI.jsx";
@@ -34,6 +36,7 @@ import BookPreviewButton from "./BookPreviewButton.jsx";
 import BookHeaderPreview from "./BookHeaderPreview.jsx";
 import GameHeaderArtwork from "./GameHeaderArtwork.jsx";
 import RetroGamesTitle from "./RetroGamesTitle.jsx";
+import { GAME_MAPPING_STRINGS } from "./gameMappingStrings.js";
 import BrowserGameModal from "./BrowserGameModal.jsx";
 import useUserProfiles from "./useUserProfiles.js";
 import { ProfileMenu, UsersPanel, ResumeDialog, userStrings } from "./UserProfiles.jsx";
@@ -1901,8 +1904,8 @@ function getTmdbLanguage(language) {
 
 function translate(language, key, variables = {}) {
   const strings = UI_STRINGS[normalizeRaspberryLanguage(language)] || UI_STRINGS.es;
-  const fallback = UI_STRINGS.es[key] || key;
-  const template = strings[key] || fallback;
+  const fallback = UI_STRINGS.es[key] || GAME_MAPPING_STRINGS.es[key] || key;
+  const template = strings[key] || GAME_MAPPING_STRINGS[normalizeRaspberryLanguage(language)]?.[key] || fallback;
 
   return Object.entries(variables).reduce(
     (result, [nextKey, nextValue]) => result.replaceAll(`{${nextKey}}`, String(nextValue)),
@@ -10256,12 +10259,12 @@ export default function App() {
                         const rating = formatLibraryRating(movie, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
                           <article data-library-index className="movie-library__card" key={movie.id}>
-                            <MoviePosterPreview movie={movie} enabled={movieLibraryView === "grid"} onClick={() => handleOpenMovieDetails(movie.id)} label={[`${t("movie_details")}: ${movie.name}`, ...awards.map(award => award.label)].join(" · ")}>
+                            <MoviePosterPreview movie={movie} view={movieLibraryView} enabled={movieLibraryView === "grid" || movieLibraryView === "list"} onClick={() => handleOpenMovieDetails(movie.id)} label={[`${t("movie_details")}: ${movie.name}`, ...awards.map(award => award.label)].join(" · ")}>
                               <LibraryPoster src={poster} name={movie.name} />
                               <MovieAwardBadges awards={awards} />
                             </MoviePosterPreview>
                             <div className="movie-library__info">
-                              <h2>{movie.name}</h2>
+                              {movieLibraryView === "list" ? <MovieListTitle movie={movie} language={raspberryLanguage} /> : <h2>{movie.name}</h2>}
                               <div className="movie-library__meta"><span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
                               <div className="movie-library__actions-reveal" inert={movieLibraryView !== "list" && !movieActionsVisible} aria-hidden={movieLibraryView !== "list" && !movieActionsVisible}>
                                 <div className="movie-library__actions-clip">
@@ -10330,6 +10333,10 @@ export default function App() {
                         <img src={deleteIcon} alt="" aria-hidden="true" />
                       </button>
                       </div>
+                      <MovieFileInfo key={selectedMovie.fileRelativePath || selectedMovie.id}
+                        relativePath={resolvePlayableMovieEntry(selectedMovie)?.relativePath || selectedMovie.fileRelativePath}
+                        fileName={selectedMovie.fileName}
+                        language={raspberryLanguage} />
                       <button
                         className="movie-panel__play"
                         onClick={() => handlePlayMovie("minitv")}

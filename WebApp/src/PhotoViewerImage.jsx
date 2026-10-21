@@ -4,13 +4,13 @@ import LoadingSpinner from './LoadingSpinner.jsx';
 import { attachPhotoZoom, MAX_PHOTO_ZOOM } from './photoZoom.js';
 
 export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s }) {
-  return faces.filter(face => face.box).map(face => <button type="button" key={face.id}
+  return faces.map((face, index) => face.box ? <button type="button" key={face.id}
     className={`photo-face-box${face.personId === highlightPersonId ? ' is-highlighted' : ''}${face.id === selectedFaceId ? ' is-selected' : ''}`}
     aria-label={`${s.editFace}: ${face.name || s.unnamedFace}`} aria-pressed={face.id === selectedFaceId}
     style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}
     onClick={event => { event.stopPropagation(); onSelect?.(face.id); }}>
-    <span>{face.name || s.unnamedFace}</span>
-  </button>);
+    <span>{index + 1} · {face.name || s.unnamedFace}</span>
+  </button> : null).filter(Boolean);
 }
 
 export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace }) {

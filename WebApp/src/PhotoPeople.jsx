@@ -31,8 +31,12 @@ export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
   </section>;
 }
 
-export function PersonEditor({ person, cover, s, busy, choosingCover, onSave, onChooseCover, renderImage }) {
+export function PersonEditor({ person, people = [], cover, s, busy, choosingCover, onSave, onMerge, onChooseCover, renderImage }) {
   const [name, setName] = useState(person.name);
+  const [target, setTarget] = useState('');
+  const choices = people.filter(other => other.id !== person.id).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const targetPerson = choices.find(other => other.id === target);
+  const mergeHintId = useId();
   const savedName = useRef(person.name);
   useEffect(() => {
     const previous = savedName.current;
@@ -42,10 +46,21 @@ export function PersonEditor({ person, cover, s, busy, choosingCover, onSave, on
   return <section className="photo-person-editor" aria-label={s.editPerson}>
     {cover && <div className="photo-person-editor__cover">{renderImage(cover)}</div>}
     <form onSubmit={event => { event.preventDefault(); if (!busy && name.trim()) onSave(name.trim()); }}>
-      <label>{s.personName}<input required maxLength={100} value={name} onChange={event => setName(event.target.value)} /></label>
+      <label>{s.personName}<input required maxLength={100} value={name} disabled={busy} onChange={event => setName(event.target.value)} /></label>
       <button type="submit" className="dialog-button" disabled={busy || !name.trim() || name.trim() === person.name}>{s.save}</button>
     </form>
-    <button type="button" className="dialog-button" aria-pressed={choosingCover} onClick={onChooseCover}>{choosingCover ? s.cancelCover : s.chooseCover}</button>
+    <button type="button" className="dialog-button" disabled={busy} aria-pressed={choosingCover} onClick={onChooseCover}>{choosingCover ? s.cancelCover : s.chooseCover}</button>
     {choosingCover && <p role="status">{s.chooseCoverHint}</p>}
+    <form className="photo-person-editor__merge" onSubmit={event => {
+      event.preventDefault(); if (!busy && targetPerson) onMerge(targetPerson.id);
+    }}>
+      <label>{s.mergeWith}<select value={targetPerson?.id || ''} required disabled={busy || !choices.length}
+        aria-describedby={mergeHintId} onChange={event => setTarget(event.target.value)}>
+        <option value="">{s.choosePerson}</option>
+        {choices.map(other => <option key={other.id} value={other.id}>{other.name}</option>)}
+      </select></label>
+      <button type="submit" className="dialog-button dialog-button--accent" disabled={busy || !targetPerson}>{s.mergePeople}</button>
+      <p id={mergeHintId}>{targetPerson ? s.mergePeoplePreview.replace('{source}', person.name).replace('{target}', targetPerson.name) : choices.length ? s.mergePeopleHint : s.noOtherPeople}</p>
+    </form>
   </section>;
 }

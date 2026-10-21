@@ -54,6 +54,7 @@ class UploadConflictTests(unittest.TestCase):
             self.assertEqual(response.status_code, status, response.json)
             self.assertEqual(target.read_bytes(), b'replacement' if confirmed else b'original')
         self.assertEqual(len(list(target.parent.glob('*.mp4'))), 1)
+        self.assertEqual(api.load_movie_library()["Movies/original.mp4"]["originalFileName"], "new.mp4")
 
     def test_collection_conflicts_use_same_slug_as_upload(self):
         folder = self.root / 'Books' / 'my-collection'

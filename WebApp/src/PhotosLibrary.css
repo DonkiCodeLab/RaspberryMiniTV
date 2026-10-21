@@ -23,6 +23,13 @@
 .photo-sort select:focus-visible { outline: 3px solid #ffdf52; outline-offset: 3px; }
 .photo-folder-grid { margin-bottom: 1.5rem; }
 .photo-album .photo-album__cover { position: relative; border: 0; }
+.photo-album--person .photo-album__cover, .photo-album--without-people .photo-album__cover { aspect-ratio: 1; }
+.photo-person-portrait { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; background: #132c39; }
+.photo-person-portrait__placeholder { display: grid; place-items: center; width: 100%; height: 100%; color: #edbfaa; }
+.photo-person-portrait__placeholder svg { width: 50%; height: 50%; }
+.photo-person-portrait__crop { position: absolute; width: 100%; height: 100%; left: 50%; top: 50%; transform: translate(-50%, -50%); overflow: hidden; }
+.photo-person-portrait .photo-person-portrait__crop img { position: absolute; max-width: none; object-fit: fill; }
+.photo-album .photo-person-portrait .photo-person-portrait__crop img { transform: none; }
 .photo-album__art { display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; color: #ffdb53; padding: 1.5rem; background: radial-gradient(ellipse at 20% 15%, #dec46228, transparent 65%), linear-gradient(145deg, #294c5c, #102a37); }
 .photo-album__art > svg { width: 48%; max-width: 105px; filter: drop-shadow(0 12px 16px #0005); }
 .photo-album__art > span { font-weight: 800; font-size: .8rem; letter-spacing: .09em; text-transform: uppercase; text-align: center; }
@@ -55,11 +62,13 @@
 .photo-person-editor { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem; margin: 0 0 1.2rem; background: #152f3e; border: 1px solid #ffffff30; border-radius: 15px; }
 .photo-person-editor__cover { width: 72px; height: 72px; flex-shrink: 0; overflow: hidden; border-radius: 12px; }
 .photo-person-editor__cover img { width: 100%; height: 100%; object-fit: cover; }
-.photo-person-editor form { display: flex; align-items: flex-end; flex: 1 1 260px; gap: .7rem; }
+.photo-person-editor form { display: flex; align-items: flex-end; flex: 1 1 260px; min-width: 0; gap: .7rem; }
 .photo-person-editor label { display: grid; flex: 1; min-width: 0; gap: .4rem; color: #c0d0d9; font-size: .8rem; }
-.photo-person-editor input { min-width: 0; width: 100%; min-height: 44px; border: 1px solid #ffffff45; border-radius: 8px; background: #0c2231; color: white; padding: .65rem; font: inherit; font-size: 1rem; }
-.photo-person-editor input:focus-visible { outline: 2px solid #ffdc40; outline-offset: 2px; }
+.photo-person-editor input, .photo-person-editor select { box-sizing: border-box; min-width: 0; width: 100%; min-height: 44px; border: 1px solid #ffffff45; border-radius: 8px; background: #0c2231; color: white; padding: .65rem; font: inherit; font-size: 1rem; }
+.photo-person-editor input:focus-visible, .photo-person-editor select:focus-visible { outline: 2px solid #ffdc40; outline-offset: 2px; }
 .photo-person-editor p { flex-basis: 100%; margin: 0; color: #ffdf88; font-size: .85rem; line-height: 1.6; }
+.photo-person-editor form.photo-person-editor__merge { flex-basis: 100%; flex-wrap: wrap; border-top: 1px solid #ffffff25; padding-top: 1rem; }
+.photo-person-editor__merge label { flex: 1 1 240px; }
 .photo-cover-label { position: absolute; left: 10px; top: 10px; padding: .3rem .55rem; border-radius: 7px; background: #ffdc40; color: #142d3e; font-size: .75rem; font-weight: 700; }
 .photo-people-analysis button:disabled, .photo-person-editor button:disabled, .photo-tile__image:disabled { opacity: .5; cursor: default; }
 @media (max-width: 600px) { .photo-people-analysis__heading { align-items: stretch; flex-direction: column; gap: .75rem; } .photo-person-editor form { flex-basis: 100%; order: 1; } .photo-person-editor > p { order: 2; } }
@@ -173,6 +182,16 @@
 .photo-face-editor label { display: grid; gap: .35rem; font-size: .85rem; }
 .photo-face-editor select, .photo-face-editor input { min-width: 0; width: 100%; box-sizing: border-box; padding: .7rem; border: 1px solid #ffffff35; border-radius: 8px; color: white; background: #142d38; }
 .photo-face-editor > div { display: flex; gap: .6rem; flex-wrap: wrap; }
+.photo-face-list { display: grid; gap: .6rem; margin: .8rem 0; }
+.photo-face-list > div { display: flex; flex-wrap: wrap; gap: .5rem; }
+.photo-face-list__item { display: grid; gap: .25rem; min-width: 0; max-width: 100%; padding: .6rem .8rem; border: 1px solid #ffffff40; border-radius: 9px; background: #122a36; color: white; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.photo-face-list__item small { color: #b4cbd6; }
+.photo-face-list__item.is-highlighted { border-color: #ffdf52; }
+.photo-face-list__item[aria-pressed=true] { background: #ffdf52; color: #17282c; }
+.photo-face-list__item[aria-pressed=true] small { color: inherit; }
+.photo-face-list__item:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+.photo-face-list__item:disabled { opacity: .5; cursor: default; }
+.photo-dialog .photo-face-list p, .photo-dialog .photo-face-editor p { margin: 0; font-size: .8rem; line-height: 1.5; color: #c0d0d9; }
 .photo-viewer__zoom { display: flex; align-items: center; justify-content: center; gap: .3rem; margin: .4rem 0; }
 .photo-viewer__zoom button { min-width: 44px; min-height: 44px; border: 1px solid #ffffff25; border-radius: 9px; background: #ffffff08; color: white; cursor: pointer; font-size: 1.2rem; }
 .photo-viewer__zoom button.photo-viewer__reset { min-width: 76px; font-size: .85rem; font-variant-numeric: tabular-nums; }
@@ -207,8 +226,8 @@
 .photo-timeline__months button { border: 0; border-radius: 6px; background: transparent; color: #a8bfcb; padding: .45rem .5rem; min-height: 36px; cursor: pointer; font-size: .7rem; text-transform: capitalize; }
 .photo-timeline__months button[aria-pressed=true] { background: #ffdc4020; color: #ffe481; }
 .photo-miniatures { overflow-x: auto; overflow-y: hidden; width: 100%; padding: 5px 0; background: #091b25; border-radius: 8px; scrollbar-color: #baaa60 #102733; overscroll-behavior-x: contain; }
-.photo-miniatures__track { position: relative; height: 56px; min-width: 100%; }
-.photo-miniature { position: absolute; width: 12px; height: 12px; padding: 0; overflow: hidden; border: 1px solid transparent; border-radius: 2px; background: #496373; cursor: pointer; }
+.photo-miniatures__track { position: relative; min-width: 100%; }
+.photo-miniature { position: absolute; box-sizing: border-box; width: var(--photo-miniature-size); height: var(--photo-miniature-size); padding: 0; overflow: hidden; border: 1px solid transparent; border-radius: 3px; background: #496373; cursor: pointer; }
 .photo-miniature img { width: 100%; height: 100%; object-fit: cover; opacity: .65; }
 .photo-miniature.is-active { border-color: #ffdc40; background: #ffdc4080; }
 .photo-miniature.is-active img, .photo-miniature:hover img { opacity: 1; }

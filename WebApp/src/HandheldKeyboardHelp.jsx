@@ -1,16 +1,17 @@
 import React from "react";
 import GameKeyboardKeys, { DIRECTION_KEYS } from "./GameKeyboardKeys.jsx";
+import { DIRECTION_INPUTS } from "./gameInputMapping.js";
 
-export default function HandheldKeyboardHelp({ frame, systemId, annotated, pressedInputs, t }) {
+export default function HandheldKeyboardHelp({ frame, systemId, annotated, pressedInputs, bindings, t }) {
   const [left, top, width, height] = frame.crop;
   const dpad = frame.buttons.find(button => button.name === "left");
   const controls = [
-    { name: "dpad", label: t("gameboy_dpad"), codes: DIRECTION_KEYS, side: "left",
+    { name: "dpad", label: t("gameboy_dpad"), codes: DIRECTION_KEYS, inputs: DIRECTION_INPUTS, side: "left",
       x: dpad.x, y: dpad.y + dpad.h / 2 },
     ...["A", "B", "Start", "Select", "L", "R"].flatMap(name => {
       const button = frame.buttons.find(button => button.name === name);
       if (!button) return [];
-      return [{ name, label: name, codes: Object.keys(frame.keys).filter(code => frame.keys[code] === button.input),
+      return [{ name, label: name, inputs: [button.input], codes: Object.keys(frame.keys).filter(code => frame.keys[code] === button.input),
         side: name === "Select" || name === "L" || (systemId === "gba" && name === "Start") ? "left" : "right",
         x: button.x + button.w / 2, y: button.y + button.h / 2 }];
     }),
@@ -42,7 +43,7 @@ export default function HandheldKeyboardHelp({ frame, systemId, annotated, press
         className={`handheld-help__mapping handheld-help__mapping--${control.name.toLowerCase()} handheld-help__mapping--${control.side}`}
         style={annotated ? { top: `${control.labelY}%` } : undefined}>
         {control.name === "dpad" && annotated && <span className="handheld-help__dpad-title">{control.label}</span>}
-        <GameKeyboardKeys codes={control.codes} frame={frame} pressedInputs={pressedInputs} />
+        <GameKeyboardKeys codes={control.codes} inputs={control.inputs} bindings={bindings} t={t} frame={frame} pressedInputs={pressedInputs} />
         {(control.name !== "dpad" || !annotated) && <>
           <span className="handheld-help__arrow" aria-hidden="true">→</span>
           <span className={`handheld-help__button${["A", "B"].includes(control.name) ? " handheld-help__button--round" : ""}`}>{control.label}</span>

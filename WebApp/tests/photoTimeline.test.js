@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { sortPhotos } from '../src/photoLibrary.js';
-import { galleryWindow, miniatureWindow, MINI_ROWS, MINI_SIZE, photoPeriods } from '../src/photoTimeline.js';
+import { galleryWindow, miniaturePosition, miniatureScrollLeft, miniatureWindow, MINI_IMAGE_SIZE, MINI_ROWS, MINI_SIZE, photoPeriods } from '../src/photoTimeline.js';
 import { migratePhotoDemo } from '../src/api/photoDemo.js';
 
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `${id}`, takenAt: new Date(Date.UTC(2000, 0, id + 1)).toISOString() }));
@@ -21,13 +21,44 @@ test('every gallery photo is reachable and no more than 100 are expanded, includ
 });
 
 test('miniature strip represents the entire library while mounting only visible columns', () => {
-  for (const left of [0, 10000, Math.ceil(photos.length / MINI_ROWS) * MINI_SIZE - 700]) {
+  const end = miniatureScrollLeft(photos.length, photos.length - 1, 700);
+  for (const left of [0, 10000, end]) {
     const window = miniatureWindow(photos.length, left, 700);
-    assert.ok(window.end - window.start <= 220);
-    assert.equal(window.width, Math.ceil(photos.length / MINI_ROWS) * MINI_SIZE);
+    assert.ok(window.end - window.start <= (Math.ceil(700 / MINI_SIZE) + 5) * MINI_ROWS);
+    assert.ok(window.width >= Math.ceil(photos.length / MINI_ROWS) * MINI_SIZE);
     assert.ok(window.start >= 0 && window.end <= photos.length);
   }
-  assert.equal(miniatureWindow(photos.length, Math.ceil(photos.length / MINI_ROWS) * MINI_SIZE - 700, 700).end, photos.length);
+  assert.equal(miniatureWindow(photos.length, end, 700).end, photos.length);
+});
+
+test('expanded groups stay centered at both ends, at arbitrary positions, and after resizing', () => {
+  for (const total of [1, 7, 99, 100, 101, 4570, photos.length]) {
+    const collection = photos.slice(0, total);
+    for (const width of [280, 700, 1800]) for (const position of [0, 1, 99, 100, 507, total - 1]) {
+      const page = galleryWindow(collection, position);
+      const left = miniatureScrollLeft(total, position, width);
+      const window = miniatureWindow(total, left, width);
+      const first = window.padding + Math.floor(page.offset / MINI_ROWS) * MINI_SIZE;
+      const last = window.padding + Math.floor((page.offset + page.items.length - 1) / MINI_ROWS) * MINI_SIZE + MINI_IMAGE_SIZE;
+      assert.equal((first + last) / 2 - left, width / 2, `total=${total}, position=${position}, width=${width}`);
+      assert.ok(left >= 0 && left <= window.width - width);
+    }
+  }
+});
+
+test('scrolling selects the group in the center and reaches the final photos', () => {
+  for (const width of [280, 700, 1800]) {
+    for (const position of [0, 8, 800, 8000]) {
+      const left = miniatureScrollLeft(photos.length, position, width);
+      assert.equal(miniaturePosition(photos.length, left, width), position);
+    }
+    for (let total = 4570; total < 4590; total++) {
+      assert.equal(miniaturePosition(total, 0, width), 0);
+      assert.equal(miniaturePosition(total, miniatureWindow(total, 0, width).width - width, width), total - 100);
+    }
+  }
+  assert.equal(miniaturePosition(0, 0, 700), 0);
+  assert.equal(miniatureWindow(0, 0, 700).end, 0);
 });
 
 test('year and month positions retain all photos and undated images in both date directions', () => {

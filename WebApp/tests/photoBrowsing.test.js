@@ -16,7 +16,7 @@ const result = await build({
 });
 const module = { exports: {} };
 new Function('require', 'module', 'exports', result.outputFiles[0].text)(require, module, module.exports);
-const { PhotoGrid, PhotoPagination, DeletePhotoChoices } = module.exports;
+const { PhotoGrid, PhotoPagination, DeletePhotoChoices, AlbumCard, PersonPortrait } = module.exports;
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `Photo ${id}`, relativePath: `${id}.jpg` }));
 const s = photoStrings('es');
 
@@ -77,4 +77,20 @@ test('choosing a person cover uses the selected image instead of opening a block
   const grid = PhotoGrid(props);
   grid.props.children[1].props.children[0].props.onClick();
   assert.deepEqual(chosen, ['1']);
+});
+
+test('person albums use face portraits and never fall back to a misleading group photo', () => {
+  const person = { id: 'person:ana', name: 'Ana', coverFace: { photoId: '1', box: { x: .6, y: .2, width: .2, height: .3 } } };
+  const html = renderToStaticMarkup(React.createElement(AlbumCard, { folder: person, photos: photos.slice(0, 2), s, language: 'es' }));
+  assert.match(html, /photo-album--person/);
+  assert.match(html, /photo-person-portrait__crop/);
+  assert.match(html, /alt="Ana"/);
+  const missing = renderToStaticMarkup(React.createElement(PersonPortrait, { person: { ...person, coverFace: null }, photo: photos[0], s }));
+  assert.doesNotMatch(missing, /<img/);
+  assert.ok(missing.includes(s.faceCoverMissing));
+  const wrongPhoto = renderToStaticMarkup(React.createElement(PersonPortrait, { person, photo: photos[0], s }));
+  assert.doesNotMatch(wrongPhoto, /<img/);
+  const album = renderToStaticMarkup(React.createElement(AlbumCard, { folder: { id: 'holiday', name: 'Holiday' }, photos: photos.slice(0, 2), s, language: 'es' }));
+  assert.doesNotMatch(album, /photo-person-portrait/);
+  assert.match(album, /alt="Photo 0"/);
 });

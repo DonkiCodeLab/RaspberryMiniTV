@@ -501,6 +501,7 @@ class TorrentApiTests(unittest.TestCase):
         with patch.object(api, "queue_tmdb_artwork", side_effect=assert_published) as artwork:
             item = api.import_torrent_movie(job, source)
             self.assertEqual(api.import_torrent_movie(job, source), item)
+            self.assertEqual(api.load_movie_library()[item["relativePath"]]["originalFileName"], source.name)
             self.assertEqual(len(api.load_movie_library()), 1)
             self.assertEqual(artwork.call_count, 2)
         source.unlink()

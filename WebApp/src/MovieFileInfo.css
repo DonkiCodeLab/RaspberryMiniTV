@@ -1,0 +1,24 @@
+.movie-file-info { box-sizing: border-box; width: 100%; min-width: 0; padding: 20px; border-radius: 22px; border: 1px solid #ffffff25; background: rgba(22,37,48,.86); color: #fff; }
+.movie-file-info__heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.movie-file-info__quality { --quality-color: #b4c3cc; display: inline-flex; align-items: center; gap: 10px; padding: 7px 12px; border: 1px solid currentColor; border-radius: 999px; color: var(--quality-color); font-weight: 800; font-size: 14px; }
+.movie-file-info__quality--1 { --quality-color: #ffaaa5; }
+.movie-file-info__quality--2 { --quality-color: #ffd38a; }
+.movie-file-info__quality--3 { --quality-color: #d7ec8a; }
+.movie-file-info__quality--4 { --quality-color: #94edbb; }
+.movie-file-info__quality--5 { --quality-color: #8fe4ff; }
+.movie-file-info__bars { display: inline-flex; gap: 3px; align-items: end; height: 20px; }
+.movie-file-info__bars i { display: block; width: 5px; height: 8px; border-radius: 2px; background: #ffffff25; }
+.movie-file-info__bars i:nth-child(2) { height: 11px; }
+.movie-file-info__bars i:nth-child(3) { height: 14px; }
+.movie-file-info__bars i:nth-child(4) { height: 17px; }
+.movie-file-info__bars i:nth-child(5) { height: 20px; }
+.movie-file-info__bars i.is-active { background: currentColor; }
+.movie-file-info dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin: 20px 0 16px; }
+.movie-file-info dl > div { min-width: 0; }
+.movie-file-info__name { grid-column: 1 / -1; }
+.movie-file-info dt { font-size: 12px; color: #c1d1dc; margin-bottom: 5px; }
+.movie-file-info dd { margin: 0; font-size: 15px; font-weight: 700; overflow-wrap: anywhere; user-select: text; }
+.movie-file-info dd small { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; color: #c1d1dc; }
+.movie-file-info .movie-file-info__note { margin: 0; font-size: 12px; line-height: 1.5; color: #c1d1dc; }
+@media (min-width:1180px) { .movie-panel__card > .movie-file-info { max-width:60%; margin-inline:auto; } }
+@media (max-width:420px) { .movie-file-info { padding:16px; } }

@@ -4,15 +4,16 @@ import { gameTelevision } from "./gameTelevisions.js";
 import { frameRectangle } from "./gameConsoleFrames.js";
 import { browserPlaybackStrings } from "./browserPlaybackStrings.js";
 import { browserVideoError } from "./browserPlayback.js";
+import { BrowserSubtitleTrack, SubtitleSelectors, useBrowserSubtitles } from "./BrowserSubtitles.jsx";
+import { subtitleStrings } from "./browserSubtitles.js";
 
 export default function BrowserVideo({ url, subtitleSourceUrl = url, t, language, initialProgress, onProgress, onPlaybackError, showShell = true }) {
   const videoRef = useRef(null);
-  const subtitleRef = useRef(null);
   const progressRef = useRef(onProgress);
   progressRef.current = onProgress;
-  const [subtitleUrl, setSubtitleUrl] = useState("");
-  const [status, setStatus] = useState("loading");
-  const [enabled, setEnabled] = useState(true);
+  const subtitles = useBrowserSubtitles(subtitleSourceUrl, language);
+  const subtitleText = subtitleStrings[language] || subtitleStrings.es;
+  const [trackStatus, setTrackStatus] = useState({});
   const [videoAspect, setVideoAspect] = useState(16 / 9);
   const [needsPlay, setNeedsPlay] = useState(false);
   const television = gameTelevision(showShell ? "simpsons" : "none");
@@ -77,71 +78,6 @@ export default function BrowserVideo({ url, subtitleSourceUrl = url, t, language
     };
   }, [url]);
 
-  useEffect(() => {
-    const track = subtitleRef.current;
-    if (!track) return;
-    const loaded = () => {
-      track.track.mode = "showing";
-      setEnabled(true);
-      setStatus("ready");
-    };
-    const failed = () => setStatus("error");
-    // Track load/error events do not bubble. Observe the element directly,
-    // including cached tracks that loaded before this effect was installed.
-    track.addEventListener("load", loaded);
-    track.addEventListener("error", failed);
-    if (track.readyState === 2) loaded();
-    else if (track.readyState === 3) failed();
-    return () => {
-      track.removeEventListener("load", loaded);
-      track.removeEventListener("error", failed);
-    };
-  }, [subtitleUrl]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let objectUrl;
-    setSubtitleUrl("");
-    setStatus("loading");
-    setEnabled(true);
-    const source = new URL(subtitleSourceUrl, window.location.href);
-    source.searchParams.set("subtitles", "1");
-    fetch(source, { signal: controller.signal, cache: "no-store" })
-      .then(async response => {
-        if (response.status === 404) {
-          if (!controller.signal.aborted) setStatus("missing");
-          return;
-        }
-        if (!response.ok) throw new Error("subtitle_load_failed");
-        const content = await response.text();
-        if (!content.startsWith("WEBVTT")) throw new Error("subtitle_load_failed");
-        if (controller.signal.aborted) return;
-        objectUrl = URL.createObjectURL(new Blob([content], { type: "text/vtt" }));
-        setSubtitleUrl(objectUrl);
-      })
-      .catch(() => { if (!controller.signal.aborted) setStatus("error"); });
-    return () => {
-      controller.abort();
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [subtitleSourceUrl]);
-
-  useEffect(() => {
-    const tracks = videoRef.current?.textTracks;
-    if (!tracks) return;
-    const sync = () => setEnabled(tracks[0]?.mode === "showing");
-    tracks.addEventListener("change", sync);
-    return () => tracks.removeEventListener("change", sync);
-  }, [url]);
-
-  function toggle() {
-    const track = videoRef.current?.textTracks[0];
-    if (!track) return;
-    const showing = track.mode !== "showing";
-    track.mode = showing ? "showing" : "disabled";
-    setEnabled(showing);
-  }
-
   return <>
     <div id="browser-video-stage" className="browser-video__stage"
       style={{ "--tv-ratio": showShell ? television.crop[2] / television.crop[3] : videoAspect }}>
@@ -151,8 +87,12 @@ export default function BrowserVideo({ url, subtitleSourceUrl = url, t, language
             const error = browserVideoError(event);
             if (error) onPlaybackError?.(error);
           }}>
-            {subtitleUrl && <track ref={subtitleRef} key={subtitleUrl} kind="subtitles"
-              label={t("subtitle_external")} src={subtitleUrl} default />}
+            {subtitles.primary && <BrowserSubtitleTrack key={`primary-${subtitles.primary}`}
+              source={subtitleSourceUrl} id={subtitles.primary} label={subtitleText.primary}
+              onStatus={status => setTrackStatus(current => ({ ...current, [subtitles.primary]: status }))} />}
+            {subtitles.auxiliary && <BrowserSubtitleTrack key={`auxiliary-${subtitles.auxiliary}`}
+              source={subtitleSourceUrl} id={subtitles.auxiliary} label={subtitleText.auxiliary} auxiliary
+              onStatus={status => setTrackStatus(current => ({ ...current, [subtitles.auxiliary]: status }))} />}
           </video>
           {needsPlay && <button type="button" className="browser-video__start"
             onClick={() => { videoRef.current.play()?.catch(() => setNeedsPlay(true)); }}>
@@ -161,11 +101,15 @@ export default function BrowserVideo({ url, subtitleSourceUrl = url, t, language
         </div>
       </RetroTelevision>
     </div>
-    <div className="playback-subtitles">
-      {status === "ready" ? <button type="button" className="dialog-button dialog-button--ghost"
-        aria-label={t("subtitle_toggle")} aria-pressed={enabled} onClick={toggle}>
-        {t(enabled ? "subtitle_on" : "subtitle_off")}
-      </button> : <p role="status">{t(status === "loading" ? "subtitle_loading" : status === "missing" ? "subtitle_none" : "subtitle_load_failed")}</p>}
-    </div>
+    {(subtitles.failed || !subtitles.inventory || subtitles.inventory.tracks.length > 0 || subtitles.inventory.embeddedStatus === "unknown") &&
+      <div className="playback-subtitles">
+        {subtitles.inventory && <SubtitleSelectors tracks={subtitles.inventory.tracks}
+          primary={subtitles.primary} auxiliary={subtitles.auxiliary} language={language}
+          onPrimary={subtitles.setPrimary} onAuxiliary={subtitles.setAuxiliary} />}
+        {(subtitles.failed || [subtitles.primary, subtitles.auxiliary].some(id => id && trackStatus[id] === "error"))
+          ? <p role="status">{subtitleText.failed} <button type="button" className="dialog-button dialog-button--ghost" onClick={subtitles.retry}>{subtitleText.retry}</button></p>
+          : (!subtitles.inventory || [subtitles.primary, subtitles.auxiliary].some(id => id && trackStatus[id] === "loading")) && <p role="status">{subtitleText.loading}</p>}
+        {subtitles.inventory?.embeddedStatus === "unknown" && <p role="status">{subtitleText.unknown}</p>}
+      </div>}
   </>;
 }

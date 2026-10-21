@@ -72,6 +72,7 @@ local.properties
 
 # Node
 node_modules
+.vite/
 *.log
 .nvm
 package-lock.json

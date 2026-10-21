@@ -2,7 +2,7 @@ const strings = {
   es: {
     availableTitle: "Subtítulos disponibles", checking: "Comprobando subtítulos…", inventoryFailed: "No se pudieron comprobar los subtítulos.",
     external: "SRT externo", embedded: "Pistas integradas", notFound: "No se han encontrado", unknown: "No se ha podido comprobar", unknownLanguage: "Idioma no indicado",
-    browserEmbedded: "Las pistas integradas están en el vídeo, pero el reproductor web solo carga el SRT externo. Puedes usar las integradas en la MiniTV o el monitor externo.",
+    browserEmbedded: "El reproductor web permite elegir pistas integradas de texto y combinarlas con otro subtítulo. Las pistas de imagen requieren la MiniTV o el monitor externo.",
     settingsTitle: "Configuración de OpenSubtitles", settingsLoading: "Cargando configuración…",
     settingsLoadFailed: "No se pudo cargar la configuración de OpenSubtitles.", settingsSaveFailed: "No se pudo guardar la configuración de OpenSubtitles.", retry: "Reintentar",
     title: "Obtener subtítulo (de OpenSubtitles)", language: "Idioma del subtítulo", searching: "Buscando y guardando subtítulo…",
@@ -29,7 +29,7 @@ const strings = {
   ca: {
     availableTitle: "Subtítols disponibles", checking: "Comprovant els subtítols…", inventoryFailed: "No s’han pogut comprovar els subtítols.",
     external: "SRT extern", embedded: "Pistes integrades", notFound: "No se n’han trobat", unknown: "No s’ha pogut comprovar", unknownLanguage: "Idioma no indicat",
-    browserEmbedded: "Les pistes integrades són al vídeo, però el reproductor web només carrega l’SRT extern. Pots utilitzar les integrades a la MiniTV o al monitor extern.",
+    browserEmbedded: "El reproductor web permet triar pistes integrades de text i combinar-les amb un altre subtítol. Les pistes d’imatge requereixen la MiniTV o el monitor extern.",
     settingsTitle: "Configuració d’OpenSubtitles", settingsLoading: "Carregant la configuració…",
     settingsLoadFailed: "No s’ha pogut carregar la configuració d’OpenSubtitles.", settingsSaveFailed: "No s’ha pogut desar la configuració d’OpenSubtitles.", retry: "Torna-ho a provar",
     title: "Obtenir subtítol (d’OpenSubtitles)", language: "Idioma del subtítol", searching: "Cercant i desant el subtítol…",
@@ -56,7 +56,7 @@ const strings = {
   en: {
     availableTitle: "Available subtitles", checking: "Checking subtitles…", inventoryFailed: "Could not check subtitles.",
     external: "External SRT", embedded: "Embedded tracks", notFound: "None found", unknown: "Could not check", unknownLanguage: "Unspecified language",
-    browserEmbedded: "Embedded tracks are in the video, but the web player only loads the external SRT. You can use embedded tracks on the MiniTV or external monitor.",
+    browserEmbedded: "The web player lets you choose embedded text tracks and combine them with another subtitle. Image subtitle tracks require the MiniTV or external monitor.",
     settingsTitle: "OpenSubtitles settings", settingsLoading: "Loading settings…",
     settingsLoadFailed: "Could not load the OpenSubtitles settings.", settingsSaveFailed: "Could not save the OpenSubtitles settings.", retry: "Retry",
     title: "Get subtitle (from OpenSubtitles)", language: "Subtitle language", searching: "Finding and saving subtitle…",

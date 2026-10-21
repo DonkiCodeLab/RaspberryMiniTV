@@ -7134,6 +7134,11 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
   padding: 8px 12px;
   background: transparent;
 }
+/* Use the row background throughout, without translucent layers around the actions. */
+.books-library__grid--list .books-library__card-copy,
+.books-library__grid.books-library__grid--list .books-library__actions-reveal {
+  background: transparent;
+}
 .books-library__downloads { display: grid; gap: 8px; padding: 4px 12px 12px; }
 .books-library__downloads a { color: #ffd429; overflow-wrap: anywhere; }
 
@@ -7220,3 +7225,13 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
   .movie-panel__card > .movie-media { max-width: 60%; margin-inline: auto; }
 }
 .tmdb-browser-movie__media { grid-area: trailer; min-width: 0; width: 100%; }
+
+/* Series lists have four content blocks: title, rating, totals and actions. */
+@media (min-width: 721px) {
+  .movie-library__items--list .movie-library__info:has(> .series-library__stats) {
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+  }
+}
+.movie-library__items--list .movie-library__info:has(> .series-library__stats) .movie-library__actions--icons {
+  grid-template-columns: repeat(3, 44px);
+}

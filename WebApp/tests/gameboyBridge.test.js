@@ -186,3 +186,58 @@ test('volume chosen during loading is applied on start, and native mute stays sy
   b.window.EJS_emulator.setVolume(.3);
   assert.equal(b.messages.length, count + 1); // Restarts don't install duplicate hooks.
 });
+
+test('managed keyboard forwards physical controls in both views and blocks the old native map', () => {
+  const b = bridge();
+  b.message({ type:'controls-config', blocked:false, mouseButtons:[] });
+  for (const framed of [true,false]) {
+    b.message({type:'presentation',framed});
+    let stopped = 0;
+    b.events.keydown({code:'KeyC',type:'keydown',preventDefault(){},stopImmediatePropagation(){stopped++;}});
+    assert.equal(stopped,1);
+    assert.equal(b.messages.at(-1)[0].type,'physical-input');
+    assert.equal(b.messages.at(-1)[0].code,'KeyC');
+  }
+  assert.deepEqual(b.inputs,[]); // Only the parent's resolved input reaches the core.
+  b.message({type:'input',input:8,pressed:true,value:1});
+  assert.deepEqual(b.inputs,[[0,8,1]]);
+});
+
+test('settings pause once, block inputs, disable duplicate pad handlers and preserve a previous pause', () => {
+  const b = bridge(), calls = [], handlers = {};
+  Object.assign(b.window.EJS_emulator, {paused:false, pause(){calls.push('pause');this.paused=true;},play(){calls.push('play');this.paused=false;},gamepad:{on:(name,handler)=>handlers[name]=handler}});
+  b.message({type:'controls-config',blocked:false,mouseButtons:[]});
+  b.message({type:'input',input:8,pressed:true});
+  b.message({type:'controls-config',blocked:true,mouseButtons:[]});
+  b.message({type:'controls-config',blocked:true,mouseButtons:[2]});
+  b.message({type:'input',input:8,pressed:true});
+  assert.deepEqual(b.inputs,[[0,8,1],[0,8,0]]);
+  assert.deepEqual(calls,['pause']);
+  assert.deepEqual(Object.keys(handlers),['axischanged','buttondown','buttonup']);
+  const count = b.messages.length;
+  b.events.keydown({code:'KeyC',type:'keydown',preventDefault(){},stopImmediatePropagation(){}});
+  assert.equal(b.messages.length,count);
+  b.message({type:'controls-config',blocked:false,mouseButtons:[2]});
+  assert.deepEqual(calls,['pause','play']);
+  b.window.EJS_emulator.paused = true;
+  b.message({type:'controls-config',blocked:true,mouseButtons:[]});
+  b.message({type:'controls-config',blocked:false,mouseButtons:[]});
+  assert.deepEqual(calls,['pause','play']);
+});
+
+test('managed input supports analog magnitude and validates config messages and mouse events', () => {
+  const b = bridge('psx');
+  b.message({type:'controls-config',blocked:false,mouseButtons:[2]}, {source:{}});
+  b.message({type:'input',input:16,pressed:true,value:20000});
+  assert.deepEqual(b.inputs,[]);
+  b.message({type:'controls-config',blocked:false,mouseButtons:[2]});
+  for (const value of [-1,32768,NaN,Infinity,1.5,'2']) b.message({type:'input',input:16,pressed:true,value});
+  assert.deepEqual(b.inputs,[]);
+  b.message({type:'input',input:16,pressed:true,value:20000});
+  assert.deepEqual(b.inputs,[[0,16,20000]]);
+  b.events.mousedown({type:'mousedown',button:2,preventDefault(){},stopImmediatePropagation(){}});
+  assert.equal(b.messages.at(-1)[0].type,'physical-input');
+  assert.equal(b.messages.at(-1)[0].device,'mouse');
+  b.events.mouseup({type:'mouseup',button:2,preventDefault(){},stopImmediatePropagation(){}});
+  assert.equal(b.messages.at(-1)[0].pressed,false);
+});

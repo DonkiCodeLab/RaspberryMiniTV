@@ -9,3 +9,8 @@
 .movie-subtitle-download__result { margin: 12px 0; padding: 12px; background: #84d39415; border-radius: 8px; overflow-wrap: anywhere; }
 .movie-subtitle-download__result strong { display: block; margin-bottom: 8px; }
 .movie-subtitle-download__result p:last-child { margin: 0; }
+
+.movie-subtitle-download__translation { display: grid; gap: 12px; padding: 16px; margin: 12px 0; border: 1px solid #ffdb4255; border-radius: 16px; background: #ffdb4209; }
+.movie-subtitle-download__translation .dialog-field { margin: 0; min-width: 0; }
+.movie-subtitle-download__translation p { margin: 0; font-size: 12px; }
+.movie-subtitle-download__translation .dialog-button { white-space: normal; }

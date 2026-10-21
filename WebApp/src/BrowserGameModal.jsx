@@ -1,5 +1,5 @@
 import { lockBodyScroll } from "./bodyScrollLock.js";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gameConsoleFrame, frameRectangle, frameVariables } from "./gameConsoleFrames.js";
 import RetroTelevision from "./RetroTelevision.jsx";
@@ -11,6 +11,9 @@ import TelevisionKeyboardHelp from "./TelevisionKeyboardHelp.jsx";
 import { readGameVolume, saveGameVolume } from "./gameAudio.js";
 import "./BrowserGameModal.css";
 import PlayerSizeControl, { usePlayerSize } from "./PlayerSizeControl.jsx";
+import GameInputSettings from "./GameInputSettings.jsx";
+import useGameInput from "./useGameInput.js";
+import { bindingLabel, controlLabel, gameControls, readGameBindings, saveGameBindings } from "./gameInputMapping.js";
 
 function GameSession({ game, onClose, t }) {
   const [screenSize, setScreenSize] = usePlayerSize("game");
@@ -27,6 +30,11 @@ function GameSession({ game, onClose, t }) {
     try { return window.localStorage.getItem(helpStorageKey) !== "false"; } catch { return true; }
   });
   const [ready, setReady] = useState(false);
+  const [mappingSupported, setMappingSupported] = useState(false);
+  const [nativeControls, setNativeControls] = useState([]);
+  const mappedControls = useMemo(() => gameControls(game.systemId, nativeControls), [game.systemId, nativeControls]);
+  const [bindings, setBindings] = useState(() => readGameBindings(game.systemId, gameControls(game.systemId)));
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [pressedInputs, setPressedInputs] = useState(() => new Set());
   const [volume, setVolume] = useState(readGameVolume);
   const [televisionId, setTelevisionId] = useState(readGameTelevision);
@@ -41,6 +49,16 @@ function GameSession({ game, onClose, t }) {
   const send = useCallback((message) => {
     if (origin !== "null") frame.current?.contentWindow?.postMessage({ channel: "minitv-gameboy", ...message }, origin);
   }, [origin]);
+  const changeBindings = useCallback(next => {
+    setBindings(next);
+    return saveGameBindings(game.systemId, next);
+  }, [game.systemId]);
+  useEffect(() => { setBindings(readGameBindings(game.systemId, mappedControls)); }, [game.systemId, mappedControls]);
+  useEffect(() => {
+    if (!mappingSupported) return;
+    send({ type: "controls-config", blocked: settingsOpen, mouseButtons: [...new Set(Object.values(bindings).flat().filter(binding => binding.type === "mouse").map(binding => binding.button))] });
+  }, [bindings, settingsOpen, mappingSupported, ready, send]);
+  const mappedInput = useGameInput({ bindings, enabled: ready && mappingSupported, blocked: settingsOpen, send, frame, origin });
 
   useEffect(() => {
     const trigger = document.activeElement;
@@ -56,22 +74,26 @@ function GameSession({ game, onClose, t }) {
   useEffect(() => {
     const onMessage = (event) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow || event.data?.channel !== "minitv-gameboy") return;
-      if (event.data.type === "ready") setReady(true);
-      if (event.data.type === "close") onClose();
+      if (event.data.type === "ready") {
+        setReady(true);
+        setMappingSupported(event.data.inputMapping === true);
+        if (Array.isArray(event.data.controls)) setNativeControls(event.data.controls);
+      }
+      if (event.data.type === "close" && !settingsOpen) onClose();
       if (event.data.type === "volume-state" && typeof event.data.volume === "number" &&
         Number.isFinite(event.data.volume) && event.data.volume >= 0 && event.data.volume <= 1) {
         const value = Math.round(event.data.volume * 100);
         emulatorVolume.current = value;
         setVolume(value);
       }
-      if (consoleFrame && event.data.type === "input-state" && Array.isArray(event.data.inputs) &&
-        event.data.inputs.every(input => Object.values(consoleFrame.keys).includes(input))) {
+      if (event.data.type === "input-state" && Array.isArray(event.data.inputs) &&
+        event.data.inputs.every(input => Number.isInteger(input) && input >= 0 && input < 24)) {
         setPressedInputs(new Set(event.data.inputs));
       }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [hasConsoleFrame, consoleFrame, origin, onClose]);
+  }, [origin, onClose, settingsOpen]);
 
   useEffect(() => {
     if (volume > 0) lastAudibleVolume.current = volume;
@@ -93,7 +115,7 @@ function GameSession({ game, onClose, t }) {
   }, [hasConsoleFrame, helpStorageKey, keyboardHelp]);
 
   useEffect(() => {
-    if (!framed) return;
+    if (!framed || mappingSupported || settingsOpen) return;
     const key = (event) => {
       const input = consoleFrame.keys[event.code];
       if (input === undefined || event.altKey || event.metaKey || event.ctrlKey) return;
@@ -114,9 +136,9 @@ function GameSession({ game, onClose, t }) {
       window.removeEventListener("keyup", key);
       window.removeEventListener("blur", release);
     };
-  }, [framed, consoleFrame, send]);
+  }, [framed, consoleFrame, send, mappingSupported, settingsOpen]);
 
-  const input = (button, pressed) => send({ type: "input", input: button.input, pressed });
+  const input = (button, pressed) => mappingSupported ? mappedInput(button.input, pressed) : send({ type: "input", input: button.input, pressed });
   const changePresentation = (value, event) => {
     send({ type: "release" });
     setExpanded(value);
@@ -133,7 +155,7 @@ function GameSession({ game, onClose, t }) {
     {consoleFrame.buttons.map(button => <button key={button.name} type="button" disabled={!ready}
       className={`gameboy-device__button gameboy-device__button--${button.name.toLowerCase()}${pressedInputs.has(button.input) ? " is-pressed" : ""}`}
       data-console-button={button.name.toLowerCase()} data-pressed={pressedInputs.has(button.input)}
-      aria-label={t(`${isTelevision && ![3, 4, 5, 6, 7].includes(button.input) ? "megadrive" : "gameboy"}_button_${button.name.toLowerCase()}`)}
+      aria-label={`${controlLabel(button, t)} · ${(bindings[button.input] || []).map(binding => bindingLabel(binding, t)).join(" / ") || t("game_mapping_unassigned")}`}
       style={{ ...frameRectangle(consoleFrame, [button.x, button.y, button.w, button.h]), transform: `rotate(${button.rotation}deg)` }}
       onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); input(button, true); }}
       onPointerUp={() => input(button, false)} onPointerCancel={() => input(button, false)}
@@ -154,7 +176,7 @@ function GameSession({ game, onClose, t }) {
       data-television={isTelevision ? television.id : undefined}
       data-without-shell={withoutShell || undefined}
       style={{ "--player-screen-scale": screenSize / 100, ...(consoleFrame ? frameVariables(consoleFrame) : {}), ...(isTelevision ? televisionVariables(television) : {}) }}
-      aria-label={t("browser_game_player")} onCancel={(event) => { event.preventDefault(); onClose(); }}>
+      aria-label={t("browser_game_player")} onCancel={(event) => { event.preventDefault(); if (!settingsOpen) onClose(); }}>
       <div className="browser-player__panel browser-game__panel">
         <header>
           {hasConsoleFrame && <div className="browser-game__identity">
@@ -193,6 +215,11 @@ function GameSession({ game, onClose, t }) {
             </select>
           </div>}
           <div className="browser-game__actions">
+            <button type="button" className="browser-game__help-switch" disabled={!ready || !mappingSupported || !mappedControls.length}
+              onClick={() => { send({ type: "release" }); setSettingsOpen(true); }}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6m8 4v6" /></svg>
+              <span>{t("game_mapping_title")}</span>
+            </button>
             <div className="browser-game__volume" role="group" aria-label={t("browser_game_volume")}>
               <button type="button" className="browser-game__mute" disabled={!ready}
                 onClick={() => setVolume(value => value === 0 ? lastAudibleVolume.current : 0)}
@@ -230,7 +257,7 @@ function GameSession({ game, onClose, t }) {
         <div className={`browser-game__stage${isTelevision ? " television-stage" : ""}`}>
           {isTelevision ? <div className="television-player">
             <RetroTelevision television={television} t={t}>{gameScreen}</RetroTelevision>
-            <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} compact t={t} />
+            <TelevisionKeyboardHelp frame={consoleFrame} bindings={bindings} pressedInputs={pressedInputs} compact t={t} />
           </div> :
           <div className={isHandheld ? "handheld-player" : "browser-game__display"}>
             <div className={hasConsoleFrame ? "gameboy-device" : "browser-game__display"}>
@@ -245,17 +272,19 @@ function GameSession({ game, onClose, t }) {
               </>}
             </div>
             {isHandheld && <HandheldKeyboardHelp frame={consoleFrame} systemId={game.systemId}
-              annotated={keyboardHelp && framed} pressedInputs={pressedInputs} t={t} />}
+              annotated={keyboardHelp && framed} bindings={bindings} pressedInputs={pressedInputs} t={t} />}
           </div>}
         </div>
         {isTelevision && <div id="television-controller-dock" hidden={!showController}
           className={`television-controller-dock${keyboardHelp ? " television-controller-dock--annotated" : ""}`}>
           <div className="mega-drive-controller">
             <MegaDriveController pressedInputs={pressedInputs} />{controls}
-            {keyboardHelp && <TelevisionKeyboardHelp frame={consoleFrame} pressedInputs={pressedInputs} annotations t={t} />}
+            {keyboardHelp && <TelevisionKeyboardHelp frame={consoleFrame} bindings={bindings} pressedInputs={pressedInputs} annotations t={t} />}
           </div>
         </div>}
       </div>
+      {settingsOpen && <GameInputSettings system={game.systemId} controls={mappedControls} bindings={bindings} onChange={changeBindings}
+        onClose={() => setSettingsOpen(false)} t={t} />}
     </dialog>, document.body
   );
 }

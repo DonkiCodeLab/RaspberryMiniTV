@@ -1,13 +1,20 @@
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
-import { obtainMovieSubtitles, getMediaSubtitles, getSubtitleSettings } from "./api/raspberryApi";
+import { obtainMovieSubtitles, getMediaSubtitles, getSubtitleSettings, startSubtitleTranslation, getSubtitleTranslation } from "./api/raspberryApi";
 import { movieSubtitleStrings } from "./movieSubtitleStrings.js";
 import "./MovieSubtitleDownload.css";
+import SubtitleTranslationOffer from "./SubtitleTranslationOffer.jsx";
+import { subtitleTranslationStrings } from "./subtitleTranslationStrings.js";
+import { translationSources, waitForSubtitleTranslation } from "./subtitleTranslation.js";
 
 export default function MovieSubtitleDownload({ relativePath, language, disabled = false, onBusyChange, onConfigure }) {
-  const s = movieSubtitleStrings(language);
+  const s = { ...movieSubtitleStrings(language), ...subtitleTranslationStrings(language) };
   const [subtitleLanguage, setSubtitleLanguage] = useState("es");
   const [busy, setBusy] = useState(false);
+  const [missingLanguages, setMissingLanguages] = useState([]);
+  const [translating, setTranslating] = useState(false);
+  const [translationStatus, setTranslationStatus] = useState(null);
+  const translationAbort = useRef(null);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [inventory, setInventory] = useState(null);
@@ -42,7 +49,7 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
 
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => { mounted.current = false; translationAbort.current?.abort(); };
   }, []);
 
   async function obtain() {
@@ -51,15 +58,39 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
     setBusy(true); onBusyChange?.(true); setError(""); setResult(null);
     try {
       const data = await obtainMovieSubtitles({ relativePath, language: subtitleLanguage });
-      if (mounted.current) { setResult(data); setRefresh(value => value + 1); }
+      if (mounted.current) { setResult(data); setMissingLanguages(values => values.filter(value => value !== subtitleLanguage)); setRefresh(value => value + 1); }
     } catch (error) {
       if (mounted.current) {
         setError(error.code || "failed");
+        if (error.code === "SUBTITLE_NOT_FOUND") setMissingLanguages(values => [...new Set([...values, subtitleLanguage])]);
         if (error.code === "SUBTITLE_NOT_CONFIGURED") setConfigured(false);
       }
     } finally {
       inFlight.current = false;
       if (mounted.current) { setBusy(false); onBusyChange?.(false); }
+    }
+  }
+
+  async function translate(sourceId) {
+    if (inFlight.current || disabled) return;
+    const controller = new AbortController();
+    translationAbort.current = controller;
+    inFlight.current = true;
+    setBusy(true); setTranslating(true); setTranslationStatus(null); setResult(null); setError(""); onBusyChange?.(true);
+    try {
+      const job = await startSubtitleTranslation({ relativePath, sourceId, language: subtitleLanguage, signal: controller.signal });
+      const result = await waitForSubtitleTranslation(job, { signal: controller.signal, getStatus: getSubtitleTranslation,
+        onProgress: status => { if (mounted.current) setTranslationStatus(status); } });
+      if (mounted.current) {
+        setResult({ file: result.file, match: "ai" });
+        setMissingLanguages(values => values.filter(value => value !== subtitleLanguage));
+        setRefresh(value => value + 1);
+      }
+    } catch (error) {
+      if (mounted.current && !controller.signal.aborted) setError(error.code || "SUBTITLE_TRANSLATION_FAILED");
+    } finally {
+      inFlight.current = false;
+      if (mounted.current) { setBusy(false); setTranslating(false); onBusyChange?.(false); }
     }
   }
 
@@ -71,7 +102,7 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
       {inventoryFailed && <button type="button" className="dialog-button dialog-button--ghost" onClick={() => setRefresh(value => value + 1)}>{s.retry}</button>}
       {inventory && <>
         <ul className="movie-subtitle-download__inventory">
-          <li>{s.external}: {inventory.external || s.notFound}</li>
+          <li>{s.external}: {(inventory.tracks || []).filter(track => track.kind === "external").map(track => track.id.slice("external:".length)).join(" · ") || inventory.external || s.notFound}</li>
           <li>{s.embedded}: {inventory.embeddedStatus === "unknown" ? s.unknown : inventory.embedded.length || s.notFound}</li>
         </ul>
         {inventory.embedded.length > 0 && <>
@@ -87,15 +118,20 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
         </select>
       </label>
       <button className="dialog-button dialog-button--accent" disabled={busy || disabled} onClick={obtain} type="button">
-        {busy ? s.searching : s.title}
+        {busy ? (translating ? s.translating : s.searching) : s.title}
       </button>
     </div>
+    <SubtitleTranslationOffer tracks={inventory?.tracks || []} missingLanguages={missingLanguages}
+      targetLanguage={subtitleLanguage} language={language} busy={busy || disabled} onTranslate={translate} />
+    {missingLanguages.includes(subtitleLanguage) && inventory && !translationSources(inventory.tracks || [], subtitleLanguage).length && <p>{s.translationNoSource}</p>}
     {disabled && <p>{s.manual}</p>}
-    {busy && <p role="status"><LoadingSpinner inline /> {s.searching}</p>}
+    {busy && <p role="status"><LoadingSpinner inline /> {translating ? (translationStatus?.state === "waiting" ? s.translateWaiting : s.translating) : s.searching}
+      {translating && translationStatus?.total > 0 && <> · {s.translatedCues}: {translationStatus.done}/{translationStatus.total}</>}
+    </p>}
     {error && <p className="dialog-error" role="alert">{s[error] || s.failed}</p>}
     {result && <div className="movie-subtitle-download__result" role="status">
       <strong>{s.saved}: {result.file}</strong>
-      <p>{result.match === "hash" ? s.exact : s.fallback}</p>
+      <p>{result.match === "ai" ? s.translationSaved : result.match === "hash" ? s.exact : s.fallback}</p>
       {result.release && <p>{result.release}</p>}
       <p>{s.restart}</p>
     </div>}

@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
 import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, photosWithoutPeople, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
+import { facePortraitLayout } from './photoFacePortrait.js';
 import PhotoFaceViewer from './PhotoFaceViewer.jsx';
 import PhotoDownloads from './PhotoDownloads.jsx';
 import PhotoGallery from './PhotoGallery.jsx';
@@ -37,7 +38,7 @@ function PhotoMeta({ photo, s, language }) {
   return <div className="photo-meta"><span title={s.taken}>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
     <span>⌖ {hasLocation(photo) ? `${photo.latitude.toFixed(4)}°, ${photo.longitude.toFixed(4)}°` : s.noGps}</span></div>;
 }
-function PhotoImage({ photo, tiny = false, ...props }) {
+function PhotoImage({ photo, tiny = false, alt = photo.name, ...props }) {
   const [error, setError] = useState(false), [ready, setReady] = useState(''), [visible, setVisible] = useState(false);
   const element = useRef(null), url = getPictureContentUrl(photo.relativePath, tiny ? 'tiny' : 'thumb');
   useEffect(() => {
@@ -54,8 +55,25 @@ function PhotoImage({ photo, tiny = false, ...props }) {
       .catch(error => { if (!controller.signal.aborted) setError(true); });
     return () => controller.abort();
   }, [url, visible, ready, tiny]);
-  return error ? <span className="photo-image-error" role="img" aria-label={photo.name}>▧ {photo.name}</span> :
-    <img {...props} ref={element} src={ready && ready === url ? url : PHOTO_PLACEHOLDER} alt={photo.name} onError={() => setError(true)} />;
+  return error ? <span className="photo-image-error" role="img" aria-label={alt}>▧ {alt}</span> :
+    <img {...props} ref={element} src={ready && ready === url ? url : PHOTO_PLACEHOLDER} alt={alt} onError={() => setError(true)} />;
+}
+
+export function PersonPortrait({ person, photo, s }) {
+  const [size, setSize] = useState(null);
+  const box = person.coverFace?.box;
+  const usable = photo?.id === person.coverFace?.photoId && facePortraitLayout(box, 1, 1);
+  const layout = usable && size?.photoId === photo.id ? facePortraitLayout(box, size.width, size.height) : null;
+  return <span className="photo-person-portrait" title={!usable ? s.faceCoverMissing : person.name}>
+    {!layout && <span className="photo-person-portrait__placeholder" role="img" aria-label={usable ? person.name : `${person.name}. ${s.faceCoverMissing}`}><Icon type="people" /></span>}
+    {usable && <span className="photo-person-portrait__crop" style={{ ...layout?.frame, visibility: layout ? 'visible' : 'hidden' }}>
+      <PhotoImage key={photo.id} photo={photo} alt={person.name} style={layout?.image} loading="lazy" decoding="async"
+        onLoad={event => {
+          const image = event.currentTarget;
+          if (image.naturalWidth > 1 && image.naturalHeight > 1) setSize({ photoId: photo.id, width: image.naturalWidth, height: image.naturalHeight });
+        }} />
+    </span>}
+  </span>;
 }
 
 export function PhotoPagination({ page, onChange, s, label = s.photos }) {
@@ -94,10 +112,11 @@ function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyD
   </dialog>, document.body);
 }
 
-export function AlbumCard({ folder, photos, s, language, onOpen, special }) {
+export function AlbumCard({ folder, photos, s, language, onOpen, special, portraitPhoto }) {
   const [active, setActive] = useState(false), [step, setStep] = useState(0);
+  const isPerson = folder.id.startsWith('person:');
   const chosenCover = photos.find(photo => photo.id === folder.coverPhotoId);
-  const covers = chosenCover ? [chosenCover] : photos.slice(0, 8);
+  const covers = isPerson ? [] : chosenCover ? [chosenCover] : photos.slice(0, 8);
   useEffect(() => {
     setStep(0);
     if (!active || covers.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -106,12 +125,13 @@ export function AlbumCard({ folder, photos, s, language, onOpen, special }) {
   }, [active, covers.length]);
   const cover = covers.length ? covers[step % covers.length] : null;
   const latest = photos.reduce((value, photo) => Math.max(value, photo.uploadedAt || 0), 0);
-  return <article className={`movie-library__card photo-album photo-album--${special || 'folder'}`}
+  return <article className={`movie-library__card photo-album photo-album--${isPerson ? 'person' : folder.id === 'withoutPeople' ? 'without-people' : special || 'folder'}`}
     onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(true); }} onPointerLeave={() => setActive(false)}
     onFocusCapture={() => setActive(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }}>
     <button className="movie-library__poster photo-album__cover" type="button" aria-label={`${s.open}: ${folder.name}`} onClick={onOpen}>
-      {cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
-      <span className="photo-album__badge"><Icon type={special || 'folder'} /></span>
+      {isPerson ? <PersonPortrait person={folder} photo={portraitPhoto || photos.find(photo => photo.id === folder.coverFace?.photoId)} s={s} /> :
+        cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
+      <span className="photo-album__badge"><Icon type={isPerson ? 'people' : special || 'folder'} /></span>
     </button>
     <div className="movie-library__info"><h2>{folder.name}</h2><div className="movie-library__meta"><span>{photos.length} {s.photos}</span></div>
       <small className="photo-album__date">{s.uploaded} · {dateLabel(latest || folder.created, language, '—')}</small>
@@ -262,10 +282,10 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const person = current.startsWith('person:') ? data.people.find(p => p.id === current.slice(7)) : null;
   useEffect(() => {
     // A face correction can move the last photo out of the open person.
-    if (!loading && current.startsWith('person:') && !person) {
+    if (!loading && !busy && current.startsWith('person:') && !person) {
       setCurrent('people'); setSearch(''); setSelected(new Set()); setActionMode(false); setChoosingCover(false);
     }
-  }, [current, person, loading]);
+  }, [current, person, loading, busy]);
   const noPeople = useMemo(() => photosWithoutPeople(data.photos), [data.photos]);
   const trail = person || current === 'withoutPeople' ? [{ id: 'people', name: s.people }, { id: current, name: person?.name || s.withoutPeople }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
   const parentId = current.startsWith('person:') || current === 'withoutPeople' ? 'people' : trail.at(-2)?.id || '';
@@ -324,6 +344,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     const photos = special === 'gallery' ? data.photos : special === 'map' ? mapPhotos.filter(hasLocation) : special === 'people' ? data.photos.filter(p => index.namesByPhoto.has(p.id)) :
       folder.id === 'withoutPeople' ? noPeople : folder.id.startsWith('person:') ? index.byPerson.get(folder.id.slice(7)) || [] : inFolder(folder.id);
     return <AlbumCard key={folder.id} folder={{ ...folder, name: (folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name }} photos={photos.filter(visible)} special={special}
+      portraitPhoto={index.byId.get(folder.coverFace?.photoId)}
       s={s} language={language} onOpen={() => navigate(folder.id)} />;
   }
   return <section className="pictures-library seasons-section photo-library" aria-label={s.root}>
@@ -344,10 +365,11 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {(current === 'albums' || isAlbum && !isAi) && <p className="photo-note">{s.referenceHint}</p>}
     {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.length} s={s} busy={faceBusy} onAction={faceAction} />}
     {current === 'withoutPeople' && <p className="photo-note">{s.withoutPeopleHint}</p>}
-    {person && <PersonEditor key={person.id} person={person} cover={index.byId.get(person.coverPhotoId || person.photoIds[0])} s={s} busy={busy}
+    {person && <PersonEditor key={person.id} person={person} people={data.knownPeople || data.people} cover={index.byId.get(person.coverFace?.photoId || person.coverPhotoId || person.photoIds[0])} s={s} busy={busy}
       choosingCover={choosingCover} onChooseCover={() => { setChoosingCover(value => !value); setActionMode(false); setSelected(new Set()); }}
       onSave={async name => { if (await act(`people/${person.id}`, { name })) setNotice(s.saved); }}
-      renderImage={photo => <PhotoImage photo={photo} />} />}
+      onMerge={async personId => { if (await act(`people/${person.id}/merge`, { personId })) { navigate(`person:${personId}`); setNotice(s.peopleMerged); } }}
+      renderImage={photo => <PersonPortrait person={person} photo={photo} s={s} />} />}
     {(current === 'ai' || isAi) && <div className="photo-ai-banner"><Icon type="ai" /><div><p>{s.aiHint}</p>
       {isAi && <><small>{albumPhotos.filter(p => !p.sourceId).length} {s.originals} · {pending} {s.pending}</small><p>{s.aiSend}</p>
         {!data.aiReady && <p>{s.aiSetup}</p>}

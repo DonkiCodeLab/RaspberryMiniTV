@@ -752,7 +752,7 @@ export async function saveGameSettings(settings) {
 }
 
 export async function getMediaSubtitles(relativePath, signal) {
-  if (isMockModeEnabled()) return { external: null, embedded: [], embeddedStatus: "unknown" };
+  if (isMockModeEnabled()) return { external: null, embedded: [], embeddedStatus: "unknown", tracks: [] };
   return request(`/media/subtitles?${new URLSearchParams({ relativePath })}`, { signal });
 }
 
@@ -2015,4 +2015,18 @@ export async function saveMovieTrailer(relativePath, video) {
 export async function saveSeriesTrailer(relativePath, video) {
   if (isMockModeEnabled()) return { video };
   return request("/series/trailer", { method: "POST", body: JSON.stringify({ relativePath, video }) });
+}
+
+export async function getMediaFileInfo(relativePath, signal) {
+  if (isMockModeEnabled()) return { fileName: relativePath.split("/").pop(), probeStatus: "unknown" };
+  return request(`/media/file-info?${new URLSearchParams({ relativePath })}`, { signal });
+}
+
+export async function startSubtitleTranslation({ relativePath, sourceId, language, signal }) {
+  if (isMockModeEnabled()) { const error = new Error("Subtitle translation requires a Raspberry connection."); error.code = "SUBTITLE_DEMO"; throw error; }
+  return request("/movies/subtitles/translate", { method: "POST", body: JSON.stringify({ relativePath, sourceId, language }), signal });
+}
+export async function getSubtitleTranslation(id, signal) {
+  if (isMockModeEnabled()) { const error = new Error("Subtitle translation requires a Raspberry connection."); error.code = "SUBTITLE_DEMO"; throw error; }
+  return request(`/movies/subtitles/translate?${new URLSearchParams({ id })}`, { signal });
 }

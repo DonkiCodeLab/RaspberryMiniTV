@@ -136,6 +136,14 @@ export function photoDemo(action, data = {}) {
         return { photoId: photo.id, faces: [], state: 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
       } else if (action === 'people/scan' || action === 'people/pause' || /^photos\/[^/]+\/detect$/.test(action)) {
         throw new Error('Conecta la Raspberry para analizar las fotos.');
+      } else if (/^people\/[^/]+\/merge$/.test(action)) {
+        const source = library.people.find(p => p.id === action.split('/')[1]);
+        const target = library.people.find(p => p.id === data.personId);
+        if (!source || !target || source === target || source.appleKey || target.appleKey) throw new Error('Selecciona otra persona existente para unir los álbumes.');
+        target.photoIds = [...new Set([...target.photoIds, ...source.photoIds])];
+        target.coverPhotoId ||= source.coverPhotoId;
+        library.people = library.people.filter(p => p !== source);
+        result = { ok: true, personId: target.id };
       } else if (/^people\/[^/]+\/cover$/.test(action)) {
         const person = library.people.find(p => p.id === action.split('/')[1]);
         if (!person?.photoIds.includes(data.photoId)) throw new Error('La portada debe ser una foto de esta persona.');

@@ -43,6 +43,20 @@ La vista de pantalla grande también muestra la guía compacta. La cabecera incl
 la portada, el año disponible y el regreso a la ficha del juego. Requiere actualizar
 WebApp y DeviceApp juntos. Las demás plataformas conservan su reproductor habitual.
 
+**Configurar controles** abre el mapeo del jugador 1. Pulsa una asignación y después
+una tecla, un botón del ratón o del gamepad, o mueve un eje del gamepad. Cada sentido
+del eje se asigna por separado; primero hay que soltar los botones y centrar los
+ejes. Escape cancela la captura. Puedes añadir asignaciones con **+**, quitarlas
+con **×** o restaurar los valores originales. Si una entrada ya pertenece a otro
+botón, se mueve a la nueva asignación y el diálogo indica de dónde se ha retirado.
+El juego se pausa mientras el diálogo está abierto y conserva su pausa anterior.
+Los cambios se guardan por consola en el navegador, funcionan también en pantalla
+grande y actualizan las etiquetas de la ayuda y los botones. El número de mando
+corresponde a su posición de conexión en el navegador. Si el navegador impide
+guardar, el diálogo avisa y mantiene el mapeo durante la partida actual.
+
+Pruebas de controles: `node --test tests/gameInputMapping.test.js tests/gameboyBridge.test.js` desde `WebApp`.
+
 Los botones se sombrean mientras están pulsados, también al jugar con el teclado.
 El puente del emulador comunica las pulsaciones simultáneas y suelta la indicación
 al perder el foco o cambiar de vista. Cada control expone `data-console-button`
@@ -564,6 +578,9 @@ Quitar una referencia conserva la imagen y el resto de sus asociaciones.
 Galería se recorre mediante un deslizador de **años** y otro de **meses**. El segundo
 permite avanzar también dentro de un mes con muchas fotos. La tira de miniaturas
 es desplazable y representa toda la colección; solo monta el tramo visible.
+Sus miniaturas de 24 px se distribuyen en ocho filas. El bloque de fotos ampliadas
+queda centrado en la tira al navegar, al terminar de desplazarla y al cambiar su
+anchura, incluso al principio y al final de la colección.
 Al detenerse durante 220 ms, las 100 fotos de la posición elegida se amplían con
 una animación, respetando la preferencia de movimiento reducido. Las fotos sin
 fecha tienen su propia posición al final. Buscar filtra también la línea temporal.
@@ -642,12 +659,27 @@ variantes de IA. El modo de bajo consumo usa un núcleo, prioridad baja, fotos d
 Las carpetas se actualizan durante el análisis. Al entrar en una persona, su
 nombre se edita directamente y **Elegir portada** permite pulsar cualquiera de
 sus fotos, también usando búsqueda y paginación. La portada elegida permanece
-fija al pasar el ratón y se conserva al volver a abrir la biblioteca. La interfaz
+fija al pasar el ratón y se conserva al volver a abrir la biblioteca. Las tarjetas
+de Personas y la miniatura del editor muestran solo el recuadro de su cara,
+conservando sus proporciones. Se usa la foto elegida como portada o la primera
+del álbum que tenga un recuadro de esa persona. Las portadas de Personas no
+rotan al pasar el ratón. Si todavía no hay ningún recuadro, aparece un icono de
+persona; abre una foto y pulsa **Detectar personas** para obtenerlo. La interfaz
 indica si falta instalar el motor en la Raspberry y permite reintentar errores.
+
+Si varios álbumes corresponden a la misma persona, usa **Unir con una persona
+existente** dentro del álbum duplicado, elige el destino y pulsa **Unir personas**.
+La pantalla explica qué nombres se unirán antes de guardar. Se abre el álbum de
+destino con todas las fotos, sin repetir las compartidas; conserva su nombre y su
+portada elegida (o hereda la del duplicado si no tenía una). Las caras trasladadas
+quedan confirmadas y el álbum duplicado desaparece del listado.
 
 El visor grande de Galería y Personas muestra rectángulos sobre todas las caras;
 al entrar desde la carpeta de una persona se resalta su cara. Pulsa un rectángulo
-para elegir un nombre existente o crear uno nuevo. Las correcciones se guardan
+o **Corregir persona** en la lista de caras situada bajo la foto para elegir un
+nombre existente o crear uno nuevo. Los números relacionan cada cara con su
+recuadro; las detecciones antiguas sin recuadro también se pueden corregir en la
+lista. El cambio afecta solo a esa cara en esa foto. Las correcciones se guardan
 por cara y se conservan al repetir el análisis. **Detectar personas** vuelve a
 analizar solo esa foto, con la posibilidad de pausarlo y sin ejecutar dos
 detectores a la vez.
