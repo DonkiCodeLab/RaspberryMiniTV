@@ -2,22 +2,43 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { facePortraitLayout } from '../src/photoFacePortrait.js';
 
-test('the crop contains only the chosen face and keeps its proportions in landscape and portrait photos', () => {
+function cropPixels(box, width, height) {
+  const { frame, image } = facePortraitLayout(box, width, height);
+  const cropWidth = width * 100 / parseFloat(image.width);
+  const cropHeight = height * 100 / parseFloat(image.height);
+  return { width: cropWidth, height: cropHeight,
+    x: -parseFloat(image.left) * cropWidth / 100,
+    y: -parseFloat(image.top) * cropHeight / 100, frame };
+}
+const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-8, `${a} != ${b}`);
+
+test('portrait framing doubles the face extent and centers it without stretching', () => {
+  const box = { x: .4, y: .4, width: .1, height: .15 };
   for (const [width, height] of [[1200, 800], [800, 1200]]) {
-    for (const box of [{ x: .05, y: .2, width: .2, height: .3 }, { x: .6, y: .5, width: .4, height: .5 }]) {
-      const layout = facePortraitLayout(box, width, height);
-      const cropWidth = parseFloat(layout.frame.width), cropHeight = parseFloat(layout.frame.height);
-      const imageWidth = cropWidth * parseFloat(layout.image.width) / 100;
-      const imageHeight = cropHeight * parseFloat(layout.image.height) / 100;
-      const left = cropWidth * parseFloat(layout.image.left) / 100;
-      const top = cropHeight * parseFloat(layout.image.top) / 100;
-      const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-8, `${a} != ${b}`);
-      close(imageWidth / width, imageHeight / height); // No stretching.
-      close(left + box.x * imageWidth, 0);
-      close(top + box.y * imageHeight, 0);
-      close(left + (box.x + box.width) * imageWidth, cropWidth);
-      close(top + (box.y + box.height) * imageHeight, cropHeight);
-      assert.equal(Math.max(cropWidth, cropHeight), 100);
+    const crop = cropPixels(box, width, height);
+    close(crop.width, 2 * Math.max(width * box.width, height * box.height));
+    close(crop.height, crop.width);
+    close(crop.x + crop.width / 2, width * (box.x + box.width / 2));
+    close(crop.y + crop.height / 2, height * (box.y + box.height / 2));
+    assert.deepEqual(crop.frame, { width: '100%', height: '100%' });
+  }
+});
+
+test('edge portraits shift inside the photo, preserving the entire face and avoiding blank borders', () => {
+  for (const [width, height] of [[1200, 800], [800, 1200]]) {
+    for (const box of [
+      { x: 0, y: 0, width: .1, height: .15 },
+      { x: .9, y: .85, width: .1, height: .15 },
+      { x: .6, y: .5, width: .4, height: .5 },
+      { x: 0, y: 0, width: 1, height: 1 },
+    ]) {
+      const crop = cropPixels(box, width, height);
+      assert.ok(crop.x >= -1e-8 && crop.y >= -1e-8);
+      assert.ok(crop.x + crop.width <= width + 1e-8 && crop.y + crop.height <= height + 1e-8);
+      assert.ok(crop.x <= box.x * width + 1e-8 && crop.y <= box.y * height + 1e-8);
+      assert.ok(crop.x + crop.width >= (box.x + box.width) * width - 1e-8);
+      assert.ok(crop.y + crop.height >= (box.y + box.height) * height - 1e-8);
+      close(parseFloat(crop.frame.width) / parseFloat(crop.frame.height), crop.width / crop.height);
     }
   }
 });

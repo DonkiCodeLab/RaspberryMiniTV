@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { build } from 'esbuild';
-import { photoPage } from '../src/photoLibrary.js';
+import { photoPage, photoDeleteRequest } from '../src/photoLibrary.js';
 import { photoStrings } from '../src/photoStrings.js';
 
 const require = createRequire(import.meta.url);
@@ -19,6 +19,26 @@ new Function('require', 'module', 'exports', result.outputFiles[0].text)(require
 const { PhotoGrid, PhotoPagination, DeletePhotoChoices, AlbumCard, PersonPortrait } = module.exports;
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `Photo ${id}`, relativePath: `${id}.jpg` }));
 const s = photoStrings('es');
+
+test('person photo tiles mark only that person in each photo and keep the full image visible', () => {
+  const photos = [{ id: 'a', name: 'Group', relativePath: 'a.jpg', width: 1200, height: 800 },
+    { id: 'b', name: 'Portrait', relativePath: 'b.jpg', width: 800, height: 1200 }];
+  const person = { id: 'ana', name: 'Ana', faceBoxes: {
+    a: [{ id: 'one', box: { x: .6, y: .2, width: .2, height: .3 } }],
+    b: [{ id: 'two', box: { x: .1, y: .4, width: .3, height: .2 } }],
+    other: [{ id: 'unrelated', box: { x: 0, y: 0, width: 1, height: 1 } }],
+  } };
+  const props = { page: photoPage(photos), selected: new Set(), s, language: 'es' };
+  const html = renderToStaticMarkup(React.createElement(PhotoGrid, { ...props, person }));
+  assert.equal((html.match(/class="photo-person-match__box"/g) || []).length, 2);
+  assert.match(html, /left:60%;top:20%;width:20%;height:30%/);
+  assert.match(html, /left:10%;top:40%;width:30%;height:20%/);
+  assert.equal((html.match(/aria-label="Ana"/g) || []).length, 2);
+  const normal = renderToStaticMarkup(React.createElement(PhotoGrid, props));
+  assert.doesNotMatch(normal, /photo-person-match/);
+  const legacy = renderToStaticMarkup(React.createElement(PhotoGrid, { ...props, person: { id: 'legacy', name: 'Legacy' } }));
+  assert.doesNotMatch(legacy, /photo-person-match__box/);
+});
 
 test('large photo albums only mount the current 100 tiles and retain viewer offsets', () => {
   const page = photoPage(photos, 2);
@@ -51,6 +71,45 @@ test('photo tiles request favorites without a watched button', () => {
   renderToStaticMarkup(React.createElement(PhotoGrid, {page: photoPage(photos.slice(0,2)), selected:new Set(), s,
     language:'es', renderMarks:(...args) => { calls.push(args); return null; }}));
   assert.deepEqual(calls, [['picture','0.jpg',false], ['picture','1.jpg',false]]);
+});
+
+test('person tiles offer compact favorite, original download and deletion of just the clicked photo', () => {
+  const photo = photos[0], calls = [], deleted = [];
+  const props = { page: photoPage([photo]), selected: new Set(), s, language: 'es', person: { id: 'ana', name: 'Ana' },
+    renderMarks: (...args) => { calls.push(args); return null; }, onDelete: photo => deleted.push(photo.id) };
+  const html = renderToStaticMarkup(React.createElement(PhotoGrid, props));
+  assert.deepEqual(calls, [['picture', photo.relativePath, false, true, true]]);
+  assert.match(html, /class="photo-card-actions"/);
+  assert.match(html, /download="Photo 0"/);
+  assert.ok(html.includes(`aria-label="${s.downloadOriginal}"`));
+  assert.ok(html.includes(`aria-label="${s.deletePhotos}"`));
+  assert.doesNotMatch(html, />No favorito</);
+  const grid = PhotoGrid(props);
+  grid.props.children[0].props.children[2].props.children[2].props.onClick();
+  assert.deepEqual(deleted, [photo.id]);
+});
+
+test('person deletion offers reference removal or global deletion and routes them to separate operations', () => {
+  const person = { id: 'ana', name: 'Ana' }, actions = [];
+  const html = renderToStaticMarkup(React.createElement(DeletePhotoChoices, { person, s }));
+  assert.ok(html.includes(s.removeMatches));
+  assert.ok(html.includes(s.removePersonReferenceHint));
+  assert.ok(html.includes(s.deleteGalleryHint));
+  assert.ok(!html.includes(s.removeReferenceHint));
+  const choices = DeletePhotoChoices({ person, s, onDelete: scope => actions.push(scope) });
+  choices.props.children[0].props.onClick();
+  choices.props.children[1].props.onClick();
+  assert.deepEqual(actions, ['person', 'gallery']);
+  assert.deepEqual(photoDeleteRequest(['a'], actions[0], 'person:ana', person.id), {
+    path: 'people/ana/remove', payload: { ids: ['a'] },
+  });
+  assert.deepEqual(photoDeleteRequest(['a'], actions[1], 'person:ana', person.id), {
+    path: 'photos/delete', payload: { ids: ['a'], scope: 'gallery' },
+  });
+  assert.deepEqual(photoDeleteRequest(['a'], 'album', 'holiday'), {
+    path: 'photos/delete', payload: { ids: ['a'], scope: 'album', folderId: 'holiday' },
+  });
+  assert.throws(() => photoDeleteRequest(['a'], 'person'), /Invalid/);
 });
 
 test('album deletion explicitly offers reference-only or global deletion; Gallery only offers global deletion', () => {

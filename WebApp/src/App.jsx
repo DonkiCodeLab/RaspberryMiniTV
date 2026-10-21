@@ -2759,10 +2759,10 @@ function MediaMarkIcon({ favorite = false, active = false }) {
   </svg>;
 }
 
-function MediaMarkButtons({ watched, favorite, onWatched, onFavorite, t }) {
+function MediaMarkButtons({ watched, favorite, onWatched, onFavorite, t, iconOnly = false }) {
   return <div className="media-marks">
     {onWatched && <button type="button" className={`media-mark${watched ? " is-watched" : ""}`} aria-pressed={Boolean(watched)} onClick={() => onWatched(!watched)}><MediaMarkIcon active={watched} /><span>{t(watched ? "mark_watched" : "mark_unwatched")}</span></button>}
-    {onFavorite && <button type="button" className={`media-mark${favorite ? " is-favorite" : ""}`} aria-pressed={Boolean(favorite)} onClick={() => onFavorite(!favorite)}><MediaMarkIcon favorite active={favorite} /><span>{t(favorite ? "mark_favorite" : "mark_not_favorite")}</span></button>}
+    {onFavorite && <button type="button" className={`media-mark${favorite ? " is-favorite" : ""}`} aria-pressed={Boolean(favorite)} aria-label={t(favorite ? "movie_favorite_remove" : "movie_favorite_add")} title={t(favorite ? "movie_favorite_remove" : "movie_favorite_add")} onClick={() => onFavorite(!favorite)}><MediaMarkIcon favorite active={favorite} />{!iconOnly && <span>{t(favorite ? "mark_favorite" : "mark_not_favorite")}</span>}</button>}
   </div>;
 }
 
@@ -6700,11 +6700,11 @@ export default function App() {
     }
   }
 
-  function renderMarks(type, id, allowWatched = true, allowFavorite = true) {
+  function renderMarks(type, id, allowWatched = true, allowFavorite = true, iconOnly = false) {
     const key = mediaMarkKey(type, id);
     const marks = mediaMarks[key] || {};
     const update = (field, value) => saveMarks({ ...mediaMarks, [key]: { ...marks, [field]: value } });
-    return <MediaMarkButtons watched={marks.watched} favorite={marks.favorite} onWatched={allowWatched ? (value) => update("watched", value) : undefined} onFavorite={allowFavorite ? (value) => update("favorite", value) : undefined} t={t} />;
+    return <MediaMarkButtons watched={marks.watched} favorite={marks.favorite} onWatched={allowWatched ? (value) => update("watched", value) : undefined} onFavorite={allowFavorite ? (value) => update("favorite", value) : undefined} t={t} iconOnly={iconOnly} />;
   }
 
   function renderBookActions(entry) {

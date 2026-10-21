@@ -4,7 +4,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, 
 import useBrowserBack from './useBrowserBack.js';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
-import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, photosWithoutPeople, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, photoDeleteRequest, pendingVariants, photosWithoutPeople, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import { facePortraitLayout } from './photoFacePortrait.js';
 import PhotoFaceViewer from './PhotoFaceViewer.jsx';
@@ -40,9 +40,9 @@ function PhotoMeta({ photo, s, language }) {
   return <div className="photo-meta"><span title={s.taken}>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
     <span>⌖ {hasLocation(photo) ? `${photo.latitude.toFixed(4)}°, ${photo.longitude.toFixed(4)}°` : s.noGps}</span></div>;
 }
-function PhotoImage({ photo, tiny = false, alt = photo.name, ...props }) {
+function PhotoImage({ photo, tiny = false, preview = false, alt = photo.name, ...props }) {
   const [error, setError] = useState(false), [ready, setReady] = useState(''), [visible, setVisible] = useState(false);
-  const element = useRef(null), url = getPictureContentUrl(photo.relativePath, tiny ? 'tiny' : 'thumb');
+  const element = useRef(null), url = getPictureContentUrl(photo.relativePath, tiny ? 'tiny' : preview ? 'preview' : 'thumb');
   useEffect(() => {
     if (!element.current) return;
     if (typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
@@ -69,7 +69,7 @@ export function PersonPortrait({ person, photo, s }) {
   return <span className="photo-person-portrait" title={!usable ? s.faceCoverMissing : person.name}>
     {!layout && <span className="photo-person-portrait__placeholder" role="img" aria-label={usable ? person.name : `${person.name}. ${s.faceCoverMissing}`}><Icon type="people" /></span>}
     {usable && <span className="photo-person-portrait__crop" style={{ ...layout?.frame, visibility: layout ? 'visible' : 'hidden' }}>
-      <PhotoImage key={photo.id} photo={photo} alt={person.name} style={layout?.image} loading="lazy" decoding="async"
+      <PhotoImage key={photo.id} photo={photo} preview alt={person.name} style={layout?.image} loading="lazy" decoding="async"
         onLoad={event => {
           const image = event.currentTarget;
           if (image.naturalWidth > 1 && image.naturalHeight > 1) setSize({ photoId: photo.id, width: image.naturalWidth, height: image.naturalHeight });
@@ -87,15 +87,40 @@ export function PhotoPagination({ page, onChange, s, label = s.photos }) {
   </nav>;
 }
 
-export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks, coverMode = false, coverPhotoId, onCover, coverBusy = false }) {
+export function PersonPhotoPreview({ photo, person }) {
+  const [ratio, setRatio] = useState(photo.width && photo.height ? photo.width / photo.height : null);
+  const faces = person.faceBoxes?.[photo.id] || [];
+  return <span className="photo-person-match" style={ratio ? {
+    width: `${100 * Math.min(1, ratio / 1.12)}%`, height: `${100 * Math.min(1, 1.12 / ratio)}%`,
+  } : { width: '100%', height: '100%' }}>
+    <PhotoImage photo={photo} loading="lazy" decoding="async" onLoad={event => {
+      const image = event.currentTarget;
+      if (image.naturalWidth > 1 && image.naturalHeight > 1) setRatio(image.naturalWidth / image.naturalHeight);
+    }} />
+    {ratio && faces.map(face => facePortraitLayout(face.box, 1, 1) && <span key={face.id}
+      className="photo-person-match__box" role="img" aria-label={person.name}
+      style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }} />)}
+  </span>;
+}
+
+export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks, person, onDelete, coverMode = false, coverPhotoId, onCover, coverBusy = false }) {
   return <div className="photo-mosaic">{page.items.map((photo, index) => <article key={photo.id} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
     <button type="button" className="photo-tile__image" aria-label={`${coverMode ? s.useCover : actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={coverMode ? coverPhotoId === photo.id : actionMode ? selected.has(photo.id) : undefined}
       disabled={coverMode && coverBusy} onClick={() => coverMode ? onCover(photo.id) : actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
-      <PhotoImage photo={photo} loading="lazy" decoding="async" />{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
+      {person ? <PersonPhotoPreview key={photo.id} photo={photo} person={person} /> : <PhotoImage photo={photo} loading="lazy" decoding="async" />}{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
       {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
       {coverPhotoId === photo.id && <span className="photo-cover-label">{s.cover}</span>}
     </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
-    {renderMarks?.('picture', photo.relativePath, false)}
+    {person ? <div className="photo-card-actions">
+      {renderMarks?.('picture', photo.relativePath, false, true, true)}
+      <a className="media-mark" href={getPictureContentUrl(photo.relativePath, undefined, { download: true })}
+        download={photo.name} title={s.downloadOriginal} aria-label={s.downloadOriginal}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" /></svg>
+      </a>
+      <button className="media-mark photo-card-actions__delete" type="button" title={s.deletePhotos} aria-label={s.deletePhotos} onClick={() => onDelete(photo)}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>
+      </button>
+    </div> : renderMarks?.('picture', photo.relativePath, false)}
   </article>)}</div>;
 }
 
@@ -171,25 +196,29 @@ function FolderDialog({ mode, folders, current, selected, person, s, onClose, on
   </form></Modal>;
 }
 
-export function DeletePhotoChoices({ album, s, busy, onDelete }) {
+export function DeletePhotoChoices({ album, person, s, busy, onDelete }) {
   return <div className="photo-delete-choices">
-    {album && <button type="button" className="photo-delete-choice" disabled={busy} onClick={() => onDelete('album')}><strong>{s.removeReference}</strong><span>{s.removeReferenceHint}</span></button>}
+    {(album || person) && <button type="button" className="photo-delete-choice" disabled={busy} onClick={() => onDelete(person ? 'person' : 'album')}><strong>{person ? s.removeMatches : s.removeReference}</strong><span>{person ? s.removePersonReferenceHint : s.removeReferenceHint}</span></button>}
     <button type="button" className="photo-delete-choice photo-delete-choice--permanent" disabled={busy} onClick={() => onDelete('gallery')}><strong>{s.deleteGallery}</strong><span>{s.deleteGalleryHint}</span></button>
   </div>;
 }
 
-function DeleteDialog({ selected, album, current, s, onClose, onComplete }) {
+function DeleteDialog({ selected, album, person, current, s, onClose, onComplete }) {
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const working = useRef(false);
   async function remove(scope) {
     if (working.current) return;
     working.current = true; setBusy(true); setError('');
-    try { onComplete(await photoRequest('photos/delete', { ids: [...selected], scope, ...(scope === 'album' ? { folderId: current } : {}) })); }
+    try {
+      const { path, payload } = photoDeleteRequest([...selected], scope, current, person?.id);
+      const result = await photoRequest(path, payload);
+      await onComplete({ ...result, personReference: scope === 'person' });
+    }
     catch (error) { setError(error.message); working.current = false; setBusy(false); }
   }
   return <Modal title={s.deletePhotos} s={s} onClose={onClose} busy={busy}>
-    <p className="photo-delete-summary">{selected.size} {s.photos} · {album ? s.deleteQuestion : s.deleteGalleryHint}</p>
-    <DeletePhotoChoices album={album} s={s} busy={busy} onDelete={remove} />
+    <p className="photo-delete-summary">{selected.size} {s.photos} · {album || person ? s.deleteQuestion : s.deleteGalleryHint}</p>
+    <DeletePhotoChoices album={album} person={person} s={s} busy={busy} onDelete={remove} />
     {error && <p role="alert" className="dialog-error">{error}</p>}
     <footer><button type="button" className="dialog-button" disabled={busy} onClick={onClose}>{s.cancel}</button></footer>
   </Modal>;
@@ -322,7 +351,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   async function complete(result) {
     const mode = dialog?.mode; await closeDialog();
     setSelected(new Set());
-    if (mode === 'delete') { setViewer(null); setNotice(result.cleanupPending ? s.cleanupPending : result.removed ? s.referencesRemoved : s.photosDeleted); return; }
+    if (mode === 'delete') { setViewer(null); setNotice(result.cleanupPending ? s.cleanupPending : result.personReference ? s.removedMatches : result.removed ? s.referencesRemoved : s.photosDeleted); return; }
     if (result.folderId || (mode === 'create' && result.id)) navigate(result.folderId || result.id);
     setNotice(mode === 'upload' ? s.imported : mode === 'move' ? s.moved : mode === 'create' ? s.albumCreated : s.saved);
   }
@@ -409,12 +438,12 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
         renderGrid={page => <PhotoGrid page={page} actionMode={actionMode} selected={selected} toggle={toggle} onOpen={initial => setViewer({ photos: currentPhotos, initial })} s={s} language={language} renderMarks={renderMarks} />} /> : <>
       <PhotoPagination page={page} onChange={changePage} s={s} />
       <PhotoGrid page={page} actionMode={actionMode} selected={selected} toggle={toggle} onOpen={initial => setViewer({ photos: currentPhotos, initial })} s={s} language={language} renderMarks={renderMarks}
-        coverMode={choosingCover && !!person} coverPhotoId={person?.coverPhotoId} onCover={chooseCover} coverBusy={busy} />
+        person={person} onDelete={photo => setDialog({ mode: 'delete', ids: [photo.id] })} coverMode={choosingCover && !!person} coverPhotoId={person?.coverPhotoId} onCover={chooseCover} coverBusy={busy} />
       <PhotoPagination page={page} onChange={changePage} s={s} /></>}
     </div>}
     {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{current === 'gallery' ? s.uploadHint : s.emptyHint}</p></div>}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
-    {dialog?.mode === 'delete' && <DeleteDialog selected={selected} album={isAlbum} current={current} s={s} onClose={closeDialog} onComplete={complete} />}
+    {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} album={isAlbum} person={person} current={current} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog && !['upload', 'delete'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
     {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} livePhotos={index.byId}
       faces={data.faces} revision={data.revision} onChanged={() => refresh()} highlightPersonId={person?.id}

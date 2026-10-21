@@ -3,6 +3,14 @@ export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
 export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
 export const PHOTO_PAGE_SIZE = 100;
 
+export function photoDeleteRequest(ids, scope, folderId, personId) {
+  if (scope === 'person' && personId) return { path: `people/${personId}/remove`, payload: { ids } };
+  if (scope === 'gallery' || scope === 'album') return {
+    path: 'photos/delete', payload: { ids, scope, ...(scope === 'album' ? { folderId } : {}) },
+  };
+  throw new Error('Invalid photo deletion scope');
+}
+
 export function photosWithoutPeople(photos) {
   return photos.filter(photo => !photo.sourceId && photo.faceState === 'done' && photo.faceCount === 0);
 }

@@ -192,6 +192,12 @@ class PeopleAnalysisTests(unittest.TestCase):
             face = next(face for face in self.store.photo_faces(cover['photoId'])['faces'] if face['personId'] == person['id'])
             self.assertEqual(cover, {'id': face['id'], 'photoId': cover['photoId'], 'box': face['box']})
             self.assertNotIn('encoding', str(cover))
+            self.assertEqual(set(person['faceBoxes']), set(person['photoIds']))
+            for photo_id, boxes in person['faceBoxes'].items():
+                expected = [{'id': f['id'], 'box': f['box']} for f in self.store.photo_faces(photo_id)['faces']
+                            if f['personId'] == person['id'] and f['box']]
+                self.assertEqual(boxes, expected)
+            self.assertNotIn('encoding', str(person['faceBoxes']))
         self.assertEqual(len({person['coverFace']['box']['x'] for person in people}), 4)
 
     def test_chosen_portrait_updates_after_face_correction_and_photo_deletion(self):
@@ -206,6 +212,8 @@ class PeopleAnalysisTests(unittest.TestCase):
         people = {p['id']: p for p in self.store.snapshot()['people']}
         self.assertEqual(people[assigned]['coverFace'], saved['coverFace'])
         self.assertNotEqual(people[person['id']]['coverFace']['photoId'], chosen)
+        self.assertNotIn(chosen, people[person['id']]['faceBoxes'])
+        self.assertEqual(people[assigned]['faceBoxes'][chosen][0]['id'], saved['coverFace']['id'])
         next_cover = people[person['id']]['coverFace']['photoId']
         self.store.delete_photos([next_cover], 'gallery')
         remaining = next(p for p in self.store.snapshot()['people'] if p['id'] == person['id'])

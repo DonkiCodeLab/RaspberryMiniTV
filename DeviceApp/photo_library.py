@@ -568,18 +568,21 @@ class PhotoLibrary:
             for person in people:
                 person['photoIds'] = person_photos.get(person['id'], [])
             covers = {row['person']: row['photo'] for row in db.execute('SELECT person, photo FROM person_covers')}
-            portraits = {}
-            # One lightweight crop per person, preferring the chosen cover and then
-            # the first album photo with a rectangle. Never send facial encodings.
+            portraits, face_boxes = {}, {}
+            # Lightweight rectangles for checking each match, plus the preferred cover.
+            # Never send facial encodings.
             for row in db.execute('''SELECT f.id, f.person, f.photo, f.box FROM face_detections f
                     LEFT JOIN person_covers c ON c.person=f.person
                     WHERE f.person IS NOT NULL AND f.box IS NOT NULL
                     ORDER BY f.person, (f.photo=c.photo) DESC, f.photo, f.manual DESC, f.rowid'''):
+                box = json.loads(row['box'])
+                face_boxes.setdefault(row['person'], {}).setdefault(row['photo'], []).append({'id': row['id'], 'box': box})
                 if row['person'] not in portraits:
-                    portraits[row['person']] = {'id': row['id'], 'photoId': row['photo'], 'box': json.loads(row['box'])}
+                    portraits[row['person']] = {'id': row['id'], 'photoId': row['photo'], 'box': box}
             for person in people:
                 person['coverPhotoId'] = covers.get(person['id']) if covers.get(person['id']) in person['photoIds'] else None
                 person['coverFace'] = portraits.get(person['id'])
+                person['faceBoxes'] = face_boxes.get(person['id'], {})
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
             known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY name, id")]
