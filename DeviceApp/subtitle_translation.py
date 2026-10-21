@@ -75,7 +75,7 @@ def translate_batch(data, batch, language):
     result = _post_response(data, {'model': data['model'], 'store': False, 'max_output_tokens': 12000,
         'instructions': instructions,
         'input': [{'role': 'user', 'content': [{'type': 'input_text', 'text': json.dumps({'cues': batch}, ensure_ascii=False)}]}],
-        'text': {'format': {'type': 'json_schema', 'name': 'subtitle_translation', 'strict': True, 'schema': schema}}}, timeout=120)
+        'text': {'format': {'type': 'json_schema', 'name': 'subtitle_translation', 'strict': True, 'schema': schema}}}, timeout=120, operation='subtitle')
     if not isinstance(result, dict) or set(result) != {'cues'} or not isinstance(result['cues'], list) or len(result['cues']) != len(batch):
         invalid()
     translated = []
@@ -142,6 +142,7 @@ class SubtitleTranslations:
             self.jobs[job_id].update(changes)
 
     def _run(self, job_id, video, root, source_id, language, data, request_slot):
+        data = {**data, '_usage_group': job_id}
         try:
             before = identity(video)
             vtt = browser_subtitles.read_track(video, root, source_id)

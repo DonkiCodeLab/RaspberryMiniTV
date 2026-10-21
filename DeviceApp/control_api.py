@@ -22,6 +22,7 @@ import book_metadata
 import youtube_search
 import movie_trailers
 from catalog_ai import AISettings, AIError, plan_query, test_connection, validate_plan, redact_debug, list_models, MODEL_RE
+from ai_usage_api import create_usage_blueprint
 from ai_catalog import build_catalog, execute_plan, SECTION_FIELDS
 from catalog_file import (CatalogFileStore, SECTIONS as FILE_CATALOG_SECTIONS, export_catalog,
                           catalog_status, upload_catalog, delete_catalog_file, compact_records,
@@ -180,6 +181,7 @@ SUBTITLE_SETTINGS_PATH = os.path.join(BASE_DIR, "subtitle_settings.json")
 GAME_SETTINGS_PATH = os.path.join(BASE_DIR, "game_settings.json")
 AI_SETTINGS_PATH = os.path.join(BASE_DIR, "ai_settings.json")
 ai_settings_store = AISettings(AI_SETTINGS_PATH)
+app.register_blueprint(create_usage_blueprint(lambda: ai_settings_store))
 photo_library_store = None
 photo_library_init_lock = threading.Lock()
 browser_playback_store = None

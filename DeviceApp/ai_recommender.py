@@ -375,7 +375,7 @@ When giving similar-title advice you may draw on ordinary film knowledge, but ex
             "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps(user_input, ensure_ascii=False)}]}],
             "text": {"format": {"type": "json_schema", "name": "catalog_recommendations", "strict": True,
                                   "schema": _schema(kind)}}}
-    message, question, updates, suggestions = _validate_response(_post_response(data, body), kind, shortlist)
+    message, question, updates, suggestions = _validate_response(_post_response(data, body, operation='recommendation'), kind, shortlist)
     preferences, warnings = _apply_updates(preferences, updates, prompt, history)
     recommendations, seen = [], set()
     for suggestion in suggestions:

@@ -25,6 +25,7 @@ from flask import Blueprint, jsonify, request
 from photo_import import validate_import_records
 from photo_previews import ImageWorkLock, PhotoPreviews
 from photo_faces import FacePaused, LocalFaceEngine, INSTALL_COMMAND
+from ai_usage import track_call
 
 try:
     from pillow_heif import register_heif_opener
@@ -123,12 +124,19 @@ def edit_image(path, style, credentials):
         data=json.dumps(payload).encode(), headers={'Authorization': 'Bearer ' + credentials['apiKey'],
                                                    'Content-Type': 'application/json'}, method='POST')
     try:
-        with urllib.request.urlopen(req, timeout=300) as response:
-            raw = response.read(32 * 1024 * 1024 + 1)
-        if len(raw) > 32 * 1024 * 1024:
-            raise ValueError()
-        result = json.loads(raw)
-        return base64.b64decode(result['data'][0]['b64_json'], validate=True)
+        with track_call(credentials, payload['model'], 'image', 'images/edits') as meter:
+            try:
+                with urllib.request.urlopen(req, timeout=300) as response:
+                    meter.response(getattr(response, 'status', None), getattr(response, 'headers', None))
+                    raw = response.read(32 * 1024 * 1024 + 1)
+            except urllib.error.HTTPError as error:
+                meter.response(error.code, error.headers)
+                raise
+            if len(raw) > 32 * 1024 * 1024:
+                raise ValueError()
+            result = json.loads(raw)
+            meter.payload = result
+            return base64.b64decode(result['data'][0]['b64_json'], validate=True)
     except urllib.error.HTTPError as error:
         messages = {401: 'Revisa la clave de OpenAI en el Dashboard.', 403: 'La cuenta no tiene acceso al modelo de imágenes.',
                     429: 'OpenAI ha alcanzado el límite de uso o cuota. Reintenta más tarde.',
@@ -1015,6 +1023,7 @@ class PhotoLibrary:
         return {'ok': True, 'jobId': ident, 'total': len(pending)}
 
     def _generate(self, ident, folder, pending, credentials):
+        credentials = {**credentials, '_usage_group': ident}
         try:
             for index, (source, relative, name, style) in enumerate(pending):
                 # Respect the configured request rate without retrying uncertain paid calls automatically.

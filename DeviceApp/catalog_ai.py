@@ -10,6 +10,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from ai_usage import track_call
 
 
 DEFAULTS = {"enabled": False, "apiKey": "", "model": "gpt-6.1-sol", "requestsPerMinute": 10}
@@ -122,7 +123,7 @@ class AISettings:
     def credentials(self):
         """Private server-side snapshot; never serialize this into an HTTP response."""
         with self.lock:
-            return self._load()
+            return {**self._load(), "_usage_path": str(self.path.with_suffix('.usage.sqlite3'))}
 
     def update(self, changes):
         if not isinstance(changes, dict) or set(changes) - (set(DEFAULTS) | {"clearApiKey"}):
@@ -229,6 +230,9 @@ def _plan_schema(section):
 def _private_settings(settings, require_enabled=False):
     values = settings.credentials() if isinstance(settings, AISettings) else settings
     data = _validate_settings(values)
+    for field in ('_usage_path', '_usage_group'):
+        if field in values:
+            data[field] = values[field]
     if require_enabled and not data["enabled"]:
         raise AIError("Activa la IA en los ajustes del dashboard.", "AI_DISABLED", 409)
     if not data["apiKey"]:
@@ -242,7 +246,7 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def _request_json(data, url, body=None, method="POST", content_type="application/json", timeout=30,
-                  input_error="AI_MODEL_ERROR", diagnostics=None):
+                  input_error="AI_MODEL_ERROR", diagnostics=None, meter=None):
     started = time.monotonic()
     if diagnostics is not None:
         diagnostics["stage"] = "provider_request"
@@ -253,6 +257,8 @@ def _request_json(data, url, body=None, method="POST", content_type="application
                                                   "Content-Type": content_type, "Accept": "application/json"}, method=method)
         opener = urllib.request.build_opener(_NoRedirect)
         with opener.open(request, timeout=timeout) as response:
+            if meter:
+                meter.response(getattr(response, 'status', None), getattr(response, 'headers', None))
             raw = response.read(MAX_RESPONSE_BYTES + 1)
             _capture_response(diagnostics, data, raw, getattr(response, "status", None), getattr(response, "headers", None), started)
         if diagnostics is not None:
@@ -262,6 +268,8 @@ def _request_json(data, url, body=None, method="POST", content_type="application
                           details={"reason": "response_too_large" if raw else "empty_response", "maxBytes": MAX_RESPONSE_BYTES})
         payload = json.loads(raw)
     except urllib.error.HTTPError as exc:
+        if meter:
+            meter.response(exc.code, exc.headers)
         if diagnostics is not None:
             try:
                 raw = exc.read(MAX_RESPONSE_BYTES + 1)
@@ -308,12 +316,15 @@ def list_models(settings):
     return sorted(models.values(), key=lambda item: (-item["created"], item["id"]))
 
 
-def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR", diagnostics=None):
+def _post_response(data, body, timeout=30, input_error="AI_MODEL_ERROR", diagnostics=None, operation='search'):
     if diagnostics is not None:
         diagnostics.setdefault("request", {}).update({"model": body["model"], "maxOutputTokens": body["max_output_tokens"],
             "fileIds": [part["file_id"] for item in body.get("input", []) for part in item.get("content", [])
                         if part.get("type") == "input_file" and "file_id" in part]})
-    payload = _request_json(data, OPENAI_URL, json.dumps(body).encode(), timeout=timeout, input_error=input_error, diagnostics=diagnostics)
+    with track_call(data, body['model'], operation, 'responses') as meter:
+        payload = _request_json(data, OPENAI_URL, json.dumps(body).encode(), timeout=timeout,
+                                input_error=input_error, diagnostics=diagnostics, meter=meter)
+        meter.payload = payload
     if diagnostics is not None:
         diagnostics["stage"] = "provider_status"
         if isinstance(payload, dict):
@@ -417,7 +428,7 @@ def test_connection(settings):
             "instructions": "This is a connection test. Return the required JSON object with ok true.",
             "input": "Check connection.",
             "text": {"format": {"type": "json_schema", "name": "connection_test", "strict": True, "schema": schema}}}
-    result = _post_response(data, body)
+    result = _post_response(data, body, operation='connection_test')
     if not isinstance(result, dict) or set(result) != {"ok"} or result["ok"] is not True:
         raise AIError("No se pudo verificar la conexión con OpenAI.", "AI_INVALID_RESPONSE", 502)
     return {"ok": True, "model": data["model"]}

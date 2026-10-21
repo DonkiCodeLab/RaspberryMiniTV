@@ -573,6 +573,42 @@ acceder a los distintos perfiles. Al cambiar de usuario se cancela la espera
 y se descarta cualquier respuesta del perfil anterior; las revisiones del
 servidor protegen también las ediciones y borrados simultáneos.
 
+### Consumo y costes de OpenAI
+
+**Dashboard → Servicios auxiliares → OpenAI → Consumo** muestra el registro
+persistente de búsquedas, recomendaciones, traducciones de subtítulos, imágenes y
+pruebas de conexión hechas por esta Raspberry. Incluye llamadas, tokens y coste
+estimado, gráficas por día, semana (lunes), mes y año, filtros de fechas, función y
+modelo, y un historial paginado con detalles. Las traducciones y generaciones por
+lotes permiten filtrar una tarea y sumar sus llamadas. Fechas y agrupaciones usan
+UTC para poder compararlas con los costes diarios de OpenAI; los importes son USD.
+
+El registro comienza al instalar esta versión del servidor. Guarda metadatos y
+consumo, sin consultas, respuestas, subtítulos ni fotografías. Cada llamada
+conserva la tarifa utilizada: actualizar las tarifas no recalcula el pasado.
+Las tarifas verificadas se mantienen en `DeviceApp/ai_usage.py`; los modelos,
+modalidades o consumos sin tarifa compatible aparecen sin estimación. Los
+errores y las interrupciones pueden tener coste: si falta el consumo, se señala
+como desconocido y no se considera cero. El estado mostrado es el de la API,
+aunque la aplicación pudiera rechazar después el formato de una respuesta.
+Las subidas de catálogo y la consulta de modelos no se incluyen en este registro
+de inferencias; el uso de Codex con la suscripción de ChatGPT tampoco.
+
+**Importar costes históricos de OpenAI** es opcional. Introduce una clave
+**Admin API**, el ID del proyecto y, si lo necesitas, el **ID** de la clave API
+como filtro (no su secreto). La clave de administración se guarda con permisos
+restringidos en la Raspberry y nunca se devuelve al navegador. Guarda y pulsa
+**Importar fechas seleccionadas** para recuperar hasta 366 días por operación.
+La importación es explícita, paginada y reemplaza los importes del intervalo;
+repetirla no duplica el gasto. Un error conserva los datos anteriores.
+
+Los importes comunicados por OpenAI se muestran separados de las estimaciones.
+Pueden incluir actividad de otros dispositivos en ese proyecto/clave y no se
+filtran por función, modelo o tarea local. Se indica cuántos días se han
+importado; los que no se han importado quedan sin importe. OpenAI puede revisar
+los datos diarios. Este histórico proporciona totales, no las llamadas antiguas
+que la aplicación no registró. Requiere actualizar tanto WebApp como DeviceApp.
+
 ## Codex en el dashboard
 
 **Dashboard → Codex** incorpora conversaciones con el Codex de la Raspberry:

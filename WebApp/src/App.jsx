@@ -23,6 +23,7 @@ import MediaCredits from "./MediaCredits.jsx";
 import { PersonCatalogContext } from "./personCatalog.js";
 import CatalogAI, { CatalogAIButton, CatalogAIResult } from "./CatalogAI.jsx";
 import OpenAISettings from "./OpenAISettings.jsx";
+import OpenAIUsage from "./OpenAIUsage.jsx";
 import CodexPanel from "./CodexPanel.jsx";
 import OmdbSettings from "./OmdbSettings.jsx";
 import ImdbRating from "./ImdbRating.jsx";
@@ -5892,6 +5893,7 @@ function RaspberryPage({
             <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-openai-panel" role="tabpanel"
               aria-labelledby="auxiliary-openai-tab" hidden={selectedAuxiliaryService !== "openai"} tabIndex={0}>
               <OpenAISettings language={raspberryLanguage} />
+              <OpenAIUsage language={raspberryLanguage} />
             </div>
             <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-omdb-panel" role="tabpanel"
               aria-labelledby="auxiliary-omdb-tab" hidden={selectedAuxiliaryService !== "omdb"} tabIndex={0}>

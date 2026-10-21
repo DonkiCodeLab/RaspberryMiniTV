@@ -1223,6 +1223,46 @@ Pruebas sin usar una clave real:
 `python -m unittest discover -s DeviceApp/tests -p 'test_*ai*.py'` (requiere Flask).
 Hay pruebas adicionales de proyección/filtrado en `tests/test_ai_catalog.py`.
 
+### Registro de consumo de la API
+
+`ai_usage.py` registra las inferencias en `ai_settings.usage.sqlite3`, junto a
+`ai_settings.json` (archivo 0600). Inicia el registro antes de enviar la petición
+y captura consumo, modelo efectivo, ID de petición, duración, estado, tarea y
+tarifa aplicada. El almacenamiento usa enteros en nanodólares para evitar errores
+de redondeo al sumar; la API devuelve USD. No persiste prompts ni contenido.
+Si no se puede iniciar el registro se evita enviar una petición de pago; si falla
+su finalización, la fila pendiente conserva la incertidumbre sin repetirla.
+
+Rutas protegidas por el PIN y con `Cache-Control: no-store`:
+
+- `GET /settings/ai/usage?start=YYYY-MM-DD&end=YYYY-MM-DD&period=day|week|month|year`:
+  totales, serie y desglose local, costes importados y primeras 50 llamadas.
+  Los extremos son inclusivos y UTC. Admite `operation`, `model`, `group` y
+  `page` (desde cero); los totales siempre corresponden a todo el filtro.
+- `GET|POST /settings/ai/billing`: configuración de consulta histórica.
+  POST admite `adminKey`, `projectId`, `apiKeyId` y `clearAdminKey`. Una clave
+  vacía conserva la anterior. GET solo devuelve presencia de clave e IDs.
+- `POST /settings/ai/billing/sync` con `{start,end}`: consulta explícita a
+  `/v1/organization/costs`, limitada a 366 días, con paginación, sin redirecciones
+  ni reintentos automáticos. Se exige proyecto para acotar el coste recuperado.
+  Cada intervalo se sustituye en una transacción, aislado por proyecto/ID de
+  clave. Si falla una página o cambia la configuración no se aplica el resultado.
+
+Las tarifas estándar verificadas el 21/10/2026 están en `TEXT_RATES` e
+`IMAGE_RATES`, con [precios oficiales](https://developers.openai.com/api/docs/pricing).
+La caché se descuenta de la entrada; los tokens de razonamiento ya están
+incluidos en la salida. Las ediciones de imágenes distinguen entrada de texto e
+imagen y no aplican descuentos de caché de la API Responses. Se conserva una
+copia de la tarifa por llamada. Modelos desconocidos, modalidades no soportadas,
+contextos largos de GPT-6 o datos ausentes permanecen sin importe estimado.
+
+El registro no reconstruye llamadas anteriores, no incluye la suscripción de
+Codex y no sustituye la facturación de OpenAI. Sus importes no se suman a los
+de la [API de costes](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/usage/methods/costs).
+Incluye `ai_settings.usage.sqlite3` en las copias privadas de seguridad: contiene
+el historial y, si se configura, la clave Admin. Pruebas sin llamadas de pago:
+`python -m unittest discover -s DeviceApp/tests -p 'test_ai_usage.py'`.
+
 ## Codex en el dashboard
 
 La pestaña **Dashboard → Codex** permite enviar prompts y ver respuestas, comandos,
