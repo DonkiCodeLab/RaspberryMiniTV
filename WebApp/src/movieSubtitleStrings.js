@@ -1,4 +1,6 @@
-const strings = {
+import { normalizeLanguage } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
+const strings = withLanguages({
   es: {
     availableTitle: "Subtítulos disponibles", checking: "Comprobando subtítulos…", inventoryFailed: "No se pudieron comprobar los subtítulos.",
     external: "SRT externo", embedded: "Pistas integradas", notFound: "No se han encontrado", unknown: "No se ha podido comprobar", unknownLanguage: "Idioma no indicado",
@@ -80,8 +82,8 @@ const strings = {
     SUBTITLE_INVALID_SETTINGS: "Check your OpenSubtitles account details.",
     SUBTITLE_DEMO: "Connect to the Raspberry to configure OpenSubtitles and download subtitles.",
   },
-};
+});
 
 export function movieSubtitleStrings(language) {
-  return strings[String(language || "es").slice(0, 2)] || strings.es;
+  return strings[normalizeLanguage(language)] || strings.es;
 }

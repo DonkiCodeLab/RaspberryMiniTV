@@ -1,3 +1,5 @@
+from ui_translations import translate as ui_translate
+from languages import SUPPORTED_LANGUAGES, LANGUAGES as UI_LANGUAGES, normalize_language, language_info
 from photo_library import PhotoLibrary, PhotoError, create_photo_blueprint
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
@@ -159,7 +161,6 @@ DEFAULT_SETTINGS = {
     "tmdb_api_key": "",
     "tmdb_bearer_token": "",
 }
-SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 
 app = Flask(__name__)
 app.register_blueprint(create_codex_blueprint())
@@ -271,10 +272,7 @@ def game_settings():
 
 
 def normalize_language_code(language):
-    language = str(language or "").strip().lower()
-    if language == "cat":
-        return "ca"
-    return language if language in SUPPORTED_LANGUAGES else DEFAULT_SETTINGS["language"]
+    return normalize_language(language, DEFAULT_SETTINGS["language"])
 
 
 def load_settings():
@@ -500,7 +498,7 @@ def save_movie_library(items):
 
 
 @media_library_transaction
-def upsert_movie_metadata(relative_path, name, tmdb_id, filename="", original_filename=None):
+def upsert_movie_metadata(relative_path, name, tmdb_id, filename="", original_filename=None, file_info=None):
     safe_relative_path = str(relative_path or "").strip()
     if not safe_relative_path:
         return None
@@ -516,6 +514,11 @@ def upsert_movie_metadata(relative_path, name, tmdb_id, filename="", original_fi
     }
     if original_filename is not None:
         item["originalFileName"] = os.path.basename(original_filename)
+    if file_info is not None:
+        target = resolve_relative_video_path(safe_relative_path, MOVIES_DIR)
+        if not media_file_info.is_current(file_info, target, item.get("originalFileName")):
+            raise OSError("Video changed before saving its information")
+        item["fileInfo"] = file_info
     items[safe_relative_path] = item
     save_media_library(library)
     queue_tmdb_artwork('movie', item)
@@ -2801,6 +2804,7 @@ def import_torrent_movie(job, source):
     ensure_media_directories()
     movie = job["movie"]
     filename = f"{slugify(movie['name'], 'movie')[:120]}-{movie['id']}-{job['id'][:12]}{source.suffix.lower()}"
+    measured = media_file_info.inspect_file(source, source.name)
     target = os.path.join(MOVIES_DIR, filename)
     previous_path = None
     published = False
@@ -2824,6 +2828,8 @@ def import_torrent_movie(job, source):
                 if previous_path and os.path.splitext(previous_path)[1].lower() == source.suffix.lower():
                     target = previous_path
                 relative = os.path.relpath(target, VIDEOS_DIR).replace("\\", "/")
+                if not media_file_info.is_current(measured, source, source.name):
+                    raise OSError("Downloaded video changed during import")
                 if os.path.lexists(target) and not os.path.samefile(source, target):
                     if os.path.islink(target) or target != previous_path or not job.get("overwriteExisting"):
                         raise ValueError("Ya existe otro fichero con el nombre de destino.")
@@ -2836,6 +2842,11 @@ def import_torrent_movie(job, source):
                 item = {**previous, "relativePath": relative, "name": movie["name"],
                         "tmdbId": movie["id"], "file": os.path.basename(target),
                         "originalFileName": source.name}
+                # A retry of the same finished import keeps the saved analysis unchanged.
+                if media_file_info.is_current(previous.get("fileInfo"), target, source.name):
+                    item["fileInfo"] = previous["fileInfo"]
+                else:
+                    item["fileInfo"] = media_file_info.for_published_file(measured, target)
                 if previous.get("relativePath") != relative:
                     library["movies"].pop(previous.get("relativePath"), None)
                 library["movies"][relative] = item
@@ -3153,6 +3164,7 @@ def upload_movie():
         tmdb_id,
         target_filename,
         original_filename=original_filename,
+        file_info=media_file_info.inspect_file(target_path, original_filename),
     )
     log_upload_event(f"movie saved relative={relative_path} target={target_path} size={saved_size}")
     return jsonify(
@@ -3255,6 +3267,7 @@ def upload_movie_raw():
         tmdb_id,
         target_filename,
         original_filename=original_filename,
+        file_info=media_file_info.inspect_file(target_path, original_filename),
     )
     log_upload_event(f"movie raw saved relative={relative_path} target={target_path} size={saved_size}")
     return jsonify(
@@ -3712,12 +3725,11 @@ def media_file_details():
             or os.path.commonpath([root, os.path.realpath(target)]) != root):
         return jsonify({"error": "Video not found"}), 404
     try:
-        details = media_file_info.inspect_file(target)
+        relative = os.path.relpath(target, VIDEOS_DIR).replace("\\", "/")
+        metadata = load_movie_library().get(relative, {})
+        details = media_file_info.stored_file_info(target, metadata)
     except OSError:
         return jsonify({"error": "Video not found"}), 404
-    relative = os.path.relpath(target, VIDEOS_DIR).replace("\\", "/")
-    metadata = load_movie_library().get(relative, {})
-    details["originalFileName"] = metadata.get("originalFileName") or None
     response = jsonify(details)
     response.headers["Cache-Control"] = "no-store"
     return response
@@ -3861,7 +3873,12 @@ def save_movie():
     if not os.path.exists(movie_path):
         return jsonify({"error": "Movie file not found"}), 404
 
-    item = upsert_movie_metadata(relative_path, name, tmdb_id, os.path.basename(movie_path))
+    metadata = load_movie_library().get(relative_path, {})
+    original = metadata.get("originalFileName") or None
+    file_info = metadata.get("fileInfo")
+    if not media_file_info.is_current(file_info, movie_path, original):
+        file_info = media_file_info.inspect_file(movie_path, original)
+    item = upsert_movie_metadata(relative_path, name, tmdb_id, os.path.basename(movie_path), file_info=file_info)
     return jsonify({"ok": True, "item": item})
 
 
@@ -4268,9 +4285,7 @@ def get_language():
 @app.route("/settings/language", methods=["POST"])
 def update_language():
     data = request.get_json(force=True, silent=True) or {}
-    language = str(data.get("language") or "").strip().lower()
-    if language == "cat":
-        language = "ca"
+    language = normalize_language(data.get("language"), fallback=None) if isinstance(data, dict) else None
     if language not in SUPPORTED_LANGUAGES:
         return jsonify({"error": "Unsupported language", "supported": sorted(SUPPORTED_LANGUAGES)}), 400
 
@@ -4475,7 +4490,7 @@ def queue_tmdb_artwork(kind, item, refresh=False):
 @app.route("/tmdb/library", methods=["GET"])
 def cached_tmdb_library():
     language = request.args.get("language", "es-ES")
-    if language not in ("es-ES", "ca-ES", "en-US"):
+    if language not in {item["tmdb"] for item in UI_LANGUAGES}:
         return jsonify({"error": "Idioma no permitido"}), 400
     library = load_media_library()
     result = {"ratings": cached_library_ratings(library, omdb_ratings)}
@@ -4848,10 +4863,7 @@ def ai_search():
                     selection = query_catalog_file(prompt.strip(), section, language, settings, saved, diagnostics=diagnostics)
                     ids = resolve_selection(selection, saved, section, current, diagnostics=diagnostics)
                 else:
-                    selection = {"intent": "filter", "message": {
-                        "es": "No hay contenido de esta sección disponible en el catálogo subido.",
-                        "ca": "No hi ha contingut d’aquesta secció disponible al catàleg pujat.",
-                        "en": "No content from this section is available in the uploaded catalogue."}[language]}
+                    selection = {"intent": "filter", "message": ui_translate("api.empty_catalog", language)}
                     ids = []
                 diagnostics["stage"] = "completed"
                 return reply({"ok": True, "section": section, "intent": selection["intent"], "message": selection["message"],
@@ -4860,7 +4872,7 @@ def ai_search():
             catalogue = build_catalog(section, list_video_directories(), tmdb_artwork, language)
             records = catalogue["records"]
             if not records:
-                message = {"es": "Esta sección no tiene contenido guardado.", "ca": "Aquesta secció no té contingut desat.", "en": "This section has no saved content."}[language]
+                message = ui_translate("api.empty_section", language)
                 diagnostics["stage"] = "completed"
                 return reply({"ok": True, "section": section, "intent": "filter", "message": message,
                                 "ids": [], "count": 0, "total": 0, "missingMetadata": 0})
@@ -5088,6 +5100,13 @@ if __name__ == "__main__":
     import signal
     faulthandler.register(signal.SIGUSR1, all_threads=True)
     ensure_media_directories()
+    def complete_movie_measurements():
+        from backfill_movie_file_info import backfill
+        try:
+            app.logger.warning("Movie file information: %s", backfill(MULTIMEDIA_DIR))
+        except Exception:
+            app.logger.exception("No se pudo completar la información de los vídeos")
+    threading.Thread(target=complete_movie_measurements, name="movie-file-info", daemon=True).start()
     tmdb_artwork.start()
     oscar_artwork.start()
     for catalog in award_artwork.values():

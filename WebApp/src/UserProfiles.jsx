@@ -1,13 +1,15 @@
+import { runtimeMessage as ui } from "./i18n/messages.js";
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { progressLabel } from "./profileState.js";
 import "./UserProfiles.css";
 
-const copy = {
-  es: { users: "Users", choose: "Cambiar de usuario", create: "Crear usuario", edit: "Editar usuario", name: "Nombre", avatar: "Elige tu avatar", upload: "Subir foto", save: "Guardar usuario", saving: "Guardando…", cancel: "Cancelar", remove: "Borrar usuario", removeCopy: "Se borrarán este usuario, sus favoritos, vistos y posiciones de lectura o reproducción.", confirm: "Sí, borrar usuario", intro: "Cada uno tiene sus favoritos y su propia historia.", default: "La app siempre empieza con default. Puedes cambiar su nombre y avatar; este perfil no se elimina.", empty: "Los nuevos perfiles empiezan sin favoritos, vistos ni lecturas.", photo: "JPG, PNG o WebP · hasta 10 MB", resume: "¿Continuar donde lo dejaste?", continue: "Continuar", restart: "Empezar desde el principio", close: "Cerrar", active: "En uso", retry: "Reintentar" },
-  ca: { users: "Users", choose: "Canviar d’usuari", create: "Crear usuari", edit: "Editar usuari", name: "Nom", avatar: "Tria el teu avatar", upload: "Pujar foto", save: "Desar usuari", saving: "Desant…", cancel: "Cancel·lar", remove: "Esborrar usuari", removeCopy: "S’esborraran aquest usuari, els seus favorits, vistos i posicions de lectura o reproducció.", confirm: "Sí, esborrar usuari", intro: "Cadascú té els seus favorits i la seva pròpia història.", default: "L’app sempre comença amb default. Pots canviar-ne el nom i l’avatar; aquest perfil no s’elimina.", empty: "Els perfils nous comencen sense favorits, vistos ni lectures.", photo: "JPG, PNG o WebP · fins a 10 MB", resume: "Continuar on ho vas deixar?", continue: "Continuar", restart: "Començar des del principi", close: "Tancar", active: "En ús", retry: "Reintentar" },
+const copy = withLanguages({
+  es: { users: "Usuarios", choose: "Cambiar de usuario", create: "Crear usuario", edit: "Editar usuario", name: "Nombre", avatar: "Elige tu avatar", upload: "Subir foto", save: "Guardar usuario", saving: "Guardando…", cancel: "Cancelar", remove: "Borrar usuario", removeCopy: "Se borrarán este usuario, sus favoritos, vistos y posiciones de lectura o reproducción.", confirm: "Sí, borrar usuario", intro: "Cada uno tiene sus favoritos y su propia historia.", default: "La app siempre empieza con default. Puedes cambiar su nombre y avatar; este perfil no se elimina.", empty: "Los nuevos perfiles empiezan sin favoritos, vistos ni lecturas.", photo: "JPG, PNG o WebP · hasta 10 MB", resume: "¿Continuar donde lo dejaste?", continue: "Continuar", restart: "Empezar desde el principio", close: "Cerrar", active: "En uso", retry: "Reintentar" },
+  ca: { users: "Usuaris", choose: "Canviar d’usuari", create: "Crear usuari", edit: "Editar usuari", name: "Nom", avatar: "Tria el teu avatar", upload: "Pujar foto", save: "Desar usuari", saving: "Desant…", cancel: "Cancel·lar", remove: "Esborrar usuari", removeCopy: "S’esborraran aquest usuari, els seus favorits, vistos i posicions de lectura o reproducció.", confirm: "Sí, esborrar usuari", intro: "Cadascú té els seus favorits i la seva pròpia història.", default: "L’app sempre comença amb default. Pots canviar-ne el nom i l’avatar; aquest perfil no s’elimina.", empty: "Els perfils nous comencen sense favorits, vistos ni lectures.", photo: "JPG, PNG o WebP · fins a 10 MB", resume: "Continuar on ho vas deixar?", continue: "Continuar", restart: "Començar des del principi", close: "Tancar", active: "En ús", retry: "Reintentar" },
   en: { users: "Users", choose: "Switch user", create: "Create user", edit: "Edit user", name: "Name", avatar: "Choose your avatar", upload: "Upload photo", save: "Save user", saving: "Saving…", cancel: "Cancel", remove: "Delete user", removeCopy: "This will delete this user, their favorites, watched items and reading or playback positions.", confirm: "Yes, delete user", intro: "Everyone has their own favorites and their own story.", default: "The app always starts with default. You can change its name and avatar; this profile cannot be deleted.", empty: "New profiles start with no favorites, watched items or reading history.", photo: "JPG, PNG or WebP · up to 10 MB", resume: "Pick up where you left off?", continue: "Continue", restart: "Start from the beginning", close: "Close", active: "Active", retry: "Retry" },
-};
+});
 export const userStrings = language => copy[language] || copy.es;
 export function avatarUrl(avatar) { return avatar?.startsWith("data:image/") ? avatar : `/avatars/${/^avatar-\d{2}$/.test(avatar) ? avatar : "avatar-01"}.jpg`; }
 export function UserAvatar({ user, className = "" }) {
@@ -47,7 +49,7 @@ export function ProfileMenu({ profiles, onManage, language }) {
 }
 
 async function readAvatar(file) {
-  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 10 * 1024 * 1024) throw new Error("Elige una foto JPG, PNG o WebP de hasta 10 MB.");
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 10 * 1024 * 1024) throw new Error(ui("Elige una foto JPG, PNG o WebP de hasta 10 MB."));
   const image = await createImageBitmap(file);
   try {
     const canvas = document.createElement("canvas"); canvas.width = 256; canvas.height = 256;
@@ -110,7 +112,7 @@ function UserEditor({ user, profiles, catalog, s, onDone }) {
       <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={async event => {
         const file = event.target.files?.[0]; if (!file) return;
         setBusy(true); setError(""); setSaved(false);
-        try { setAvatar(await readAvatar(file)); } catch (failure) { setError(failure.message || "No se pudo leer la foto."); }
+        try { setAvatar(await readAvatar(file)); } catch (failure) { setError(failure.message || ui("No se pudo leer la foto.")); }
         finally { setBusy(false); event.target.value = ""; }
       }} />
       <p className="user-editor__hint">{s.photo}</p>

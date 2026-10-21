@@ -12,11 +12,11 @@ const compiled = await build({ entryPoints: [new URL('../src/MoviePosterPreview.
       ? 'export function loadYouTubeApi(){return Promise.resolve();} export default function YouTubePreview(){}'
       : 'export function findMovieTrailer(){return Promise.resolve({video:null});}' }));
   } }] });
-function harness() {
+function harness(overrides = {}) {
   const values = [], effects = [], refs = [], timers = new Map();
   let cursor = 0, tree, timerId = 0, clock = 0;
-  const props = { movie: { id: 1, name: 'Film', preferredVideo: { id: 'abcdefghijk' } }, enabled: true, view: 'list', onClick() {}, children: 'Poster', label: 'Open' };
-  const react = { createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
+  const props = { movie: { id: 1, name: 'Film', preferredVideo: { id: 'abcdefghijk' } }, enabled: true, view: 'list', onClick() {}, children: 'Poster', label: 'Open', ...overrides };
+  const react = { createContext: value => ({ value }), useContext: context => context.value, createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
     useState(initial) { const i = cursor++; if (!(i in values)) values[i] = initial; return [values[i], value => { values[i] = typeof value === 'function' ? value(values[i]) : value; }]; },
     useRef() { const i = cursor++; return refs[i] ||= { current: null }; },
     useEffect(effect, deps) { const i = cursor++; const old = effects[i];
@@ -38,20 +38,38 @@ function harness() {
     return tree;
   }
   render();
-  return { render, enter() { tree.props.onPointerEnter({ pointerType: 'mouse' }); render(); },
+  function find(className, node = tree) {
+    if (Array.isArray(node)) return node.map(child => find(className, child)).find(Boolean);
+    if (!node || typeof node !== 'object') return null;
+    return node.props?.className === className ? node : find(className, node.props?.children);
+  }
+  return { render, click(className) { find(className).props.onClick(); render(); },
+    hasActions() { return Boolean(find('movie-poster-preview__actions')); }, enter() { tree.props.onPointerEnter({ pointerType: 'mouse' }); render(); },
     leave() { tree.props.onPointerLeave({ relatedTarget: null }); render(); },
     advance(ms) { clock += ms; for (const [id, timer] of [...timers]) if (timer.at <= clock) { timers.delete(id); timer.callback(); } render(); },
     hasVideo() { const visit = node => Array.isArray(node) ? node.some(visit) : node && (node.type?.name === 'YouTubePreview' || visit(node.props?.children)); return Boolean(visit(tree)); },
     hasExpanded() { const visit = node => Array.isArray(node) ? node.some(visit) : node && (node.props?.className === 'movie-poster-preview__expanded' || visit(node.props?.children)); return Boolean(visit(tree)); } };
 }
-test('list posters enlarge immediately but wait two seconds before mounting the video', () => {
-  const h = harness(); h.enter(); assert.equal(h.hasExpanded(), true); assert.equal(h.hasVideo(), false);
-  h.advance(1999); assert.equal(h.hasVideo(), false);
-  h.advance(1); assert.equal(h.hasVideo(), true);
-  h.leave(); assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false);
-});
-test('leaving before the delay cancels the preview and prevents late playback', () => {
-  const h = harness(); h.enter(); h.advance(1000); h.leave(); h.advance(2000);
+for (const view of ['grid', 'list']) {
+  test(`${view} posters show actions and require a click before playing`, () => {
+    const h = harness({ view }); h.enter();
+    assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false); assert.equal(h.hasActions(), true);
+    h.advance(10000); assert.equal(h.hasVideo(), false); assert.equal(h.hasExpanded(), false);
+    h.click('movie-poster-preview__play');
+    assert.equal(h.hasVideo(), true); assert.equal(h.hasActions(), false);
+    assert.equal(h.hasExpanded(), view === 'list');
+    h.leave(); assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false);
+    h.enter(); assert.equal(h.hasActions(), true); assert.equal(h.hasVideo(), false);
+  });
+  test(`${view} detail button opens the title without playing`, () => {
+    let opened = 0;
+    const h = harness({ view, onClick() { opened++; } }); h.enter();
+    h.click('movie-poster-preview__details');
+    assert.equal(opened, 1); assert.equal(h.hasVideo(), false); assert.equal(h.hasExpanded(), false);
+  });
+}
+test('leaving without clicking never starts a delayed preview', () => {
+  const h = harness(); h.enter(); h.advance(1000); h.leave(); h.advance(10000);
   assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false);
 });
 test('expanded poster matches the enlarged grid poster and stays inside viewport edges', () => {

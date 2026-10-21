@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/languages.js";
 import React, { useEffect, useRef, useState } from "react";
 import { getAISettings, saveAISettings, testAISettings, getAICatalog, uploadAICatalog, isMockMode } from "./api/raspberryApi";
 import { aiSettingsPayload } from "./catalogAI.js";
@@ -89,7 +90,7 @@ export default function OpenAISettings({ language }) {
         <h4 id="openai-catalog-title">{s.catalogTitle}</h4>
         <p>{s.catalogHint}</p>
         {catalog && <>
-          <p>{catalog.uploaded ? `${s.catalogUpdated}: ${new Date(catalog.uploadedAt).toLocaleString(language === "ca" ? "ca-ES" : language || "es")}` : s.catalogNotUploaded}</p>
+          <p>{catalog.uploaded ? `${s.catalogUpdated}: ${new Date(catalog.uploadedAt).toLocaleString(intlLocale(language))}` : s.catalogNotUploaded}</p>
           <dl>{["movies", "series", "books", "games"].map(section => <div key={section}><dt>{s.catalogSections[section]}</dt>
             <dd>{catalog.uploaded ? catalog.counts[section] : catalog.currentCounts[section]}</dd></div>)}</dl>
           {catalog.stale && <p className="openai-settings__notice" role="status">{s.catalogStale}</p>}

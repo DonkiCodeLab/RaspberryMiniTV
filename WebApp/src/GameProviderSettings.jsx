@@ -1,13 +1,14 @@
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useState } from "react";
 import { getGameSettings, saveGameSettings } from "./api/raspberryApi";
 import "./OpenSubtitlesSettings.css";
 import ServiceCredentialTest from "./ServiceCredentialTest.jsx";
 
-const strings = {
+const strings = withLanguages({
   es: { title: "Fichas de videojuegos", intro: "Configura al menos una fuente para buscar fichas reales. Las credenciales se guardan en el servidor.", keep: "Configurado: dejar vacío para conservar", save: "Guardar configuración", saving: "Guardando…", saved: "Configuración guardada.", error: "No se pudo cargar o guardar la configuración.", retry: "Reintentar", demo: "Modo maqueta: conecta con un servidor local o la Raspberry para guardar credenciales y buscar fichas reales.", ready: "Credenciales configuradas (sin verificar)", missing: "Faltan credenciales", help: "Obtener credenciales", optional: "opcional", user: "Usuario", password: "Contraseña", soft: "Nombre de aplicación", clear: "Borrar credenciales de esta fuente", hint: "Deja los campos vacíos para conservar sus valores. Borrar una fuente también desactiva sus credenciales del entorno." },
   ca: { title: "Fitxes de videojocs", intro: "Configura almenys una font per cercar fitxes reals. Les credencials es desen al servidor.", keep: "Configurat: deixa-ho buit per conservar", save: "Desa la configuració", saving: "Desant…", saved: "Configuració desada.", error: "No s'ha pogut carregar o desar la configuració.", retry: "Torna-ho a provar", demo: "Mode maqueta: connecta amb un servidor local o la Raspberry per desar credencials i cercar fitxes reals.", ready: "Credencials configurades (sense verificar)", missing: "Falten credencials", help: "Obtenir credencials", optional: "opcional", user: "Usuari", password: "Contrasenya", soft: "Nom de l'aplicació", clear: "Esborra les credencials d'aquesta font", hint: "Deixa els camps buits per conservar els valors. Esborrar una font també desactiva les credencials de l'entorn." },
   en: { title: "Video game metadata", intro: "Configure at least one provider to search for real game profiles. Credentials are stored on the server.", keep: "Configured: leave blank to retain", save: "Save settings", saving: "Saving…", saved: "Settings saved.", error: "Could not load or save settings.", retry: "Retry", demo: "Demo mode: connect to a local server or Raspberry to save credentials and search for real profiles.", ready: "Credentials configured (not verified)", missing: "Credentials missing", help: "Get credentials", optional: "optional", user: "Username", password: "Password", soft: "Application name", clear: "Clear this provider's credentials", hint: "Leave fields blank to retain their values. Clearing a provider also disables its environment credentials." },
-};
+});
 const providers = [
   { id: "youtube", name: "YouTube Data API v3", url: "https://developers.google.com/youtube/v3/getting-started", fields: [["YOUTUBE_API_KEY", "API key"]] },
   { id: "igdb", name: "IGDB", url: "https://api-docs.igdb.com/#account-creation", fields: [["IGDB_CLIENT_ID", "Client ID"], ["IGDB_CLIENT_SECRET", "Client Secret"]] },
@@ -17,7 +18,7 @@ const providers = [
 export default function GameProviderSettings({ language, youtube = false }) {
   const s = strings[language] || strings.es;
   const visibleProviders = providers.filter(provider => (provider.id === "youtube") === youtube);
-  const youtubeIntro = { es: "Búsqueda de vídeos para videojuegos, películas y series.", ca: "Cerca de vídeos per a videojocs, pel·lícules i sèries.", en: "Video search for games, movies and TV series." };
+  const youtubeIntro = withLanguages({ es: "Búsqueda de vídeos para videojuegos, películas y series.", ca: "Cerca de vídeos per a videojocs, pel·lícules i sèries.", en: "Video search for games, movies and TV series." });
   const [settings, setSettings] = useState(null);
   const [values, setValues] = useState({});
   const [clear, setClear] = useState({});

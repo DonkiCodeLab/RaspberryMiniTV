@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import control_api as api
 import subtitle_translation as translation
 from catalog_ai import AIError
+from languages import LANGUAGE_BY_ID
 
 SETTINGS = {'enabled': True, 'apiKey': 'test-key', 'model': 'configured-model', 'requestsPerMinute': 10}
 VTT = 'WEBVTT\n\n1\n00:00:01.200 --> 00:00:03.400\nHello\n\n2\n00:00:04.000 --> 00:00:05.000\nGoodbye\n'
@@ -22,19 +23,36 @@ class SubtitleTranslationTests(unittest.TestCase):
         self.target = self.movies / 'Film.es.ai.srt'
         self.manager = translation.SubtitleTranslations()
 
-    def run_job(self, vtt=VTT, callback=None):
+    def run_job(self, vtt=VTT, callback=None, language='es'):
         with patch.object(translation.threading, 'Thread'):
-            job = self.manager.start(self.video, self.movies, 'external:Film.en.srt', 'es', SETTINGS, lambda limit: nullcontext())
+            job = self.manager.start(self.video, self.movies, 'external:Film.en.srt', language, SETTINGS, lambda limit: nullcontext())
         def provider(data, body, **kwargs):
             self.assertEqual(data['apiKey'], 'test-key')
             self.assertEqual(body['model'], 'configured-model'); self.assertFalse(body['store'])
             self.assertEqual(body['text']['format']['type'], 'json_schema')
+            self.assertIn('into ' + LANGUAGE_BY_ID[language]['name'] + ' (' + LANGUAGE_BY_ID[language]['locale'] + ').', body['instructions'])
             if callback:
                 return callback(data, body)
             return {'cues': [{'id': 1, 'text': 'Hola'}, {'id': 2, 'text': 'Adiós'}]}
         with patch.object(translation.browser_subtitles, 'read_track', return_value=vtt), patch.object(translation, '_post_response', side_effect=provider):
-            self.manager._run(job['id'], self.video, self.movies, 'external:Film.en.srt', 'es', SETTINGS, lambda limit: nullcontext())
+            self.manager._run(job['id'], self.video, self.movies, 'external:Film.en.srt', language, SETTINGS, lambda limit: nullcontext())
         return self.manager.status(job['id'])
+
+    def test_all_interface_languages_translate_to_complete_discoverable_tracks(self):
+        for language, info in LANGUAGE_BY_ID.items():
+            with self.subTest(language=language):
+                output = {'cues': [{'id': 1, 'text': info['nativeName']}, {'id': 2, 'text': '✓'}]}
+                job = self.run_job(language=language, callback=lambda *_: output)
+                self.assertEqual(job['state'], 'ready')
+                self.assertEqual(job['language'], language)
+                self.assertEqual(job['file'], f'Film.{language}.ai.srt')
+                saved = (self.movies / job['file']).read_text(encoding='utf-8')
+                self.assertIn('00:00:01,200 --> 00:00:03,400\n' + info['nativeName'], saved)
+                self.assertIn('00:00:04,000 --> 00:00:05,000\n✓', saved)
+        self.assertEqual(self.original.read_text(), 'original remains')
+        tracks = translation.browser_subtitles.inventory(self.video, self.movies,
+            subtitle_info={'embedded': [], 'embeddedStatus': 'known'})['tracks']
+        self.assertEqual({track['language'] for track in tracks if '.ai.srt' in track['id']}, set(LANGUAGE_BY_ID))
 
     def test_complete_translation_preserves_every_timestamp_source_and_private_settings(self):
         job = self.run_job()
@@ -74,8 +92,10 @@ class SubtitleTranslationTests(unittest.TestCase):
         self.assertEqual(job['code'], 'SUBTITLE_MOVIE_CHANGED'); self.assertFalse(self.target.exists())
 
     def test_invalid_input_missing_settings_and_concurrent_job(self):
-        with self.assertRaises(AIError):
-            self.manager.start(self.video, self.movies, 'external:Film.en.srt', [], SETTINGS, nullcontext)
+        for language in [[], 'xx', '../en', None]:
+            with self.subTest(language=language), self.assertRaises(AIError) as error:
+                self.manager.start(self.video, self.movies, 'external:Film.en.srt', language, SETTINGS, nullcontext)
+            self.assertEqual(error.exception.code, 'SUBTITLE_TRANSLATION_REQUEST')
         with self.assertRaises(AIError) as error:
             self.manager.start(self.video, self.movies, 'external:Film.en.srt', 'es', {**SETTINGS, 'apiKey': ''}, nullcontext)
         self.assertEqual(error.exception.code, 'AI_NOT_CONFIGURED')

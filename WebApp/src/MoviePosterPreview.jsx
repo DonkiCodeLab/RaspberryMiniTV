@@ -1,28 +1,27 @@
+import { useUiText } from "./i18n/react.js";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { moviePosterGeometry } from "./moviePosterGeometry.js";
 import "./MoviePosterPreview.css";
 import { findMovieTrailer } from "./api/raspberryApi";
-import YouTubePreview, { loadYouTubeApi } from "./YouTubePreview.jsx";
+import YouTubePreview from "./YouTubePreview.jsx";
 
 export default function MoviePosterPreview({ movie, enabled, onClick, label, children, kind = "movie", view = "grid" }) {
+  const ui = useUiText();
   const [hovered, setHovered] = useState(false);
   const [resolved, setResolved] = useState(null);
   const [position, setPosition] = useState(null);
+  const [actionsPosition, setActionsPosition] = useState(null);
   const [playPreview, setPlayPreview] = useState(false);
   const anchor = useRef(null);
   const popup = useRef(null);
-  const expanded = enabled && hovered && view === "list" && position;
+  const expanded = enabled && hovered && playPreview && view === "list" && position;
   const mediaKey = `${kind}:${movie.tmdbId ?? movie.id}:${movie.name}`;
   const videoId = [movie.preferredVideo?.id, movie.trailer?.key, resolved?.key === mediaKey ? resolved.video?.id : null]
     .find(id => typeof id === "string" && /^[A-Za-z0-9_-]{11}$/.test(id));
 
   useEffect(() => {
     setPlayPreview(false);
-    if (!enabled || !hovered) return;
-    if (view !== "list") { setPlayPreview(true); return; }
-    const timer = window.setTimeout(() => setPlayPreview(true), 2000);
-    return () => window.clearTimeout(timer);
   }, [enabled, hovered, view, mediaKey]);
 
   useEffect(() => {
@@ -60,10 +59,19 @@ export default function MoviePosterPreview({ movie, enabled, onClick, label, chi
     setHovered(false); setPlayPreview(false); onClick();
   }
 
+  const actions = enabled && !playPreview ? <div className="movie-poster-preview__actions">
+    <button type="button" className="movie-poster-preview__play" disabled={!videoId}
+      onClick={() => { setHovered(true); setPlayPreview(true); }}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
+      <span>{ui("Watch trailer")}</span>
+    </button>
+    <button type="button" className="movie-poster-preview__details" onClick={open}>{ui("View title details")}</button>
+  </div> : null;
+
   const preview = enabled && hovered && playPreview && videoId ? <YouTubePreview
     key={videoId}
     videoId={videoId}
-    title={`${movie.name} — ${movie.preferredVideo?.name || movie.trailer?.name || "Tráiler"}`}
+    title={`${movie.name} — ${movie.preferredVideo?.name || movie.trailer?.name || ui("Trailer")}`}
   /> : null;
 
   return <div ref={anchor} className="movie-library__poster movie-poster-preview"
@@ -72,18 +80,25 @@ export default function MoviePosterPreview({ movie, enabled, onClick, label, chi
         if (view === "list") {
           const rectangle = anchor.current.getBoundingClientRect();
           const library = anchor.current.closest(".movie-library__items");
+          setActionsPosition({ left: Math.max(12, Math.min(rectangle.left, window.innerWidth - 192)),
+            top: Math.max(12, Math.min(rectangle.top, window.innerHeight - 112)), width: 180 });
           setPosition(moviePosterGeometry(rectangle, library?.clientWidth || window.innerWidth,
             window.innerWidth, window.innerHeight, parseFloat(getComputedStyle(document.documentElement).fontSize) || 16));
         }
-        loadYouTubeApi().catch(() => {});
         setHovered(true);
       }
     }}
+    onFocus={() => { if (enabled && view !== "list") setHovered(true); }}
+    onBlur={stop}
     onPointerLeave={stop} onPointerCancel={() => stop()}>
     <button className="movie-poster-preview__button" type="button" aria-label={label} onClick={open}>
       {children}
     </button>
+    {view !== "list" && actions}
     {view !== "list" && preview}
+    {enabled && hovered && !playPreview && view === "list" && actionsPosition && createPortal(
+      <div ref={popup} className="movie-poster-preview__list-actions" style={actionsPosition}
+        onPointerLeave={stop} onPointerCancel={() => stop()} onBlur={stop}>{actions}</div>, document.body)}
     {expanded && createPortal(<div ref={popup} className="movie-poster-preview__expanded" style={position}
       onPointerLeave={stop} onPointerCancel={() => stop()}>
       <button className="movie-poster-preview__button" type="button" aria-label={label} onClick={open}>{children}</button>

@@ -6,10 +6,11 @@ import "./MovieSubtitleDownload.css";
 import SubtitleTranslationOffer from "./SubtitleTranslationOffer.jsx";
 import { subtitleTranslationStrings } from "./subtitleTranslationStrings.js";
 import { translationSources, waitForSubtitleTranslation } from "./subtitleTranslation.js";
+import { LANGUAGES, normalizeLanguage } from "./i18n/languages.js";
 
 export default function MovieSubtitleDownload({ relativePath, language, disabled = false, onBusyChange, onConfigure }) {
   const s = { ...movieSubtitleStrings(language), ...subtitleTranslationStrings(language) };
-  const [subtitleLanguage, setSubtitleLanguage] = useState("es");
+  const [subtitleLanguage, setSubtitleLanguage] = useState(() => normalizeLanguage(language));
   const [busy, setBusy] = useState(false);
   const [missingLanguages, setMissingLanguages] = useState([]);
   const [translating, setTranslating] = useState(false);
@@ -114,7 +115,7 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
     <div className="movie-subtitle-download__actions">
       <label className="dialog-field"><span>{s.language}</span>
         <select value={subtitleLanguage} disabled={busy || disabled} onChange={event => { setSubtitleLanguage(event.target.value); setResult(null); setError(""); }}>
-          <option value="es">Español</option><option value="ca">Català</option><option value="en">English</option>
+          {LANGUAGES.map(item => <option key={item.id} value={item.id} lang={item.id} dir={item.direction}>{item.nativeName}</option>)}
         </select>
       </label>
       <button className="dialog-button dialog-button--accent" disabled={busy || disabled} onClick={obtain} type="button">

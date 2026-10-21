@@ -1,6 +1,7 @@
+import { withLanguages } from "./i18n/index.js";
 import { bookLanguage } from "./bookMetadata.js";
 
-const strings = {
+const strings = withLanguages({
   es: {
     previousPage: "Página anterior", nextPage: "Página siguiente", previewLoading: "Cargando páginas…", previewError: "No se pudo cargar la vista previa.",
     searchLibrary: "Buscar por título, autor o año", searchLibraryPlaceholder: "Título, autor o año",
@@ -64,6 +65,6 @@ const strings = {
     collection: "Collection", yourLibrary: "Your library", read: "Read", edit: "Edit details", lookup: "Find book information", remove: "Delete", format: "Format", topics: "Subjects", source: "Original record on Open Library ↗",
     noDescription: "No synopsis yet. Find the book on Open Library or fill in its details.", empty: "No books", emptyHint: "Upload a file or a folder containing a collection.", enter: "Open", customize: "Customize",
   },
-};
+});
 
-export const bookStrings = language => strings[bookLanguage(language)];
+export const bookStrings = language => strings[language] || strings.es;

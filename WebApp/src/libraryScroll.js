@@ -1,12 +1,14 @@
+import { intlLocale } from "./i18n/languages.js";
 import { compareLibraryRatings, formatLibraryRating } from "./libraryRatings.js";
 
 export function libraryScrollLabel(item, sort = "name", language = "es", ratingSource = "tmdb") {
+  if (sort === "quality") return item.fileInfo?.quality?.level > 0 ? `${item.fileInfo.quality.level}/5` : "—";
   if (sort === "year") return String(item.year || item.releaseDate || "").match(/\b\d{4}\b/)?.[0] || "—";
   if (sort === "rating") {
     if (["imdb", "metacritic"].includes(ratingSource)) return formatLibraryRating(item, ratingSource, language).replace(/\s*\/ (?:10|100)$/, "");
     if (ratingSource !== "tmdb") return formatLibraryRating(item, ratingSource, language);
     const rating = Number(item.voteAverage);
-    return rating > 0 ? `★ ${new Intl.NumberFormat(language, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(rating / 2)}` : "—";
+    return rating > 0 ? `★ ${new Intl.NumberFormat(intlLocale(language), { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(rating / 2)}` : "—";
   }
   const name = String(sort === "author" ? item.author || "" : item.label || item.name || "").trim().replace(/^[^\p{L}\p{N}]+/u, "");
   if (/^\p{N}/u.test(name)) return "0–9";
@@ -61,7 +63,7 @@ export function compareLibraryItems(left, right, sort = "name", direction = "asc
     if (!a || !b) return Number(!a) - Number(!b) || names;
     return sign * a.localeCompare(b, language, { sensitivity: "base", numeric: true }) || names;
   }
-  const value = item => sort === "year"
+  const value = item => sort === "quality" ? Number(item.fileInfo?.quality?.level) || 0 : sort === "year"
     ? Number(String(item.year || item.releaseDate || "").match(/\b\d{4}\b/)?.[0]) || 0
     : Number(item.voteAverage) || 0;
   const a = value(left), b = value(right);

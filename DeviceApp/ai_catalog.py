@@ -1,3 +1,4 @@
+from languages import LANGUAGES as UI_LANGUAGES, normalize_language
 """Read-only catalog projection and deterministic execution of AI filter plans.
 
 The legacy planner supplies criteria, never executable expressions. The same
@@ -18,7 +19,7 @@ SECTION_FIELDS = {
     "pictures": frozenset(("title", "year")),
 }
 ALL_FIELDS = frozenset().union(*SECTION_FIELDS.values())
-LANGUAGES = {"es": "es-ES", "ca": "ca-ES", "en": "en-US"}
+LANGUAGES = {item["id"]: item["tmdb"] for item in UI_LANGUAGES}
 
 # Stable genre vocabulary, also useful when a book/game provider uses English.
 GENRE_ALIASES = (
@@ -110,8 +111,7 @@ def _year(value):
 
 
 def _locale(language):
-    code = str(language or "es").lower().replace("_", "-").split("-")[0]
-    return {"spa": "es", "cat": "ca", "eng": "en"}.get(code, code) if code in (*LANGUAGES, "spa", "cat", "eng") else "es"
+    return normalize_language(language, "es")
 
 
 class _LocalMetadata:

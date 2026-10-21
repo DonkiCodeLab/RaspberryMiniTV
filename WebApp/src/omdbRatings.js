@@ -1,11 +1,13 @@
+import { intlLocale } from "./i18n/languages.js";
+import { withLanguages, message, number } from "./i18n/index.js";
 const locales = { es: "es-ES", ca: "ca-ES", en: "en-GB" };
 const languageKey = language => {
   const code = String(language || "").trim().toLowerCase().split(/[-_]/)[0];
   return code === "cat" ? "ca" : code;
 };
-const locale = language => locales[languageKey(language)] || locales.es;
+const locale = language => intlLocale(language);
 
-const strings = {
+const strings = withLanguages({
   es: {
     settingsTitle: "Puntuaciones · OMDb", settingsHint: "Añade tu clave de OMDb para mostrar IMDb, Rotten Tomatoes y Metacritic en las fichas de películas y series cuando estén disponibles. Las puntuaciones se guardan en la Raspberry para reducir las consultas.",
     key: "Clave de API de OMDb", keySaved: "Clave guardada", keyEmpty: "Sin configurar", keyLink: "Obtener una clave de OMDb",
@@ -57,7 +59,7 @@ const strings = {
       tmdbNotConfigured: "Configure TMDB to get this title’s IMDb identifier.", storage: "Could not save OMDb information on the Raspberry.",
     },
   },
-};
+}, language => ({ votes: count => message("{count} votes", language, { count: number(count, language) }) }));
 
 export function omdbStrings(language) { return strings[languageKey(language)] || strings.es; }
 

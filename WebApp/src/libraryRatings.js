@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/languages.js";
 import { formatOmdbCriticScore, formatOmdbRating, isOmdbCriticScore } from "./omdbRatings.js";
 
 export const RATING_SOURCES = [
@@ -41,7 +42,7 @@ export function formatLibraryRating(item, source = "tmdb", language = "es", unav
   if (id === "imdb") return `${formatOmdbRating(value, language)} / 10`;
   if (id === "rottenTomatoes") return `${formatOmdbCriticScore(value, language)} %`;
   if (id === "metacritic") return `${formatOmdbCriticScore(value, language)} / 100`;
-  return `${new Intl.NumberFormat(language === "cat" ? "ca" : language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)} / 5`;
+  return `${new Intl.NumberFormat(intlLocale(language), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)} / 5`;
 }
 
 export function compareLibraryRatings(left, right, source = "tmdb", direction = "desc", language = "es") {

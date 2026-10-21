@@ -1,3 +1,5 @@
+import { normalizeLanguage, intlLocale } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
 export function torrentQuery(media, mediaType = "movies") {
   if (mediaType === "books") return [media?.spanishTitle || media?.name, 'español'].filter(Boolean).join(' ');
   return [(mediaType === "movies" && media?.englishName) || media?.originalName || media?.name, mediaType === "movies" ? media?.releaseDate?.slice(0, 4) : null].filter(Boolean).join(" ");
@@ -20,7 +22,7 @@ export function torrentJobTitle(job) {
 }
 
 export function torrentSize(bytes, language = "es") {
-  return `${(Math.max(0, Number(bytes) || 0) / 1_000_000).toLocaleString(language, { maximumFractionDigits: 1 })} MB`;
+  return `${(Math.max(0, Number(bytes) || 0) / 1_000_000).toLocaleString(intlLocale(language), { maximumFractionDigits: 1 })} MB`;
 }
 
 export function torrentListSize(bytes) {
@@ -70,7 +72,7 @@ export function canStartFreeTorrent(job) {
     (job.state === "complete" || (job.state === "failed" && !job.item)));
 }
 
-const strings = {
+const strings = withLanguages({
   es: {
     sendingDownload: "Enviando la descarga a la Raspberry…",
     startUnconfirmed: "No se ha podido confirmar la descarga. Comprueba «En curso»; volver a pulsar no duplicará el mismo torrent.",
@@ -185,8 +187,8 @@ const strings = {
     metadata: "Preparing TMDB resources", complete: "Ready in the library", failed: "Error", cancelled: "Cancelled",
     demo: "Connect to the Raspberry to download torrents.", pending: "Waiting for the Raspberry…", remaining: "remaining",
   },
-};
+});
 
 export function torrentStrings(language) {
-  return strings[String(language).slice(0, 2)] || strings.en;
+  return strings[normalizeLanguage(language)] || strings.en;
 }

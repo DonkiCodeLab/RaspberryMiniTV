@@ -22,3 +22,11 @@
 .movie-file-info .movie-file-info__note { margin: 0; font-size: 12px; line-height: 1.5; color: #c1d1dc; }
 @media (min-width:1180px) { .movie-panel__card > .movie-file-info { max-width:60%; margin-inline:auto; } }
 @media (max-width:420px) { .movie-file-info { padding:16px; } }
+
+.movie-file-info__bars--compact { flex-shrink: 0; gap: 2px; height: 14px; color: var(--quality-color, #b4c3cc); }
+.movie-file-info__bars--compact i { width: 3px; height: 5px; border-radius: 1px; }
+.movie-file-info__bars--compact i:nth-child(2) { height: 7px; }
+.movie-file-info__bars--compact i:nth-child(3) { height: 9px; }
+.movie-file-info__bars--compact i:nth-child(4) { height: 12px; }
+.movie-file-info__bars--compact i:nth-child(5) { height: 14px; }
+.movie-library__file-quality { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .35rem .5rem; }

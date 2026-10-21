@@ -1,3 +1,5 @@
+import { normalizeLanguage } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useState } from "react";
 
 export default function BackToTop({ language = "es" }) {
@@ -9,8 +11,8 @@ export default function BackToTop({ language = "es" }) {
     return () => window.removeEventListener("scroll", update);
   }, []);
   if (!visible) return null;
-  const code = language === "cat" ? "ca" : language.split("-")[0];
-  const label = { es: "Volver al inicio", ca: "Tornar a l’inici", en: "Back to top" }[code] || "Back to top";
+  const code = normalizeLanguage(language);
+  const label = withLanguages({ es: "Volver al inicio", ca: "Tornar a l’inici", en: "Back to top" })[code] || "Back to top";
   return <button className="library-back-to-top" type="button" onClick={() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: reducedMotion ? "instant" : "smooth" });

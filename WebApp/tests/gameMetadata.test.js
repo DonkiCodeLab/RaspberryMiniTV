@@ -121,6 +121,6 @@ test("mock gameplay selection survives a library reload and preserves other fiel
     await api.saveGameVideo(game.relativePath, video);
     const library = await api.getVideos();
     assert.deepEqual(library.games, [{ ...game, preferredVideo: video }, other]);
-    await assert.rejects(api.saveGameVideo("Games/missing.gb", video), /Game not found/);
+    await assert.rejects(api.saveGameVideo("Games/missing.gb", video), { code: "GAME_NOT_FOUND" });
   } finally { globalThis.window = previousWindow; }
 });

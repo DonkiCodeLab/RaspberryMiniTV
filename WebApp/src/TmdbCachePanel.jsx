@@ -1,9 +1,11 @@
+import { intlLocale } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { getTmdbCacheStatus, cancelTmdbCacheDownload, discardTmdbCacheImage, isMockMode } from "./api/raspberryApi";
 import TmdbFailureList, { tmdbFailureKey } from "./TmdbFailureList.jsx";
 
-const labels = {
+const labels = withLanguages({
   es: {
     ignored: "imágenes descartadas", ignoredOne: "imagen descartada", discarded: "Imagen descartada. No volverá a descargarse ni a utilizarse.",
     calculating: "Calculando el espacio de TMDB en segundo plano…",
@@ -28,7 +30,7 @@ const labels = {
     title: "Local TMDB content", copy: "Save metadata, posters, backdrops, logos, season and episode artwork on the Raspberry. New additions download automatically. You can close this page while downloads continue.",
     start: "Download catalog / retry pending", busy: "Preparing…", complete: "complete", pending: "pending", failed: "failed", missing: "Missing TMDB ID: assign a title to download its content.", errors: "Error details", mock: "Connect to the Raspberry to download the catalog.",
   },
-};
+});
 
 export default function TmdbCachePanel({ language, onArtworkChange }) {
   const t = labels[language] || labels.es;
@@ -37,7 +39,7 @@ export default function TmdbCachePanel({ language, onArtworkChange }) {
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
   const action = useRef({ revision: 0, busy: false });
-  const number = (value) => Number(value).toLocaleString(language === "en" ? "en-US" : language === "ca" ? "ca-ES" : "es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const number = (value) => Number(value).toLocaleString(intlLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const amount = (value) => value > 0 && value < 0.01 ? `< ${number(0.01)}` : number(value);
   const active = Boolean(status?.pending || status?.running);
   useEffect(() => {

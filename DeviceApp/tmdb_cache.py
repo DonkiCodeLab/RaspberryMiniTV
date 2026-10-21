@@ -1,3 +1,4 @@
+from languages import LANGUAGES as UI_LANGUAGES
 """Persistent TMDB metadata/artwork and a single resumable download worker."""
 import hashlib
 import io
@@ -150,6 +151,11 @@ class TmdbCache:
         try:
             data = json.loads((self.root / "metadata" / (key + ".json")).read_text())
         except (OSError, ValueError):
+            if language not in LANGUAGES and language in {item["tmdb"] for item in UI_LANGUAGES}:
+                for fallback in ("en-US", "es-ES", "ca-ES"):
+                    summary = self.library_summary(kind, tmdb_id, fallback)
+                    if summary.get("name"):
+                        return summary
             return {"id": int(tmdb_id), "creditsReady": credits_ready}
         summary = {"id": int(tmdb_id), "name": data.get("title") or data.get("name") or "",
                 "posterPath": "" if data.get("poster_path") in self.ignored_images else data.get("poster_path") or "", "voteAverage": data.get("vote_average") or 0,
@@ -219,6 +225,14 @@ class TmdbCache:
                         return self._appended_credits(path)
                     except (OSError, ValueError):
                         pass
+                requested_language = params.get("language")
+                if requested_language not in LANGUAGES and requested_language in {item["tmdb"] for item in UI_LANGUAGES}:
+                    for fallback in ("en-US", "es-ES", "ca-ES"):
+                        try:
+                            return self.json(path, {**params, "language": fallback}, local_only=True)
+                        except TmdbError as error:
+                            if error.code != "TMDB_LOCAL_MISSING":
+                                raise
                 # Episode details already exist inside locally saved season metadata.
                 episode = re.fullmatch(r"(.*/season/\d+)/episode/(\d+)", path)
                 if episode:

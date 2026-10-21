@@ -9,9 +9,16 @@ const result = await build({ entryPoints: [new URL('../src/MovieListTitle.jsx', 
   format: 'cjs', platform: 'node', external: ['react'], define: { 'import.meta.env': '{}' }, loader: { '.css': 'empty' } });
 const module = { exports: {} };
 new Function('require', 'module', 'exports', result.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
-test('list summary uses original filename, actual resolution, estimated quality and megabytes', () => {
-  const html = renderToStaticMarkup(React.createElement(module.exports.MovieListTitleContent, { name: 'Film', fileName: 'renamed.mkv',
-    info: { originalFileName: 'Film.1080p.BluRay.mkv', width: 1920, height: 800, sizeBytes: 1500000000 }, language: 'es' }));
+test('list separates the title and filename from resolution and quality bars', () => {
+  const movie = { name: 'Film', fileName: 'renamed.mkv', fileInfo: { originalFileName: 'Film.1080p.BluRay.mkv',
+    width: 1920, height: 800, sizeBytes: 1500000000, quality: { level: 4, resolution: '1080p Full HD', source: 'Blu-ray' } } };
+  const heading = renderToStaticMarkup(React.createElement(module.exports.default, { movie, language: 'es' }));
+  assert.doesNotMatch(heading, /Óptima|1080p Full HD|1500 MB/);
+  const metadata = renderToStaticMarkup(React.createElement(module.exports.MovieListFileQuality, { movie, language: 'es' }));
+  assert.equal((metadata.match(/class="is-active"/g) || []).length, 4);
+  assert.ok(metadata.indexOf('1080p Full HD') < metadata.indexOf('movie-file-info__bars'));
+  assert.ok(metadata.indexOf('movie-file-info__bars') < metadata.indexOf('Óptima'));
+  const html = heading + metadata;
   assert.match(html, /<h2>Film<\/h2>/);
   assert.match(html, /Film.1080p.BluRay.mkv/);
   assert.match(html, /Óptima/); assert.match(html, /1080p Full HD/);
@@ -41,4 +48,14 @@ test('leaving the list cancels queued work before it can probe another video', a
   await assert.rejects(queued, { name: 'AbortError' });
   finish({ fileName: 'first' }); await first;
   assert.deepEqual(calls, ['first']);
+});
+
+test('list entries display saved measurements immediately without requesting metadata', () => {
+  const html = renderToStaticMarkup(React.createElement(module.exports.MovieListFileQuality, { language: 'es', movie: {
+    name: 'Saved film', fileRelativePath: 'Movies/saved.mkv', fileInfo: {
+      sizeBytes: 2000000, quality: { level: 3, resolution: '720p HD', source: 'WEB-DL' },
+    },
+  } }));
+  assert.match(html, /Buena/); assert.match(html, /720p HD/); assert.match(html, /2 MB/);
+  assert.doesNotMatch(html, /Consultando|Consultant|Checking/);
 });

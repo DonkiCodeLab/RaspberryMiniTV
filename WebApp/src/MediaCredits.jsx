@@ -1,10 +1,11 @@
+import { withLanguages, message, number } from "./i18n/index.js";
 import React, { useEffect, useId, useState } from "react";
 import { buildTmdbImageUrl, getMediaCredits } from "./tmdbApi.js";
 import { mediaCreditsFailure, normalizeCreators } from "./mediaCredits.js";
 import PersonDetailsModal from "./PersonDetailsModal.jsx";
 import "./MediaCredits.css";
 
-const labels = {
+const labels = withLanguages({
   es: {
     title: "Reparto y equipo", cast: "Reparto", directors: "Dirección", writers: "Guion y obra original", creators: "Creación",
     loading: "Cargando reparto y equipo…", pending: "Reparto y equipo pendientes de completar. Puedes prepararlos desde TMDB en el dashboard.",
@@ -23,7 +24,10 @@ const labels = {
     error: "Cast and crew could not be loaded.", empty: "TMDB does not include cast or crew for this title.",
     retry: "Retry", more: count => `Show ${count} more`, episodes: count => `${count} ${count === 1 ? "episode" : "episodes"}`,
   },
-};
+}, language => ({
+  more: count => message('Show {count} more', language, { count: number(count, language) }),
+  episodes: count => message(count === 1 ? '{count} episode' : '{count} episodes', language, { count: number(count, language) }),
+}));
 
 function PersonAvatar({ person, importPreview }) {
   const src = buildTmdbImageUrl(person.profilePath, "w185", importPreview);

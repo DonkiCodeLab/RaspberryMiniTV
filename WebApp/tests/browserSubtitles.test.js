@@ -33,6 +33,12 @@ test("default matches the UI language and ignores unavailable tracks", () => {
   assert.equal(preferredSubtitle(tracks, 'en'), 'embedded:2');
   assert.equal(preferredSubtitle([{ ...tracks[1], available: false }, tracks[0]], 'en'), tracks[0].id);
 });
+test("playback selects expanded language tags and keeps Egyptian Arabic distinct", () => {
+  for (const [tag, language] of [['fra', 'fr'], ['jpn', 'ja'], ['zh-cn', 'zh'], ['pt-pt', 'pt'], ['hau', 'ha'], ['arz', 'arz']]) {
+    assert.equal(preferredSubtitle([tracks[0], { ...tracks[1], language: tag }], language), tracks[1].id);
+  }
+  assert.equal(preferredSubtitle([{ ...tracks[0], language: 'ara' }, { ...tracks[1], language: 'ar-EG' }], 'arz'), tracks[1].id);
+});
 test("subtitle URLs retain authentication and refer to original rather than converted video", () => {
   const url = subtitleUrl('http://minitv/media/stream?relativePath=Movies%2Ffilm.mkv&pin=secret&browserCopy=cached&download=1', 'embedded:2');
   assert.equal(url.searchParams.get('pin'), 'secret');

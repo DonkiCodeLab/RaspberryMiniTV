@@ -1,14 +1,16 @@
+import { normalizeLanguage } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useState } from "react";
 import { getTorrentUploadSettings, setTorrentUploadSettings } from "./api/raspberryApi";
 
-const labels = {
+const labels = withLanguages({
   es: { title: "Subida a otros usuarios", toggle: "Limitar subida", limit: "Máximo total (kB/s)", save: "Guardar", saving: "Guardando…", saved: "Ajuste guardado", loading: "Cargando ajuste…", retry: "Reintentar", demo: "Conecta con la Raspberry para gestionar la subida.", hint: "Activado: limita la subida de todos los torrents. Desactivado: elimina este límite. Un mínimo de 1 kB/s reduce la subida, pero no la bloquea. Un límite muy bajo puede ralentizar las descargas. Los torrents se detienen al terminar.", alternate: "Hay límites alternativos o un horario configurados en Transmission. Desactívalos allí para gestionar este límite." },
   ca: { title: "Pujada a altres usuaris", toggle: "Limitar pujada", limit: "Màxim total (kB/s)", save: "Desar", saving: "Desant…", saved: "Ajust desat", loading: "Carregant ajust…", retry: "Torna-ho a provar", demo: "Connecta amb la Raspberry per gestionar la pujada.", hint: "Activat: limita la pujada de tots els torrents. Desactivat: elimina aquest límit. Un mínim d’1 kB/s redueix la pujada, però no la bloqueja. Un límit molt baix pot alentir les descàrregues. Els torrents s’aturen en acabar.", alternate: "Hi ha límits alternatius o un horari configurats a Transmission. Desactiva’ls allà per gestionar aquest límit." },
   en: { title: "Upload to other users", toggle: "Limit upload", limit: "Total maximum (kB/s)", save: "Save", saving: "Saving…", saved: "Setting saved", loading: "Loading setting…", retry: "Retry", demo: "Connect to the Raspberry to manage uploads.", hint: "On: limits uploads across all torrents. Off: removes this limit. A minimum of 1 kB/s reduces uploads but does not block them. A very low limit may slow downloads. Torrents stop when downloads finish.", alternate: "Alternative limits or a schedule are configured in Transmission. Disable them there to manage this limit." },
-};
+});
 
 export default function TorrentUploadSettings({ language }) {
-  const s = labels[String(language).slice(0, 2)] || labels.es;
+  const s = labels[normalizeLanguage(language)] || labels.es;
   const [settings, setSettings] = useState(null);
   const [limited, setLimited] = useState(false);
   const [limit, setLimit] = useState("100");

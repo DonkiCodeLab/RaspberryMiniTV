@@ -1,6 +1,7 @@
+import { withLanguages } from "./i18n/index.js";
 import React from "react";
 
-const labels = {
+const labels = withLanguages({
   es: {
     title: "Descargas con errores", help: "Descartar una imagen cancela sus reintentos y la excluye de las portadas y galerías, también al reiniciar. El resto del título se conserva.",
     movie: "Película", tv: "Serie", season: "Temporada", episode: "Episodio",
@@ -28,7 +29,7 @@ const labels = {
     original: "Original", thumbnails: "Thumbnail", technical: "Technical details",
     discard: "Discard image", discarding: "Discarding…",
   },
-};
+});
 
 export function tmdbFailureKey(item) {
   return `${item.media}:${item.resource || "metadata"}:${item.path || ""}`;

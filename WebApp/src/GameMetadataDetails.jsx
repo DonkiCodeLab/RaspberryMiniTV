@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/languages.js";
 import React, { useState } from "react";
 import { retryGameMetadata } from "./api/raspberryApi";
 import GameMetadataPicker from "./GameMetadataPicker.jsx";
@@ -12,10 +13,10 @@ export default function GameMetadataDetails({ game, t, language = "es", onRefres
   const metadata = game.gameMetadata || {};
   const releaseDate = /^\d{4}-\d{2}-\d{2}$/.test(metadata.releaseDate || "")
     && Number.isFinite(Date.parse(metadata.releaseDate))
-    ? new Intl.DateTimeFormat(language, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(metadata.releaseDate))
+    ? new Intl.DateTimeFormat(intlLocale(language), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(metadata.releaseDate))
     : metadata.releaseDate;
   const rating = metadata.rating !== "" && metadata.rating != null && Number.isFinite(Number(metadata.rating))
-    ? new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(Number(metadata.rating)) : "";
+    ? new Intl.NumberFormat(intlLocale(language), { maximumFractionDigits: 1 }).format(Number(metadata.rating)) : "";
   const list = value => Array.isArray(value) ? value.filter(Boolean).join(", ") : value;
   const facts = [
     ["games_release_date", releaseDate],

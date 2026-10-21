@@ -12,7 +12,7 @@ import urllib.request
 
 FIELDS = ("title", "author", "year", "isbn", "description", "coverUrl", "openLibraryKey",
           "editionKey", "publisher", "publishDate", "language", "pageCount", "pageCountSource", "subjects", "subtitle")
-LANGUAGES = {"es": "spa", "ca": "cat", "en": "eng"}
+LANGUAGES = {'es': 'spa', 'ca': 'cat', 'en': 'eng', 'zh': 'chi', 'hi': 'hin', 'ar': 'ara', 'fr': 'fre', 'bn': 'ben', 'pt': 'por', 'id': 'ind', 'ur': 'urd', 'ru': 'rus', 'de': 'ger', 'ja': 'jpn', 'pcm': 'pcm', 'arz': 'arz', 'mr': 'mar', 'vi': 'vie', 'te': 'tel', 'sw': 'swa', 'ha': 'hau'}
 LOCALIZED_FIELDS = ("title", "subtitle", "description", "subjects")
 _request_lock = threading.Lock()
 _last_request = 0
@@ -49,7 +49,7 @@ def is_graphic_novel(data, filename):
 
 def normalize_language(language):
     language = str(language or "").strip().lower().replace("_", "-").split("-")[0]
-    return {"spa": "es", "cat": "ca", "eng": "en"}.get(language, language) if language else "es"
+    return {**{value: key for key, value in LANGUAGES.items()}, "zho": "zh", "deu": "de", "fra": "fr"}.get(language, language) if language else "es"
 
 
 def _get(path, params=None):
@@ -157,7 +157,7 @@ def _localized_edition(edition, language):
 
 def localized_metadata(work_key, edition_key, edition, language):
     variants = {}
-    for code in dict.fromkeys([language, *LANGUAGES]):
+    for code in dict.fromkeys([language, "es", "ca", "en"]):
         localized = _localized_edition(edition, code)
         if not localized and work_key:
             try:

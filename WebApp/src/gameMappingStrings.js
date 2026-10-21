@@ -1,4 +1,5 @@
-export const GAME_MAPPING_STRINGS = {
+import { withLanguages } from "./i18n/index.js";
+export const GAME_MAPPING_STRINGS = withLanguages({
   es: {
     game_mapping_title: "Configurar controles", game_mapping_player: "Jugador 1 · Teclado, ratón y gamepad",
     game_mapping_description: "Pulsa una asignación para cambiarla. Usa + para añadir otra. Si eliges un control ya asignado, se moverá al nuevo botón.",
@@ -38,4 +39,4 @@ export const GAME_MAPPING_STRINGS = {
     game_mapping_done: "Done", game_mapping_cancel: "Cancel capture", game_mapping_space: "Space",
     game_mapping_mouse: "Mouse · Button {button}", game_mapping_pad_button: "Gamepad {pad} · Button {button}", game_mapping_pad_axis: "Gamepad {pad} · Axis {axis} {direction}",
   },
-};
+});

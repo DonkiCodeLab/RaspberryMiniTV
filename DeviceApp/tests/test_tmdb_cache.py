@@ -42,6 +42,23 @@ class TmdbCacheTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     reopened.json(path)
 
+    def test_new_ui_languages_use_cached_fallback_without_network(self):
+        from languages import LANGUAGES as UI_LANGUAGES
+        original = {"id": 1, "title": "Título original", "overview": "Descripción"}
+        with patch.object(self.cache, '_download', return_value=(json.dumps(original).encode(), 'application/json')):
+            self.cache.json('/movie/1', {'language': 'es-ES', 'append_to_response': 'external_ids'})
+        reopened = TmdbCache(self.temp.name, lambda: {})
+        with patch.object(reopened, '_download', side_effect=AssertionError('must stay offline')):
+            for language in {item['tmdb'] for item in UI_LANGUAGES} - set(LANGUAGES):
+                with self.subTest(language=language):
+                    data = reopened.json('/movie/1', {'language': language, 'append_to_response': 'external_ids'}, local_only=True)
+                    self.assertEqual(data['title'], original['title'])
+                    self.assertEqual(reopened.library_summary('movie', 1, language)['name'], original['title'])
+        translated = {**original, 'title': 'Titre français'}
+        with patch.object(self.cache, '_download', return_value=(json.dumps(translated).encode(), 'application/json')):
+            self.cache.json('/movie/1', {'language': 'fr-FR', 'append_to_response': 'external_ids'})
+        self.assertEqual(reopened.library_summary('movie', 1, 'fr-FR')['name'], translated['title'])
+
     def test_metadata_and_images_survive_restart_without_network_or_credentials(self):
         with patch.object(self.cache, '_download', return_value=(b'{"id":1}', 'application/json')) as download:
             self.cache.json('/movie/1', {'language': 'es-ES'})

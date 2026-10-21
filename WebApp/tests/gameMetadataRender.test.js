@@ -12,7 +12,9 @@ test("dashboard system update renders without a global React", async () => {
   const SystemUpdate = await loadComponent("SystemUpdate");
   const html = renderToStaticMarkup(React.createElement(SystemUpdate, { language: "es" }));
   assert.match(html, /Actualizar Raspberry y web/);
-  assert.match(html, /Actualizar desde Git/);
+  assert.match(html, /Actualizar Git y refrescar web/);
+  assert.match(html, /La web se recargará automáticamente al terminar/);
+  assert.equal((html.match(/<button\b/g) || []).length, 1);
 });
 
 async function loadComponent(name) {

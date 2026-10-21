@@ -1,19 +1,21 @@
+import { normalizeLanguage } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useId, useState } from "react";
 import GameVideo from "./GameVideo.jsx";
 import { findMovieTrailer } from "./api/raspberryApi";
 import "./MediaCredits.css";
 
-const strings = {
+const strings = withLanguages({
   es: { photos: "Fotos", trailer: "Tráiler", search: "Buscar tráiler en YouTube", missing: "No hay un tráiler asociado. Puedes buscar otra propuesta en YouTube.", results: "Comprueba que el tráiler corresponde a esta película y a su año de estreno.", error: "No se pudo buscar el tráiler. Puedes reintentar la búsqueda en YouTube." },
   ca: { photos: "Fotos", trailer: "Tràiler", search: "Cerca un tràiler a YouTube", missing: "No hi ha cap tràiler associat. Pots cercar una altra proposta a YouTube.", results: "Comprova que el tràiler correspon a aquesta pel·lícula i al seu any d’estrena.", error: "No s’ha pogut cercar el tràiler. Pots tornar a cercar a YouTube." },
   en: { photos: "Photos", trailer: "Trailer", search: "Find a trailer on YouTube", missing: "No trailer is linked. You can search YouTube for another suggestion.", results: "Check that the trailer matches this movie and its release year.", error: "Could not find the trailer. You can retry the search on YouTube." },
-};
+});
 
 export default function MovieMedia(props) {
   const [expanded, setExpanded] = useState(false);
   const headingId = useId();
   if (props.kind !== "tv") return <MovieMediaContent {...props} />;
-  const labels = strings[String(props.language).slice(0, 2)] || strings.es;
+  const labels = strings[normalizeLanguage(props.language)] || strings.es;
   return <details className="media-credits" aria-labelledby={headingId} onToggle={event => setExpanded(event.currentTarget.open)}>
     <summary className="media-credits__summary"><h3 id={headingId}>{labels.trailer}</h3><span className="media-credits__chevron" aria-hidden="true">⌄</span></summary>
     <div className="media-credits__body">
@@ -23,7 +25,7 @@ export default function MovieMedia(props) {
 }
 
 function MovieMediaContent({ movie, language, t, onSaveVideo, children, kind = "movie" }) {
-  const labels = { ...(strings[String(language).slice(0, 2)] || strings.es) };
+  const labels = { ...(strings[normalizeLanguage(language)] || strings.es) };
   if (kind === "tv") labels.results = labels.results.replace("esta película", "esta serie").replace("aquesta pel·lícula", "aquesta sèrie").replace("this movie", "this series");
   const [mode, setMode] = useState(children && !movie.preferredVideo ? "photos" : "trailer");
   const [suggestion, setSuggestion] = useState(null);

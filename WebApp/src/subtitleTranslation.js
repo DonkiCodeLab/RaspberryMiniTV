@@ -1,6 +1,8 @@
+import { normalizeSubtitleLanguage } from "./subtitleLanguages.js";
+
 export function translationSources(tracks = [], language) {
-  const aliases = { spa: "es", esp: "es", eng: "en", cat: "ca" };
-  return tracks.filter(track => track.available && (aliases[track.language?.toLowerCase()] || track.language?.toLowerCase()) !== language);
+  const target = normalizeSubtitleLanguage(language);
+  return tracks.filter(track => track.available && normalizeSubtitleLanguage(track.language) !== target);
 }
 export function canTranslateSubtitle(missingLanguages, language, tracks) {
   return missingLanguages.includes(language) && translationSources(tracks, language).length > 0;

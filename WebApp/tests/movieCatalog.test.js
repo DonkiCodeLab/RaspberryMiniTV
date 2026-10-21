@@ -95,3 +95,12 @@ test('torrent series resolve existing directories by path, then TMDB after a mov
   assert.equal(findTorrentSeries({ ...job, mediaType: 'movies' }, directories), null);
   assert.equal(findTorrentSeries({ ...job, item: undefined, series: { name: 'Moved' } }, directories), null);
 });
+
+test('file measurements come from the saved catalog', () => {
+  const fileInfo = { quality: { level: 4, resolution: '1080p Full HD' }, width: 1920 };
+  const movies = catalog({ movieRootFiles: [file('Movies/a.mp4')], mediaLibrary: { movies: {
+    'Movies/a.mp4': { name: 'Movie', fileInfo },
+  } } });
+  assert.deepEqual(movies[0].fileInfo, fileInfo);
+});
+

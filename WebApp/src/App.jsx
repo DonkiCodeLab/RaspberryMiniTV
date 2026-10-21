@@ -1,4 +1,9 @@
+import { useUiText, LanguageContext, legacyMessage } from "./i18n/react.js";
+import { withLanguages } from "./i18n/index.js";
+import LanguageSelector from "./LanguageSelector.jsx";
+import { normalizeLanguage, intlLocale, tmdbLocale, applyDocumentLanguage } from "./i18n/languages.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
+import useBrowserBack from "./useBrowserBack.js";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import PhotosLibrary from "./PhotosLibrary.jsx";
 import { saveSeriesTrailer } from "./api/raspberryApi";
@@ -10,10 +15,10 @@ import { seriesArtwork } from "./seriesArtwork.js";
 import LibraryScrollRail from "./LibraryScrollRail.jsx";
 import BackToTop from "./BackToTop.jsx";
 import MovieLibraryItems from "./MovieLibraryItems.jsx";
-import MovieListTitle from "./MovieListTitle.jsx";
+import MovieListTitle, { MovieListFileQuality } from "./MovieListTitle.jsx";
 import MoviePosterPreview from "./MoviePosterPreview.jsx";
 import MovieSubtitleDownload from "./MovieSubtitleDownload.jsx";
-import MovieFileInfo from "./MovieFileInfo.jsx";
+import MovieFileInfo, { MovieQualityBars } from "./MovieFileInfo.jsx";
 import MediaCredits from "./MediaCredits.jsx";
 import { PersonCatalogContext } from "./personCatalog.js";
 import CatalogAI, { CatalogAIButton, CatalogAIResult } from "./CatalogAI.jsx";
@@ -100,12 +105,6 @@ import bookIconBlack from "./assets/icon_book_black.svg";
 import bookIconWhite from "./assets/icon_book_white.svg";
 import bookIconYellow from "./assets/icon_book_yellow.svg";
 import languagesIcon from "./assets/icon_languages.png";
-import languageCatNormal from "./assets/language_cat_normal.png";
-import languageCatSelected from "./assets/language_cat_selected.png";
-import languageEnNormal from "./assets/language_en_normal.png";
-import languageEnSelected from "./assets/language_en_selected.png";
-import languageEsNormal from "./assets/language_es_normal.png";
-import languageEsSelected from "./assets/language_es_selected.png";
 import movieIconBlack from "./assets/icon_movie_black.png";
 import movieIconWhite from "./assets/icon_movie_white.png";
 import movieIconYellow from "./assets/icon_movie_yellow.png";
@@ -323,37 +322,12 @@ const GAME_PLATFORM_ICONS = {
   gba: gameboyAdvanceIcon,
 };
 const GAME_METADATA_PLATFORM_OPTIONS = GAME_SYSTEMS.map(s => ({key: s.id, value: s.id, label: s.name}));
-const RASPBERRY_LANGUAGE_OPTIONS = [
-  {
-    id: "es",
-    label: "Castellano",
-    normalIcon: languageEsNormal,
-    selectedIcon: languageEsSelected,
-  },
-  {
-    id: "ca",
-    label: "Català",
-    normalIcon: languageCatNormal,
-    selectedIcon: languageCatSelected,
-  },
-  {
-    id: "en",
-    label: "English",
-    normalIcon: languageEnNormal,
-    selectedIcon: languageEnSelected,
-  },
-];
 const DEFAULT_HERO_CROP = {
   focusX: 0.5,
   focusY: 0.5,
   zoom: 1,
 };
-const TMDB_LANGUAGE_BY_APP_LANGUAGE = {
-  es: "es-ES",
-  ca: "ca-ES",
-  en: "en-US",
-};
-const UI_STRINGS = {
+const UI_STRINGS = withLanguages({
   es: {
     media_series: "Series",
     media_movies: "Películas",
@@ -374,10 +348,10 @@ const UI_STRINGS = {
     book_open_raspberry: "Abrir en Raspberry",
     book_open_raspberry_busy: "Abriendo en Raspberry…",
     book_open_raspberry_failed: "No se pudo abrir el libro en la Raspberry.",
-    raspberry_dashboard: "Dashboard",
-    users_title: "Users",
-    raspberry_controls: "Controls",
-    raspberry_uploads: "Uploads",
+    raspberry_dashboard: "Panel de control",
+    users_title: "Usuarios",
+    raspberry_controls: "Controles",
+    raspberry_uploads: "Subidas",
     upload_series: "Serie",
     upload_movie: "Película",
     upload_movie_title_field: "Título de la película",
@@ -821,6 +795,7 @@ const UI_STRINGS = {
     movie_view_grid: "Vista mosaico",
     movie_view_list: "Vista listado",
     movie_sort_name: "Nombre",
+    movie_sort_quality: "Calidad",
     movie_sort_year: "Año",
     movie_sort_rating: "Puntuación",
     movie_sort_label: "Ordenar por",
@@ -886,10 +861,10 @@ const UI_STRINGS = {
     book_open_raspberry: "Obrir a la Raspberry",
     book_open_raspberry_busy: "Obrint a la Raspberry…",
     book_open_raspberry_failed: "No s'ha pogut obrir el llibre a la Raspberry.",
-    raspberry_dashboard: "Dashboard",
-    users_title: "Users",
+    raspberry_dashboard: "Tauler de control",
+    users_title: "Usuaris",
     raspberry_controls: "Controls",
-    raspberry_uploads: "Uploads",
+    raspberry_uploads: "Pujades",
     upload_series: "Sèrie",
     upload_movie: "Pel·lícula",
     upload_movie_title_field: "Títol de la pel·lícula",
@@ -1333,6 +1308,7 @@ const UI_STRINGS = {
     movie_view_grid: "Vista mosaic",
     movie_view_list: "Vista llista",
     movie_sort_name: "Nom",
+    movie_sort_quality: "Qualitat",
     movie_sort_year: "Any",
     movie_sort_rating: "Puntuació",
     movie_sort_label: "Ordenar per",
@@ -1845,6 +1821,7 @@ const UI_STRINGS = {
     movie_view_grid: "Grid view",
     movie_view_list: "List view",
     movie_sort_name: "Name",
+    movie_sort_quality: "Quality",
     movie_sort_year: "Year",
     movie_sort_rating: "Rating",
     movie_sort_label: "Sort by",
@@ -1890,17 +1867,11 @@ const UI_STRINGS = {
       "If you want to add movie content, you can do it from the Uploads section.",
     go_to_uploads: "Uploads",
   },
-};
+});
 
-function normalizeRaspberryLanguage(language) {
-  const safeLanguage = String(language || "").trim().toLowerCase();
-  if (safeLanguage === "cat") return "ca";
-  return RASPBERRY_LANGUAGE_OPTIONS.some((option) => option.id === safeLanguage) ? safeLanguage : "es";
-}
+const normalizeRaspberryLanguage = normalizeLanguage;
 
-function getTmdbLanguage(language) {
-  return TMDB_LANGUAGE_BY_APP_LANGUAGE[normalizeRaspberryLanguage(language)] || TMDB_LANGUAGE_BY_APP_LANGUAGE.es;
-}
+const getTmdbLanguage = tmdbLocale;
 
 function translate(language, key, variables = {}) {
   const strings = UI_STRINGS[normalizeRaspberryLanguage(language)] || UI_STRINGS.es;
@@ -2223,7 +2194,7 @@ function loadStoredRaspberryLanguage() {
 
 function saveStoredRaspberryLanguage(language) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(RASPBERRY_LANGUAGE_STORAGE_KEY, normalizeRaspberryLanguage(language));
+  try { window.localStorage.setItem(RASPBERRY_LANGUAGE_STORAGE_KEY, normalizeRaspberryLanguage(language)); } catch { /* The device still stores the selection when browser storage is unavailable. */ }
 }
 
 function loadStoredRaspberryCurrentPlayback() {
@@ -2260,12 +2231,12 @@ function saveStoredRaspberryCurrentPlayback(playback) {
   );
 }
 
-function formatPercent(value) {
-  return `${Math.round(clamp(Number(value) || 0, 0, 100))}%`;
+function formatPercent(value, language) {
+  return new Intl.NumberFormat(intlLocale(language), { style: "percent", maximumFractionDigits: 0 }).format(clamp(Number(value) || 0, 0, 100) / 100);
 }
 
-function formatStorageGb(value) {
-  return Number(Number(value) || 0).toFixed(1);
+function formatStorageGb(value, language) {
+  return new Intl.NumberFormat(intlLocale(language), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(value) || 0);
 }
 
 function normalizeLibraryUsageItem(item) {
@@ -2937,6 +2908,7 @@ function EpisodeDetailsModal({
   onDelete,
   t,
 }) {
+  const ui = useUiText();
   useEffect(() => {
     if (!visible) return () => {};
 
@@ -2992,8 +2964,8 @@ function EpisodeDetailsModal({
         </header>
 
         <div className="episode-dialog__body">
-          {loading && <p role="status"><LoadingSpinner inline /> Cargando información del episodio…</p>}
-          {error && <p role="alert">{error} <button type="button" onClick={onRetry}>Reintentar</button></p>}
+          {loading && <p role="status"><LoadingSpinner inline />{ui("Cargando información del episodio…")}</p>}
+          {error && <p role="alert">{error} <button type="button" onClick={onRetry}>{ui("Reintentar")}</button></p>}
           <MediaMarkButtons watched={watched} onWatched={onWatched} favorite={favorite} onFavorite={onFavorite} t={t} />
           <div className="episode-dialog__overview">
             {episode.image ? (
@@ -4311,6 +4283,8 @@ function GameUploadModal({
 
 const BOOK_UPLOAD_REPORT_KEY = "minitv-book-upload-report-v1";
 function BookUploadProgressModal({ upload, onCancel, onClose, t }) {
+  const ui = useUiText();
+  const language = React.useContext(LanguageContext);
   if (!upload) return null;
   const progressValue = clamp(Number(upload.progress?.percent) || 0, 0, 100);
   const isUploading = upload.phase === "uploading";
@@ -4346,18 +4320,18 @@ function BookUploadProgressModal({ upload, onCancel, onClose, t }) {
           </div>
         )}
         {upload.report ? <div className="book-upload-report">
-          <p>{new Date(upload.report.startedAt).toLocaleString()} · {upload.report.files.filter((file) => file.status === "saved").length}/{upload.report.files.length} archivos guardados</p>
+          <p>{new Date(upload.report.startedAt).toLocaleString(intlLocale(language))} · {upload.report.files.filter((file) => file.status === "saved").length}/{upload.report.files.length}{ui(" archivos guardados")}</p>
           {upload.report.note ? <p>{upload.report.note}</p> : null}
           {upload.report.storageError ? <p role="alert">{upload.report.storageError}</p> : null}
           <details open={upload.phase === "error"}>
-            <summary>Detalles de la subida</summary>
-            <ul>{upload.report.files.map((file, index) => <li key={index}><strong>{({ saved: "Guardado", pending: "Pendiente", uploading: "Sin confirmación", error: "Error", canceled: "Cancelado", rejected: "Formato no compatible" })[file.status] || file.status}</strong> · {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB{file.error ? ` — ${file.error}` : ""}{file.httpStatus ? ` (HTTP ${file.httpStatus})` : ""}</li>)}</ul>
+            <summary>{ui("Detalles de la subida")}</summary>
+            <ul>{upload.report.files.map((file, index) => <li key={index}><strong>{({ saved: ui("Guardado"), pending: ui("Pendiente"), uploading: ui("Sin confirmación"), error: ui("Error"), canceled: ui("Cancelado"), rejected: ui("Formato no compatible") })[file.status] || file.status}</strong> · {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB{file.error ? ` — ${file.error}` : ""}{file.httpStatus ? ` (HTTP ${file.httpStatus})` : ""}</li>)}</ul>
           </details>
           <button className="dialog-button dialog-button--ghost" type="button" onClick={() => {
             const url = URL.createObjectURL(new Blob([JSON.stringify(upload.report, null, 2)], { type: "application/json" }));
             const link = document.createElement("a"); link.href = url; link.download = "informe-subida-comics.json"; link.click();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }}>Descargar informe</button>
+          }}>{ui("Descargar informe")}</button>
         </div> : null}
         <div className="dialog-card__actions">
           <button className={`dialog-button ${isDone ? "dialog-button--accent" : "dialog-button--ghost"}`} onClick={isUploading ? onCancel : onClose} type="button">
@@ -4641,6 +4615,11 @@ function TmdbBrowserModal({ visible, onClose, t, tmdbLanguage, initialMediaType 
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [browserView, setBrowserView] = useState("results");
   const [error, setError] = useState("");
+
+  useBrowserBack(visible ? () => {
+    if (browserView === "results") onClose();
+    else handleBack();
+  } : null, 20);
 
   useEffect(() => {
     if (!visible) {
@@ -5184,6 +5163,7 @@ function UploadValidationModal({ visible, title, message, onClose, t }) {
 }
 
 function RaspberryStatCard({ label, value, usedGb, percent, icon, t, calculating }) {
+  const language = React.useContext(LanguageContext);
   return (
     <article className="raspberry-stat-card">
       <div className="raspberry-stat-card__label">
@@ -5192,9 +5172,9 @@ function RaspberryStatCard({ label, value, usedGb, percent, icon, t, calculating
       </div>
       <strong>{value}</strong>
       <span>
-        {calculating ? "Calculando espacio…" : t("section_storage_used", {
-          gb: formatStorageGb(usedGb),
-          percent: formatPercent(percent),
+        {calculating ? t("loading_details") : t("section_storage_used", {
+          gb: formatStorageGb(usedGb, language),
+          percent: formatPercent(percent, language),
         })}
       </span>
     </article>
@@ -5465,6 +5445,7 @@ function RaspberryPage({
   onOpenTorrentMovie,
   onOpenTorrentSeries,
 }) {
+  const ui = useUiText();
   const [poweroffDialogOpen, setPoweroffDialogOpen] = useState(false);
   const [cameraImageUrl, setCameraImageUrl] = useState("");
   const [cameraBusy, setCameraBusy] = useState(false);
@@ -5589,7 +5570,7 @@ function RaspberryPage({
               { key: "clock", title: t("dashboard_clock_title") },
               { key: "auxiliary", title: t("dashboard_auxiliary_title") },
               { key: "codex", title: "Codex" },
-              { key: "torrents", title: "Torrents" },
+              { key: "torrents", title: torrentStrings(raspberryLanguage).title },
             ]}
             selected={selectedDashboardSection} onSelect={setSelectedDashboardSection} />
           <div className="raspberry-dashboard-panel" id="dashboard-codex-panel" role="tabpanel"
@@ -5619,30 +5600,7 @@ function RaspberryPage({
                 <p>{t("language_title")}</p>
               </div>
 
-              <div className="raspberry-language-card__options">
-                {RASPBERRY_LANGUAGE_OPTIONS.map((option) => {
-                  const isSelected = raspberryLanguage === option.id;
-
-                  return (
-                    <button
-                      key={option.id}
-                      className={`raspberry-language-option${isSelected ? " active" : ""}`}
-                      onClick={() => onSetRaspberryLanguage(option.id)}
-                      disabled={raspberryLanguageSaving}
-                      type="button"
-                    >
-                      <img
-                        className="raspberry-language-option__icon"
-                        loading="eager"
-                        fetchPriority="high"
-                        src={isSelected ? option.selectedIcon : option.normalIcon}
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+              <LanguageSelector value={raspberryLanguage} onChange={onSetRaspberryLanguage} disabled={raspberryLanguageSaving} />
               {raspberryLanguageSaving ? (
                 <p className="raspberry-language-card__status">{t("language_updating")}</p>
               ) : raspberryLanguageError ? (
@@ -5650,7 +5608,7 @@ function RaspberryPage({
                   {raspberryLanguageError}
                 </p>
               ) : null}
-              <p className="raspberry-language-card__notice">{t("language_cover_notice")}</p>
+              <p className="raspberry-language-card__notice">{t("language_microtv")}</p>
             </article>
             <RaspberryStatCard
               calculating={statsCalculating}
@@ -5709,18 +5667,18 @@ function RaspberryPage({
             <article className="raspberry-storage-card">
               <div className="raspberry-storage-card__copy">
                 <p>{t("microsd_capacity")}</p>
-                <strong>{formatStorageGb(usedStorageGb)} GB / {formatStorageGb(totalStorageGb)} GB</strong>
+                <strong>{formatStorageGb(usedStorageGb, raspberryLanguage)} GB / {formatStorageGb(totalStorageGb, raspberryLanguage)} GB</strong>
               </div>
               <div className="raspberry-storage-card__ring" style={{ "--storage-fill": `${multimediaPercent}%` }}>
                 <div className="raspberry-storage-card__ring-inner">
-                  <strong>{formatPercent(multimediaPercent)}</strong>
+                  <strong>{formatPercent(multimediaPercent, raspberryLanguage)}</strong>
                   <span className="raspberry-storage-card__device" aria-hidden="true">SSD</span>
                   <span>{t("occupied")}</span>
                 </div>
               </div>
               <div className="raspberry-storage-card__copy raspberry-storage-card__copy--media">
                 <p>{t("multimedia_occupied")}</p>
-                <strong>{statsCalculating ? "Calculando…" : `${formatStorageGb(multimediaUsedGb)} GB`}</strong>
+                <strong>{statsCalculating ? t("loading_details") : `${formatStorageGb(multimediaUsedGb, raspberryLanguage)} GB`}</strong>
               </div>
             </article>
             </div>
@@ -6193,9 +6151,7 @@ function RaspberryPage({
                   webkitdirectory=""
                   directory=""
                   onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
-                />
-                Seleccionar una carpeta o colección
-              </label>
+                />{ui("Seleccionar una carpeta o colección")}</label>
             ) : null}
 
             {uploadMediaType === "pictures" ? (
@@ -6208,7 +6164,7 @@ function RaspberryPage({
                   directory=""
                   onChange={(event) => onUploadFiles(Array.from(event.target.files || []))}
                 />
-                {t("upload_pictures")} · carpeta
+                {t("upload_pictures")} · {freeDownloadStrings(raspberryLanguage).folder}
               </label>
             ) : null}
 
@@ -6264,7 +6220,7 @@ function BookCover({ book }) {
   return (
     <span
       className="books-library__generated-cover"
-      aria-label={`Portada de ${book.name}`}
+      aria-label={book.name}
       role="img"
     >
       {imageAvailable && imageUrl ? (
@@ -6379,6 +6335,7 @@ function BookDetails({ book, language, onRead, onEdit, onDelete, onBack, renderM
 function BooksLibrary({ detailPath, setDetailPath, view, books, title, author, language, sort, direction, onDirectionChange, countLabel, onOpen, onEdit, onDelete, renderMarks, actionsVisible, onActionsChange, renderActions }) {
   const t = bookStrings(language);
   const detail = books.length === 1 ? books[0] : books.find(book => book.relativePath === detailPath);
+  useBrowserBack(detail && books.length > 1 ? () => setDetailPath("") : null, 5);
   if (detail) return <BookDetails book={detail} language={language} onRead={onOpen} onEdit={onEdit} onDelete={onDelete} renderMarks={renderMarks} onBack={books.length > 1 ? () => setDetailPath("") : null} />;
   return (
     <section className="books-library seasons-section library-with-scroll-rail">
@@ -6417,6 +6374,7 @@ function BooksLibrary({ detailPath, setDetailPath, view, books, title, author, l
 }
 
 function BookCollectionModal({ collection, language, onClose, onSave, onDelete }) {
+  const ui = useUiText();
   const [graphicNovel, setGraphicNovel] = useState(false);
   const [typeChanged, setTypeChanged] = useState(false);
   const [name, setName] = useState("");
@@ -6435,16 +6393,16 @@ function BookCollectionModal({ collection, language, onClose, onSave, onDelete }
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div className="dialog-card book-collection-modal" onClick={(event) => event.stopPropagation()}>
-        <div className="dialog-card__header"><div><p>Biblioteca</p><h2>Customizar colección</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
+        <div className="dialog-card__header"><div><p>{ui("Biblioteca")}</p><h2>{ui("Customizar colección")}</h2></div><button className="dialog-card__close" onClick={onClose} type="button">×</button></div>
         <div className="book-collection-modal__body">
           <div className="book-metadata__preview"><BookCover book={{ ...collection.coverBook, coverUrl: preview || collection.coverBook.coverUrl }} /></div>
           <BookTypeField language={language} collection checked={graphicNovel} mixed={!typeChanged && !graphicNovel && collection.books.some(isGraphicNovel)} onChange={value => { setGraphicNovel(value); setTypeChanged(true); }} />
-          <label className="dialog-field"><span>Nombre de la colección</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
+          <label className="dialog-field"><span>{ui("Nombre de la colección")}</span><input value={name} onChange={(event) => setName(event.target.value)} /></label>
           <label className="dialog-field"><span>{bookStrings(language).author}</span><input value={author} maxLength={1000} onChange={event => setAuthor(event.target.value)} /></label>
-          <label className="dialog-field book-metadata__file"><span>Portada manual</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile?.name || "Esta portada se mostrará en la ficha y en la cartelera de la colección. Por defecto se usa el primer libro."}</small></label>
+          <label className="dialog-field book-metadata__file"><span>{ui("Portada manual")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} /><small>{coverFile?.name || ui("Esta portada se mostrará en la ficha y en la cartelera de la colección. Por defecto se usa el primer libro.")}</small></label>
           {error ? <p className="book-metadata__error">{error}</p> : null}
         </div>
-        <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(collection)} type="button">Borrar colección completa</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">Cancelar</button><button className="dialog-button dialog-button--accent" disabled={busy || !name.trim()} onClick={async () => { try { setBusy(true); await onSave({ collection: collection.key, name, author, coverFile, coverUrl: collection.coverUrl || "", ...(typeChanged ? { isGraphicNovel: graphicNovel } : {}) }); } catch (nextError) { setError(nextError.message || "No se pudo guardar la colección."); } finally { setBusy(false); } }} type="button">{busy ? "Guardando…" : "Guardar cambios"}</button></div>
+        <div className="book-metadata__footer"><button className="dialog-button dialog-button--danger book-metadata__delete" onClick={() => onDelete(collection)} type="button">{ui("Borrar colección completa")}</button><button className="dialog-button dialog-button--ghost" onClick={onClose} type="button">{ui("Cancelar")}</button><button className="dialog-button dialog-button--accent" disabled={busy || !name.trim()} onClick={async () => { try { setBusy(true); await onSave({ collection: collection.key, name, author, coverFile, coverUrl: collection.coverUrl || "", ...(typeChanged ? { isGraphicNovel: graphicNovel } : {}) }); } catch (nextError) { setError(nextError.message || ui("No se pudo guardar la colección.")); } finally { setBusy(false); } }} type="button">{busy ? ui("Guardando…") : ui("Guardar cambios")}</button></div>
       </div>
     </div>, document.body
   );
@@ -6475,6 +6433,7 @@ function BookOpenModal({ book, busy, onClose, onOpenBrowser, onOpenRaspberry, t 
 
 
 function LibraryLoading({ label, progress, stage, readProgress }) {
+  const ui = useUiText();
   const [now, setNow] = useState(Date.now());
   const [started] = useState(Date.now());
   useEffect(() => {
@@ -6485,10 +6444,10 @@ function LibraryLoading({ label, progress, stage, readProgress }) {
     <div className="library-loading__card" role="status" aria-live="polite">
       <LoadingSpinner />
       <h2>{label}</h2>
-      <p className="library-loading__detail">{stage || label}{readProgress ? (readProgress.total > 0 ? ` · ${Math.floor(readProgress.completed / readProgress.total * 100)} %` : " · Preparando lectura…") : ` · ${Math.max(0, Math.floor((now - started) / 1000))} s`}</p>
+      <p className="library-loading__detail">{stage || label}{readProgress ? (readProgress.total > 0 ? ` · ${Math.floor(readProgress.completed / readProgress.total * 100)} %` : ui(" · Preparando lectura…")) : ` · ${Math.max(0, Math.floor((now - started) / 1000))} s`}</p>
       {progress?.total > 0 ? <>
-        <p className="library-loading__detail">Portadas: {progress.completed}/{progress.total} revisadas · {progress.loaded || 0} cargadas · {progress.failed || 0} errores · {progress.timedOut || 0} tiempos agotados</p>
-        <ul className="library-loading__pending">{progress.active?.map(item => <li key={item.name}>Esperando: {item.name} · {Math.max(0, Math.floor((now - item.started) / 1000))} s</li>)}</ul>
+        <p className="library-loading__detail">{ui("Portadas: {completed}/{total} revisadas · {loaded} cargadas · {failed} errores · {timedOut} tiempos agotados", { completed: progress.completed, total: progress.total, loaded: progress.loaded || 0, failed: progress.failed || 0, timedOut: progress.timedOut || 0 })}</p>
+        <ul className="library-loading__pending">{progress.active?.map(item => <li key={item.name}>{ui("Esperando: {name}", { name: item.name })} · {Math.max(0, Math.floor((now - item.started) / 1000))} s</li>)}</ul>
       </> : null}
       {readProgress?.total > 0 ? <progress className="library-loading__progress" value={readProgress.completed} max={readProgress.total} aria-label={stage || label} /> : null}
       {progress?.total > 0 ? <progress className="library-loading__progress" value={progress.completed} max={progress.total} aria-label={label} /> : null}
@@ -6616,6 +6575,9 @@ export default function App() {
   const [weatherLocationStatus, setWeatherLocationStatus] = useState("");
   const [weatherLocationDetails, setWeatherLocationDetails] = useState(null);
   const [raspberryLanguage, setRaspberryLanguage] = useState(() => loadStoredRaspberryLanguage());
+  const ui = (source, variables) => legacyMessage(source, raspberryLanguage, variables);
+  const languageRevision = useRef(0);
+  const languageSaving = useRef(false);
   const [raspberryLanguageSaving, setRaspberryLanguageSaving] = useState(false);
   const [raspberryLanguageError, setRaspberryLanguageError] = useState("");
   const [tmdbSettings, setTmdbSettings] = useState({ apiKey: "", bearerToken: "" });
@@ -6683,7 +6645,7 @@ export default function App() {
   function saveMarks(next) { return profiles.saveMarks(next); }
 
   function handleManageUsers(id) {
-    setRaspberryReturnView(currentView === "season" ? "season" : "series");
+    if (currentView !== "raspberry") setRaspberryReturnView(currentView === "season" ? "season" : "series");
     setUserEditorId(id); setCurrentView("raspberry"); setRaspberryTab("users");
     window.scrollTo({ top: 0, behavior: "instant" });
   }
@@ -6831,7 +6793,7 @@ export default function App() {
 
   function recordBookUploadReport(report) {
     try { window.localStorage.setItem(BOOK_UPLOAD_REPORT_KEY, JSON.stringify(report)); }
-    catch { report = { ...report, storageError: "No se pudo conservar el informe en este navegador. Descárgalo antes de cerrar la página." }; }
+    catch { report = { ...report, storageError: ui("No se pudo conservar el informe en este navegador. Descárgalo antes de cerrar la página.") }; }
     return report;
   }
 
@@ -6883,7 +6845,7 @@ export default function App() {
       const track = async (name, read) => {
         const started = Date.now();
         pending.add(name);
-        if (!cancelled) setLibraryStage(`Leyendo: ${[...pending].join(", ")}`);
+        if (!cancelled) setLibraryStage(ui("Leyendo: {items}", { items: [...pending].join(", ") }));
         console.info(`[Biblioteca] Inicio: ${name}`);
         try {
           const result = await read();
@@ -6894,17 +6856,18 @@ export default function App() {
           throw error;
         } finally {
           pending.delete(name);
-          if (!cancelled) setLibraryStage(pending.size ? `Leyendo: ${[...pending].join(", ")}` : "Preparando biblioteca");
+          if (!cancelled) setLibraryStage(pending.size ? ui("Leyendo: {items}", { items: [...pending].join(", ") }) : ui("Preparando biblioteca"));
         }
       };
 
       try {
+        const readLanguageRevision = languageRevision.current;
         const [nextVideos, nextLanguage] = await Promise.all([
-          track("catálogo local", () => getVideos({ onProgress: progress => { if (!cancelled) setReadProgress(progress); } })),
-          track("idioma", getRaspberryLanguage),
+          track(ui("catálogo local"), () => getVideos({ onProgress: progress => { if (!cancelled) setReadProgress(progress); } })),
+          track(ui("Idioma"), getRaspberryLanguage),
         ]);
         if (cancelled) return;
-        if (nextLanguage?.language) setRaspberryLanguage(normalizeRaspberryLanguage(nextLanguage.language));
+        if (nextLanguage?.language && !languageSaving.current && readLanguageRevision === languageRevision.current) setRaspberryLanguage(normalizeRaspberryLanguage(nextLanguage.language));
         // Settings have their own background load; they are not library media.
         const settings = Promise.all([
           getRaspberryAlarms(), getRaspberryWeatherSettings(), getRaspberryTmdbSettings(), getRaspberryBirthdays(),
@@ -6929,7 +6892,7 @@ export default function App() {
         if (nextError?.status === 401) {
           setStoredWebPin("");
           setUnlocked(false);
-          setPinError("PIN incorrecto o sesion caducada.");
+          setPinError(ui("PIN incorrecto o sesion caducada."));
           return;
         }
         setError(nextError.message || "No se pudo conectar con la Raspberry.");
@@ -6970,7 +6933,7 @@ export default function App() {
         if (nextError?.status === 401) {
           setStoredWebPin("");
           setUnlocked(false);
-          setPinError("PIN incorrecto o sesion caducada.");
+          setPinError(ui("PIN incorrecto o sesion caducada."));
         }
       }
     }, 350);
@@ -6982,6 +6945,7 @@ export default function App() {
 
   useEffect(() => {
     saveStoredRaspberryLanguage(raspberryLanguage);
+    applyDocumentLanguage(raspberryLanguage);
   }, [raspberryLanguage]);
 
   useEffect(() => {
@@ -7042,10 +7006,11 @@ export default function App() {
     async function refreshRaspberryStatus() {
       if (refreshing || cancelled) return;
       refreshing = true;
+      const readLanguageRevision = languageRevision.current;
       try {
         const nextHealth = await getHealth();
         if (!cancelled) {
-          if (nextHealth?.language) {
+          if (nextHealth?.language && !languageSaving.current && readLanguageRevision === languageRevision.current) {
             setRaspberryLanguage(normalizeRaspberryLanguage(nextHealth.language));
           }
           setRaspberryHealth({
@@ -7151,7 +7116,7 @@ export default function App() {
     setCoverProgress(null);
     setCoverWarning("");
     setReadProgress({ completed: 0, total: 0 });
-    setLibraryStage("Leyendo resumen local de series y películas");
+    setLibraryStage(ui("Leyendo resumen local de series y películas"));
     const summaryStarted = Date.now();
     console.info("[Biblioteca] Inicio: resumen local", { language: tmdbLanguage });
     setError("");
@@ -7160,7 +7125,7 @@ export default function App() {
       setReadProgress(null);
       setLibraryRatings(summaries.ratings || {});
       console.info("[Biblioteca] Completado: resumen local", { ms: Date.now() - summaryStarted });
-      setLibraryStage("Cargando miniaturas locales de series y películas");
+      setLibraryStage(ui("Cargando miniaturas locales de series y películas"));
       const covers = [
         ...directories.map(directory => {
           const card = summaries.series[String(directory.tmdbId)] || {};
@@ -7182,7 +7147,7 @@ export default function App() {
         const detail = current[String(movie.id)];
         return [String(movie.id), { ...card, ...(detail?._detailsLanguage === tmdbLanguage ? detail : {}) }];
       })));
-      setLibraryStage("Cargando miniaturas de libros y novelas gráficas");
+      setLibraryStage(ui("Cargando miniaturas de libros y novelas gráficas"));
       setCoverProgress(null);
       // Continue warming the remaining covers after opening the library.
       const bookPreload = preloadBookLibraryCovers(videos.books || [], videos.bookCollections || {},
@@ -7278,6 +7243,7 @@ export default function App() {
         name: profile.name || tmdbMovie?.name || movie.name,
         fileRelativePath: movie.fileRelativePath || "",
         fileName: movie.fileName || "",
+        fileInfo: movie.fileInfo || null,
         preferredVideo: profile.preferredVideo || null,
         trailer: tmdbMovie?.trailer || null,
         originalName: tmdbMovie?.originalName || "",
@@ -7562,7 +7528,7 @@ export default function App() {
   async function handleUnlock(event) {
     event.preventDefault();
     if (!/^\d{4}$/.test(webPinInput)) {
-      setPinError("Introduce un PIN numerico de 4 digitos.");
+      setPinError(t("pin_digits"));
       return;
     }
 
@@ -7576,7 +7542,7 @@ export default function App() {
       setUnlocked(true);
       setWebPinInput("");
     } catch (nextError) {
-      setPinError(nextError.message || "No se pudo validar el PIN.");
+      setPinError(nextError.message || t("pin_validate_failed"));
     } finally {
       setPinSubmitting(false);
     }
@@ -7584,10 +7550,12 @@ export default function App() {
 
   async function handleRaspberryLanguageChange(nextLanguage) {
     nextLanguage = normalizeRaspberryLanguage(nextLanguage);
-    if (nextLanguage === raspberryLanguage || raspberryLanguageSaving) {
+    if (nextLanguage === raspberryLanguage || languageSaving.current) {
       return;
     }
 
+    languageSaving.current = true;
+    languageRevision.current += 1;
     setRaspberryLanguageSaving(true);
     setRaspberryLanguageError("");
     try {
@@ -7597,11 +7565,13 @@ export default function App() {
       if (nextError?.status === 401) {
         setStoredWebPin("");
         setUnlocked(false);
-        setPinError("PIN incorrecto o sesion caducada.");
+        setPinError(ui("PIN incorrecto o sesion caducada."));
       } else {
         setRaspberryLanguageError(nextError.message || t("language_update_failed"));
       }
     } finally {
+      languageSaving.current = false;
+      languageRevision.current += 1;
       setRaspberryLanguageSaving(false);
     }
   }
@@ -7635,7 +7605,7 @@ export default function App() {
   }
 
   function handleOpenRaspberryPage() {
-    setRaspberryReturnView(currentView === "season" ? "season" : "series");
+    if (currentView !== "raspberry") setRaspberryReturnView(currentView === "season" ? "season" : "series");
     setCurrentView("raspberry");
     setMiniTvOpen(false);
     setSettingsOpen(false);
@@ -7665,7 +7635,7 @@ export default function App() {
     const safeMediaType = ["games", "movies", "books", "pictures"].includes(mediaType) ? mediaType : "series";
     setUploadMediaType(safeMediaType);
     if (safeMediaType === "books") setUploadBookIsGraphicNovel(bookLibraryType === "graphic");
-    setRaspberryReturnView(currentView === "season" ? "season" : "series");
+    if (currentView !== "raspberry") setRaspberryReturnView(currentView === "season" ? "season" : "series");
     setRaspberryTab("uploads");
     setCurrentView("raspberry");
     setMiniTvOpen(false);
@@ -7699,7 +7669,7 @@ export default function App() {
           ? { relativePath: activeItem.fileRelativePath }
           : resolvePlayableMovieEntry(activeItem);
         if (!movieEntry?.relativePath && !mockMode) {
-          throw new Error("No se encontró el archivo para guardar la ficha en la Raspberry.");
+          throw new Error(ui("No se encontró el archivo para guardar la ficha en la Raspberry."));
         }
         if (movieEntry?.relativePath) {
           if (subtitleFile) await uploadMovieSubtitles({ relativePath: movieEntry.relativePath, file: subtitleFile });
@@ -7736,7 +7706,7 @@ export default function App() {
 
   async function handleSaveGameVideo(video) {
     const relativePath = selectedGame?.relativePath;
-    if (!relativePath) throw new Error("Game not found");
+    if (!relativePath) throw new Error(ui("No se encontró el juego."));
     const response = await saveGameVideo(relativePath, video);
     setVideos(current => current ? { ...current,
       games: (current.games || []).map(game => game.relativePath === relativePath
@@ -8461,8 +8431,8 @@ export default function App() {
         if (!uploadedExists) {
           throw new Error(
             uploadedMovie?.saved?.path
-              ? `La API dice que guardó la película en ${uploadedMovie.saved.path}, pero no aparece al refrescar la biblioteca.`
-              : "La película no aparece al refrescar la biblioteca de la Raspberry."
+              ? ui("La API dice que guardó la película en {path}, pero no aparece al refrescar la biblioteca.", { path: uploadedMovie.saved.path })
+              : ui("La película no aparece al refrescar la biblioteca de la Raspberry.")
           );
         }
         setUploadSummary(
@@ -9019,7 +8989,7 @@ export default function App() {
       setSelectedBookCollection("");
       setVideos(await getVideos());
     } catch (nextError) {
-      window.alert(nextError.message || "No se pudo eliminar la colección.");
+      window.alert(nextError.message || ui("No se pudo eliminar la colección."));
     }
   }
 
@@ -9039,7 +9009,7 @@ export default function App() {
       const supported = new Set(["pdf", "epub", "cbz", "cbr"]);
       const bookFiles = safeFiles.filter((file) => supported.has(getFileExtension(file.name)));
       if (!bookFiles.length || bookFiles.length !== safeFiles.length) {
-        const report = recordBookUploadReport({ startedAt: new Date().toISOString(), status: "error", error: "La carpeta contiene archivos incompatibles. Usa PDF, EPUB, CBZ o CBR.", files: safeFiles.map((file) => ({ name: file.webkitRelativePath || file.name, size: file.size, status: supported.has(getFileExtension(file.name)) ? "pending" : "rejected" })) });
+        const report = recordBookUploadReport({ startedAt: new Date().toISOString(), status: "error", error: ui("La carpeta contiene archivos incompatibles. Usa PDF, EPUB, CBZ o CBR."), files: safeFiles.map((file) => ({ name: file.webkitRelativePath || file.name, size: file.size, status: supported.has(getFileExtension(file.name)) ? "pending" : "rejected" })) });
         setBookUploadDialog({ phase: "error", error: report.error, report });
         setUploadSummary(report.error);
         return;
@@ -9052,21 +9022,21 @@ export default function App() {
         return;
       }
       const suggestedTitle = isCollectionUpload
-        ? detectedCollection || "Nueva colección"
+        ? detectedCollection || ui("Nueva colección")
         : stripFileExtension(bookFiles[0].name);
       const requestedTitle = isCollectionUpload
-        ? window.prompt("Nombre de la colección", suggestedTitle)
+        ? window.prompt(ui("Nombre de la colección"), suggestedTitle)
         : confirmedBookProfile.title;
       if (requestedTitle === null) return;
       const safeTitle = requestedTitle.trim() || suggestedTitle;
       const collection = isCollectionUpload ? safeTitle : "";
       const uploadLabel = isCollectionUpload
-        ? `${safeTitle} · ${bookFiles.length} libro(s)`
+        ? `${safeTitle} · ${t("book_collection_count", { count: bookFiles.length })}`
         : bookFiles[0].name;
       try {
         const { conflicts } = await checkUploadConflicts({ mediaType: "books", files: bookFiles.map(file => file.webkitRelativePath || file.name), collection, title: isCollectionUpload ? "" : safeTitle });
         if (conflicts.length && await requestSeriesDuplicateAction(conflicts.length, bookFiles.length, "books") !== "overwrite") return;
-        setUploadSummary(`Subiendo ${bookFiles.length} libro(s)…`);
+        setUploadSummary(ui("Subiendo {count} libro(s)…", { count: bookFiles.length }));
         setUploadProgress({ percent: 0, fileName: uploadLabel, status: "uploading" });
         setBookUploadDialog({
           phase: "uploading",
@@ -9097,7 +9067,7 @@ export default function App() {
           nextVideos = await getVideos();
           setVideos(nextVideos);
         } catch (refreshError) {
-          refreshWarning = ` Los archivos se han guardado, pero no se pudo actualizar la biblioteca: ${refreshError.message}.`;
+          refreshWarning = ui("Los archivos se han guardado, pero no se pudo actualizar la biblioteca: {error}.", { error: refreshError.message });
           uploadResponse.report.note = refreshWarning;
           recordBookUploadReport(uploadResponse.report);
         }
@@ -9106,7 +9076,7 @@ export default function App() {
           const uploadedPath = uploadResponse?.items?.[0]?.relativePath;
           uploadedBook = (nextVideos?.books || []).find((book) => book.relativePath === uploadedPath) || null;
         }
-        const completedSummary = `${uploadResponse.items.length} libro(s) añadidos${collection ? ` a ${collection}` : ""}.${refreshWarning}`;
+        const completedSummary = `${ui(collection ? "{count} libro(s) añadidos a {collection}." : "{count} libro(s) añadidos.", { count: uploadResponse.items.length, collection })} ${refreshWarning}`;
         setUploadSummary(completedSummary);
         setUploadProgress(null);
         setBookUploadDialog({
@@ -9333,6 +9303,33 @@ export default function App() {
       }));
   const bookHeaderBook = filteredActiveBooks?.length === 1 ? filteredActiveBooks[0] : activeBookCollection?.books.find(book => book.relativePath === bookDetailPath);
   const isMediaDetail = (isGamesMode && Boolean(selectedGame)) || (isSeriesMode && Boolean(selectedSeries)) || (isMoviesMode && Boolean(selectedMovie)) || (isBooksMode && Boolean(activeBookCollection));
+  useBrowserBack(!unlocked ? null
+    : currentView === "raspberry" ? handleBackFromRaspberry
+    : currentView === "season" ? handleBackToSeries
+    : !isMediaDetail ? null
+    : isGamesMode ? handleBackToGameLibrary
+    : isBooksMode ? handleBackToBookLibrary
+    : isMoviesMode ? handleBackToMovieLibrary
+    : handleBackToSeriesLibrary);
+  useBrowserBack(unlocked && episodeDialogOpen ? handleCloseEpisodeDetails : null, 10);
+  useBrowserBack(unlocked && catalogAIOpen ? () => setCatalogAIOpen(false) : null, 15);
+  useBrowserBack(unlocked && settingsOpen ? () => setSettingsOpen(false) : null, 20);
+  useBrowserBack(unlocked && bookTorrentTarget ? () => setBookTorrentTarget(null) : null, 20);
+  useBrowserBack(unlocked && browserPlayback ? () => setBrowserPlayback(null) : null, 30);
+  useBrowserBack(unlocked && browserGame ? () => setBrowserGame(null) : null, 30);
+  useBrowserBack(unlocked && openBook ? () => setOpenBook(null) : null, 30);
+  useBrowserBack(!unlocked ? null
+    : deleteConfirmation ? () => setDeleteConfirmation(null)
+    : movieFavoriteConfirmation ? () => setMovieFavoriteConfirmation(null)
+    : uploadValidationError ? () => setUploadValidationError(null)
+    : bookMetadataTarget ? () => setBookMetadataTarget(null)
+    : bookCollectionTarget ? () => setBookCollectionTarget(null)
+    : bookOpenTarget ? () => { if (!bookOpenBusy) setBookOpenTarget(null); }
+    : freeDownloadPickerOpen ? () => setFreeDownloadPickerOpen(false)
+    : gameLookupOpen ? handleCloseGameUploadDialog
+    : addSeriesOpen || uploadLookupOpen ? handleCloseUploadDialog
+    : null, 35);
+  useBrowserBack(unlocked && resumeRequest ? () => chooseResume(null) : null, 40);
   const filterTotal = isPicturesMode ? pictureLibrary.length : isBooksMode
     ? activeBookCollection?.books.length ?? bookCollections.length
     : isGamesMode
@@ -9378,7 +9375,7 @@ export default function App() {
   }, [directories, raspberryCurrentPlayback, raspberryHealth, seriesOptions]);
 
   return (
-    <PersonCatalogContext.Provider value={{ movies: movieOptions, onSelectMovie: movie => {
+    <LanguageContext.Provider value={raspberryLanguage}><PersonCatalogContext.Provider value={{ movies: movieOptions, onSelectMovie: movie => {
       setActiveMediaType("movies");
       setCurrentView("series");
       setTmdbBrowserOpen(false);
@@ -9490,7 +9487,7 @@ export default function App() {
             <span className="torrent-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
               {downloadNotificationCount > 0 ? torrentNotificationLabel(downloadNotificationCount, torrentStrings(raspberryLanguage)) : ""}
             </span>
-            {profiles.error ? createPortal(<div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div>, document.body) : !profiles.ready ? <div className="profile-status" role="status">Users…</div> : null}
+            {profiles.error ? createPortal(<div className="profile-status" role="alert">{profiles.error}<button type="button" onClick={profiles.reload}>{userStrings(raspberryLanguage).retry}</button></div>, document.body) : !profiles.ready ? <div className="profile-status" role="status">{ui("Cargando usuarios…")}</div> : null}
             {!libraryPending && !detailLoading && !detailError && coverWarning && currentView !== "raspberry" ? (
               <div className="detail-load-status detail-load-status--dismissible" role="status">
                 <span>{coverWarning}</span>
@@ -9505,10 +9502,10 @@ export default function App() {
               </div>
             ) : null}
             {(detailLoading || detailError) && !(isSeriesMode && currentView !== "season") && !libraryPending && currentView !== "raspberry" ? <div className="detail-load-status" role={detailError ? "alert" : "status"}>
-              {detailLoading ? <><LoadingSpinner inline /> Cargando ficha de {selectedMovie?.name || selectedSeries?.name || "este título"}…</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">Reintentar</button></>}
+              {detailLoading ? <><LoadingSpinner inline /> {ui("Cargando ficha de {name}…", { name: selectedMovie?.name || selectedSeries?.name || ui("este título") })}</> : <>{detailError} <button className="dialog-button" onClick={() => setDetailRetry(value => value + 1)} type="button">{ui("Reintentar")}</button></>}
             </div> : null}
             {!error && libraryPending && !(currentView === "raspberry" && videos) ? (
-              <LibraryLoading label={t("loading_library")} stage={libraryStage} readProgress={readProgress} progress={tmdbLoading ? coverProgress : null} />
+              <LibraryLoading label={t("loading_library")} stage={ui(libraryStage)} readProgress={readProgress} progress={tmdbLoading ? coverProgress : null} />
             ) : error ? (
               <section className="empty-state">
                 <div className="empty-state__card">
@@ -9672,7 +9669,7 @@ export default function App() {
                 </div>
 
                 {seasonEpisodesLoading ? (
-                  <p role="status"><LoadingSpinner inline /> Cargando miniaturas de {selectedSeason.title}…</p>
+                  <p role="status"><LoadingSpinner inline /> {ui("Cargando miniaturas de {name}…", { name: selectedSeason.title })}</p>
                 ) : (
                   <section className="season-page__episodes">
                     {(seasonEpisodes?.episodes || []).map((episode) => (
@@ -9717,6 +9714,7 @@ export default function App() {
                       })}
                     </div>
                     {!isMediaDetail && (!isPicturesMode || picturesAtRoot) && <TorrentNotificationBell notifications={downloadNotifications} language={raspberryLanguage} onViewDownloads={handleOpenDownloadNotifications} />}
+                    <LanguageSelector compact value={raspberryLanguage} onChange={handleRaspberryLanguageChange} disabled={raspberryLanguageSaving} error={raspberryLanguageError} />
                     <ProfileMenu profiles={profiles} onManage={handleManageUsers} language={raspberryLanguage} />
                   </div>
                 </section>
@@ -9730,7 +9728,7 @@ export default function App() {
                       crop={headerImageCrop}
                       bookCover={(isBooksMode && Boolean(activeBookCollection)) || (isGamesMode && Boolean(selectedGame?.coverImage))}
                       bookType={isBooksMode ? bookLibraryType : null}
-                      alt={(isBooksMode ? activeBookCollection?.label || (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : selectedItem?.name) || "Cartell principal"}
+                      alt={(isBooksMode ? activeBookCollection?.label || (bookLibraryType === "graphic" ? bookStrings(raspberryLanguage).graphicNovels : bookStrings(raspberryLanguage).novels) : selectedItem?.name) || ""}
                     />}
 
                     {!isMediaDetail && isGamesMode ? <RetroGamesTitle label={t(activeMediaSection.labelKey)} icon={activeMediaSection.inactiveIcon} headerIcon={activeMediaSection.headerIcon} /> : !isMediaDetail ? (
@@ -9776,6 +9774,7 @@ export default function App() {
                                 <option value="name">{t("movie_sort_name")}</option>
                                 {isMoviesMode || isGamesMode ? <option value="year">{t("movie_sort_year")}</option> : null}
                                 {!isGamesMode && <option value="rating">{t("movie_sort_rating")}</option>}
+                                {isMoviesMode && <option value="quality">{t("movie_sort_quality")}</option>}
                               </select>
                             </label>}
                             {!isOscarView && (isMoviesMode || isSeriesMode) && <label className="movie-library__sort movie-library__rating-source">
@@ -9862,8 +9861,8 @@ export default function App() {
                         className={`series-icon-button series-icon-button--hero series-icon-button--hero-settings${isMediaDetail ? " series-icon-button--detail-settings" : ""}`}
                         onClick={handleOpenCustomization}
                         type="button"
-                        aria-label={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.isCollection ? "colección" : "libro"}`}
-                        title={`Personalizar ${isMoviesMode ? "película" : isSeriesMode ? "serie" : isGamesMode ? "juego" : activeBookCollection?.isCollection ? "colección" : "libro"}`}
+                        aria-label={bookStrings(raspberryLanguage).customize}
+                        title={bookStrings(raspberryLanguage).customize}
                       >
                         <img
                           className="series-icon-button__image series-icon-button__image--settings"
@@ -10148,7 +10147,7 @@ export default function App() {
                         const rating = formatLibraryRating(series, libraryRatingSource, raspberryLanguage, t("not_available"));
                         return (
                           <article data-library-index className="movie-library__card" key={series.directoryPath}>
-                            <MoviePosterPreview movie={series} kind="tv" enabled={seriesLibraryView === "grid"} onClick={() => handleOpenSeriesDetails(series.directoryPath)} label={`${t("movie_details")}: ${series.name}`}>
+                            <MoviePosterPreview movie={series} kind="tv" view={seriesLibraryView} enabled={seriesLibraryView === "grid" || seriesLibraryView === "list"} onClick={() => handleOpenSeriesDetails(series.directoryPath)} label={`${t("movie_details")}: ${series.name}`}>
                               <LibraryPoster src={poster} name={series.name} />
                             </MoviePosterPreview>
                             <div className="movie-library__info">
@@ -10165,7 +10164,7 @@ export default function App() {
                                 </div>
                                 <div title={t(series.totalRuntimeMinutes == null ? "not_available" : series.runtimeIsEstimated ? "series_runtime_estimated" : "duration")}>
                                   <dt>{t("series_stats_hours")}</dt>
-                                  <dd>{series.totalRuntimeMinutes == null ? "—" : `${series.runtimeIsEstimated ? "≈ " : ""}${new Intl.NumberFormat(normalizeRaspberryLanguage(raspberryLanguage), { maximumFractionDigits: 1 }).format(series.totalRuntimeMinutes / 60)}`}</dd>
+                                  <dd>{series.totalRuntimeMinutes == null ? "—" : `${series.runtimeIsEstimated ? "≈ " : ""}${new Intl.NumberFormat(intlLocale(raspberryLanguage), { maximumFractionDigits: 1 }).format(series.totalRuntimeMinutes / 60)}`}</dd>
                                 </div>
                               </dl>
                               <div className="movie-library__actions-reveal" inert={seriesLibraryView !== "list" && !seriesActionsVisible} aria-hidden={seriesLibraryView !== "list" && !seriesActionsVisible}>
@@ -10265,7 +10264,8 @@ export default function App() {
                             </MoviePosterPreview>
                             <div className="movie-library__info">
                               {movieLibraryView === "list" ? <MovieListTitle movie={movie} language={raspberryLanguage} /> : <h2>{movie.name}</h2>}
-                              <div className="movie-library__meta"><span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
+                              <div className="movie-library__meta">{movieLibraryView === "list" && <MovieListFileQuality movie={movie} language={raspberryLanguage} />}<span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
+                              {movieLibraryView !== "list" && <small className="movie-library__file-quality"><span>{t("movie_sort_quality")}: {movie.fileInfo?.quality?.resolution || "—"}</span><MovieQualityBars level={movie.fileInfo?.quality?.level} compact language={raspberryLanguage} /></small>}
                               <div className="movie-library__actions-reveal" inert={movieLibraryView !== "list" && !movieActionsVisible} aria-hidden={movieLibraryView !== "list" && !movieActionsVisible}>
                                 <div className="movie-library__actions-clip">
                                   <div className="movie-library__actions movie-library__actions--icons">
@@ -10336,6 +10336,7 @@ export default function App() {
                       <MovieFileInfo key={selectedMovie.fileRelativePath || selectedMovie.id}
                         relativePath={resolvePlayableMovieEntry(selectedMovie)?.relativePath || selectedMovie.fileRelativePath}
                         fileName={selectedMovie.fileName}
+                        fileInfo={selectedMovie.fileInfo}
                         language={raspberryLanguage} />
                       <button
                         className="movie-panel__play"
@@ -10622,7 +10623,7 @@ export default function App() {
               initialMovie={torrentInitialMovie}
               profiles={profiles}
               onTorrentStarted={torrentDownloads.recordJob}
-              onTorrentDashboard={() => { setTmdbBrowserOpen(false); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }}
+              onTorrentDashboard={() => { setTmdbBrowserOpen(false); handleOpenRaspberryPage(); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }}
             />
             <EpisodeDetailsModal
               loading={episodeLoading}
@@ -10663,9 +10664,9 @@ export default function App() {
       </div>
       {bookTorrentTarget && <BookTorrentModal key={bookTorrentTarget.key} winner={bookTorrentTarget} language={raspberryLanguage} onClose={() => setBookTorrentTarget(null)}
         notificationPreferences={profiles.state.torrentNotifications} notificationsReady={profiles.ready} onNotificationChange={profiles.setTorrentNotification}
-        onStarted={torrentDownloads.recordJob} onDashboard={() => { setBookTorrentTarget(null); setCurrentView("raspberry"); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }} />}
+        onStarted={torrentDownloads.recordJob} onDashboard={() => { setBookTorrentTarget(null); handleOpenRaspberryPage(); setRaspberryTab("dashboard"); setDashboardSection("torrents"); }} />}
       {unlocked && currentView !== "raspberry" && !isOscarView && !isBookAwardView && !loading && !tmdbLoading ? <BackToTop language={raspberryLanguage} /> : null}
     </main>
-    </PersonCatalogContext.Provider>
+    </PersonCatalogContext.Provider></LanguageContext.Provider>
   );
 }

@@ -1,0 +1,23 @@
+[
+  {"id":"en","name":"English","nativeName":"English","flag":"gb","locale":"en-US","tmdb":"en-US","direction":"ltr","script":"Latn"},
+  {"id":"zh","name":"Mandarin Chinese","nativeName":"普通话","flag":"cn","locale":"zh-CN","tmdb":"zh-CN","direction":"ltr","script":"Hani"},
+  {"id":"hi","name":"Hindi","nativeName":"हिन्दी","flag":"in","locale":"hi-IN","tmdb":"hi-IN","direction":"ltr","script":"Deva"},
+  {"id":"es","name":"Spanish","nativeName":"Español","flag":"es","locale":"es-ES","tmdb":"es-ES","direction":"ltr","script":"Latn"},
+  {"id":"ar","name":"Modern Standard Arabic","nativeName":"العربية الفصحى","flag":"sa","locale":"ar-SA","tmdb":"ar-SA","direction":"rtl","script":"Arab"},
+  {"id":"fr","name":"French","nativeName":"Français","flag":"fr","locale":"fr-FR","tmdb":"fr-FR","direction":"ltr","script":"Latn"},
+  {"id":"bn","name":"Bengali","nativeName":"বাংলা","flag":"bd","locale":"bn-BD","tmdb":"bn-BD","direction":"ltr","script":"Beng"},
+  {"id":"pt","name":"Portuguese","nativeName":"Português","flag":"pt","locale":"pt-PT","tmdb":"pt-PT","direction":"ltr","script":"Latn"},
+  {"id":"id","name":"Indonesian","nativeName":"Bahasa Indonesia","flag":"id","locale":"id-ID","tmdb":"id-ID","direction":"ltr","script":"Latn"},
+  {"id":"ur","name":"Urdu","nativeName":"اردو","flag":"pk","locale":"ur-PK","tmdb":"ur-PK","direction":"rtl","script":"Arab"},
+  {"id":"ru","name":"Russian","nativeName":"Русский","flag":"ru","locale":"ru-RU","tmdb":"ru-RU","direction":"ltr","script":"Cyrl"},
+  {"id":"de","name":"German","nativeName":"Deutsch","flag":"de","locale":"de-DE","tmdb":"de-DE","direction":"ltr","script":"Latn"},
+  {"id":"ja","name":"Japanese","nativeName":"日本語","flag":"jp","locale":"ja-JP","tmdb":"ja-JP","direction":"ltr","script":"Jpan"},
+  {"id":"pcm","name":"Nigerian Pidgin","nativeName":"Naijá","flag":"ng","locale":"en-NG","tmdb":"en-US","direction":"ltr","script":"Latn"},
+  {"id":"arz","name":"Egyptian Arabic","nativeName":"العربية المصرية","flag":"eg","locale":"ar-EG","tmdb":"ar-EG","direction":"rtl","script":"Arab"},
+  {"id":"mr","name":"Marathi","nativeName":"मराठी","flag":"in","locale":"mr-IN","tmdb":"mr-IN","direction":"ltr","script":"Deva"},
+  {"id":"vi","name":"Vietnamese","nativeName":"Tiếng Việt","flag":"vn","locale":"vi-VN","tmdb":"vi-VN","direction":"ltr","script":"Latn"},
+  {"id":"te","name":"Telugu","nativeName":"తెలుగు","flag":"in","locale":"te-IN","tmdb":"te-IN","direction":"ltr","script":"Telu"},
+  {"id":"sw","name":"Swahili","nativeName":"Kiswahili","flag":"tz","locale":"sw-TZ","tmdb":"sw-TZ","direction":"ltr","script":"Latn"},
+  {"id":"ha","name":"Hausa","nativeName":"Hausa","flag":"ng","locale":"ha-NG","tmdb":"ha-NG","direction":"ltr","script":"Latn"},
+  {"id":"ca","name":"Catalan","nativeName":"Català","flag":"ca","locale":"ca-ES","tmdb":"ca-ES","direction":"ltr","script":"Latn"}
+]

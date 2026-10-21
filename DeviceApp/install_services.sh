@@ -45,6 +45,7 @@ install_service() {
 }
 
 require_root
+bash "${SCRIPT_DIR}/install_language_support.sh"
 
 if ! command -v ffprobe >/dev/null 2>&1 || ! command -v ffmpeg >/dev/null 2>&1; then
   apt-get update

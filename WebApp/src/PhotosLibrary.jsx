@@ -1,5 +1,7 @@
+import { intlLocale } from "./i18n/languages.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import useBrowserBack from './useBrowserBack.js';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
 import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, pendingVariants, photosWithoutPeople, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
@@ -32,7 +34,7 @@ function Icon({ type }) {
 function dateLabel(value, language, fallback) {
   if (!value) return fallback;
   const date = new Date(typeof value === 'number' ? value * 1000 : /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) + 'T12:00:00' : value);
-  return Number.isNaN(date.getTime()) ? fallback : date.toLocaleDateString(language === 'ca' ? 'ca-ES' : language === 'en' ? 'en-GB' : 'es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+  return Number.isNaN(date.getTime()) ? fallback : date.toLocaleDateString(intlLocale(language), { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function PhotoMeta({ photo, s, language }) {
   return <div className="photo-meta"><span title={s.taken}>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
@@ -99,6 +101,7 @@ export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, langu
 
 function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyDown, className = '' }) {
   const ref = useRef(null), titleId = useId();
+  useBrowserBack(() => { if (!busy) onClose(); }, 40);
   useEffect(() => {
     const dialog = ref.current, previous = document.activeElement;
     dialog.showModal();
@@ -314,6 +317,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     if (zone) { setZone(null); setSelected(new Set()); setActionMode(false); }
     else navigate(parentId);
   };
+  useBrowserBack(current || zone ? goBack : null, 5);
   const closeDialog = () => { setDialog(null); onImportDone?.(); return refresh(); };
   async function complete(result) {
     const mode = dialog?.mode; await closeDialog();

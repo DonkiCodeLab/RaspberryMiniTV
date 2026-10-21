@@ -1,3 +1,4 @@
+from languages import LANGUAGES as UI_LANGUAGES
 """Local profile marks and strict, bounded verification of suggested TMDB titles."""
 from datetime import date
 import http.client
@@ -15,8 +16,7 @@ from catalog_ai import AIError
 TMDB_SEARCH_ROOT = "https://api.themoviedb.org/3/search/"
 MAX_RESPONSE_BYTES = 1024 * 1024
 POSTER_PATH = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp)")
-LANGUAGES = {"es": "es-ES", "ca": "ca-ES", "en": "en-US",
-             "es-ES": "es-ES", "ca-ES": "ca-ES", "en-US": "en-US"}
+LANGUAGES = {key: item["tmdb"] for item in UI_LANGUAGES for key in (item["id"], item["tmdb"])}
 
 
 def _mapping(value):

@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/languages.js";
 import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { galleryWindow, miniaturePosition, miniatureScrollLeft, miniatureWindow, MINI_IMAGE_SIZE, MINI_ROWS, MINI_SIZE, photoPeriods } from './photoTimeline.js';
 
@@ -11,7 +12,7 @@ export default function PhotoGallery({ photos, position, onPosition, s, language
   const yearIndex = Math.max(0, years.findIndex(group => anchor >= group.start && anchor < group.start + group.count));
   const year = years[yearIndex];
   const month = year?.months.find(group => anchor >= group.start && anchor < group.start + group.count);
-  const monthName = value => value == null ? s.undated : new Intl.DateTimeFormat(language, { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, value, 1)));
+  const monthName = value => value == null ? s.undated : new Intl.DateTimeFormat(intlLocale(language), { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, value, 1)));
   const miniature = miniatureWindow(photos.length, viewport.left, viewport.width);
   const page = galleryWindow(photos, position);
   const preview = galleryWindow(photos, draft);
@@ -49,7 +50,7 @@ export default function PhotoGallery({ photos, position, onPosition, s, language
   return <div className={`photo-gallery${seeking ? ' is-seeking' : ''}`}>
     <div className="photo-timeline">
       <div className="photo-timeline__heading"><div><span>{s.timeline}</span><strong>{year.year ?? s.undated}{year.year !== null && ` · ${monthName(month?.month)}`}</strong></div>
-        <span>{photos.length.toLocaleString(language)} {s.photos}</span></div>
+        <span>{photos.length.toLocaleString(intlLocale(language))} {s.photos}</span></div>
       <p className="photo-timeline__hint">{s.timelineHint}</p>
       <div className="photo-timeline__sliders">
         <label><span>{s.year}<b>{year.year ?? s.undated}</b></span>

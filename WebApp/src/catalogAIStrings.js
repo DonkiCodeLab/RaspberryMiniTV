@@ -1,4 +1,5 @@
-const strings = {
+import { withLanguages } from "./i18n/index.js";
+const strings = withLanguages({
   es: {
     modelDefault: "Del dashboard", modelCustom: "Otro modelo…", modelId: "ID del modelo", modelsLoading: "Cargando…", modelsRefresh: "Actualizar modelos", modelsFallback: "No se pudo consultar tu cuenta. Se muestran opciones predefinidas; su disponibilidad depende de tu clave.", modelQueryHint: "Elige un modelo para esta búsqueda. El modelo del dashboard se mantiene como predeterminado.", modelSettingsHint: "Modelo predeterminado para las búsquedas y recomendaciones. Guarda los cambios para aplicarlo.",
     debug: "Depurar", debugTitle: "Depuración de la última consulta", debugCopy: "Copiar informe", debugCopied: "Informe copiado.", debugCopyError: "No se pudo copiar. Puedes seleccionar el texto del informe y copiarlo manualmente.",
@@ -50,7 +51,7 @@ const strings = {
     catalogError: "Could not check the catalogue status.", catalogRequired: "First upload your catalogue in Dashboard → Auxiliary services → OpenAI.", catalogEmpty: "There are no movies, series, books or games to upload.", catalogTooLarge: "The catalogue is too large to attach in full.", catalogFileError: "OpenAI could not use the file. Upload the catalogue again from the dashboard.", catalogQueryError: "OpenAI could not process the catalogue with this model. Check that it supports files and that the catalogue fits its context; if you deleted the file, upload it again.", catalogStorageError: "Could not read or save the uploaded catalogue. Try uploading it again.", catalogSettingsChanged: "The key changed during upload. Upload the catalogue again with the saved key.", invalidSelection: "The AI response does not match the expected format. Open Debug to see what failed.",
     samples: { movies: ["Movies about time travel", "Movies starring the lead actor from Top Gun", "Comedies from the 90s"], series: ["Series with an atmosphere like Twin Peaks", "Science fiction series", "How many series do I have?"], books: ["Stories about loneliness and hope", "Books by Stephen King", "How many books do I have?"], games: ["Exploration games with a mysterious atmosphere", "Super Nintendo games", "Games published in the 90s"], pictures: ["Pictures with holiday in the name", "Images with 2024 in the name", "How many pictures do I have?"] },
   },
-};
+});
 export function catalogAIStrings(language) {
   const key = String(language || "es").toLowerCase().split(/[-_]/)[0];
   return strings[key === "cat" ? "ca" : key] || strings.es;

@@ -1,3 +1,4 @@
+from languages import normalize_language, language_info
 """Private OpenAI settings and bounded, read-only catalogue query planning."""
 import json
 from datetime import date
@@ -379,7 +380,7 @@ def plan_query(prompt, section, language, settings, options=None, diagnostics=No
     if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 2000 or "\x00" in prompt:
         raise AIError("Escribe una consulta de entre 1 y 2000 caracteres.", "AI_INVALID_PROMPT")
     data = _private_settings(settings, require_enabled=True)
-    language = language if language in ("es", "es-ES", "ca", "ca-ES", "en", "en-US") else "es-ES"
+    language = language_info(normalize_language(language, "es"))["name"]
     user_input = {"section": section, "language": language, "currentDate": date.today().isoformat(),
                   "prompt": prompt.strip()}
     if isinstance(options, dict) and isinstance(options.get("genres"), list):

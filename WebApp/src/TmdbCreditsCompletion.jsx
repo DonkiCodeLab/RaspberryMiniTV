@@ -1,7 +1,8 @@
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useRef, useState } from "react";
 import { clearLocalMetadataCache, getTmdbCreditsStatus, isMockMode } from "./api/raspberryApi";
 
-const strings = {
+const strings = withLanguages({
   es: {
     title: "Reparto y equipo", copy: "Completa las fichas de tus películas y series con actores, personajes, dirección, guion y sus fotos de TMDB.",
     start: "Completar todas las fichas", retry: "Reintentar pendientes", working: "Completando fichas…", ready: "fichas completadas",
@@ -29,7 +30,7 @@ const strings = {
     refresh: "Refresh status", done: "All identified profiles have their credits saved.",
     continues: "The download continues after you close this page.",
   },
-};
+});
 
 export default function TmdbCreditsCompletion({ language = "es" }) {
   const s = strings[language] || strings.es;

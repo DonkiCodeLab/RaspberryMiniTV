@@ -4,7 +4,8 @@ import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { canTranslateSubtitle, waitForSubtitleTranslation } from '../src/subtitleTranslation.js';
+import { canTranslateSubtitle, translationSources, waitForSubtitleTranslation } from '../src/subtitleTranslation.js';
+import { LANGUAGES } from '../src/i18n/languages.js';
 const result = await build({ entryPoints: [new URL('../src/SubtitleTranslationOffer.jsx', import.meta.url).pathname], bundle: true, write: false,
   format: 'cjs', platform: 'node', external: ['react'] });
 const module = { exports: {} };
@@ -23,6 +24,24 @@ test('translation offered after a missing target and a subtitle in another langu
   assert.equal(render({ tracks: [] }), '');
 });
 test('running translation prevents another paid click', () => { assert.match(render({ busy: true }), /disabled=""/); });
+test('every MiniTV language offers AI after a missing subtitle, including distinct Arabic and Pidgin', () => {
+  for (const { id } of LANGUAGES) {
+    const source = [{ ...tracks[0], language: id === 'en' ? 'fr' : 'en' }];
+    assert.equal(canTranslateSubtitle([id], id, source), true, id);
+    assert.match(render({ missingLanguages: [id], targetLanguage: id, tracks: source }), /Traducir subtítulo con la IA/);
+    assert.equal(canTranslateSubtitle([id], id, [{ ...tracks[0], language: id }]), false, id);
+  }
+  assert.equal(canTranslateSubtitle(['arz'], 'arz', [{ ...tracks[0], language: 'ara' }]), true);
+  assert.equal(canTranslateSubtitle(['pcm'], 'pcm', tracks), true);
+});
+test('source language aliases exclude the target without treating unknown languages as Spanish', () => {
+  for (const [tag, language] of [['fra', 'fr'], ['GER', 'de'], ['jpn', 'ja'], ['zho', 'zh'], ['zh-CN', 'zh'],
+    ['pt-PT', 'pt'], ['por', 'pt'], ['hin', 'hi'], ['ben', 'bn'], ['ind', 'id'], ['urd', 'ur'],
+    ['rus', 'ru'], ['mar', 'mr'], ['vie', 'vi'], ['tel', 'te'], ['swh', 'sw'], ['hau', 'ha'], ['ar_EG', 'arz']]) {
+    assert.deepEqual(translationSources([{ ...tracks[0], language: tag }], language), [], tag);
+  }
+  assert.equal(translationSources([{ ...tracks[0], language: 'und' }, { ...tracks[0], language: '' }], 'es').length, 2);
+});
 test('polls background progress until completed and never reports failed files as saved', async () => {
   const updates = [];
   const final = await waitForSubtitleTranslation({ id: 'job', state: 'queued' }, {

@@ -3,7 +3,7 @@ import { acquireLibraryCover, coverPreloadResults } from './preloadLibraryCovers
 
 export default function LibraryPoster(props) {
   if (props.src.includes('/tmdb/import/images/')) {
-    return <img src={props.src} alt={props.alt ?? `Portada de ${props.name}`}
+    return <img src={props.src} alt={props.alt ?? props.name}
       className={props.className} style={props.style} loading="lazy" decoding="async" fetchPriority="low" />;
   }
   return <StoredLibraryPoster {...props} />;
@@ -15,7 +15,7 @@ function StoredLibraryPoster({ src, name, className = '', style, alt }) {
   useLayoutEffect(() => {
     const container = ref.current;
     const image = acquireLibraryCover(src);
-    image.alt = alt ?? `Portada de ${name}`;
+    image.alt = alt ?? name;
     image.className = className;
     image.removeAttribute('style');
     Object.assign(image.style, style || {});

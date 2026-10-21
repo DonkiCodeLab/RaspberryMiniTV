@@ -1,5 +1,34 @@
 # DeviceApp
 
+## Información de los archivos de películas
+
+La resolución, códec, duración, tamaño, bitrates y calidad orientativa se calculan
+con FFprobe al incorporar una película (subida normal/raw, torrent o registro de
+un archivo existente). Se guardan en `fileInfo` en `media_library.sqlite3`.
+Reemplazar un vídeo renueva esos datos y el nombre original; si el análisis falla,
+se guarda el error sin conservar la calidad de la copia anterior. La fuente se
+identifica únicamente por el nombre original cuando está disponible.
+
+Las fichas y el listado leen los valores guardados. `GET /media/file-info` no
+ejecuta FFprobe. La huella del archivo detecta sustituciones; una ficha sin datos
+vigentes queda pendiente, sin presentar la medición anterior como actual.
+Al arrancar la API se completa en segundo plano el catálogo antiguo y los archivos
+nuevos o modificados fuera de la aplicación. El repaso se puede ejecutar también
+de forma manual y retoma lo que falte sin repetir los análisis ya guardados:
+
+```bash
+python3 DeviceApp/backfill_movie_file_info.py --multimedia-dir MultimediaContent
+# Reintentar los vídeos cuyo análisis falló:
+python3 DeviceApp/backfill_movie_file_info.py --multimedia-dir MultimediaContent --retry-failed
+```
+
+El repaso guarda lotes de 20 películas por transacción, conservando sus fichas.
+El comando informa de archivos actualizados, sin cambios, fallidos u omitidos
+por modificaciones concurrentes. No modifica los vídeos.
+
+Pruebas: `python -m unittest discover -s DeviceApp/tests -p 'test_media_file_info.py'`,
+`test_torrent_downloads.py` y `test_upload_conflicts.py` con el mismo comando.
+
 ## Audio compatible al reproducir desde la web
 
 Al pulsar **Reproducir en navegador**, `POST /media/playback` comprueba las pistas
@@ -319,12 +348,12 @@ conservan en su sitio y no bloquean las actualizaciones.
 
 ### Actualizar desde el dashboard
 
-Antes de **Cerrar sesión**, **Actualizar desde Git** ejecuta el mismo proceso en
+Antes de **Cerrar sesión**, **Actualizar Git y refrescar web** ejecuta el mismo proceso en
 `minitv-update.service`: descarga `origin/main`, instala dependencias, compila la
 web y reinicia la API y el menú. Solo incluye cambios publicados en Git; los
 cambios que todavía están en tu ordenador deben subirse primero. La reproducción
-se interrumpe al reiniciar el menú. La página consulta el estado y permite recargar
-la web cuando termina. El proceso continúa aunque cierres el navegador o se
+se interrumpe al reiniciar el menú. La página consulta el estado y recarga
+la web automáticamente cuando termina correctamente. El proceso continúa aunque cierres el navegador o se
 reinicie la API. El modo demo no permite iniciarlo.
 
 Para habilitar el botón por primera vez, después de copiar esta versión y compilar
@@ -921,7 +950,8 @@ carpeta de caché.
 ## Subtítulos durante la reproducción
 
 La ficha y su editor incluyen **Obtener subtítulo**, además de la carga manual de
-SRT. Selecciona español (predeterminado), catalán o inglés. La Raspberry busca en
+SRT. Permite elegir los 21 idiomas de MiniTV, con el idioma de la interfaz
+seleccionado inicialmente. La Raspberry busca en
 OpenSubtitles.com primero por la huella del vídeo (solo lee sus primeros y últimos
 64 KiB); si no hay coincidencia, busca por el ID TMDB de la ficha guardada, o por
 el nombre del fichero cuando no hay ID. Prioriza la coincidencia de versión,
@@ -929,6 +959,15 @@ fuentes fiables, valoración y descargas. Descarta otros idiomas, otras películ
 subtítulos parciales, traducciones automáticas y entregas divididas en varios CD.
 La consulta de respaldo evalúa la primera página ordenada por descargas; es una
 selección por compatibilidad estimada, no una garantía de sincronización.
+
+Si no hay un subtítulo compatible, se ofrece **Traducir subtítulo con la IA**
+desde una pista de texto disponible a cualquiera de esos 21 idiomas. Si no hay
+una pista de origen, descarga primero un subtítulo en otro idioma o carga un SRT.
+La traducción usa la configuración de OpenAI del dashboard y guarda una pista
+`<nombre-del-vídeo>.<idioma>.ai.srt`, conservando los tiempos y el original.
+Los idiomas sin catálogo propio en OpenSubtitles (pidgin nigeriano, árabe egipcio
+y hausa) también permiten esta traducción. Chino y portugués usan los códigos
+del proveedor `zh-cn` y `pt-pt`, respectivamente.
 
 En **Configurar OpenSubtitles**, introduce una clave de API, usuario y contraseña
 de OpenSubtitles.com. Consulta su [guía de alta y claves](https://opensubtitles.tawk.help/article/getting-started).

@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/languages.js";
 export function releaseSource(name = "") {
   const text = String(name).toUpperCase();
   const sources = [
@@ -28,5 +29,5 @@ export function movieFileQuality(info = {}, name = "") {
 export function formatFileSize(bytes, locale = "es") {
   if (typeof bytes !== "number" || !Number.isFinite(bytes) || bytes < 0) return null;
   const unit = bytes >= 1024 ** 3 ? 3 : bytes >= 1024 ** 2 ? 2 : bytes >= 1024 ? 1 : 0;
-  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(bytes / 1024 ** unit)} ${["B", "KiB", "MiB", "GiB"][unit]}`;
+  return `${new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 2 }).format(bytes / 1024 ** unit)} ${["B", "KiB", "MiB", "GiB"][unit]}`;
 }

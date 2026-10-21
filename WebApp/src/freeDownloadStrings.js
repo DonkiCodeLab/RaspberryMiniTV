@@ -1,4 +1,5 @@
-const strings = {
+import { withLanguages } from "./i18n/index.js";
+const strings = withLanguages({
   es: {
     title: "Descargas libres", kind: "Descarga libre", search: "Buscar descargas libres",
     added: "Descarga registrada. Su estado aparece en el listado:",
@@ -68,5 +69,5 @@ const strings = {
     historyHint: "Completed and cancelled standalone downloads stay here. Open the contents to browse, extract or delete files.",
     importDone: "Content moved to the library.", nothingMoved: "The episodes were already in the library. The download’s contents have been kept.",
   },
-};
+});
 export const freeDownloadStrings = language => strings[language] || strings.es;

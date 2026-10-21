@@ -1,3 +1,5 @@
+from languages import normalize_language
+from ui_translations import translate as ui_translate
 """Stateless, profile-scoped recommendations with locally verified availability."""
 from datetime import date
 import json
@@ -84,11 +86,7 @@ def _is_vague(prompt):
 
 
 def _first_question(language):
-    return {
-        "es": ("Puedo orientarte mejor con un poco de tus gustos.", "¿Qué géneros, actores o títulos te gustan?"),
-        "ca": ("Et puc orientar millor si conec una mica els teus gustos.", "Quins gèneres, actors o títols t’agraden?"),
-        "en": ("I can make a better suggestion with a little about your tastes.", "Which genres, actors or titles do you like?"),
-    }[language]
+    return ui_translate("recommendation.intro", language), ui_translate("recommendation.question", language)
 
 
 def _catalog_groups(catalog, kind):
@@ -349,7 +347,7 @@ def recommend(prompt, section, language, settings, memory, catalog, resolve_titl
         raise AIError("Escribe una consulta de entre 1 y 2000 caracteres.", "AI_INVALID_PROMPT", 400)
     data = _private_settings(settings, require_enabled=True)
     preferences, history = _memory(memory)
-    lang = _LANGUAGES.get(language, "es") if isinstance(language, str) else "es"
+    lang = normalize_language(language, "es")
     if not any(preferences.values()) and not history and _is_vague(prompt):
         message, question = _first_question(lang)
         return {"message": message, "question": question, "preferences": preferences,

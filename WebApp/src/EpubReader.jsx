@@ -1,3 +1,4 @@
+import { useUiText } from "./i18n/react.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -10,6 +11,7 @@ const flattenToc = (items, depth = 0) => items.flatMap((item) => [
 ]);
 
 export default function EpubReader({ book, onClose, initialProgress, onProgress }) {
+  const ui = useUiText();
   const progressRef = useRef(onProgress);
   progressRef.current = onProgress;
   const host = useRef(null);
@@ -35,7 +37,7 @@ export default function EpubReader({ book, onClose, initialProgress, onProgress 
       setLoading(false);
       setError(failure?.status === 401 ? "La sesión ha caducado. Vuelve a introducir el PIN."
         : failure?.status === 404 ? "El libro ya no existe en la biblioteca."
-          : "No se pudo leer el EPUB. Reintenta y comprueba que el archivo sea válido y no esté protegido con DRM.");
+          : ui("No se pudo leer el EPUB. Reintenta y comprueba que el archivo sea válido y no esté protegido con DRM."));
     };
     const keydown = (event) => {
       if (/INPUT|TEXTAREA|SELECT/.test(event.target?.tagName) || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -126,53 +128,52 @@ export default function EpubReader({ book, onClose, initialProgress, onProgress 
         await rendition.display(mapped.start);
       }
       else await renditionRef.current.display(target);
-    } catch { setError("No se pudo mostrar este capítulo. Puedes reintentar la lectura."); }
+    } catch { setError(ui("No se pudo mostrar este capítulo. Puedes reintentar la lectura.")); }
     finally { setTurning(false); }
   }
 
-  return createPortal(<div className="book-reader epub-reader" role="dialog" aria-modal="true" aria-label={`Leer ${book.name}`}>
+  return createPortal(<div className="book-reader epub-reader" role="dialog" aria-modal="true" aria-label={ui("Leer {name}", { name: book.name })}>
     <header className="book-reader__header">
-      <div className="book-reader__file"><strong><span>Leyendo:</span> {book.name}</strong></div>
-      <div className="book-reader__pagination" aria-label="Navegación del libro">
-        <button type="button" onClick={() => navigate("prev")} disabled={loading || turning || !location || location.atStart} aria-label="Página anterior">‹</button>
+      <div className="book-reader__file"><strong><span>{ui("Leyendo:")}</span> {book.name}</strong></div>
+      <div className="book-reader__pagination" aria-label={ui("Navegación del libro")}>
+        <button type="button" onClick={() => navigate("prev")} disabled={loading || turning || !location || location.atStart} aria-label={ui("Página anterior")}>‹</button>
         <div className="epub-reader__page-selector">
-          <small aria-live="polite">{location ? `Sección ${location.start.index + 1} de ${location.chapters}` : "Cargando…"}</small>
+          <small aria-live="polite">{location ? ui("Sección {section} de {total}", { section: location.start.index + 1, total: location.chapters }) : ui("Cargando…")}</small>
           <BookPageSelector key={`${book.relativePath}:${location?.start.index}`} section
             page={location?.start.displayed.page} total={location?.start.displayed.total}
             disabled={loading || turning || !!error} onSelect={navigate} />
         </div>
-        <button type="button" onClick={() => navigate("next")} disabled={loading || turning || !location || location.atEnd} aria-label="Página siguiente">›</button>
+        <button type="button" onClick={() => navigate("next")} disabled={loading || turning || !location || location.atEnd} aria-label={ui("Página siguiente")}>›</button>
       </div>
       <div className="book-reader__controls">
-        <div className="book-reader__zoom" aria-label="Tamaño de letra">
-          <button type="button" disabled={fontSize <= 70 || loading} onClick={() => setFontSize(value => value - 10)} aria-label="Reducir letra">A−</button>
+        <div className="book-reader__zoom" aria-label={ui("Tamaño de letra")}>
+          <button type="button" disabled={fontSize <= 70 || loading} onClick={() => setFontSize(value => value - 10)} aria-label={ui("Reducir letra")}>A−</button>
           <output>{fontSize}%</output>
-          <button type="button" disabled={fontSize >= 200 || loading} onClick={() => setFontSize(value => value + 10)} aria-label="Aumentar letra">A+</button>
+          <button type="button" disabled={fontSize >= 200 || loading} onClick={() => setFontSize(value => value + 10)} aria-label={ui("Aumentar letra")}>A+</button>
         </div>
-        <button className="book-reader__close" type="button" onClick={() => setConfirmClose(true)} aria-label="Cerrar lector">×</button>
+        <button className="book-reader__close" type="button" onClick={() => setConfirmClose(true)} aria-label={ui("Cerrar lector")}>×</button>
       </div>
     </header>
     <div className="epub-reader__body">
-      <label className="epub-reader__toc">Índice
-        <select aria-label="Ir a un capítulo" disabled={!toc.length || loading} value="" onChange={event => navigate(event.target.value)}>
-          <option value="">Selecciona un capítulo</option>
+      <label className="epub-reader__toc">{ui("Índice")}<select aria-label={ui("Ir a un capítulo")} disabled={!toc.length || loading} value="" onChange={event => navigate(event.target.value)}>
+          <option value="">{ui("Selecciona un capítulo")}</option>
           {toc.map((item, index) => <option key={`${item.href}-${index}`} value={item.href}>{item.label}</option>)}
         </select>
       </label>
       <div className="epub-reader__viewport">
         <div ref={host} className="epub-reader__pages" />
         {loading || error ? <div className="epub-reader__status" role={error ? "alert" : "status"}>
-          <p>{error || "Abriendo el libro…"}</p>
-          {error ? <button className="dialog-button dialog-button--accent" type="button" onClick={() => setRetry(value => value + 1)}>Reintentar</button> : null}
+          <p>{error || ui("Abriendo el libro…")}</p>
+          {error ? <button className="dialog-button dialog-button--accent" type="button" onClick={() => setRetry(value => value + 1)}>{ui("Reintentar")}</button> : null}
         </div> : null}
       </div>
-      <small className="epub-reader__hint">Tu posición se guarda en tu perfil. Las páginas de cada sección se ajustan a la pantalla y al tamaño de letra.</small>
+      <small className="epub-reader__hint">{ui("Tu posición se guarda en tu perfil. Las páginas de cada sección se ajustan a la pantalla y al tamaño de letra.")}</small>
     </div>
     {confirmClose ? <div className="book-reader__confirm-backdrop">
       <div className="book-reader__confirm" role="alertdialog" aria-modal="true" aria-labelledby="epub-close-title">
-        <h2 id="epub-close-title">¿Cerrar el libro?</h2><p>Podrás continuar desde la última posición con tu usuario.</p>
-        <div><button className="dialog-button dialog-button--ghost" type="button" onClick={() => setConfirmClose(false)}>Seguir leyendo</button>
-          <button className="dialog-button dialog-button--accent" type="button" onClick={onClose}>Cerrar libro</button></div>
+        <h2 id="epub-close-title">{ui("¿Cerrar el libro?")}</h2><p>{ui("Podrás continuar desde la última posición con tu usuario.")}</p>
+        <div><button className="dialog-button dialog-button--ghost" type="button" onClick={() => setConfirmClose(false)}>{ui("Seguir leyendo")}</button>
+          <button className="dialog-button dialog-button--accent" type="button" onClick={onClose}>{ui("Cerrar libro")}</button></div>
       </div>
     </div> : null}
   </div>, document.body);

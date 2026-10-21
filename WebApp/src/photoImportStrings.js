@@ -1,3 +1,4 @@
+import { withLanguages } from "./i18n/index.js";
 const es = {
   checking: 'Comprobando fotos ya guardadas…',
   checkingHint: 'Comprobamos las fotos en tu equipo antes de enviarlas. Solo se suben las que faltan; las ya guardadas conservan sus metadatos sin reenviar la imagen.',
@@ -125,4 +126,5 @@ const ca = {
   showFailures: 'Veure fotos pendents (fins a 20)', downloadFailures: 'Descarregar la llista completa d’errors', retryFailed: 'Reintentar només les pendents',
   metadata: 'Descarregar metadades originals', appleData: 'Dades d’Apple Fotos', description: 'Descripció', keywords: 'Etiquetes',
 };
-export const photoImportStrings = language => language === 'en' ? en : language === 'ca' ? ca : es;
+const translations = withLanguages({ es, ca, en });
+export const photoImportStrings = language => translations[language] || es;

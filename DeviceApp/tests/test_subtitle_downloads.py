@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import control_api as api
 import movie_subtitles as subtitles
+from languages import SUPPORTED_LANGUAGES
 
 SRT = b'1\r\n00:00:01,000 --> 00:00:02,000\r\nHola\r\n'
 CREDENTIALS = {'apiKey': 'test-key', 'username': 'test-user', 'password': 'test-password'}
@@ -126,6 +127,27 @@ class SubtitleProviderTests(unittest.TestCase):
         self.assertEqual(error.exception.code, 'SUBTITLE_NOT_FOUND')
         self.assertFalse(any('/download' in call.args[0] for call in request.call_args_list))
 
+    def test_provider_codes_filter_results_and_preserve_minitv_language(self):
+        for language, provider_language in [('zh', 'zh-cn'), ('pt', 'pt-pt'), ('fr', 'fr'), ('te', 'te')]:
+            with self.subTest(language=language), patch.object(self.provider, '_request', side_effect=[
+                {'data': [candidate(language='en', moviehash_match=True),
+                          candidate(20, language=provider_language, moviehash_match=True)]},
+                {'link': 'https://dl.opensubtitles.com/file.srt'}, SRT,
+            ]) as request:
+                _, result = self.provider.obtain(self.video, {'tmdbId': 348}, language, {**CREDENTIALS, 'password': ''})
+                self.assertIn('languages=' + provider_language, request.call_args_list[0].args[0])
+                self.assertEqual(request.call_args_list[1].kwargs['body']['file_id'], 20)
+                self.assertEqual(result['language'], language)
+
+    def test_languages_without_provider_catalogue_reach_translation_without_network_or_quota(self):
+        for language in ['pcm', 'arz', 'ha']:
+            with self.subTest(language=language), patch.object(self.provider, '_request') as request:
+                with self.assertRaises(subtitles.SubtitleError) as error:
+                    self.provider.obtain(self.video, {}, language, {})
+                self.assertEqual(error.exception.code, 'SUBTITLE_NOT_FOUND')
+                self.assertEqual(error.exception.status, 404)
+                request.assert_not_called()
+
     def test_invalid_or_oversized_downloads_are_rejected(self):
         for content in [b'', b'<html>Error</html>', b'not subtitles', b'\xff', SRT + b'\x00', b'x' * (subtitles.MAX_SUBTITLE_BYTES + 1)]:
             with self.subTest(content=content[:20]), self.assertRaises(subtitles.SubtitleError):
@@ -208,6 +230,13 @@ class SubtitleDownloadApiTests(unittest.TestCase):
         self.assertEqual(self.provider.obtain.call_args.args[1], {'tmdbId': 348})
         self.assertFalse(list(self.movies.glob('.subtitle-*')))
 
+    def test_every_interface_language_is_accepted_by_the_download_endpoint(self):
+        for language in SUPPORTED_LANGUAGES:
+            with self.subTest(language=language):
+                response = self.obtain(language=language)
+                self.assertEqual(response.status_code, 200, response.json)
+                self.assertEqual(self.provider.obtain.call_args.args[2], language)
+
     def test_errors_and_movie_changes_keep_existing_subtitle(self):
         for code in ('SUBTITLE_NOT_FOUND', 'SUBTITLE_AUTH_FAILED', 'SUBTITLE_INVALID_DOWNLOAD'):
             self.provider.obtain.side_effect = subtitles.SubtitleError(code)
@@ -228,7 +257,7 @@ class SubtitleDownloadApiTests(unittest.TestCase):
         self.assertFalse(list(self.movies.glob('.subtitle-*')))
 
     def test_rejects_unsupported_languages_missing_files_traversal_and_symlinks(self):
-        for changes in [{'language': 'fr'}, {'language': []}, {'relativePath': '../outside.mp4'},
+        for changes in [{'language': 'xx'}, {'language': []}, {'language': '../en'}, {'relativePath': '../outside.mp4'},
                         {'relativePath': 'TVShows/Alien.mkv'}, {'relativePath': 'Movies/missing.mp4'}]:
             self.assertIn(self.obtain(**changes).status_code, (400, 404))
         outside = self.root / 'outside.mp4'

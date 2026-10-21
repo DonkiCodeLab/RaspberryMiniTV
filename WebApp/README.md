@@ -1,5 +1,22 @@
 # WebApp
 
+En Películas, **Ordenar por → Calidad** usa la calidad guardada al importar cada
+vídeo; los archivos sin valoración quedan al final en ambos sentidos. La calidad
+y la resolución aparecen en las tarjetas y en el listado.
+Las fichas leen el análisis guardado y ya no analizan el vídeo al abrirse.
+
+Pruebas: `node --test tests/movieCatalog.test.js tests/libraryScroll.test.js tests/movieFileQuality.test.js`.
+
+El botón **Atrás del navegador** ejecuta la acción de volver de la pantalla
+actual: cierra primero el reproductor o la ficha de un capítulo, vuelve de una
+temporada a la ficha de la serie y de una ficha al listado. Desde el dashboard
+regresa a la pantalla de origen, aunque se hayan cambiado sus pestañas. También
+respeta los niveles del buscador TMDB, las colecciones de libros y las carpetas
+de fotos. Los filtros y el orden del listado se conservan. En la raíz de la
+biblioteca, Atrás permite salir de la web normalmente.
+
+Pruebas de navegación: `node --test tests/browserBack.test.js` desde `WebApp`.
+
 Al pulsar **Reproducir en navegador**, se comprueba el audio de forma silenciosa
 antes de abrir el vídeo. Los archivos compatibles y las copias ya preparadas se
 abren sin mostrar el diálogo de conversión. Este solo aparece cuando hay una
@@ -222,8 +239,11 @@ al archivo descargado sin comprobarlos. Requiere actualizar también DeviceApp.
 Pruebas: `cd WebApp && node --test tests/bookAwards.test.js tests/bookTorrent.test.js tests/torrentUtils.test.js`;
 backend: `python -m unittest discover -s DeviceApp/tests -p 'test_*torrent*.py'`.
 
-La ficha de una película guardada incluye **Obtener subtítulo**, con español,
-catalán e inglés. Busca y guarda automáticamente el SRT en la Raspberry, primero
+La ficha de una película guardada incluye **Obtener subtítulo**, con los 21
+idiomas de MiniTV y el idioma de la interfaz seleccionado inicialmente. Si no
+hay un subtítulo compatible, permite traducir con IA una pista de texto existente
+a cualquiera de esos idiomas, incluidos los que no tienen catálogo propio en
+OpenSubtitles. Busca y guarda automáticamente el SRT en la Raspberry, primero
 por la huella del fichero y después por su ficha y versión. **Configurar
 OpenSubtitles** abre la tarjeta de configuración en **Dashboard → Servicios
 auxiliares**, junto a TMDB, para guardar la cuenta una sola vez; los errores y las

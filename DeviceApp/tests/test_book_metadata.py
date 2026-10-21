@@ -145,10 +145,10 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(metadata._localized_edition(bilingual, 'es'), {'title': 'Original'})
 
     def test_normalize_localized_metadata_from_json_or_multipart(self):
-        variants = {'es': {'description': ' Texto ', 'isbn': 'not allowed'}, 'ca': {'title': 'Títol'}, 'fr': {'title': 'ignored'}}
+        variants = {'es': {'description': ' Texto ', 'isbn': 'not allowed'}, 'ca': {'title': 'Títol'}, 'fr': {'title': 'Titre'}, 'xx': {'title': 'ignored'}}
         for value in (variants, json.dumps(variants)):
             self.assertEqual(metadata.normalize_profile({'localizedMetadata': value}), {
-                'localizedMetadata': {'es': {'description': 'Texto'}, 'ca': {'title': 'Títol'}}})
+                'localizedMetadata': {'es': {'description': 'Texto'}, 'ca': {'title': 'Títol'}, 'fr': {'title': 'Titre'}}})
         for value in ([], '[]', '{invalid'):
             with self.assertRaises(ValueError):
                 metadata.normalize_profile({'localizedMetadata': value})

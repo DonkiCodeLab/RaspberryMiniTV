@@ -1,11 +1,12 @@
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useRef } from 'react';
 import { GAME_SYSTEMS } from './gameSystems';
 
-const COPY = {
+const COPY = withLanguages({
   es: ['Plataformas', 'Plataforma anterior', 'Plataforma siguiente'],
   ca: ['Plataformes', 'Plataforma anterior', 'Plataforma següent'],
   en: ['Platforms', 'Previous platform', 'Next platform'],
-};
+});
 
 export default function GameConsoleCarousel({ systemId, onSystemChange, language }) {
   const c = COPY[language] || COPY.es;

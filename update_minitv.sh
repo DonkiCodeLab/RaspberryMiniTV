@@ -97,6 +97,7 @@ git fetch origin main
 git switch main
 git pull --ff-only origin main
 progress dependencies
+sudo bash "${SCRIPT_DIR}/DeviceApp/install_language_support.sh"
 
 # Shared CBR/CBZ rendering for browser previews, covers and the Wayland reader.
 if ! command -v unrar >/dev/null 2>&1 || ! command -v bsdtar >/dev/null 2>&1 || ! command -v chromium >/dev/null 2>&1 || ! /usr/bin/python3 -c 'import fitz; import PIL' >/dev/null 2>&1; then

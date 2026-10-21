@@ -1,3 +1,4 @@
+import { useUiText } from "./i18n/react.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
@@ -110,6 +111,7 @@ export function TorrentContentPreview({ torrent, language, mediaType }) {
 }
 
 export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber = null, episodeNumber = null, language, onDashboard, onStarted, jobs = [], onRefresh, notificationPreferences = {}, notificationsReady = false, onNotificationChange }) {
+  const ui = useUiText();
   const s = torrentStrings(language);
   const fs = freeDownloadStrings(language);
   const isGeneric = mediaType === "generic";
@@ -237,7 +239,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
         <div className="movie-torrents__sort">
           <label className="dialog-field"><span>{s.sortBy}</span>
             <select value={sortField} onChange={event => setSortField(event.target.value)}>
-              <option value="sizeBytes">{s.size}</option><option value="seeds">Seeds</option>
+              <option value="sizeBytes">{s.size}</option><option value="seeds">{ui("Fuentes completas")}</option>
             </select>
           </label>
           <label className="dialog-field"><span>{s.sortDirection}</span>
@@ -247,7 +249,7 @@ export function MediaTorrentSearch({ media, mediaType = "movies", seasonNumber =
           </label>
         </div>
         <div className="movie-torrents__table"><table>
-        <thead><tr><th>{s.name}</th><th>{s.source}</th><th aria-sort={sortField === "sizeBytes" ? sortAria : undefined}>{s.size}{sortField === "sizeBytes" ? ` ${sortArrow}` : ""}</th><th aria-sort={sortField === "seeds" ? sortAria : undefined}>Seeds{sortField === "seeds" ? ` ${sortArrow}` : ""}</th><th><span className="torrent-visually-hidden">{s.download}</span></th></tr></thead>
+        <thead><tr><th>{s.name}</th><th>{s.source}</th><th aria-sort={sortField === "sizeBytes" ? sortAria : undefined}>{s.size}{sortField === "sizeBytes" ? ` ${sortArrow}` : ""}</th><th aria-sort={sortField === "seeds" ? sortAria : undefined}>{ui("Fuentes completas")}{sortField === "seeds" ? ` ${sortArrow}` : ""}</th><th><span className="torrent-visually-hidden">{s.download}</span></th></tr></thead>
         <tbody>{sortedResults.map(result => {
           const existing = isGeneric && jobs.find(job => job.id === result.infoHash);
           const viewExisting = existing && !canStartFreeTorrent(existing);

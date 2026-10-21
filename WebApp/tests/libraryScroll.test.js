@@ -108,3 +108,18 @@ test('author navigation uses author initials rather than book titles', () => {
   assert.equal(libraryScrollLabel({ name: 'Zeta', author: 'Álvaro' }, 'author'), 'A');
   assert.equal(libraryScrollLabel({ name: 'Zeta' }, 'author'), '#');
 });
+
+test('quality sorting uses saved measurements and keeps unmeasured movies last in both directions', async () => {
+  const { compareLibraryItems } = await import('../src/libraryScroll.js');
+  const items = [
+    { name: 'UHD', fileInfo: { quality: { level: 5 } } },
+    { name: 'Unknown 2160p' },
+    { name: 'CAM', fileInfo: { quality: { level: 1 } } },
+    { name: 'HD', fileInfo: { quality: { level: 3 } } },
+  ];
+  const order = direction => [...items].sort((a,b) => compareLibraryItems(a,b,'quality',direction)).map(m => m.name);
+  assert.deepEqual(order('asc'), ['CAM', 'HD', 'UHD', 'Unknown 2160p']);
+  assert.deepEqual(order('desc'), ['UHD', 'HD', 'CAM', 'Unknown 2160p']);
+  assert.equal(libraryScrollLabel(items[0], 'quality'), '5/5');
+  assert.equal(libraryScrollLabel(items[1], 'quality'), '—');
+});

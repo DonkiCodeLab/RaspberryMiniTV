@@ -1,7 +1,9 @@
+import { useUiText } from "./i18n/react.js";
 import React, { useEffect, useRef, useState } from 'react';
 import { getTmdbCacheStatus } from './api/raspberryApi';
 
 export default function TmdbUploadProgress({ upload, onReady, onClose }) {
+  const ui = useUiText();
   const [job, setJob] = useState(null);
   const [error, setError] = useState('');
   const ready = useRef(onReady);
@@ -25,13 +27,13 @@ export default function TmdbUploadProgress({ upload, onReady, onClose }) {
     return () => { disposed = true; clearTimeout(timer); };
   }, [upload?.kind, upload?.id, upload?.videoComplete]);
   if (!upload) return null;
-  const phase = { metadata: 'Guardando fichas de TMDB', images: 'Descargando imágenes', thumbnails: 'Generando miniaturas' }[job?.progress?.phase];
+  const phase = { metadata: ui('Guardando fichas de TMDB'), images: ui('Descargando imágenes'), thumbnails: ui('Generando miniaturas') }[job?.progress?.phase];
   return <aside className="tmdb-upload-progress" role="status" aria-live="polite">
-    <strong>Preparación de {upload.name}</strong>
-    <p>Vídeos: {upload.videoComplete ? 'guardados' : 'subida en curso (progreso en el diálogo de subida)'}</p>
-    <p>TMDB: {job?.state === 'complete' ? 'Listo en local' : job?.state === 'failed' ? 'Preparación incompleta' : job?.state === 'cancelled' ? 'Cancelado' : phase || 'En cola'}</p>
-    {job?.state === 'running' && <><progress value={job.progress?.total ? job.progress.completed : undefined} max={job.progress?.total || 1} /><p>{job.progress?.completed || 0}{job.progress?.total ? ` / ${job.progress.total}` : ''} ficheros · {job.progress?.current}</p></>}
+    <strong>{ui("Preparación de {name}", { name: upload.name })}</strong>
+    <p>{ui("Vídeos: ")}{upload.videoComplete ? ui('guardados') : ui('subida en curso (progreso en el diálogo de subida)')}</p>
+    <p>TMDB: {job?.state === 'complete' ? ui('Listo en local') : job?.state === 'failed' ? ui('Preparación incompleta') : job?.state === 'cancelled' ? ui('Cancelado') : phase || ui('En cola')}</p>
+    {job?.state === 'running' && <><progress value={job.progress?.total ? job.progress.completed : undefined} max={job.progress?.total || 1} /><p>{job.progress?.completed || 0}{job.progress?.total ? ` / ${job.progress.total}` : ''}{ui(" ficheros · ")}{job.progress?.current}</p></>}
     {(error || job?.error) && <p role="alert">{error || job.error}</p>}
-    <button className="dialog-button" type="button" onClick={onClose}>{job?.state === 'complete' ? 'Cerrar' : 'Ocultar (continúa en segundo plano)'}</button>
+    <button className="dialog-button" type="button" onClick={onClose}>{job?.state === 'complete' ? ui('Cerrar') : ui('Ocultar (continúa en segundo plano)')}</button>
   </aside>;
 }

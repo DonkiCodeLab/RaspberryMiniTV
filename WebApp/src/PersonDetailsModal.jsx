@@ -1,17 +1,20 @@
+import { withLanguages } from "./i18n/index.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
+import useBrowserBack from "./useBrowserBack.js";
 import React, { useContext, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { buildTmdbImageUrl, getPersonDetails } from "./tmdbApi.js";
 import "./PersonDetailsModal.css";
 import { PersonCatalogContext, personCatalogMovies } from "./personCatalog.js";
 
-const labels = {
+const labels = withLanguages({
   es: { catalog: "Películas del catálogo", noMovies: "No hay películas de esta persona en el catálogo.", unavailable: "No se pudo consultar su participación en películas.", close: "Cerrar", biography: "Biografía", loading: "Cargando ficha…", error: "No se pudo cargar la ficha. Comprueba la conexión e inténtalo de nuevo.", retry: "Reintentar", empty: "Todavía no hay una biografía disponible en TMDB.", born: "Nacimiento", died: "Fallecimiento", imdb: "Ver en IMDb", tmdb: "Ver en TMDB", profile: "Reparto y equipo" },
   ca: { catalog: "Pel·lícules del catàleg", noMovies: "No hi ha pel·lícules d’aquesta persona al catàleg.", unavailable: "No s’ha pogut consultar la seva participació en pel·lícules.", close: "Tanca", biography: "Biografia", loading: "Carregant fitxa…", error: "No s’ha pogut carregar la fitxa. Comprova la connexió i torna-ho a provar.", retry: "Torna-ho a provar", empty: "Encara no hi ha una biografia disponible a TMDB.", born: "Naixement", died: "Defunció", imdb: "Veure a IMDb", tmdb: "Veure a TMDB", profile: "Repartiment i equip" },
   en: { catalog: "Movies in your catalog", noMovies: "There are no movies featuring this person in your catalog.", unavailable: "Movie credits could not be loaded.", close: "Close", biography: "Biography", loading: "Loading profile…", error: "The profile could not be loaded. Check your connection and try again.", retry: "Retry", empty: "There is no biography available on TMDB yet.", born: "Born", died: "Died", imdb: "View on IMDb", tmdb: "View on TMDB", profile: "Cast and crew" },
-};
+});
 
 export default function PersonDetailsModal({ person, language, onClose }) {
+  useBrowserBack(onClose, 50);
   const lang = String(language || "es").toLowerCase().split(/[-_]/)[0];
   const locale = lang === "en" ? "en-US" : ["ca", "cat"].includes(lang) ? "ca-ES" : "es-ES";
   const t = labels[locale.split("-")[0]];

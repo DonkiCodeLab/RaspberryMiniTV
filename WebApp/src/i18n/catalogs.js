@@ -1,0 +1,22 @@
+import zh from './locales/zh.json' with { type: 'json' };
+import hi from './locales/hi.json' with { type: 'json' };
+import es from './locales/es.json' with { type: 'json' };
+import ar from './locales/ar.json' with { type: 'json' };
+import fr from './locales/fr.json' with { type: 'json' };
+import bn from './locales/bn.json' with { type: 'json' };
+import pt from './locales/pt.json' with { type: 'json' };
+import id from './locales/id.json' with { type: 'json' };
+import ur from './locales/ur.json' with { type: 'json' };
+import ru from './locales/ru.json' with { type: 'json' };
+import de from './locales/de.json' with { type: 'json' };
+import ja from './locales/ja.json' with { type: 'json' };
+import pcm from './locales/pcm.json' with { type: 'json' };
+import arz from './locales/arz.json' with { type: 'json' };
+import mr from './locales/mr.json' with { type: 'json' };
+import vi from './locales/vi.json' with { type: 'json' };
+import te from './locales/te.json' with { type: 'json' };
+import sw from './locales/sw.json' with { type: 'json' };
+import ha from './locales/ha.json' with { type: 'json' };
+import ca from './locales/ca.json' with { type: 'json' };
+
+export default { zh, hi, es, ar, fr, bn, pt, id, ur, ru, de, ja, pcm, arz, mr, vi, te, sw, ha, ca };

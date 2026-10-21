@@ -1,16 +1,18 @@
+import { normalizeLanguage } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { getTorrentTraffic } from './api/raspberryApi';
 import { trafficPaths, trafficSize, trafficTime } from './torrentTraffic.js';
 import './TorrentTraffic.css';
 
-const strings = {
+const strings = withLanguages({
   es: { title: 'El pulso de tus torrents', scope: 'TRÁFICO DE TORRENTS', down: 'Bajada', up: 'Subida', total: 'Transferido en el periodo', live: 'Actualiza cada 30 s', stale: 'Sin medición reciente', hours: 'Últimas 3 horas', day: 'Últimas 24 horas', week: 'Últimos 7 días', month: 'Último mes', year: 'Último año', expand: 'Ampliar detalle', collapse: 'Reducir detalle', loading: 'Cargando historial…', empty: 'Estamos preparando el historial. La primera medición llegará en aproximadamente un minuto.', demo: 'Conecta con la Raspberry para ver el consumo real.', note: 'Velocidad media por intervalo. Solo tráfico de torrents, no toda la red de casa. Los huecos indican periodos sin mediciones.', coverage: 'del periodo registrado', inspect: 'Explorar un momento', noData: 'Sin mediciones', data: 'Ver datos del periodo', time: 'Fecha y hora', observed: 'Tiempo medido', sample: 'Última medición', retry: 'Reintentar' },
   ca: { title: 'El pols dels teus torrents', scope: 'TRÀFIC DE TORRENTS', down: 'Baixada', up: 'Pujada', total: 'Transferit en el període', live: 'S’actualitza cada 30 s', stale: 'Sense mesurament recent', hours: 'Últimes 3 hores', day: 'Últimes 24 hores', week: 'Últims 7 dies', month: 'Últim mes', year: 'Últim any', expand: 'Ampliar detall', collapse: 'Reduir detall', loading: 'Carregant historial…', empty: 'Estem preparant l’historial. El primer mesurament arribarà en aproximadament un minut.', demo: 'Connecta amb la Raspberry per veure el consum real.', note: 'Velocitat mitjana per interval. Només tràfic de torrents, no tota la xarxa de casa. Els buits indiquen períodes sense mesuraments.', coverage: 'del període registrat', inspect: 'Explorar un moment', noData: 'Sense mesuraments', data: 'Veure dades del període', time: 'Data i hora', observed: 'Temps mesurat', sample: 'Últim mesurament', retry: 'Torna-ho a provar' },
   en: { title: 'The pulse of your torrents', scope: 'TORRENT TRAFFIC', down: 'Download', up: 'Upload', total: 'Transferred in this period', live: 'Updates every 30 s', stale: 'No recent measurement', hours: 'Last 3 hours', day: 'Last 24 hours', week: 'Last 7 days', month: 'Last month', year: 'Last year', expand: 'Expand details', collapse: 'Collapse details', loading: 'Loading history…', empty: 'Building your history. The first measurement will arrive in about a minute.', demo: 'Connect to the Raspberry to see real traffic.', note: 'Average speed per interval. Torrent traffic only, not your whole home network. Gaps indicate periods without measurements.', coverage: 'of the period recorded', inspect: 'Explore a moment', noData: 'No measurements', data: 'View period data', time: 'Date and time', observed: 'Measured time', sample: 'Last measurement', retry: 'Retry' },
-};
+});
 
 export default function TorrentTraffic({ language = 'es' }) {
-  const locale = ['es', 'ca', 'en'].includes(String(language).slice(0, 2)) ? String(language).slice(0, 2) : 'es';
+  const locale = normalizeLanguage(language);
   const s = strings[locale];
   const uid = useId().replace(/:/g, '');
   const [period, setPeriod] = useState('3h');

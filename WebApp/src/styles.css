@@ -1950,6 +1950,7 @@ img {
   }
   .movie-library__items--grid .movie-library__card:has(.movie-poster-preview__video--playing) {
     z-index: 6;
+    background: #14222c;
     transform: scale(1.344);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   }

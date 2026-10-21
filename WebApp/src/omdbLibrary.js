@@ -1,10 +1,12 @@
+import { intlLocale } from "./i18n/languages.js";
+import { withLanguages, message, number } from "./i18n/index.js";
 const languageKey = language => {
   const key = String(language || "").trim().toLowerCase().split(/[-_]/)[0];
   return key === "cat" ? "ca" : key;
 };
-const count = (value, language) => new Intl.NumberFormat({ es: "es-ES", ca: "ca-ES", en: "en-GB" }[language] || "es-ES").format(value);
+const count = (value, language) => new Intl.NumberFormat(intlLocale(language)).format(value);
 
-const strings = {
+const strings = withLanguages({
   es: {
     title: "Actualizar fichas existentes",
     hint: "Consulta las puntuaciones de las películas y series que ya tienes. Solo se consultan las que faltan o han caducado; se reutilizan las puntuaciones guardadas que siguen vigentes.",
@@ -59,7 +61,15 @@ const strings = {
     error: "Could not load the update status. Try again.",
     oldServer: "Update the Raspberry application to update all existing titles from here.",
   },
-};
+}, language => ({
+  progress: (processed, total) => message('{processed} of {total} titles checked', language, { processed: number(processed, language), total: number(total, language) }),
+  inventory: (ready, total) => message('{ready} of {total} titles up to date', language, { ready: number(ready, language), total: number(total, language) }),
+  current: title => message('Checking: {title}', language, { title }),
+  completed: job => message('{processed} titles checked; {ready} with ratings available.', language, { processed: number(job.processed, language), ready: number(job.ready, language) }),
+  missingIds: count => message(count === 1 ? '{count} title has no identifier: review its details to update it.' : '{count} titles have no identifier: review their details to update them.', language, { count: number(count, language) }),
+  failed: count => message(count === 1 ? '{count} title could not be checked.' : '{count} titles could not be checked.', language, { count: number(count, language) }),
+  unavailable: count => message(count === 1 ? '{count} title has no ratings available on OMDb.' : '{count} titles have no ratings available on OMDb.', language, { count: number(count, language) }),
+}));
 
 export function omdbLibraryStrings(language) { return strings[languageKey(language)] || strings.es; }
 

@@ -1,9 +1,11 @@
+import { runtimeMessage as ui } from "../i18n/messages.js";
+import { normalizeLanguage } from "../i18n/languages.js";
 import { readResponseWithProgress } from "./readResponseWithProgress.js";
 import { photoDemo, demoPhotoUrl } from "./photoDemo.js";
 import { requestWithTimeout } from '../requestWithTimeout.js';
 // Admin credentials stay in request headers; never place them in URLs or media links.
 export async function codexRequest(action, token = '', data = null, signal) {
-  if (isMockModeEnabled()) throw new Error('Codex no está disponible en modo demo.');
+  if (isMockModeEnabled()) throw new Error(ui('Codex no está disponible en modo demo.'));
   const controller = new AbortController();
   const abort = () => controller.abort();
   if (signal?.aborted) abort();
@@ -33,12 +35,14 @@ const MOCK_HIDDEN_SERIES_STORAGE_KEY = "minitv-web-mock-hidden-series-v1";
 const MOCK_GAMES_LIBRARY_STORAGE_KEY = "minitv-web-mock-games-library-v1";
 const explicitMockMode = (import.meta.env.VITE_WEB_DEV_MODE || "").trim().toLowerCase() === "mock";
 const localhostHosts = new Set(["localhost", "127.0.0.1"]);
-const SUPPORTED_RASPBERRY_LANGUAGES = new Set(["es", "ca", "en"]);
 
 let mockPlayback = "";
 let mockPlaybackDirectory = "";
 let mockPlaybackFile = "";
-let mockLanguage = "es";
+let mockLanguage = (() => {
+  try { return normalizeLanguage(window.localStorage.getItem("minitv-raspberry-language-v1")); }
+  catch { return "es"; }
+})();
 let mockWeatherLocation = "Madrid";
 let mockTmdbSettings = {
   apiKey: String(import.meta.env.VITE_TMDB_API_KEY || import.meta.env.EXPO_PUBLIC_TMDB_API_KEY || "").trim(),
@@ -156,11 +160,7 @@ function normalizeLabel(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
-function normalizeRaspberryLanguage(language) {
-  const safeLanguage = String(language || "").trim().toLowerCase();
-  if (safeLanguage === "cat") return "ca";
-  return SUPPORTED_RASPBERRY_LANGUAGES.has(safeLanguage) ? safeLanguage : "es";
-}
+const normalizeRaspberryLanguage = normalizeLanguage;
 
 function getLocalStorage() {
   if (typeof window === "undefined") return null;
@@ -612,7 +612,7 @@ export function addSeries({ name, tmdbId }) {
 export function removeSeries(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
-    return Promise.reject(new Error("Missing relativePath"));
+    return Promise.reject(new Error(ui("Missing relativePath")));
   }
 
   if (isMockModeEnabled()) {
@@ -633,7 +633,7 @@ export function removeSeries(relativePath) {
 export function removeSeriesEpisode(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
-    return Promise.reject(new Error("Missing relativePath"));
+    return Promise.reject(new Error(ui("Missing relativePath")));
   }
 
   if (isMockModeEnabled()) {
@@ -692,7 +692,7 @@ export function removeSeriesSeason(relativePath, seasonNumber) {
 }
 
 function createAbortError() {
-  const error = new Error("Upload canceled");
+  const error = new Error(ui("Upload canceled"));
   error.name = "AbortError";
   return error;
 }
@@ -722,7 +722,7 @@ export async function uploadMovieSubtitles({ relativePath, file, signal } = {}) 
     throw new Error("Selecciona un archivo .srt para esta película.");
   }
   if (!file.size || file.size > 5 * 1024 * 1024) {
-    throw new Error("El archivo SRT debe tener contenido y no superar los 5 MB.");
+    throw new Error(ui("El archivo SRT debe tener contenido y no superar los 5 MB."));
   }
   if (isMockModeEnabled()) return { ok: true, mock: true };
   const body = new FormData();
@@ -747,7 +747,7 @@ export async function searchYoutubeGameplay(query, signal) {
 }
 
 export async function saveGameSettings(settings) {
-  if (isMockModeEnabled()) throw new Error("Game settings require a backend.");
+  if (isMockModeEnabled()) throw new Error(ui("Game settings require a backend."));
   return request("/settings/games", { method: "POST", body: JSON.stringify(settings) });
 }
 
@@ -757,13 +757,13 @@ export async function getMediaSubtitles(relativePath, signal) {
 }
 
 export async function saveSubtitleSettings(settings) {
-  if (isMockModeEnabled()) throw new Error("OpenSubtitles: conecta con la Raspberry para configurar la cuenta.");
+  if (isMockModeEnabled()) throw new Error(ui("OpenSubtitles: conecta con la Raspberry para configurar la cuenta."));
   return request("/settings/subtitles", { method: "POST", body: JSON.stringify(settings) });
 }
 
 export async function obtainMovieSubtitles({ relativePath, language = "es" }) {
   if (isMockModeEnabled()) {
-    const error = new Error("Conecta con la Raspberry para descargar subtítulos.");
+    const error = new Error(ui("Conecta con la Raspberry para descargar subtítulos."));
     error.code = "SUBTITLE_DEMO";
     throw error;
   }
@@ -772,7 +772,7 @@ export async function obtainMovieSubtitles({ relativePath, language = "es" }) {
 
 export function uploadMovieFile({ file, movie, overwriteExisting = false, onProgress, signal } = {}) {
   if (!file) {
-    return Promise.reject(new Error("Missing file"));
+    return Promise.reject(new Error(ui("Missing file")));
   }
 
   const movieName = String(movie?.name || "").trim();
@@ -848,7 +848,7 @@ export function uploadMovieFile({ file, movie, overwriteExisting = false, onProg
 
     xhr.onerror = () => {
       detachAbort();
-      reject(new Error("Upload failed"));
+      reject(new Error(ui("Upload failed")));
     };
     xhr.onabort = () => detachAbort();
     xhr.send(file);
@@ -858,7 +858,7 @@ export function uploadMovieFile({ file, movie, overwriteExisting = false, onProg
 export function uploadSeriesFiles({ files, series, directoryName, heroImage, heroImageCrop, overwriteExisting = true, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
   if (!safeFiles.length) {
-    return Promise.reject(new Error("Missing files"));
+    return Promise.reject(new Error(ui("Missing files")));
   }
 
   const seriesName = String(series?.name || "").trim();
@@ -968,7 +968,7 @@ export function uploadSeriesFiles({ files, series, directoryName, heroImage, her
 
       xhr.onerror = () => {
         detachAbort();
-        reject(new Error("Upload failed"));
+        reject(new Error(ui("Upload failed")));
       };
       xhr.onabort = () => detachAbort();
       xhr.send(formData);
@@ -1038,7 +1038,7 @@ export async function saveGameVideo(relativePath, video) {
     channel: String(video.channel || "").trim().slice(0, 200) };
   if (isMockModeEnabled()) {
     const games = loadMockGamesLibrary();
-    if (!games.some(game => game.relativePath === path)) throw new Error("Game not found");
+    if (!games.some(game => game.relativePath === path)) throw Object.assign(new Error(ui("Game not found")), { code: "GAME_NOT_FOUND" });
     saveMockGamesLibrary(games.map(game => game.relativePath === path ? { ...game, preferredVideo: selection } : game));
     return { ok: true, mock: true, relativePath: path, video: selection };
   }
@@ -1054,7 +1054,7 @@ export function gameMetadataImageUrl(url) {
 
 export async function uploadGameFile({ file, game, cover, onProgress, signal } = {}) {
   if (!file) {
-    return Promise.reject(new Error("Missing file"));
+    return Promise.reject(new Error(ui("Missing file")));
   }
 
   const gameName = String(game?.name || "").trim() || String(file.name || "").replace(/\.[^.]+$/, "");
@@ -1147,7 +1147,7 @@ export async function uploadGameFile({ file, game, cover, onProgress, signal } =
 
     xhr.onerror = () => {
       detachAbort();
-      reject(new Error("Upload failed"));
+      reject(new Error(ui("Upload failed")));
     };
     xhr.onabort = () => detachAbort();
     xhr.send(formData);
@@ -1165,7 +1165,7 @@ export function updateGameFileMetadata({
 } = {}) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
-    return Promise.reject(new Error("Missing relativePath"));
+    return Promise.reject(new Error(ui("Missing relativePath")));
   }
 
   const safeName = String(name || "").trim();
@@ -1224,7 +1224,7 @@ export function saveMovieFileMetadata({ relativePath, name, tmdbId }) {
   const safeName = String(name || "").trim();
   const safeTmdbId = Number(tmdbId) || 0;
   if (!safeRelativePath || !safeName || !safeTmdbId) {
-    return Promise.reject(new Error("Missing movie metadata"));
+    return Promise.reject(new Error(ui("Missing movie metadata")));
   }
 
   if (isMockModeEnabled()) {
@@ -1254,7 +1254,7 @@ export function saveMediaProfile({ collection, relativePath, name, tmdbId, file,
   const safeCollection = collection === "movies" ? "movies" : "series";
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
-    return Promise.reject(new Error("Missing relativePath"));
+    return Promise.reject(new Error(ui("Missing relativePath")));
   }
 
   if (isMockModeEnabled()) {
@@ -1294,7 +1294,7 @@ export function saveMediaProfile({ collection, relativePath, name, tmdbId, file,
 export function removeMovieFile(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
-    return Promise.reject(new Error("Missing relativePath"));
+    return Promise.reject(new Error(ui("Missing relativePath")));
   }
 
   if (isMockModeEnabled()) {
@@ -1309,7 +1309,7 @@ export function removeMovieFile(relativePath) {
 export function removeGameFile(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
-    return Promise.reject(new Error("Missing relativePath"));
+    return Promise.reject(new Error(ui("Missing relativePath")));
   }
 
   if (isMockModeEnabled()) {
@@ -1327,7 +1327,7 @@ export function removeGameFile(relativePath) {
 export function playGameFile(relativePath) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) {
-    return Promise.reject(new Error("Missing relativePath"));
+    return Promise.reject(new Error(ui("Missing relativePath")));
   }
 
   if (isMockModeEnabled()) {
@@ -1420,7 +1420,7 @@ export function getPictureContentUrl(relativePath, render, { download = false } 
 
 export function uploadPictureFiles({ files, albumName, folderId, parent, importData, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
-  if (!safeFiles.length && !importData?.digests?.length) return Promise.reject(new Error("Missing pictures"));
+  if (!safeFiles.length && !importData?.digests?.length) return Promise.reject(new Error(ui("Missing pictures")));
   if (isMockModeEnabled()) {
     return photoDemo("upload", { files: safeFiles, albumName, folderId, parent, importData });
   }
@@ -1450,8 +1450,8 @@ export function uploadPictureFiles({ files, albumName, folderId, parent, importD
       error.status = xhr.status;
       reject(error);
     };
-    xhr.ontimeout = () => { detachAbort(); reject(new Error("La subida ha tardado demasiado. Reintenta para continuar sin duplicar las fotos guardadas.")); };
-    xhr.onerror = () => { detachAbort(); reject(new Error("Upload failed")); };
+    xhr.ontimeout = () => { detachAbort(); reject(new Error(ui("La subida ha tardado demasiado. Reintenta para continuar sin duplicar las fotos guardadas."))); };
+    xhr.onerror = () => { detachAbort(); reject(new Error(ui("Upload failed"))); };
     xhr.onabort = () => detachAbort();
     xhr.send(formData);
   });
@@ -1477,7 +1477,7 @@ export function getBookContentUrl(relativePath, { render } = {}) {
 
 export async function getBookContent(relativePath, { signal, format = "pdf", preview = false } = {}) {
   const url = getBookContentUrl(relativePath, { render: format === "pdf" && preview ? "preview" : /\.(cbr|cbz)$/i.test(relativePath) && format === "pdf" ? "pdf" : undefined });
-  if (!url) throw new Error("Missing book path");
+  if (!url) throw new Error(ui("Missing book path"));
 
   const storedPin = getStoredWebPin();
   const response = await fetch(url, {
@@ -1501,14 +1501,14 @@ export async function getBookContent(relativePath, { signal, format = "pdf", pre
   const pdfHeader = String.fromCharCode(...data.subarray(0, 1024));
   if (!data.length || (format === "pdf" && !pdfHeader.includes("%PDF-")) ||
       (format === "epub" && (data[0] !== 0x50 || data[1] !== 0x4b))) {
-    throw new Error(`El servidor no devolvió un archivo ${format.toUpperCase()} válido.`);
+    throw new Error(ui("El servidor no devolvió un archivo {format} válido.", { format: format.toUpperCase() }));
   }
   return data;
 }
 
 export function openBookOnRaspberry(relativePath, { userId, resume = false } = {}) {
   const safeRelativePath = String(relativePath || "").trim();
-  if (!safeRelativePath) return Promise.reject(new Error("Missing book path"));
+  if (!safeRelativePath) return Promise.reject(new Error(ui("Missing book path")));
   if (isMockModeEnabled()) return Promise.resolve({ ok: true, mock: true });
   return request("/books/open", {
     method: "POST",
@@ -1533,7 +1533,7 @@ export function getBookDisplayCoverUrl(book) {
 
 export async function uploadBookFiles({ files, collection = "", title = "", metadata, overwriteExisting = false, onProgress, onReport, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
-  if (!safeFiles.length) throw new Error("Missing book files");
+  if (!safeFiles.length) throw new Error(ui("Missing book files"));
   return uploadBookBatch({ files: safeFiles, onProgress, onReport, signal,
     uploadOne: (file, progress) => uploadBookRequest({ files: [file], collection, overwriteExisting, title: safeFiles.length === 1 ? title : "",
       metadata: safeFiles.length === 1 ? metadata : typeof metadata?.isGraphicNovel === "boolean" ? { isGraphicNovel: metadata.isGraphicNovel } : undefined,
@@ -1543,7 +1543,7 @@ export async function uploadBookFiles({ files, collection = "", title = "", meta
 
 async function uploadBookRequest({ files, collection = "", title = "", metadata, overwriteExisting = false, onProgress, signal } = {}) {
   const safeFiles = Array.isArray(files) ? files.filter(Boolean) : [];
-  if (!safeFiles.length) throw new Error("Missing book files");
+  if (!safeFiles.length) throw new Error(ui("Missing book files"));
   if (isMockModeEnabled()) {
     if (typeof onProgress === "function") {
       onProgress({ percent: 100, fileName: safeFiles.at(-1)?.name || "", status: "done" });
@@ -1586,13 +1586,13 @@ async function uploadBookRequest({ files, collection = "", title = "", metadata,
         resolve(payload);
         return;
       }
-      const error = new Error(payload?.error || (xhr.status === 413 ? "El servidor ha rechazado el tamaño del archivo (HTTP 413)." : `Error del servidor (HTTP ${xhr.status}).`));
+      const error = new Error(payload?.error || (xhr.status === 413 ? ui("El servidor ha rechazado el tamaño del archivo (HTTP 413).") : ui("Error del servidor (HTTP {status}).", { status: xhr.status })));
       error.status = xhr.status;
       reject(error);
     };
     xhr.onerror = () => {
       detachAbort();
-      reject(new Error("Se ha perdido la conexión con la Mini TV durante la subida. Comprueba la red y que la Mini TV siga encendida."));
+      reject(new Error(ui("Se ha perdido la conexión con la Mini TV durante la subida. Comprueba la red y que la Mini TV siga encendida.")));
     };
     xhr.onabort = () => detachAbort();
     xhr.send(form);
@@ -1733,7 +1733,7 @@ export async function gameSystemArtwork(systemId, file, reset = false) {
     ...(file || reset ? { body } : {}),
   });
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error || 'Could not save image');
+  if (!response.ok) throw new Error(result.error || ui('Could not save image'));
   if (result.image?.startsWith('/')) result.image = `${getBaseUrl()}${result.image}`;
   return result;
 }
@@ -1773,12 +1773,12 @@ export function getCachedTmdbJson(path, { language, query = {}, importPreview = 
 }
 
 export function getTmdbCacheStatus(start = false) {
-  if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para descargar el catálogo."));
+  if (isMockModeEnabled()) return Promise.reject(new Error(ui("Conecta con la Raspberry para descargar el catálogo.")));
   return requestWithTimeout(signal => request("/tmdb/cache", { ...(start ? { method: "POST" } : {}), signal }));
 }
 
 export function getTmdbCreditsStatus(start = false) {
-  if (isMockModeEnabled()) return Promise.reject(new Error("Conecta con la Raspberry para completar las fichas."));
+  if (isMockModeEnabled()) return Promise.reject(new Error(ui("Conecta con la Raspberry para completar las fichas.")));
   if (start) clearLocalMetadataCache();
   return requestWithTimeout(signal => request("/tmdb/credits", {
     ...(start ? { method: "POST" } : {}), signal, cache: "no-store",
@@ -1942,7 +1942,7 @@ export function getSystemUpdate(signal) {
 }
 
 export function startSystemUpdate(signal) {
-  if (isMockModeEnabled()) return Promise.reject(new Error("Actualización no disponible en modo demo."));
+  if (isMockModeEnabled()) return Promise.reject(new Error(ui("Actualización no disponible en modo demo.")));
   return request("/system/update", { method: "POST", signal });
 }
 
@@ -1972,7 +1972,7 @@ export async function editUser(id, data) {
   return { user };
 }
 export async function deleteUser(id) {
-  if (id === "default") throw new Error("El perfil default se conserva para iniciar la app.");
+  if (id === "default") throw new Error(ui("El perfil default se conserva para iniciar la app."));
   if (!isMockModeEnabled()) return request(`/users/${encodeURIComponent(id)}`, { method: "DELETE" });
   const store = mockUsers();
   store.users = store.users.filter(item => item.id !== id); delete store.states[id]; saveMockUsers(store);
@@ -1981,7 +1981,7 @@ export async function deleteUser(id) {
 export async function getUserState(id) {
   if (!isMockModeEnabled()) return requestWithTimeout(signal => request(`/users/${encodeURIComponent(id)}/state`, { signal }));
   const store = mockUsers();
-  if (!store.users.some(user => user.id === id)) throw Object.assign(new Error("El usuario ya no existe."), { status: 404 });
+  if (!store.users.some(user => user.id === id)) throw Object.assign(new Error(ui("El usuario ya no existe.")), { status: 404 });
   return store.states[id] || { ...EMPTY_STATE };
 }
 export async function patchUserState(id, patch) {
@@ -1992,7 +1992,7 @@ export async function patchUserState(id, patch) {
     }));
   }
   const store = mockUsers();
-  if (!store.users.some(user => user.id === id)) throw Object.assign(new Error("El usuario ya no existe."), { status: 404 });
+  if (!store.users.some(user => user.id === id)) throw Object.assign(new Error(ui("El usuario ya no existe.")), { status: 404 });
   store.states[id] = mergeProfileState(store.states[id], patch); saveMockUsers(store);
   return { ok: true };
 }
@@ -2008,7 +2008,7 @@ export async function findMovieTrailer(movie, signal, kind = "movie") {
 }
 
 export async function saveMovieTrailer(relativePath, video) {
-  if (isMockModeEnabled()) throw new Error("Saving trailers requires a backend.");
+  if (isMockModeEnabled()) throw new Error(ui("Saving trailers requires a backend."));
   return request("/movies/trailer", { method: "POST", body: JSON.stringify({ relativePath, video }) });
 }
 

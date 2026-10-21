@@ -9,8 +9,9 @@ import uuid
 import browser_subtitles
 from catalog_ai import AIError, _private_settings, _post_response
 from movie_subtitles import atomic_write, validate_srt, MAX_SUBTITLE_BYTES
+from languages import LANGUAGE_BY_ID
 
-LANGUAGES = {'es': 'Spanish', 'ca': 'Catalan', 'en': 'English'}
+LANGUAGES = {code: f"{item['name']} ({item['locale']})" for code, item in LANGUAGE_BY_ID.items()}
 TIME = r'(?:\d{2,}:)?\d{2}:\d{2}[.,]\d{3}'
 CUE = re.compile(r'^(' + TIME + r')\s+-->\s+(' + TIME + r')(?:\s+.*)?$')
 

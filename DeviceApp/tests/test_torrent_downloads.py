@@ -579,6 +579,27 @@ class TorrentApiTests(unittest.TestCase):
         self.assertEqual(source.read_bytes(), b"new video")
         artwork.assert_not_called()
 
+    def test_import_and_overwrite_persist_new_measurements_before_artwork(self):
+        source = self.root / 'Film.720p.WEB-DL.mkv'
+        source.write_bytes(b'first release')
+        job = {"id": INFO_HASH, "movie": {"id": 123, "name": "Film"}}
+        def check_saved(kind, item):
+            self.assertEqual(api.load_movie_library()[item['relativePath']]['fileInfo'], item['fileInfo'])
+        with patch.object(api, 'queue_tmdb_artwork', side_effect=check_saved), patch.object(
+                api.media_file_info, 'probe', return_value={'streams': [
+                    {'codec_type': 'video', 'width': 1280, 'height': 720}]}) as probe:
+            first = api.import_torrent_movie(job, source)
+            self.assertEqual(first['fileInfo']['quality']['level'], 3)
+            replacement = self.root / 'Film.2160p.BluRay.mp4'
+            replacement.write_bytes(b'replacement release')
+            probe.return_value = {'streams': [{'codec_type': 'video', 'width': 3840, 'height': 1600}]}
+            second = api.import_torrent_movie({**job, 'overwriteExisting': True}, replacement)
+            self.assertEqual(second['fileInfo']['quality']['level'], 5)
+            self.assertEqual(second['fileInfo']['quality']['source'], 'Blu-ray')
+            self.assertEqual(second['fileInfo']['originalFileName'], replacement.name)
+            self.assertNotIn(first['relativePath'], api.load_movie_library())
+            self.assertTrue(api.media_file_info.is_current(second['fileInfo'], self.root / second['relativePath']))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,3 +1,4 @@
+from languages import SUPPORTED_LANGUAGES, LANGUAGES as UI_LANGUAGES, normalize_language, language_info
 from playback_process import process_identity
 from profile_playback import ProfilePlayback
 from video_formats import is_video_file
@@ -16,6 +17,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from functools import lru_cache
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -59,6 +61,8 @@ else:
     os.environ.setdefault("MINITV_ALSA_DEVICE", DEFAULT_ALSA_DEVICE)
 
 import pygame
+from menu_fonts import MenuFont
+from ui_translations import translate as ui_translate, format_long_date as translated_date
 
 try:
     from evdev import InputDevice, ecodes, list_devices
@@ -76,12 +80,6 @@ MORE_OPTIONS_PATH = os.path.join(MENU_DIR, "Screen_MoreOptions.png")
 POWEROFF_PATH = os.path.join(MENU_DIR, "PowerOff_Menu.png")
 PLAYMENU_PATH = os.path.join(MENU_DIR, "PlayMenu.png")
 SETTINGS_MENU_PATH = os.path.join(MENU_DIR, "Settings_Menu.png")
-LANGUAGE_ICON_EN_NORMAL_PATH = os.path.join(MENU_DIR, "language_en_normal.png")
-LANGUAGE_ICON_EN_SELECTED_PATH = os.path.join(MENU_DIR, "language_en_selected.png")
-LANGUAGE_ICON_CAT_NORMAL_PATH = os.path.join(MENU_DIR, "language_cat_normal.png")
-LANGUAGE_ICON_CAT_SELECTED_PATH = os.path.join(MENU_DIR, "language_cat_selected.png")
-LANGUAGE_ICON_ES_NORMAL_PATH = os.path.join(MENU_DIR, "language_es_normal.png")
-LANGUAGE_ICON_ES_SELECTED_PATH = os.path.join(MENU_DIR, "language_es_selected.png")
 MENU_BUTTON_BACKGROUND_NORMAL_PATH = os.path.join(MENU_DIR, "background_button_normal.png")
 MENU_BUTTON_BACKGROUND_PRESSED_PATH = os.path.join(MENU_DIR, "background_button_pressed.png")
 MENU_BUTTON_BACKGROUND_RED_PRESSED_PATH = os.path.join(MENU_DIR, "background_button_red_pressed.png")
@@ -250,7 +248,6 @@ DEFAULT_SETTINGS = {
     "weather_location_details": None,
     "birthdays": [],
 }
-SUPPORTED_LANGUAGES = {"en", "ca", "es"}
 LANGUAGE_BUTTON_MAP = {
     "1x1": "en",
     "1x2": "ca",
@@ -503,10 +500,7 @@ def save_json_file(path, payload):
 
 
 def normalize_language_code(language):
-    language = str(language or "").strip().lower()
-    if language == "cat":
-        return "ca"
-    return language if language in SUPPORTED_LANGUAGES else DEFAULT_SETTINGS["language"]
+    return normalize_language(language, DEFAULT_SETTINGS["language"])
 
 
 def normalize_alarm_sound(sound):
@@ -930,24 +924,24 @@ def scan_wifi_networks():
     return merge_wifi_networks(collected_networks)
 
 
-def classify_wifi_error(stdout, stderr):
+def classify_wifi_error(stdout, stderr, language="en"):
     combined = f"{stdout}\n{stderr}".lower()
     if any(token in combined for token in ["secrets were required", "wrong password", "bad password", "authentication", "802-11-wireless-security.key-mgmt"]):
-        return "Contrasena incorrecta o autenticacion fallida."
+        return ui_translate("wifi.bad_password", language)
     if any(token in combined for token in ["no network with ssid", "network not found", "not found"]):
-        return "La red Wi-Fi ya no esta disponible."
+        return ui_translate("wifi.network_unavailable", language)
     if any(token in combined for token in ["timeout", "timed out"]):
-        return "Tiempo de espera agotado al conectar."
+        return ui_translate("wifi.timeout", language)
     if any(token in combined for token in ["failed to activate", "could not activate", "activation failed"]):
-        return "La Raspberry no pudo activar la conexion Wi-Fi."
+        return ui_translate("wifi.activation_failed", language)
     if any(token in combined for token in ["networkmanager", "nmcli"]) and "not found" in combined:
-        return "NetworkManager no esta disponible."
-    return "No se pudo conectar a la red Wi-Fi."
+        return ui_translate("wifi.manager_missing", language)
+    return ui_translate("wifi.failed", language)
 
 
-def connect_wifi(ssid, password):
+def connect_wifi(ssid, password, language="en"):
     if not ssid:
-        return False, "Selecciona una red Wi-Fi primero."
+        return False, ui_translate("wifi.select_network", language)
 
     nmcli_base = ["nmcli", "dev", "wifi", "connect", ssid]
     if password:
@@ -962,7 +956,7 @@ def connect_wifi(ssid, password):
         stderr=(nmcli_result.stderr or "").strip(),
     )
     if nmcli_result.returncode == 0:
-        return wait_for_wifi_connection(ssid)
+        return wait_for_wifi_connection(ssid, language=language)
 
     if password:
         add_result = run_command(["wpa_cli", "-i", "wlan0", "add_network"])
@@ -988,14 +982,14 @@ def connect_wifi(ssid, password):
                 stderr=(save_result.stderr or "").strip(),
             )
             if save_result.returncode == 0:
-                return wait_for_wifi_connection(ssid)
+                return wait_for_wifi_connection(ssid, language=language)
 
     stderr = (nmcli_result.stderr or "").strip()
     stdout = (nmcli_result.stdout or "").strip()
-    return False, classify_wifi_error(stdout, stderr)
+    return False, classify_wifi_error(stdout, stderr, language)
 
 
-def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds=1):
+def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds=1, language="en"):
     deadline = time.time() + timeout_seconds
     while time.time() < deadline:
         current_ssid = get_connected_wifi_info()
@@ -1003,10 +997,10 @@ def wait_for_wifi_connection(expected_ssid, timeout_seconds=12, interval_seconds
         log_wifi_debug("wifi_connect_poll", expected_ssid=expected_ssid, current_ssid=current_ssid, current_ip=current_ip)
         if current_ssid == expected_ssid:
             if current_ip:
-                return True, f"Conectado a {expected_ssid} ({current_ip})"
-            return False, f"Conectado a {expected_ssid}, pero sin direccion IP."
+                return True, ui_translate("wifi.connected_address", language, ssid=expected_ssid, ip=current_ip)
+            return False, ui_translate("wifi.no_address", language, ssid=expected_ssid)
         time.sleep(interval_seconds)
-    return False, f"No se pudo confirmar la conexion a {expected_ssid}."
+    return False, ui_translate("wifi.could_not_connect", language, ssid=expected_ssid)
 
 
 def get_connected_wifi_info():
@@ -1024,6 +1018,14 @@ def get_connected_wifi_info():
     iwgetid_result = run_command(["iwgetid", "-r"])
     ssid = iwgetid_result.stdout.strip()
     return ssid or None
+
+
+@lru_cache(maxsize=32)
+def load_language_flag(flag):
+    image = pygame.image.load(os.path.join(MENU_DIR, "flags", flag + ".png"))
+    surface = pygame.Surface(image.get_size(), pygame.SRCALPHA, 32)
+    surface.blit(image, (0, 0))
+    return surface
 
 
 def load_image(path):
@@ -1114,21 +1116,21 @@ class DeviceAppMenu:
         self.load_ui_sounds()
         self.clock = pygame.time.Clock()
         self.width, self.height = self.screen.get_size()
-        self.font = pygame.font.SysFont(FONT_FAMILY, 28)
-        self.title_font = pygame.font.SysFont(FONT_FAMILY, 42, bold=True)
+        self.font = MenuFont(28)
+        self.title_font = MenuFont(42, bold=True)
         self.main_title_font = self.load_font(MONTSERRAT_BLACK_PATH, 42, self.title_font)
-        self.poweroff_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
-        self.clock_font = pygame.font.SysFont(FONT_FAMILY, 140, bold=True)
-        self.clock_date_font = pygame.font.SysFont(FONT_FAMILY, 30, bold=True)
-        self.weather_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
-        self.small_font = pygame.font.SysFont(FONT_FAMILY, 20)
-        self.wifi_font = pygame.font.SysFont(FONT_FAMILY, 24)
-        self.wifi_bold_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
-        self.play_title_font = pygame.font.SysFont(FONT_FAMILY, 34, bold=True)
-        self.play_label_font = pygame.font.SysFont(FONT_FAMILY, 26, bold=True)
-        self.browser_font = pygame.font.SysFont(FONT_FAMILY, 24)
-        self.browser_bold_font = pygame.font.SysFont(FONT_FAMILY, 24, bold=True)
-        self.video_button_font = pygame.font.SysFont(FONT_FAMILY, 30, bold=True)
+        self.poweroff_title_font = MenuFont(34, bold=True)
+        self.clock_font = MenuFont(140, bold=True)
+        self.clock_date_font = MenuFont(30, bold=True)
+        self.weather_font = MenuFont(24, bold=True)
+        self.small_font = MenuFont(20)
+        self.wifi_font = MenuFont(24)
+        self.wifi_bold_font = MenuFont(24, bold=True)
+        self.play_title_font = MenuFont(34, bold=True)
+        self.play_label_font = MenuFont(26, bold=True)
+        self.browser_font = MenuFont(24)
+        self.browser_bold_font = MenuFont(24, bold=True)
+        self.video_button_font = MenuFont(30, bold=True)
         self.translations = load_json_file(TRANSLATIONS_PATH, {})
         self.config = self.load_settings()
         self.weather = None
@@ -1152,6 +1154,9 @@ class DeviceAppMenu:
         self.external_touch_is_down = False
         self.external_last_touch_ticks = 0
         self.language_return_state = "settings"
+        self.language_dropdown_open = False
+        self.language_scroll = 0
+        self.language_active = 0
         self.wifi_return_state = "network"
         self.network_return_state = "more"
         self.password_menu_return_state = "more"
@@ -1214,7 +1219,6 @@ class DeviceAppMenu:
             "pressed": load_image(MENU_BUTTON_2X_BACKGROUND_PRESSED_PATH),
         }
         self.menu_tile_assets = self.prepare_menu_tile_assets()
-        self.language_icon_assets = self.prepare_language_icon_assets()
         self.play_button_assets = self.prepare_play_button_assets()
         self.password_menu_assets = self.prepare_password_menu_assets()
         self.password_information_assets = {
@@ -1391,7 +1395,7 @@ class DeviceAppMenu:
     def load_font(self, path, size, fallback):
         try:
             if os.path.exists(path):
-                return pygame.font.Font(path, size)
+                return MenuFont(size, path=path)
         except Exception as exc:
             log_debug(f"FONT failed to load path={path}: {exc}")
         return fallback
@@ -1646,60 +1650,7 @@ class DeviceAppMenu:
             return value
 
     def format_long_date(self, value):
-        language = normalize_language_code(self.config.get("language"))
-        if language == "ca":
-            weekdays = ["dilluns", "dimarts", "dimecres", "dijous", "divendres", "dissabte", "diumenge"]
-            months = [
-                "gener",
-                "febrer",
-                "març",
-                "abril",
-                "maig",
-                "juny",
-                "juliol",
-                "agost",
-                "setembre",
-                "octubre",
-                "novembre",
-                "desembre",
-            ]
-            month = months[value.month - 1]
-            prefix = "d'" if month[0] in "aeiou" else "de "
-            return f"{value.day} ({weekdays[value.weekday()]}) {prefix}{month} del {value.year}"
-        if language == "es":
-            weekdays = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
-            months = [
-                "enero",
-                "febrero",
-                "marzo",
-                "abril",
-                "mayo",
-                "junio",
-                "julio",
-                "agosto",
-                "septiembre",
-                "octubre",
-                "noviembre",
-                "diciembre",
-            ]
-            return f"{value.day} ({weekdays[value.weekday()]}) de {months[value.month - 1]} de {value.year}"
-
-        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        months = [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-        ]
-        return f"{months[value.month - 1]} {value.day} ({weekdays[value.weekday()]}), {value.year}"
+        return translated_date(value, self.config.get("language"))
 
     def weather_description(self, code):
         key = "clear" if code == 0 else "partly_cloudy" if code in (1, 2, 3) else "fog" if code in (45, 48) else "rain" if code in (51, 53, 55, 61, 63, 65, 80, 81, 82) else "snow" if code in (56, 57, 66, 67, 71, 73, 75, 77, 85, 86) else "storm" if code in (95, 96, 99) else "unknown"
@@ -1829,22 +1780,6 @@ class DeviceAppMenu:
                 MENU_BUTTON_POWEROFF_PRESSED_PATH,
             ),
             "back": self.prepare_menu_tile_asset(MENU_BUTTON_BACK_NORMAL_PATH, MENU_BUTTON_BACK_PRESSED_PATH),
-        }
-
-    def prepare_language_icon_assets(self):
-        return {
-            "1x1": {
-                "normal": load_image(LANGUAGE_ICON_EN_NORMAL_PATH),
-                "selected": load_image(LANGUAGE_ICON_EN_SELECTED_PATH),
-            },
-            "1x2": {
-                "normal": load_image(LANGUAGE_ICON_CAT_NORMAL_PATH),
-                "selected": load_image(LANGUAGE_ICON_CAT_SELECTED_PATH),
-            },
-            "2x1": {
-                "normal": load_image(LANGUAGE_ICON_ES_NORMAL_PATH),
-                "selected": load_image(LANGUAGE_ICON_ES_SELECTED_PATH),
-            },
         }
 
     def prepare_play_button_assets(self):
@@ -2218,12 +2153,43 @@ class DeviceAppMenu:
             "back": self.get_more_back_rect(),
         }
 
+    def language_visible_rows(self):
+        return max(2, min(6, int((self.height - MAIN_HEADER_HEIGHT - 126) / 42)))
+
+    def handle_language_key(self, key):
+        if key == pygame.K_ESCAPE:
+            if self.language_dropdown_open:
+                self.language_dropdown_open = False
+            else:
+                self.state = self.language_return_state
+        elif key in (pygame.K_RETURN, pygame.K_SPACE):
+            self.handle_button_action("language:" + UI_LANGUAGES[self.language_active]["id"]
+                                      if self.language_dropdown_open else "language-toggle")
+        elif key in (pygame.K_DOWN, pygame.K_UP, pygame.K_HOME, pygame.K_END):
+            if not self.language_dropdown_open:
+                self.handle_button_action("language-toggle")
+            else:
+                self.language_active = (0 if key == pygame.K_HOME else len(UI_LANGUAGES) - 1 if key == pygame.K_END
+                                        else (self.language_active + (1 if key == pygame.K_DOWN else -1)) % len(UI_LANGUAGES))
+                rows = self.language_visible_rows()
+                self.language_scroll = max(0, min(self.language_scroll, self.language_active))
+                if self.language_active >= self.language_scroll + rows:
+                    self.language_scroll = self.language_active - rows + 1
+
     def get_language_button_rects(self):
-        button_rects = self.get_centered_menu_grid_rects((("1x1", "1x2", "2x1"),), MAIN_HEADER_HEIGHT, self.height)
-        return {
-            **button_rects,
-            "back": self.get_more_back_rect(),
-        }
+        width = min(540, self.width - 48)
+        x = (self.width - width) // 2
+        y = MAIN_HEADER_HEIGHT + 14
+        rects = {"language-toggle": pygame.Rect(x, y, width, 50), "back": self.get_more_back_rect()}
+        if self.language_dropdown_open:
+            rows = self.language_visible_rows()
+            self.language_scroll = max(0, min(len(UI_LANGUAGES) - rows, self.language_scroll))
+            row_width = width - 52
+            for index, item in enumerate(UI_LANGUAGES[self.language_scroll:self.language_scroll + rows]):
+                rects["language:" + item["id"]] = pygame.Rect(x, y + 58 + index * 42, row_width, 40)
+            rects["language-up"] = pygame.Rect(x + row_width + 6, y + 58, 46, 42)
+            rects["language-down"] = pygame.Rect(x + row_width + 6, y + 58 + (rows - 1) * 42, 46, 42)
+        return rects
 
     def get_play_button_rects(self):
         return {
@@ -2900,7 +2866,7 @@ class DeviceAppMenu:
         if self.display_suspended:
             self.resume_display_after_external_app("book")
         append_debug_log(BOOK_DEBUG_LOG_PATH, "No compatible book reader could be started")
-        self.browser_status = "No book reader installed"
+        self.browser_status = self.tr("reader.missing")
 
     def update_book_state(self):
         if self.state != "book" or not self.book_proc or self.book_proc.poll() is None:
@@ -3402,13 +3368,6 @@ class DeviceAppMenu:
     def get_selected_language_code(self):
         return normalize_language_code(self.config.get("language"))
 
-    def get_selected_language_button(self):
-        selected_language = self.get_selected_language_code()
-        for button_id, language_code in LANGUAGE_BUTTON_MAP.items():
-            if language_code == selected_language:
-                return button_id
-        return "1x1"
-
     def set_language(self, language_code):
         language_code = normalize_language_code(language_code)
         if language_code == self.get_selected_language_code():
@@ -3473,13 +3432,20 @@ class DeviceAppMenu:
             elif button_id == "2x2":
                 self.state = "main"
         elif self.state == "language":
-            if button_id == "1x1":
-                self.set_language("en")
-            elif button_id == "1x2":
-                self.set_language("ca")
-            elif button_id == "2x1":
-                self.set_language("es")
+            if button_id == "language-toggle":
+                self.language_dropdown_open = not self.language_dropdown_open
+                if self.language_dropdown_open:
+                    index = next(i for i, item in enumerate(UI_LANGUAGES) if item["id"] == self.get_selected_language_code())
+                    self.language_active = index
+                    self.language_scroll = min(index, len(UI_LANGUAGES) - self.language_visible_rows())
+            elif button_id.startswith("language:"):
+                self.set_language(button_id.split(":", 1)[1])
+                self.language_dropdown_open = False
+            elif button_id in ("language-up", "language-down"):
+                self.language_scroll = max(0, min(len(UI_LANGUAGES) - self.language_visible_rows(),
+                    self.language_scroll + (-1 if button_id == "language-up" else 1)))
             elif button_id in ("back", "2x2"):
+                self.language_dropdown_open = False
                 self.state = self.language_return_state
         elif self.state == "more":
             if button_id in ("language",):
@@ -3774,7 +3740,7 @@ class DeviceAppMenu:
                 self.state = "wifi"
                 return
             if active_button == "wifi-password-connect" and layout["connect"].collidepoint(pos):
-                success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password)
+                success, message = connect_wifi(self.wifi_selected_ssid, self.wifi_password, self.config.get("language"))
                 resolved_message = message
                 self.wifi_status = resolved_message
                 self.wifi_dialog_message = resolved_message
@@ -4002,9 +3968,9 @@ class DeviceAppMenu:
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=settings pressed={self.pressed_button}")
             return
         if self.state == "language":
-            selected_button = self.get_selected_language_button()
-            next_button = self.button_at_pos(normalized_pos)
-            self.pressed_button = next_button if next_button != selected_button else None
+            self.pressed_button = self.button_at_pos(normalized_pos)
+            if self.pressed_button is None:
+                self.language_dropdown_open = False
             log_debug(f"DOWN raw={pos} normalized={normalized_pos} state=language pressed={self.pressed_button}")
             return
         if self.state == "password_menu":
@@ -4321,7 +4287,7 @@ class DeviceAppMenu:
         pressed = self.pressed_button == "external-video-stop"
         pygame.draw.rect(self.screen, (190, 48, 42) if pressed else (125, 42, 40), rect, border_radius=18)
         pygame.draw.rect(self.screen, WHITE, rect, 2, border_radius=18)
-        label = self.play_label_font.render("Finalizar reproducción en monitor externo", True, WHITE)
+        label = self.play_label_font.render(self.tr("play.stop_external"), True, WHITE)
         if label.get_width() > rect.width - 30:
             ratio = (rect.width - 30) / label.get_width()
             label = pygame.transform.smoothscale(label, (rect.width - 30, max(1, int(label.get_height() * ratio))))
@@ -4491,7 +4457,7 @@ class DeviceAppMenu:
         layout = self.get_wifi_password_layout()
         self.screen.fill(BLACK)
 
-        title = self.title_font.render("Password de", True, WHITE)
+        title = self.title_font.render(self.tr("wifi.password_for"), True, WHITE)
         title_y = self.get_top_back_rect().centery
         self.screen.blit(title, title.get_rect(center=(self.width // 2, title_y)))
 
@@ -4518,10 +4484,10 @@ class DeviceAppMenu:
             dialog_color = (110, 38, 38) if self.wifi_dialog_is_error else (38, 72, 44)
             draw_rect_compat(self.screen, dialog_color, dialog_rect, 0, 18)
             draw_rect_compat(self.screen, WHITE, dialog_rect, 2, 18)
-            title_text = "Error de connexio" if self.wifi_dialog_is_error else "Wi-Fi connectada"
+            title_text = self.tr("wifi.connection_error" if self.wifi_dialog_is_error else "wifi.connection_success")
             title_surface = self.wifi_bold_font.render(title_text, True, WHITE)
             body_surface = self.small_font.render(self.wifi_dialog_message, True, WHITE)
-            hint_surface = self.small_font.render("Toca per continuar", True, WHITE)
+            hint_surface = self.small_font.render(self.tr("wifi.tap_continue"), True, WHITE)
             self.screen.blit(title_surface, title_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.y + 32)))
             self.screen.blit(body_surface, body_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.centery)))
             self.screen.blit(hint_surface, hint_surface.get_rect(center=(dialog_rect.centerx, dialog_rect.bottom - 24)))
@@ -4595,8 +4561,8 @@ class DeviceAppMenu:
 
         layout = self.get_video_preview_layout()
         for key, label, color in (
-            ("play", "Play", GREEN),
-            ("stop", "Stop", RED),
+            ("play", self.tr("common.play"), GREEN),
+            ("stop", self.tr("common.stop"), RED),
         ):
             rect = layout[key]
             pressed = self.pressed_button == f"video-preview-{key}"
@@ -4652,26 +4618,6 @@ class DeviceAppMenu:
         if asset is None:
             label_rect = label_surface.get_rect(center=rect.center)
         self.screen.blit(label_surface, label_rect)
-
-    def draw_language_tile(self, button_id, rect, selected=False, pressed=False):
-        background = self.menu_button_backgrounds.get("pressed" if pressed else "normal")
-        if background is not None:
-            self.screen.blit(fit_image(background, rect.size), rect)
-        else:
-            draw_rect_compat(self.screen, DARK_GRAY, rect, 0, 8)
-            draw_rect_compat(self.screen, WHITE, rect, 2, 8)
-
-        icon_state = "selected" if selected else "normal"
-        icon = self.language_icon_assets.get(button_id, {}).get(icon_state)
-        if icon is None:
-            fallback_labels = {"1x1": "EN", "1x2": "CAT", "2x1": "ES"}
-            label_surface = self.wifi_bold_font.render(fallback_labels.get(button_id, ""), True, WHITE)
-            self.screen.blit(label_surface, label_surface.get_rect(center=rect.center))
-            return
-
-        fitted = fit_image_contain(icon, (rect.width - 22, rect.height - 22))
-        if fitted is not None:
-            self.screen.blit(fitted, fitted.get_rect(center=rect.center))
 
     def draw_play_choice_button(self, button_id, rect, label, pressed=False):
         state = "pressed" if pressed else "normal"
@@ -4898,19 +4844,43 @@ class DeviceAppMenu:
             return
         self.screen.blit(asset, (0, 0))
 
+    def draw_language_flag(self, flag, rect):
+        if flag == "ca":
+            pygame.draw.rect(self.screen, (249, 204, 24), rect)
+            for row in (1, 3, 5, 7):
+                pygame.draw.rect(self.screen, (216, 32, 41), (rect.x, rect.y + row * rect.height / 9, rect.width, max(1, rect.height / 9)))
+        else:
+            image = fit_image_contain(load_language_flag(flag), rect.size)
+            self.screen.blit(image, image.get_rect(center=rect.center))
+
     def draw_language(self):
-        selected_button = self.get_selected_language_button()
         self.screen.fill((18, 22, 28))
         self.draw_submenu_header(self.tr("language.title"))
+        selected = language_info(self.get_selected_language_code())
         for button_id, rect in self.get_language_button_rects().items():
             if button_id == "back":
                 continue
-            self.draw_language_tile(
-                button_id,
-                rect,
-                selected=button_id == selected_button,
-                pressed=self.pressed_button == button_id,
-            )
+            active = button_id == "language:" + selected["id"]
+            focused = self.language_dropdown_open and button_id == "language:" + UI_LANGUAGES[self.language_active]["id"]
+            pygame.draw.rect(self.screen, (37, 72, 89) if active or focused or self.pressed_button == button_id else (23, 47, 62), rect, border_radius=10)
+            pygame.draw.rect(self.screen, (255, 212, 41) if active or button_id == "language-toggle" else (65, 85, 94), rect, 1, border_radius=10)
+            if button_id in ("language-up", "language-down"):
+                label = "↑" if button_id == "language-up" else "↓"
+                surface = self.wifi_font.render(label, True, (255, 212, 41))
+                self.screen.blit(surface, surface.get_rect(center=rect.center))
+                continue
+            item = selected if button_id == "language-toggle" else language_info(button_id.split(":", 1)[1])
+            self.draw_language_flag(item["flag"], pygame.Rect(rect.x + 12, rect.centery - 10, 30, 20))
+            surface = self.wifi_font.render(item["nativeName"], True, (255, 212, 41) if active else WHITE)
+            available = rect.width - 98
+            if surface.get_width() > available or surface.get_height() > rect.height - 6:
+                scale = min(available / surface.get_width(), (rect.height - 6) / surface.get_height())
+                surface = pygame.transform.smoothscale(surface, (max(1, int(surface.get_width() * scale)), max(1, int(surface.get_height() * scale))))
+            self.screen.blit(surface, (rect.x + 54, rect.centery - surface.get_height() // 2))
+            marker = ("▴" if self.language_dropdown_open else "▾") if button_id == "language-toggle" else ("✓" if active else "")
+            if marker:
+                image = self.small_font.render(marker, True, (255, 212, 41))
+                self.screen.blit(image, (rect.right - 30, rect.centery - image.get_height() // 2))
 
     def draw_password_menu(self):
         layout = self.get_password_menu_layout()
@@ -5309,6 +5279,11 @@ class DeviceAppMenu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif self.state == "language" and event.type == pygame.MOUSEWHEEL:
+                    if self.language_dropdown_open:
+                        self.language_scroll = max(0, min(len(UI_LANGUAGES) - self.language_visible_rows(), self.language_scroll - event.y))
+                elif self.state == "language" and event.type == pygame.KEYDOWN:
+                    self.handle_language_key(event.key)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
                 elif self.touch_device is None and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:

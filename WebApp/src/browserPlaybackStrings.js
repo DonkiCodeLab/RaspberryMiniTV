@@ -1,4 +1,5 @@
-const strings = {
+import { withLanguages } from "./i18n/index.js";
+const strings = withLanguages({
   es: {
     play: "Reproducir",
     playback: "Reproducción de vídeo", playbackFailed: "Se ha interrumpido la reproducción",
@@ -26,7 +27,7 @@ const strings = {
     elapsed: "Elapsed time", remaining: "Estimated time remaining", position: "Queue position", retry: "Retry", failed: "Could not prepare this video",
     errors: { TOOLS_MISSING: "FFmpeg is missing on the MiniTV. Update or run the service installer again.", PROBE_FAILED: "Could not read the file’s tracks.", NO_VIDEO: "This file has no video track.", VIDEO_UNSUPPORTED: "This video format needs a different conversion. You can play the original on the MiniTV.", AAC_UNSUPPORTED: "This browser does not support the required AAC audio. Try another browser.", QUEUE_FULL: "Too many preparations are pending. Retry after one finishes.", CACHE_FULL: "The playback cache is full of recent copies. Free space in MultimediaContent/BrowserPlayback or try again later.", NO_SPACE: "There is not enough space to prepare a compatible copy.", SOURCE_CHANGED: "The original file has changed. Retry to prepare the new version.", SOURCE_NOT_FOUND: "The original video could not be found.", BACKEND_MISSING: "Update the MiniTV API as well to enable audio preparation.", UNAUTHORIZED: "Your session has expired. Sign in again with the MiniTV PIN.", CONVERSION_FAILED: "Conversion did not finish. The original is unchanged.", NETWORK: "Connection lost. Retry to recover preparation progress." },
   },
-};
+});
 export const browserPlaybackStrings = language => strings[language] || strings.es;
 
 Object.assign(strings.es.errors, {

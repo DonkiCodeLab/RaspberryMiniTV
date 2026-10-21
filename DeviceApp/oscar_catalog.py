@@ -1,3 +1,4 @@
+from languages import LANGUAGES as UI_LANGUAGES
 """Permanent Best Picture collection, isolated from deletable library artwork."""
 import json
 from pathlib import Path
@@ -82,7 +83,7 @@ class OscarCatalog(TmdbCache):
         super().warm(kind, tmdb_id, extra_images, refresh)
 
     def snapshot(self, language):
-        if language not in LANGUAGES:
+        if language not in {item["tmdb"] for item in UI_LANGUAGES}:
             raise ValueError("Idioma no permitido")
         status = self.status()
         items = []

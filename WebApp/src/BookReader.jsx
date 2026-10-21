@@ -1,3 +1,4 @@
+import { useUiText } from "./i18n/react.js";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
@@ -8,6 +9,7 @@ import donkicodeLogo from "../../DeviceApp/menu/miniLogo_donkicodeLab.png";
 GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export default function BookReader({ book, onClose, initialProgress, onProgress }) {
+  const ui = useUiText();
   const progressRef = useRef(onProgress);
   progressRef.current = onProgress;
   const canvasRef = useRef(null);
@@ -41,7 +43,7 @@ export default function BookReader({ book, onClose, initialProgress, onProgress 
           ? "La sesión ha caducado. Vuelve a introducir el PIN."
           : error?.status === 404
             ? "El archivo ya no existe en la biblioteca."
-            : error?.message || "No se pudo cargar este PDF.";
+            : error?.message || ui("No se pudo cargar este PDF.");
         setReaderError(detail);
       });
     return () => { cancelled = true; controller.abort(); task?.destroy(); };
@@ -66,7 +68,7 @@ export default function BookReader({ book, onClose, initialProgress, onProgress 
       return renderTaskRef.current.promise.then(() => {
         if (!cancelled) progressRef.current?.({ kind: "book", page: pageNumber, total: pdf.numPages, completed: pageNumber === pdf.numPages });
       });
-    }).catch((error) => { if (!cancelled && error?.name !== "RenderingCancelledException") setReaderError("No se pudo mostrar esta página."); });
+    }).catch((error) => { if (!cancelled && error?.name !== "RenderingCancelledException") setReaderError(ui("No se pudo mostrar esta página.")); });
     return () => { cancelled = true; renderTaskRef.current?.cancel(); };
   }, [pdf, pageNumber, zoom]);
 
@@ -76,40 +78,40 @@ export default function BookReader({ book, onClose, initialProgress, onProgress 
       <header className="book-reader__header">
         <div className="book-reader__file">
           <img src={donkicodeLogo} alt="" />
-          <strong><span>Fichero:</span> {book.name}</strong>
+          <strong><span>{ui("Fichero:")}</span> {book.name}</strong>
         </div>
-        <div className="book-reader__pagination" aria-label="Navegación de páginas">
-          <button onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={!pdf || pageNumber <= 1} type="button" aria-label="Página anterior">‹</button>
+        <div className="book-reader__pagination" aria-label={ui("Navegación de páginas")}>
+          <button onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={!pdf || pageNumber <= 1} type="button" aria-label={ui("Página anterior")}>‹</button>
           <BookPageSelector key={book.relativePath} page={pageNumber} total={pdf?.numPages} onSelect={setPageNumber} />
-          <button onClick={() => setPageNumber((page) => Math.min(pdf?.numPages || page, page + 1))} disabled={!pdf || pageNumber >= pdf.numPages} type="button" aria-label="Página siguiente">›</button>
+          <button onClick={() => setPageNumber((page) => Math.min(pdf?.numPages || page, page + 1))} disabled={!pdf || pageNumber >= pdf.numPages} type="button" aria-label={ui("Página siguiente")}>›</button>
         </div>
         <div className="book-reader__controls">
-          <div className="book-reader__zoom" aria-label="Control de zoom">
-            <button onClick={() => changeZoom(-.1)} disabled={zoom <= .6} type="button" aria-label="Reducir zoom un 10 %">−</button>
-            <input type="range" min="0.6" max="3" step="0.1" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} aria-label="Zoom" />
+          <div className="book-reader__zoom" aria-label={ui("Control de zoom")}>
+            <button onClick={() => changeZoom(-.1)} disabled={zoom <= .6} type="button" aria-label={ui("Reducir zoom un 10 %")}>−</button>
+            <input type="range" min="0.6" max="3" step="0.1" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} aria-label={ui("Zoom")} />
             <output>{Math.round(zoom * 100)}%</output>
-            <button onClick={() => changeZoom(.1)} disabled={zoom >= 3} type="button" aria-label="Aumentar zoom un 10 %">+</button>
+            <button onClick={() => changeZoom(.1)} disabled={zoom >= 3} type="button" aria-label={ui("Aumentar zoom un 10 %")}>+</button>
           </div>
-          <button className="book-reader__close" onClick={() => setCloseConfirmationOpen(true)} type="button" aria-label="Cerrar lector">×</button>
+          <button className="book-reader__close" onClick={() => setCloseConfirmationOpen(true)} type="button" aria-label={ui("Cerrar lector")}>×</button>
         </div>
       </header>
       {["pdf", "cbr", "cbz"].includes(book.format) ? (
-        <div ref={pageContainerRef} className="book-reader__page">{readerError ? <p className="book-reader__error">{readerError}</p> : !pdf ? <p role="status">Preparando las páginas…</p> : null}<canvas ref={canvasRef} aria-label={`Página ${pageNumber}`} /></div>
+        <div ref={pageContainerRef} className="book-reader__page">{readerError ? <p className="book-reader__error">{readerError}</p> : !pdf ? <p role="status">{ui("Preparando las páginas…")}</p> : null}<canvas ref={canvasRef} aria-label={ui("Página {page}", { page: pageNumber })} /></div>
       ) : (
         <div className="book-reader__fallback">
           <span>📚</span><h2>{book.name}</h2>
-          <p>Este formato se abrirá con el lector compatible del navegador o del dispositivo.</p>
-          <a className="dialog-button dialog-button--accent" href={source} target="_blank" rel="noreferrer">Abrir {book.format.toUpperCase()}</a>
+          <p>{ui("Este formato se abrirá con el lector compatible del navegador o del dispositivo.")}</p>
+          <a className="dialog-button dialog-button--accent" href={source} target="_blank" rel="noreferrer">{ui("Abrir {format}", { format: book.format.toUpperCase() })}</a>
         </div>
       )}
       {closeConfirmationOpen ? (
         <div className="book-reader__confirm-backdrop" onClick={() => setCloseConfirmationOpen(false)}>
           <div className="book-reader__confirm" role="alertdialog" aria-modal="true" aria-labelledby="book-reader-close-title" onClick={(event) => event.stopPropagation()}>
-            <h2 id="book-reader-close-title">¿Realmente quieres abandonar la visualización?</h2>
-            <p>Tu posición en <strong>{book.name}</strong> se guarda en tu perfil.</p>
+            <h2 id="book-reader-close-title">{ui("¿Realmente quieres abandonar la visualización?")}</h2>
+            <p>{ui("Tu posición en {name} se guarda en tu perfil.", { name: book.name })}</p>
             <div>
-              <button className="dialog-button dialog-button--ghost" onClick={() => setCloseConfirmationOpen(false)} type="button">Seguir leyendo</button>
-              <button className="dialog-button dialog-button--danger" onClick={onClose} type="button">Abandonar</button>
+              <button className="dialog-button dialog-button--ghost" onClick={() => setCloseConfirmationOpen(false)} type="button">{ui("Seguir leyendo")}</button>
+              <button className="dialog-button dialog-button--danger" onClick={onClose} type="button">{ui("Abandonar")}</button>
             </div>
           </div>
         </div>

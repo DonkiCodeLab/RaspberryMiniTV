@@ -1,3 +1,5 @@
+import { normalizeLanguage } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useRef, useState } from "react";
 import { scrollIndexAtPosition, buildDecadeTicks, buildRatingScale, nearestRailTick } from "./libraryScroll.js";
 
@@ -53,9 +55,9 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
     if (Math.abs(window.scrollY - top) > 1) window.scrollTo({ top, behavior: "instant" });
     setState(current => current.index === index ? current : { ...current, index });
   };
-  const code = language === "cat" ? "ca" : language.split("-")[0];
-  const text = ({ es: { name: "Recorrer por letra", author: "Recorrer por autor", year: "Recorrer por año", rating: "Recorrer por puntuación" }, ca: { name: "Recórrer per lletra", author: "Recórrer per autor", year: "Recórrer per any", rating: "Recórrer per puntuació" }, en: { name: "Browse by letter", author: "Browse by author", year: "Browse by year", rating: "Browse by rating" } })[code] || { name: "Browse by letter", author: "Browse by author", year: "Browse by year", rating: "Browse by rating" };
-  const controls = ({
+  const code = normalizeLanguage(language);
+  const text = withLanguages({ es: { name: "Recorrer por letra", author: "Recorrer por autor", year: "Recorrer por año", rating: "Recorrer por puntuación", quality: "Recorrer por calidad" }, ca: { name: "Recórrer per lletra", author: "Recórrer per autor", year: "Recórrer per any", rating: "Recórrer per puntuació", quality: "Recórrer per qualitat" }, en: { name: "Browse by letter", author: "Browse by author", year: "Browse by year", rating: "Browse by rating", quality: "Browse by quality" } })[code] || { name: "Browse by letter", author: "Browse by author", year: "Browse by year", rating: "Browse by rating", quality: "Browse by quality" };
+  const controls = withLanguages({
     es: { asc: "Ascendente", desc: "Descendente", ascShort: "Asc.", descShort: "Desc.", show: "Mostrar opciones de películas", hide: "Ocultar opciones de películas", options: "Opciones" },
     ca: { asc: "Ascendent", desc: "Descendent", ascShort: "Asc.", descShort: "Desc.", show: "Mostrar opcions de pel·lícules", hide: "Amagar opcions de pel·lícules", options: "Opcions" },
     en: { asc: "Ascending", desc: "Descending", ascShort: "Asc.", descShort: "Desc.", show: "Show movie options", hide: "Hide movie options", options: "Options" },
@@ -71,7 +73,7 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
   const currentTick = Math.max(0, yearMode ? decades.indexOf(currentDecade) : ticks.findIndex(([label]) => label === currentLabel));
   const yearTicks = currentDecade?.label !== "—" ? currentDecade?.years || [] : [];
   const currentYearTick = Math.max(0, yearTicks.findIndex(([label]) => label === currentLabel));
-  const decadeText = ({ es: "Recorrer por década", ca: "Recórrer per dècada", en: "Browse by decade" })[code] || "Browse by decade";
+  const decadeText = withLanguages({ es: "Recorrer por década", ca: "Recórrer per dècada", en: "Browse by decade" })[code] || "Browse by decade";
   return <div ref={host} className={`library-scroll-rail${yearMode ? " library-scroll-rail--years" : ""}${active ? " is-active" : ""}`} hidden={!labels.length}>
     {onDirectionChange ? <button className="library-scroll-rail__control" type="button"
       aria-label={`${text[sort]}: ${controls[direction]}`} title={`${text[sort]}: ${controls[direction]}`}

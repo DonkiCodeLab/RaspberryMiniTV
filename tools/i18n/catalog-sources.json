@@ -1,0 +1,341 @@
+{
+  "records": [
+    {
+      "file": "App.jsx",
+      "name": "UI_STRINGS",
+      "start": 13318,
+      "end": 95718,
+      "keys": 506
+    },
+    {
+      "file": "BackToTop.jsx",
+      "name": "label",
+      "start": 600,
+      "end": 669,
+      "keys": 11
+    },
+    {
+      "file": "GameConsoleCarousel.jsx",
+      "name": "COPY",
+      "start": 173,
+      "end": 373,
+      "keys": 3
+    },
+    {
+      "file": "GameProviderSettings.jsx",
+      "name": "strings",
+      "start": 307,
+      "end": 2799,
+      "keys": 18
+    },
+    {
+      "file": "GameProviderSettings.jsx",
+      "name": "youtubeIntro",
+      "start": 3740,
+      "end": 3921,
+      "keys": 45
+    },
+    {
+      "file": "LibraryScrollRail.jsx",
+      "name": "text",
+      "start": 3454,
+      "end": 4053,
+      "keys": 6
+    },
+    {
+      "file": "LibraryScrollRail.jsx",
+      "name": "controls",
+      "start": 4280,
+      "end": 4825,
+      "keys": 7
+    },
+    {
+      "file": "LibraryScrollRail.jsx",
+      "name": "decadeText",
+      "start": 5985,
+      "end": 6065,
+      "keys": 16
+    },
+    {
+      "file": "MediaCredits.jsx",
+      "name": "labels",
+      "start": 386,
+      "end": 2001,
+      "keys": 12
+    },
+    {
+      "file": "MovieFileInfo.jsx",
+      "name": "strings",
+      "start": 323,
+      "end": 2489,
+      "keys": 17
+    },
+    {
+      "file": "MovieListTitle.jsx",
+      "name": "strings",
+      "start": 194,
+      "end": 855,
+      "keys": 4
+    },
+    {
+      "file": "MovieMedia.jsx",
+      "name": "strings",
+      "start": 321,
+      "end": 1312,
+      "keys": 6
+    },
+    {
+      "file": "PersonDetailsModal.jsx",
+      "name": "labels",
+      "start": 487,
+      "end": 2037,
+      "keys": 14
+    },
+    {
+      "file": "ServiceCredentialTest.jsx",
+      "name": "strings",
+      "start": 201,
+      "end": 870,
+      "keys": 5
+    },
+    {
+      "file": "SystemUpdate.jsx",
+      "name": "strings",
+      "start": 285,
+      "end": 3933,
+      "keys": 12
+    },
+    {
+      "file": "TmdbCachePanel.jsx",
+      "name": "labels",
+      "start": 430,
+      "end": 3883,
+      "keys": 23
+    },
+    {
+      "file": "TmdbCreditsCompletion.jsx",
+      "name": "strings",
+      "start": 236,
+      "end": 2799,
+      "keys": 16
+    },
+    {
+      "file": "TmdbFailureList.jsx",
+      "name": "labels",
+      "start": 106,
+      "end": 2195,
+      "keys": 21
+    },
+    {
+      "file": "TorrentTraffic.jsx",
+      "name": "strings",
+      "start": 369,
+      "end": 3110,
+      "keys": 26
+    },
+    {
+      "file": "TorrentUploadSettings.jsx",
+      "name": "labels",
+      "start": 277,
+      "end": 2132,
+      "keys": 11
+    },
+    {
+      "file": "UserProfiles.jsx",
+      "name": "copy",
+      "start": 318,
+      "end": 2831,
+      "keys": 23
+    },
+    {
+      "file": "awardCatalog.js",
+      "name": "translations",
+      "start": 459,
+      "end": 1983,
+      "keys": 10
+    },
+    {
+      "file": "bookAwardCatalog.js",
+      "name": "translations",
+      "start": 337,
+      "end": 2935,
+      "keys": 22
+    },
+    {
+      "file": "bookStrings.js",
+      "name": "strings",
+      "start": 130,
+      "end": 11463,
+      "keys": 79
+    },
+    {
+      "file": "bookTorrentUtils.js",
+      "name": "strings",
+      "start": 136,
+      "end": 3039,
+      "keys": 20
+    },
+    {
+      "file": "browserPlaybackStrings.js",
+      "name": "strings",
+      "start": 79,
+      "end": 5487,
+      "keys": 15
+    },
+    {
+      "file": "browserSubtitles.js",
+      "name": "subtitleStrings",
+      "start": 212,
+      "end": 1476,
+      "keys": 12
+    },
+    {
+      "file": "catalogAIStrings.js",
+      "name": "strings",
+      "start": 79,
+      "end": 19065,
+      "keys": 91
+    },
+    {
+      "file": "codexStrings.js",
+      "name": "translations",
+      "start": 6468,
+      "end": 6482,
+      "keys": 49
+    },
+    {
+      "file": "codexStrings.js",
+      "name": "standalone",
+      "keys": 49
+    },
+    {
+      "file": "freeDownloadStrings.js",
+      "name": "strings",
+      "start": 79,
+      "end": 8426,
+      "keys": 52
+    },
+    {
+      "file": "gameMappingStrings.js",
+      "name": "GAME_MAPPING_STRINGS",
+      "start": 99,
+      "end": 4222,
+      "keys": 20
+    },
+    {
+      "file": "movieSubtitleStrings.js",
+      "name": "strings",
+      "start": 136,
+      "end": 9360,
+      "keys": 46
+    },
+    {
+      "file": "omdbLibrary.js",
+      "name": "strings",
+      "start": 391,
+      "end": 6359,
+      "keys": 23
+    },
+    {
+      "file": "omdbRatings.js",
+      "name": "strings",
+      "start": 408,
+      "end": 6320,
+      "keys": 26
+    },
+    {
+      "file": "oscarCatalog.js",
+      "name": "oscarStrings",
+      "start": 758,
+      "end": 4160,
+      "keys": 29
+    },
+    {
+      "file": "photoImportStrings.js",
+      "name": "translations",
+      "start": 15425,
+      "end": 15439,
+      "keys": 86
+    },
+    {
+      "file": "photoImportStrings.js",
+      "name": "standalone",
+      "keys": 86
+    },
+    {
+      "file": "photoStrings.js",
+      "name": "translations",
+      "start": 24907,
+      "end": 24921,
+      "keys": 167
+    },
+    {
+      "file": "photoStrings.js",
+      "name": "standalone",
+      "keys": 167
+    },
+    {
+      "file": "recommendationStrings.js",
+      "name": "strings",
+      "start": 79,
+      "end": 9427,
+      "keys": 55
+    },
+    {
+      "file": "subtitleTranslationStrings.js",
+      "name": "strings",
+      "start": 136,
+      "end": 4736,
+      "keys": 17
+    },
+    {
+      "file": "torrentUtils.js",
+      "name": "strings",
+      "start": 3346,
+      "end": 18531,
+      "keys": 95
+    }
+  ],
+  "functions": [
+    {
+      "context": "MediaCredits.jsx:labels.more",
+      "source": "count => `Show ${count} more`"
+    },
+    {
+      "context": "MediaCredits.jsx:labels.episodes",
+      "source": "count => `${count} ${count === 1 ? \"episode\" : \"episodes\"}`"
+    },
+    {
+      "context": "omdbLibrary.js:strings.progress",
+      "source": "(processed, total) => `${count(processed, \"en\")} of ${count(total, \"en\")} titles checked`"
+    },
+    {
+      "context": "omdbLibrary.js:strings.inventory",
+      "source": "(ready, total) => `${count(ready, \"en\")} of ${count(total, \"en\")} titles up to date`"
+    },
+    {
+      "context": "omdbLibrary.js:strings.current",
+      "source": "title => `Checking: ${title}`"
+    },
+    {
+      "context": "omdbLibrary.js:strings.completed",
+      "source": "job => `${count(job.processed, \"en\")} titles checked; ${count(job.ready, \"en\")} with ratings available.`"
+    },
+    {
+      "context": "omdbLibrary.js:strings.missingIds",
+      "source": "value => value === 1 ? \"1 title has no identifier: review its details to update it.\" : `${count(value, \"en\")} titles have no identifier: review their details to update them.`"
+    },
+    {
+      "context": "omdbLibrary.js:strings.failed",
+      "source": "value => `${count(value, \"en\")} ${value === 1 ? \"title\" : \"titles\"} could not be checked.`"
+    },
+    {
+      "context": "omdbLibrary.js:strings.unavailable",
+      "source": "value => `${count(value, \"en\")} ${value === 1 ? \"title has\" : \"titles have\"} no ratings available on OMDb.`"
+    },
+    {
+      "context": "omdbRatings.js:strings.votes",
+      "source": "count => `${formatOmdbVotes(count, \"en\")} votes`"
+    }
+  ]
+}

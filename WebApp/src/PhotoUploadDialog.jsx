@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/languages.js";
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { photoRequest, uploadPictureFiles } from './api/raspberryApi.js';
@@ -24,13 +25,13 @@ export function ImportProgress({ title, done, total, countLabel, detail, fileNam
     return () => clearInterval(timer);
   }, [active]);
   const knownTotal = total !== null, percent = knownTotal ? percentage(done, total) : null;
-  const number = value => value.toLocaleString(language);
+  const number = value => value.toLocaleString(intlLocale(language));
   const waiting = active && now - updatedAt >= 30000;
   return <section className="photo-import-progress" aria-label={title}>
     <div className="photo-import-progress__heading">
       {active && <LoadingSpinner inline />}
       <strong role="status">{title}</strong>
-      {knownTotal && <b>{percent.toLocaleString(language, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</b>}
+      {knownTotal && <b>{percent.toLocaleString(intlLocale(language), { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</b>}
     </div>
     <progress value={percent ?? undefined} max={100} aria-label={title} />
     <div className="photo-import-progress__counts"><strong>{number(done)}{knownTotal ? ` / ${number(total)}` : ''} {countLabel}</strong><small>{t.elapsed}: {duration(now - startedAt)}</small></div>
@@ -183,7 +184,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
     <div className="photo-import">
       <div className="photo-import-heading"><span className="photo-import-mark" aria-hidden="true">✳</span><p>{t.subtitle}</p></div>
       {(mode === 'mac' || selection.geolocatedOnly) && <p className="photo-note">{t.geoOnly}</p>}
-      {selection.withoutLocation > 0 && <p role="status">{selection.withoutLocation.toLocaleString(language)} {t.withoutLocation}</p>}
+      {selection.withoutLocation > 0 && <p role="status">{selection.withoutLocation.toLocaleString(intlLocale(language))} {t.withoutLocation}</p>}
       <ol className="photo-import-steps">{[t.prepare, t.review, t.import].map((label, index) => <li key={label} aria-current={(result || started ? 2 : stats.count ? 1 : 0) === index ? 'step' : undefined}><span>{index + 1}</span>{label}</li>)}</ol>
       {result ? <div className="photo-import-success" role="status"><span aria-hidden="true">{result.rejected.length ? '!' : '✓'}</span><h3>{result.rejected.length ? t.finishedWithErrors : t.success}</h3>
         <p><strong>{result.imported}</strong> {t.saved}</p><p>{result.duplicates} {t.duplicates}</p>
@@ -201,7 +202,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
           {...readProgress} countLabel={readProgress.total === null ? t.filesFound : t.photosRead} active t={t} language={language} detail={t.readingHint} />}
         {started && <ImportProgress title={busy ? ['hashing', 'checking'].includes(progress.status) ? t.checking : progress.status === 'saving' ? t.saving : t.uploading : paused ? t.paused : t.interrupted}
           {...progress} total={stats.count} countLabel={t.photosAttempted} active={busy} t={t} language={language}
-          detail={busy ? `${t.currentBatch}: ${progress.batchStart.toLocaleString(language)}–${progress.batchEnd.toLocaleString(language)} · ${['hashing', 'checking'].includes(progress.status) ? t.checkingHint : progress.status === 'saving' ? t.confirming : `${progress.batchPercent}% ${t.batchSent}`}` : t.keepOpen} />}
+          detail={busy ? `${t.currentBatch}: ${progress.batchStart.toLocaleString(intlLocale(language))}–${progress.batchEnd.toLocaleString(intlLocale(language))} · ${['hashing', 'checking'].includes(progress.status) ? t.checkingHint : progress.status === 'saving' ? t.confirming : `${progress.batchPercent}% ${t.batchSent}`}` : t.keepOpen} />}
         {!stats.count && !reading && <div className={`photo-import-drop${drag ? ' is-dragging' : ''}`} onDragOver={event => { event.preventDefault(); if (!locked) setDrag(true); }} onDragLeave={() => setDrag(false)}
           onDrop={event => { event.preventDefault(); setDrag(false); if (!locked) pick(event.dataTransfer, true); }}>
           <div className="photo-import-stack" aria-hidden="true"><span>⌖</span><span>♡</span><span>▧</span></div>
@@ -209,7 +210,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
           <div className="photo-file-choices">{picker(true)}{picker(false)}</div><small>HEIC · JPG · PNG · WebP · AVIF · GIF · BMP · 50 MB / {s.photos}</small>
         </div>}
         {stats.count > 0 && <>
-          <div className="photo-import-stats"><div><strong>{stats.count.toLocaleString()}</strong><span>{s.photos} · {size(stats.bytes)}</span></div>
+          <div className="photo-import-stats"><div><strong>{stats.count.toLocaleString(intlLocale(language))}</strong><span>{s.photos} · {size(stats.bytes)}</span></div>
             <div><strong>{stats.locations}</strong><span>{t.locations}</span></div><div><strong>{stats.people}</strong><span>{t.people}</span></div><div><strong>{stats.albums}</strong><span>{t.albums}</span></div></div>
           {!started && <>
           <p className="photo-note">{t.checkingHint}</p>

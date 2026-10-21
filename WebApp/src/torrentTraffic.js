@@ -1,3 +1,4 @@
+import { intlLocale } from "./i18n/languages.js";
 export function trafficTime(timestamp, language = 'es', period = '3h', full = false) {
   let options = { hour: '2-digit', minute: '2-digit' };
   if (full || period === '7d') {
@@ -5,14 +6,14 @@ export function trafficTime(timestamp, language = 'es', period = '3h', full = fa
     if (period === '365d') options.year = 'numeric';
   } else if (period === '30d') options = { day: '2-digit', month: 'short' };
   else if (period === '365d') options = { month: 'short', year: 'numeric' };
-  return new Date(timestamp * 1000).toLocaleString(language, options);
+  return new Date(timestamp * 1000).toLocaleString(intlLocale(language), options);
 }
 
 export function trafficSize(value, language = 'es', rate = false) {
   if (value == null || !Number.isFinite(value)) return '—';
   const units = ['B', 'kB', 'MB', 'GB', 'TB'];
   const index = Math.min(4, Math.max(0, Math.floor(Math.log10(Math.max(1, value)) / 3)));
-  return `${new Intl.NumberFormat(language, { maximumFractionDigits: index ? 1 : 0 }).format(value / 1000 ** index)} ${units[index]}${rate ? '/s' : ''}`;
+  return `${new Intl.NumberFormat(intlLocale(language), { maximumFractionDigits: index ? 1 : 0 }).format(value / 1000 ** index)} ${units[index]}${rate ? '/s' : ''}`;
 }
 
 export function trafficPaths(points, field, x, y, baseline) {

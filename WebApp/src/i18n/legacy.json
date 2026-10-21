@@ -1,0 +1,807 @@
+[
+  [
+    "Fichero:",
+    "File:",
+    "Fitxer:"
+  ],
+  [
+    "Navegación de páginas",
+    "Page navigation",
+    "Navegació de pàgines"
+  ],
+  [
+    "Página anterior",
+    "Previous page",
+    "Pàgina anterior"
+  ],
+  [
+    "Página siguiente",
+    "Next page",
+    "Pàgina següent"
+  ],
+  [
+    "Control de zoom",
+    "Zoom controls",
+    "Controls de zoom"
+  ],
+  [
+    "Reducir zoom un 10 %",
+    "Zoom out by 10%",
+    "Redueix el zoom un 10 %"
+  ],
+  [
+    "Aumentar zoom un 10 %",
+    "Zoom in by 10%",
+    "Augmenta el zoom un 10 %"
+  ],
+  [
+    "Zoom",
+    "Zoom",
+    "Zoom"
+  ],
+  [
+    "Cerrar lector",
+    "Close reader",
+    "Tanca el lector"
+  ],
+  [
+    "Preparando las páginas…",
+    "Preparing pages…",
+    "Preparant les pàgines…"
+  ],
+  [
+    "Este formato se abrirá con el lector compatible del navegador o del dispositivo.",
+    "This format will open in a compatible browser or device reader.",
+    "Aquest format s’obrirà amb el lector compatible del navegador o del dispositiu."
+  ],
+  [
+    "Abrir ",
+    "Open ",
+    "Obre "
+  ],
+  [
+    "¿Realmente quieres abandonar la visualización?",
+    "Do you want to stop reading?",
+    "Vols deixar de llegir?"
+  ],
+  [
+    "Tu posición en ",
+    "Your position in ",
+    "La teva posició a "
+  ],
+  [
+    " se guarda en tu perfil.",
+    " is saved in your profile.",
+    " es desa al teu perfil."
+  ],
+  [
+    "Seguir leyendo",
+    "Keep reading",
+    "Continua llegint"
+  ],
+  [
+    "Abandonar",
+    "Leave",
+    "Surt"
+  ],
+  [
+    "La sesión ha caducado. Vuelve a introducir el PIN.",
+    "Your session has expired. Enter your PIN again.",
+    "La sessió ha caducat. Torna a introduir el PIN."
+  ],
+  [
+    "El archivo ya no existe en la biblioteca.",
+    "The file is no longer in the library.",
+    "El fitxer ja no existeix a la biblioteca."
+  ],
+  [
+    "No se pudo cargar este PDF.",
+    "Could not load this PDF.",
+    "No s’ha pogut carregar aquest PDF."
+  ],
+  [
+    "No se pudo mostrar esta página.",
+    "Could not display this page.",
+    "No s’ha pogut mostrar aquesta pàgina."
+  ],
+  [
+    "Página {page}",
+    "Page {page}",
+    "Pàgina {page}"
+  ],
+  [
+    "Leyendo:",
+    "Reading:",
+    "Llegint:"
+  ],
+  [
+    "Navegación del libro",
+    "Book navigation",
+    "Navegació del llibre"
+  ],
+  [
+    "Tamaño de letra",
+    "Font size",
+    "Mida de la lletra"
+  ],
+  [
+    "Reducir letra",
+    "Decrease font size",
+    "Redueix la lletra"
+  ],
+  [
+    "Aumentar letra",
+    "Increase font size",
+    "Augmenta la lletra"
+  ],
+  [
+    "Índice",
+    "Contents",
+    "Índex"
+  ],
+  [
+    "Ir a un capítulo",
+    "Go to a chapter",
+    "Ves a un capítol"
+  ],
+  [
+    "Selecciona un capítulo",
+    "Select a chapter",
+    "Tria un capítol"
+  ],
+  [
+    "Reintentar",
+    "Retry",
+    "Torna-ho a provar"
+  ],
+  [
+    "Tu posición se guarda en tu perfil. Las páginas de cada sección se ajustan a la pantalla y al tamaño de letra.",
+    "Your position is saved in your profile. Each section’s pages adjust to the screen and font size.",
+    "La teva posició es desa al perfil. Les pàgines de cada secció s’ajusten a la pantalla i a la mida de la lletra."
+  ],
+  [
+    "¿Cerrar el libro?",
+    "Close the book?",
+    "Vols tancar el llibre?"
+  ],
+  [
+    "Podrás continuar desde la última posición con tu usuario.",
+    "You can resume from your last position with your profile.",
+    "Podràs continuar des de l’última posició amb el teu usuari."
+  ],
+  [
+    "Cerrar libro",
+    "Close book",
+    "Tanca el llibre"
+  ],
+  [
+    "El libro ya no existe en la biblioteca.",
+    "The book is no longer in the library.",
+    "El llibre ja no existeix a la biblioteca."
+  ],
+  [
+    "No se pudo leer el EPUB. Reintenta y comprueba que el archivo sea válido y no esté protegido con DRM.",
+    "Could not read the EPUB. Try again and check that the file is valid and is not DRM protected.",
+    "No s’ha pogut llegir l’EPUB. Torna-ho a provar i comprova que el fitxer sigui vàlid i no estigui protegit amb DRM."
+  ],
+  [
+    "No se pudo mostrar este capítulo. Puedes reintentar la lectura.",
+    "Could not display this chapter. You can try reading it again.",
+    "No s’ha pogut mostrar aquest capítol. Pots tornar a provar la lectura."
+  ],
+  [
+    "Cargando…",
+    "Loading…",
+    "Carregant…"
+  ],
+  [
+    "Abriendo el libro…",
+    "Opening the book…",
+    "Obrint el llibre…"
+  ],
+  [
+    "Leer {name}",
+    "Read {name}",
+    "Llegeix {name}"
+  ],
+  [
+    "Sección {section} de {total}",
+    "Section {section} of {total}",
+    "Secció {section} de {total}"
+  ],
+  [
+    "Ir a una página de la sección",
+    "Go to a section page",
+    "Ves a una pàgina de la secció"
+  ],
+  [
+    "Ir a una página",
+    "Go to a page",
+    "Ves a una pàgina"
+  ],
+  [
+    "Página de la sección",
+    "Section page",
+    "Pàgina de la secció"
+  ],
+  [
+    "Número de página",
+    "Page number",
+    "Número de pàgina"
+  ],
+  [
+    "Escribe una página entre 1 y {total}",
+    "Enter a page from 1 to {total}",
+    "Escriu una pàgina entre 1 i {total}"
+  ],
+  [
+    "Cargando páginas",
+    "Loading pages",
+    "Carregant pàgines"
+  ],
+  [
+    "Página",
+    "Page",
+    "Pàgina"
+  ],
+  [
+    "de ",
+    "of ",
+    "de "
+  ],
+  [
+    "Ir a la página de la sección",
+    "Go to the section page",
+    "Ves a la pàgina de la secció"
+  ],
+  [
+    "Ir a la página",
+    "Go to the page",
+    "Ves a la pàgina"
+  ],
+  [
+    "Ir",
+    "Go",
+    "Ves-hi"
+  ],
+  [
+    "Tu posición está guardada. Puedes cerrar esta ventana.",
+    "Your position is saved. You can close this window.",
+    "La teva posició està desada. Pots tancar aquesta finestra."
+  ],
+  [
+    "El usuario ya no existe. Cierra el lector y elige otro perfil.",
+    "This user no longer exists. Close the reader and choose another profile.",
+    "L’usuari ja no existeix. Tanca el lector i tria un altre perfil."
+  ],
+  [
+    "Guardando fichas de TMDB",
+    "Saving TMDB details",
+    "Desant les fitxes de TMDB"
+  ],
+  [
+    "Descargando imágenes",
+    "Downloading images",
+    "Descarregant imatges"
+  ],
+  [
+    "Generando miniaturas",
+    "Generating thumbnails",
+    "Generant miniatures"
+  ],
+  [
+    "Preparación de ",
+    "Preparing ",
+    "Preparació de "
+  ],
+  [
+    "Vídeos: ",
+    "Videos: ",
+    "Vídeos: "
+  ],
+  [
+    "guardados",
+    "saved",
+    "desats"
+  ],
+  [
+    "subida en curso (progreso en el diálogo de subida)",
+    "upload in progress (see the upload dialog)",
+    "pujada en curs (progrés al diàleg de pujada)"
+  ],
+  [
+    "Listo en local",
+    "Ready locally",
+    "Disponible en local"
+  ],
+  [
+    "Preparación incompleta",
+    "Preparation incomplete",
+    "Preparació incompleta"
+  ],
+  [
+    "Cancelado",
+    "Cancelled",
+    "Cancel·lat"
+  ],
+  [
+    "En cola",
+    "Queued",
+    "A la cua"
+  ],
+  [
+    " ficheros · ",
+    " files · ",
+    " fitxers · "
+  ],
+  [
+    "Cerrar",
+    "Close",
+    "Tanca"
+  ],
+  [
+    "Ocultar (continúa en segundo plano)",
+    "Hide (continues in the background)",
+    "Amaga (continua en segon pla)"
+  ],
+  [
+    "Cargando información del episodio…",
+    "Loading episode information…",
+    "Carregant la informació de l’episodi…"
+  ],
+  [
+    " archivos guardados",
+    " files saved",
+    " fitxers desats"
+  ],
+  [
+    "Detalles de la subida",
+    "Upload details",
+    "Detalls de la pujada"
+  ],
+  [
+    "Descargar informe",
+    "Download report",
+    "Descarrega l’informe"
+  ],
+  [
+    "Seleccionar una carpeta o colección",
+    "Select a folder or collection",
+    "Tria una carpeta o col·lecció"
+  ],
+  [
+    " · carpeta",
+    " · folder",
+    " · carpeta"
+  ],
+  [
+    "Biblioteca",
+    "Library",
+    "Biblioteca"
+  ],
+  [
+    "Customizar colección",
+    "Customize collection",
+    "Personalitza la col·lecció"
+  ],
+  [
+    "Nombre de la colección",
+    "Collection name",
+    "Nom de la col·lecció"
+  ],
+  [
+    "Portada manual",
+    "Custom cover",
+    "Portada manual"
+  ],
+  [
+    "Borrar colección completa",
+    "Delete entire collection",
+    "Esborra tota la col·lecció"
+  ],
+  [
+    "Cancelar",
+    "Cancel",
+    "Cancel·la"
+  ],
+  [
+    "Esta portada se mostrará en la ficha y en la cartelera de la colección. Por defecto se usa el primer libro.",
+    "This cover will appear in the collection’s details and banner. The first book is used by default.",
+    "Aquesta portada es mostrarà a la fitxa i a la cartellera de la col·lecció. Per defecte es fa servir el primer llibre."
+  ],
+  [
+    "No se pudo guardar la colección.",
+    "Could not save the collection.",
+    "No s’ha pogut desar la col·lecció."
+  ],
+  [
+    "Guardando…",
+    "Saving…",
+    "Desant…"
+  ],
+  [
+    "Guardar cambios",
+    "Save changes",
+    "Desa els canvis"
+  ],
+  [
+    "Portadas: ",
+    "Covers: ",
+    "Portades: "
+  ],
+  [
+    " revisadas · ",
+    " checked · ",
+    " revisades · "
+  ],
+  [
+    " cargadas · ",
+    " loaded · ",
+    " carregades · "
+  ],
+  [
+    " errores · ",
+    " errors · ",
+    " errors · "
+  ],
+  [
+    " tiempos agotados",
+    " timeouts",
+    " temps esgotats"
+  ],
+  [
+    "Esperando: ",
+    "Waiting: ",
+    "Esperant: "
+  ],
+  [
+    "Cargando usuarios…",
+    "Loading users…",
+    "Carregant usuaris…"
+  ],
+  [
+    "Cargando ficha de {name}…",
+    "Loading details for {name}…",
+    "Carregant la fitxa de {name}…"
+  ],
+  [
+    "Cargando miniaturas de {name}…",
+    "Loading thumbnails for {name}…",
+    "Carregant les miniatures de {name}…"
+  ],
+  [
+    "este título",
+    "this title",
+    "aquest títol"
+  ],
+  [
+    "Cargando miniaturas locales de series y películas",
+    "Loading local series and movie thumbnails",
+    "Carregant miniatures locals de sèries i pel·lícules"
+  ],
+  [
+    "Cargando miniaturas de libros y novelas gráficas",
+    "Loading book and graphic novel thumbnails",
+    "Carregant miniatures de llibres i novel·les gràfiques"
+  ],
+  [
+    " · Preparando lectura…",
+    " · Preparing to read…",
+    " · Preparant la lectura…"
+  ],
+  [
+    "PIN incorrecto o sesion caducada.",
+    "Incorrect PIN or expired session.",
+    "PIN incorrecte o sessió caducada."
+  ],
+  [
+    "Back to top",
+    "Back to top",
+    "Torna a l’inici"
+  ],
+  [
+    "sección",
+    "section",
+    "secció"
+  ],
+  [
+    "Portadas: {completed}/{total} revisadas · {loaded} cargadas · {failed} errores · {timedOut} tiempos agotados",
+    "Covers: {completed}/{total} checked · {loaded} loaded · {failed} errors · {timedOut} timeouts",
+    "Portades: {completed}/{total} revisades · {loaded} carregades · {failed} errors · {timedOut} temps esgotats"
+  ],
+  [
+    "Esperando: {name}",
+    "Waiting: {name}",
+    "Esperant: {name}"
+  ],
+  [
+    "Abrir {format}",
+    "Open {format}",
+    "Obre {format}"
+  ],
+  [
+    "Tu posición en {name} se guarda en tu perfil.",
+    "Your position in {name} is saved in your profile.",
+    "La teva posició a {name} es desa al teu perfil."
+  ],
+  [
+    "de {total}",
+    "of {total}",
+    "de {total}"
+  ],
+  [
+    "Preparación de {name}",
+    "Preparing {name}",
+    "Preparació de {name}"
+  ],
+  [
+    "Idioma",
+    "Language",
+    "Idioma"
+  ],
+  [
+    "Conectando con la Raspberry",
+    "Connecting to the Raspberry",
+    "Connectant amb la Raspberry"
+  ],
+  [
+    "Leyendo: {items}",
+    "Reading: {items}",
+    "Llegint: {items}"
+  ],
+  [
+    "Preparando biblioteca",
+    "Preparing library",
+    "Preparant la biblioteca"
+  ],
+  [
+    "catálogo local",
+    "local catalog",
+    "catàleg local"
+  ],
+  [
+    "Leyendo resumen local de series y películas",
+    "Reading local series and movie summary",
+    "Llegint el resum local de sèries i pel·lícules"
+  ],
+  [
+    "Fuentes completas",
+    "Seeds",
+    "Fonts completes"
+  ],
+  [
+    "Guardado",
+    "Saved",
+    "Desat"
+  ],
+  [
+    "Pendiente",
+    "Pending",
+    "Pendent"
+  ],
+  [
+    "Sin confirmación",
+    "Unconfirmed",
+    "Sense confirmar"
+  ],
+  [
+    "Error",
+    "Error",
+    "Error"
+  ],
+  [
+    "Formato no compatible",
+    "Unsupported format",
+    "Format no compatible"
+  ],
+  [
+    "Elige una foto JPG, PNG o WebP de hasta 10 MB.",
+    "Choose a JPG, PNG or WebP photo up to 10 MB.",
+    "Tria una foto JPG, PNG o WebP de fins a 10 MB."
+  ],
+  [
+    "No se pudo leer la foto.",
+    "Could not read the photo.",
+    "No s’ha pogut llegir la foto."
+  ],
+  [
+    "No se encontró el archivo para guardar la ficha en la Raspberry.",
+    "The file needed to save the details on the Raspberry was not found.",
+    "No s’ha trobat l’arxiu per desar la fitxa a la Raspberry."
+  ],
+  [
+    "La API dice que guardó la película en {path}, pero no aparece al refrescar la biblioteca.",
+    "The server reported saving the movie at {path}, but it does not appear in the refreshed library.",
+    "El servidor indica que ha desat la pel·lícula a {path}, però no apareix en actualitzar la biblioteca."
+  ],
+  [
+    "La película no aparece al refrescar la biblioteca de la Raspberry.",
+    "The movie does not appear in the refreshed Raspberry library.",
+    "La pel·lícula no apareix en actualitzar la biblioteca de la Raspberry."
+  ],
+  [
+    "No se pudo conservar el informe en este navegador. Descárgalo antes de cerrar la página.",
+    "The report could not be stored in this browser. Download it before closing the page.",
+    "No s’ha pogut conservar l’informe en aquest navegador. Descarrega’l abans de tancar la pàgina."
+  ],
+  [
+    "No se pudo eliminar la colección.",
+    "Could not delete the collection.",
+    "No s’ha pogut esborrar la col·lecció."
+  ],
+  [
+    "La carpeta contiene archivos incompatibles. Usa PDF, EPUB, CBZ o CBR.",
+    "The folder contains unsupported files. Use PDF, EPUB, CBZ or CBR.",
+    "La carpeta conté arxius incompatibles. Fes servir PDF, EPUB, CBZ o CBR."
+  ],
+  [
+    "Nueva colección",
+    "New collection",
+    "Col·lecció nova"
+  ],
+  [
+    "Subiendo {count} libro(s)…",
+    "Uploading {count} book(s)…",
+    "Pujant {count} llibre(s)…"
+  ],
+  [
+    "Los archivos se han guardado, pero no se pudo actualizar la biblioteca: {error}.",
+    "The files were saved, but the library could not be refreshed: {error}.",
+    "Els arxius s’han desat, però no s’ha pogut actualitzar la biblioteca: {error}."
+  ],
+  [
+    "{count} libro(s) añadidos.",
+    "{count} book(s) added.",
+    "{count} llibre(s) afegits."
+  ],
+  [
+    "{count} libro(s) añadidos a {collection}.",
+    "{count} book(s) added to {collection}.",
+    "{count} llibre(s) afegits a {collection}."
+  ],
+  [
+    "Subida cancelada",
+    "Upload canceled",
+    "Pujada cancel·lada"
+  ],
+  [
+    "El servidor no ha confirmado el archivo guardado.",
+    "The server has not confirmed that the file was saved.",
+    "El servidor no ha confirmat que s’hagi desat l’arxiu."
+  ],
+  [
+    "Si se perdió la conexión, comprueba la biblioteca antes de repetir el archivo: el servidor podría haberlo guardado sin confirmar la respuesta.",
+    "If the connection was lost, check the library before retrying the file: the server may have saved it without confirming the response.",
+    "Si s’ha perdut la connexió, comprova la biblioteca abans de tornar a pujar l’arxiu: el servidor podria haver-lo desat sense confirmar la resposta."
+  ],
+  [
+    "El archivo SRT debe tener contenido y no superar los 5 MB.",
+    "The SRT file must not be empty or exceed 5 MB.",
+    "L’arxiu SRT ha de tenir contingut i no superar els 5 MB."
+  ],
+  [
+    "OpenSubtitles: conecta con la Raspberry para configurar la cuenta.",
+    "OpenSubtitles: connect to the Raspberry to configure your account.",
+    "OpenSubtitles: connecta amb la Raspberry per configurar el compte."
+  ],
+  [
+    "Conecta con la Raspberry para descargar subtítulos.",
+    "Connect to the Raspberry to download subtitles.",
+    "Connecta amb la Raspberry per descarregar subtítols."
+  ],
+  [
+    "La subida ha tardado demasiado. Reintenta para continuar sin duplicar las fotos guardadas.",
+    "The upload timed out. Retry to continue without duplicating saved photos.",
+    "La pujada ha trigat massa. Torna-ho a provar per continuar sense duplicar les fotos desades."
+  ],
+  [
+    "El servidor no devolvió un archivo {format} válido.",
+    "The server did not return a valid {format} file.",
+    "El servidor no ha retornat un arxiu {format} vàlid."
+  ],
+  [
+    "El servidor ha rechazado el tamaño del archivo (HTTP 413).",
+    "The server rejected the file size (HTTP 413).",
+    "El servidor ha rebutjat la mida de l’arxiu (HTTP 413)."
+  ],
+  [
+    "Error del servidor (HTTP {status}).",
+    "Server error (HTTP {status}).",
+    "Error del servidor (HTTP {status})."
+  ],
+  [
+    "Se ha perdido la conexión con la Mini TV durante la subida. Comprueba la red y que la Mini TV siga encendida.",
+    "The connection to MiniTV was lost during upload. Check the network and that MiniTV is still powered on.",
+    "S’ha perdut la connexió amb la MiniTV durant la pujada. Comprova la xarxa i que la MiniTV continuï encesa."
+  ],
+  [
+    "Conecta con la Raspberry para descargar el catálogo.",
+    "Connect to the Raspberry to download the catalog.",
+    "Connecta amb la Raspberry per descarregar el catàleg."
+  ],
+  [
+    "Conecta con la Raspberry para completar las fichas.",
+    "Connect to the Raspberry to complete the details.",
+    "Connecta amb la Raspberry per completar les fitxes."
+  ],
+  [
+    "Actualización no disponible en modo demo.",
+    "Updates are unavailable in demo mode.",
+    "Les actualitzacions no estan disponibles en mode de demostració."
+  ],
+  [
+    "El perfil default se conserva para iniciar la app.",
+    "The default profile is kept for starting the app.",
+    "El perfil default es conserva per iniciar l’app."
+  ],
+  [
+    "El usuario ya no existe.",
+    "The user no longer exists.",
+    "L’usuari ja no existeix."
+  ],
+  [
+    "No se pudo subir el archivo.",
+    "Upload failed",
+    "No s’ha pogut pujar l’arxiu."
+  ],
+  [
+    "No se encontró el juego.",
+    "Game not found",
+    "No s’ha trobat el joc."
+  ],
+  [
+    "Falta el archivo.",
+    "Missing file",
+    "Falta l’arxiu."
+  ],
+  [
+    "Faltan archivos.",
+    "Missing files",
+    "Falten arxius."
+  ],
+  [
+    "Falta la ruta del archivo.",
+    "Missing relativePath",
+    "Falta la ruta de l’arxiu."
+  ],
+  [
+    "Faltan los datos de la película.",
+    "Missing movie metadata",
+    "Falten les dades de la pel·lícula."
+  ],
+  [
+    "Faltan fotos.",
+    "Missing pictures",
+    "Falten fotos."
+  ],
+  [
+    "Falta la ruta del libro.",
+    "Missing book path",
+    "Falta la ruta del llibre."
+  ],
+  [
+    "Faltan los archivos de los libros.",
+    "Missing book files",
+    "Falten els arxius dels llibres."
+  ],
+  [
+    "No se pudo guardar la imagen.",
+    "Could not save image",
+    "No s’ha pogut desar la imatge."
+  ],
+  [
+    "Conecta con la Raspberry para guardar tráileres.",
+    "Saving trailers requires a backend.",
+    "Connecta amb la Raspberry per desar tràilers."
+  ],
+  [
+    "Conecta con la Raspberry para configurar los juegos.",
+    "Game settings require a backend.",
+    "Connecta amb la Raspberry per configurar els jocs."
+  ],
+  [
+    "Codex no está disponible en modo demo.",
+    "Codex is unavailable in demo mode.",
+    "Codex no està disponible en mode de demostració."
+  ]
+]

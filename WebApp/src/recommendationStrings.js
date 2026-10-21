@@ -1,4 +1,5 @@
-const strings = {
+import { withLanguages } from "./i18n/index.js";
+const strings = withLanguages({
   es: {
     tasteLimit: "Máximo 12 entradas por categoría y 100 caracteres por entrada.", aiReason: "Por qué podría gustarte · IA",
     warningUnverified: "Se han omitido títulos que TMDB no ha podido identificar con seguridad.", warningLookup: "No se han podido comprobar algunos títulos en TMDB.", warningWatched: "Se han omitido títulos que ya has visto.", warningIgnoredTaste: "No se han guardado como gustos permanentes las preferencias ambiguas o solo para esta ocasión.", warningTasteLimit: "Has alcanzado el límite de 12 gustos por categoría; puedes editarlos.",
@@ -44,7 +45,7 @@ const strings = {
     conflict: "Your tastes changed in another request and have been reloaded. Review the changes and try again.", missingProfile: "This user is no longer available. Select another profile.", memoryError: "Your tastes could not be loaded or saved. Please try again.", noResults: "This response has no confirmed titles. Try telling me more about your tastes.",
     examples: ["I like science fiction and time travel stories", "I prefer comedies and want to avoid horror", "Ask me questions to learn my tastes"],
   },
-};
+});
 
 export function recommendationStrings(language) {
   const key = String(language || "es").toLowerCase().split(/[-_]/)[0];

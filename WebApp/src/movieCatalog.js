@@ -19,6 +19,7 @@ export function getRaspberryMovieLibraryItems(videos) {
       name: String(profile.name || entry.name || fileName.replace(/\.[^.]+$/, '')),
       fileRelativePath: path,
       fileName,
+      fileInfo: profile.fileInfo || null,
     }];
   });
 }

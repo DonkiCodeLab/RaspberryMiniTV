@@ -1,4 +1,5 @@
-export const BOOK_LANGUAGES = ["es", "ca", "en"];
+import { LANGUAGES, normalizeLanguage, intlLocale } from "./i18n/languages.js";
+export const BOOK_LANGUAGES = LANGUAGES.map(item => item.id);
 export const LOCALIZED_BOOK_FIELDS = ["title", "subtitle", "description", "subjects"];
 
 export function isGraphicNovel(book = {}) {
@@ -16,8 +17,7 @@ export function selectBookPageCount(current, detail) {
 }
 
 export function bookLanguage(language) {
-  const code = String(language || "es").toLowerCase().replaceAll("_", "-").split("-")[0];
-  return ({ cat: "ca", spa: "es", eng: "en" })[code] || (BOOK_LANGUAGES.includes(code) ? code : "es");
+  return normalizeLanguage(language);
 }
 
 export function localizeBook(book, language) {
@@ -41,6 +41,8 @@ export function bookLanguageName(code, language) {
   const names = { es: { es: "Castellano", ca: "Catalán", en: "Inglés" }, ca: { es: "Castellà", ca: "Català", en: "Anglès" }, en: { es: "Spanish", ca: "Catalan", en: "English" } };
   return String(code || "").split(",").map(part => {
     const normalized = ({ spa: "es", cat: "ca", eng: "en" })[part.trim()] || part.trim();
-    return names[locale][normalized] || part.trim();
+    if (names[locale]?.[normalized]) return names[locale][normalized];
+    try { return new Intl.DisplayNames([intlLocale(language)], { type: "language" }).of(normalized) || part.trim(); }
+    catch { return part.trim(); }
   }).join(", ");
 }

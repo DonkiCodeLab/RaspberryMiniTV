@@ -1,44 +1,46 @@
+import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useState } from "react";
 import { getSystemUpdate, startSystemUpdate, isMockMode } from "./api/raspberryApi";
+import { createSystemUpdateReload } from "./systemUpdateReload.js";
 
-const strings = {
+const strings = withLanguages({
   es: {
     phases: { preparing: "Preparando la Raspberry…", backup: "Guardando los cambios locales…", downloading: "Descargando la última versión…", dependencies: "Instalando las dependencias…", building: "Compilando y empaquetando la web…", restarting: "Reiniciando los servicios…", verifying: "Comprobando que los servicios funcionan…" },
-    title: "Actualizar Raspberry y web", button: "Actualizar desde Git", busy: "Actualizando…",
-    copy: "Descarga los cambios publicados en main, compila la web y reinicia los servicios. Puede tardar varios minutos y se interrumpirá la reproducción.",
+    title: "Actualizar Raspberry y web", button: "Actualizar Git y refrescar web", busy: "Actualizando…",
+    copy: "Descarga los cambios publicados en main, compila la web y reinicia los servicios. La web se recargará automáticamente al terminar. Puede tardar varios minutos y se interrumpirá la reproducción.",
     running: "Actualización en curso. Puedes dejar esta página abierta o volver más tarde.",
-    succeeded: "Actualización completada. Recarga la web para utilizar la nueva versión.",
+    succeeded: "Actualización completada.",
     failed: "La actualización ha fallado. Revisa el registro de minitv-update.service en la Raspberry antes de reintentar.",
     unavailable: "El servicio de actualización todavía no está instalado en la Raspberry.",
     offline: "Esperando conexión con la Raspberry. Los servicios pueden estar reiniciándose…",
-    reload: "Recargar web", demo: "Disponible al conectar con una Raspberry real.",
+    demo: "Disponible al conectar con una Raspberry real.",
     error: "No se ha podido confirmar el inicio. Consultando el estado de la Raspberry…",
   },
   ca: {
     phases: { preparing: "Preparant la Raspberry…", backup: "Desant els canvis locals…", downloading: "Descarregant l’última versió…", dependencies: "Instal·lant les dependències…", building: "Compilant i empaquetant la web…", restarting: "Reiniciant els serveis…", verifying: "Comprovant que els serveis funcionen…" },
-    title: "Actualitzar Raspberry i web", button: "Actualitzar des de Git", busy: "Actualitzant…",
-    copy: "Descarrega els canvis publicats a main, compila la web i reinicia els serveis. Pot trigar uns minuts i s’interromprà la reproducció.",
+    title: "Actualitzar Raspberry i web", button: "Actualitzar Git i refrescar la web", busy: "Actualitzant…",
+    copy: "Descarrega els canvis publicats a main, compila la web i reinicia els serveis. La web es recarregarà automàticament en acabar. Pot trigar uns minuts i s’interromprà la reproducció.",
     running: "Actualització en curs. Pots deixar aquesta pàgina oberta o tornar més tard.",
-    succeeded: "Actualització completada. Recarrega la web per utilitzar la nova versió.",
+    succeeded: "Actualització completada.",
     failed: "L’actualització ha fallat. Revisa el registre de minitv-update.service a la Raspberry abans de tornar-ho a provar.",
     unavailable: "El servei d’actualització encara no està instal·lat a la Raspberry.",
     offline: "Esperant connexió amb la Raspberry. Els serveis poden estar reiniciant-se…",
-    reload: "Recarregar web", demo: "Disponible en connectar amb una Raspberry real.",
+    demo: "Disponible en connectar amb una Raspberry real.",
     error: "No s’ha pogut confirmar l’inici. Consultant l’estat de la Raspberry…",
   },
   en: {
     phases: { preparing: "Preparing the Raspberry…", backup: "Backing up local changes…", downloading: "Downloading the latest version…", dependencies: "Installing dependencies…", building: "Building and packaging the web app…", restarting: "Restarting services…", verifying: "Checking that services are running…" },
-    title: "Update Raspberry and web", button: "Update from Git", busy: "Updating…",
-    copy: "Downloads changes published to main, builds the web app and restarts the services. This may take several minutes and will interrupt playback.",
+    title: "Update Raspberry and web", button: "Update Git and refresh web", busy: "Updating…",
+    copy: "Downloads changes published to main, builds the web app and restarts the services. The web app will reload automatically when complete. This may take several minutes and will interrupt playback.",
     running: "Update in progress. You can leave this page open or come back later.",
-    succeeded: "Update complete. Reload the web app to use the new version.",
+    succeeded: "Update complete.",
     failed: "The update failed. Check the minitv-update.service log on the Raspberry before retrying.",
     unavailable: "The update service is not installed on the Raspberry yet.",
     offline: "Waiting for the Raspberry to reconnect. The services may be restarting…",
-    reload: "Reload web app", demo: "Available when connected to a real Raspberry.",
+    demo: "Available when connected to a real Raspberry.",
     error: "Could not confirm the start. Checking the Raspberry’s status…",
   },
-};
+});
 
 export default function SystemUpdate({ language }) {
   const t = strings[language] || strings.es;
@@ -47,6 +49,10 @@ export default function SystemUpdate({ language }) {
   const [connected, setConnected] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(false);
+  const [observeUpdate] = useState(() => createSystemUpdateReload(() => window.location.reload()));
+  useEffect(() => {
+    observeUpdate(status?.state);
+  }, [status?.state, observeUpdate]);
   useEffect(() => {
     if (demo) return undefined;
     let stopped = false;
@@ -96,7 +102,6 @@ export default function SystemUpdate({ language }) {
           {busy ? t.busy : t.button}
         </button>
         <p role="status" aria-live="polite">{message || ""}</p>
-        {connected && status?.state === "succeeded" ? <button className="dialog-button" type="button" onClick={() => window.location.reload()}>{t.reload}</button> : null}
       </article>
     </section>
   );

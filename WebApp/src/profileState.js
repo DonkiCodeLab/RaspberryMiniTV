@@ -1,3 +1,4 @@
+import { message } from "./i18n/index.js";
 export const DEFAULT_USER = { id: "default", name: "default", avatar: "avatar-01" };
 export const EMPTY_STATE = { marks: {}, progress: {}, torrentNotifications: {} };
 
@@ -41,7 +42,7 @@ export function progressLabel(progress, language = "es") {
     const seconds = Math.floor(progress.seconds || 0);
     return `${Math.floor(seconds / 3600) ? `${Math.floor(seconds / 3600)}:` : ""}${String(Math.floor(seconds / 60) % 60).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
   }
-  const page = language === "en" ? "Page" : language === "ca" ? "Pàgina" : "Página";
-  const section = language === "en" ? "section" : language === "ca" ? "secció" : "sección";
+  const page = message("Page", language);
+  const section = message("section", language);
   return `${page} ${progress.page || 1}${progress.section ? ` · ${section} ${progress.section}` : ""}`;
 }

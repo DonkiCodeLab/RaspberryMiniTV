@@ -1,4 +1,6 @@
-const strings = {
+import { normalizeLanguage } from "./i18n/languages.js";
+import { withLanguages } from "./i18n/index.js";
+const strings = withLanguages({
   es: {
     translate: "Traducir subtítulo con la IA", translateSource: "Subtítulo de origen", translating: "Traduciendo subtítulo con OpenAI…", translatedCues: "Líneas traducidas", translateWaiting: "Esperando el límite de consultas de IA…",
     translationHint: "Se enviará el texto del subtítulo a OpenAI y se guardará una nueva pista en el idioma seleccionado. Se usará la cuenta y el modelo configurados en el dashboard.",
@@ -21,5 +23,5 @@ const strings = {
     SUBTITLE_TRANSLATION_FAILED: "Could not complete the translation. No incomplete file was saved.", SUBTITLE_TRANSLATION_INVALID: "The translation was incomplete or invalid. It was not saved; please retry.", SUBTITLE_TRANSLATION_NOT_FOUND: "This task is no longer available. Check whether the track was saved before retrying.",
     AI_DISABLED: "Enable AI in the dashboard’s OpenAI settings.", AI_NOT_CONFIGURED: "Configure an OpenAI key in the dashboard to translate subtitles.", AI_AUTH_ERROR: "OpenAI rejected the configured key. Review it in the dashboard.", AI_UPSTREAM_RATE_LIMIT: "OpenAI reached its usage limit. Check your quota or try again later.", AI_TIMEOUT: "OpenAI took too long. You can retry the translation.", AI_MODEL_ERROR: "The configured model could not complete the translation. Review it in OpenAI settings.",
   },
-};
-export function subtitleTranslationStrings(language) { return strings[String(language || "es").slice(0, 2)] || strings.es; }
+});
+export function subtitleTranslationStrings(language) { return strings[normalizeLanguage(language)] || strings.es; }

@@ -14,10 +14,14 @@ import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
+from languages import SUPPORTED_LANGUAGES as LANGUAGES
 
 MAX_SUBTITLE_BYTES = 5 * 1024 * 1024
 API_HOSTS = {"api.opensubtitles.com", "vip-api.opensubtitles.com"}
-LANGUAGES = {"es", "ca", "en"}
+# Provider identities differ from the shared MiniTV language IDs. Languages
+# without a separate catalogue must still reach the AI translation offer.
+# https://github.com/opensubtitles/vlsub-opensubtitles-com/blob/main/docs/languages.md
+PROVIDER_LANGUAGES = {"zh": "zh-cn", "pt": "pt-pt", "pcm": None, "arz": None, "ha": None}
 
 
 def inspect_subtitles(video_path, root):
@@ -243,13 +247,18 @@ class OpenSubtitles:
             return base, token
 
     def obtain(self, path, metadata, language, credentials):
+        if not isinstance(language, str) or language not in LANGUAGES:
+            raise SubtitleError("SUBTITLE_INVALID_LANGUAGE", 400)
+        provider_language = PROVIDER_LANGUAGES.get(language, language)
+        if provider_language is None:
+            raise SubtitleError("SUBTITLE_NOT_FOUND", 404)
         if not credentials.get("apiKey"):
             raise SubtitleError("SUBTITLE_NOT_CONFIGURED", 503)
         base, token = (self._login(credentials) if credentials.get("username") and credentials.get("password")
                        else ("https://api.opensubtitles.com/api/v1", ""))
         file_hash = movie_hash(path)
         filename = os.path.basename(path)
-        params = {"languages": language, "type": "movie", "machine_translated": "exclude", "ai_translated": "exclude",
+        params = {"languages": provider_language, "type": "movie", "machine_translated": "exclude", "ai_translated": "exclude",
                   "foreign_parts_only": "exclude", "order_by": "download_count", "order_direction": "desc"}
 
         def search(extra, exact=False):
@@ -258,7 +267,7 @@ class OpenSubtitles:
             rows = response.get("data")
             if not isinstance(rows, list):
                 raise SubtitleError("SUBTITLE_PROVIDER_ERROR")
-            return best_candidate(rows, language, filename, metadata, hash_only=exact)
+            return best_candidate(rows, provider_language, filename, metadata, hash_only=exact)
 
         candidate = search({"moviehash": file_hash, "moviehash_match": "only"}, exact=True) if file_hash else None
         if candidate is None:

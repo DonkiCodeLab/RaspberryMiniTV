@@ -1,3 +1,4 @@
+import { withLanguages } from "./i18n/index.js";
 const es = {
   faceCoverMissing: 'Esta persona aún no tiene un recuadro de cara. Abre una de sus fotos y pulsa Detectar personas.',
   facesBatchHint: 'Cada lote revisa como máximo 100 fotos y se detiene al terminar. Tú decides cuándo empezar el siguiente.',
@@ -199,4 +200,5 @@ const ca = {
   indexing: 'Preparant les fotos anteriors…', demo: 'Maqueta local: fotos i metadades importades es desen en aquest navegador. La lectura d’EXIF sense JSON, la detecció de cares i la IA requereixen la Raspberry.',
   albumCreated: 'Carpeta creada.', folders: 'Carpetes', matches: 'No hi ha coincidències.', noNew: 'Totes les variants estan completes.',
 };
-export const photoStrings = language => ({ ...es, ...(language === 'en' ? en : language === 'ca' ? ca : {}) });
+const translations = withLanguages({ es, ca, en });
+export const photoStrings = language => translations[language] || es;

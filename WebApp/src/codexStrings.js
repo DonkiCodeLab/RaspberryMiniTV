@@ -1,3 +1,4 @@
+import { withLanguages } from "./i18n/index.js";
 const es = {
   title: 'Codex del proyecto', hint: 'Pide cambios, consulta el código y revisa el resultado desde tu Raspberry.',
   isolated: 'Los cambios se guardan en la copia de desarrollo. La MiniTV en uso no se actualiza automáticamente.',
@@ -55,7 +56,8 @@ const en = {
   completed: 'Completed', failed: 'Failed', interrupted: 'Stopped', inProgress: 'Running',
   retry: 'Reconnect', installDetail: 'Requires a 64-bit Linux kernel, Node.js 20 or newer and Internet. On 32-bit Raspberry Pi OS it prepares a compatible environment without reinstalling the OS.',
 };
-export function codexStrings(language) { return ({ es, ca, en })[language] || es; }
+const translations = withLanguages({ es, ca, en });
+export function codexStrings(language) { return translations[language] || es; }
 
 export function codexLoginUrl(value) {
   try {

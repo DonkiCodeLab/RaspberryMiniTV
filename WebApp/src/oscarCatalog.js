@@ -1,3 +1,4 @@
+import { withLanguages } from "./i18n/index.js";
 // Match by TMDB identity and an actual library file, never by a translated title.
 export function matchOscarMovies(winners, movies) {
   const downloaded = new Map();
@@ -14,7 +15,7 @@ export function oscarSelectionIndex(winners, edition) {
   return index < 0 ? Math.max(0, winners.length - 1) : index;
 }
 
-export const oscarStrings = {
+export const oscarStrings = withLanguages({
   es: {
     view: 'Vista Óscar', title: 'Una historia de cine', eyebrow: 'LA COLECCIÓN ÓSCAR',
     subtitle: 'Todas las ganadoras a mejor película. Un viaje, año a año.',
@@ -51,4 +52,4 @@ export const oscarStrings = {
     preview: 'Connect to the Raspberry to save this collection’s details and artwork.',
     source: 'Academy winners', collection: 'downloaded', poster: 'Poster for',
   },
-};
+});

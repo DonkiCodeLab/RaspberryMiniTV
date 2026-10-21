@@ -63,6 +63,42 @@ class UploadConflictTests(unittest.TestCase):
         response = self.client.post('/uploads/check', json={'mediaType': 'books', 'collection': 'My Collection', 'files': ['Folder/Volume One.cbz', 'Folder/Volume Two.cbz']})
         self.assertEqual(response.json['conflicts'], ['Folder/Volume One.cbz'])
 
+    def test_both_movie_upload_routes_store_measurements_and_replace_them(self):
+        for raw in (False, True):
+            with self.subTest(raw=raw), patch.object(api.media_file_info, 'probe') as probe:
+                probe.return_value = {'streams': [{'codec_type': 'video', 'width': 1280, 'height': 720}]}
+                route = '/movies/upload/raw' if raw else '/movies/upload'
+                fields = {'name': f'Film {raw}', 'tmdbId': 10 if raw else 20}
+                def upload(content, original, overwrite=False):
+                    params = {**fields, 'overwriteExisting': str(overwrite).lower()}
+                    if raw:
+                        return self.client.post(route, query_string={**params, 'filename': original},
+                                                data=content, content_type='application/octet-stream')
+                    return self.client.post(route, data={**params, 'file': (io.BytesIO(content), original)})
+                first = upload(b'first release', 'Film.WEBRip.mkv')
+                self.assertEqual(first.status_code, 200)
+                self.assertEqual(first.json['item']['fileInfo']['quality']['level'], 3)
+                probe.return_value = {'streams': [{'codec_type': 'video', 'width': 1920, 'height': 800}]}
+                second = upload(b'new release', 'Film.BluRay.mkv', True)
+                self.assertEqual(second.status_code, 200)
+                item = api.load_movie_library()[second.json['item']['relativePath']]
+                self.assertEqual(item['fileInfo']['quality']['level'], 4)
+                self.assertEqual(item['fileInfo']['quality']['source'], 'Blu-ray')
+
+    def test_register_existing_movie_measures_once_and_title_edits_reuse_it(self):
+        target = self.root / 'Movies/existing.mkv'
+        target.write_bytes(b'video')
+        with patch.object(api.media_file_info, 'probe', return_value={'streams': [
+                {'codec_type': 'video', 'width': 1920, 'height': 1080}]}) as probe:
+            first = self.client.post('/movies', json={
+                'relativePath': 'Movies/existing.mkv', 'name': 'Title', 'tmdbId': 10})
+            second = self.client.post('/movies', json={
+                'relativePath': 'Movies/existing.mkv', 'name': 'Edited title', 'tmdbId': 10})
+            self.assertEqual(first.status_code, 200)
+            self.assertEqual(second.json['item']['fileInfo']['quality']['level'], 4)
+            self.assertEqual(second.json['item']['fileInfo'], first.json['item']['fileInfo'])
+            self.assertEqual(probe.call_count, 1)
+
 
 if __name__ == '__main__':
     unittest.main()
