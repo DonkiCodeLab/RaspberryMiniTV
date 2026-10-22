@@ -798,6 +798,7 @@ const UI_STRINGS = withLanguages({
     movie_view_list: "Vista listado",
     movie_sort_name: "Nombre",
     movie_sort_quality: "Calidad del vídeo",
+    movie_card_quality: "Calidad",
     movie_sort_year: "Año",
     movie_sort_rating: "Puntuación",
     movie_sort_label: "Ordenar por",
@@ -1312,6 +1313,7 @@ const UI_STRINGS = withLanguages({
     movie_view_list: "Vista llista",
     movie_sort_name: "Nom",
     movie_sort_quality: "Qualitat del vídeo",
+    movie_card_quality: "Qualitat",
     movie_sort_year: "Any",
     movie_sort_rating: "Puntuació",
     movie_sort_label: "Ordenar per",
@@ -1826,6 +1828,7 @@ const UI_STRINGS = withLanguages({
     movie_view_list: "List view",
     movie_sort_name: "Name",
     movie_sort_quality: "Video quality",
+    movie_card_quality: "Quality",
     movie_sort_year: "Year",
     movie_sort_rating: "Rating",
     movie_sort_label: "Sort by",
@@ -5898,7 +5901,7 @@ function RaspberryPage({
             <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-openai-panel" role="tabpanel"
               aria-labelledby="auxiliary-openai-tab" hidden={selectedAuxiliaryService !== "openai"} tabIndex={0}>
               <OpenAISettings language={raspberryLanguage} />
-              <OpenAIUsage language={raspberryLanguage} />
+              <OpenAIUsage language={raspberryLanguage} active={selectedDashboardSection === "auxiliary" && selectedAuxiliaryService === "openai"} />
             </div>
             <div className="raspberry-dashboard-panel raspberry-auxiliary-panel" id="auxiliary-omdb-panel" role="tabpanel"
               aria-labelledby="auxiliary-omdb-tab" hidden={selectedAuxiliaryService !== "omdb"} tabIndex={0}>
@@ -10272,7 +10275,7 @@ export default function App() {
                             <div className="movie-library__info">
                               {movieLibraryView === "list" ? <MovieListTitle movie={movie} language={raspberryLanguage} /> : <h2>{movie.name}</h2>}
                               <div className="movie-library__meta">{movieLibraryView === "list" && <MovieListFileQuality movie={movie} language={raspberryLanguage} />}<span>{year}</span><span className="movie-library__score"><small>{ratingSource(libraryRatingSource).label}</small>{rating}</span></div>
-                              {movieLibraryView !== "list" && <small className="movie-library__file-quality"><span>{t("movie_sort_quality")}: {movie.fileInfo?.quality?.resolution || "—"}</span><MovieQualityBars level={movie.fileInfo?.quality?.level} compact language={raspberryLanguage} /></small>}
+                              {movieLibraryView !== "list" && <small className="movie-library__file-quality"><span>{t("movie_card_quality")}: {movie.fileInfo?.quality?.resolution || "—"}</span><MovieQualityBars level={movie.fileInfo?.quality?.level} compact language={raspberryLanguage} /></small>}
                               <div className="movie-library__actions-reveal" inert={movieLibraryView !== "list" && !movieActionsVisible} aria-hidden={movieLibraryView !== "list" && !movieActionsVisible}>
                                 <div className="movie-library__actions-clip">
                                   <div className="movie-library__actions movie-library__actions--icons">

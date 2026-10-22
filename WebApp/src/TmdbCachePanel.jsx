@@ -1,12 +1,14 @@
 import { intlLocale } from "./i18n/languages.js";
 import { withLanguages } from "./i18n/index.js";
 import LoadingSpinner from "./LoadingSpinner.jsx";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
+import useTmdbStatus from "./useTmdbStatus.js";
 import { getTmdbCacheStatus, cancelTmdbCacheDownload, discardTmdbCacheImage, isMockMode } from "./api/raspberryApi";
 import TmdbFailureList, { tmdbFailureKey } from "./TmdbFailureList.jsx";
 
 const labels = withLanguages({
   es: {
+    loading: "Comprobando el contenido TMDB local…", refresh: "Actualizar estado", error: "No se pudo consultar el estado del contenido TMDB local.",
     ignored: "imágenes descartadas", ignoredOne: "imagen descartada", discarded: "Imagen descartada. No volverá a descargarse ni a utilizarse.",
     calculating: "Calculando el espacio de TMDB en segundo plano…",
     storage: "Espacio de la caché", disk: "del disco", storageUnavailable: "No se pudo consultar el espacio de la caché.",
@@ -15,6 +17,7 @@ const labels = withLanguages({
     start: "Descargar catálogo / reintentar pendientes", busy: "Preparando…", complete: "completados", pending: "pendientes", failed: "con errores", missing: "Sin ID de TMDB: asigna su ficha para poder descargarlos.", errors: "Detalles de errores", mock: "Conecta con la Raspberry para descargar el catálogo.",
   },
   ca: {
+    loading: "Comprovant el contingut TMDB local…", refresh: "Actualitzar l’estat", error: "No s’ha pogut consultar l’estat del contingut TMDB local.",
     ignored: "imatges descartades", ignoredOne: "imatge descartada", discarded: "Imatge descartada. No es tornarà a descarregar ni a utilitzar.",
     calculating: "Calculant l’espai de TMDB en segon pla…",
     storage: "Espai de la memòria cau", disk: "del disc", storageUnavailable: "No s’ha pogut consultar l’espai de la memòria cau.",
@@ -23,6 +26,7 @@ const labels = withLanguages({
     start: "Descarregar catàleg / reintentar pendents", busy: "Preparant…", complete: "completats", pending: "pendents", failed: "amb errors", missing: "Sense ID de TMDB: assigna la seva fitxa per descarregar-los.", errors: "Detalls dels errors", mock: "Connecta amb la Raspberry per descarregar el catàleg.",
   },
   en: {
+    loading: "Checking local TMDB content…", refresh: "Refresh status", error: "Could not check the status of local TMDB content.",
     ignored: "discarded images", ignoredOne: "discarded image", discarded: "Image discarded. It will no longer be downloaded or used.",
     calculating: "Calculating TMDB storage in the background…",
     storage: "Cache storage", disk: "of disk", storageUnavailable: "Cache storage usage is unavailable.",
@@ -34,73 +38,41 @@ const labels = withLanguages({
 
 export default function TmdbCachePanel({ language, onArtworkChange }) {
   const t = labels[language] || labels.es;
-  const [status, setStatus] = useState(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
-  const action = useRef({ revision: 0, busy: false });
+  const demo = isMockMode();
+  const { status, error, busy, run } = useTmdbStatus(signal => getTmdbCacheStatus(false, signal), { enabled: !demo });
   const number = (value) => Number(value).toLocaleString(intlLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const amount = (value) => value > 0 && value < 0.01 ? `< ${number(0.01)}` : number(value);
   const active = Boolean(status?.pending || status?.running);
-  useEffect(() => {
-    if (isMockMode()) return;
-    let disposed = false;
-    let timer;
-    async function poll() {
-      const revision = action.current.revision;
-      try {
-        const next = await getTmdbCacheStatus();
-        if (!disposed && !action.current.busy && revision === action.current.revision) { setStatus(next); setError(""); }
-      } catch (e) { if (!disposed && !action.current.busy && revision === action.current.revision) setError(e.message); }
-      if (!disposed) timer = setTimeout(poll, 5000);
-    }
-    // Let the header graphics finish first, but do not wait forever on a broken image.
-    const graphics = [...document.querySelectorAll(".raspberry-page img")];
-    Promise.race([
-      Promise.all(graphics.map(image => image.decode ? image.decode().catch(() => {}) : Promise.resolve())),
-      new Promise(resolve => { timer = setTimeout(resolve, 5000); }),
-    ]).then(() => {
-      clearTimeout(timer);
-      if (!disposed) timer = setTimeout(poll, 0);
-    });
-    return () => { disposed = true; clearTimeout(timer); };
-  }, []);
+  const showStatus = status && (!busy || busy === "poll") && !error;
   async function runAction(cancel = false) {
-    if (action.current.busy) return;
-    action.current = { revision: action.current.revision + 1, busy: true };
-    setBusy(cancel ? "cancel" : "start");
     setNotice("");
-    try { setStatus(await (cancel ? cancelTmdbCacheDownload() : getTmdbCacheStatus(true))); setError(""); }
-    catch (e) { setError(e.message); }
-    finally { action.current.revision += 1; action.current.busy = false; setBusy(""); }
+    await run(cancel ? "cancel" : "start", signal => cancel ? cancelTmdbCacheDownload() : getTmdbCacheStatus(true, signal));
   }
   async function discard(item) {
-    if (action.current.busy) return;
-    action.current = { revision: action.current.revision + 1, busy: true };
-    setBusy(tmdbFailureKey(item));
     setNotice("");
-    try {
-      setStatus(await discardTmdbCacheImage(item.media, item.path));
-      setError("");
-      setNotice(t.discarded);
+    await run(tmdbFailureKey(item), async () => {
+      const next = await discardTmdbCacheImage(item.media, item.path);
       await onArtworkChange?.();
-    } catch (e) { setError(e.message); }
-    finally { action.current.revision += 1; action.current.busy = false; setBusy(""); }
+      setNotice(t.discarded);
+      return next;
+    });
   }
-  return <section className="tmdb-cache-panel">
+  return <section className="tmdb-cache-panel" aria-busy={Boolean(busy)}>
     <h3>{t.title}</h3>
     <p>{t.copy}</p>
-    {!isMockMode() && !error && (!status || status.storage?.calculating) && <p className="tmdb-cache-calculating" role="status"><LoadingSpinner inline />{t.calculating}</p>}
-    {status?.storage?.available ? <div className="tmdb-cache-storage">
+    {!demo && busy && <p className="tmdb-cache-calculating" role="status"><LoadingSpinner inline />{busy === "refresh" || busy === "poll" ? t.loading : busy === "cancel" ? t.cancelling : t.busy}</p>}
+    {!demo && !busy && !error && status?.storage?.calculating && <p className="tmdb-cache-calculating" role="status"><LoadingSpinner inline />{t.calculating}</p>}
+    {showStatus && !status.storage?.calculating && (status?.storage?.available ? <div className="tmdb-cache-storage">
       <strong>{t.storage}: {amount(status.storage.gb)} GB · {amount(status.storage.percent)} % {t.disk}</strong>
-    </div> : status?.storage && !status.storage.calculating && <p>{t.storageUnavailable}</p>}
-    <button className="dialog-button" type="button" disabled={Boolean(busy) || active || !status || isMockMode()} onClick={() => runAction()}>{busy === "start" ? t.busy : active ? t.downloading : status?.cancelled ? t.resume : t.start}</button>
+    </div> : status?.storage && !status.storage.calculating && <p>{t.storageUnavailable}</p>)}
+    <button className="dialog-button" type="button" disabled={Boolean(busy) || Boolean(error) || active || !status || demo} onClick={() => runAction()}>{busy === "start" ? t.busy : active ? t.downloading : status?.cancelled ? t.resume : t.start}</button>
     {active && <button className="dialog-button" type="button" disabled={Boolean(busy)} onClick={() => runAction(true)}>{busy === "cancel" ? t.cancelling : t.cancel}</button>}
-    {!active && status?.cancelled > 0 && <p role="status">{t.stopped}</p>}
-    {isMockMode() && <p>{t.mock}</p>}
-    {error && <p role="alert">{error}</p>}
+    {showStatus && !active && status?.cancelled > 0 && <p role="status">{t.stopped}</p>}
+    {demo && <p>{t.mock}</p>}
+    {error && <><p role="alert" className="dialog-error">{error.message || t.error}</p><button className="dialog-button" type="button" onClick={() => { setNotice(""); run(); }}>{t.refresh}</button></>}
     {notice && <p role="status">{notice}</p>}
-    {status && <div aria-live="polite">
+    {showStatus && <div aria-live="polite">
       <p>{status.complete}/{status.total} {t.complete} · {status.pending + status.running} {t.pending} · {status.failed} {t.failed}{status.cancelled > 0 && <> · {status.cancelled} {t.cancelled}</>}</p>
       {status.total > 0 && <progress value={status.complete} max={status.total} aria-label={t.title} />}
       {status.ignoredImages > 0 && <p>{status.ignoredImages} {status.ignoredImages === 1 ? t.ignoredOne : t.ignored}</p>}

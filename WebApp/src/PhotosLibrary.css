@@ -207,6 +207,8 @@
 .photo-viewer__transform { position: absolute; top: 50%; left: 50%; transform-origin: center; pointer-events: none; will-change: transform; }
 .photo-viewer__transform img { -webkit-user-drag: none; }
 .photo-face-viewer { min-width: 0; }
+.photo-face-drawing { position: absolute; inset: 0; z-index: 4; pointer-events: auto; cursor: crosshair; touch-action: none; }
+.photo-face-box--draft { display: block; pointer-events: none; border: 3px dashed #ffdf52; background: #ffdf5226; }
 .photo-face-box { position: absolute; z-index: 2; box-sizing: border-box; border: 2px solid #63e6c4; border-radius: 4px; background: transparent; padding: 0; pointer-events: auto; cursor: pointer; touch-action: manipulation; box-shadow: 0 0 0 1px #0008; }
 .photo-face-box.is-highlighted, .photo-face-box.is-selected { border-color: #ffdf52; border-width: 3px; background: #ffdf5218; }
 .photo-face-box:focus-visible { outline: 3px solid white; outline-offset: 3px; }

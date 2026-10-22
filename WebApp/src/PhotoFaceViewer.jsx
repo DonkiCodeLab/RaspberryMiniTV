@@ -3,23 +3,23 @@ import { photoRequest } from './api/raspberryApi.js';
 import PhotoViewerImage from './PhotoViewerImage.jsx';
 import { photoPeopleOptions, photoPersonName } from './photoLibrary.js';
 
-export function FaceNameEditor({ face, people, s, busy, onSave, onClose }) {
+export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creating = false, hasBox = false }) {
   const [target, setTarget] = useState(face.personId || 'new');
   const [name, setName] = useState('');
   const choices = photoPeopleOptions(people, s);
-  const valid = target === 'new' ? !!name.trim() : choices.some(person => person.id === target);
+  const valid = (!creating || hasBox) && (target === 'new' ? !!name.trim() : choices.some(person => person.id === target));
   return <form className="photo-face-editor" onSubmit={event => {
     event.preventDefault();
     if (!busy && valid) onSave(target === 'new' ? { name: name.trim() } : { personId: target });
   }}>
-    <strong>{s.editFace}: {photoPersonName(face, s) || s.unnamedFace}</strong>
-    <p>{s.faceAssignmentHint}</p>
-    <label>{s.choosePerson}<select autoFocus value={target} onChange={event => setTarget(event.target.value)} disabled={busy}>
+    <strong>{creating ? s.addFace : `${s.editFace}: ${photoPersonName(face, s) || s.unnamedFace}`}</strong>
+    <p>{creating ? s.drawFaceHint : s.faceAssignmentHint}</p>
+    <label>{s.choosePerson}<select autoFocus={!creating} value={target} onChange={event => setTarget(event.target.value)} disabled={busy}>
       {choices.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
       <option value="new">{s.newPerson}</option>
     </select></label>
     {target === 'new' && <label>{s.personName}<input value={name} onChange={event => setName(event.target.value)} required maxLength={100} autoComplete="off" disabled={busy} /></label>}
-    <div><button type="submit" className="dialog-button dialog-button--accent" disabled={busy || !valid}>{s.save}</button>
+    <div><button type="submit" className="dialog-button dialog-button--accent" disabled={busy || !valid}>{creating ? s.confirmFace : s.save}</button>
       <button type="button" className="dialog-button" onClick={onClose} disabled={busy}>{s.cancel}</button></div>
   </form>;
 }
@@ -40,6 +40,7 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
   const [details, setDetails] = useState(null), [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [reload, setReload] = useState(0);
   const [notice, setNotice] = useState('');
+  const [addingFace, setAddingFace] = useState(false), [faceBox, setFaceBox] = useState(null);
   const mounted = useRef(true), action = useRef(false), changed = useRef(onChanged), previousScan = useRef('idle');
   changed.current = onChanged;
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -70,7 +71,7 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
     try {
       await photoRequest(path, payload);
       if (!mounted.current) { changed.current?.(); return; }
-      if (assigned) { setSelectedId(null); setNotice(s.faceSaved); }
+      if (assigned) { setSelectedId(null); setAddingFace(false); setFaceBox(null); setNotice(s.faceSaved); }
       setReload(value => value + 1);
       changed.current?.();
     } catch (error) {
@@ -82,15 +83,23 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
   }
   const selectFace = id => { if (!action.current) { setSelectedId(id); setNotice(''); } };
   return <div className="photo-face-viewer">
+    <div className="photo-face-actions">
+      <button type="button" className="dialog-button" disabled={busy} aria-pressed={addingFace}
+        onClick={() => { setSelectedId(null); setFaceBox(null); setAddingFace(value => !value); setNotice(''); }}>{addingFace ? s.cancel : s.addFace}</button>
+    </div>
     <PhotoViewerImage photo={photo} s={s} faces={details?.faces || []} selectedFaceId={selectedId}
-      highlightPersonId={highlightPersonId} onSelectFace={selectFace} />
+      highlightPersonId={highlightPersonId} onSelectFace={addingFace ? undefined : selectFace}
+      addingFace={addingFace} onFaceBoxChange={setFaceBox} busy={busy} />
     <PhotoFaceList faces={details?.faces || []} selectedId={selectedId} highlightPersonId={highlightPersonId}
-      onSelect={selectFace} busy={busy} s={s} />
+      onSelect={selectFace} busy={busy || addingFace} s={s} />
+    {addingFace && <FaceNameEditor face={{}} people={people} s={s} busy={busy} creating hasBox={!!faceBox}
+      onSave={payload => { if (faceBox) perform(`photos/${photo.id}/faces`, { ...payload, box: faceBox }, true); }}
+      onClose={() => { setAddingFace(false); setFaceBox(null); }} />}
     {selected && <FaceNameEditor key={`${selected.id}:${selected.personId || ''}`} face={selected} people={people} s={s} busy={busy}
       onSave={payload => perform(`photos/${photo.id}/faces/${selected.id}/assign`, payload, true)} onClose={() => setSelectedId(null)} />}
     {notice && <p role="status">{notice}</p>}
     {!photo.sourceId && <div className="photo-face-actions">
-      <button type="button" className="dialog-button dialog-button--accent" disabled={busy || !details?.canDetect || anyRunning}
+      <button type="button" className="dialog-button dialog-button--accent" disabled={busy || addingFace || !details?.canDetect || anyRunning}
         onClick={() => perform(`photos/${photo.id}/detect`, {})}>{running ? s.detectingPhoto : s.detectPeople}</button>
       {anyRunning && <button type="button" className="dialog-button" disabled={busy}
         onClick={() => perform('people/pause', {})}>{s.pauseFaces}</button>}

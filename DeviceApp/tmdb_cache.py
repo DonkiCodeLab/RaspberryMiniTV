@@ -18,6 +18,7 @@ import urllib.request
 from tmdb_resources import (IMAGE_DOWNLOADS, METADATA_DOWNLOADS, THUMBNAILS,
                             DOWNLOAD_BYTES_PER_SECOND, DOWNLOAD_CHUNK_BYTES)
 from tmdb_failures import PreparationError, failure, image_contexts, legacy_failures, merge_failures
+from background_status import BackgroundStatus
 
 IMAGE_RE = re.compile(r"/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|webp|svg)")
 DETAIL_RE = re.compile(r"/(?:person/[1-9]\d*|movie/\d+(?:/images|/credits)?|tv/\d+(?:/images|/aggregate_credits|/season/\d+(?:/images|/episode/\d+(?:/images)?)?)?)")
@@ -46,6 +47,8 @@ def atomic_write(path, data):
 
 class TmdbCache:
     def __init__(self, root, credentials, *, include_credits=True):
+        self.cache_status_query = BackgroundStatus("No se pudo consultar el estado del contenido TMDB local.")
+        self.credits_status_query = BackgroundStatus("No se pudo comprobar el reparto y equipo de las fichas.")
         self.root = Path(root)
         self.credentials = credentials
         self.include_credits = include_credits
@@ -1007,7 +1010,7 @@ class TmdbCache:
             except OSError:
                 snapshot = {"available": False}
             self.storage_snapshot = snapshot
-            self.storage_checked_at = now
+            self.storage_checked_at = time.monotonic()
             return dict(snapshot)
 
     def _describe_failures(self, job):

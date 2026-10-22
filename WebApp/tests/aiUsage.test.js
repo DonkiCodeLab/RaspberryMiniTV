@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import vm from 'node:vm';
 import { build } from 'esbuild';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -60,6 +61,73 @@ test('mock mode requires connection and never displays fabricated usage or an Ad
   for (const language of ['es', 'ca', 'en']) {
     assert.deepEqual(Object.keys(aiUsageStrings(language)).sort(), Object.keys(aiUsageStrings('en')).sort());
   }
+});
+
+test('opening usage fetches fresh totals and keeps visible translations up to date', async () => {
+  const compiled = await build({ entryPoints: [new URL('../src/OpenAIUsage.jsx', import.meta.url).pathname],
+    bundle: true, write: false, format: 'cjs', platform: 'node', external: ['react'], loader: { '.css': 'empty' },
+    plugins: [{ name: 'usage-api', setup(builder) {
+      builder.onResolve({ filter: /api\/raspberryApi$/ }, () => ({ path: 'usage-api', external: true }));
+    } }] });
+  const state = [], effects = [], refs = [], calls = [], timers = new Set(), listeners = new Map();
+  let cursor = 0, tree;
+  const fakeReact = { ...React,
+    useState(initial) {
+      const i = cursor++;
+      if (!(i in state)) state[i] = typeof initial === 'function' ? initial() : initial;
+      return [state[i], value => { state[i] = typeof value === 'function' ? value(state[i]) : value; }];
+    },
+    useRef(initial) { const i = cursor++; return refs[i] ||= { current: initial }; },
+    useEffect(effect, deps) {
+      const i = cursor++, old = effects[i];
+      if (!old || deps.some((value, index) => value !== old.deps[index])) {
+        effects[i] = { effect, deps, previous: old?.cleanup, pending: true };
+      }
+    },
+  };
+  const document = { visibilityState: 'visible',
+    addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: name => listeners.delete(name) };
+  const api = { isMockMode: () => false, getAIUsage: (filters, signal) => new Promise(resolve => calls.push({ signal, resolve })) };
+  const module = { exports: {} };
+  vm.runInNewContext(compiled.outputFiles[0].text, { module, exports: module.exports, AbortController, document,
+    require: name => name === 'react' ? fakeReact : api,
+    setInterval: fn => { timers.add(fn); return fn; }, clearInterval: fn => timers.delete(fn) });
+  function render(active) {
+    cursor = 0;
+    tree = module.exports.default({ language: 'es', active });
+    for (const effect of effects) if (effect?.pending) {
+      effect.previous?.(); effect.cleanup = effect.effect(); effect.pending = false;
+    }
+  }
+  const tick = () => { for (const fn of timers) fn(); };
+  const settle = async (index, total) => {
+    calls[index].resolve({ summary: { calls: total }, billing: { projectId: '', apiKeyId: '' } });
+    await new Promise(resolve => setImmediate(resolve));
+  };
+  render(false);
+  assert.equal(calls.length, 0);
+  render(true);
+  assert.equal(calls.length, 1);
+  tick(); assert.equal(calls.length, 1, 'do not overlap pending requests');
+  await settle(0, 0);
+  tick(); assert.equal(calls.length, 2);
+  await settle(1, 2);
+  render(true);
+  const findData = node => {
+    if (Array.isArray(node)) return node.map(findData).find(Boolean);
+    if (!node || typeof node !== 'object') return null;
+    return node.props?.data || findData(node.props?.children);
+  };
+  assert.equal(findData(tree).summary.calls, 2, 'new subtitle usage replaces the initial zero');
+  document.visibilityState = 'hidden'; tick(); assert.equal(calls.length, 2);
+  document.visibilityState = 'visible'; listeners.get('visibilitychange')(); assert.equal(calls.length, 3);
+  render(false);
+  assert.equal(calls[2].signal.aborted, true);
+  assert.equal(timers.size, 0); assert.equal(listeners.size, 0);
+  await settle(2, 99);
+  render(true);
+  assert.equal(calls.length, 4, 'reopening fetches fresh data');
+  render(false);
 });
 
 test('metering endpoints use PIN, no-store and separate Admin configuration from query parameters', async () => {

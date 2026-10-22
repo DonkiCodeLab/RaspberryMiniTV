@@ -5,10 +5,9 @@ const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$/;
 export function readSearchPreferences() {
   try {
     const data = JSON.parse(window.localStorage.getItem(SEARCH_PREFERENCES_KEY));
-    return { provider: data?.provider === "openai" ? "openai" : "codex",
-      models: Object.fromEntries(["codex", "openai"].map(provider =>
-        [provider, typeof data?.models?.[provider] === "string" && MODEL_ID.test(data.models[provider]) ? data.models[provider] : ""])) };
-  } catch { return { provider: "codex", models: { codex: "", openai: "" } }; }
+    return { provider: "openai", models: { openai:
+      typeof data?.models?.openai === "string" && MODEL_ID.test(data.models.openai) ? data.models.openai : "" } };
+  } catch { return { provider: "openai", models: { openai: "" } }; }
 }
 
 export function saveSearchPreferences(preferences) {

@@ -15,7 +15,6 @@ import subtitle_translation
 import media_file_info
 import system_update
 from codex_bridge import create_codex_blueprint
-from catalog_codex import list_codex_models, query_codex_catalog, cancel_codex_search
 from oscar_catalog import OscarCatalog
 from background_stats import BackgroundStats
 import catalog_store
@@ -4704,6 +4703,9 @@ def tmdb_credits_snapshot(titles, profiles, missing):
 @app.route("/tmdb/credits", methods=["GET", "POST"])
 def complete_tmdb_credits():
     try:
+        if request.method == "GET" and request.args.get("background") == "1":
+            return tmdb_background_status(tmdb_artwork.credits_status_query,
+                                          lambda: tmdb_credits_snapshot(*tmdb_credits_inventory()))
         with tmdb_cache_action_lock:
             titles, profiles, missing = tmdb_credits_inventory()
             if request.method == "POST":
@@ -4725,6 +4727,8 @@ def complete_tmdb_credits():
 
 @app.route("/tmdb/cache", methods=["GET", "POST", "DELETE"])
 def tmdb_cache_status():
+    if request.method == "GET" and request.args.get("background") == "1":
+        return tmdb_background_status(tmdb_artwork.cache_status_query, tmdb_cache_snapshot)
     with tmdb_cache_action_lock:
         if request.method == "DELETE":
             tmdb_artwork.cancel()
@@ -4737,6 +4741,15 @@ def tmdb_cache_status():
                         queue_tmdb_artwork(kind, item)
         tmdb_artwork.start()
         return jsonify(tmdb_cache_snapshot())
+
+
+def tmdb_background_status(query, calculate):
+    # Reads do not hold the mutation lock while checking hundreds of local files.
+    result = query.read(calculate, refresh=request.args.get("refresh") == "1")
+    response = jsonify(result)
+    response.status_code = 500 if result.get("error") else 200
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 def tmdb_cache_snapshot():
@@ -4817,8 +4830,6 @@ def ai_settings():
 def ai_models():
     try:
         provider = request.args.get("provider", "openai")
-        if provider == "codex":
-            return ai_json(list_codex_models())
         if provider != "openai":
             raise AIError("Proveedor no válido.", "AI_INVALID_QUERY")
         settings = ai_settings_store.credentials()
@@ -4901,7 +4912,7 @@ def ai_search():
     if request.content_length and request.content_length > 16384:
         return ai_json({"ok": False, "error": "La consulta es demasiado larga.", "code": "AI_INVALID_QUERY"}, 400)
     data = request.get_json(silent=True)
-    if not isinstance(data, dict) or set(data) - {"section", "prompt", "language", "model", "provider", "requestId", "userId"}:
+    if not isinstance(data, dict) or set(data) - {"section", "prompt", "language", "model", "provider"}:
         return ai_json({"ok": False, "error": "Consulta no válida.", "code": "AI_INVALID_QUERY"}, 400)
     section, prompt, language = data.get("section"), data.get("prompt"), data.get("language", "es")
     if (not isinstance(section, str) or section not in SECTION_FIELDS
@@ -4912,12 +4923,8 @@ def ai_search():
     if "model" in data and (not isinstance(model, str) or not MODEL_RE.fullmatch(model)):
         return ai_json({"ok": False, "error": "Modelo no válido.", "code": "AI_INVALID_QUERY"}, 400)
     provider = data.get("provider", "openai")
-    request_id = data.get("requestId", "")
-    user_id = data.get("userId")
-    if (provider not in ("openai", "codex")
-            or (provider == "codex" and (not isinstance(request_id, str) or not re.fullmatch(r"[A-Za-z0-9-]{16,80}", request_id)))
-            or (user_id is not None and (not isinstance(user_id, str) or not 1 <= len(user_id) <= 100))):
-        return ai_json({"ok": False, "error": "Proveedor o identificador de consulta no válido.", "code": "AI_INVALID_QUERY"}, 400)
+    if provider != "openai":
+        return ai_json({"ok": False, "error": "Proveedor no válido.", "code": "AI_INVALID_QUERY"}, 400)
     diagnostics = {"request": {"section": section, "prompt": prompt.strip(), "language": language},
                    "stage": "settings", "provider": {"name": provider, "called": False, "rawResponse": None}}
     settings = {}
@@ -4926,30 +4933,6 @@ def ai_search():
         return ai_json({**payload, "debug": redact_debug(diagnostics, settings.get("apiKey", ""))}, status)
     try:
         settings = ai_settings_store.credentials()
-        if provider == "codex":
-            diagnostics["request"].update(provider=provider, model=model)
-            # Codex uses its ChatGPT sign-in, independently of the API key/switch.
-            with ai_request_slot(settings["requestsPerMinute"]):
-                diagnostics["stage"] = "local_catalog"
-                snapshot = list_video_directories()
-                catalogue = build_catalog(section, snapshot, tmdb_artwork, language)
-                records = catalogue["records"]
-                if user_id is not None and section in ("movies", "series"):
-                    records = augment_catalog(records, snapshot, section, ProfileStore(USER_PROFILES_PATH).state(user_id))
-                diagnostics["catalog"] = {"source": "live", "section": section, "currentCount": len(records)}
-                if records:
-                    selection = query_codex_catalog(prompt.strip(), section, language, model, records, request_id, diagnostics)
-                    # Items removed while the agent was working cannot become results.
-                    current = build_catalog(section, list_video_directories(), tmdb_artwork, language)["records"]
-                    available = {item["id"] for item in current}
-                    ids = [identifier for identifier in selection["ids"] if identifier in available]
-                else:
-                    current, ids = [], []
-                    selection = {"intent": "filter", "message": ui_translate("api.empty_section", language)}
-            diagnostics["stage"] = "completed"
-            return reply({"ok": True, "provider": provider, "section": section, "intent": selection["intent"],
-                          "message": selection["message"], "ids": ids, "count": len(ids), "total": len(current),
-                          "missingMetadata": catalogue["missingMetadata"], "catalogStale": False})
         if model is not None:
             settings = {**settings, "model": model}
         diagnostics["request"]["model"] = settings["model"]
@@ -4999,16 +4982,6 @@ def ai_search():
         return reply({"ok": False, "error": str(error), "code": "AI_INVALID_QUERY"}, error.status)
     except (OSError, ValueError, TypeError):
         return reply({"ok": False, "error": "No se ha podido consultar el catálogo local. Inténtalo de nuevo.", "code": "AI_CATALOG_UNAVAILABLE"}, 503)
-
-
-@app.route("/ai/search/cancel", methods=["POST"])
-def ai_search_cancel():
-    data = request.get_json(silent=True)
-    if (not isinstance(data, dict) or set(data) != {"requestId"}
-            or not isinstance(data["requestId"], str) or not re.fullmatch(r"[A-Za-z0-9-]{16,80}", data["requestId"])):
-        return ai_json({"ok": False, "code": "AI_INVALID_QUERY", "error": "Consulta no válida."}, 400)
-    cancel_codex_search(data["requestId"])
-    return ai_json({"ok": True})
 
 
 @app.route("/ai/recommendations", methods=["GET", "POST", "PATCH", "DELETE"])

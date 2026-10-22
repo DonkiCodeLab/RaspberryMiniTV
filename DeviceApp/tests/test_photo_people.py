@@ -362,6 +362,53 @@ class PeopleAnalysisTests(unittest.TestCase):
         return [{'encoding': [value] * 128, 'box': {'x': x, 'y': .2, 'width': .2, 'height': .3}}
                 for value, x in [(0., .1), (1., .6)]]
 
+    def test_manual_face_creates_album_without_detector_and_survives_reanalysis(self):
+        photo = self.upload(1)[0]
+        box = {'x': .1, 'y': .2, 'width': .2, 'height': .3}
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        client = app.test_client()
+        with patch('photo_library.LocalFaceEngine.available', return_value=False):
+            response = client.post(f"/pictures/photos/{photo['id']}/faces", json={'box': box, 'name': 'Ana'})
+        self.assertEqual(response.status_code, 201)
+        face_id, person_id = response.json['faceId'], response.json['personId']
+        restored = PhotoLibrary(self.store.root)
+        person = next(p for p in restored.snapshot()['people'] if p['id'] == person_id)
+        self.assertEqual(person['photoIds'], [photo['id']])
+        self.assertEqual(person['coverFace']['box'], box)
+        self.assertEqual(person['coverFace']['id'], face_id)
+        restored.group_faces(photo['id'], [])
+        face = restored.photo_faces(photo['id'])['faces'][0]
+        self.assertEqual((face['id'], face['personId'], face['box'], face['manual']), (face_id, person_id, box, True))
+        # Later automatic recognition of the same face must not create a duplicate identity.
+        restored.group_faces(photo['id'], [self.detections()[0]])
+        faces = restored.photo_faces(photo['id'])['faces']
+        self.assertEqual(len(faces), 1)
+        self.assertEqual((faces[0]['id'], faces[0]['personId']), (face_id, person_id))
+
+    def test_manual_face_reuses_names_can_be_reassigned_and_rejects_incomplete_requests(self):
+        photos = self.upload(2)
+        box = {'x': .1, 'y': .2, 'width': .2, 'height': .3}
+        created = self.store.add_face(photos[0]['id'], {'box': box, 'name': 'Ana'})
+        self.assertEqual(self.store.add_face(photos[1]['id'], {'box': box, 'name': ' ANA '})['personId'], created['personId'])
+        self.assertEqual(self.store.add_face(photos[1]['id'], {'box': box, 'personId': created['personId']})['personId'], created['personId'])
+        before = self.store.snapshot()
+        invalid = [{}, {'name': 'Ana'}, {'box': box}, {'box': box, 'name': ''}, {'box': box, 'personId': 'missing'},
+                   {'box': box, 'name': 'Ana', 'personId': created['personId']}, {'box': box, 'name': 'Ana', 'extra': True}]
+        for changes in [{'width': 0}, {'width': -1}, {'x': -.1}, {'x': .9}, {'y': float('nan')}, {'height': True}, {'height': '0.2'}]:
+            invalid.append({'box': {**box, **changes}, 'name': 'New name'})
+        for data in invalid:
+            with self.subTest(data=data), self.assertRaises(PhotoError):
+                self.store.add_face(photos[0]['id'], data)
+            self.assertEqual(self.store.snapshot(), before)
+        with self.assertRaises(PhotoError): self.store.add_face('missing', {'box': box, 'name': 'New name'})
+        changed = self.store.assign_face(photos[0]['id'], created['faceId'], {'name': 'Luis'})
+        people = self.store.snapshot()['people']
+        self.assertNotIn(photos[0]['id'], next(p for p in people if p['id'] == created['personId'])['photoIds'])
+        self.assertEqual(next(p for p in people if p['id'] == changed['personId'])['photoIds'], [photos[0]['id']])
+        self.store.remove_matches(changed['personId'], [photos[0]['id']])
+        self.assertNotIn(changed['personId'], [p['id'] for p in self.store.snapshot()['people']])
+
     def test_batches_stop_at_100_and_require_a_new_start_for_the_remainder(self):
         self.upload(103)
         self.assertEqual((self.store.snapshot()['faces']['total'], self.store.snapshot()['faces']['pending']), (100, 103))
@@ -507,6 +554,38 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.assertTrue(self.store.safe_file(photo['relativePath']).is_file())
         self.store.group_faces(photo['id'], self.detections())
         self.assertTrue(all(face['personId'] == 'unknown' for face in self.store.photo_faces(photo['id'])['faces']))
+
+    def test_unknown_photo_selection_downloads_and_deletes_only_selected_originals(self):
+        photos = self.upload(3)
+        for photo in photos:
+            self.store.group_faces(photo['id'], self.detections())
+        sources = [person['id'] for person in self.store.snapshot()['people'] if person['id'] != UNKNOWN_PERSON_ID]
+        self.store.delete_people(sources)
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        client = app.test_client()
+        before = self.store.snapshot()
+        selected = [photos[0], photos[2]]
+        response = client.post('/pictures/photos/download', json={'ids': [photo['id'] for photo in selected] * 2})
+        self.addCleanup(response.close)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, 'application/zip')
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        with zipfile.ZipFile(io.BytesIO(response.data)) as archive:
+            self.assertEqual(set(archive.namelist()), {photo['relativePath'] for photo in selected})
+            self.assertEqual(len(archive.namelist()), 2)
+            for photo in selected:
+                self.assertEqual(archive.read(photo['relativePath']), self.store.safe_file(photo['relativePath']).read_bytes())
+        for ids, status in [(None, 400), ([], 400), ('bad', 400), ([True], 400), (['x'] * 5001, 400),
+                            ([photos[0]['id'], 'missing'], 409), (['../etc/passwd'], 409)]:
+            self.assertEqual(client.post('/pictures/photos/download', json={'ids': ids}).status_code, status)
+        self.assertEqual(self.store.snapshot(), before)
+        deleted = client.post('/pictures/photos/delete', json={'ids': [photo['id'] for photo in selected], 'scope': 'gallery'})
+        self.assertEqual(deleted.status_code, 200)
+        after = self.store.snapshot()
+        self.assertEqual([photo['id'] for photo in after['photos']], [photos[1]['id']])
+        unknown = next(person for person in after['people'] if person['id'] == UNKNOWN_PERSON_ID)
+        self.assertEqual(unknown['photoIds'], [photos[1]['id']])
 
     def test_people_zip_keeps_original_bytes_paths_and_shared_photos_only_once(self):
         photos = self.upload(2)

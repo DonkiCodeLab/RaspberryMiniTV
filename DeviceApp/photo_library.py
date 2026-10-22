@@ -574,10 +574,10 @@ class PhotoLibrary:
                     'size': row['size'], 'sourceId': row['source'], 'style': row['style'], **json.loads(row['metadata']),
                     'faceState': row['face_state'], 'faceCount': face_counts.get(row['id'], 0)})
             people = [dict(row) for row in db.execute("""SELECT * FROM people
-                WHERE id=? OR id IN (SELECT person FROM faces WHERE encoding!='[]')
+                WHERE id=? OR id IN (SELECT person FROM faces WHERE encoding!='[]' OR person NOT LIKE 'apple-%')
                 ORDER BY id=?, created""", (UNKNOWN_PERSON_ID, UNKNOWN_PERSON_ID))]
             person_photos = {}
-            for row in db.execute("SELECT person, photo FROM faces WHERE encoding!='[]' ORDER BY person, photo"):
+            for row in db.execute("SELECT person, photo FROM faces WHERE encoding!='[]' OR person NOT LIKE 'apple-%' ORDER BY person, photo"):
                 person_photos.setdefault(row['person'], []).append(row['photo'])
             for person in people:
                 person['photoIds'] = person_photos.get(person['id'], [])
@@ -912,7 +912,8 @@ class PhotoLibrary:
                     not (0 <= box['x'] < 1 and 0 <= box['y'] < 1 and box['width'] > 0 and box['height'] > 0
                          and box['x'] + box['width'] <= 1.000001 and box['y'] + box['height'] <= 1.000001)):
                 raise ValueError('Rectángulo de cara inválido.')
-            candidates = [(distance(face['encoding'], encoding), face) for face in previous
+            candidates = [(0 if face['manual'] and not face['encoding'] and overlap(face['box'], box) > .5
+                           else distance(face['encoding'], encoding), face) for face in previous
                           if face['id'] not in matched and (overlap(face['box'], box) > .3 or face['box'] is None)]
             candidates.sort(key=lambda item: item[0])
             old = candidates[0][1] if candidates and candidates[0][0] < .48 else None
@@ -940,30 +941,52 @@ class PhotoLibrary:
         db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photo_id,))
 
     def _sync_face_links(self, photo_id, db):
-        db.execute("DELETE FROM faces WHERE photo=? AND encoding!='[]'", (photo_id,))
+        db.execute("DELETE FROM faces WHERE photo=? AND (encoding!='[]' OR person NOT LIKE 'apple-%')", (photo_id,))
         db.execute('''INSERT OR IGNORE INTO faces SELECT photo, person, encoding FROM face_detections
             WHERE photo=? AND person IS NOT NULL ORDER BY manual DESC, rowid''', (photo_id,))
         db.execute('''DELETE FROM person_covers WHERE photo=? AND NOT EXISTS
             (SELECT 1 FROM faces WHERE person=person_covers.person AND photo=person_covers.photo)''', (photo_id,))
 
-    def assign_face(self, photo_id, face_id, data):
+    def _face_person(self, db, data):
         if set(data) not in ({'personId'}, {'name'}):
             raise PhotoError('Selecciona una persona existente o escribe un nombre nuevo.')
+        if 'personId' in data:
+            person_id = data['personId']
+            if not isinstance(person_id, str) or person_id.startswith('apple-') or not db.execute('SELECT 1 FROM people WHERE id=?', (person_id,)).fetchone():
+                raise PhotoError('Selecciona una persona existente.', 400)
+            return person_id
+        name = clean_name(data['name'])
+        existing = next((row for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%'")
+                         if row['name'].casefold() == name.casefold()), None)
+        if existing:
+            return existing['id']
+        person_id = uuid.uuid4().hex
+        db.execute('INSERT INTO people VALUES (?,?,?)', (person_id, name, time.time()))
+        return person_id
+
+    def add_face(self, photo_id, data):
+        box = data.get('box')
+        if (not isinstance(box, dict) or set(box) != {'x', 'y', 'width', 'height'} or
+                any(type(box[key]) not in (int, float) or not math.isfinite(box[key]) for key in box) or
+                not (0 <= box['x'] < 1 and 0 <= box['y'] < 1 and box['width'] > 0 and box['height'] > 0
+                     and box['x'] + box['width'] <= 1.000001 and box['y'] + box['height'] <= 1.000001)):
+            raise PhotoError('Define un recuadro válido dentro de la foto.')
+        with self.db() as db:
+            if not db.execute('SELECT 1 FROM photos WHERE id=?', (photo_id,)).fetchone():
+                raise PhotoError('No se encuentra la foto.', 404)
+            person_id = self._face_person(db, {key: value for key, value in data.items() if key != 'box'})
+            face_id = uuid.uuid4().hex
+            # Manual boxes work without a detector or a biometric encoding.
+            db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,1)',
+                       (face_id, photo_id, person_id, '[]', json.dumps(box)))
+            self._sync_face_links(photo_id, db)
+        return {'ok': True, 'faceId': face_id, 'personId': person_id}
+
+    def assign_face(self, photo_id, face_id, data):
         with self.db() as db:
             face = db.execute('SELECT * FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).fetchone()
             if not face: raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
-            if 'personId' in data:
-                person_id = data['personId']
-                if not isinstance(person_id, str) or person_id.startswith('apple-') or not db.execute('SELECT 1 FROM people WHERE id=?', (person_id,)).fetchone():
-                    raise PhotoError('Selecciona una persona existente.', 400)
-            else:
-                name = clean_name(data['name'])
-                # Reuse names regardless of case; an explicit ID disambiguates homonyms.
-                existing = next((row for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%'")
-                                 if row['name'].casefold() == name.casefold()), None)
-                person_id = existing['id'] if existing else uuid.uuid4().hex
-                if not existing:
-                    db.execute('INSERT INTO people VALUES (?,?,?)', (person_id, name, time.time()))
+            person_id = self._face_person(db, data)
             db.execute('UPDATE face_detections SET person=?, manual=1 WHERE id=?', (person_id, face_id))
             self._sync_face_links(photo_id, db)
         return {'ok': True, 'personId': person_id}
@@ -1024,12 +1047,21 @@ class PhotoLibrary:
                     photos[photo['id']] = photo['path']
         if not photos:
             raise PhotoError('Estas personas no tienen fotos para descargar.')
+        return self._download_archive(photos.values())
+
+    def download_photos(self, ids):
+        with self.db() as db:
+            ids = self.validate_photo_ids(db, ids)
+            paths = [db.execute('SELECT path FROM photos WHERE id=?', (ident,)).fetchone()['path'] for ident in ids]
+        return self._download_archive(paths)
+
+    def _download_archive(self, paths):
         # Use disk rather than RAM for large albums. Preserve original bytes and
         # relative paths, and include shared photos only once.
         archive = tempfile.TemporaryFile()
         try:
             with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_STORED) as bundle:
-                for relative in photos.values():
+                for relative in paths:
                     bundle.write(self.safe_file(relative), arcname=relative)
             archive.seek(0)
             return archive
@@ -1160,6 +1192,16 @@ def create_photo_blueprint(get_library):
         data = body()
         return jsonify(get_library().delete_photos(data.get('ids'), data.get('scope'), data.get('folderId')))
 
+    @bp.post('/pictures/photos/download')
+    def download_photos():
+        archive = get_library().download_photos(body().get('ids'))
+        try:
+            return send_file(archive, mimetype='application/zip', as_attachment=True,
+                             download_name='fotos.zip', conditional=False)
+        except Exception:
+            archive.close()
+            raise
+
     @bp.post('/pictures/generate')
     def generate():
         return jsonify(get_library().start_generation(body().get('folderId'))), 202
@@ -1187,6 +1229,10 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/photos/<ident>/faces/<face>/assign')
     def assign_face(ident, face):
         return jsonify(get_library().assign_face(ident, face, body()))
+
+    @bp.post('/pictures/photos/<ident>/faces')
+    def add_face(ident):
+        return jsonify(get_library().add_face(ident, body())), 201
 
     @bp.post('/pictures/people/<ident>/cover')
     def cover(ident):

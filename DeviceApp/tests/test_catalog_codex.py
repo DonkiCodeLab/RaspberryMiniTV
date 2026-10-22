@@ -6,12 +6,10 @@ import sys
 import tempfile
 import threading
 import unittest
-from collections import deque
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import catalog_codex as codex
-import control_api as api
 from catalog_ai import AIError, AISettings
 
 
@@ -166,87 +164,6 @@ for line in sys.stdin:
                 with self.assertRaises(AIError) as raised:
                     agent.run("x", "movies", "es", None)
                 self.assertIn(raised.exception.code, {"AI_CODEX_FAILED", "AI_TIMEOUT", "AI_CODEX_UNAVAILABLE", "AI_INVALID_RESPONSE"})
-
-
-class CodexSearchApiTests(unittest.TestCase):
-    def setUp(self):
-        root = tempfile.TemporaryDirectory()
-        self.addCleanup(root.cleanup)
-        self.settings = AISettings(Path(root.name) / "ai.json")  # No API key, API disabled.
-        for name, value in (("ai_settings_store", self.settings), ("current_web_pin", lambda: "test-pin"),
-                            ("ai_request_times", deque()), ("ai_request_active", False)):
-            patcher = patch.object(api, name, value)
-            patcher.start()
-            self.addCleanup(patcher.stop)
-        self.client = api.app.test_client()
-        self.headers = {"X-Web-Pin": "test-pin"}
-        self.query = {"provider": "codex", "section": "movies", "prompt": "Like Interstellar", "language": "es",
-                      "requestId": "unique-request-123456", "model": "chosen-model"}
-        self.records = [{"id": "Movies/new.mp4", "fields": {"title": ["New title"]}}]
-
-    def test_pin_required_for_models_search_and_cancel(self):
-        with patch.object(api, "list_codex_models") as models, patch.object(api, "query_codex_catalog") as search, patch.object(api, "cancel_codex_search") as cancel:
-            self.assertEqual(self.client.get("/settings/ai/models?provider=codex").status_code, 401)
-            self.assertEqual(self.client.post("/ai/search", json=self.query).status_code, 401)
-            self.assertEqual(self.client.post("/ai/search/cancel", json={"requestId": self.query["requestId"]}).status_code, 401)
-            for method in (models, search, cancel): method.assert_not_called()
-
-    def test_search_uses_live_catalogue_without_api_key_upload_or_fallback(self):
-        with patch.object(api, "list_video_directories", return_value={}), patch.object(api, "build_catalog", return_value={"records": self.records, "missingMetadata": 0}), \
-             patch.object(api, "query_codex_catalog", return_value=selection(["Movies/new.mp4"])) as search, \
-             patch.object(api, "query_catalog_file") as direct, patch.object(api, "CatalogFileStore") as uploaded:
-            response = self.client.post("/ai/search", json=self.query, headers=self.headers)
-            self.assertEqual(response.status_code, 200, response.json)
-            self.assertEqual(response.json["ids"], ["Movies/new.mp4"])
-            self.assertEqual(search.call_args.args[3], "chosen-model")
-            self.assertEqual(search.call_args.args[4], self.records)
-            self.assertEqual(response.headers["Cache-Control"], "no-store")
-            search.side_effect = codex.codex_error(codex.CodexError(
-                "Unsupported dynamicTools sk-private-token", 502, method="thread/start"))
-            failed = self.client.post("/ai/search", json=self.query, headers=self.headers)
-            self.assertEqual(failed.status_code, 502)
-            details = failed.json["debug"]["validation"]["providerError"]
-            self.assertEqual(details["method"], "thread/start")
-            self.assertEqual(details["message"], "Unsupported dynamicTools [REDACTED]")
-            direct.assert_not_called()
-            uploaded.assert_not_called()
-            self.assertFalse(api.ai_request_active)
-
-    def test_deleted_items_filtered_and_empty_catalogue_does_not_spend(self):
-        with patch.object(api, "list_video_directories", return_value={}), patch.object(api, "build_catalog", side_effect=[
-            {"records": self.records, "missingMetadata": 0}, {"records": [], "missingMetadata": 0}]), \
-             patch.object(api, "query_codex_catalog", return_value=selection(["Movies/new.mp4"])):
-            result = self.client.post("/ai/search", json=self.query, headers=self.headers)
-            self.assertEqual(result.json["ids"], [])
-        with patch.object(api, "list_video_directories", return_value={}), patch.object(api, "build_catalog", return_value={"records": [], "missingMetadata": 0}), patch.object(api, "query_codex_catalog") as search:
-            self.assertEqual(self.client.post("/ai/search", json=self.query, headers=self.headers).json["total"], 0)
-            search.assert_not_called()
-
-    def test_watched_and_favorite_marks_come_from_the_selected_profile(self):
-        profile_path = self.settings.path.parent / "profiles.sqlite3"
-        store = api.ProfileStore(profile_path)
-        store.patch("default", {"marks": {'["movie","Movies/new.mp4"]': {"watched": True, "favorite": True}}})
-        with patch.object(api, "USER_PROFILES_PATH", str(profile_path)), \
-             patch.object(api, "list_video_directories", return_value={"movieRootFiles": [{"relativePath": "Movies/new.mp4"}]}), \
-             patch.object(api, "build_catalog", return_value={"records": self.records, "missingMetadata": 0}), \
-             patch.object(api, "query_codex_catalog", return_value=selection()) as search:
-            response = self.client.post("/ai/search", json={**self.query, "userId": "default"}, headers=self.headers)
-            self.assertEqual(response.status_code, 200, response.json)
-            records = search.call_args.args[4]
-            self.assertTrue(records[0]["watched"])
-            self.assertTrue(records[0]["favorite"])
-            self.assertNotIn("watched", self.records[0])
-
-    def test_invalid_provider_and_id_rejected_before_model_and_models_use_codex(self):
-        with patch.object(api, "list_video_directories") as scan:
-            for changes in ({"provider": []}, {"provider": "unknown"}, {"requestId": ""}, {"model": "bad model"}, {"userId": []}):
-                self.assertEqual(self.client.post("/ai/search", json={**self.query, **changes}, headers=self.headers).status_code, 400)
-            scan.assert_not_called()
-        with patch.object(api, "list_codex_models", return_value={"ok": True, "models": [{"id": "chosen-model"}], "configured": True}) as models, patch.object(api, "list_models") as direct:
-            result = self.client.get("/settings/ai/models?provider=codex", headers=self.headers)
-            self.assertEqual(result.json["models"], [{"id": "chosen-model"}])
-            models.assert_called_once()
-            direct.assert_not_called()
 
 
 if __name__ == "__main__":

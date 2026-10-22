@@ -1,4 +1,5 @@
 import base64
+from contextlib import nullcontext
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import io
@@ -134,6 +135,47 @@ class UsageTests(unittest.TestCase):
         row = self.snapshot()['calls'][0]
         self.assertEqual((row['operation'], row['group_id']), ('image', 'job-a'))
         self.assertAlmostEqual(row['estimatedUsd'], .03145)
+
+    def test_subtitle_job_records_each_batch_in_dashboard_usage(self):
+        import subtitle_translation
+        movies = Path(self.temp.name) / 'Movies'
+        movies.mkdir()
+        video = movies / 'Film.mp4'
+        video.write_bytes(b'video')
+        vtt = 'WEBVTT\n\n' + '\n\n'.join(
+            f'{n}\n00:00:01.000 --> 00:00:02.000\nHello {n}' for n in range(1, 52))
+        manager = subtitle_translation.SubtitleTranslations()
+        with patch.object(subtitle_translation.threading, 'Thread') as worker:
+            job = manager.start(video, movies, 'external:Film.en.srt', 'es', self.settings,
+                                lambda limit: nullcontext())
+        def translate(request, **kwargs):
+            body = json.loads(request.data)
+            batch = json.loads(body['input'][0]['content'][0]['text'])['cues']
+            payload = response()
+            payload['output'][0]['content'][0]['text'] = json.dumps({
+                'cues': [{'id': cue['id'], 'text': 'Hola'} for cue in batch]})
+            return upstream(payload)
+        with patch.object(subtitle_translation.browser_subtitles, 'read_track', return_value=vtt), \
+                patch('catalog_ai.urllib.request.build_opener') as opener:
+            opener.return_value.open.side_effect = translate
+            # Run exactly the worker and private settings captured by start().
+            worker.call_args.kwargs['target'](*worker.call_args.kwargs['args'])
+            self.assertEqual(opener.return_value.open.call_count, 2)
+        self.assertEqual(manager.status(job['id'])['state'], 'ready')
+        with patch.object(api, 'ai_settings_store', self.settings), \
+                patch.object(api, 'current_web_pin', return_value='test-pin'):
+            result = api.app.test_client().get('/settings/ai/usage', headers={'X-Web-Pin': 'test-pin'},
+                query_string={'start': self.day, 'end': self.day, 'operation': 'subtitle'}).json
+        self.assertEqual(result['summary']['calls'], 2)
+        self.assertEqual(result['summary']['tokens'], 22000)
+        self.assertAlmostEqual(result['summary']['estimatedUsd'], .0524)
+        self.assertEqual({call['group_id'] for call in result['calls']}, {job['id']})
+        self.assertEqual(result['series'][0]['calls'], 2)
+        self.assertEqual(result['breakdown'][0]['operation'], 'subtitle')
+        # Reusing an already translated track must not create another paid call.
+        reused = manager.start(video, movies, 'external:Film.en.srt', 'es', self.settings, nullcontext)
+        self.assertEqual(reused['state'], 'ready')
+        self.assertEqual(self.snapshot()['summary']['calls'], 2)
 
     def test_concurrent_calls_filters_pagination_and_group_totals(self):
         with ThreadPoolExecutor(max_workers=8) as pool:

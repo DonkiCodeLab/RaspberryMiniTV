@@ -11,10 +11,11 @@ export default function TmdbUploadProgress({ upload, onReady, onClose }) {
   useEffect(() => {
     if (!upload) return;
     let disposed = false, timer;
+    const controller = new AbortController();
     setJob(null); setError('');
     async function poll() {
       try {
-        const status = await getTmdbCacheStatus();
+        const status = await getTmdbCacheStatus(false, controller.signal);
         if (disposed) return;
         const next = status.jobs?.[`${upload.kind}/${upload.id}`];
         setJob(next); setError('');
@@ -24,7 +25,7 @@ export default function TmdbUploadProgress({ upload, onReady, onClose }) {
       if (!disposed) timer = setTimeout(poll, 1500);
     }
     poll();
-    return () => { disposed = true; clearTimeout(timer); };
+    return () => { disposed = true; clearTimeout(timer); controller.abort(); };
   }, [upload?.kind, upload?.id, upload?.videoComplete]);
   if (!upload) return null;
   const phase = { metadata: ui('Guardando fichas de TMDB'), images: ui('Descargando imágenes'), thumbnails: ui('Generando miniaturas') }[job?.progress?.phase];

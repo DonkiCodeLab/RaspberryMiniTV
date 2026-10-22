@@ -501,18 +501,10 @@ y las búsquedas vacías se indican en pantalla; no impiden usar los vídeos de 
 
 ### Buscar con IA
 
-En **IA → Buscar**, el selector **Proveedor** ofrece **Codex · Cuenta de ChatGPT**
-(predeterminado) y **OpenAI · Clave API**. Con Codex, conecta primero tu cuenta en
-**Dashboard → Codex**. El selector de modelos consulta esa conexión y la elección
-se recuerda por proveedor en el navegador. Codex consulta una instantánea actual
-del catálogo local, con metadatos y marcas del perfil para películas/series, sin
-necesitar subir un archivo ni configurar una clave API. Usa los límites del plan
-y envía a OpenAI la pregunta y las fichas consultadas. Cancelar detiene su tarea
-independiente; un error nunca cambia automáticamente a la API. Consulta los
-[requisitos de Codex](../DeviceApp/CODEX.md#buscar-en-el-catálogo-con-codex).
-
-Las instrucciones de clave API y subida de catálogo de abajo corresponden al
-proveedor **OpenAI · Clave API**. Las recomendaciones conservan su conexión API.
+En **IA → Buscar**, el filtrado usa la API de OpenAI con la clave configurada en
+el dashboard. El selector de modelos recuerda el modelo de API elegido en este
+navegador. Las preferencias antiguas de Codex se migran a OpenAI conservando ese
+modelo. Las recomendaciones también usan la API de OpenAI.
 
 El botón **IA**, junto al filtro de la biblioteca, abre una consulta con ejemplos
 para la sección actual: películas por actor o temas, series por ambiente o
@@ -754,8 +746,11 @@ analizar solo esa foto, con la posibilidad de pausarlo y sin ejecutar dos
 detectores a la vez.
 
 **Personas → Sin personas** contiene fotos ya revisadas sin caras detectadas,
-no las pendientes ni las fallidas. Desde su visor se puede volver a detectar y
-asignar nombres igual que en Galería. Si aparecen caras, la foto sale de esta
+no las pendientes ni las fallidas. **Modo edición**, junto al título del álbum,
+permite seleccionar varias fotos para descargarlas en un ZIP o borrarlas de Galería.
+Desde su visor, **Añadir cara**, encima de la foto, permite dibujar un recuadro y
+elegir una persona existente o crear una nueva, igual que en Galería. También se
+puede volver a detectar personas. Si aparecen caras, la foto sale de esta
 carpeta y entra en los grupos correspondientes; el original sigue en Galería.
 
 Actualizar WebApp y DeviceApp juntos. Para HEIC y Personas, consulta la

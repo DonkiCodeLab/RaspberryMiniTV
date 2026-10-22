@@ -30,7 +30,7 @@ test("AI uses authenticated Raspberry endpoints, keeps keys off storage and test
     assert.deepEqual(calls.map(({ url }) => new URL(url).pathname), ["/settings/ai", "/settings/ai", "/settings/ai/test", "/ai/search"]);
     assert.equal(calls[2].options.body, undefined);
     assert.equal(calls[3].options.body.includes("sk-synthetic-test"), false);
-    assert.deepEqual(JSON.parse(calls[3].options.body), { section: "books", prompt: "Books by an author", language: "en", model: "chat-latest" });
+    assert.deepEqual(JSON.parse(calls[3].options.body), { provider: "openai", section: "books", prompt: "Books by an author", language: "en", model: "chat-latest" });
     await api.getAICatalog();
     await api.uploadAICatalog();
     assert.equal(new URL(calls[4].url).pathname, "/settings/ai/catalog");
@@ -56,7 +56,7 @@ test("AI uses authenticated Raspberry endpoints, keeps keys off storage and test
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
 
-test("Codex model discovery and cancellation use PIN-authenticated endpoints and never fall back to API", async () => {
+test("catalogue searches use the OpenAI API even with an old Codex preference", async () => {
   const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
   const calls = [];
   globalThis.window = { location: { hostname: "raspberry", origin: "http://raspberry:5050" },
@@ -64,29 +64,18 @@ test("Codex model discovery and cancellation use PIN-authenticated endpoints and
   globalThis.fetch = async (url, options) => {
     calls.push({ url, options });
     assert.equal(options.headers["X-Web-Pin"], "test-pin");
-    if (new URL(url).pathname === "/ai/search") return new Promise(() => {});
     return { ok: true, text: async () => '{"ok":true,"models":[]}' };
   };
   try {
     const api = await loadAPI();
-    await api.getAIModels(undefined, "codex");
-    assert.equal(new URL(calls[0].url).searchParams.get("provider"), "codex");
-    const controller = new AbortController();
-    const pending = api.searchCatalogAI({ provider: "codex", model: "chosen-model", section: "movies", prompt: "Like Interstellar", userId: "default" }, controller.signal);
+    await api.getAIModels();
+    assert.equal(new URL(calls[0].url).search, "");
+    await api.searchCatalogAI({ provider: "codex", model: "api-model", section: "movies", prompt: "Apollo" });
+    assert.equal(new URL(calls[1].url).pathname, "/ai/search");
     const body = JSON.parse(calls[1].options.body);
-    assert.match(body.requestId, /^[a-f0-9]{32}$/);
-    assert.equal(body.model, "chosen-model");
-    assert.equal(body.provider, "codex");
-    controller.abort();
-    await assert.rejects(pending, error => error.name === "AbortError");
-    assert.equal(new URL(calls[2].url).pathname, "/ai/search/cancel");
-    assert.deepEqual(JSON.parse(calls[2].options.body), { requestId: body.requestId });
-    assert.equal(calls.length, 3);
-    globalThis.fetch = async (url, options) => {
-      calls.push({ url, options });
-      return { ok: false, status: 502, text: async () => '{"ok":false,"code":"AI_CODEX_FAILED","error":"Limit reached"}' };
-    };
-    await assert.rejects(api.searchCatalogAI({ provider: "codex", section: "movies", prompt: "x" }), error => error.code === "AI_CODEX_FAILED");
-    assert.equal(calls.length, 4);
+    assert.equal(body.provider, "openai");
+    assert.equal(body.model, "api-model");
+    assert.equal(body.requestId, undefined);
+    assert.equal(calls.length, 2);
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });

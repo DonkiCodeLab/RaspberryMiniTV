@@ -89,6 +89,22 @@ test('person tiles offer compact favorite, original download and deletion of jus
   assert.deepEqual(deleted, [photo.id]);
 });
 
+test('Unknown edit mode selects individual photos without opening the viewer and can delete that subset', () => {
+  const selected = new Set(['0']), toggled = [];
+  const props = { page: photoPage(photos.slice(0, 3)), selected, actionMode: true, s, language: 'es',
+    person: { id: 'unknown', name: s.unknownPerson }, toggle: id => toggled.push(id),
+    onOpen: () => assert.fail('Selection must not open the viewer') };
+  const html = renderToStaticMarkup(React.createElement(PhotoGrid, props));
+  assert.match(html, /aria-label="Seleccionar: Photo 0" aria-pressed="true"/);
+  assert.match(html, /aria-label="Seleccionar: Photo 1" aria-pressed="false"/);
+  const grid = PhotoGrid(props);
+  grid.props.children[1].props.children[0].props.onClick();
+  assert.deepEqual(toggled, ['1']);
+  assert.deepEqual(photoDeleteRequest([...selected], 'gallery', 'person:unknown', 'unknown'), {
+    path: 'photos/delete', payload: { ids: ['0'], scope: 'gallery' },
+  });
+});
+
 test('person deletion offers reference removal or global deletion and routes them to separate operations', () => {
   const person = { id: 'ana', name: 'Ana' }, actions = [];
   const html = renderToStaticMarkup(React.createElement(DeletePhotoChoices, { person, s }));

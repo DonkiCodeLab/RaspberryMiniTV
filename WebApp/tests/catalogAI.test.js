@@ -142,6 +142,7 @@ test("AI search and settings render localized connection requirements in mock mo
     const component = await loadComponent("CatalogAI", { VITE_WEB_DEV_MODE: "mock" });
     const html = renderToStaticMarkup(React.createElement(component.default, { section: "pictures", language: "es" }));
     assert.match(html, /por nombre de archivo/);
+    assert.doesNotMatch(html, /catalog-ai-provider|Cuenta de ChatGPT|Codex/);
     assert.match(html, /Conecta con la Raspberry/);
     assert.match(html, /<textarea[^>]*disabled/);
     const Settings = await loadComponent("OpenAISettings", { VITE_WEB_DEV_MODE: "mock" });
@@ -176,19 +177,19 @@ test("model selector includes current aliases, preserves custom choices and offe
   }
 });
 
-test("Codex search defaults and per-provider model preferences survive reopening without storing secrets", () => {
+test("OpenAI search migrates saved Codex preferences and preserves the API model", () => {
   const previousWindow = globalThis.window;
   let saved = null;
   globalThis.window = { localStorage: { getItem: () => saved, setItem: (key, value) => { saved = value; } } };
   try {
-    assert.deepEqual(readSearchPreferences(), { provider: "codex", models: { codex: "", openai: "" } });
+    assert.deepEqual(readSearchPreferences(), { provider: "openai", models: { openai: "" } });
     const preferences = { provider: "codex", models: { codex: "selected-codex", openai: "selected-api" } };
     saveSearchPreferences(preferences);
-    assert.deepEqual(readSearchPreferences(), preferences);
+    assert.deepEqual(readSearchPreferences(), { provider: "openai", models: { openai: "selected-api" } });
     saved = '{"provider":"unknown","models":{"codex":"bad model","openai":[]}}';
-    assert.deepEqual(readSearchPreferences(), { provider: "codex", models: { codex: "", openai: "" } });
+    assert.deepEqual(readSearchPreferences(), { provider: "openai", models: { openai: "" } });
     saved = 'invalid json';
-    assert.equal(readSearchPreferences().provider, "codex");
+    assert.equal(readSearchPreferences().provider, "openai");
   } finally { globalThis.window = previousWindow; }
 });
 

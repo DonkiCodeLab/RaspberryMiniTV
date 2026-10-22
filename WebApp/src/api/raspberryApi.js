@@ -3,6 +3,7 @@ import { normalizeLanguage } from "../i18n/languages.js";
 import { readResponseWithProgress } from "./readResponseWithProgress.js";
 import { photoDemo, demoPhotoUrl } from "./photoDemo.js";
 import { requestWithTimeout } from '../requestWithTimeout.js';
+import { requestTmdbStatus } from '../tmdbStatusRequest.js';
 // Admin credentials stay in request headers; never place them in URLs or media links.
 export async function codexRequest(action, token = '', data = null, signal) {
   if (isMockModeEnabled()) throw new Error(ui('Codex no está disponible en modo demo.'));
@@ -1475,10 +1476,18 @@ export function photoRequest(action, data, signal) {
 }
 
 export function downloadPhotoPeople(ids, signal) {
-  if (isMockModeEnabled()) return photoDemo('people/download', { ids });
+  return downloadPhotoArchive('people/download', ids, signal);
+}
+
+export function downloadSelectedPhotos(ids, signal) {
+  return downloadPhotoArchive('photos/download', ids, signal);
+}
+
+function downloadPhotoArchive(action, ids, signal) {
+  if (isMockModeEnabled()) return photoDemo(action, { ids });
   return aiRequestWithTimeout(async activeSignal => {
     const storedPin = getStoredWebPin();
-    const response = await fetch(`${getBaseUrl()}/pictures/people/download`, {
+    const response = await fetch(`${getBaseUrl()}/pictures/${action}`, {
       method: 'POST', cache: 'no-store', signal: activeSignal,
       headers: { 'Content-Type': 'application/json', ...(storedPin ? { 'X-Web-Pin': storedPin } : {}) },
       body: JSON.stringify({ ids }),
@@ -1799,17 +1808,21 @@ export function getCachedTmdbJson(path, { language, query = {}, importPreview = 
   return localMetadataRequests.get(key);
 }
 
-export function getTmdbCacheStatus(start = false) {
+export function getTmdbCacheStatus(start = false, signal) {
   if (isMockModeEnabled()) return Promise.reject(new Error(ui("Conecta con la Raspberry para descargar el catálogo.")));
-  return requestWithTimeout(signal => request("/tmdb/cache", { ...(start ? { method: "POST" } : {}), signal }));
+  return requestTmdbStatus(({ signal, start, refresh }) => request(
+    start ? "/tmdb/cache" : `/tmdb/cache?background=1${refresh ? "&refresh=1" : ""}`,
+    { ...(start ? { method: "POST" } : {}), signal, cache: "no-store" },
+  ), { start, signal });
 }
 
-export function getTmdbCreditsStatus(start = false) {
+export function getTmdbCreditsStatus(start = false, signal) {
   if (isMockModeEnabled()) return Promise.reject(new Error(ui("Conecta con la Raspberry para completar las fichas.")));
   if (start) clearLocalMetadataCache();
-  return requestWithTimeout(signal => request("/tmdb/credits", {
-    ...(start ? { method: "POST" } : {}), signal, cache: "no-store",
-  }));
+  return requestTmdbStatus(({ signal, start, refresh }) => request(
+    start ? "/tmdb/credits" : `/tmdb/credits?background=1${refresh ? "&refresh=1" : ""}`,
+    { ...(start ? { method: "POST" } : {}), signal, cache: "no-store" },
+  ), { start, signal });
 }
 
 function requestAI(path, options, signal, timeoutMs = 50000) {
@@ -1817,8 +1830,8 @@ function requestAI(path, options, signal, timeoutMs = 50000) {
   return aiRequestWithTimeout(activeSignal => request(path, { ...options, signal: activeSignal, cache: "no-store" }), signal, timeoutMs);
 }
 
-export function getAIModels(signal, provider = "openai") {
-  return requestAI(`/settings/ai/models${provider === "codex" ? "?provider=codex" : ""}`, {}, signal, provider === "codex" ? 60000 : 20000);
+export function getAIModels(signal) {
+  return requestAI("/settings/ai/models", {}, signal, 20000);
 }
 export function getAISettings(signal) { return requestAI("/settings/ai", {}, signal); }
 export function saveAISettings(settings, signal) {
@@ -1908,19 +1921,8 @@ export async function updateOmdbLibrary(action, signal) {
   return requestOmdbLibrary({ method: "POST", body: JSON.stringify({ action }) }, signal);
 }
 
-export async function searchCatalogAI(query, signal) {
-  if (query.provider !== "codex") return requestAI("/ai/search", { method: "POST", body: JSON.stringify(query) }, signal, 90000);
-  // getRandomValues also works on the Raspberry's plain HTTP LAN origin.
-  const requestId = Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
-  const cancel = () => requestAI("/ai/search/cancel", { method: "POST", body: JSON.stringify({ requestId }) }, undefined, 10000).catch(() => {});
-  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-  signal?.addEventListener("abort", cancel, { once: true });
-  try {
-    return await requestAI("/ai/search", { method: "POST", body: JSON.stringify({ ...query, requestId }) }, signal, 240000);
-  } catch (error) {
-    if (error.code === "AI_TIMEOUT") cancel();
-    throw error;
-  } finally { signal?.removeEventListener("abort", cancel); }
+export function searchCatalogAI(query, signal) {
+  return requestAI("/ai/search", { method: "POST", body: JSON.stringify({ ...query, provider: "openai" }) }, signal, 90000);
 }
 
 export function getAIRecommendations(userId, section, signal) {

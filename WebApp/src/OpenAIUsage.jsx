@@ -102,7 +102,7 @@ export function UsageResults({ data, filters, setFilters, language, source, metr
   </>;
 }
 
-export default function OpenAIUsage({ language }) {
+export default function OpenAIUsage({ language, active = true }) {
   const s = aiUsageStrings(language), demo = isMockMode();
   const [filters, setFilters] = useState(() => ({ ...usageRange('month'), period: 'day', operation: '', model: '', group: '', page: 0 }));
   const [data, setData] = useState(null), [error, setError] = useState(''), [loading, setLoading] = useState(false);
@@ -111,17 +111,35 @@ export default function OpenAIUsage({ language }) {
   const [dirty, setDirty] = useState(false), [busy, setBusy] = useState(''), [message, setMessage] = useState('');
   const action = useRef(null), dirtyRef = useRef(false);
   useEffect(() => {
-    if (demo) return;
+    if (demo || !active) return;
     const controller = new AbortController();
+    let pending = false;
     setLoading(true); setError(''); setData(null);
-    getAIUsage(filters, controller.signal).then(value => {
-      if (controller.signal.aborted) return;
-      setData(value);
-      if (!dirtyRef.current) { setProjectId(value.billing.projectId); setApiKeyId(value.billing.apiKeyId); }
-    }).catch(error => { if (!controller.signal.aborted) setError(error.code || 'error'); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [filters, revision, demo]);
+    async function refresh() {
+      if (pending || controller.signal.aborted) return;
+      pending = true;
+      try {
+        const value = await getAIUsage(filters, controller.signal);
+        if (controller.signal.aborted) return;
+        setData(value); setError('');
+        if (!dirtyRef.current) { setProjectId(value.billing.projectId); setApiKeyId(value.billing.apiKeyId); }
+      } catch (error) {
+        if (!controller.signal.aborted) setError(error.code || 'error');
+      } finally {
+        pending = false;
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    const refreshVisible = () => { if (document.visibilityState !== 'hidden') refresh(); };
+    refresh();
+    const timer = setInterval(refreshVisible, 15000);
+    document.addEventListener('visibilitychange', refreshVisible);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshVisible);
+    };
+  }, [filters, revision, demo, active]);
   useEffect(() => () => { action.current?.abort(); }, []);
   function change(field, value) { setFilters(current => ({ ...current, [field]: value, page: 0 })); }
   function edit(setter, value) { setter(value); setDirty(true); dirtyRef.current = true; setMessage(''); }

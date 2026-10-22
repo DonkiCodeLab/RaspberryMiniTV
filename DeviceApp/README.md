@@ -805,6 +805,12 @@ API autenticada con el PIN habitual:
 
 - `GET /tmdb/cache`: progreso, errores e identificadores pendientes de asignar.
 - `POST /tmdb/cache`: encolar catálogo/reintentar fallidos.
+- `GET /tmdb/cache?background=1&refresh=1` y `GET /tmdb/credits?background=1&refresh=1`:
+  iniciar o compartir una comprobación local sin bloquear la respuesta HTTP.
+  Mientras se calcula devuelven `calculating: true`; las consultas siguientes
+  omiten `refresh=1` hasta recibir los contadores definitivos o un error HTTP.
+  Los errores se conservan hasta solicitar una nueva comprobación. La web muestra
+  un spinner durante la espera y, si falla, permite reintentar con «Actualizar estado».
 - `GET /tmdb/json/<ruta>`: JSON persistente de búsquedas/fichas permitidas.
 - `GET /tmdb/images/<archivo>?pin=...`: imagen local (la descarga si falta).
 

@@ -3,6 +3,19 @@ import { getPictureContentUrl } from './api/raspberryApi.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { attachPhotoZoom, MAX_PHOTO_ZOOM } from './photoZoom.js';
 import { photoPersonName } from './photoLibrary.js';
+import { attachFaceDrawing } from './photoFaceDrawing.js';
+
+function FaceDrawing({ onChange, s, disabled }) {
+  const overlay = useRef(null), callback = useRef(onChange);
+  const [box, setBox] = useState(null);
+  callback.current = onChange;
+  useEffect(() => {
+    if (!disabled) return attachFaceDrawing(overlay.current, setBox, value => callback.current(value));
+  }, [disabled]);
+  return <div ref={overlay} className="photo-face-drawing" role="group" aria-label={s.drawFaceHint}>
+    {box && <span className="photo-face-box photo-face-box--draft" style={{ left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.width * 100}%`, height: `${box.height * 100}%` }} />}
+  </div>;
+}
 
 export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s }) {
   return faces.map((face, index) => face.box ? <button type="button" key={face.id}
@@ -14,7 +27,7 @@ export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, 
   </button> : null).filter(Boolean);
 }
 
-export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace }) {
+export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onFaceBoxChange, busy = false }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
@@ -37,6 +50,7 @@ export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId,
         {!error && <img key={attempt} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, 'preview') || undefined}
           alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
         <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} />
+        {addingFace && ready && <FaceDrawing onChange={onFaceBoxChange} s={s} disabled={busy} />}
       </div>
       {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}</div>}
     </div>
@@ -45,6 +59,6 @@ export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId,
       <button type="button" className="photo-viewer__reset" aria-label={s.fitPhoto} title={s.fitPhoto} onClick={() => zoom.current?.reset()}>{Math.round(view.scale * 100)} %</button>
       <button type="button" aria-label={s.zoomIn} title={s.zoomIn} disabled={view.scale >= MAX_PHOTO_ZOOM} onClick={() => zoom.current?.zoomBy(1.5)}>＋</button>
     </div>
-    <p id={hint} className="photo-viewer__hint">{s.zoomHint}</p>
+    <p id={hint} className="photo-viewer__hint">{addingFace ? s.drawFaceHint : s.zoomHint}</p>
   </div>;
 }

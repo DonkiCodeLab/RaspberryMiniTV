@@ -1,5 +1,7 @@
 import { withLanguages } from "./i18n/index.js";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
+import LoadingSpinner from "./LoadingSpinner.jsx";
+import useTmdbStatus from "./useTmdbStatus.js";
 import { clearLocalMetadataCache, getTmdbCreditsStatus, isMockMode } from "./api/raspberryApi";
 
 const strings = withLanguages({
@@ -34,54 +36,23 @@ const strings = withLanguages({
 
 export default function TmdbCreditsCompletion({ language = "es" }) {
   const s = strings[language] || strings.es;
-  const [status, setStatus] = useState(null);
-  const [error, setError] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const mounted = useRef(false);
-  const pending = useRef(false);
   const previousReady = useRef(null);
-  const timer = useRef(null);
   const demo = isMockMode();
-
-  async function refresh(start = false) {
-    if (pending.current || demo) return;
-    pending.current = true;
-    clearTimeout(timer.current);
-    setChecking(true);
-    if (start) setStarting(true);
-    try {
-      const next = await getTmdbCreditsStatus(start);
-      if (!mounted.current) return;
-      setStatus(next);
-      setError(false);
+  const { status, error, busy, run } = useTmdbStatus(signal => getTmdbCreditsStatus(false, signal), {
+    enabled: !demo,
+    interval: next => next.pending || next.running ? 3000 : 15000,
+    onStatus(next) {
       if (previousReady.current !== null && previousReady.current !== next.ready) clearLocalMetadataCache();
       previousReady.current = next.ready;
-      timer.current = setTimeout(() => refresh(), next.pending || next.running ? 3000 : 15000);
-    } catch {
-      if (mounted.current) {
-        setError(true);
-        timer.current = setTimeout(() => refresh(), 15000);
-      }
-    } finally {
-      pending.current = false;
-      if (mounted.current) { setStarting(false); setChecking(false); }
-    }
-  }
-
-  useEffect(() => {
-    mounted.current = true;
-    refresh();
-    return () => { mounted.current = false; clearTimeout(timer.current); };
-  }, []);
-
-  const active = Boolean(status?.pending || status?.running || starting);
-  return <section className="tmdb-cache-panel" aria-label={s.title}>
+    },
+  });
+  const active = Boolean(status?.pending || status?.running || busy === "start");
+  return <section className="tmdb-cache-panel" aria-label={s.title} aria-busy={Boolean(busy)}>
     <h3>{s.title}</h3>
     <p>{s.copy}</p>
     {demo ? <p>{s.demo}</p> : <>
-      {!status && !error && <p role="status">{s.loading}</p>}
-      {status && <>
+      {busy && <p className="tmdb-cache-calculating" role="status"><LoadingSpinner inline />{busy === "start" ? s.working : s.loading}</p>}
+      {status && (!busy || busy === "poll") && !error && <>
         <p role="status">{status.total ? `${status.ready} / ${status.total} ${s.ready} · ${status.remaining} ${s.remaining}${status.failed ? ` · ${status.failed} ${s.failed}` : ""}` : s.empty}</p>
         {status.total > 0 && <progress value={status.ready} max={status.total} aria-label={s.ready} style={{ width: "100%", accentColor: "#ffd429" }} />}
         {active && <p>{s.continues}</p>}
@@ -89,10 +60,10 @@ export default function TmdbCreditsCompletion({ language = "es" }) {
         {!!status.missingIds?.length && <details><summary>{s.missing} ({status.missingIds.length})</summary><ul>{status.missingIds.map(path => <li key={path}>{path}</li>)}</ul></details>}
         {!!status.errors?.length && <details><summary>{status.errors.length} {s.failed}</summary><ul>{status.errors.map(item => <li key={item.media}>{item.name}: {item.error}</li>)}</ul></details>}
       </>}
-      {error && <p role="alert" className="dialog-error">{s.error}</p>}
+      {error && <p role="alert" className="dialog-error">{error.message || s.error}</p>}
       <div className="dialog-actions">
-        <button type="button" className="dialog-button" disabled={active || checking || !status?.remaining} onClick={() => refresh(true)}>{active ? s.working : status?.failed ? s.retry : s.start}</button>
-        <button type="button" className="dialog-button" disabled={checking} onClick={() => refresh()}>{s.refresh}</button>
+        <button type="button" className="dialog-button" disabled={active || Boolean(busy) || Boolean(error) || !status?.remaining} onClick={() => run("start", signal => getTmdbCreditsStatus(true, signal))}>{active ? s.working : status?.failed ? s.retry : s.start}</button>
+        <button type="button" className="dialog-button" disabled={Boolean(busy)} onClick={() => run()}>{s.refresh}</button>
       </div>
     </>}
   </section>;

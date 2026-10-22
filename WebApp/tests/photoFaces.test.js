@@ -50,6 +50,20 @@ test('name editor offers known names and new-person creation in every language',
   }
 });
 
+test('manual face confirmation requires both a finished box and a selected or entered name', () => {
+  for (const language of ['es', 'en', 'ca']) {
+    const strings = photoStrings(language);
+    const render = (face, hasBox) => renderToStaticMarkup(React.createElement(FaceNameEditor, {
+      face, hasBox, creating: true, people: [{ id: 'ana', name: 'Ana' }], s: strings,
+    }));
+    assert.ok(render({ personId: 'ana' }, false).includes(`disabled="">${strings.confirmFace}`));
+    assert.ok(!render({ personId: 'ana' }, true).includes(`disabled="">${strings.confirmFace}`));
+    assert.ok(render({}, true).includes(`disabled="">${strings.confirmFace}`));
+    assert.ok(render({}, false).includes(strings.cancel));
+    assert.ok(render({}, false).includes(strings.drawFaceHint));
+  }
+});
+
 test('No people contains only reviewed originals with zero detections, including none of the pending or failed photos', () => {
   const photos = [
     { id: 'empty', faceState: 'done', faceCount: 0 },

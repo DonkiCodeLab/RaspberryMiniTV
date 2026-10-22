@@ -125,6 +125,7 @@ export function photoDemo(action, data = {}) {
           library.photos = library.photos.filter(photo => !ids.has(photo.id));
           for (const person of library.people) person.photoIds = person.photoIds.filter(id => !ids.has(id));
           for (const id of ids) if (library.metadata) delete library.metadata[id];
+          for (const id of ids) if (library.manualFaces) delete library.manualFaces[id];
           for (const [digest, id] of Object.entries(library.importFiles || {})) if (ids.has(id)) delete library.importFiles[digest];
           for (const [batch, receipt] of Object.entries(library.importBatches || {})) if (receipt.saved.some(path => paths.has(path))) delete library.importBatches[batch];
           result = { ok: true, deleted: photos.length };
@@ -136,9 +137,49 @@ export function photoDemo(action, data = {}) {
       } else if (/^photos\/[^/]+\/faces$/.test(action)) {
         const photo = library.photos.find(photo => photo.id === action.split('/')[1]);
         if (!photo) throw new Error('No se encuentra la foto.');
-        return { photoId: photo.id, faces: [], state: 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
+        const faces = library.manualFaces?.[photo.id] || [];
+        if (!Object.keys(data).length) return { photoId: photo.id, faces, state: photo.faceState || 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
+        const box = data.box;
+        if (!box || ['x', 'y', 'width', 'height'].some(key => !Number.isFinite(box[key])) || box.x < 0 || box.y < 0 || box.width <= 0 || box.height <= 0 || box.x + box.width > 1.000001 || box.y + box.height > 1.000001) throw new Error('Define un recuadro válido dentro de la foto.');
+        let person = data.personId ? library.people.find(person => person.id === data.personId && !person.appleKey) : null;
+        if (!data.personId) {
+          const name = String(data.name || '').trim();
+          if (!name || name.length > 100 || /[/\\]/.test(name)) throw new Error('Escribe un nombre válido.');
+          person = library.people.find(person => !person.appleKey && person.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+          if (!person) { person = { id: crypto.randomUUID(), name, photoIds: [] }; library.people.push(person); }
+        }
+        if (!person) throw new Error('Selecciona una persona existente.');
+        const face = { id: crypto.randomUUID(), personId: person.id, name: person.name, box, manual: true };
+        library.manualFaces ||= {}; library.manualFaces[photo.id] = [...faces, face];
+        person.photoIds = [...new Set([...person.photoIds, photo.id])];
+        result = { ok: true, faceId: face.id, personId: person.id };
+      } else if (/^photos\/[^/]+\/faces\/[^/]+\/assign$/.test(action)) {
+        const [, photoId, , faceId] = action.split('/');
+        const face = library.manualFaces?.[photoId]?.find(face => face.id === faceId);
+        if (!face) throw new Error('Esta cara ya no está disponible.');
+        let target = data.personId ? library.people.find(person => person.id === data.personId && !person.appleKey) : null;
+        if (!data.personId) {
+          const name = String(data.name || '').trim();
+          if (!name || name.length > 100 || /[/\\]/.test(name)) throw new Error('Escribe un nombre válido.');
+          target = library.people.find(person => !person.appleKey && person.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+          if (!target) { target = { id: crypto.randomUUID(), name, photoIds: [] }; library.people.push(target); }
+        }
+        if (!target) throw new Error('Selecciona una persona existente.');
+        const previous = library.people.find(person => person.id === face.personId);
+        face.personId = target.id; face.name = target.name;
+        if (previous && !library.manualFaces[photoId].some(face => face.personId === previous.id)) previous.photoIds = previous.photoIds.filter(id => id !== photoId);
+        target.photoIds = [...new Set([...target.photoIds, photoId])];
+        result = { ok: true, personId: target.id };
       } else if (action === 'people/scan' || action === 'people/pause' || /^photos\/[^/]+\/detect$/.test(action)) {
         throw new Error('Conecta la Raspberry para analizar las fotos.');
+      } else if (action === 'photos/download') {
+        if (!Array.isArray(data.ids) || !data.ids.length || data.ids.length > 5000) throw new Error('Selecciona entre 1 y 5000 fotos.');
+        const photos = [...new Set(data.ids)].map(id => library.photos.find(photo => photo.id === id));
+        if (photos.some(photo => !photo?.blob)) throw new Error('Una foto ya no está disponible. Actualiza la biblioteca.');
+        const { default: JSZip } = await import('jszip');
+        const zip = new JSZip();
+        for (const photo of photos) zip.file(`${photo.id}/${photo.name.replace(/[/\\]/g, '_')}`, await photo.blob.arrayBuffer());
+        return zip.generateAsync({ type: 'blob', compression: 'STORE' });
       } else if (['people/merge', 'people/delete', 'people/download'].includes(action)) {
         if (!Array.isArray(data.ids) || !data.ids.length || data.ids.some(id => typeof id !== 'string')) throw new Error('Selecciona las personas para esta acción.');
         const sources = [...new Set(data.ids)].map(id => library.people.find(person => person.id === id && !person.appleKey));
@@ -160,6 +201,7 @@ export function photoDemo(action, data = {}) {
         const target = library.people.find(person => person.id === (action === 'people/delete' ? UNKNOWN_PERSON_ID : data.personId));
         if (!target || target.appleKey || sources.includes(target) || sources.some(person => person.id === UNKNOWN_PERSON_ID)) throw new Error('Selecciona otra persona existente para unir los álbumes.');
         for (const source of sources) {
+          for (const faces of Object.values(library.manualFaces || {})) for (const face of faces) if (face.personId === source.id) { face.personId = target.id; face.name = target.name; }
           target.photoIds = [...new Set([...target.photoIds, ...source.photoIds])];
           target.coverPhotoId ||= source.coverPhotoId;
         }
@@ -169,6 +211,7 @@ export function photoDemo(action, data = {}) {
         const source = library.people.find(p => p.id === action.split('/')[1]);
         const target = library.people.find(p => p.id === data.personId);
         if (!source || !target || source === target || source.appleKey || target.appleKey || source.id === UNKNOWN_PERSON_ID) throw new Error('Selecciona otra persona existente para unir los álbumes.');
+        for (const faces of Object.values(library.manualFaces || {})) for (const face of faces) if (face.personId === source.id) { face.personId = target.id; face.name = target.name; }
         target.photoIds = [...new Set([...target.photoIds, ...source.photoIds])];
         target.coverPhotoId ||= source.coverPhotoId;
         library.people = library.people.filter(p => p !== source);
@@ -185,9 +228,23 @@ export function photoDemo(action, data = {}) {
       } else if (/^people\/[^/]+\/remove$/.test(action)) {
         const person = library.people.find(p => p.id === action.split('/')[1]);
         if (person) person.photoIds = person.photoIds.filter(id => !data.ids.includes(id));
+        if (person) for (const id of data.ids) for (const face of library.manualFaces?.[id] || []) if (face.personId === person.id) { face.personId = null; face.name = null; }
         result = { ok: true };
       } else if (action !== 'library') throw new Error('Conecta la Raspberry para usar esta función.');
-      for (const person of library.people) if (!person.photoIds.includes(person.coverPhotoId)) person.coverPhotoId = null;
+      for (const person of library.people) {
+        if (!person.photoIds.includes(person.coverPhotoId)) person.coverPhotoId = null;
+        person.faceBoxes = {};
+        person.coverFace = null;
+        for (const [photoId, faces] of Object.entries(library.manualFaces || {})) {
+          const matches = faces.filter(face => face.personId === person.id);
+          for (const face of matches) face.name = person.name;
+          if (matches.length) {
+            person.faceBoxes[photoId] = matches.map(({ id, box }) => ({ id, box }));
+            person.coverFace ||= { ...person.faceBoxes[photoId][0], photoId };
+          }
+        }
+      }
+      for (const photo of library.photos) if (library.manualFaces?.[photo.id]) photo.faceCount = library.manualFaces[photo.id].length;
       if (action !== 'library' || migrated) {
         library.revision = crypto.randomUUID();
         await new Promise((resolve, reject) => {

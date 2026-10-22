@@ -44,6 +44,15 @@ class CatalogAIApiTests(unittest.TestCase):
             planner.assert_not_called()
             connection.assert_not_called()
 
+    def test_codex_catalog_requests_are_rejected_without_starting_codex(self):
+        with patch('codex_bridge.CodexBridge.start') as start:
+            response = self.search(provider="codex")
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.json["code"], "AI_INVALID_QUERY")
+            response = self.client.get("/settings/ai/models?provider=codex", headers=self.headers)
+            self.assertEqual(response.status_code, 400)
+            start.assert_not_called()
+
     def test_settings_show_saved_values_preserve_blank_and_explicitly_delete(self):
         response = self.client.get("/settings/ai", headers=self.headers)
         self.assertEqual(response.status_code, 200)

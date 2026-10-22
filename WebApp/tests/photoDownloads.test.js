@@ -21,7 +21,7 @@ test('original photo downloads keep authentication and nested names, with no pre
   } finally {globalThis.window=previous;}
 });
 
-test('people ZIP download sends selected identities and authentication, and surfaces server failures', async () => {
+test('ZIP downloads send selected identities or photos with authentication and surface server failures', async () => {
   const result = await build({ entryPoints: [new URL('../src/api/raspberryApi.js', import.meta.url).pathname],
     bundle: true, write: false, format: 'esm', platform: 'browser', define: { 'import.meta.env': '{}' } });
   const api = await import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`);
@@ -38,7 +38,16 @@ test('people ZIP download sends selected identities and authentication, and surf
       return { ok: true, blob: async () => archive };
     };
     assert.equal(await api.downloadPhotoPeople(['ana', 'luis']), archive);
+    globalThis.fetch = async (url, options) => {
+      assert.equal(url, 'http://raspberry/pictures/photos/download');
+      assert.equal(options.method, 'POST');
+      assert.equal(options.headers['X-Web-Pin'], 'fixture-pin');
+      assert.deepEqual(JSON.parse(options.body), { ids: ['photo-one', 'photo-three'] });
+      return { ok: true, blob: async () => archive };
+    };
+    assert.equal(await api.downloadSelectedPhotos(['photo-one', 'photo-three']), archive);
     globalThis.fetch = async () => ({ ok: false, status: 409, json: async () => ({ error: 'Persona ya no disponible' }) });
     await assert.rejects(api.downloadPhotoPeople(['missing']), error => error.status === 409 && error.message === 'Persona ya no disponible');
+    await assert.rejects(api.downloadSelectedPhotos(['missing']), error => error.status === 409);
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });

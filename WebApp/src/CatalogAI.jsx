@@ -66,7 +66,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
   const [mode, setMode] = useState("search");
   const canRecommend = ["movies", "series"].includes(section);
   const [preferences, setPreferences] = useState(readSearchPreferences);
-  const provider = preferences.provider;
+  const provider = "openai";
   const model = preferences.models[provider];
   function choose(provider, model = preferences.models[provider]) {
     const next = { provider, models: { ...preferences.models, [provider]: model } };
@@ -102,7 +102,7 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     setBusy(true); setError(""); setMessage(""); setDebug(null);
     try {
       const data = await searchCatalogAI({ section, prompt: prompt.trim(), language, provider,
-        ...(provider === "codex" && user?.id ? { userId: user.id } : {}), ...(model ? { model } : {}) }, controller.signal);
+        ...(model ? { model } : {}) }, controller.signal);
       if (request.current.generation !== generation || controller.signal.aborted) return;
       setDebug(data?.debug || { request: { section, prompt: prompt.trim(), model: model || undefined }, source: "client", response: data });
       const result = validateAIResult(data, section);
@@ -125,14 +125,9 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     </div>}
     {canRecommend && mode === "recommend" ? <Recommendations key={`${user?.id}:${section}:${language}`} user={user} section={section} language={language}
       onOpenLibrary={onOpenLibrary} onSearchTorrent={onSearchTorrent} /> : <>
-    <p>{section === "pictures" ? s.picturesHint : provider === "codex" ? s.codexHint : s.hint}</p>
+    <p>{section === "pictures" ? s.picturesHint : s.hint}</p>
     {demo && <p role="status">{s.demo}</p>}
     <form onSubmit={submit}>
-      <label htmlFor="catalog-ai-provider">{s.provider}</label>
-      <select id="catalog-ai-provider" value={provider} disabled={busy || demo} onChange={event => choose(event.target.value)}>
-        <option value="codex">{s.codexProvider}</option><option value="openai">{s.openaiProvider}</option>
-      </select>
-      <small>{provider === "codex" ? s.codexUsage : s.openaiUsage}</small>
       <AIModelSelect key={provider} provider={provider} value={model} onChange={value => choose(provider, value)} language={language} disabled={busy || demo} useDefault />
       <label htmlFor="catalog-ai-prompt">{s.prompt}</label>
       <textarea ref={input} id="catalog-ai-prompt" value={prompt} onChange={event => setPrompt(event.target.value)} maxLength={2000} rows={3} disabled={busy || demo} autoFocus />

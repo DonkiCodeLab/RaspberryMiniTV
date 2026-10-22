@@ -8,7 +8,7 @@ import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, photoD
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import { facePortraitLayout } from './photoFacePortrait.js';
 import PhotoFaceViewer from './PhotoFaceViewer.jsx';
-import PhotoDownloads from './PhotoDownloads.jsx';
+import PhotoDownloads, { PhotoDownloadDialog } from './PhotoDownloads.jsx';
 import PhotoGallery from './PhotoGallery.jsx';
 import { PeopleAnalysis, PersonEditor } from './PhotoPeople.jsx';
 import { PeopleActionDialog, PeopleToolbar, PersonCardActions } from './PhotoPeopleActions.jsx';
@@ -414,6 +414,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     <header className="photo-library__header"><div><h1>{title}</h1><p>{current === 'gallery' ? `${currentPhotos.length} ${s.photos} · ${s.galleryHint}` : current ? `${currentPhotos.length} ${s.photos} · ${folders.length} ${s.albums}` : s.intro}</p></div>
       <div className="photo-toolbar">{canCreate && <button className="dialog-button" type="button" onClick={() => setDialog({ mode: 'create' })}>＋ {s.newFolder}</button>}
         {canWrite && <button className="dialog-button dialog-button--accent" type="button" onClick={() => setDialog({ mode: 'upload', folderId: isAlbum ? current : current === 'ai' ? '' : 'gallery', parent: current === 'ai' ? 'ai' : 'gallery' })}>↑ {s.upload}</button>}
+        {(currentPhotos.length > 0 || actionMode) && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}
         <button className="photo-refresh" type="button" title={s.refresh} aria-label={s.refresh} onClick={() => { setAttempt(n => n + 1); }}>↻</button>
       </div></header>
     {data.demo && <p className="photo-note">{s.demo}</p>}
@@ -443,8 +444,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       {currentPhotos.length > 0 && <div className="photo-sort">{current !== 'gallery' && <label>{s.sortBy}<select value={order.field} onChange={event => setOrder(value => ({ ...value, field: event.target.value }))}>
         <option value="takenAt">{s.photoDate}</option><option value="uploadedAt">{s.uploadDate}</option></select></label>}
         <label>{s.sortOrder}<select value={order.direction} onChange={event => setOrder(value => ({ ...value, direction: event.target.value }))}>
-          <option value="desc">{s.newestFirst}</option><option value="asc">{s.oldestFirst}</option></select></label></div>}
-      {currentPhotos.length > 0 && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}</div>
+          <option value="desc">{s.newestFirst}</option><option value="asc">{s.oldestFirst}</option></select></label></div>}</div>
     {current === 'people' && <PeopleToolbar editing={peopleEditing} onToggle={() => { setPeopleEditing(value => !value); setSelectedPeople(new Set()); }}
       selected={selectedPersonList} people={data.knownPeople || data.people} s={s} busy={busy}
       onSelectPage={() => setSelectedPeople(previous => new Set([...previous, ...folderPage.items.filter(folder => folder.id.startsWith('person:') && folder.id !== `person:${UNKNOWN_PERSON_ID}`).map(folder => folder.id.slice(7))]))}
@@ -459,6 +459,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       <button type="button" onClick={() => setSelected(new Set(page.items.map(p => p.id)))}>{s.selectPage}</button><button type="button" onClick={() => setSelected(new Set())}>{s.clear}</button>
       <button type="button" className="dialog-button dialog-button--accent" disabled={!selected.size} onClick={() => setDialog({ mode: 'move' })}>{s.move} →</button>
       <button type="button" className="dialog-button photo-delete-button" disabled={!selected.size} onClick={() => setDialog({ mode: 'delete' })}>{s.deletePhotos}</button>
+      <button type="button" className="dialog-button" disabled={!selected.size} onClick={() => setDialog({ mode: 'download' })}>{s.downloadPeople}</button>
       {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
     </div>}
     {currentPhotos.length > 0 && <div ref={grid} className="photo-page">
@@ -474,7 +475,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} album={isAlbum} person={person} current={current} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'people-action' && <PeopleActionDialog Modal={Modal} {...dialog} s={s} onClose={closeDialog} onComplete={completePeopleAction} />}
-    {dialog && !['upload', 'delete', 'people-action'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
+    {dialog?.mode === 'download' && <PhotoDownloadDialog Modal={Modal} selected={selected} s={s} onClose={() => setDialog(null)} onComplete={() => { setDialog(null); setNotice(s.peopleDownloadStarted); }} />}
+    {dialog && !['upload', 'delete', 'people-action', 'download'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
     {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} livePhotos={index.byId}
       faces={data.faces} revision={data.revision} onChanged={() => refresh()} highlightPersonId={person?.id}
       s={s} language={language} onClose={() => setViewer(null)} />}
