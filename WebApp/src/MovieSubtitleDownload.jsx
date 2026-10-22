@@ -1,24 +1,28 @@
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import React, { useEffect, useRef, useState } from "react";
-import { obtainMovieSubtitles, getMediaSubtitles, getSubtitleSettings, startSubtitleTranslation, getSubtitleTranslation } from "./api/raspberryApi";
+import { deleteMovieSubtitle, obtainMovieSubtitles, getMediaSubtitles, getSubtitleSettings, startSubtitleTranslation, getSubtitleTranslation } from "./api/raspberryApi";
 import { movieSubtitleStrings } from "./movieSubtitleStrings.js";
 import "./MovieSubtitleDownload.css";
-import SubtitleTranslationOffer, { SubtitleTranslationAction } from "./SubtitleTranslationOffer.jsx";
+import { SubtitleTranslationAction, SubtitleTranslationDialog } from "./SubtitleTranslationOffer.jsx";
 import { subtitleTranslationStrings } from "./subtitleTranslationStrings.js";
 import { translationSources, waitForSubtitleTranslation } from "./subtitleTranslation.js";
 import { LANGUAGES, languageName, normalizeLanguage } from "./i18n/languages.js";
 import LanguageSelector, { LanguageFlag } from "./LanguageSelector.jsx";
+import { message } from "./i18n/index.js";
 import { normalizeSubtitleLanguage } from "./subtitleLanguages.js";
 
-export function ExternalSubtitleItem({ track, language, busy, onTranslate }) {
+export function ExternalSubtitleItem({ track, language, busy, onTranslate, onDelete }) {
   const code = normalizeSubtitleLanguage(track.language);
   const info = LANGUAGES.find(item => item.id === code);
   const name = info ? languageName(info.id, language) : movieSubtitleStrings(language).unknownLanguage;
   const filename = track.id.slice("external:".length);
   return <li className="movie-subtitle-download__external">
     {info ? <LanguageFlag flag={info.flag} /> : <span className="language-flag" aria-hidden="true">🌐</span>}
-    <span><bdi>{name}</bdi>: <bdi>{filename}</bdi></span>
+    <span><bdi>{name}</bdi></span>
+    {onDelete && <button type="button" className="dialog-button dialog-button--ghost movie-subtitle-download__small-button" disabled={busy}
+      aria-label={`${message("Delete", language)}: ${filename}`} onClick={() => onDelete(track.id)}>{message("Delete", language)}</button>}
     {onTranslate && <SubtitleTranslationAction track={track} language={language} busy={busy} onTranslate={onTranslate} />}
+    <small className="movie-subtitle-download__filename"><bdi>{filename}</bdi></small>
   </li>;
 }
 
@@ -27,6 +31,8 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
   const [subtitleLanguage, setSubtitleLanguage] = useState(() => normalizeLanguage(language));
   const [busy, setBusy] = useState(false);
   const [missingLanguages, setMissingLanguages] = useState([]);
+  const [translationTrack, setTranslationTrack] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translationStatus, setTranslationStatus] = useState(null);
   const translationAbort = useRef(null);
@@ -86,6 +92,25 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
     }
   }
 
+  async function remove(sourceId) {
+    if (inFlight.current || disabled) return;
+    inFlight.current = true;
+    setBusy(true); setDeleting(true); setError(""); setResult(null); onBusyChange?.(true);
+    try {
+      await deleteMovieSubtitle({ relativePath, sourceId });
+      if (mounted.current) setRefresh(value => value + 1);
+    } catch (error) {
+      if (mounted.current) setError(error.code || "SUBTITLE_DELETE_FAILED");
+    } finally {
+      inFlight.current = false;
+      if (mounted.current) { setBusy(false); setDeleting(false); onBusyChange?.(false); }
+    }
+  }
+
+  function openTranslation(track) {
+    setError(""); setResult(null); setTranslationStatus(null); setTranslationTrack(track);
+  }
+
   async function translate(sourceId, targetLanguage = subtitleLanguage) {
     if (inFlight.current || disabled) return;
     const controller = new AbortController();
@@ -120,12 +145,16 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
       {inventory && <>
         <ul className="movie-subtitle-download__inventory">
           {externalTracks.length ? externalTracks.map(track => <ExternalSubtitleItem key={track.id} track={track} language={language}
-            busy={busy || disabled} onTranslate={translate} />)
+            busy={busy || disabled} onTranslate={openTranslation} onDelete={remove} />)
             : <li>{s.external}: {s.notFound}</li>}
           <li>{s.embedded}: {inventory.embeddedStatus === "unknown" ? s.unknown : inventory.embedded.length || s.notFound}</li>
         </ul>
         {inventory.embedded.length > 0 && <>
-          <ul>{inventory.embedded.map(track => <li key={track.index}>{[track.language && track.language !== "und" ? track.language : s.unknownLanguage, track.title, track.codec].filter(Boolean).join(" · ")}</li>)}</ul>
+          <ul className="movie-subtitle-download__inventory">{inventory.embedded.map(track => <li className="movie-subtitle-download__external" key={track.index}>
+            <span>{[track.language && track.language !== "und" ? track.language : s.unknownLanguage, track.title, track.codec].filter(Boolean).join(" · ")}</span>
+            <SubtitleTranslationAction track={(inventory.tracks || []).find(item => item.id === `embedded:${track.index}`) || { available: false }}
+              language={language} busy={busy || disabled} onTranslate={openTranslation} />
+          </li>)}</ul>
           <p>{s.browserEmbedded}</p>
         </>}
       </>}
@@ -136,18 +165,17 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
           disabled={busy || disabled} onChange={value => { setSubtitleLanguage(value); setResult(null); setError(""); }} />
       </div>
       <button className="dialog-button dialog-button--accent" disabled={busy || disabled} onClick={obtain} type="button">
-        {busy ? (translating ? s.translating : s.searching) : s.title}
+        {busy && !translating && !deleting ? s.searching : s.title}
       </button>
     </div>
-    <SubtitleTranslationOffer tracks={inventory?.tracks || []} missingLanguages={missingLanguages}
-      targetLanguage={subtitleLanguage} language={language} busy={busy || disabled} onTranslate={translate} />
+    {translationTrack && <SubtitleTranslationDialog track={translationTrack} language={language} busy={busy || disabled}
+      status={translationStatus} error={error} result={result} onTranslate={translate} onClose={() => { if (!translating) { setTranslationTrack(null); setError(""); setResult(null); } }} />}
     {missingLanguages.includes(subtitleLanguage) && inventory && !translationSources(inventory.tracks || [], subtitleLanguage).length && <p>{s.translationNoSource}</p>}
     {disabled && <p>{s.manual}</p>}
-    {busy && <p role="status"><LoadingSpinner inline /> {translating ? (translationStatus?.state === "waiting" ? s.translateWaiting : s.translating) : s.searching}
-      {translating && translationStatus?.total > 0 && <> · {s.translatedCues}: {translationStatus.done}/{translationStatus.total}</>}
+    {busy && !translating && !translationTrack && <p role="status"><LoadingSpinner inline /> {deleting ? s.deleting : s.searching}
     </p>}
-    {error && <p className="dialog-error" role="alert">{s[error] || s.failed}</p>}
-    {result && <div className="movie-subtitle-download__result" role="status">
+    {error && !translationTrack && <p className="dialog-error" role="alert">{s[error] || s.failed}</p>}
+    {result && !translationTrack && <div className="movie-subtitle-download__result" role="status">
       <strong>{s.saved}: {result.file}</strong>
       <p>{result.match === "ai" ? s.translationSaved : result.match === "hash" ? s.exact : s.fallback}</p>
       {result.release && <p>{result.release}</p>}

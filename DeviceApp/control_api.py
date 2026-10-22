@@ -3752,6 +3752,31 @@ def media_subtitle_info():
     return response
 
 
+@app.route("/movies/subtitles", methods=["DELETE"])
+def delete_movie_subtitle():
+    movie_path = resolve_relative_video_path(request.args.get("relativePath"), MOVIES_DIR)
+    root = os.path.realpath(MOVIES_DIR)
+    if (not movie_path or not os.path.isfile(movie_path) or not is_video_file(movie_path)
+            or not browser_subtitles.contained(movie_path, root)):
+        return jsonify({"code": "SUBTITLE_MOVIE_CHANGED"}), 404
+    source_id = request.args.get("sourceId")
+    try:
+        # Only sidecars belonging to this video may be deleted, never embedded streams or arbitrary paths.
+        tracks = browser_subtitles.inventory(movie_path, root)["tracks"]
+        track = next((item for item in tracks if item["id"] == source_id and item["kind"] == "external"), None)
+        if not track:
+            return jsonify({"code": "SUBTITLE_NOT_FOUND"}), 404
+        path = os.path.join(os.path.dirname(movie_path), track["id"].split(":", 1)[1])
+        if not browser_subtitles.contained(path, root):
+            return jsonify({"code": "SUBTITLE_NOT_FOUND"}), 404
+        os.remove(path)
+        return jsonify({"ok": True, "file": os.path.basename(path)})
+    except FileNotFoundError:
+        return jsonify({"code": "SUBTITLE_NOT_FOUND"}), 404
+    except OSError:
+        return jsonify({"code": "SUBTITLE_DELETE_FAILED"}), 500
+
+
 @app.route("/movies/subtitles", methods=["POST"])
 def upload_movie_subtitles():
     relative_path = str(request.form.get("relativePath") or "").strip()

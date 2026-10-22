@@ -28,7 +28,8 @@ test("subtitle search starts with the interface language and shows its flag and 
     const html = renderToStaticMarkup(React.createElement(module.exports.ExternalSubtitleItem, {
       track: { id: "external:Alien.en.srt", language: tag }, language: "es",
     }));
-    assert.ok(html.includes(`<bdi>${expected}</bdi>: <bdi>Alien.en.srt</bdi>`), html);
+    assert.ok(html.includes(`<bdi>${expected}</bdi>`), html);
+    assert.ok(html.includes(`<bdi>Alien.en.srt</bdi>`), html);
     assert.match(html, /class="language-flag"/);
   }
 });
@@ -91,12 +92,31 @@ test("subtitle download targets the Raspberry file with its PIN and preserves pr
   } finally { Object.assign(globalThis, previous); }
 });
 
+test("subtitle deletion sends the exact movie and selected track with its PIN", async () => {
+  const previous = { window: globalThis.window, fetch: globalThis.fetch };
+  globalThis.window = { location: { origin: "http://localhost:5173" }, sessionStorage: { getItem: () => "test-pin" } };
+  try {
+    const api = await client({ VITE_RASPBERRY_API_BASE_URL: "http://raspberry:5050" });
+    globalThis.fetch = async (url, options) => {
+      const target = new URL(url);
+      assert.equal(target.pathname, "/movies/subtitles");
+      assert.equal(target.searchParams.get("relativePath"), "Movies/Alien & Friends.mkv");
+      assert.equal(target.searchParams.get("sourceId"), "external:Alien & Friends.fr.ai.srt");
+      assert.equal(options.method, "DELETE");
+      assert.equal(options.headers["X-Web-Pin"], "test-pin");
+      return new Response(JSON.stringify({ ok: true }));
+    };
+    await api.deleteMovieSubtitle({ relativePath: "Movies/Alien & Friends.mkv", sourceId: "external:Alien & Friends.fr.ai.srt" });
+  } finally { Object.assign(globalThis, previous); }
+});
+
 test("demo subtitle actions do not make requests or report a saved file", async () => {
   const previous = globalThis.fetch;
   globalThis.fetch = async () => { assert.fail("Demo must not contact a provider"); };
   try {
     const api = await client({ VITE_WEB_DEV_MODE: "mock" });
     assert.equal((await api.getSubtitleSettings()).demo, true);
+    await assert.rejects(api.deleteMovieSubtitle({ relativePath: "Movies/Alien.mkv", sourceId: "external:Alien.srt" }), error => error.code === "SUBTITLE_DEMO");
     await assert.rejects(api.obtainMovieSubtitles({ relativePath: "Movies/Alien.mkv" }), error => error.code === "SUBTITLE_DEMO");
     await assert.rejects(api.saveSubtitleSettings({ username: "test" }));
   } finally { globalThis.fetch = previous; }

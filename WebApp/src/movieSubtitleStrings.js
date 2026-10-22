@@ -2,6 +2,7 @@ import { normalizeLanguage } from "./i18n/languages.js";
 import { withLanguages } from "./i18n/index.js";
 const strings = withLanguages({
   es: {
+    deleting: "Borrando subtítulo…", SUBTITLE_DELETE_FAILED: "No se pudo borrar el subtítulo. Inténtalo de nuevo.",
     availableTitle: "Subtítulos disponibles", checking: "Comprobando subtítulos…", inventoryFailed: "No se pudieron comprobar los subtítulos.",
     external: "SRT externo", embedded: "Pistas integradas", notFound: "No se han encontrado", unknown: "No se ha podido comprobar", unknownLanguage: "Idioma no indicado",
     browserEmbedded: "El reproductor web permite elegir pistas integradas de texto y combinarlas con otro subtítulo. Las pistas de imagen requieren la MiniTV o el monitor externo.",
@@ -29,6 +30,7 @@ const strings = withLanguages({
     SUBTITLE_DEMO: "Conecta con la Raspberry para configurar OpenSubtitles y descargar subtítulos.",
   },
   ca: {
+    deleting: "Eliminant el subtítol…", SUBTITLE_DELETE_FAILED: "No s’ha pogut eliminar el subtítol. Torna-ho a provar.",
     availableTitle: "Subtítols disponibles", checking: "Comprovant els subtítols…", inventoryFailed: "No s’han pogut comprovar els subtítols.",
     external: "SRT extern", embedded: "Pistes integrades", notFound: "No se n’han trobat", unknown: "No s’ha pogut comprovar", unknownLanguage: "Idioma no indicat",
     browserEmbedded: "El reproductor web permet triar pistes integrades de text i combinar-les amb un altre subtítol. Les pistes d’imatge requereixen la MiniTV o el monitor extern.",
@@ -56,6 +58,7 @@ const strings = withLanguages({
     SUBTITLE_DEMO: "Connecta amb la Raspberry per configurar OpenSubtitles i descarregar subtítols.",
   },
   en: {
+    deleting: "Deleting subtitle…", SUBTITLE_DELETE_FAILED: "Could not delete the subtitle. Please try again.",
     availableTitle: "Available subtitles", checking: "Checking subtitles…", inventoryFailed: "Could not check subtitles.",
     external: "External SRT", embedded: "Embedded tracks", notFound: "None found", unknown: "Could not check", unknownLanguage: "Unspecified language",
     browserEmbedded: "The web player lets you choose embedded text tracks and combine them with another subtitle. Image subtitle tracks require the MiniTV or external monitor.",

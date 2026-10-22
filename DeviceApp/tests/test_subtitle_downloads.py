@@ -220,6 +220,51 @@ class SubtitleDownloadApiTests(unittest.TestCase):
     def obtain(self, **changes):
         return self.client.post('/movies/subtitles/obtain', json={'relativePath': self.path, 'language': 'es', **changes})
 
+    def test_delete_only_selected_sidecar_and_preserve_video_and_other_languages(self):
+        french = self.movies / 'Alien.fr.ai.srt'
+        french.write_bytes(SRT)
+        response = self.client.delete('/movies/subtitles', query_string={
+            'relativePath': self.path, 'sourceId': 'external:Alien.fr.ai.srt'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(french.exists())
+        self.assertEqual(self.target.read_bytes(), b'existing')
+        self.assertEqual(self.video.read_bytes(), b'video')
+
+    def test_delete_rejects_other_movies_embedded_streams_and_traversal(self):
+        other = self.movies / 'Other.srt'
+        other.write_bytes(SRT)
+        for source in ['embedded:1', 'external:Other.srt', 'external:../secret.srt', 'external:Alien.mkv', '']:
+            with self.subTest(source=source):
+                response = self.client.delete('/movies/subtitles', query_string={
+                    'relativePath': self.path, 'sourceId': source})
+                self.assertEqual(response.status_code, 404)
+        self.assertTrue(other.exists())
+        self.assertTrue(self.target.exists())
+        self.assertTrue(self.video.exists())
+
+    def test_delete_rejects_sidecar_symlink_outside_movies(self):
+        outside = self.root / 'outside.srt'
+        outside.write_bytes(SRT)
+        link = self.movies / 'Alien.fr.srt'
+        link.symlink_to(outside)
+        response = self.client.delete('/movies/subtitles', query_string={
+            'relativePath': self.path, 'sourceId': 'external:Alien.fr.srt'})
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(outside.exists())
+        self.assertTrue(link.is_symlink())
+
+    def test_delete_requires_authorization_and_reports_failure(self):
+        with patch.object(api, 'is_authorized_request', return_value=False):
+            response = self.client.delete('/movies/subtitles', query_string={
+                'relativePath': self.path, 'sourceId': 'external:Alien.srt'})
+            self.assertEqual(response.status_code, 401)
+        with patch.object(api.os, 'remove', side_effect=PermissionError):
+            response = self.client.delete('/movies/subtitles', query_string={
+                'relativePath': self.path, 'sourceId': 'external:Alien.srt'})
+            self.assertEqual(response.status_code, 500)
+            self.assertEqual(response.json['code'], 'SUBTITLE_DELETE_FAILED')
+        self.assertTrue(self.target.exists())
+
     def test_download_saved_next_to_exact_video_using_server_metadata(self):
         response = self.obtain(tmdbId=999)
         self.assertEqual(response.status_code, 200)

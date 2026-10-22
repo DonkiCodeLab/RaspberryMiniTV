@@ -756,6 +756,15 @@ export async function getMediaSubtitles(relativePath, signal) {
   return request(`/media/subtitles?${new URLSearchParams({ relativePath })}`, { signal });
 }
 
+export async function deleteMovieSubtitle({ relativePath, sourceId }) {
+  if (isMockModeEnabled()) {
+    const error = new Error(ui("Connect to the Raspberry to delete subtitles."));
+    error.code = "SUBTITLE_DEMO";
+    throw error;
+  }
+  return request(`/movies/subtitles?${new URLSearchParams({ relativePath, sourceId })}`, { method: "DELETE" });
+}
+
 export async function saveSubtitleSettings(settings) {
   if (isMockModeEnabled()) throw new Error(ui("OpenSubtitles: conecta con la Raspberry para configurar la cuenta."));
   return request("/settings/subtitles", { method: "POST", body: JSON.stringify(settings) });

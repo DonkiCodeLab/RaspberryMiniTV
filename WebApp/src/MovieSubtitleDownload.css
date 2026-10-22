@@ -4,8 +4,7 @@
 .movie-subtitle-download__inventory li + li { margin-top: 6px; }
 .movie-subtitle-download__inventory .movie-subtitle-download__external { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .movie-subtitle-download__external > span { min-width: 0; }
-.movie-subtitle-download__translate-action { flex: 1 1 100%; min-width: 0; }
-.movie-subtitle-download__translate-action > .dialog-button { width: auto; min-height: 36px; padding: 6px 12px; font-size: 13px; }
+.movie-subtitle-download .movie-subtitle-download__small-button { width: auto; min-height: 36px; padding: 6px 12px; font-size: 13px; }
 .movie-subtitle-download__actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-bottom: 12px; }
 .movie-subtitle-download__actions .dialog-field { min-width: 0; margin: 0; }
 .movie-subtitle-download__actions .dialog-button { min-width: 0; white-space: normal; }
@@ -18,3 +17,10 @@
 .movie-subtitle-download__translation .dialog-field { margin: 0; min-width: 0; }
 .movie-subtitle-download__translation p { margin: 0; font-size: 12px; }
 .movie-subtitle-download__translation .dialog-button { white-space: normal; }
+
+.movie-subtitle-download__filename { flex-basis: 100%; min-width: 0; color: #ffffffa6; overflow-wrap: anywhere; }
+.subtitle-translation-backdrop { z-index: 10500; }
+.subtitle-translation-dialog { width: min(520px, 100%); }
+.subtitle-translation-dialog p { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.subtitle-translation-dialog .dialog-field { margin: 16px 0; }
+.subtitle-translation-dialog > .dialog-button { margin-bottom: 12px; }

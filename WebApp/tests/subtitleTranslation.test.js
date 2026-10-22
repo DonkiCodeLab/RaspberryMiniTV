@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { canTranslateSubtitle, translationSources, waitForSubtitleTranslation } from '../src/subtitleTranslation.js';
 import { LANGUAGES } from '../src/i18n/languages.js';
 const result = await build({ entryPoints: [new URL('../src/SubtitleTranslationOffer.jsx', import.meta.url).pathname], bundle: true, write: false,
-  format: 'cjs', platform: 'node', external: ['react'], loader: { '.css': 'empty', '.png': 'dataurl' } });
+  format: 'cjs', platform: 'node', external: ['react', 'react-dom'], loader: { '.css': 'empty', '.png': 'dataurl' } });
 const module = { exports: {} };
 new Function('require', 'module', 'exports', result.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
 const tracks = [{ id: 'external:Film.en.srt', language: 'en', kind: 'external', available: true }];
@@ -24,32 +24,40 @@ test('each available subtitle offers direct translation without a failed search'
 test('direct translation sends the listed source and chosen target, independently of subtitle search', () => {
   const state = [];
   let cursor = 0;
-  const fakeReact = { ...React, useState(initial) {
+  const fakeReact = { ...React, useRef: () => ({ current: null }), useId: () => 'translation-title', useEffect: () => {}, useState(initial) {
     const index = cursor++;
     if (!(index in state)) state[index] = typeof initial === 'function' ? initial() : initial;
     return [state[index], value => { state[index] = typeof value === 'function' ? value(state[index]) : value; }];
   } };
   const localModule = { exports: {} };
   const require = createRequire(import.meta.url);
-  new Function('require', 'module', 'exports', result.outputFiles[0].text)(name => name === 'react' ? fakeReact : require(name), localModule, localModule.exports);
+  new Function('require', 'module', 'exports', result.outputFiles[0].text)(name => name === 'react' ? fakeReact : name === 'react-dom' ? { createPortal: node => node } : require(name), localModule, localModule.exports);
   const calls = [];
-  const renderAction = (extra = {}) => {
+  globalThis.document = { body: {} };
+  const renderDialog = (extra = {}) => {
     cursor = 0;
-    return localModule.exports.SubtitleTranslationAction({ track: tracks[0], language: 'en', onTranslate: (...args) => calls.push(args), ...extra });
+    return localModule.exports.SubtitleTranslationDialog({ track: tracks[0], language: 'en', onTranslate: (...args) => calls.push(args), ...extra });
   };
   const children = node => React.Children.toArray(node.props.children);
-  children(renderAction())[0].props.onClick();
-  const panel = children(renderAction())[1];
-  const selector = children(children(panel)[0])[1];
-  assert.notEqual(selector.props.value, 'en');
-  selector.props.onChange('ca');
-  const confirm = children(children(renderAction())[1])[1];
-  assert.equal(confirm.props.disabled, false);
-  confirm.props.onClick();
-  assert.deepEqual(calls, [['external:Film.en.srt', 'ca']]);
-  selector.props.onChange('en');
-  assert.equal(children(children(renderAction())[1])[1].props.disabled, true);
-  assert.equal(children(children(renderAction({ busy: true }))[1])[1].props.disabled, true);
+  const card = () => children(renderDialog())[0];
+  try {
+    const action = localModule.exports.SubtitleTranslationAction({ track: tracks[0], language: 'en', onTranslate: track => calls.push(track) });
+    assert.equal(action.props['aria-haspopup'], 'dialog');
+    action.props.onClick();
+    assert.deepEqual(calls.pop(), tracks[0]);
+    assert.equal(card().props.role, 'dialog');
+    const selector = children(children(card())[2])[1];
+    assert.notEqual(selector.props.value, 'en');
+    selector.props.onChange('ca');
+    const confirm = children(card())[4];
+    assert.equal(confirm.props.disabled, false);
+    confirm.props.onClick();
+    assert.deepEqual(calls, [['external:Film.en.srt', 'ca']]);
+    selector.props.onChange('en');
+    assert.equal(children(card())[4].props.disabled, true);
+    assert.equal(children(children(renderDialog({ busy: true }))[0])[4].props.disabled, true);
+  } finally { delete globalThis.document; }
+
 });
 test('translation offered after a missing target and a subtitle in another language becomes available', () => {
   assert.equal(canTranslateSubtitle(['es'], 'es', []), false);
