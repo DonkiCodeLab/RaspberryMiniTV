@@ -7,7 +7,7 @@ const strings = withLanguages({
     browserEmbedded: "El reproductor web permite elegir pistas integradas de texto y combinarlas con otro subtítulo. Las pistas de imagen requieren la MiniTV o el monitor externo.",
     settingsTitle: "Configuración de OpenSubtitles", settingsLoading: "Cargando configuración…",
     settingsLoadFailed: "No se pudo cargar la configuración de OpenSubtitles.", settingsSaveFailed: "No se pudo guardar la configuración de OpenSubtitles.", retry: "Reintentar",
-    title: "Obtener subtítulo (de OpenSubtitles)", language: "Idioma del subtítulo", searching: "Buscando y guardando subtítulo…",
+    title: "Obtener subtítulo (de OpenSubtitles)", language: "Idioma del subtítulo a buscar:", searching: "Buscando y guardando subtítulo…",
     saved: "Subtítulo guardado", exact: "Coincidencia con el fichero de vídeo.", fallback: "Elegido por la película y la versión disponible. Comprueba la sincronización.",
     restart: "Si el vídeo ya estaba reproduciéndose, vuelve a iniciarlo para cargar el subtítulo.",
     configure: "Configurar OpenSubtitles", setup: "Introduce tu clave de API y usuario. La contraseña es opcional; sin ella se conecta sin iniciar sesión. Se guardan en la Raspberry.",

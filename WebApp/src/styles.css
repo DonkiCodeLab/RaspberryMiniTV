@@ -2237,7 +2237,7 @@ img {
   grid-column: 1 / -1;
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 1rem;
   padding: 1.3rem 1.4rem;
@@ -2406,8 +2406,15 @@ img {
   object-fit: contain;
 }
 
+.raspberry-language-card__selection {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  min-width: 0;
+}
+
 .raspberry-language-card__notice {
-  grid-column: 1 / -1;
   margin: 0;
   color: rgba(233, 242, 252, 0.8);
   font-size: 0.84rem;
@@ -2416,7 +2423,7 @@ img {
 
 .raspberry-language-card__status {
   margin: 0;
-  justify-self: end;
+  justify-self: start;
   color: rgba(233, 242, 252, 0.8);
   font-size: 0.84rem;
   font-weight: 600;

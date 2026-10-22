@@ -5604,7 +5604,10 @@ function RaspberryPage({
                 <p>{t("language_title")}</p>
               </div>
 
-              <LanguageSelector value={raspberryLanguage} onChange={onSetRaspberryLanguage} disabled={raspberryLanguageSaving} />
+              <div className="raspberry-language-card__selection">
+                <p className="raspberry-language-card__notice">{t("language_microtv")}</p>
+                <LanguageSelector value={raspberryLanguage} onChange={onSetRaspberryLanguage} disabled={raspberryLanguageSaving} />
+              </div>
               {raspberryLanguageSaving ? (
                 <p className="raspberry-language-card__status">{t("language_updating")}</p>
               ) : raspberryLanguageError ? (
@@ -5612,7 +5615,6 @@ function RaspberryPage({
                   {raspberryLanguageError}
                 </p>
               ) : null}
-              <p className="raspberry-language-card__notice">{t("language_microtv")}</p>
             </article>
             <RaspberryStatCard
               calculating={statsCalculating}

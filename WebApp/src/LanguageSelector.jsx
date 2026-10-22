@@ -28,10 +28,11 @@ export function LanguageFlag({ flag }) {
   return <img className="language-flag" src={flags[flag]} alt="" aria-hidden="true" />;
 }
 
-export default function LanguageSelector({ value, onChange, disabled = false, compact = false, error = '' }) {
+export default function LanguageSelector({ value, onChange, disabled = false, compact = false, error = '', displayLanguage = value, ariaLabel }) {
   const selected = languageInfo(value);
-  const options = LANGUAGES.map(language => ({ ...language, label: languageName(language.id, selected.id) }));
-  const selectedName = languageName(selected.id, selected.id);
+  const display = languageInfo(displayLanguage);
+  const options = LANGUAGES.map(language => ({ ...language, label: languageName(language.id, display.id) }));
+  const selectedName = languageName(selected.id, display.id);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -39,7 +40,7 @@ export default function LanguageSelector({ value, onChange, disabled = false, co
   const list = useRef(null);
   const search = useRef({ text: '', time: 0 });
   const id = useId();
-  const label = message('Language', value);
+  const label = ariaLabel || message('Language', display.id);
   const close = (focus = false) => { setOpen(false); if (focus) trigger.current?.focus(); };
   const choose = index => { close(true); if (!disabled && LANGUAGES[index].id !== value) onChange(LANGUAGES[index].id); };
 
@@ -104,7 +105,7 @@ export default function LanguageSelector({ value, onChange, disabled = false, co
       }}>
       <img className="language-selector__icon" src={languagesIcon} alt="" aria-hidden="true" />
       {!compact && <LanguageFlag flag={selected.flag} />}
-      <bdi className="language-selector__name" lang={selected.id} dir={selected.direction}>{compact ? selected.id.toUpperCase() : selectedName}</bdi>
+      <bdi className="language-selector__name" lang={display.id} dir={display.direction}>{compact ? selected.id.toUpperCase() : selectedName}</bdi>
       <span className="language-selector__chevron" aria-hidden="true">⌄</span>
     </button>
     {error && <span id={`${id}-error`} className="language-selector__error" role="alert">{error}</span>}
@@ -113,7 +114,7 @@ export default function LanguageSelector({ value, onChange, disabled = false, co
       {options.map((language, index) => <div key={language.id} id={`${id}-${index}`} data-index={index}
         role="option" aria-selected={language.id === selected.id} className={`language-selector__option${index === active ? ' is-focused' : ''}`}
         onPointerMove={() => setActive(index)} onClick={() => choose(index)}>
-        <LanguageFlag flag={language.flag} /><bdi lang={selected.id} dir={selected.direction}>{language.label}</bdi>
+        <LanguageFlag flag={language.flag} /><bdi lang={display.id} dir={display.direction}>{language.label}</bdi>
         <span className="language-selector__check" aria-hidden="true">{language.id === selected.id ? '✓' : ''}</span>
       </div>)}
     </div>, document.body)}

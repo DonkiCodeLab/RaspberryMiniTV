@@ -3,10 +3,24 @@ import React, { useEffect, useRef, useState } from "react";
 import { obtainMovieSubtitles, getMediaSubtitles, getSubtitleSettings, startSubtitleTranslation, getSubtitleTranslation } from "./api/raspberryApi";
 import { movieSubtitleStrings } from "./movieSubtitleStrings.js";
 import "./MovieSubtitleDownload.css";
-import SubtitleTranslationOffer from "./SubtitleTranslationOffer.jsx";
+import SubtitleTranslationOffer, { SubtitleTranslationAction } from "./SubtitleTranslationOffer.jsx";
 import { subtitleTranslationStrings } from "./subtitleTranslationStrings.js";
 import { translationSources, waitForSubtitleTranslation } from "./subtitleTranslation.js";
-import { LANGUAGES, normalizeLanguage } from "./i18n/languages.js";
+import { LANGUAGES, languageName, normalizeLanguage } from "./i18n/languages.js";
+import LanguageSelector, { LanguageFlag } from "./LanguageSelector.jsx";
+import { normalizeSubtitleLanguage } from "./subtitleLanguages.js";
+
+export function ExternalSubtitleItem({ track, language, busy, onTranslate }) {
+  const code = normalizeSubtitleLanguage(track.language);
+  const info = LANGUAGES.find(item => item.id === code);
+  const name = info ? languageName(info.id, language) : movieSubtitleStrings(language).unknownLanguage;
+  const filename = track.id.slice("external:".length);
+  return <li className="movie-subtitle-download__external">
+    {info ? <LanguageFlag flag={info.flag} /> : <span className="language-flag" aria-hidden="true">🌐</span>}
+    <span><bdi>{name}</bdi>: <bdi>{filename}</bdi></span>
+    {onTranslate && <SubtitleTranslationAction track={track} language={language} busy={busy} onTranslate={onTranslate} />}
+  </li>;
+}
 
 export default function MovieSubtitleDownload({ relativePath, language, disabled = false, onBusyChange, onConfigure }) {
   const s = { ...movieSubtitleStrings(language), ...subtitleTranslationStrings(language) };
@@ -72,19 +86,19 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
     }
   }
 
-  async function translate(sourceId) {
+  async function translate(sourceId, targetLanguage = subtitleLanguage) {
     if (inFlight.current || disabled) return;
     const controller = new AbortController();
     translationAbort.current = controller;
     inFlight.current = true;
     setBusy(true); setTranslating(true); setTranslationStatus(null); setResult(null); setError(""); onBusyChange?.(true);
     try {
-      const job = await startSubtitleTranslation({ relativePath, sourceId, language: subtitleLanguage, signal: controller.signal });
+      const job = await startSubtitleTranslation({ relativePath, sourceId, language: targetLanguage, signal: controller.signal });
       const result = await waitForSubtitleTranslation(job, { signal: controller.signal, getStatus: getSubtitleTranslation,
         onProgress: status => { if (mounted.current) setTranslationStatus(status); } });
       if (mounted.current) {
         setResult({ file: result.file, match: "ai" });
-        setMissingLanguages(values => values.filter(value => value !== subtitleLanguage));
+        setMissingLanguages(values => values.filter(value => value !== targetLanguage));
         setRefresh(value => value + 1);
       }
     } catch (error) {
@@ -96,6 +110,8 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
   }
 
   if (!relativePath) return null;
+  const externalTracks = (inventory?.tracks || []).filter(track => track.kind === "external");
+  if (!externalTracks.length && inventory?.external) externalTracks.push({ id: `external:${inventory.external}`, language: "" });
   return <section className="movie-subtitle-download" aria-label={s.availableTitle} aria-busy={busy}>
     <div aria-live="polite">
       <p><strong>{s.availableTitle}</strong></p>
@@ -103,7 +119,9 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
       {inventoryFailed && <button type="button" className="dialog-button dialog-button--ghost" onClick={() => setRefresh(value => value + 1)}>{s.retry}</button>}
       {inventory && <>
         <ul className="movie-subtitle-download__inventory">
-          <li>{s.external}: {(inventory.tracks || []).filter(track => track.kind === "external").map(track => track.id.slice("external:".length)).join(" · ") || inventory.external || s.notFound}</li>
+          {externalTracks.length ? externalTracks.map(track => <ExternalSubtitleItem key={track.id} track={track} language={language}
+            busy={busy || disabled} onTranslate={translate} />)
+            : <li>{s.external}: {s.notFound}</li>}
           <li>{s.embedded}: {inventory.embeddedStatus === "unknown" ? s.unknown : inventory.embedded.length || s.notFound}</li>
         </ul>
         {inventory.embedded.length > 0 && <>
@@ -113,11 +131,10 @@ export default function MovieSubtitleDownload({ relativePath, language, disabled
       </>}
     </div>
     <div className="movie-subtitle-download__actions">
-      <label className="dialog-field"><span>{s.language}</span>
-        <select value={subtitleLanguage} disabled={busy || disabled} onChange={event => { setSubtitleLanguage(event.target.value); setResult(null); setError(""); }}>
-          {LANGUAGES.map(item => <option key={item.id} value={item.id} lang={item.id} dir={item.direction}>{item.nativeName}</option>)}
-        </select>
-      </label>
+      <div className="dialog-field"><span>{s.language}</span>
+        <LanguageSelector value={subtitleLanguage} displayLanguage={language} ariaLabel={s.language}
+          disabled={busy || disabled} onChange={value => { setSubtitleLanguage(value); setResult(null); setError(""); }} />
+      </div>
       <button className="dialog-button dialog-button--accent" disabled={busy || disabled} onClick={obtain} type="button">
         {busy ? (translating ? s.translating : s.searching) : s.title}
       </button>

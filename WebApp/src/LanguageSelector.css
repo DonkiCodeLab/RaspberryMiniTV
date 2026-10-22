@@ -18,7 +18,7 @@
 .language-flag { object-fit: contain; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 29px; height: 21px; font-size: 25px; line-height: 1; border-radius: 2px; }
 .language-selector__error { display: block; color: #ffcece; font-size: 12px; padding-block: 6px; }
 .language-selector--compact .language-selector__error { position: absolute; inset-inline-end: 0; top: 100%; width: 240px; padding: 12px; border-radius: 10px; background: #172f3e; z-index: 50; }
-.raspberry-language-card .language-selector { min-width: 200px; justify-self: stretch; }
+.raspberry-language-card .language-selector { width: 240px; max-width: 100%; min-width: 0; }
 .raspberry-profile-menu { display: flex; align-items: center; gap: 14px; }
 html[dir="rtl"] .profile-menu__options { left: 0; right: auto; }
 html[dir="rtl"] .profile-menu__options button, html[dir="rtl"] .users-panel__list button { text-align: start; }

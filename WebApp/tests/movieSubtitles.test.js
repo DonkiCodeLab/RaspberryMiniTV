@@ -4,7 +4,7 @@ import { build } from "esbuild";
 import { createRequire } from "node:module";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LANGUAGES } from "../src/i18n/languages.js";
+import { LANGUAGES, languageName } from "../src/i18n/languages.js";
 
 async function client(env) {
   const result = await build({ entryPoints: [new URL("../src/api/raspberryApi.js", import.meta.url).pathname], bundle: true, write: false,
@@ -12,18 +12,43 @@ async function client(env) {
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString("base64")}`);
 }
 
-test("subtitle selector offers every MiniTV language and starts with the interface language", async () => {
+test("subtitle search starts with the interface language and shows its flag and translated name", async () => {
   const result = await build({ entryPoints: [new URL("../src/MovieSubtitleDownload.jsx", import.meta.url).pathname],
     bundle: true, write: false, format: "cjs", platform: "node", external: ["react"],
-    loader: { ".css": "empty" }, define: { "import.meta.env": "{}" } });
+    loader: { ".css": "empty", ".png": "dataurl" }, define: { "import.meta.env": "{}" } });
   const module = { exports: {} };
   new Function("require", "module", "exports", result.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
   for (const { id } of LANGUAGES) {
     const html = renderToStaticMarkup(React.createElement(module.exports.default, { relativePath: "Movies/Alien.mkv", language: id }));
-    const values = [...html.matchAll(/<option value="([^"]+)"/g)].map(match => match[1]);
-    assert.deepEqual(values, LANGUAGES.map(item => item.id));
-    assert.match(html, new RegExp(`<option value="${id}"[^>]*selected=""`));
-    assert.match(html, /<option value="ar"[^>]*dir="rtl"/);
+    assert.ok(html.includes(languageName(id, id)));
+    assert.match(html, /class="language-flag"/);
+    assert.match(html, /aria-haspopup="listbox"/);
+  }
+  for (const [tag, expected] of [["eng", "Inglés"], ["cat", "Catalán"], ["ar-EG", languageName("arz", "es")], ["und", "Idioma no indicado"], ["", "Idioma no indicado"]]) {
+    const html = renderToStaticMarkup(React.createElement(module.exports.ExternalSubtitleItem, {
+      track: { id: "external:Alien.en.srt", language: tag }, language: "es",
+    }));
+    assert.ok(html.includes(`<bdi>${expected}</bdi>: <bdi>Alien.en.srt</bdi>`), html);
+    assert.match(html, /class="language-flag"/);
+  }
+});
+
+test("subtitle language names follow the interface even when a different target is selected", async () => {
+  const result = await build({ entryPoints: [new URL("../src/LanguageSelector.jsx", import.meta.url).pathname],
+    bundle: true, write: false, format: "cjs", platform: "node", external: ["react"],
+    loader: { ".css": "empty", ".png": "dataurl" } });
+  const module = { exports: {} };
+  new Function("require", "module", "exports", result.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
+  for (const display of LANGUAGES) {
+    for (const target of LANGUAGES) {
+      const html = renderToStaticMarkup(React.createElement(module.exports.default, {
+        value: target.id, displayLanguage: display.id, ariaLabel: "Subtitle language", disabled: true,
+      }));
+      assert.ok(html.includes(languageName(target.id, display.id)), `${target.id} in ${display.id}`);
+      assert.ok(html.includes(`lang="${display.id}" dir="${display.direction}"`));
+      assert.match(html, /class="language-flag"/);
+      assert.match(html, /disabled=""/);
+    }
   }
 });
 
