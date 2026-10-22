@@ -180,7 +180,7 @@ class PhotoLibraryTests(unittest.TestCase):
         self.store.group_faces(photos[0]['id'], [[0.] * 128, [1.] * 128])
         self.store.group_faces(photos[1]['id'], [[.001] * 128])
         people = self.store.snapshot()['people']
-        self.assertEqual(len(people), 2)
+        self.assertEqual(len(people), 3)
         match = next(p for p in people if len(p['photoIds']) == 2)
         self.store.rename_person(match['id'], 'Ana')
         self.store.remove_matches(match['id'], [photos[1]['id']])

@@ -36,6 +36,7 @@ except ImportError:
 EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif', '.heic', '.heif'}
 MAX_FILE_BYTES = 50 * 1024 * 1024
 FACE_BATCH_SIZE = 100
+UNKNOWN_PERSON_ID = 'unknown'
 
 
 def validate_import_digests(digests):
@@ -210,6 +211,7 @@ class PhotoLibrary:
             ''')
             for ident, name in [('gallery', 'Galería'), ('albums', 'Álbumes personales'), ('ai', 'Diviértete con la IA')]:
                 db.execute('INSERT OR IGNORE INTO folders VALUES (?, ?, ?, ?)', (ident, '', name, time.time()))
+            db.execute('INSERT OR IGNORE INTO people VALUES (?,?,?)', (UNKNOWN_PERSON_ID, 'Desconocido', 0))
             self._migrate_gallery(db)
             # An interrupted scan is resumed explicitly, preserving its queue and progress.
             db.execute("UPDATE face_analysis SET state='paused' WHERE state='running'")
@@ -569,7 +571,9 @@ class PhotoLibrary:
                     'name': row['name'], 'uploadedAt': row['uploaded'], 'modifiedAt': row['modified'],
                     'size': row['size'], 'sourceId': row['source'], 'style': row['style'], **json.loads(row['metadata']),
                     'faceState': row['face_state'], 'faceCount': face_counts.get(row['id'], 0)})
-            people = [dict(row) for row in db.execute("SELECT * FROM people WHERE id IN (SELECT person FROM faces WHERE encoding!='[]') ORDER BY created")]
+            people = [dict(row) for row in db.execute("""SELECT * FROM people
+                WHERE id=? OR id IN (SELECT person FROM faces WHERE encoding!='[]')
+                ORDER BY id=?, created""", (UNKNOWN_PERSON_ID, UNKNOWN_PERSON_ID))]
             person_photos = {}
             for row in db.execute("SELECT person, photo FROM faces WHERE encoding!='[]' ORDER BY person, photo"):
                 person_photos.setdefault(row['person'], []).append(row['photo'])
@@ -593,7 +597,7 @@ class PhotoLibrary:
                 person['faceBoxes'] = face_boxes.get(person['id'], {})
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
-            known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY name, id")]
+            known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY id=? DESC, name, id", (UNKNOWN_PERSON_ID,))]
         try:
             configured = self.settings.public() if self.settings else {}
         except Exception:
@@ -877,8 +881,11 @@ class PhotoLibrary:
         if not state: return
         # A merged person can have several faces in one photo (for example a collage).
         # The album link keeps one row per photo, but matching needs every face vector.
+        # Unknown is a collection of unrelated faces, not an identity to match.
+        # Explicit assignments are retained through the previous detections below.
         known = [(r['person'], json.loads(r['encoding'])) for r in db.execute(
-            "SELECT person, encoding FROM face_detections WHERE person IS NOT NULL AND encoding!='[]'")]
+            "SELECT person, encoding FROM face_detections WHERE person IS NOT NULL AND person!=? AND encoding!='[]'",
+            (UNKNOWN_PERSON_ID,))]
         previous = [dict(row) for row in db.execute('SELECT * FROM face_detections WHERE photo=?', (photo_id,))]
         for face in previous:
             face['encoding'] = json.loads(face['encoding'])
@@ -912,7 +919,7 @@ class PhotoLibrary:
                             for person, vector in known if person not in used and len(vector) == 128)
             person = old['person'] if old else scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
             if person and not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
-                count = db.execute('SELECT count(*) FROM people').fetchone()[0]
+                count = db.execute('SELECT count(*) FROM people WHERE id!=?', (UNKNOWN_PERSON_ID,)).fetchone()[0]
                 number = count + 1
                 while db.execute('SELECT 1 FROM people WHERE name=?', ('Persona ' + str(number),)).fetchone():
                     number += 1
@@ -960,6 +967,8 @@ class PhotoLibrary:
         return {'ok': True, 'personId': person_id}
 
     def rename_person(self, ident, name):
+        if ident == UNKNOWN_PERSON_ID:
+            raise PhotoError('La carpeta Desconocido es fija y no se puede renombrar.')
         name = clean_name(name)
         with self.db() as db:
             if not db.execute('UPDATE people SET name=? WHERE id=?', (name, ident)).rowcount:
@@ -967,6 +976,8 @@ class PhotoLibrary:
         return {'ok': True}
 
     def merge_people(self, source, target):
+        if source == UNKNOWN_PERSON_ID:
+            raise PhotoError('La carpeta Desconocido es fija. Reasigna cada cara desde su foto.')
         if not isinstance(target, str) or not target or source == target or source.startswith('apple-') or target.startswith('apple-'):
             raise PhotoError('Selecciona otra persona existente para unir los álbumes.')
         with self.db() as db:

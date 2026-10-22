@@ -3,17 +3,17 @@
 .language-selector__trigger:hover, .language-selector__trigger[aria-expanded="true"] { background: #254859; border-color: #ffd429; }
 .language-selector__trigger:focus-visible, .language-selector__list:focus-visible { outline: 3px solid #ffd429; outline-offset: 3px; }
 .language-selector__trigger:disabled { cursor: wait; opacity: .65; }
-.language-selector__icon { width: 25px; height: 25px; flex-shrink: 0; }
+.language-selector__icon { display: block; width: 25px; height: 25px; object-fit: contain; flex-shrink: 0; }
 .language-selector__name { flex: 1; font-size: 15px; overflow-wrap: anywhere; }
 .language-selector__chevron { flex-shrink: 0; font-size: 18px; }
 .language-selector--compact { width: auto; flex-shrink: 0; }
 .language-selector--compact .language-selector__trigger { min-height: 48px; gap: 7px; padding: 10px; box-shadow: 0 5px 16px #152e4e25; }
 .language-selector--compact .language-selector__name { font-size: 11px; }
 .language-selector__list { position: fixed; z-index: 11000; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid #ffd42970; border-radius: 18px; background: #172f3e; color: #fff; box-shadow: 0 16px 50px #10233066; scrollbar-color: #ffd429 #172f3e; }
-.language-selector__option { display: flex; align-items: center; gap: 12px; min-height: 43px; padding: 4px 10px; border-radius: 10px; cursor: pointer; font-size: 15px; }
+.language-selector__option { display: flex; direction: ltr; align-items: center; gap: 12px; min-height: 43px; padding: 4px 10px; border-radius: 10px; cursor: pointer; font-size: 15px; }
 .language-selector__option.is-focused { background: #ffffff17; }
 .language-selector__option[aria-selected="true"] { color: #ffd429; background: #ffd42915; }
-.language-selector__option bdi { flex: 1; text-align: start; }
+.language-selector__option bdi { flex: 1; text-align: left; }
 .language-selector__check { min-width: 16px; font-weight: bold; }
 .language-flag { object-fit: contain; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 29px; height: 21px; font-size: 25px; line-height: 1; border-radius: 2px; }
 .language-selector__error { display: block; color: #ffcece; font-size: 12px; padding-block: 6px; }

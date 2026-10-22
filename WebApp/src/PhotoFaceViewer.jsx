@@ -1,17 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { photoRequest } from './api/raspberryApi.js';
 import PhotoViewerImage from './PhotoViewerImage.jsx';
+import { photoPeopleOptions, photoPersonName } from './photoLibrary.js';
 
 export function FaceNameEditor({ face, people, s, busy, onSave, onClose }) {
   const [target, setTarget] = useState(face.personId || 'new');
   const [name, setName] = useState('');
-  const choices = [...people].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const choices = photoPeopleOptions(people, s);
   const valid = target === 'new' ? !!name.trim() : choices.some(person => person.id === target);
   return <form className="photo-face-editor" onSubmit={event => {
     event.preventDefault();
     if (!busy && valid) onSave(target === 'new' ? { name: name.trim() } : { personId: target });
   }}>
-    <strong>{s.editFace}: {face.name || s.unnamedFace}</strong>
+    <strong>{s.editFace}: {photoPersonName(face, s) || s.unnamedFace}</strong>
     <p>{s.faceAssignmentHint}</p>
     <label>{s.choosePerson}<select autoFocus value={target} onChange={event => setTarget(event.target.value)} disabled={busy}>
       {choices.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
@@ -30,7 +31,7 @@ export function PhotoFaceList({ faces, selectedId, highlightPersonId, onSelect, 
     <div>{faces.map((face, index) => <button key={face.id} type="button" disabled={busy}
       className={`photo-face-list__item${face.personId === highlightPersonId ? ' is-highlighted' : ''}`}
       aria-pressed={face.id === selectedId} onClick={() => onSelect(face.id)}>
-      <span>{index + 1} · {face.name || s.unnamedFace}</span><small>{s.correctPerson}</small>
+      <span>{index + 1} · {photoPersonName(face, s) || s.unnamedFace}</span><small>{s.correctPerson}</small>
     </button>)}</div>
   </section>;
 }

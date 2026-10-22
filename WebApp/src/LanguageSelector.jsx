@@ -1,7 +1,8 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { LANGUAGES, languageInfo } from './i18n/languages.js';
+import { LANGUAGES, languageInfo, languageName } from './i18n/languages.js';
 import { message } from './i18n/index.js';
+import languagesIcon from './assets/icon_languages.png';
 import './LanguageSelector.css';
 import flag_bd from "../../DeviceApp/menu/flags/bd.png";
 import flag_cn from "../../DeviceApp/menu/flags/cn.png";
@@ -29,6 +30,8 @@ export function LanguageFlag({ flag }) {
 
 export default function LanguageSelector({ value, onChange, disabled = false, compact = false, error = '' }) {
   const selected = languageInfo(value);
+  const options = LANGUAGES.map(language => ({ ...language, label: languageName(language.id, selected.id) }));
+  const selectedName = languageName(selected.id, selected.id);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -88,29 +91,29 @@ export default function LanguageSelector({ value, onChange, disabled = false, co
     } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       search.current.text = (Date.now() - search.current.time < 700 ? search.current.text : '') + event.key.toLowerCase();
       search.current.time = Date.now();
-      const index = LANGUAGES.findIndex(language => [language.nativeName, language.name, language.id].some(name => name.toLowerCase().startsWith(search.current.text)));
+      const index = options.findIndex(language => [language.label, language.nativeName, language.name, language.id].some(name => name.toLowerCase().startsWith(search.current.text)));
       if (index >= 0) setActive(index);
     }
   }
   return <div className={`language-selector${compact ? ' language-selector--compact' : ''}`}>
     <button ref={trigger} type="button" className="language-selector__trigger" disabled={disabled}
-      aria-label={`${label}: ${selected.nativeName}`} title={`${label}: ${selected.nativeName}`} aria-haspopup="listbox"
+      aria-label={`${label}: ${selectedName}`} title={`${label}: ${selectedName}`} aria-haspopup="listbox"
       aria-expanded={open} aria-controls={open ? id : undefined} aria-describedby={error ? `${id}-error` : undefined}
       onClick={() => open ? close() : show()} onKeyDown={event => {
         if (['ArrowDown', 'ArrowUp'].includes(event.key)) { event.preventDefault(); show(); }
       }}>
-      <svg className="language-selector__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h12M9 3v2M6 5c0 5 3 8 7 10M12 5c0 4-3 8-9 11M13 21l4-10 4 10M14.5 17h5" /></svg>
+      <img className="language-selector__icon" src={languagesIcon} alt="" aria-hidden="true" />
       {!compact && <LanguageFlag flag={selected.flag} />}
-      <bdi className="language-selector__name" lang={selected.id}>{compact ? selected.id.toUpperCase() : selected.nativeName}</bdi>
+      <bdi className="language-selector__name" lang={selected.id} dir={selected.direction}>{compact ? selected.id.toUpperCase() : selectedName}</bdi>
       <span className="language-selector__chevron" aria-hidden="true">⌄</span>
     </button>
     {error && <span id={`${id}-error`} className="language-selector__error" role="alert">{error}</span>}
     {open && createPortal(<div ref={list} id={id} role="listbox" tabIndex={-1} aria-label={label}
       aria-activedescendant={`${id}-${active}`} className="language-selector__list" style={position} onKeyDown={navigate}>
-      {LANGUAGES.map((language, index) => <div key={language.id} id={`${id}-${index}`} data-index={index}
+      {options.map((language, index) => <div key={language.id} id={`${id}-${index}`} data-index={index}
         role="option" aria-selected={language.id === selected.id} className={`language-selector__option${index === active ? ' is-focused' : ''}`}
         onPointerMove={() => setActive(index)} onClick={() => choose(index)}>
-        <LanguageFlag flag={language.flag} /><bdi lang={language.id} dir={language.direction}>{language.nativeName}</bdi>
+        <LanguageFlag flag={language.flag} /><bdi lang={selected.id} dir={selected.direction}>{language.label}</bdi>
         <span className="language-selector__check" aria-hidden="true">{language.id === selected.id ? '✓' : ''}</span>
       </div>)}
     </div>, document.body)}

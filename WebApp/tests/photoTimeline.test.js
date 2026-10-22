@@ -87,4 +87,12 @@ test('demo migration removes Uploads hierarchy and retains unique photos and ind
   assert.ok(!library.folders.some(folder => folder.parent === 'gallery' || folder.id === 'uploads'));
   assert.equal(library.importSessions.session, 'gallery');
   assert.equal(library.importBatches.batch.folderId, 'gallery');
+  assert.deepEqual(library.people.map(person => [person.id, person.photoIds]), [['unknown', []]]);
+});
+
+test('existing demo libraries gain the permanent Unknown folder exactly once', () => {
+  const library = { galleryVersion: 1, people: [{ id: 'ana', name: 'Ana', photoIds: ['photo'] }] };
+  assert.equal(migratePhotoDemo(library), true);
+  assert.equal(migratePhotoDemo(library), false);
+  assert.deepEqual(library.people.map(person => [person.id, person.photoIds]), [['ana', ['photo']], ['unknown', []]]);
 });

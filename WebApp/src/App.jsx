@@ -463,6 +463,7 @@ const UI_STRINGS = withLanguages({
     used_percent: "{percent} utilizado",
     language_title: "Idioma",
     language_microtv: "Selecciona el idioma de la mini tele.",
+    cover_load_error: "No se han podido cargar {count} portadas. Puedes volver a abrir la biblioteca para reintentarlo.",
     language_cover_notice: "Al cambiar el idioma, también cambiarán las portadas de todas las películas y series guardadas, ya que están localizadas según el idioma seleccionado.",
     language_updating: "Actualizando idioma...",
     language_update_failed: "No se pudo actualizar el idioma de la Raspberry.",
@@ -976,6 +977,7 @@ const UI_STRINGS = withLanguages({
     used_percent: "{percent} utilitzat",
     language_title: "Idioma",
     language_microtv: "Selecciona l'idioma de la mini tele.",
+    cover_load_error: "No s’han pogut carregar {count} portades. Pots tornar a obrir la biblioteca per reintentar-ho.",
     language_cover_notice: "En canviar l’idioma, també canviaran les portades de totes les pel·lícules i sèries desades, ja que estan localitzades segons l’idioma seleccionat.",
     language_updating: "S'està actualitzant l'idioma...",
     language_update_failed: "No s'ha pogut actualitzar l'idioma de la Raspberry.",
@@ -1489,6 +1491,7 @@ const UI_STRINGS = withLanguages({
     used_percent: "{percent} used",
     language_title: "Language",
     language_microtv: "Choose the mini TV language.",
+    cover_load_error: "Could not load {count} covers. Reopen the library to retry.",
     language_cover_notice: "Changing the language also changes the posters of all saved movies and TV series, as posters are localized for the selected language.",
     language_updating: "Updating language...",
     language_update_failed: "Could not update the Raspberry language.",
@@ -7138,7 +7141,7 @@ export default function App() {
       ];
       const prepared = await preloadLibraryCovers(covers, { signal: controller.signal, onProgress: progress => { if (!cancelled) setCoverProgress(progress); } });
       if (cancelled) return;
-      if (prepared.loaded < prepared.total) setCoverWarning(`${prepared.total - prepared.loaded} portadas no están disponibles. Consulta la preparación local de TMDB en el dashboard.`);
+      if (prepared.failed > 0) setCoverWarning(t("cover_load_error", { count: prepared.failed }));
       setTmdbSeriesMap(current => Object.fromEntries(directories.map(directory => {
         const card = summaries.series[String(directory.tmdbId)] || {};
         const detail = current[directory.relativePath];

@@ -23,6 +23,36 @@ test('broken or stalled covers do not trap the loading dialog', async () => {
   await preloadLibraryCovers(['unused'], { signal: controller.signal, createImage: () => { throw Error('cancelled'); } });
 });
 
+test('the library deadline leaves slow and unstarted covers pending, not failed', async () => {
+  const requested = [];
+  const result = await preloadLibraryCovers(['good', 'slow', 'queued'], {
+    concurrency: 1, deadlineMs: 20, timeoutMs: 1000, log: () => {},
+    createImage: () => ({ set src(url) {
+      if (!url) return;
+      requested.push(url);
+      if (url === 'good') queueMicrotask(() => this.onload?.());
+    } }),
+  });
+  assert.deepEqual(requested, ['good', 'slow']);
+  assert.deepEqual(result, { loaded: 1, failed: 0, timedOut: 0, pending: 2, total: 3 });
+});
+
+test('only actual image errors count as failures alongside timeouts and pending covers', async () => {
+  const controller = new AbortController();
+  const result = await preloadLibraryCovers(['broken', 'stalled', 'cancelled', 'queued'], {
+    concurrency: 1, timeoutMs: 10, deadlineMs: 100, log: () => {},
+    createImage: () => ({ set src(url) {
+      if (url === 'broken') queueMicrotask(() => this.onerror?.());
+    } }),
+    onProgress: progress => {
+      // Stop after a real error and a timeout, leaving the rest untested.
+      if (progress.timedOut === 1) controller.abort();
+    },
+    signal: controller.signal,
+  });
+  assert.deepEqual(result, { loaded: 0, failed: 1, timedOut: 1, pending: 2, total: 4 });
+});
+
 test('reports named pending covers and separates success, errors and timeouts without logging PINs', async () => {
   const events = [], progress = [];
   await preloadLibraryCovers([

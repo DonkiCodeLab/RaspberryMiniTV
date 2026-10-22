@@ -1353,6 +1353,14 @@ una persona existente o crear un nombre; la corrección solo afecta a esa cara
 y se conserva al volver a detectar. **Personas → Sin personas** reúne únicamente
 originales revisados sin ninguna cara; excluye pendientes y errores.
 
+**Desconocido** es una carpeta fija, disponible incluso vacía, para caras que no
+quieres etiquetar. Aparece primero al elegir una persona en el visor o al unir
+una carpeta completa. Usa el ID reservado `unknown`; se crea automáticamente
+también en bibliotecas existentes y no se puede renombrar ni unir a otra carpeta.
+Las asignaciones se conservan al repetir el análisis y pueden corregirse cara
+por cara desde el visor. Al contener personas distintas, sus vectores no se usan
+para asignar automáticamente nuevas caras a esta carpeta.
+
 **Detectar personas** en el visor analiza una sola foto y puede pausarse. Comparte
 los límites de CPU y temperatura con los lotes, no ejecuta otro detector en
 paralelo y conserva cualquier lote pausado. Su estado se guarda en

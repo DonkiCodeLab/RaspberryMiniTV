@@ -25,14 +25,14 @@ export function acquireLibraryCover(url, createImage = () => new Image()) {
   if (!prepared) preparedCovers.set(url, image);
   return image;
 }
-export async function preloadLibraryCovers(urls, { signal, createImage = () => new Image(), timeoutMs = 12000, concurrency = 6, onProgress = () => {}, preserve = false, log = (event, data) => console.info(`[Biblioteca] ${event}`, data) } = {}) {
+export async function preloadLibraryCovers(urls, { signal, createImage = () => new Image(), timeoutMs = 12000, deadlineMs = 10000, concurrency = 6, onProgress = () => {}, preserve = false, log = (event, data) => console.info(`[Biblioteca] ${event}`, data) } = {}) {
   const parentSignal = signal;
   const controller = new AbortController();
   const cancel = () => controller.abort();
   if (parentSignal?.aborted) cancel();
   else parentSignal?.addEventListener('abort', cancel, { once: true });
   signal = controller.signal;
-  const deadline = setTimeout(cancel, 10000);
+  const deadline = setTimeout(cancel, deadlineMs);
   if (!preserve) coverPreloadResults.clear();
   const pending = [...new Map(urls.map(item => typeof item === 'string' ? { url: item, name: item.split('?')[0] } : item).filter(item => item?.url).map(item => [item.url, item])).values()];
   const wanted = new Set(pending.map(item => item.url));
@@ -86,5 +86,6 @@ export async function preloadLibraryCovers(urls, { signal, createImage = () => n
   clearTimeout(deadline);
   parentSignal?.removeEventListener('abort', cancel);
   log(signal?.aborted ? 'Precarga cancelada' : 'Precarga terminada', { loaded, failed, timedOut, total: pending.length });
-  return { loaded, failed, timedOut, total: pending.length };
+  // Unstarted and cancelled requests have not established whether a cover exists.
+  return { loaded, failed, timedOut, pending: pending.length - completed, total: pending.length };
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { photoPeopleOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 
 export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
   const titleId = useId();
@@ -34,7 +35,8 @@ export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
 export function PersonEditor({ person, people = [], cover, s, busy, choosingCover, onSave, onMerge, onChooseCover, renderImage }) {
   const [name, setName] = useState(person.name);
   const [target, setTarget] = useState('');
-  const choices = people.filter(other => other.id !== person.id).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const unknown = person.id === UNKNOWN_PERSON_ID;
+  const choices = photoPeopleOptions(people, s).filter(other => other.id !== person.id);
   const targetPerson = choices.find(other => other.id === target);
   const mergeHintId = useId();
   const savedName = useRef(person.name);
@@ -45,22 +47,23 @@ export function PersonEditor({ person, people = [], cover, s, busy, choosingCove
   }, [person.name]);
   return <section className="photo-person-editor" aria-label={s.editPerson}>
     {cover && <div className="photo-person-editor__cover">{renderImage(cover)}</div>}
-    <form onSubmit={event => { event.preventDefault(); if (!busy && name.trim()) onSave(name.trim()); }}>
+    {unknown ? <p>{s.unknownPersonHint}</p> : <form onSubmit={event => { event.preventDefault(); if (!busy && name.trim()) onSave(name.trim()); }}>
       <label>{s.personName}<input required maxLength={100} value={name} disabled={busy} onChange={event => setName(event.target.value)} /></label>
       <button type="submit" className="dialog-button" disabled={busy || !name.trim() || name.trim() === person.name}>{s.save}</button>
-    </form>
+    </form>}
     <button type="button" className="dialog-button" disabled={busy} aria-pressed={choosingCover} onClick={onChooseCover}>{choosingCover ? s.cancelCover : s.chooseCover}</button>
     {choosingCover && <p role="status">{s.chooseCoverHint}</p>}
-    <form className="photo-person-editor__merge" onSubmit={event => {
+    {!unknown && <form className="photo-person-editor__merge" onSubmit={event => {
       event.preventDefault(); if (!busy && targetPerson) onMerge(targetPerson.id);
     }}>
       <label>{s.mergeWith}<select value={targetPerson?.id || ''} required disabled={busy || !choices.length}
         aria-describedby={mergeHintId} onChange={event => setTarget(event.target.value)}>
-        <option value="">{s.choosePerson}</option>
-        {choices.map(other => <option key={other.id} value={other.id}>{other.name}</option>)}
+        <option value={UNKNOWN_PERSON_ID}>{s.unknownPerson}</option>
+        <option value="" disabled hidden>{s.choosePerson}</option>
+        {choices.filter(other => other.id !== UNKNOWN_PERSON_ID).map(other => <option key={other.id} value={other.id}>{other.name}</option>)}
       </select></label>
       <button type="submit" className="dialog-button dialog-button--accent" disabled={busy || !targetPerson}>{s.mergePeople}</button>
       <p id={mergeHintId}>{targetPerson ? s.mergePeoplePreview.replace('{source}', person.name).replace('{target}', targetPerson.name) : choices.length ? s.mergePeopleHint : s.noOtherPeople}</p>
-    </form>
+    </form>}
   </section>;
 }

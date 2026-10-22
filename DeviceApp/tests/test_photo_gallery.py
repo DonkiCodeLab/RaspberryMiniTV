@@ -37,7 +37,7 @@ class GalleryTests(unittest.TestCase):
         after = self.store.snapshot()['photos'][0]
         self.assertEqual(set(after['folderIds']), set(before['folderIds']) - {first['id']})
         self.assertEqual(after['latitude'], photo['latitude'])
-        self.assertEqual(len(self.store.snapshot()['people']), 1)
+        self.assertEqual(len(self.store.snapshot()['people']), 2)
         self.assertEqual(self.store.safe_file(photo['relativePath']).read_bytes(), picture().read())
 
     def test_global_delete_removes_every_reference_metadata_digest_and_cached_bytes(self):
@@ -51,7 +51,7 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(result, {'ok': True, 'deleted': 1, 'cleanupPending': 0})
         snapshot = self.store.snapshot()
         self.assertEqual(snapshot['photos'], [])
-        self.assertEqual(snapshot['people'], [])
+        self.assertEqual([(p['id'], p['photoIds']) for p in snapshot['people']], [('unknown', [])])
         self.assertTrue(all(not file.exists() for file in (path, thumb, large, tiny)))
         with self.store.db() as db:
             for table in ('photo_albums', 'photo_metadata', 'photo_import_files', 'photo_import_batches', 'faces'):
@@ -155,7 +155,7 @@ class GalleryApiTests(unittest.TestCase):
         content = self.client.get('/pictures/content', headers=self.headers, query_string={'relativePath': photo['relativePath']})
         self.assertEqual(content.status_code, 404)
         self.assertEqual(self.client.get('/pictures/metadata/' + photo['id'], headers=self.headers).status_code, 404)
-        self.assertEqual(self.store.snapshot()['people'], [])
+        self.assertEqual([(p['id'], p['photoIds']) for p in self.store.snapshot()['people']], [('unknown', [])])
 
 
 if __name__ == '__main__': unittest.main()

@@ -11,7 +11,7 @@ from PIL import Image
 from werkzeug.datastructures import FileStorage
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from photo_library import PhotoLibrary, PhotoError, create_photo_blueprint
+from photo_library import PhotoLibrary, PhotoError, create_photo_blueprint, UNKNOWN_PERSON_ID
 from photo_faces import FacePaused, FaceEngineError
 
 
@@ -57,6 +57,80 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.store.upload(files, 'Fotos')
         return self.store.snapshot()['photos']
 
+    def test_unknown_exists_in_empty_and_upgraded_libraries_and_is_permanent(self):
+        expected = {'id': UNKNOWN_PERSON_ID, 'name': 'Desconocido'}
+        for store in (self.store, PhotoLibrary(self.store.root)):
+            snap = store.snapshot()
+            self.assertEqual(snap['knownPeople'], [expected])
+            self.assertEqual([(p['id'], p['photoIds']) for p in snap['people']], [(UNKNOWN_PERSON_ID, [])])
+        # Simulate a catalogue created before the reserved folder existed.
+        with self.store.db() as db:
+            db.execute('DELETE FROM people WHERE id=?', (UNKNOWN_PERSON_ID,))
+        upgraded = PhotoLibrary(self.store.root)
+        self.assertEqual(upgraded.snapshot()['knownPeople'], [expected])
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: upgraded))
+        client = app.test_client()
+        before = upgraded.snapshot()
+        self.assertEqual(client.post('/pictures/people/unknown', json={'name': 'Otra persona'}).status_code, 400)
+        self.assertEqual(client.post('/pictures/people/unknown/merge', json={'personId': 'missing'}).status_code, 400)
+        self.assertEqual(upgraded.snapshot(), before)
+
+    def test_unknown_assignment_is_per_face_survives_detection_and_can_be_corrected(self):
+        photos = self.upload(2)
+        photo = photos[0]
+        self.store.group_faces(photo['id'], self.detections())
+        first, other = self.store.photo_faces(photo['id'])['faces']
+        self.assertEqual(self.store.assign_face(photo['id'], first['id'], {'personId': UNKNOWN_PERSON_ID}),
+                         {'ok': True, 'personId': UNKNOWN_PERSON_ID})
+        restored = PhotoLibrary(self.store.root)
+        restored.group_faces(photo['id'], self.detections())
+        faces = restored.photo_faces(photo['id'])['faces']
+        self.assertEqual([f['personId'] for f in faces], [UNKNOWN_PERSON_ID, other['personId']])
+        self.assertTrue(faces[0]['manual'])
+        restored.group_faces(photo['id'], self.detections()[1:])  # Missed face remains assigned.
+        self.assertEqual({f['id'] for f in restored.photo_faces(photo['id'])['faces']}, {first['id'], other['id']})
+        # Unknown contains unrelated people, so it must not be used as a matching identity.
+        restored.group_faces(photos[1]['id'], self.detections()[:1])
+        self.assertNotEqual(restored.photo_faces(photos[1]['id'])['faces'][0]['personId'], UNKNOWN_PERSON_ID)
+        unknown = next(p for p in restored.snapshot()['people'] if p['id'] == UNKNOWN_PERSON_ID)
+        self.assertEqual(unknown['photoIds'], [photo['id']])
+        restored.assign_face(photo['id'], first['id'], {'name': 'Ana'})
+        unknown = next(p for p in restored.snapshot()['people'] if p['id'] == UNKNOWN_PERSON_ID)
+        self.assertEqual(unknown['photoIds'], [])
+        self.assertEqual(len(restored.snapshot()['photos']), 2)
+
+    def test_whole_people_folders_merge_into_unknown_without_losing_shared_faces_or_photos(self):
+        photos = self.upload(2)
+        for photo in photos: self.store.group_faces(photo['id'], self.detections())
+        a, b = self.store.photo_faces(photos[0]['id'])['faces']
+        original_photos = self.store.snapshot()['photos']
+        self.store.set_person_cover(a['personId'], photos[0]['id'])
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        client = app.test_client()
+        for person in (a['personId'], b['personId']):
+            response = client.post(f'/pictures/people/{person}/merge', json={'personId': UNKNOWN_PERSON_ID})
+            self.assertEqual((response.status_code, response.json), (200, {'ok': True, 'personId': UNKNOWN_PERSON_ID}))
+        restored = PhotoLibrary(self.store.root)
+        snap = restored.snapshot()
+        self.assertEqual(snap['photos'], original_photos)
+        self.assertEqual(len(snap['people']), 1)
+        unknown = snap['people'][0]
+        self.assertEqual((unknown['id'], unknown['coverPhotoId']), (UNKNOWN_PERSON_ID, photos[0]['id']))
+        self.assertEqual(set(unknown['photoIds']), {p['id'] for p in photos})
+        self.assertEqual(snap['knownPeople'], [{'id': UNKNOWN_PERSON_ID, 'name': 'Desconocido'}])
+        for photo in photos:
+            restored.group_faces(photo['id'], self.detections())
+            faces = restored.photo_faces(photo['id'])['faces']
+            self.assertEqual(len(faces), 2)
+            self.assertTrue(all(f['personId'] == UNKNOWN_PERSON_ID and f['manual'] for f in faces))
+            self.assertTrue(restored.safe_file(photo['relativePath']).is_file())
+        restored.remove_matches(UNKNOWN_PERSON_ID, [photos[0]['id']])
+        restored.delete_photos([photos[1]['id']], 'gallery')
+        empty = PhotoLibrary(self.store.root).snapshot()['people']
+        self.assertEqual([(p['id'], p['photoIds'], p['coverPhotoId']) for p in empty], [(UNKNOWN_PERSON_ID, [], None)])
+
     def test_scan_uses_all_local_originals_including_apple_labels_but_excludes_generated_photos(self):
         photos = self.upload(4)
         self.assertFalse(self.store.faces_running)
@@ -67,13 +141,13 @@ class PeopleAnalysisTests(unittest.TestCase):
             db.execute("INSERT INTO people VALUES ('apple-old','Apple name',0)")
             db.execute("INSERT INTO faces VALUES (?,'apple-old','[]')", (photos[1]['id'],))
             db.execute("UPDATE photos SET source='original', style='lego' WHERE id=?", (photos[2]['id'],))
-        self.assertEqual(self.store.snapshot()['people'], [])
+        self.assertEqual([(p['id'], p['photoIds']) for p in self.store.snapshot()['people']], [('unknown', [])])
         self.assertEqual(self.store.snapshot()['faces']['total'], 3)
         self.store.start_faces(); self.wait_idle()
         result = self.store.snapshot()
         self.assertEqual(self.engine.encode.call_count, 3)
         self.assertEqual((result['faces']['state'], result['faces']['done'], result['faces']['total'], result['faces']['percent']), ('complete', 3, 3, 100))
-        self.assertEqual(len(result['people']), 1)
+        self.assertEqual(len(result['people']), 2)
         self.assertNotEqual(result['people'][0]['name'], 'Apple name')
         self.assertEqual(set(result['people'][0]['photoIds']), {photos[i]['id'] for i in (0, 1, 3)})
         self.store.start_faces(); self.wait_idle()
@@ -183,7 +257,7 @@ class PeopleAnalysisTests(unittest.TestCase):
         detections = [{'encoding': [float(i)] * 128, 'box': {'x': i * .25, 'y': .2, 'width': .2, 'height': .3}}
                       for i in range(4)]
         for photo in photos: self.store.group_faces(photo['id'], detections)
-        people = self.store.snapshot()['people']
+        people = [p for p in self.store.snapshot()['people'] if p['id'] != 'unknown']
         self.assertEqual(len(people), 4)
         for person in people:
             cover = person['coverFace']
@@ -315,7 +389,7 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.store.assign_face(photo['id'], b['id'], {'personId': ana['id']})
         snap = PhotoLibrary(self.store.root).snapshot()
         self.assertEqual(snap['photos'][0]['faceCount'], 2)
-        self.assertEqual(len(snap['people']), 1)
+        self.assertEqual(len(snap['people']), 2)
         self.assertEqual(snap['people'][0]['photoIds'], [photo['id']])
         self.assertEqual({face['personId'] for face in self.store.photo_faces(photo['id'])['faces']}, {ana['id']})
 
@@ -360,7 +434,7 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.assertEqual(self.store.merge_people(source, target), {'ok': True, 'personId': target})
         restored = PhotoLibrary(self.store.root)
         result = restored.snapshot()
-        self.assertEqual(len(result['people']), 1)
+        self.assertEqual(len(result['people']), 2)
         person = result['people'][0]
         self.assertEqual((person['id'], person['name'], person['coverPhotoId']), (target, 'Ana', photos[2]['id']))
         self.assertEqual(set(person['photoIds']), {photo['id'] for photo in photos})
@@ -402,7 +476,7 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.store.merge_people(source, target)
         self.release.set(); self.wait_idle()
         self.assertEqual(self.store.photo_faces(photos[1]['id'])['faces'][0]['personId'], target)
-        self.assertEqual(len(self.store.snapshot()['people']), 1)
+        self.assertEqual(len(self.store.snapshot()['people']), 2)
 
     def test_correction_after_merge_moves_only_one_face_and_preserves_other_album_members(self):
         photos = self.upload(2)

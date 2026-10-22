@@ -4,7 +4,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, 
 import useBrowserBack from './useBrowserBack.js';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
-import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, photoDeleteRequest, pendingVariants, photosWithoutPeople, sortPhotos, SPECIAL_FOLDERS, STYLES } from './photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, indexPhotos, photoPage, photoDeleteRequest, pendingVariants, photosWithoutPeople, photoPeopleOptions, sortPhotos, SPECIAL_FOLDERS, STYLES, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import { facePortraitLayout } from './photoFacePortrait.js';
 import PhotoFaceViewer from './PhotoFaceViewer.jsx';
@@ -252,7 +252,8 @@ function Viewer({ photos, initial, onClose, s, language, people = [], knownPeopl
 
 export default function PhotosLibrary({ language = 'es', renderMarks, initialFiles, onImportDone, matchesPicture, onRootChange }) {
   const s = photoStrings(language), t = photoImportStrings(language);
-  const [data, setData] = useState(blank), [current, setCurrent] = useState(''), [search, setSearch] = useState('');
+  const [library, setData] = useState(blank), [current, setCurrent] = useState(''), [search, setSearch] = useState('');
+  const data = useMemo(() => ({ ...library, people: photoPeopleOptions(library.people, s) }), [library, s]);
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
   const [choosingCover, setChoosingCover] = useState(false);
@@ -396,7 +397,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {error && <div className="photo-alert" role="alert">{error} <button type="button" onClick={() => setAttempt(n => n + 1)}>{s.retry}</button></div>}
     {notice && <p role="status">{notice}</p>}
     {(current === 'albums' || isAlbum && !isAi) && <p className="photo-note">{s.referenceHint}</p>}
-    {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.length} s={s} busy={faceBusy} onAction={faceAction} />}
+    {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={faceBusy} onAction={faceAction} />}
     {current === 'withoutPeople' && <p className="photo-note">{s.withoutPeopleHint}</p>}
     {person && <PersonEditor key={person.id} person={person} people={data.knownPeople || data.people} cover={index.byId.get(person.coverFace?.photoId || person.coverPhotoId || person.photoIds[0])} s={s} busy={busy}
       choosingCover={choosingCover} onChooseCover={() => { setChoosingCover(value => !value); setActionMode(false); setSelected(new Set()); }}

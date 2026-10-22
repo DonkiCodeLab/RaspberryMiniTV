@@ -2,6 +2,17 @@ export const SPECIAL_FOLDERS = ['gallery', 'map', 'people', 'albums', 'ai'];
 export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
 export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
 export const PHOTO_PAGE_SIZE = 100;
+export const UNKNOWN_PERSON_ID = 'unknown';
+
+export function photoPersonName(person, s) {
+  return (person.personId ?? person.id) === UNKNOWN_PERSON_ID ? s.unknownPerson : person.name;
+}
+
+export function photoPeopleOptions(people, s) {
+  const unknown = people.find(person => person.id === UNKNOWN_PERSON_ID) || { id: UNKNOWN_PERSON_ID, photoIds: [] };
+  return [{ ...unknown, name: s.unknownPerson }, ...people.filter(person => person.id !== UNKNOWN_PERSON_ID)
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))];
+}
 
 export function photoDeleteRequest(ids, scope, folderId, personId) {
   if (scope === 'person' && personId) return { path: `people/${personId}/remove`, payload: { ids } };

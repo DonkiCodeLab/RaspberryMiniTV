@@ -2,14 +2,15 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { getPictureContentUrl } from './api/raspberryApi.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { attachPhotoZoom, MAX_PHOTO_ZOOM } from './photoZoom.js';
+import { photoPersonName } from './photoLibrary.js';
 
 export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s }) {
   return faces.map((face, index) => face.box ? <button type="button" key={face.id}
     className={`photo-face-box${face.personId === highlightPersonId ? ' is-highlighted' : ''}${face.id === selectedFaceId ? ' is-selected' : ''}`}
-    aria-label={`${s.editFace}: ${face.name || s.unnamedFace}`} aria-pressed={face.id === selectedFaceId}
+    aria-label={`${s.editFace}: ${photoPersonName(face, s) || s.unnamedFace}`} aria-pressed={face.id === selectedFaceId}
     style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}
     onClick={event => { event.stopPropagation(); onSelect?.(face.id); }}>
-    <span>{index + 1} · {face.name || s.unnamedFace}</span>
+    <span>{index + 1} · {photoPersonName(face, s) || s.unnamedFace}</span>
   </button> : null).filter(Boolean);
 }
 

@@ -6997,7 +6997,9 @@ fieldset.book-metadata__form { margin:0; padding:0; min-width:0; border:0; }
 
 /* Fast library navigation: the yellow marker follows the current sort value. */
 .library-with-scroll-rail { padding-right: max(64px, env(safe-area-inset-right)); }
-.library-scroll-rail { display: flex; flex-direction: column; gap: 8px; position: fixed; right: max(6px, env(safe-area-inset-right)); top: max(80px, calc(env(safe-area-inset-top) + 16px)); bottom: max(16px, env(safe-area-inset-bottom)); width: 48px; z-index: 15; isolation: isolate; contain: layout style; }
+.library-scroll-rail { display: flex; flex-direction: column; gap: 8px; position: fixed; right: max(6px, env(safe-area-inset-right)); top: 50%; transform: translateY(-50%); height: calc(100dvh - 160px); max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); width: 48px; z-index: 15; isolation: isolate; contain: layout style; }
+.library-scroll-rail--compact { height: auto; padding: 6px; box-sizing: content-box; border: 1px solid #ffffff30; border-radius: 22px; background: #142b39b8; box-shadow: 0 6px 24px #0003; }
+.library-scroll-rail--compact .library-scroll-rail__scales { flex: 0 1 var(--compact-scale-height); min-height: 60px; height: var(--compact-scale-height); }
 .library-scroll-rail[hidden], .library-scroll-rail__track[hidden] { display: none; }
 .library-scroll-rail__control { flex: none; width: 100%; min-height: 44px; padding: 4px 1px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 1px solid #ffffff50; border-radius: 14px; background: #142b39f5; color: #ffd429; cursor: pointer; box-shadow: 0 3px 12px #0003; }
 .library-scroll-rail__control span { font-size: 20px; line-height: 1; }

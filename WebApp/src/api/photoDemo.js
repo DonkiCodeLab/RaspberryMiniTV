@@ -1,4 +1,4 @@
-import { descendantIds, folderTrail, hasLocation } from '../photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, UNKNOWN_PERSON_ID } from '../photoLibrary.js';
 import { hashPhoto } from '../photoHash.js';
 // Local demo albums persist in IndexedDB, including image blobs, without network uploads.
 const urls = new Map();
@@ -15,7 +15,10 @@ const open = () => new Promise((resolve, reject) => {
 });
 export const demoPhotoUrl = path => urls.get(path) || '';
 export function migratePhotoDemo(library) {
-  if (library.galleryVersion === 1) return false;
+  library.people ||= [];
+  const missingUnknown = !library.people.some(person => person.id === UNKNOWN_PERSON_ID);
+  if (missingUnknown) library.people.push({ id: UNKNOWN_PERSON_ID, name: 'Desconocido', created: 0, photoIds: [] });
+  if (library.galleryVersion === 1) return missingUnknown;
   const removed = new Set([...descendantIds(library.folders, 'uploads'), ...descendantIds(library.folders, 'gallery')]);
   removed.delete('gallery');
   library.folders = library.folders.filter(folder => !removed.has(folder.id));
@@ -139,7 +142,7 @@ export function photoDemo(action, data = {}) {
       } else if (/^people\/[^/]+\/merge$/.test(action)) {
         const source = library.people.find(p => p.id === action.split('/')[1]);
         const target = library.people.find(p => p.id === data.personId);
-        if (!source || !target || source === target || source.appleKey || target.appleKey) throw new Error('Selecciona otra persona existente para unir los álbumes.');
+        if (!source || !target || source === target || source.appleKey || target.appleKey || source.id === UNKNOWN_PERSON_ID) throw new Error('Selecciona otra persona existente para unir los álbumes.');
         target.photoIds = [...new Set([...target.photoIds, ...source.photoIds])];
         target.coverPhotoId ||= source.coverPhotoId;
         library.people = library.people.filter(p => p !== source);
@@ -150,6 +153,7 @@ export function photoDemo(action, data = {}) {
         person.coverPhotoId = data.photoId; result = { ok: true };
       } else if (/^people\/[^/]+$/.test(action)) {
         const person = library.people.find(p => p.id === action.split('/')[1]);
+        if (person?.id === UNKNOWN_PERSON_ID) throw new Error('La carpeta Desconocido es fija y no se puede renombrar.');
         if (!person || !data.name?.trim()) throw new Error('Escribe un nombre válido.');
         person.name = data.name.trim(); result = { ok: true };
       } else if (/^people\/[^/]+\/remove$/.test(action)) {
@@ -172,7 +176,8 @@ export function photoDemo(action, data = {}) {
         return photo;
       });
       const { metadata, importSessions, importBatches, importFiles, ...publicLibrary } = library;
-      return result || { ...publicLibrary, people: library.people.filter(p => !p.appleKey && p.photoIds.length), photos };
+      return result || { ...publicLibrary, people: library.people.filter(p => !p.appleKey && (p.photoIds.length || p.id === UNKNOWN_PERSON_ID)),
+        knownPeople: library.people.filter(p => !p.appleKey).map(({ id, name }) => ({ id, name })), photos };
     } finally { db.close(); }
   };
   const next = operation.then(run, run); operation = next.catch(() => {}); return next;

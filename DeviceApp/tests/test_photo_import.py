@@ -105,7 +105,7 @@ class PhotoImportTests(unittest.TestCase):
         self.assertEqual(snap['photos'][0]['longitude'], 0)
         self.assertEqual(snap['photos'][0]['folderIds'], [])
         self.assertEqual({f['id'] for f in snap['folders']}, {'gallery', 'albums', 'ai'})
-        self.assertEqual(snap['people'], [])
+        self.assertEqual([(p['id'], p['photoIds']) for p in snap['people']], [('unknown', [])])
         self.store.start_faces.assert_not_called()
         with self.store.db() as db:
             self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'pending')
@@ -130,7 +130,7 @@ class PhotoImportTests(unittest.TestCase):
         self.assertEqual(photo['latitude'], 0); self.assertEqual(photo['longitude'], -3.7)
         self.assertEqual(photo['takenAt'], '2024-08-02T17:25:00+02:00')
         self.assertEqual(len(photo['folderIds']), 2); self.assertTrue(photo['appleFavorite'])
-        self.assertEqual(snap['people'], [])
+        self.assertEqual([(p['id'], p['photoIds']) for p in snap['people']], [('unknown', [])])
         with self.store.db() as db:
             self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'pending')
             raw = json.loads(db.execute('SELECT data FROM photo_metadata').fetchone()[0])
@@ -153,7 +153,7 @@ class PhotoImportTests(unittest.TestCase):
         self.store.upload([picture(color='blue')], 'Ordinary')
         photo = next(p for p in self.store.snapshot()['photos'] if not p.get('appleId'))
         self.store.group_faces(photo['id'], [[0.0] * 128])
-        self.assertEqual(len(self.store.snapshot()['people']), 1)
+        self.assertEqual(len(self.store.snapshot()['people']), 2)
         self.assertFalse(any(photo['id'] in p['photoIds'] for p in self.store.snapshot()['people'] if p['name'] == 'Ana'))
 
     def test_reimport_preserves_local_person_name_cover_and_completed_analysis(self):
@@ -165,7 +165,7 @@ class PhotoImportTests(unittest.TestCase):
         self.store.set_person_cover(person['id'], photo['id'])
         self.store.upload([picture()], 'Mac', import_data=payload(metadata(), session='reimport'))
         people = self.store.snapshot()['people']
-        self.assertEqual(len(people), 1)
+        self.assertEqual(len(people), 2)
         self.assertEqual((people[0]['name'], people[0]['coverPhotoId']), ('Nombre local', photo['id']))
         with self.store.db() as db:
             self.assertEqual(db.execute('SELECT face_state FROM photos').fetchone()[0], 'done')
@@ -260,8 +260,8 @@ class PhotoImportTests(unittest.TestCase):
             return db
         with patch('photo_library.sqlite3.connect', side_effect=traced):
             snapshot = self.store.snapshot()
-        self.assertEqual(len(snapshot['people']), 100)
-        self.assertTrue(all(person['photoIds'] == [snapshot['photos'][0]['id']] for person in snapshot['people']))
+        self.assertEqual(len(snapshot['people']), 101)
+        self.assertTrue(all(person['photoIds'] == [snapshot['photos'][0]['id']] for person in snapshot['people'] if person['id'] != 'unknown'))
         self.assertLess(len([sql for sql in statements if sql.startswith('SELECT')]), 15)
 
 

@@ -5,7 +5,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { build } from 'esbuild';
 import { photoStrings } from '../src/photoStrings.js';
-import { photosWithoutPeople } from '../src/photoLibrary.js';
+import { photosWithoutPeople, photoPeopleOptions, UNKNOWN_PERSON_ID } from '../src/photoLibrary.js';
 
 async function load(file) {
   const result = await build({ entryPoints: [new URL(file, import.meta.url).pathname], bundle: true, write: false,
@@ -41,6 +41,7 @@ test('name editor offers known names and new-person creation in every language',
   for (const language of ['es', 'en', 'ca']) {
     const strings = photoStrings(language);
     const html = renderToStaticMarkup(React.createElement(FaceNameEditor, { face: faces[0], people: [{ id: 'ana', name: 'Ana' }], s: strings }));
+    assert.match(html, new RegExp(`<select[^>]*><option value="unknown">${strings.unknownPerson}</option>`));
     assert.match(html, /value="ana" selected=""/);
     assert.ok(html.includes(strings.newPerson));
     const unnamed = renderToStaticMarkup(React.createElement(FaceNameEditor, { face: faces[1], people: [], s: strings }));
@@ -74,8 +75,27 @@ test('person albums offer renaming and merging with another known person, exclud
     assert.ok(html.includes(strings.mergeWith));
     assert.ok(html.includes(`disabled="">${strings.mergePeople}`));
     const alone = renderToStaticMarkup(React.createElement(PersonEditor, { person, people: [person], s: strings }));
-    assert.match(alone, /<select[^>]+disabled=""/);
-    assert.ok(alone.includes(strings.noOtherPeople));
+    assert.doesNotMatch(alone, /<select[^>]+disabled=""/);
+    assert.match(alone, new RegExp(`<select[^>]*><option value="unknown">${strings.unknownPerson}</option>`));
+    assert.ok(alone.includes(strings.mergePeopleHint));
+  }
+});
+
+test('Unknown is unique, localized and first, and its permanent album cannot be renamed or merged away', () => {
+  for (const language of ['es', 'ca', 'en']) {
+    const strings = photoStrings(language);
+    const options = photoPeopleOptions([{ id: 'ana', name: 'Ana' }, { id: UNKNOWN_PERSON_ID, name: 'Desconocido', photoIds: [] }], strings);
+    assert.deepEqual(options.map(person => person.id), [UNKNOWN_PERSON_ID, 'ana']);
+    assert.equal(options[0].name, strings.unknownPerson);
+    const html = renderToStaticMarkup(React.createElement(PersonEditor, { person: options[0], people: options, s: strings }));
+    assert.doesNotMatch(html, /<input|<select/);
+    assert.ok(html.includes(strings.unknownPersonHint));
+    const face = { ...faces[0], personId: UNKNOWN_PERSON_ID, name: 'Desconocido' };
+    const editor = renderToStaticMarkup(React.createElement(FaceNameEditor, { face, people: options, s: strings }));
+    assert.match(editor, new RegExp(`<option value="unknown" selected="">${strings.unknownPerson}</option>`));
+    assert.match(editor, /<option value="ana">Ana<\/option>/);
+    const rectangles = renderToStaticMarkup(React.createElement(FaceRectangles, { faces: [face], s: strings }));
+    assert.ok(rectangles.includes(`${strings.editFace}: ${strings.unknownPerson}`));
   }
 });
 

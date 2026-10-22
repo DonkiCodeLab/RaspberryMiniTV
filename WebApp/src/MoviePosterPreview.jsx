@@ -60,12 +60,22 @@ export default function MoviePosterPreview({ movie, enabled, onClick, label, chi
   }
 
   const actions = enabled && !playPreview ? <div className="movie-poster-preview__actions">
+    <button type="button" className="movie-poster-preview__details" onClick={open}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v6" />
+        <circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none" />
+      </svg>
+      <span>{ui("View title details")}</span>
+    </button>
     <button type="button" className="movie-poster-preview__play" disabled={!videoId}
       onClick={() => { setHovered(true); setPlayPreview(true); }}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8Z" fill="#ff0000" />
+        <path d="m9.5 8.4 6.3 3.6-6.3 3.6Z" fill="#fff" />
+      </svg>
       <span>{ui("Watch trailer")}</span>
     </button>
-    <button type="button" className="movie-poster-preview__details" onClick={open}>{ui("View title details")}</button>
   </div> : null;
 
   const preview = enabled && hovered && playPreview && videoId ? <YouTubePreview

@@ -9,7 +9,7 @@
 .movie-poster-preview__list-actions .movie-poster-preview__actions { opacity: 1; visibility: visible; pointer-events: auto; }
 .movie-poster-preview__actions button { display: flex; align-items: center; justify-content: center; gap: .35rem; width: 100%; max-width: 180px; min-height: 38px; padding: .55rem .6rem; border: 1px solid #ffffff70; border-radius: 10px; color: #fff; background: #17232ce6; font: inherit; font-size: .85rem; font-weight: 800; cursor: pointer; }
 .movie-poster-preview__actions .movie-poster-preview__play { color: #17232c; background: #ffd429; border-color: #ffd429; }
-.movie-poster-preview__play svg { flex-shrink: 0; width: 20px; height: 20px; }
+.movie-poster-preview__actions svg { flex-shrink: 0; width: 20px; height: 20px; }
 .movie-poster-preview__actions button:disabled { opacity: .5; cursor: default; }
 .movie-poster-preview__actions button:is(:hover, :focus-visible):not(:disabled) { outline: 2px solid #fff; outline-offset: 2px; }
 .movie-poster-preview__list-actions { position: fixed; z-index: 40; }
