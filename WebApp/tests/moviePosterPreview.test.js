@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { build } from 'esbuild';
 import { moviePosterGeometry } from '../src/moviePosterGeometry.js';
+import { readFileSync } from 'node:fs';
 const compiled = await build({ entryPoints: [new URL('../src/MoviePosterPreview.jsx', import.meta.url).pathname],
   bundle: true, write: false, format: 'cjs', platform: 'node', external: ['react', 'react-dom'], loader: { '.css': 'empty' },
   plugins: [{ name: 'preview-fixtures', setup(build) {
     build.onResolve({ filter: /YouTubePreview\.jsx$/ }, () => ({ path: 'youtube', namespace: 'fixture' }));
     build.onResolve({ filter: /api\/raspberryApi$/ }, () => ({ path: 'api', namespace: 'fixture' }));
     build.onLoad({ filter: /.*/, namespace: 'fixture' }, args => ({ contents: args.path === 'youtube'
-      ? 'export function loadYouTubeApi(){return Promise.resolve();} export default function YouTubePreview(){}'
+      ? 'export function loadYouTubeApi(){window.previewApiLoads++; return Promise.resolve();} export default function YouTubePreview(){}'
       : 'export function findMovieTrailer(){return Promise.resolve({video:null});}' }));
   } }] });
 function harness(overrides = {}) {
@@ -22,7 +23,7 @@ function harness(overrides = {}) {
     useEffect(effect, deps) { const i = cursor++; const old = effects[i];
       if (!old || deps.some((d, n) => d !== old.deps[n])) effects[i] = { deps, effect, previous: old?.cleanup, pending: true };
     } };
-  const window = { innerWidth: 1280, innerHeight: 800,
+  const window = { innerWidth: 1280, innerHeight: 800, previewApiLoads: 0,
     setTimeout(callback, delay) { timers.set(++timerId, { callback, at: clock + delay }); return timerId; },
     clearTimeout(id) { timers.delete(id); }, addEventListener() {}, removeEventListener() {} };
   const document = { body: {}, documentElement: {}, addEventListener() {}, removeEventListener() {} };
@@ -44,6 +45,8 @@ function harness(overrides = {}) {
     return node.props?.className === className ? node : find(className, node.props?.children);
   }
   return { render, click(className) { find(className).props.onClick(); render(); },
+    get apiLoads() { return window.previewApiLoads; },
+    isRequested() { return tree.props.className.split(' ').includes('movie-poster-preview--requested'); },
     hasActions() { return Boolean(find('movie-poster-preview__actions')); }, enter() { tree.props.onPointerEnter({ pointerType: 'mouse' }); render(); },
     leave() { tree.props.onPointerLeave({ relatedTarget: null }); render(); },
     advance(ms) { clock += ms; for (const [id, timer] of [...timers]) if (timer.at <= clock) { timers.delete(id); timer.callback(); } render(); },
@@ -52,13 +55,18 @@ function harness(overrides = {}) {
 }
 for (const view of ['grid', 'list']) {
   test(`${view} posters show actions and require a click before playing`, () => {
-    const h = harness({ view }); h.enter();
+    const h = harness({ view });
+    assert.equal(h.apiLoads, 0);
+    h.enter();
+    assert.equal(h.apiLoads, 1);
+    assert.equal(h.isRequested(), false);
     assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false); assert.equal(h.hasActions(), true);
     h.advance(10000); assert.equal(h.hasVideo(), false); assert.equal(h.hasExpanded(), false);
     h.click('movie-poster-preview__play');
+    assert.equal(h.isRequested(), true);
     assert.equal(h.hasVideo(), true); assert.equal(h.hasActions(), false);
     assert.equal(h.hasExpanded(), view === 'list');
-    h.leave(); assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false);
+    h.leave(); assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false); assert.equal(h.isRequested(), false);
     h.enter(); assert.equal(h.hasActions(), true); assert.equal(h.hasVideo(), false);
   });
   test(`${view} detail button opens the title without playing`, () => {
@@ -71,6 +79,10 @@ for (const view of ['grid', 'list']) {
 test('leaving without clicking never starts a delayed preview', () => {
   const h = harness(); h.enter(); h.advance(1000); h.leave(); h.advance(10000);
   assert.equal(h.hasExpanded(), false); assert.equal(h.hasVideo(), false);
+});
+test('grid enlargement follows the click before the YouTube player reports playback', () => {
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /\.movie-library__card:has\(\.movie-poster-preview--requested\)\s*\{[^}]*transform: scale\(1\.344\)/);
 });
 test('expanded poster matches the enlarged grid poster and stays inside viewport edges', () => {
   const box = moviePosterGeometry({ left: 100, top: 300, height: 67.2 }, 1100, 1280, 900);

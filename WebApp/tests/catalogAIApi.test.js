@@ -55,3 +55,38 @@ test("AI uses authenticated Raspberry endpoints, keeps keys off storage and test
     await assert.rejects(mock.uploadAICatalog(), error => error.code === "AI_DEMO");
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
+
+test("Codex model discovery and cancellation use PIN-authenticated endpoints and never fall back to API", async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.window = { location: { hostname: "raspberry", origin: "http://raspberry:5050" },
+    sessionStorage: { getItem: () => "test-pin" } };
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, options });
+    assert.equal(options.headers["X-Web-Pin"], "test-pin");
+    if (new URL(url).pathname === "/ai/search") return new Promise(() => {});
+    return { ok: true, text: async () => '{"ok":true,"models":[]}' };
+  };
+  try {
+    const api = await loadAPI();
+    await api.getAIModels(undefined, "codex");
+    assert.equal(new URL(calls[0].url).searchParams.get("provider"), "codex");
+    const controller = new AbortController();
+    const pending = api.searchCatalogAI({ provider: "codex", model: "chosen-model", section: "movies", prompt: "Like Interstellar", userId: "default" }, controller.signal);
+    const body = JSON.parse(calls[1].options.body);
+    assert.match(body.requestId, /^[a-f0-9]{32}$/);
+    assert.equal(body.model, "chosen-model");
+    assert.equal(body.provider, "codex");
+    controller.abort();
+    await assert.rejects(pending, error => error.name === "AbortError");
+    assert.equal(new URL(calls[2].url).pathname, "/ai/search/cancel");
+    assert.deepEqual(JSON.parse(calls[2].options.body), { requestId: body.requestId });
+    assert.equal(calls.length, 3);
+    globalThis.fetch = async (url, options) => {
+      calls.push({ url, options });
+      return { ok: false, status: 502, text: async () => '{"ok":false,"code":"AI_CODEX_FAILED","error":"Limit reached"}' };
+    };
+    await assert.rejects(api.searchCatalogAI({ provider: "codex", section: "movies", prompt: "x" }), error => error.code === "AI_CODEX_FAILED");
+    assert.equal(calls.length, 4);
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});

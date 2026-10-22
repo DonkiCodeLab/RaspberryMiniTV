@@ -5,6 +5,7 @@ import tempfile
 import threading
 import time
 import unittest
+import zipfile
 from unittest.mock import Mock, patch
 
 from PIL import Image
@@ -460,6 +461,75 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.store.merge_people(source, 'ana')
         person = self.store.snapshot()['people'][0]
         self.assertEqual((person['id'], person['coverPhotoId'], person['photoIds']), ('ana', photo['id'], [photo['id']]))
+
+    def test_bulk_merge_validates_every_person_before_changing_shared_faces(self):
+        photos = self.upload(2)
+        for photo in photos: self.store.group_faces(photo['id'], self.detections())
+        sources = [face['personId'] for face in self.store.photo_faces(photos[0]['id'])['faces']]
+        with self.store.db() as db: db.execute("INSERT INTO people VALUES ('target','Destino',0)")
+        self.store.set_person_cover(sources[0], photos[0]['id'])
+        before = self.store.snapshot()
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        client = app.test_client()
+        for ids, target, status in [(sources + ['missing'], 'target', 409), (sources, sources[0], 400),
+                                     (sources + ['unknown'], 'target', 400), (sources, 'missing', 409)]:
+            response = client.post('/pictures/people/merge', json={'ids': ids, 'personId': target})
+            self.assertEqual(response.status_code, status)
+            self.assertEqual(self.store.snapshot(), before)
+        response = client.post('/pictures/people/merge', json={'ids': sources + sources, 'personId': 'target'})
+        self.assertEqual((response.status_code, response.json), (200, {'ok': True, 'personId': 'target'}))
+        restored = PhotoLibrary(self.store.root)
+        target = next(person for person in restored.snapshot()['people'] if person['id'] == 'target')
+        self.assertEqual(set(target['photoIds']), {photo['id'] for photo in photos})
+        self.assertEqual(target['coverPhotoId'], photos[0]['id'])
+        for photo in photos:
+            faces = restored.photo_faces(photo['id'])['faces']
+            self.assertEqual(len(faces), 2)
+            self.assertTrue(all(face['personId'] == 'target' and face['manual'] for face in faces))
+
+    def test_bulk_delete_removes_only_identities_and_preserves_photos_and_albums(self):
+        photo = self.upload(1)[0]
+        self.store.group_faces(photo['id'], self.detections())
+        sources = [face['personId'] for face in self.store.photo_faces(photo['id'])['faces']]
+        before = self.store.snapshot()
+        for ids in [[], None, 'invalid', sources + ['missing'], sources + ['unknown']]:
+            with self.assertRaises(PhotoError): self.store.delete_people(ids)
+            self.assertEqual(self.store.snapshot(), before)
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        response = app.test_client().post('/pictures/people/delete', json={'ids': sources})
+        self.assertEqual(response.status_code, 200)
+        after = PhotoLibrary(self.store.root).snapshot()
+        self.assertEqual(after['photos'], before['photos'])
+        self.assertEqual(after['folders'], before['folders'])
+        self.assertEqual(after['knownPeople'], [{'id': 'unknown', 'name': 'Desconocido'}])
+        self.assertTrue(self.store.safe_file(photo['relativePath']).is_file())
+        self.store.group_faces(photo['id'], self.detections())
+        self.assertTrue(all(face['personId'] == 'unknown' for face in self.store.photo_faces(photo['id'])['faces']))
+
+    def test_people_zip_keeps_original_bytes_paths_and_shared_photos_only_once(self):
+        photos = self.upload(2)
+        for photo in photos: self.store.group_faces(photo['id'], self.detections())
+        sources = [face['personId'] for face in self.store.photo_faces(photos[0]['id'])['faces']]
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        client = app.test_client()
+        before = self.store.snapshot()
+        response = client.post('/pictures/people/download', json={'ids': sources + sources})
+        self.addCleanup(response.close)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, 'application/zip')
+        self.assertIn('attachment', response.headers['Content-Disposition'])
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        with zipfile.ZipFile(io.BytesIO(response.data)) as archive:
+            self.assertEqual(set(archive.namelist()), {photo['relativePath'] for photo in photos})
+            self.assertEqual(len(archive.namelist()), 2)
+            for photo in photos:
+                self.assertEqual(archive.read(photo['relativePath']), self.store.safe_file(photo['relativePath']).read_bytes())
+        for ids, status in [([], 400), (['missing'], 409), (['unknown'], 400), (['../etc/passwd'], 409)]:
+            self.assertEqual(client.post('/pictures/people/download', json={'ids': ids}).status_code, status)
+        self.assertEqual(self.store.snapshot(), before)
 
     def test_merge_during_scan_applies_to_results_that_arrive_later(self):
         photos = self.upload(2)

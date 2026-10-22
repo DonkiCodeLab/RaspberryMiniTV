@@ -1,5 +1,21 @@
 export const AI_SECTIONS = ["movies", "series", "books", "games", "pictures"];
 
+const SEARCH_PREFERENCES_KEY = "minitv-catalog-ai-preferences-v1";
+const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$/;
+export function readSearchPreferences() {
+  try {
+    const data = JSON.parse(window.localStorage.getItem(SEARCH_PREFERENCES_KEY));
+    return { provider: data?.provider === "openai" ? "openai" : "codex",
+      models: Object.fromEntries(["codex", "openai"].map(provider =>
+        [provider, typeof data?.models?.[provider] === "string" && MODEL_ID.test(data.models[provider]) ? data.models[provider] : ""])) };
+  } catch { return { provider: "codex", models: { codex: "", openai: "" } }; }
+}
+
+export function saveSearchPreferences(preferences) {
+  // Only provider/model choices, never credentials, prompts or catalogue data.
+  try { window.localStorage.setItem(SEARCH_PREFERENCES_KEY, JSON.stringify(preferences)); } catch { /* Private browsing. */ }
+}
+
 export function catalogItemId(section, item) {
   return String(section === "movies" ? item?.fileRelativePath || item?.relativePath || item?.id || ""
     : section === "series" ? item?.directoryPath || item?.relativePath || "" : item?.relativePath || "");

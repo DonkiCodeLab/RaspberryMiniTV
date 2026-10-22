@@ -501,6 +501,19 @@ y las búsquedas vacías se indican en pantalla; no impiden usar los vídeos de 
 
 ### Buscar con IA
 
+En **IA → Buscar**, el selector **Proveedor** ofrece **Codex · Cuenta de ChatGPT**
+(predeterminado) y **OpenAI · Clave API**. Con Codex, conecta primero tu cuenta en
+**Dashboard → Codex**. El selector de modelos consulta esa conexión y la elección
+se recuerda por proveedor en el navegador. Codex consulta una instantánea actual
+del catálogo local, con metadatos y marcas del perfil para películas/series, sin
+necesitar subir un archivo ni configurar una clave API. Usa los límites del plan
+y envía a OpenAI la pregunta y las fichas consultadas. Cancelar detiene su tarea
+independiente; un error nunca cambia automáticamente a la API. Consulta los
+[requisitos de Codex](../DeviceApp/CODEX.md#buscar-en-el-catálogo-con-codex).
+
+Las instrucciones de clave API y subida de catálogo de abajo corresponden al
+proveedor **OpenAI · Clave API**. Las recomendaciones conservan su conexión API.
+
 El botón **IA**, junto al filtro de la biblioteca, abre una consulta con ejemplos
 para la sección actual: películas por actor o temas, series por ambiente o
 similitud, libros por autor y juegos por estilo, consola o desarrollador. En fotos se busca
@@ -751,6 +764,16 @@ La maqueta local guarda archivos, carpetas y metadatos importados en IndexedDB,
 y permite probar el visor, los movimientos y los álbumes. Personas necesita el
 motor local de la Raspberry. Si falta, se muestra el comando de instalación.
 No lee EXIF de imágenes sin JSON ni simula reconocimiento facial o resultados de IA.
+
+En **Personas**, cada tarjeta permite entrar en la carpeta y elegir otra persona
+junto al botón **Unir**. Cambiar el desplegable no aplica cambios. **Modo edición**
+despliega los controles de descargar, eliminar y seleccionar con la misma animación
+que las películas. La barra permite actuar sobre las personas marcadas, incluso
+en distintas páginas; cambiar la búsqueda o terminar la edición limpia la selección.
+Las acciones muestran una confirmación con las personas afectadas y, al unir, el
+destino. Eliminar una persona conserva los originales y pasa sus caras a
+**Desconocido**. Esta carpeta fija solo admite descarga. Las descargas individuales
+y conjuntas generan un ZIP de originales, sin duplicar fotos compartidas.
 
 Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,
 `python -m unittest discover -s DeviceApp/tests -p 'test_photo_library.py'`.

@@ -72,6 +72,39 @@ Documentación oficial: [App Server](https://learn.chatgpt.com/docs/app-server) 
 
 ## Trabajo e historial
 
+### Buscar en el catálogo con Codex
+
+El botón **IA → Buscar** permite elegir **Codex · Cuenta de ChatGPT** y el modelo
+que ofrece `model/list`, incluido el predeterminado de Codex. La web recuerda el
+proveedor y un modelo por proveedor en ese navegador. Conecta ChatGPT una vez en
+**Dashboard → Codex**; las búsquedas no necesitan clave API ni subir un catálogo.
+Consumen los límites de esa cuenta y envían la pregunta y las fichas consultadas a
+OpenAI. Si fallan, no se cambia automáticamente a la API de pago.
+
+La API, protegida por el PIN, prepara una instantánea actual de la sección y ofrece
+al agente únicamente una herramienta paginada de lectura. Incluye metadatos locales
+y, en películas/series, las marcas de visto/favorito del perfil seleccionado. Los
+IDs numéricos se validan en el servidor y los elementos eliminados durante la
+consulta se descartan. No se envían archivos multimedia. Fotos solo conoce nombres.
+
+Cada búsqueda lanza un proceso app-server independiente con la misma sesión de
+ChatGPT y una conversación efímera. Usa sandbox de lectura sin raíces legibles,
+sin permisos adicionales, shell, apps, búsqueda web ni agentes secundarios; las
+integraciones MCP y plugins configurados se desactivan para esa conversación.
+No concede acceso de administrador al navegador ni reutiliza el chat de desarrollo.
+Cancelar, cerrar el buscador o cambiar de sección/perfil solicita detener ese
+proceso. También se detiene al agotar el tiempo de respuesta. Reiniciar la API
+interrumpe cualquier búsqueda en curso.
+
+Requiere un Codex con `dynamicTools`, `ephemeral`, `outputSchema` y control de
+lectura restringida. Si una instalación antigua rechaza esos campos, vuelve a
+ejecutar `sudo bash DeviceApp/install_codex_support.sh`. El contrato se ha comprobado
+con Codex CLI `0.163.0-alpha.10.2` sin ejecutar inferencia; las pruebas de transporte
+usan un servidor simulado y no consumen cuota. La opción OpenAI mantiene su flujo
+de API y catálogo subido.
+
+### Conversaciones de desarrollo
+
 Se ejecuta una sola tarea a la vez sobre esta copia, aunque abras varios navegadores.
 Cerrar la pestaña no detiene la tarea. Al volver a desbloquearla se recuperan la
 tarea y las aprobaciones pendientes. El historial lo guarda el propio Codex y se

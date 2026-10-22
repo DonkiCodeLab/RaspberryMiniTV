@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { moviePosterGeometry } from "./moviePosterGeometry.js";
 import "./MoviePosterPreview.css";
 import { findMovieTrailer } from "./api/raspberryApi";
-import YouTubePreview from "./YouTubePreview.jsx";
+import YouTubePreview, { loadYouTubeApi } from "./YouTubePreview.jsx";
 
 export default function MoviePosterPreview({ movie, enabled, onClick, label, children, kind = "movie", view = "grid" }) {
   const ui = useUiText();
@@ -22,7 +22,11 @@ export default function MoviePosterPreview({ movie, enabled, onClick, label, chi
 
   useEffect(() => {
     setPlayPreview(false);
-  }, [enabled, hovered, view, mediaKey]);
+  }, [enabled, view, mediaKey]);
+
+  useEffect(() => {
+    if (enabled && hovered) loadYouTubeApi().catch(() => {});
+  }, [enabled, hovered]);
 
   useEffect(() => {
     if (!enabled || !hovered) return;
@@ -84,7 +88,7 @@ export default function MoviePosterPreview({ movie, enabled, onClick, label, chi
     title={`${movie.name} — ${movie.preferredVideo?.name || movie.trailer?.name || ui("Trailer")}`}
   /> : null;
 
-  return <div ref={anchor} className="movie-library__poster movie-poster-preview"
+  return <div ref={anchor} className={`movie-library__poster movie-poster-preview${preview ? " movie-poster-preview--requested" : ""}`}
     onPointerEnter={event => {
       if (enabled && event.pointerType === "mouse") {
         if (view === "list") {

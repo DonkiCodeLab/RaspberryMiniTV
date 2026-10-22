@@ -1,6 +1,15 @@
 import { withLanguages } from "./i18n/index.js";
 const strings = withLanguages({
   es: {
+    provider: "Proveedor", codexProvider: "Codex · Cuenta de ChatGPT", openaiProvider: "OpenAI · Clave API",
+    codexDefault: "Predeterminado de Codex", codexModelHint: "Elige el modelo que utilizará Codex. Se recuerda tu elección en este navegador.",
+    codexHint: "Codex consulta tu catálogo actualizado para buscar por temas, ambiente, similitud o personas. Puede equivocarse.",
+    codexUsage: "Usa la sesión de Dashboard → Codex y los límites de tu plan. Envía la pregunta y las fichas consultadas a OpenAI; no requiere clave API ni subir el catálogo.",
+    openaiUsage: "Usa la clave API del dashboard y puede generar coste. El proveedor no cambia automáticamente.",
+    codexAuth: "Conecta tu cuenta de ChatGPT en Dashboard → Codex y vuelve a intentarlo.",
+    codexUnavailable: "No se pudo conectar con Codex. Revisa Dashboard → Codex y actualiza su instalación si es necesario.",
+    codexFailed: "Codex no completó la búsqueda. Revisa el modelo, la conexión o los límites de tu plan. No se ha cambiado a la API.",
+    codexDebugHint: "Muestra la última búsqueda de Codex y las lecturas del catálogo, sin volver a ejecutarla.", codexDebugRaw: "Resultado de Codex",
     modelDefault: "Del dashboard", modelCustom: "Otro modelo…", modelId: "ID del modelo", modelsLoading: "Cargando…", modelsRefresh: "Actualizar modelos", modelsFallback: "No se pudo consultar tu cuenta. Se muestran opciones predefinidas; su disponibilidad depende de tu clave.", modelQueryHint: "Elige un modelo para esta búsqueda. El modelo del dashboard se mantiene como predeterminado.", modelSettingsHint: "Modelo predeterminado para las búsquedas y recomendaciones. Guarda los cambios para aplicarlo.",
     debug: "Depurar", debugTitle: "Depuración de la última consulta", debugCopy: "Copiar informe", debugCopied: "Informe copiado.", debugCopyError: "No se pudo copiar. Puedes seleccionar el texto del informe y copiarlo manualmente.",
     debugHint: "Muestra lo recibido en la última consulta, sin volver a llamar a OpenAI. Las claves se ocultan. El informe solo permanece en esta vista.", debugOutput: "Respuesta de la IA", debugContext: "Consulta, validación y resultado", debugRaw: "Respuesta completa de OpenAI", debugNotCalled: "Esta consulta no llegó a llamar a OpenAI.", debugNoOutput: "No se recibió texto del modelo. Consulta el estado y la respuesta completa.", debugNoResponse: "No hay una respuesta de OpenAI disponible para esta consulta.", debugTruncated: "La respuesta superó el límite de diagnóstico. Se muestran los primeros 256 KiB.",
@@ -18,6 +27,15 @@ const strings = withLanguages({
     samples: { movies: ["Películas sobre viajes en el tiempo", "Películas con el protagonista de Top Gun", "Comedias de los años 90"], series: ["Series con un ambiente parecido a Twin Peaks", "Series de ciencia ficción", "¿Cuántas series tengo?"], books: ["Historias sobre soledad y esperanza", "Libros de Stephen King", "¿Cuántos libros tengo?"], games: ["Juegos de exploración con una atmósfera misteriosa", "Juegos de Super Nintendo", "Juegos publicados en los años 90"], pictures: ["Fotos con vacaciones en el nombre", "Imágenes con 2024 en el nombre", "¿Cuántas imágenes tengo?"] },
   },
   ca: {
+    provider: "Proveïdor", codexProvider: "Codex · Compte de ChatGPT", openaiProvider: "OpenAI · Clau API",
+    codexDefault: "Predeterminat de Codex", codexModelHint: "Tria el model que farà servir Codex. Es recorda la tria en aquest navegador.",
+    codexHint: "Codex consulta el catàleg actualitzat per cercar per temes, ambient, similitud o persones. Es pot equivocar.",
+    codexUsage: "Fa servir la sessió de Dashboard → Codex i els límits del teu pla. Envia la pregunta i les fitxes consultades a OpenAI; no cal clau API ni pujar el catàleg.",
+    openaiUsage: "Fa servir la clau API del dashboard i pot generar cost. El proveïdor no canvia automàticament.",
+    codexAuth: "Connecta el teu compte de ChatGPT a Dashboard → Codex i torna-ho a provar.",
+    codexUnavailable: "No s’ha pogut connectar amb Codex. Revisa Dashboard → Codex i actualitza’n la instal·lació si cal.",
+    codexFailed: "Codex no ha completat la cerca. Revisa el model, la connexió o els límits del pla. No s’ha canviat a l’API.",
+    codexDebugHint: "Mostra l’última cerca de Codex i les lectures del catàleg, sense tornar-la a executar.", codexDebugRaw: "Resultat de Codex",
     modelDefault: "Del dashboard", modelCustom: "Un altre model…", modelId: "ID del model", modelsLoading: "Carregant…", modelsRefresh: "Actualitza models", modelsFallback: "No s’ha pogut consultar el compte. Es mostren opcions predefinides; la disponibilitat depèn de la clau.", modelQueryHint: "Tria un model per a aquesta cerca. El model del dashboard es manté com a predeterminat.", modelSettingsHint: "Model predeterminat per a cerques i recomanacions. Desa els canvis per aplicar-lo.",
     debug: "Depura", debugTitle: "Depuració de l’última consulta", debugCopy: "Copia l’informe", debugCopied: "Informe copiat.", debugCopyError: "No s’ha pogut copiar. Pots seleccionar el text de l’informe i copiar-lo manualment.",
     debugHint: "Mostra el que s’ha rebut a l’última consulta, sense tornar a cridar OpenAI. Les claus s’oculten. L’informe només es conserva en aquesta vista.", debugOutput: "Resposta de la IA", debugContext: "Consulta, validació i resultat", debugRaw: "Resposta completa d’OpenAI", debugNotCalled: "Aquesta consulta no ha arribat a cridar OpenAI.", debugNoOutput: "No s’ha rebut text del model. Consulta l’estat i la resposta completa.", debugNoResponse: "No hi ha cap resposta d’OpenAI disponible per a aquesta consulta.", debugTruncated: "La resposta ha superat el límit de diagnòstic. Es mostren els primers 256 KiB.",
@@ -35,6 +53,15 @@ const strings = withLanguages({
     samples: { movies: ["Pel·lícules sobre viatges en el temps", "Pel·lícules amb el protagonista de Top Gun", "Comèdies dels anys 90"], series: ["Sèries amb un ambient semblant a Twin Peaks", "Sèries de ciència-ficció", "Quantes sèries tinc?"], books: ["Històries sobre solitud i esperança", "Llibres de Stephen King", "Quants llibres tinc?"], games: ["Jocs d’exploració amb una atmosfera misteriosa", "Jocs de Super Nintendo", "Jocs publicats als anys 90"], pictures: ["Fotos amb vacances al nom", "Imatges amb 2024 al nom", "Quantes imatges tinc?"] },
   },
   en: {
+    provider: "Provider", codexProvider: "Codex · ChatGPT account", openaiProvider: "OpenAI · API key",
+    codexDefault: "Codex default", codexModelHint: "Choose the model Codex will use. Your choice is remembered in this browser.",
+    codexHint: "Codex reads your current catalogue to search by themes, mood, similarities or people. It can make mistakes.",
+    codexUsage: "Uses your Dashboard → Codex sign-in and plan limits. Sends the question and consulted records to OpenAI; no API key or catalogue upload required.",
+    openaiUsage: "Uses the dashboard API key and may incur charges. The provider never changes automatically.",
+    codexAuth: "Connect your ChatGPT account in Dashboard → Codex and try again.",
+    codexUnavailable: "Could not connect to Codex. Check Dashboard → Codex and update its installation if needed.",
+    codexFailed: "Codex did not complete the search. Check the model, connection or plan limits. No switch to the API was made.",
+    codexDebugHint: "Shows the last Codex search and catalogue reads without running it again.", codexDebugRaw: "Codex result",
     modelDefault: "Dashboard default", modelCustom: "Other model…", modelId: "Model ID", modelsLoading: "Loading…", modelsRefresh: "Refresh models", modelsFallback: "Could not check your account. Showing preset options; availability depends on your API key.", modelQueryHint: "Choose a model for this search. The dashboard model remains the default.", modelSettingsHint: "Default model for searches and recommendations. Save your changes to apply it.",
     debug: "Debug", debugTitle: "Last query diagnostics", debugCopy: "Copy report", debugCopied: "Report copied.", debugCopyError: "Could not copy. You can select the report text and copy it manually.",
     debugHint: "Shows the last response without calling OpenAI again. Keys are hidden. The report is only kept in this view.", debugOutput: "AI response", debugContext: "Query, validation and result", debugRaw: "Full OpenAI response", debugNotCalled: "This query did not call OpenAI.", debugNoOutput: "No model text was received. Check the status and full response.", debugNoResponse: "No OpenAI response is available for this query.", debugTruncated: "The response exceeded the diagnostic limit. Only the first 256 KiB are shown.",
@@ -65,6 +92,7 @@ export function catalogAIError(error, language, fallback = "error") {
     AI_CATALOG_NOT_UPLOADED: "catalogRequired", AI_CATALOG_EMPTY: "catalogEmpty", AI_CATALOG_TOO_LARGE: "catalogTooLarge",
     AI_CATALOG_FILE_ERROR: "catalogFileError", AI_CATALOG_QUERY_ERROR: "catalogQueryError", AI_CATALOG_STORAGE_ERROR: "catalogStorageError",
     AI_CATALOG_SETTINGS_CHANGED: "catalogSettingsChanged", AI_INVALID_PLAN: "invalidSelection", AI_INVALID_IDS: "invalidIds",
-    AI_INVALID_RESPONSE: "invalidResponse", AI_INCOMPLETE_RESPONSE: "incompleteSelection" }[error?.code];
+    AI_INVALID_RESPONSE: "invalidResponse", AI_INCOMPLETE_RESPONSE: "incompleteSelection",
+    AI_CODEX_AUTH: "codexAuth", AI_CODEX_UNAVAILABLE: "codexUnavailable", AI_CODEX_FAILED: "codexFailed" }[error?.code];
   return s[key || fallback];
 }

@@ -1948,7 +1948,7 @@ img {
     position: relative;
     transition: transform 180ms ease-out, box-shadow 180ms ease-out;
   }
-  .movie-library__items--grid .movie-library__card:has(.movie-poster-preview__video--playing) {
+  .movie-library__items--grid .movie-library__card:has(.movie-poster-preview--requested) {
     z-index: 6;
     background: #14222c;
     transform: scale(1.344);

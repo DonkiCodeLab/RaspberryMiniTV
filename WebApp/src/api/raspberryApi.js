@@ -1465,6 +1465,24 @@ export function photoRequest(action, data, signal) {
   }), signal, 30000);
 }
 
+export function downloadPhotoPeople(ids, signal) {
+  if (isMockModeEnabled()) return photoDemo('people/download', { ids });
+  return aiRequestWithTimeout(async activeSignal => {
+    const storedPin = getStoredWebPin();
+    const response = await fetch(`${getBaseUrl()}/pictures/people/download`, {
+      method: 'POST', cache: 'no-store', signal: activeSignal,
+      headers: { 'Content-Type': 'application/json', ...(storedPin ? { 'X-Web-Pin': storedPin } : {}) },
+      body: JSON.stringify({ ids }),
+    });
+    if (!response.ok) {
+      let message = `HTTP ${response.status}`;
+      try { message = (await response.json()).error || message; } catch {}
+      throw Object.assign(new Error(message), { status: response.status });
+    }
+    return response.blob();
+  }, signal, 10 * 60 * 1000);
+}
+
 export function getBookContentUrl(relativePath, { render } = {}) {
   const safeRelativePath = String(relativePath || "").trim();
   if (!safeRelativePath) return "";
@@ -1790,7 +1808,9 @@ function requestAI(path, options, signal, timeoutMs = 50000) {
   return aiRequestWithTimeout(activeSignal => request(path, { ...options, signal: activeSignal, cache: "no-store" }), signal, timeoutMs);
 }
 
-export function getAIModels(signal) { return requestAI("/settings/ai/models", {}, signal, 20000); }
+export function getAIModels(signal, provider = "openai") {
+  return requestAI(`/settings/ai/models${provider === "codex" ? "?provider=codex" : ""}`, {}, signal, provider === "codex" ? 60000 : 20000);
+}
 export function getAISettings(signal) { return requestAI("/settings/ai", {}, signal); }
 export function saveAISettings(settings, signal) {
   return requestAI("/settings/ai", { method: "POST", body: JSON.stringify(settings) }, signal);
@@ -1879,8 +1899,19 @@ export async function updateOmdbLibrary(action, signal) {
   return requestOmdbLibrary({ method: "POST", body: JSON.stringify({ action }) }, signal);
 }
 
-export function searchCatalogAI(query, signal) {
-  return requestAI("/ai/search", { method: "POST", body: JSON.stringify(query) }, signal, 90000);
+export async function searchCatalogAI(query, signal) {
+  if (query.provider !== "codex") return requestAI("/ai/search", { method: "POST", body: JSON.stringify(query) }, signal, 90000);
+  // getRandomValues also works on the Raspberry's plain HTTP LAN origin.
+  const requestId = Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
+  const cancel = () => requestAI("/ai/search/cancel", { method: "POST", body: JSON.stringify({ requestId }) }, undefined, 10000).catch(() => {});
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  signal?.addEventListener("abort", cancel, { once: true });
+  try {
+    return await requestAI("/ai/search", { method: "POST", body: JSON.stringify({ ...query, requestId }) }, signal, 240000);
+  } catch (error) {
+    if (error.code === "AI_TIMEOUT") cancel();
+    throw error;
+  } finally { signal?.removeEventListener("abort", cancel); }
 }
 
 export function getAIRecommendations(userId, section, signal) {

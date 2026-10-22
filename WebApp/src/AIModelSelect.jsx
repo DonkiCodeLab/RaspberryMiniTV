@@ -11,25 +11,26 @@ export function modelOptions(models, value) {
   return [...new Set([...preferred, ...ids, ...(value ? [value] : [])])];
 }
 
-export default function AIModelSelect({ value, onChange, language, disabled, useDefault = false, revision = 0 }) {
+export default function AIModelSelect({ value, onChange, language, disabled, useDefault = false, revision = 0, provider = "openai" }) {
   const s = catalogAIStrings(language);
   const id = useId();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [custom, setCustom] = useState(false);
   useEffect(() => {
     if (isMockMode()) return;
     const controller = new AbortController();
-    setLoading(true); setFailed(false); setData(null);
-    getAIModels(controller.signal).then(result => {
+    setLoading(true); setFailed(false); setFailure(""); setData(null);
+    getAIModels(controller.signal, provider).then(result => {
       if (!controller.signal.aborted) setData(result);
-    }).catch(() => { if (!controller.signal.aborted) setFailed(true); })
+    }).catch(error => { if (!controller.signal.aborted) { setFailed(true); setFailure(error.code); } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [attempt, revision]);
-  const models = data?.configured ? data.models : MODEL_PRESETS.map(id => ({ id }));
+  }, [attempt, revision, provider]);
+  const models = data?.configured ? data.models : provider === "codex" ? [] : MODEL_PRESETS.map(id => ({ id }));
   const options = modelOptions(models, value);
   return <div className="ai-model-select">
     <label htmlFor={id}>{s.model}</label>
@@ -39,7 +40,7 @@ export default function AIModelSelect({ value, onChange, language, disabled, use
         setCustom(next === "__custom");
         if (next !== "__custom") onChange(next);
       }}>
-        {useDefault && <option value="">{s.modelDefault}{data?.defaultModel ? ` (${data.defaultModel})` : ""}</option>}
+        {useDefault && <option value="">{provider === "codex" ? s.codexDefault : s.modelDefault}{data?.defaultModel ? ` (${data.defaultModel})` : ""}</option>}
         {!useDefault && !value && <option value="" disabled>{s.model}</option>}
         {options.map(model => <option key={model} value={model}>{model === "chat-latest" ? `${model} · ChatGPT Instant` : model}</option>)}
         <option value="__custom">{s.modelCustom}</option>
@@ -48,6 +49,8 @@ export default function AIModelSelect({ value, onChange, language, disabled, use
     </div>
     {custom && <label className="ai-model-select__custom">{s.modelId}<input value={value} required maxLength={100} pattern="[A-Za-z0-9][A-Za-z0-9._:\-]{0,99}" disabled={disabled}
       placeholder="gpt-6.1-sol" autoComplete="off" spellCheck={false} onChange={event => onChange(event.target.value)} /></label>}
-    <small role={failed ? "status" : undefined}>{failed ? s.modelsFallback : useDefault ? s.modelQueryHint : s.modelSettingsHint}</small>
+    <small role={failed ? "status" : undefined}>{provider === "codex"
+      ? failed ? (failure === "AI_CODEX_AUTH" ? s.codexAuth : s.codexUnavailable) : s.codexModelHint
+      : failed ? s.modelsFallback : useDefault ? s.modelQueryHint : s.modelSettingsHint}</small>
   </div>;
 }

@@ -14,14 +14,16 @@ import os
 import re
 from pathlib import Path
 import sqlite3
+import tempfile
 import threading
 import time
 import urllib.error
 import urllib.request
 import uuid
+import zipfile
 
 from PIL import Image, ImageOps, UnidentifiedImageError
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from photo_import import validate_import_records
 from photo_previews import ImageWorkLock, PhotoPreviews
 from photo_faces import FacePaused, LocalFaceEngine, INSTALL_COMMAND
@@ -976,25 +978,64 @@ class PhotoLibrary:
         return {'ok': True}
 
     def merge_people(self, source, target):
-        if source == UNKNOWN_PERSON_ID:
+        return self.merge_people_many([source], target)
+
+    def _people_selection(self, ids, db, allow_unknown=False):
+        if not isinstance(ids, list) or not ids or any(not isinstance(ident, str) or not ident or ident.startswith('apple-') for ident in ids):
+            raise PhotoError('Selecciona las personas para esta acción.')
+        ids = list(dict.fromkeys(ids))
+        if not allow_unknown and UNKNOWN_PERSON_ID in ids:
             raise PhotoError('La carpeta Desconocido es fija. Reasigna cada cara desde su foto.')
-        if not isinstance(target, str) or not target or source == target or source.startswith('apple-') or target.startswith('apple-'):
-            raise PhotoError('Selecciona otra persona existente para unir los álbumes.')
+        for ident in ids:
+            if not db.execute('SELECT 1 FROM people WHERE id=?', (ident,)).fetchone():
+                raise PhotoError('Esta persona ya no está disponible. Actualiza la biblioteca.', 409)
+        return ids
+
+    def merge_people_many(self, ids, target):
         with self.db() as db:
-            for ident in (source, target):
-                if not db.execute('SELECT 1 FROM people WHERE id=?', (ident,)).fetchone():
-                    raise PhotoError('Esta persona ya no está disponible. Actualiza la biblioteca.', 409)
-            photos = [row[0] for row in db.execute('SELECT DISTINCT photo FROM face_detections WHERE person=?', (source,))]
-            # Keep the destination cover, or inherit the source cover if none was chosen.
-            db.execute('INSERT OR IGNORE INTO person_covers SELECT ?, photo FROM person_covers WHERE person=?', (target, source))
-            db.execute('UPDATE face_detections SET person=?, manual=1 WHERE person=?', (target, source))
-            # Also retain legacy links; shared photos appear only once in the album.
-            db.execute('INSERT OR IGNORE INTO faces SELECT photo, ?, encoding FROM faces WHERE person=?', (target, source))
-            db.execute('DELETE FROM faces WHERE person=?', (source,))
-            for photo in photos:
-                self._sync_face_links(photo, db)
-            db.execute('DELETE FROM people WHERE id=?', (source,))
+            ids = self._people_selection(ids, db)
+            self._people_selection([target], db, allow_unknown=True)
+            if target in ids:
+                raise PhotoError('Selecciona otra persona existente para unir los álbumes.')
+            for source in ids:
+                photos = [row[0] for row in db.execute('SELECT DISTINCT photo FROM face_detections WHERE person=?', (source,))]
+                # Keep the destination cover, or inherit the first chosen source cover.
+                db.execute('INSERT OR IGNORE INTO person_covers SELECT ?, photo FROM person_covers WHERE person=?', (target, source))
+                db.execute('UPDATE face_detections SET person=?, manual=1 WHERE person=?', (target, source))
+                # Also retain legacy links; shared photos appear only once in the album.
+                db.execute('INSERT OR IGNORE INTO faces SELECT photo, ?, encoding FROM faces WHERE person=?', (target, source))
+                db.execute('DELETE FROM faces WHERE person=?', (source,))
+                for photo in photos:
+                    self._sync_face_links(photo, db)
+                db.execute('DELETE FROM people WHERE id=?', (source,))
         return {'ok': True, 'personId': target}
+
+    def delete_people(self, ids):
+        # Removing an identity never deletes the underlying original images.
+        self.merge_people_many(ids, UNKNOWN_PERSON_ID)
+        return {'ok': True}
+
+    def download_people(self, ids):
+        with self.db() as db:
+            ids = self._people_selection(ids, db, allow_unknown=True)
+            photos = {}
+            for ident in ids:
+                for photo in db.execute('SELECT p.id, p.path FROM photos p JOIN faces f ON f.photo=p.id WHERE f.person=? ORDER BY p.path', (ident,)):
+                    photos[photo['id']] = photo['path']
+        if not photos:
+            raise PhotoError('Estas personas no tienen fotos para descargar.')
+        # Use disk rather than RAM for large albums. Preserve original bytes and
+        # relative paths, and include shared photos only once.
+        archive = tempfile.TemporaryFile()
+        try:
+            with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_STORED) as bundle:
+                for relative in photos.values():
+                    bundle.write(self.safe_file(relative), arcname=relative)
+            archive.seek(0)
+            return archive
+        except Exception:
+            archive.close()
+            raise
 
     def remove_matches(self, person, ids):
         if not isinstance(ids, list) or not ids or any(not isinstance(i, str) for i in ids):
@@ -1158,6 +1199,25 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/people/<ident>/merge')
     def merge(ident):
         return jsonify(get_library().merge_people(ident, body().get('personId')))
+
+    @bp.post('/pictures/people/merge')
+    def merge_many():
+        data = body()
+        return jsonify(get_library().merge_people_many(data.get('ids'), data.get('personId')))
+
+    @bp.post('/pictures/people/delete')
+    def delete_people():
+        return jsonify(get_library().delete_people(body().get('ids')))
+
+    @bp.post('/pictures/people/download')
+    def download_people():
+        archive = get_library().download_people(body().get('ids'))
+        try:
+            return send_file(archive, mimetype='application/zip', as_attachment=True,
+                             download_name='personas.zip', conditional=False)
+        except Exception:
+            archive.close()
+            raise
 
     @bp.post('/pictures/people/<ident>/remove')
     def remove(ident):

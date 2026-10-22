@@ -10,6 +10,9 @@
 .catalog-ai-panel__heading > button { color: inherit; background: none; border: 0; font-size: 1.8rem; cursor: pointer; padding: 0 0.4rem; }
 .catalog-ai-panel p, .catalog-ai-result p { line-height: 1.5; margin: 0.6rem 0; }
 .catalog-ai-panel form > label { display: block; margin-bottom: 0.5rem; font-weight: 700; }
+.catalog-ai-panel form > select { width: 100%; box-sizing: border-box; border: 1px solid #fff5; border-radius: 10px; padding: 0.7rem; background: #101c29; color: #fff; font: inherit; }
+.catalog-ai-panel form > select:focus-visible { outline: 2px solid #ffd429; outline-offset: 3px; }
+.catalog-ai-panel form > small { display: block; margin: 0.5rem 0 1rem; line-height: 1.4; opacity: 0.8; }
 .catalog-ai-panel textarea { width: 100%; box-sizing: border-box; resize: vertical; border-radius: 10px; border: 1px solid #fff5; color: #fff; background: #101c29; font: inherit; padding: 0.8rem; }
 .catalog-ai-panel__examples { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0.8rem 0; font-size: 0.85rem; }
 .catalog-ai-panel__examples button { border: 1px solid #ffffff35; border-radius: 12px; padding: 0.45rem 0.65rem; background: #2b4158; color: #fff; font: inherit; cursor: pointer; text-align: left; }

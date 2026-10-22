@@ -1346,6 +1346,17 @@ portada debe pertenecer al grupo y se retira si se quita esa asociación o foto.
 Las rutas con PIN son `POST /pictures/people/scan`, `/pictures/people/pause` y
 `/pictures/people/<id>/cover` (JSON `{ "photoId": "..." }`).
 
+La edición múltiple usa `POST /pictures/people/merge` con `{ "ids": ["..."],
+"personId": "destino" }` y `POST /pictures/people/delete` con `{ "ids": ["..."] }`.
+Se validan todas las personas antes de aplicar la operación en una transacción.
+Eliminar retira la identidad y mueve sus caras a **Desconocido**, sin borrar fotos
+ni referencias de otros álbumes. No se puede eliminar ni unir la carpeta fija
+**Desconocido** como origen. `POST /pictures/people/download`, también con `ids`,
+devuelve un ZIP de originales con sus rutas relativas, sin duplicar fotos
+compartidas. El ZIP usa un archivo temporal en disco, que se cierra al terminar
+la respuesta, y no comprime de nuevo las imágenes. Estas rutas requieren el PIN
+igual que el resto de la biblioteca.
+
 Cada detección guarda su rectángulo normalizado sobre la imagen orientada,
 vector y persona en `face_detections`. El visor dibuja todas las caras y resalta
 la persona cuya carpeta se está viendo. Al pulsar una cara puedes asignarla a

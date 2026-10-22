@@ -31,10 +31,11 @@ function harness(ready = true) {
     flushTimers() { for (const [id, callback] of [...timers]) { timers.delete(id); callback(); } } };
 }
 
-test("hover previews request sound, hide controls and show only active playback", async () => {
+test("clicked previews request autoplay immediately, with sound, and show only active playback", async () => {
   const h = harness();
   const stop = h.start();
   await Promise.resolve();
+  assert.equal(h.options.playerVars.autoplay, 1);
   assert.equal(h.options.playerVars.controls, 0);
   assert.equal(h.options.playerVars.disablekb, 1);
   assert.equal(h.options.playerVars.fs, 0);
@@ -60,7 +61,7 @@ test("pausing, blocking or failing playback hides the preview immediately", asyn
     const h = harness();
     const stop = h.start();
     await Promise.resolve();
-    assert.equal(h.options.playerVars.autoplay, 0);
+    assert.equal(h.options.playerVars.autoplay, 1);
     h.options.events.onStateChange({ data: 1 });
     if (end === "pause") h.options.events.onStateChange({ data: 2 });
     if (end === "blocked") h.options.events.onAutoplayBlocked();

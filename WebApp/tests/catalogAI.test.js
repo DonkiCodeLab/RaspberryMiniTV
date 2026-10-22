@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { build } from "esbuild";
-import { aiRequestWithTimeout, aiSettingsPayload, catalogAIIds, catalogItemId, copyAIDebug, filterAICollections, matchesCatalogAI, validateAIResult } from "../src/catalogAI.js";
+import { aiRequestWithTimeout, aiSettingsPayload, catalogAIIds, catalogItemId, copyAIDebug, filterAICollections, matchesCatalogAI, validateAIResult, readSearchPreferences, saveSearchPreferences } from "../src/catalogAI.js";
 import { catalogAIError, catalogAIStrings } from "../src/catalogAIStrings.js";
 
 test("AI filters use exact local paths, reject names/TMDB IDs and intersect existing filters", () => {
@@ -173,5 +173,35 @@ test("model selector includes current aliases, preserves custom choices and offe
     assert.match(html, /gpt-6-luna/);
     assert.match(html, /gpt-6-astra/);
     assert.match(html, /__custom/);
+  }
+});
+
+test("Codex search defaults and per-provider model preferences survive reopening without storing secrets", () => {
+  const previousWindow = globalThis.window;
+  let saved = null;
+  globalThis.window = { localStorage: { getItem: () => saved, setItem: (key, value) => { saved = value; } } };
+  try {
+    assert.deepEqual(readSearchPreferences(), { provider: "codex", models: { codex: "", openai: "" } });
+    const preferences = { provider: "codex", models: { codex: "selected-codex", openai: "selected-api" } };
+    saveSearchPreferences(preferences);
+    assert.deepEqual(readSearchPreferences(), preferences);
+    saved = '{"provider":"unknown","models":{"codex":"bad model","openai":[]}}';
+    assert.deepEqual(readSearchPreferences(), { provider: "codex", models: { codex: "", openai: "" } });
+    saved = 'invalid json';
+    assert.equal(readSearchPreferences().provider, "codex");
+  } finally { globalThis.window = previousWindow; }
+});
+
+test("Codex model selection does not substitute API model presets and explains ChatGPT usage", async () => {
+  const component = await loadComponent("AIModelSelect", { VITE_WEB_DEV_MODE: "mock" });
+  const html = renderToStaticMarkup(React.createElement(component.default, {
+    provider: "codex", value: "selected-codex", useDefault: true, language: "es", onChange() {},
+  }));
+  assert.match(html, /Predeterminado de Codex/);
+  assert.match(html, /selected-codex/);
+  assert.doesNotMatch(html, /chat-latest|gpt-4.1-mini/);
+  for (const language of ["es", "ca", "en"]) {
+    assert.equal(catalogAIError({ code: "AI_CODEX_AUTH" }, language), catalogAIStrings(language).codexAuth);
+    assert.equal(catalogAIError({ code: "AI_CODEX_FAILED" }, language), catalogAIStrings(language).codexFailed);
   }
 });

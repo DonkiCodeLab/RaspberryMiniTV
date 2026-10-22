@@ -112,6 +112,13 @@ class CodexBridge:
             options.update(user=user.pw_uid, group=user.pw_gid, extra_groups=[])
         return config, options
 
+    def command(self, config):
+        return [config["binary"], "app-server", "--listen", "stdio://"]
+
+    def initialize_params(self):
+        return {"clientInfo": {"name": "minitv_dashboard", "title": "MiniTV", "version": "1.0.0"},
+                "capabilities": {"experimentalApi": False}}
+
     def start(self):
         with self.start_lock:
             if self.process and self.process.poll() is None:
@@ -119,7 +126,7 @@ class CodexBridge:
             restarting = self.process is not None
             try:
                 config, options = self.launch_options()
-                process = subprocess.Popen([config["binary"], "app-server", "--listen", "stdio://"],
+                process = subprocess.Popen(self.command(config),
                                            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                            stderr=subprocess.DEVNULL, text=True, encoding="utf-8", bufsize=1, **options)
             except (OSError, KeyError) as exc:
@@ -134,8 +141,7 @@ class CodexBridge:
             self.reader = threading.Thread(target=self._read, args=(process,), daemon=True)
             self.reader.start()
             try:
-                self.rpc("initialize", {"clientInfo": {"name": "minitv_dashboard", "title": "MiniTV", "version": "1.0.0"},
-                                        "capabilities": {"experimentalApi": False}})
+                self.rpc("initialize", self.initialize_params())
                 self._write({"method": "initialized"})
                 result = self.rpc("account/read", {"refreshToken": False})
                 with self.lock:

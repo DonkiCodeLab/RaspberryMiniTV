@@ -49,7 +49,7 @@ export default function YouTubePreview({ videoId, title }) {
       player = new YT.Player(target, {
         host: "https://www.youtube-nocookie.com",
         videoId,
-        playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, playsinline: 1,
+        playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, playsinline: 1,
           rel: 0, iv_load_policy: 3, loop: 1, playlist: videoId, origin: window.location.origin },
         events: {
           onReady: event => {

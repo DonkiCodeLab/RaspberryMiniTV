@@ -139,6 +139,32 @@ export function photoDemo(action, data = {}) {
         return { photoId: photo.id, faces: [], state: 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
       } else if (action === 'people/scan' || action === 'people/pause' || /^photos\/[^/]+\/detect$/.test(action)) {
         throw new Error('Conecta la Raspberry para analizar las fotos.');
+      } else if (['people/merge', 'people/delete', 'people/download'].includes(action)) {
+        if (!Array.isArray(data.ids) || !data.ids.length || data.ids.some(id => typeof id !== 'string')) throw new Error('Selecciona las personas para esta acción.');
+        const sources = [...new Set(data.ids)].map(id => library.people.find(person => person.id === id && !person.appleKey));
+        if (sources.some(person => !person)) throw new Error('Esta persona ya no está disponible. Actualiza la biblioteca.');
+        if (action === 'people/download') {
+          const ids = new Set(sources.flatMap(person => person.photoIds));
+          const photos = library.photos.filter(photo => ids.has(photo.id));
+          if (!photos.length) throw new Error('Estas personas no tienen fotos para descargar.');
+          const { default: JSZip } = await import('jszip');
+          const zip = new JSZip();
+          for (const photo of photos) {
+            if (!photo.blob) throw new Error('No se encuentra la foto.');
+            // Demo storage uses UUID paths; include the original filename too.
+            const name = photo.name.replace(/[/\\]/g, '_');
+            zip.file(`${photo.id}/${name}`, await photo.blob.arrayBuffer());
+          }
+          return zip.generateAsync({ type: 'blob', compression: 'STORE' });
+        }
+        const target = library.people.find(person => person.id === (action === 'people/delete' ? UNKNOWN_PERSON_ID : data.personId));
+        if (!target || target.appleKey || sources.includes(target) || sources.some(person => person.id === UNKNOWN_PERSON_ID)) throw new Error('Selecciona otra persona existente para unir los álbumes.');
+        for (const source of sources) {
+          target.photoIds = [...new Set([...target.photoIds, ...source.photoIds])];
+          target.coverPhotoId ||= source.coverPhotoId;
+        }
+        library.people = library.people.filter(person => !sources.includes(person));
+        result = { ok: true, ...(action === 'people/merge' ? { personId: target.id } : {}) };
       } else if (/^people\/[^/]+\/merge$/.test(action)) {
         const source = library.people.find(p => p.id === action.split('/')[1]);
         const target = library.people.find(p => p.id === data.personId);

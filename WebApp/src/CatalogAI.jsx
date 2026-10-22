@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { isMockMode, searchCatalogAI } from "./api/raspberryApi";
 import { catalogAIError, catalogAIStrings } from "./catalogAIStrings.js";
-import { copyAIDebug, validateAIResult } from "./catalogAI.js";
+import { copyAIDebug, validateAIResult, readSearchPreferences, saveSearchPreferences } from "./catalogAI.js";
 import AIModelSelect from "./AIModelSelect.jsx";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import Recommendations from "./Recommendations.jsx";
@@ -44,16 +44,16 @@ export function CatalogAIDebug({ report, language }) {
   return <section id="catalog-ai-debug" className="catalog-ai-debug" aria-label={s.debugTitle}>
     <div className="catalog-ai-debug__heading"><h3>{s.debugTitle}</h3>
       <button type="button" className="dialog-button" onClick={copy}>{s.debugCopy}</button></div>
-    <p>{s.debugHint}</p>
+    <p>{provider?.name === "codex" ? s.codexDebugHint : s.debugHint}</p>
     {copyStatus && <p role="status">{s[copyStatus]}</p>}
     <h4>{s.debugOutput}</h4>
     <pre tabIndex={0}>{outputText || (provider?.called === false ? s.debugNotCalled : s.debugNoOutput)}</pre>
     <h4>{s.debugContext}</h4>
     <pre tabIndex={0}>{JSON.stringify({ ...context, provider: provider && {
-      httpStatus: provider.httpStatus, requestId: provider.requestId, status: provider.status,
+      name: provider.name, toolReads: provider.toolReads, httpStatus: provider.httpStatus, requestId: provider.requestId, status: provider.status,
       incomplete_details: provider.incomplete_details, usage: provider.usage, elapsedMs: provider.elapsedMs,
     } }, null, 2)}</pre>
-    <details><summary>{s.debugRaw}</summary>
+    <details><summary>{provider?.name === "codex" ? s.codexDebugRaw : s.debugRaw}</summary>
       {provider?.truncated && <p>{s.debugTruncated}</p>}
       <pre tabIndex={0}>{provider?.rawResponse ?? s.debugNoResponse}</pre>
     </details>
@@ -65,7 +65,15 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
   const rs = recommendationStrings(language);
   const [mode, setMode] = useState("search");
   const canRecommend = ["movies", "series"].includes(section);
-  const [model, setModel] = useState("gpt-6.1-sol");
+  const [preferences, setPreferences] = useState(readSearchPreferences);
+  const provider = preferences.provider;
+  const model = preferences.models[provider];
+  function choose(provider, model = preferences.models[provider]) {
+    const next = { provider, models: { ...preferences.models, [provider]: model } };
+    setPreferences(next);
+    saveSearchPreferences(next);
+    setError(""); setMessage(""); setDebug(null); setDebugOpen(false);
+  }
   const [prompt, setPrompt] = useState(initialPrompt);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -76,9 +84,9 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
   const input = useRef(null);
   const demo = isMockMode();
   useEffect(() => {
-    setDebug(null); setDebugOpen(false); setError(""); setMessage("");
+    setDebug(null); setDebugOpen(false); setError(""); setMessage(""); setBusy(false);
     return () => { request.current.generation += 1; request.current.controller?.abort(); };
-  }, [section]);
+  }, [section, user?.id]);
   function cancel() {
     request.current.generation += 1;
     request.current.controller?.abort();
@@ -93,7 +101,8 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     request.current.controller = controller;
     setBusy(true); setError(""); setMessage(""); setDebug(null);
     try {
-      const data = await searchCatalogAI({ section, prompt: prompt.trim(), language, ...(model ? { model } : {}) }, controller.signal);
+      const data = await searchCatalogAI({ section, prompt: prompt.trim(), language, provider,
+        ...(provider === "codex" && user?.id ? { userId: user.id } : {}), ...(model ? { model } : {}) }, controller.signal);
       if (request.current.generation !== generation || controller.signal.aborted) return;
       setDebug(data?.debug || { request: { section, prompt: prompt.trim(), model: model || undefined }, source: "client", response: data });
       const result = validateAIResult(data, section);
@@ -116,10 +125,15 @@ export default function CatalogAI({ section, language, onResult, onClose, initia
     </div>}
     {canRecommend && mode === "recommend" ? <Recommendations key={`${user?.id}:${section}:${language}`} user={user} section={section} language={language}
       onOpenLibrary={onOpenLibrary} onSearchTorrent={onSearchTorrent} /> : <>
-    <p>{section === "pictures" ? s.picturesHint : s.hint}</p>
+    <p>{section === "pictures" ? s.picturesHint : provider === "codex" ? s.codexHint : s.hint}</p>
     {demo && <p role="status">{s.demo}</p>}
     <form onSubmit={submit}>
-      <AIModelSelect value={model} onChange={setModel} language={language} disabled={busy || demo} useDefault />
+      <label htmlFor="catalog-ai-provider">{s.provider}</label>
+      <select id="catalog-ai-provider" value={provider} disabled={busy || demo} onChange={event => choose(event.target.value)}>
+        <option value="codex">{s.codexProvider}</option><option value="openai">{s.openaiProvider}</option>
+      </select>
+      <small>{provider === "codex" ? s.codexUsage : s.openaiUsage}</small>
+      <AIModelSelect key={provider} provider={provider} value={model} onChange={value => choose(provider, value)} language={language} disabled={busy || demo} useDefault />
       <label htmlFor="catalog-ai-prompt">{s.prompt}</label>
       <textarea ref={input} id="catalog-ai-prompt" value={prompt} onChange={event => setPrompt(event.target.value)} maxLength={2000} rows={3} disabled={busy || demo} autoFocus />
       <div className="catalog-ai-panel__examples"><span>{s.examples}</span>{(s.samples[section] || []).map(example => <button type="button" key={example} disabled={busy || demo}
