@@ -56,6 +56,7 @@ export default function CodexPanel({ language }) {
   const log = useRef(null);
   const follow = useRef(true);
   const generation = useRef(0);
+  const actionVersion = useRef(0);
 
   function forget() { saveSession(''); setToken(''); setState(null); setThreads([]); setPassword(''); }
 
@@ -72,18 +73,20 @@ export default function CodexPanel({ language }) {
     let timer, previous = '', historyLoaded = false;
     const currentGeneration = ++generation.current;
     async function poll() {
+      const version = actionVersion.current;
       try {
+        if (acting.current) return;
         const next = await codexRequest('state', token, null, controller.signal);
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || version !== actionVersion.current) return;
         setState(next);
         const key = `${next.thread?.id}:${next.busy}`;
-        if (!acting.current && (!historyLoaded || previous !== key)) {
+        if (next.account && !acting.current && (!historyLoaded || previous !== key)) {
           const history = await codexRequest('threads', token, {}, controller.signal);
-          if (controller.signal.aborted) return;
+          if (controller.signal.aborted || version !== actionVersion.current) return;
           setThreads(history.threads); setCursor(history.cursor); historyLoaded = true; previous = key;
         }
       } catch (e) {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && version === actionVersion.current) {
           if (e.status === 403) forget();
           setError(e.message);
         }
@@ -99,6 +102,7 @@ export default function CodexPanel({ language }) {
 
   async function act(name, data = {}) {
     if (acting.current || demo) return;
+    actionVersion.current += 1;
     acting.current = true; setBusy(name); setError('');
     try {
       const result = await codexRequest(name, token, data);
@@ -106,6 +110,7 @@ export default function CodexPanel({ language }) {
       else if (name === 'lock') forget();
       else if (name === 'threads') { setThreads(current => [...current, ...result.threads.filter(t => !current.some(c => c.id === t.id))]); setCursor(result.cursor); }
       else {
+        if (name === 'login') setState(current => ({ ...current, login: result }));
         if (name === 'send') { setDraft(''); follow.current = true; }
         if (name === 'select') follow.current = true;
         setState(await codexRequest('state', token));
@@ -116,6 +121,8 @@ export default function CodexPanel({ language }) {
 
   const running = Boolean(state?.busy);
   const loginUrl = codexLoginUrl(state?.login?.verificationUrl);
+  const loginPending = Boolean(state?.login && !state.login.completed);
+  const connecting = busy === 'login';
   return <section className="codex-panel" aria-labelledby="codex-title">
     <header className="codex-heading"><div><h2 id="codex-title">{s.title}</h2><p>{s.hint}</p></div>
       {token && !demo && <button disabled={!!busy} onClick={() => act('lock')}>{s.lock}</button>}
@@ -130,10 +137,15 @@ export default function CodexPanel({ language }) {
     </form> : !state ? <p role="status">{s.loading}</p> : <>
       <div className="codex-account">
         <p>{state.account ? `${s.account}${state.account.email ? ` · ${state.account.email}` : ''}` : s.noAccount}</p>
-        <button disabled={!!busy || running || Boolean(state.login && !state.login.completed)} onClick={() => act(state.account ? 'logout' : 'login')}>{state.account ? s.disconnect : s.connect}</button>
+        <button disabled={!!busy || running || loginPending} onClick={() => act(state.account ? 'logout' : 'login')}>{connecting ? s.loading : state.account ? s.disconnect : s.connect}</button>
       </div>
-      {state.login && !state.login.completed && <div className="codex-login" role="status"><p>{s.loginHint}</p><strong>{state.login.userCode}</strong>{loginUrl && <a href={loginUrl} target="_blank" rel="noopener noreferrer">{s.loginOpen}</a>}</div>}
-      {state.login?.completed && <p role="status">{state.login.success ? s.loginDone : state.login.error || s.loginFailed}</p>}
+      {connecting && <p role="status">{s.loginStarting}</p>}
+      {loginPending && <div className="codex-login" role="status">
+        <p>{loginUrl ? s.loginHint : s.loginFailed}</p>
+        {loginUrl && <><strong>{state.login.userCode}</strong><a href={loginUrl} target="_blank" rel="noopener noreferrer">{s.loginOpen}</a><p>{s.loginWaiting}</p></>}
+        <button disabled={!!busy} onClick={() => act('cancel-login')}>{s.loginCancel}</button>
+      </div>}
+      {state.login?.completed && !state.login.cancelled && <p role={state.login.success ? 'status' : 'alert'} className={state.login.success ? undefined : 'codex-error'}>{state.login.success ? s.loginDone : state.login.error || s.loginFailed}</p>}
       <p className="codex-isolated">{s.isolated}</p>
       <div className="codex-layout">
         <aside className="codex-history" aria-label={s.history}>
@@ -153,8 +165,8 @@ export default function CodexPanel({ language }) {
           {state.diff && <details className="codex-tool"><summary>{s.diff}</summary><pre>{state.diff}</pre></details>}
           <form className="codex-composer" onSubmit={e => { e.preventDefault(); act('send', { prompt: draft }); }}>
             <label htmlFor="codex-prompt">{s.prompt}</label>
-            <textarea id="codex-prompt" rows={4} maxLength={16000} value={draft} placeholder={s.placeholder} disabled={!state.account} onChange={e => setDraft(e.target.value)} />
-            <div className="codex-actions"><span role="status">{state.approvals?.length ? s.waiting : running ? s.working : s.ready}</span>
+            <textarea id="codex-prompt" rows={4} maxLength={16000} value={draft} placeholder={s.placeholder} onChange={e => setDraft(e.target.value)} />
+            <div className="codex-actions"><span role="status">{!state.account ? s.connectToSend : state.approvals?.length ? s.waiting : running ? s.working : s.ready}</span>
               {running ? <button type="button" disabled={!!busy} onClick={() => act('stop')}>{s.stop}</button> : <button type="submit" disabled={!!busy || !draft.trim() || !state.account}>{s.send}</button>}
             </div>
           </form>

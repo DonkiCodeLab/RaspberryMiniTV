@@ -4,6 +4,7 @@ from pathlib import Path
 import pwd
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from unittest.mock import patch
@@ -153,6 +154,118 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual(ctx.exception.status, 504)
             close.assert_called_once()
             self.assertEqual(self.bridge.pending, {})
+
+    def test_login_completion_race_retry_cancel_and_account_refresh(self):
+        bridge = self.bridge
+        login = {'type': 'chatgptDeviceCode', 'loginId': 'login-1',
+                 'verificationUrl': 'https://auth.openai.com/codex/device', 'userCode': 'TEST-CODE'}
+        with patch.object(bridge, 'start'), patch.object(bridge, 'rpc') as rpc:
+            rpc.return_value = login
+            self.assertEqual(bridge.action('login', {}), login)
+            self.assertEqual(bridge.action('login', {}), login)
+            self.assertEqual(rpc.call_count, 1)
+            bridge.action('cancel-login', {})
+            rpc.assert_called_with('account/login/cancel', {'loginId': 'login-1'})
+            self.assertTrue(bridge.snapshot()['login']['cancelled'])
+            self.notify('account/login/completed', loginId='login-1', success=False, error='Cancelled')
+            self.assertTrue(bridge.snapshot()['login']['cancelled'])
+
+            login = {**login, 'loginId': 'login-2'}
+            def immediate_completion(method, params):
+                if method == 'account/login/start':
+                    self.notify('account/login/completed', loginId='login-2', success=True, error=None)
+                    return login
+                return {'account': {'type': 'chatgpt', 'email': 'test@example.test'}}
+            rpc.side_effect = immediate_completion
+            self.assertTrue(bridge.action('login', {})['success'])
+            state = bridge.snapshot()
+            self.assertTrue(state['login']['completed'])
+            self.assertEqual(state['account']['email'], 'test@example.test')
+            # An old cancelled/expired attempt must not replace the completed login.
+            self.notify('account/login/completed', loginId='login-1', success=False, error='Expired')
+            self.assertTrue(bridge.snapshot()['login']['success'])
+
+    def test_failed_login_can_retry_and_invalid_response_never_stays_pending(self):
+        with patch.object(self.bridge, 'start'), patch.object(self.bridge, 'rpc') as rpc:
+            rpc.side_effect = CodexError('No network', 502)
+            with self.assertRaisesRegex(CodexError, 'No network'):
+                self.bridge.action('login', {})
+            self.assertIsNone(self.bridge.login)
+            rpc.side_effect = None
+            rpc.return_value = {}
+            with self.assertRaisesRegex(CodexError, 'enlace y un código válidos'):
+                self.bridge.action('login', {})
+            self.assertIsNone(self.bridge.login)
+            rpc.return_value = {'loginId': 'retry', 'verificationUrl': 'https://auth.openai.com/codex/device', 'userCode': 'TEST'}
+            self.assertEqual(self.bridge.action('login', {})['loginId'], 'retry')
+
+    def test_web_login_survives_request_thread_exit_and_completes_without_restart(self):
+        if os.geteuid() == 0:
+            self.skipTest('Production deliberately refuses root.')
+        fake = self.root / 'fake-codex-login'
+        fake.write_text('#!' + sys.executable + '\n' + r'''
+import ctypes, json, signal, sys
+if sys.platform == 'linux':
+    # Reproduce bwrap --die-with-parent, including its thread lifetime semantics.
+    assert ctypes.CDLL(None).prctl(1, signal.SIGKILL, 0, 0, 0) == 0
+account = None
+def emit(value): print(json.dumps(value), flush=True)
+for line in sys.stdin:
+    message = json.loads(line)
+    if 'id' not in message: continue
+    method, result = message.get('method'), {}
+    if method == 'account/read': result = {'account': account}
+    elif method == 'account/login/start':
+        assert message['params']['type'] == 'chatgptDeviceCode'
+        result = {'type': 'chatgptDeviceCode', 'loginId': 'web-login',
+                  'verificationUrl': 'https://auth.openai.com/codex/device', 'userCode': 'TEST-CODE'}
+    elif method == 'test/authorize':
+        account = {'type': 'chatgpt', 'email': 'test@example.test'}
+        emit({'method': 'account/login/completed', 'params': {'loginId': 'web-login', 'success': True, 'error': None}})
+        emit({'method': 'account/updated', 'params': {'authMode': 'chatgpt', 'planType': 'plus'}})
+    emit({'id': message['id'], 'result': result})
+''')
+        fake.chmod(0o700)
+        self.config['binary'] = str(fake)
+        self.path.write_text(json.dumps(self.config))
+        app = Flask(__name__)
+        app.register_blueprint(create_codex_blueprint(self.bridge))
+        token = self.bridge.unlock('admin-secret')['token']
+        headers = {'X-Codex-Session': token}
+
+        def web_request(path, method='get'):
+            responses = []
+            def handle():
+                with app.test_client() as client:
+                    responses.append(getattr(client, method)(path, headers=headers, **({'json': {}} if method == 'post' else {})))
+            request_thread = threading.Thread(target=handle)
+            request_thread.start()
+            request_thread.join(timeout=5)
+            self.assertFalse(request_thread.is_alive())
+            self.assertEqual(responses[0].status_code, 200)
+            return responses[0].json
+
+        self.assertIsNone(web_request('/codex/state')['account'])
+        process = self.bridge.process
+        self.assertTrue(self.bridge.process_owner.is_alive())
+        login = web_request('/codex/login', 'post')
+        self.assertEqual(login['userCode'], 'TEST-CODE')
+        self.assertEqual(web_request('/codex/state')['login'], login)
+        self.bridge.rpc('test/authorize', {})
+        state = web_request('/codex/state')
+        self.assertEqual(state['account']['type'], 'chatgpt')
+        self.assertTrue(state['login']['success'])
+        self.assertEqual(state['error'], '')
+        self.assertIs(self.bridge.process, process)
+        self.bridge.close()
+        self.assertFalse(self.bridge.process_owner.is_alive())
+
+    def test_spawn_failure_returns_without_hanging_request(self):
+        with patch('codex_bridge.subprocess.Popen', side_effect=OSError('Missing binary')):
+            with self.assertRaisesRegex(CodexError, 'No se pudo iniciar'):
+                self.bridge.start()
+        self.bridge.process_owner.join(timeout=1)
+        self.assertFalse(self.bridge.process_owner.is_alive())
 
     def test_real_stdio_transport_with_fake_server(self):
         fake = self.root / 'fake-codex'

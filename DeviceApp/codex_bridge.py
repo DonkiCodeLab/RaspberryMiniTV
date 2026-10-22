@@ -35,6 +35,7 @@ class CodexBridge:
         self.action_lock = threading.Lock()
         self.write_lock = threading.Lock()
         self.process = None
+        self.process_owner = None
         self.reader = None
         self.pending = {}
         self.serial = 0
@@ -119,21 +120,46 @@ class CodexBridge:
         return {"clientInfo": {"name": "minitv_dashboard", "title": "MiniTV", "version": "1.0.0"},
                 "capabilities": {"experimentalApi": False}}
 
+    def _spawn(self, config, options):
+        # Linux PDEATHSIG (used by bwrap --die-with-parent) follows the thread
+        # that spawned the process. Flask request threads end after each response.
+        # Keep the spawning thread alive for the full app-server lifetime.
+        ready = threading.Event()
+        launched = {}
+
+        def own_process():
+            try:
+                launched["process"] = subprocess.Popen(
+                    self.command(config), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, text=True, encoding="utf-8", bufsize=1, **options)
+            except Exception as exc:
+                launched["error"] = exc
+            finally:
+                ready.set()
+            if "process" in launched:
+                launched["process"].wait()
+
+        self.process_owner = threading.Thread(target=own_process, name="minitv-codex-process", daemon=True)
+        self.process_owner.start()
+        ready.wait()
+        if "error" in launched:
+            raise launched["error"]
+        return launched["process"]
+
     def start(self):
         with self.start_lock:
             if self.process and self.process.poll() is None:
                 return
-            restarting = self.process is not None
+            interrupted_conversation = bool(self.thread and self.thread.get("turns"))
             try:
                 config, options = self.launch_options()
-                process = subprocess.Popen(self.command(config),
-                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                           stderr=subprocess.DEVNULL, text=True, encoding="utf-8", bufsize=1, **options)
+                process = self._spawn(config, options)
             except (OSError, KeyError) as exc:
                 raise CodexError("No se pudo iniciar Codex. Comprueba la instalación.", 503) from exc
             with self.lock:
                 self.process = process
-                self.error = "Codex se ha reiniciado. Abre la conversación en el historial para revisar el resultado antes de continuar." if restarting else ""
+                self.error = "Codex se ha reiniciado. Abre la conversación en el historial para revisar el resultado antes de continuar." if interrupted_conversation else ""
+                self.account = None
                 self.login = None
                 self.thread = None
                 self.busy = False
@@ -171,6 +197,8 @@ class CodexBridge:
             if not entry["event"].wait(timeout):
                 # A timed-out turn might still execute: stop the process before permitting a retry.
                 self.close()
+                if method == "account/login/start":
+                    raise CodexError("No se ha podido obtener el código de acceso a ChatGPT a tiempo. Comprueba Internet en la Raspberry y vuelve a pulsar Conectar ChatGPT.", 504)
                 raise CodexError("Codex no ha respondido a tiempo. Se ha detenido la conexión; revisa el historial antes de reintentar.", 504)
             if "error" in entry:
                 raise CodexError(str(entry["error"].get("message", "Error de Codex")), 502)
@@ -235,8 +263,10 @@ class CodexBridge:
         method, params = message["method"], message.get("params", {})
         with self.lock:
             if method == "account/login/completed":
-                self.login = {"completed": True, "success": params.get("success"), "error": params.get("error")}
-                # account/updated follows; account/read on next reconnect supplies full details.
+                if self.login and (self.login.get("cancelled") or self.login.get("loginId") != params.get("loginId")):
+                    return
+                self.login = {"loginId": params.get("loginId"), "completed": True,
+                              "success": params.get("success"), "error": params.get("error")}
             elif method == "account/updated":
                 self.account = {"type": params.get("authMode"), "planType": params.get("planType")} if params.get("authMode") else None
             elif method == "serverRequest/resolved":
@@ -281,6 +311,13 @@ class CodexBridge:
     def snapshot(self):
         self.start()
         with self.lock:
+            read_account = bool(self.login and self.login.get("completed") and self.login.get("success") and not self.account)
+        # Never issue an RPC from the reader thread: it must keep consuming replies.
+        if read_account:
+            account = self.rpc("account/read", {"refreshToken": False}).get("account")
+            with self.lock:
+                self.account = account
+        with self.lock:
             result = copy.deepcopy({"thread": self.thread, "busy": self.busy, "account": self.account,
                                     "login": self.login, "error": self.error, "diff": self.diff,
                                     "approvals": list(self.approvals.values())})
@@ -322,10 +359,27 @@ class CodexBridge:
             if name == "login":
                 if self.login and not self.login.get("completed"):
                     return self.login
-                result = self.rpc("account/login/start", {"type": "chatgptDeviceCode"})
                 with self.lock:
-                    self.login = result
-                return result
+                    self.login = None
+                result = self.rpc("account/login/start", {"type": "chatgptDeviceCode"})
+                if not isinstance(result, dict) or any(not isinstance(result.get(key), str) or not result[key].strip()
+                                                       for key in ("loginId", "verificationUrl", "userCode")):
+                    raise CodexError("Codex no ha devuelto un enlace y un código válidos para conectar ChatGPT. Vuelve a intentarlo.", 502)
+                with self.lock:
+                    # Completion can arrive immediately after the RPC response,
+                    # before the request thread gets scheduled again.
+                    if not (self.login and self.login.get("completed") and self.login.get("loginId") == result.get("loginId")):
+                        self.login = result
+                    return copy.deepcopy(self.login)
+            if name == "cancel-login":
+                with self.lock:
+                    login_id = self.login.get("loginId") if self.login and not self.login.get("completed") else None
+                if login_id:
+                    self.rpc("account/login/cancel", {"loginId": login_id})
+                    with self.lock:
+                        if self.login and self.login.get("loginId") == login_id and not self.login.get("success"):
+                            self.login = {"loginId": login_id, "completed": True, "cancelled": True}
+                return {"ok": True}
             if name == "logout":
                 self.rpc("account/logout", {})
                 with self.lock:
@@ -411,6 +465,8 @@ class CodexBridge:
                 pass
         if self.reader and self.reader is not threading.current_thread():
             self.reader.join(timeout=3)
+        if self.process_owner and self.process_owner is not threading.current_thread():
+            self.process_owner.join(timeout=3)
         if process:
             for stream in (process.stdin, process.stdout):
                 if stream:

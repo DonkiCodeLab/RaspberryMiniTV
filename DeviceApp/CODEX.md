@@ -45,6 +45,17 @@ Codex; se aplican sus límites. Si el inicio mediante código está desactivado,
 actívalo en la configuración de seguridad de ChatGPT o consulta al administrador
 del espacio. No se utiliza ni modifica la clave del buscador IA del catálogo.
 
+La conexión se completa desde la web: **Conectar ChatGPT** muestra el progreso,
+el código y **Autorizar en OpenAI**. Al autorizar, el panel detecta la cuenta y
+habilita **Enviar** automáticamente. Puedes escribir el mensaje mientras conectas,
+cancelar el intento o volver a conectar si caduca el código. Los errores de acceso
+se muestran en el panel; no hace falta iniciar sesión por terminal ni reiniciar la API.
+
+El proceso se inicia desde un hilo que vive hasta que Codex termina. En el entorno
+ARM64 de Bubblewrap, `--die-with-parent` sigue el hilo que creó el proceso; lanzarlo
+desde un hilo temporal de Flask cerraba Codex al terminar la petición web y perdía
+el código pendiente. Se conserva el cierre automático cuando termina la API.
+
 Documentación oficial: [App Server](https://learn.chatgpt.com/docs/app-server) y
 [autenticación](https://learn.chatgpt.com/docs/auth).
 
