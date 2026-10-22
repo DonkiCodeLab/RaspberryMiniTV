@@ -39,15 +39,20 @@ export default function MovieFileInfo({ relativePath, fileName, fileInfo, langua
   const bitrate = info?.videoBitrate || info?.totalBitrate;
   return <section className="movie-file-info" aria-label={s.title} aria-busy={!info && !failed}>
     <div className="movie-file-info__heading"><strong>{s.title}</strong>
-      <span className={`movie-file-info__quality movie-file-info__quality--${quality.level}`}>
-        <MovieQualityBars level={quality.level} />
-        {s.levels[quality.level]}
-      </span>
+      <div className="movie-file-info__summary">
+        <dl className="movie-file-info__size">
+          <dt>{s.size}</dt>
+          <dd>{formatFileSize(info?.sizeBytes, language) || s.unknown}</dd>
+        </dl>
+        <span className={`movie-file-info__quality movie-file-info__quality--${quality.level}`}>
+          <MovieQualityBars level={quality.level} />
+          {s.levels[quality.level]}
+        </span>
+      </div>
     </div>
-    <dl>
+    <dl className="movie-file-info__details">
       <div className="movie-file-info__name"><dt>{s.file}</dt><dd>{name}</dd></div>
       {info?.originalFileName && info.originalFileName !== name && <div className="movie-file-info__name"><dt>{s.original}</dt><dd>{info.originalFileName}</dd></div>}
-      <div><dt>{s.size}</dt><dd>{formatFileSize(info?.sizeBytes, language) || s.unknown}</dd></div>
       <div><dt>{s.resolution}</dt><dd>{quality.resolution || s.unknown}{info?.width && info?.height ? <small>{info.width} × {info.height} px</small> : null}</dd></div>
       <div><dt>{s.source}</dt><dd>{quality.source || s.unknown}</dd></div>
       <div><dt>{s.codec}</dt><dd>{info?.codec?.toUpperCase() || s.unknown}</dd></div>

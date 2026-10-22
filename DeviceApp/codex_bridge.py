@@ -18,9 +18,11 @@ from flask import Blueprint, jsonify, request
 
 
 class CodexError(Exception):
-    def __init__(self, message, status=400):
+    def __init__(self, message, status=400, method=None, rpc_error=None):
         super().__init__(message)
         self.status = status
+        self.method = method
+        self.rpc_error = rpc_error
 
 
 def password_hash(password, salt):
@@ -199,9 +201,11 @@ class CodexBridge:
                 self.close()
                 if method == "account/login/start":
                     raise CodexError("No se ha podido obtener el código de acceso a ChatGPT a tiempo. Comprueba Internet en la Raspberry y vuelve a pulsar Conectar ChatGPT.", 504)
-                raise CodexError("Codex no ha respondido a tiempo. Se ha detenido la conexión; revisa el historial antes de reintentar.", 504)
+                raise CodexError("Codex no ha respondido a tiempo. Se ha detenido la conexión; revisa el historial antes de reintentar.", 504, method=method)
             if "error" in entry:
-                raise CodexError(str(entry["error"].get("message", "Error de Codex")), 502)
+                raise CodexError(str(entry["error"].get("message", "Error de Codex")), 502,
+                                 method=method, rpc_error={key: entry["error"][key]
+                                     for key in ("code", "message") if key in entry["error"]})
             return entry.get("result", {})
         finally:
             with self.lock:

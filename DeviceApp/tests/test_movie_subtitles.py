@@ -18,7 +18,9 @@ class MovieSubtitleTests(unittest.TestCase):
         self.movies.mkdir()
         self.video = self.movies / 'Alien (1979).mkv'
         self.video.write_bytes(b'video')
-        for name, value in {'VIDEOS_DIR': str(self.root), 'MOVIES_DIR': str(self.movies)}.items():
+        for name, value in {'VIDEOS_DIR': str(self.root), 'MOVIES_DIR': str(self.movies),
+                            'MEDIA_LIBRARY_PATH': str(self.root / 'media_library.json'),
+                            'LEGACY_MOVIE_LIBRARY_PATH': str(self.root / 'movie_library.json')}.items():
             mocked = patch.object(api, name, value)
             mocked.start()
             self.addCleanup(mocked.stop)

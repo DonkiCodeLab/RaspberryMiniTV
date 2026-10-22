@@ -18,7 +18,9 @@ class DualSubtitleTests(unittest.TestCase):
         self.video = self.root / 'Film.mp4'; self.video.write_bytes(b'video')
         self.content = '1\n00:00:00,100 --> 00:00:02,000\nHello\n'
         (self.root / 'Film.srt').write_text(self.content)
-        for name, value in [('VIDEOS_DIR', str(self.root)), ('current_web_pin', lambda: 'test-pin')]:
+        for name, value in [('VIDEOS_DIR', str(self.root)), ('current_web_pin', lambda: 'test-pin'),
+                            ('MEDIA_LIBRARY_PATH', str(self.root / 'media_library.json')),
+                            ('LEGACY_MOVIE_LIBRARY_PATH', str(self.root / 'movie_library.json'))]:
             handle = patch.object(api, name, value); handle.start(); self.addCleanup(handle.stop)
         self.client = api.app.test_client()
         subtitles._extract.cache_clear()

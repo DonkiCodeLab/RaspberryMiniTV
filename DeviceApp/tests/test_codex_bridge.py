@@ -152,8 +152,22 @@ class BridgeTests(unittest.TestCase):
             with self.assertRaises(CodexError) as ctx:
                 self.bridge.rpc('turn/start', {}, timeout=.01)
             self.assertEqual(ctx.exception.status, 504)
+            self.assertEqual(ctx.exception.method, 'turn/start')
             close.assert_called_once()
             self.assertEqual(self.bridge.pending, {})
+
+    def test_rpc_rejection_preserves_method_and_protocol_error(self):
+        rejection = {'code': -32602, 'message': 'Unsupported dynamicTools', 'data': {'private': 'omitted'}}
+        def reject(message):
+            entry = self.bridge.pending[message['id']]
+            entry['error'] = rejection
+            entry['event'].set()
+        with patch.object(self.bridge, '_write', side_effect=reject):
+            with self.assertRaises(CodexError) as ctx:
+                self.bridge.rpc('thread/start', {})
+        self.assertEqual(ctx.exception.method, 'thread/start')
+        self.assertEqual(ctx.exception.rpc_error, {'code': -32602, 'message': 'Unsupported dynamicTools'})
+        self.assertEqual(self.bridge.pending, {})
 
     def test_login_completion_race_retry_cancel_and_account_refresh(self):
         bridge = self.bridge

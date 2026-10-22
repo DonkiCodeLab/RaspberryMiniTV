@@ -53,6 +53,21 @@ class CatalogAgent(CodexBridge):
         self.read_ids = set()
         self.diagnostics = diagnostics if diagnostics is not None else {}
 
+    def rpc(self, method, params, timeout=25):
+        self.diagnostics["stage"] = "codex_" + method.replace("/", "_")
+        provider = self.diagnostics.setdefault("provider", {"name": "codex"})
+        provider["rpcMethod"] = method
+        try:
+            result = super().rpc(method, params, timeout=timeout)
+            if method == "initialize" and isinstance(result.get("userAgent"), str):
+                provider["userAgent"] = result["userAgent"]
+            return result
+        except CodexError as error:
+            provider["error"] = {"method": method, "status": error.status,
+                                 "message": str(error), "rpcError": error.rpc_error}
+            provider["rawResponse"] = json.dumps(provider["error"], ensure_ascii=False)[:100000]
+            raise
+
     def launch_options(self):
         config, options = super().launch_options()
         # Avoid loading the development checkout's instructions or project config.
@@ -155,12 +170,13 @@ class CatalogAgent(CodexBridge):
         self.diagnostics["request"]["model"] = result.get("model", model)
         if self.cancelled.is_set():
             raise AIError("Consulta cancelada.", "AI_CANCELLED", 409)
-        self.diagnostics["provider"] = {"name": "codex", "called": True}
+        self.diagnostics.setdefault("provider", {"name": "codex"})["called"] = True
         started = time.monotonic()
         self.rpc("turn/start", {"threadId": self.thread["id"],
             "input": [{"type": "text", "text": prompt}], "outputSchema": OUTPUT_SCHEMA,
             "approvalPolicy": "never", "sandboxPolicy": {"type": "readOnly", "access": {
                 "type": "restricted", "includePlatformDefaults": False, "readableRoots": []}}})
+        self.diagnostics["stage"] = "codex_turn_wait"
         while not self.completed.wait(0.2):
             if self.cancelled.is_set():
                 raise AIError("Consulta cancelada.", "AI_CANCELLED", 409)
@@ -192,7 +208,9 @@ class CatalogAgent(CodexBridge):
 
 def codex_error(error):
     code = "AI_TIMEOUT" if error.status == 504 else "AI_CODEX_UNAVAILABLE"
-    return AIError("No se pudo consultar Codex. Revisa Dashboard → Codex y actualiza su instalación si es necesario.", code, error.status)
+    return AIError("No se pudo completar la solicitud a Codex. Consulta Depurar para ver el motivo.",
+                   code, error.status, details={"providerError": {"method": error.method,
+                       "status": error.status, "message": str(error), "rpcError": error.rpc_error}})
 
 
 def list_codex_models():

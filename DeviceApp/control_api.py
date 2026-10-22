@@ -3738,6 +3738,52 @@ def media_file_details():
     return response
 
 
+def subtitle_file_key(path):
+    return os.path.relpath(path, VIDEOS_DIR).replace(os.sep, "/")
+
+
+@media_library_transaction
+def save_subtitle_file(path, content, language=""):
+    library = load_media_library()
+    records = library.setdefault("subtitleFiles", {})
+    key = subtitle_file_key(path)
+    movie_subtitles.atomic_write(path, content, mode=0o644)
+    if language:
+        records[key] = {"language": language, "sha256": hashlib.sha256(content).hexdigest()}
+    else:
+        records.pop(key, None)
+    save_media_library(library)
+
+
+@media_library_transaction
+def remove_subtitle_file(path):
+    library = load_media_library()
+    os.remove(path)
+    library.get("subtitleFiles", {}).pop(subtitle_file_key(path), None)
+    save_media_library(library)
+
+
+def stored_subtitle_inventory(video, root, subtitle_info=None):
+    inventory = browser_subtitles.inventory(video, root, subtitle_info=subtitle_info)
+    records = load_media_library().get("subtitleFiles", {})
+    for track in inventory["tracks"]:
+        if track["kind"] != "external":
+            continue
+        path = os.path.join(os.path.dirname(video), track["id"].split(":", 1)[1])
+        record = records.get(subtitle_file_key(path), {})
+        if record.get("language") not in movie_subtitles.LANGUAGES:
+            continue
+        # Ignore metadata if the SRT was replaced outside the app.
+        try:
+            with open(path, "rb") as source:
+                content = source.read(movie_subtitles.MAX_SUBTITLE_BYTES + 1)
+            if hashlib.sha256(content).hexdigest() == record.get("sha256"):
+                track["language"] = record["language"]
+        except OSError:
+            continue
+    return inventory
+
+
 @app.route("/media/subtitles", methods=["GET"])
 def media_subtitle_info():
     target = resolve_relative_video_path(request.args.get("relativePath"), VIDEOS_DIR)
@@ -3746,7 +3792,7 @@ def media_subtitle_info():
             or os.path.commonpath([root, os.path.realpath(target)]) != root):
         return jsonify({"error": "Video not found"}), 404
     inventory = movie_subtitles.inspect_subtitles(target, root)
-    inventory["tracks"] = browser_subtitles.inventory(target, root, subtitle_info=inventory)["tracks"]
+    inventory["tracks"] = stored_subtitle_inventory(target, root, subtitle_info=inventory)["tracks"]
     response = jsonify(inventory)
     response.headers["Cache-Control"] = "no-store"
     return response
@@ -3769,7 +3815,7 @@ def delete_movie_subtitle():
         path = os.path.join(os.path.dirname(movie_path), track["id"].split(":", 1)[1])
         if not browser_subtitles.contained(path, root):
             return jsonify({"code": "SUBTITLE_NOT_FOUND"}), 404
-        os.remove(path)
+        remove_subtitle_file(path)
         return jsonify({"ok": True, "file": os.path.basename(path)})
     except FileNotFoundError:
         return jsonify({"code": "SUBTITLE_NOT_FOUND"}), 404
@@ -3792,7 +3838,7 @@ def upload_movie_subtitles():
     if not content.strip() or len(content) > 5 * 1024 * 1024:
         return jsonify({"error": "Subtitle must be non-empty and no larger than 5 MB"}), 400
     subtitle_path = os.path.splitext(movie_path)[0] + ".srt"
-    movie_subtitles.atomic_write(subtitle_path, content, mode=0o644)
+    save_subtitle_file(subtitle_path, content)
     return jsonify({"ok": True, "file": os.path.basename(subtitle_path)})
 
 
@@ -3870,7 +3916,7 @@ def obtain_movie_subtitles():
             raise movie_subtitles.SubtitleError("SUBTITLE_MOVIE_CHANGED", 409)
         subtitle_path = os.path.splitext(movie_path)[0] + ".srt"
         # Kodi may run as the desktop user while the API runs as root.
-        movie_subtitles.atomic_write(subtitle_path, content, mode=0o644)
+        save_subtitle_file(subtitle_path, content, language)
         return jsonify({"ok": True, "file": os.path.basename(subtitle_path), **result})
     except movie_subtitles.SubtitleError as error:
         return jsonify({"error": error.code, "code": error.code}), error.status
@@ -4099,7 +4145,7 @@ def stream_media():
 
     subtitle_id = request.args.get("subtitles", "")
     if subtitle_id == "list":
-        response = jsonify(browser_subtitles.inventory(target_path, VIDEOS_DIR))
+        response = jsonify(stored_subtitle_inventory(target_path, VIDEOS_DIR))
         response.headers["Cache-Control"] = "no-store"
         return response
     if subtitle_id and subtitle_id not in {"0", "1"}:

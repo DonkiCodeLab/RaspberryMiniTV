@@ -202,7 +202,9 @@ class SubtitleDownloadApiTests(unittest.TestCase):
         self.target.write_bytes(b'existing')
         self.settings = self.root / 'subtitle_settings.json'
         self.path = 'Movies/Alien.mkv'
-        for name, value in {'VIDEOS_DIR': str(self.root), 'MOVIES_DIR': str(self.movies), 'SUBTITLE_SETTINGS_PATH': str(self.settings)}.items():
+        for name, value in {'VIDEOS_DIR': str(self.root), 'MOVIES_DIR': str(self.movies), 'SUBTITLE_SETTINGS_PATH': str(self.settings),
+                            'MEDIA_LIBRARY_PATH': str(self.root / 'media_library.json'),
+                            'LEGACY_MOVIE_LIBRARY_PATH': str(self.root / 'movie_library.json')}.items():
             mocked = patch.object(api, name, value)
             mocked.start(); self.addCleanup(mocked.stop)
         self.patch_api('is_authorized_request', return_value=True)
@@ -281,6 +283,42 @@ class SubtitleDownloadApiTests(unittest.TestCase):
                 response = self.obtain(language=language)
                 self.assertEqual(response.status_code, 200, response.json)
                 self.assertEqual(self.provider.obtain.call_args.args[2], language)
+                self.assertEqual(self.inventory()['tracks'][0]['language'], language)
+
+    def inventory(self, stream=False):
+        with patch.object(subtitles.shutil, 'which', return_value=None):
+            return self.client.get('/media/stream' if stream else '/media/subtitles', query_string={
+                'relativePath': self.path, 'subtitles': 'list'}).json
+
+    def test_download_language_persists_in_sqlite_and_both_inventories(self):
+        self.assertEqual(self.obtain(language='en').status_code, 200)
+        # New clients/reads must recover the language from disk, without a filename suffix.
+        self.client = api.app.test_client()
+        self.assertTrue((self.root / 'media_library.sqlite3').exists())
+        self.assertEqual(api.load_media_library()['subtitleFiles']['Movies/Alien.srt']['language'], 'en')
+        for stream in (False, True):
+            self.assertEqual(self.inventory(stream)['tracks'][0]['language'], 'en')
+        self.assertEqual(self.obtain(language='fr').status_code, 200)
+        self.assertEqual(self.inventory()['tracks'][0]['language'], 'fr')
+
+    def test_replaced_or_uploaded_srt_does_not_inherit_download_language(self):
+        self.obtain(language='en')
+        self.target.write_bytes(SRT + b'\nDifferent file\n')
+        self.assertEqual(self.inventory()['tracks'][0]['language'], '')
+        response = self.client.post('/movies/subtitles', data={
+            'relativePath': self.path, 'file': (io.BytesIO(SRT), 'replacement.srt')})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.inventory()['tracks'][0]['language'], '')
+        self.assertNotIn('Movies/Alien.srt', api.load_media_library()['subtitleFiles'])
+
+    def test_deleting_download_removes_its_language_record(self):
+        self.obtain(language='en')
+        response = self.client.delete('/movies/subtitles', query_string={
+            'relativePath': self.path, 'sourceId': 'external:Alien.srt'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('Movies/Alien.srt', api.load_media_library()['subtitleFiles'])
+        self.target.write_bytes(SRT)
+        self.assertEqual(self.inventory()['tracks'][0]['language'], '')
 
     def test_errors_and_movie_changes_keep_existing_subtitle(self):
         for code in ('SUBTITLE_NOT_FOUND', 'SUBTITLE_AUTH_FAILED', 'SUBTITLE_INVALID_DOWNLOAD'):
@@ -296,6 +334,7 @@ class SubtitleDownloadApiTests(unittest.TestCase):
         self.assertEqual(self.target.read_bytes(), b'existing')
 
     def test_atomic_write_failure_keeps_old_subtitle_and_cleans_temp(self):
+        api.load_media_library()  # Initialize SQLite before simulating an SRT write failure.
         with patch.object(subtitles.os, 'replace', side_effect=OSError('disk full')):
             self.assertEqual(self.obtain().json['code'], 'SUBTITLE_SAVE_FAILED')
         self.assertEqual(self.target.read_bytes(), b'existing')

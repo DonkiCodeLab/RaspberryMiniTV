@@ -19,7 +19,9 @@ class BrowserSubtitleTests(unittest.TestCase):
         (self.root / 'Movie.mp4').write_bytes(b'video')
         self.srt = self.root / 'Movie.srt'
         self.srt.write_bytes('1\r\n00:00:01,200 --> 00:00:03,400\r\n¡Hola!\r\n'.encode())
-        for name, value in [('VIDEOS_DIR', str(self.root))]:
+        for name, value in [('VIDEOS_DIR', str(self.root)),
+                            ('MEDIA_LIBRARY_PATH', str(self.root / 'media_library.json')),
+                            ('LEGACY_MOVIE_LIBRARY_PATH', str(self.root / 'movie_library.json'))]:
             mocked = patch.object(api, name, value)
             mocked.start()
             self.addCleanup(mocked.stop)

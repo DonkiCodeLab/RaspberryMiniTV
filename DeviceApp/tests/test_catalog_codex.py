@@ -73,6 +73,31 @@ class CatalogueAgentTests(unittest.TestCase):
             self.assertEqual(seen, [True])
             close.assert_called_once()
 
+    def test_thread_start_rejection_preserves_exact_protocol_error_and_stage(self):
+        diagnostics = {"provider": {"name": "codex", "called": False}}
+        rejection = {"code": -32602, "message": "Invalid dynamicTools configuration"}
+        def rpc(agent, method, params, timeout=25):
+            if method == "config/read":
+                return {"config": {}}
+            raise codex.CodexError(rejection["message"], 502, method=method, rpc_error=rejection)
+        with patch.object(codex.CatalogAgent, "require_account"), \
+             patch.object(codex.CodexBridge, "rpc", rpc), patch.object(codex.CatalogAgent, "close"):
+            with self.assertRaises(AIError) as raised:
+                codex.query_codex_catalog("Bugs", "movies", "es", "chosen-model", self.records, "reject-thread", diagnostics)
+        self.assertEqual(raised.exception.code, "AI_CODEX_UNAVAILABLE")
+        self.assertEqual(diagnostics["stage"], "codex_thread_start")
+        self.assertFalse(diagnostics["provider"]["called"])
+        self.assertEqual(diagnostics["provider"]["rpcMethod"], "thread/start")
+        self.assertEqual(json.loads(diagnostics["provider"]["rawResponse"])["rpcError"], rejection)
+        self.assertEqual(raised.exception.details["providerError"]["method"], "thread/start")
+        self.assertEqual(raised.exception.details["providerError"]["message"], rejection["message"])
+
+    def test_timeout_keeps_its_code_and_underlying_reason(self):
+        error = codex.codex_error(codex.CodexError("Timed out waiting for config", 504, method="config/read"))
+        self.assertEqual(error.code, "AI_TIMEOUT")
+        self.assertEqual(error.details["providerError"]["method"], "config/read")
+        self.assertEqual(error.details["providerError"]["message"], "Timed out waiting for config")
+
     def test_real_transport_reads_catalogue_and_uses_selected_model_in_ephemeral_thread(self):
         if os.geteuid() == 0:
             self.skipTest("Production refuses to run Codex as root")
@@ -95,7 +120,9 @@ for line in sys.stdin:
         continue
     if 'id' not in message: continue
     result = {}
-    if method == 'initialize': assert message['params']['capabilities']['experimentalApi']
+    if method == 'initialize':
+        assert message['params']['capabilities']['experimentalApi']
+        result = {'userAgent': 'codex-test/1.0'}
     elif method == 'account/read': result = {'account':{'type':'chatgpt'}}
     elif method == 'config/read': result = {'config':{'mcp_servers':{'private':{}},'plugins':{'private-plugin':{}}}}
     elif method == 'thread/start':
@@ -123,6 +150,7 @@ for line in sys.stdin:
             self.assertEqual(result["ids"], [self.records[0]["id"]])
             self.assertEqual(diagnostics["provider"]["toolReads"], 1)
             self.assertEqual(diagnostics["provider"]["status"], "completed")
+            self.assertEqual(diagnostics["provider"]["userAgent"], "codex-test/1.0")
 
     def test_failure_timeout_and_disconnect_never_apply_results(self):
         for outcome in ("failed", "interrupted", "timeout", "disconnect", "no-read"):
@@ -173,8 +201,13 @@ class CodexSearchApiTests(unittest.TestCase):
             self.assertEqual(search.call_args.args[3], "chosen-model")
             self.assertEqual(search.call_args.args[4], self.records)
             self.assertEqual(response.headers["Cache-Control"], "no-store")
-            search.side_effect = AIError("Codex limit", "AI_CODEX_FAILED", 502)
-            self.assertEqual(self.client.post("/ai/search", json=self.query, headers=self.headers).status_code, 502)
+            search.side_effect = codex.codex_error(codex.CodexError(
+                "Unsupported dynamicTools sk-private-token", 502, method="thread/start"))
+            failed = self.client.post("/ai/search", json=self.query, headers=self.headers)
+            self.assertEqual(failed.status_code, 502)
+            details = failed.json["debug"]["validation"]["providerError"]
+            self.assertEqual(details["method"], "thread/start")
+            self.assertEqual(details["message"], "Unsupported dynamicTools [REDACTED]")
             direct.assert_not_called()
             uploaded.assert_not_called()
             self.assertFalse(api.ai_request_active)
