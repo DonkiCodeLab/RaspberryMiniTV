@@ -48,6 +48,7 @@ export function PersonCardActions({ person, people, editing, selected, s, busy, 
 export function PeopleToolbar({ editing, onToggle, selected, people, s, busy, onSelectPage, onClear, onAction }) {
   const actionsId = useId();
   const fixedSelected = selected.some(person => person.id === UNKNOWN_PERSON_ID);
+  const mergeSources = selected.filter(person => person.id !== UNKNOWN_PERSON_ID);
   return <div className="photo-people-toolbar">
     <button type="button" className="dialog-button" aria-pressed={editing} aria-expanded={editing} aria-controls={actionsId}
       disabled={busy} onClick={onToggle}>{editing ? s.finishPeopleEdit : s.editPeople}</button>
@@ -57,8 +58,8 @@ export function PeopleToolbar({ editing, onToggle, selected, people, s, busy, on
       <button type="button" className="dialog-button" disabled={busy || !selected.length} onClick={onClear}>{s.clear}</button>
       <button type="button" className="dialog-button photo-delete-button" disabled={busy || !selected.length || fixedSelected} onClick={() => onAction('delete', selected)}>{s.deletePeople}</button>
       <button type="button" className="dialog-button" disabled={busy || !selected.some(person => person.photoIds?.length)} onClick={() => onAction('download', selected)}>{s.downloadPeople}</button>
-      <PersonMergeForm people={people} excludedIds={selected.length === 1 ? [selected[0].id] : []} s={s} busy={busy} disabled={!selected.length || fixedSelected}
-        onMerge={target => onAction('merge', selected.filter(person => person.id !== target.id), target)} />
+      <PersonMergeForm people={people} excludedIds={mergeSources.length === 1 ? [mergeSources[0].id] : []} s={s} busy={busy} disabled={!mergeSources.length}
+        onMerge={target => onAction('merge', mergeSources.filter(person => person.id !== target.id), target)} />
       {fixedSelected && <small className="photo-people-fixed-hint">{s.fixedPerson}</small>}
     </div>}
   </div>;

@@ -1810,6 +1810,7 @@
   "Game settings require a backend.": "تتطلب إعدادات الألعاب خادمًا خلفيًا.",
   "Codex is unavailable in demo mode.": "Codex غير متاح في الوضع التجريبي.",
   "Quality": "الجودة",
+  "Video quality": "جودة الفيديو",
   "Duplicates by name": "العناصر المكررة بالاسم",
   "Browse by quality": "التصفح حسب الجودة",
   "Browse duplicates by letter": "تصفح العناصر المكررة حسب الحرف",

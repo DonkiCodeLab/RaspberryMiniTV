@@ -10,6 +10,7 @@ case "$(uname -m)" in
   *) echo "Se necesita un kernel Linux de 64 bits." >&2; exit 1 ;;
 esac
 install -d -m 0755 "${CODEX_PREFIX}" "${CODEX_PREFIX}/bin"
+echo "Consultando la versión de Codex en npm…"
 CODEX_VERSION="$(npm view "@openai/codex@${MINITV_CODEX_VERSION:-latest}" version)"
 [[ "${CODEX_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][a-zA-Z0-9.-]+)?$ ]] || { echo "Versión inválida." >&2; exit 1; }
 CODEX_STAGE="$(mktemp -d "${CODEX_PREFIX}/.install-XXXXXX")"
@@ -18,6 +19,7 @@ trap 'rm -rf -- "${CODEX_STAGE}"' EXIT
 install -d -m 0755 "${CODEX_PREFIX}/versions"
 CODEX_RUNTIME="${CODEX_PREFIX}/versions/${CODEX_VERSION}-linux-${CODEX_ARCH}"
 if [[ ! -d "${CODEX_RUNTIME}" ]]; then
+  echo "Descargando Codex ${CODEX_VERSION} para ${CODEX_ARCH}…"
   npm pack "@openai/codex@${CODEX_VERSION}-linux-${CODEX_ARCH}" --pack-destination "${CODEX_STAGE}" --silent
   tar -xzf "${CODEX_STAGE}/openai-codex-${CODEX_VERSION}-linux-${CODEX_ARCH}.tgz" -C "${CODEX_STAGE}" --no-same-owner
   "${CODEX_STAGE}/package/vendor/${CODEX_TARGET}/bin/codex" --version

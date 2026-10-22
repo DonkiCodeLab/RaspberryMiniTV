@@ -1,6 +1,6 @@
 # WebApp
 
-En Películas, **Ordenar por → Calidad** usa la calidad guardada al importar cada
+En Películas, **Ordenar por → Calidad del vídeo** usa la calidad guardada al importar cada
 vídeo; los archivos sin valoración quedan al final en ambos sentidos. La calidad
 y la resolución aparecen en las tarjetas y en el listado.
 Las fichas leen el análisis guardado y ya no analizan el vídeo al abrirse.

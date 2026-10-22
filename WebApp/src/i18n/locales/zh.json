@@ -1810,6 +1810,7 @@
   "Game settings require a backend.": "游戏设置需要后端服务。",
   "Codex is unavailable in demo mode.": "演示模式无法使用 Codex。",
   "Quality": "画质",
+  "Video quality": "视频画质",
   "Duplicates by name": "同名重复项",
   "Browse by quality": "按画质浏览",
   "Browse duplicates by letter": "按字母浏览重复项",

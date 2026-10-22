@@ -1810,6 +1810,7 @@
   "Game settings require a backend.": "Conecta con la Raspberry para configurar los juegos.",
   "Codex is unavailable in demo mode.": "Codex no está disponible en modo demo.",
   "Quality": "Calidad",
+  "Video quality": "Calidad del vídeo",
   "Duplicates by name": "Repetidas por nombre",
   "Browse by quality": "Recorrer por calidad",
   "Browse duplicates by letter": "Recorrer repetidas por letra",

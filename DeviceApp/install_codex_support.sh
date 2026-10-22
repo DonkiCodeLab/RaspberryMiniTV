@@ -11,44 +11,13 @@ if [[ "$(uname -s)" != Linux ]]; then
   exit 1
 fi
 case "$(uname -m)" in aarch64|x86_64) ;; *) echo "Arquitectura no compatible con este instalador." >&2; exit 1 ;; esac
-if ! command -v node >/dev/null || ! command -v npm >/dev/null || ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 20 ? 0 : 1)'; then
-  echo "Instala Node.js 20 o superior y npm para todos los usuarios y vuelve a ejecutar este instalador." >&2
-  exit 1
-fi
-for dependency in git python3 runuser useradd; do
-  command -v "${dependency}" >/dev/null || { echo "Falta ${dependency}." >&2; exit 1; }
-done
 if [[ "${1:-}" != "" && "${1}" != --reset-password ]]; then
   echo "Uso: sudo bash DeviceApp/install_codex_support.sh [--reset-password]" >&2
   exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(dirname "${SCRIPT_DIR}")"
-CODEX_USER=minitv-codex
-CODEX_DATA=/var/lib/minitv-codex
-CODEX_WORKSPACE="${CODEX_DATA}/workspace"
-CODEX_PREFIX=/opt/minitv-codex
-
-if ! id "${CODEX_USER}" >/dev/null 2>&1; then
-  useradd --system --user-group --create-home --home-dir "${CODEX_DATA}" --shell /usr/sbin/nologin "${CODEX_USER}"
-fi
-if [[ "$(id -u "${CODEX_USER}")" == 0 ]]; then
-  echo "El usuario de Codex no puede ser root." >&2
-  exit 1
-fi
-install -d -m 0700 -o "${CODEX_USER}" -g "${CODEX_USER}" "${CODEX_DATA}" "${CODEX_DATA}/.codex"
-if [[ ! -e "${CODEX_WORKSPACE}" ]]; then
-  # A standalone clone: no shared objects/worktree metadata with the live repository.
-  git -c safe.directory="${REPO_DIR}" clone --no-hardlinks -- "${REPO_DIR}" "${CODEX_WORKSPACE}"
-  chown -R "${CODEX_USER}:${CODEX_USER}" "${CODEX_WORKSPACE}"
-  runuser -u "${CODEX_USER}" -- git -C "${CODEX_WORKSPACE}" remote remove origin
-  runuser -u "${CODEX_USER}" -- git -C "${CODEX_WORKSPACE}" switch -c codex/dashboard
-fi
-bash "${SCRIPT_DIR}/prepare_codex_runtime.sh"
-runuser -u "${CODEX_USER}" -- env HOME="${CODEX_DATA}" CODEX_HOME="${CODEX_DATA}/.codex" \
-  "${CODEX_PREFIX}/bin/codex" --version
-
+# Password resets do not need downloads or runtime preparation.
+configure_admin_password() {
 python3 - "${1:-}" <<'PY'
 import hashlib
 import json
@@ -80,6 +49,53 @@ if password:
 else:
     print('Se conserva la clave de administrador de Codex existente.')
 PY
+}
+
+if [[ "${1:-}" == --reset-password && -f /etc/minitv-codex.json ]]; then
+  echo "Generando una nueva clave de administrador…"
+  configure_admin_password --reset-password
+  if systemctl is-active --quiet minitv-api.service; then
+    systemctl restart minitv-api.service
+  fi
+  exit 0
+fi
+
+if ! command -v node >/dev/null || ! command -v npm >/dev/null || ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 20 ? 0 : 1)'; then
+  echo "Instala Node.js 20 o superior y npm para todos los usuarios y vuelve a ejecutar este instalador." >&2
+  exit 1
+fi
+for dependency in git python3 runuser useradd; do
+  command -v "${dependency}" >/dev/null || { echo "Falta ${dependency}." >&2; exit 1; }
+done
+echo "Preparando la instalación de Codex…"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "${SCRIPT_DIR}")"
+CODEX_USER=minitv-codex
+CODEX_DATA=/var/lib/minitv-codex
+CODEX_WORKSPACE="${CODEX_DATA}/workspace"
+CODEX_PREFIX=/opt/minitv-codex
+
+if ! id "${CODEX_USER}" >/dev/null 2>&1; then
+  useradd --system --user-group --create-home --home-dir "${CODEX_DATA}" --shell /usr/sbin/nologin "${CODEX_USER}"
+fi
+if [[ "$(id -u "${CODEX_USER}")" == 0 ]]; then
+  echo "El usuario de Codex no puede ser root." >&2
+  exit 1
+fi
+install -d -m 0700 -o "${CODEX_USER}" -g "${CODEX_USER}" "${CODEX_DATA}" "${CODEX_DATA}/.codex"
+if [[ ! -e "${CODEX_WORKSPACE}" ]]; then
+  # A standalone clone: no shared objects/worktree metadata with the live repository.
+  git -c safe.directory="${REPO_DIR}" clone --no-hardlinks -- "${REPO_DIR}" "${CODEX_WORKSPACE}"
+  chown -R "${CODEX_USER}:${CODEX_USER}" "${CODEX_WORKSPACE}"
+  runuser -u "${CODEX_USER}" -- git -C "${CODEX_WORKSPACE}" remote remove origin
+  runuser -u "${CODEX_USER}" -- git -C "${CODEX_WORKSPACE}" switch -c codex/dashboard
+fi
+echo "Preparando el entorno de Codex (la primera instalación puede tardar varios minutos)…"
+bash "${SCRIPT_DIR}/prepare_codex_runtime.sh"
+runuser -u "${CODEX_USER}" -- env HOME="${CODEX_DATA}" CODEX_HOME="${CODEX_DATA}/.codex" \
+  "${CODEX_PREFIX}/bin/codex" --version
+
+configure_admin_password "${1:-}"
 
 if systemctl is-active --quiet minitv-api.service; then
   systemctl restart minitv-api.service

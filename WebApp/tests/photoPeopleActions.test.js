@@ -54,6 +54,45 @@ test('bulk controls use the complete selected list and disable destructive actio
   assert.ok(fixed.includes(s.fixedPerson));
 });
 
+test('bulk merge remains available when Unknown is selected alongside people', () => {
+  for (const language of ['es', 'en', 'ca']) {
+    const s = photoStrings(language);
+    const unknown = { id: 'unknown', name: s.unknownPerson, photoIds: ['one'] };
+    for (const sources of [people.slice(0, 1), people.slice(0, 2)]) {
+      const html = render(PeopleToolbar, { s, people: [unknown, ...people], editing: true,
+        selected: [unknown, ...sources], onToggle() {} });
+      assert.match(html, /<select/);
+      assert.doesNotMatch(html, /<select[^>]*disabled=""/);
+      assert.ok(html.includes(`<option value="unknown">${s.unknownPerson}</option>`));
+      assert.ok(html.includes(`disabled="">${s.deletePeople}`));
+      if (sources.length === 1) assert.doesNotMatch(html, /<option value="a">/);
+    }
+    for (const selected of [[], [unknown]]) {
+      const html = render(PeopleToolbar, { s, people, editing: true, selected, onToggle() {} });
+      assert.match(html, /<select[^>]*disabled=""/);
+    }
+    const busy = render(PeopleToolbar, { s, people, editing: true, selected: [unknown, ...people], busy: true, onToggle() {} });
+    assert.match(busy, /<select[^>]*disabled=""/);
+  }
+});
+
+test('bulk merge confirmation receives only movable sources, excluding Unknown and the destination', () => {
+  const inspected = { exports: {} };
+  const require = createRequire(import.meta.url);
+  new Function('require', 'module', 'exports', result.outputFiles[0].text)(
+    name => name === 'react' ? { ...React, useId: () => 'toolbar-test' } : require(name), inspected, inspected.exports);
+  const unknown = { id: 'unknown', name: 'Desconocido', photoIds: ['one'] };
+  for (const target of [unknown, people[0]]) {
+    let action;
+    const toolbar = inspected.exports.PeopleToolbar({ s: photoStrings('es'), people: [unknown, ...people],
+      selected: [unknown, ...people], editing: true, onAction: (...args) => { action = args; } });
+    const bulk = React.Children.toArray(toolbar.props.children)[1];
+    const merge = React.Children.toArray(bulk.props.children).find(child => child.type === inspected.exports.PersonMergeForm);
+    merge.props.onMerge(target);
+    assert.deepEqual(action, ['merge', people.filter(person => person.id !== target.id), target]);
+  }
+});
+
 test('all confirmations list exact sources, show merge destination and explain original photo handling', () => {
   for (const language of ['es', 'en', 'ca']) {
     const s = photoStrings(language);

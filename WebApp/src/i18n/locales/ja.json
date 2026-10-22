@@ -1810,6 +1810,7 @@
   "Game settings require a backend.": "ゲーム設定にはバックエンドが必要です。",
   "Codex is unavailable in demo mode.": "デモモードでは Codex を利用できません。",
   "Quality": "画質",
+  "Video quality": "動画の画質",
   "Duplicates by name": "同名の重複",
   "Browse by quality": "画質順に表示",
   "Browse duplicates by letter": "重複を文字順に表示",

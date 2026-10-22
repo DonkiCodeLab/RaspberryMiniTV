@@ -1810,6 +1810,7 @@
   "Game settings require a backend.": "गेम की सेटिंग के लिए बैकएंड चाहिए।",
   "Codex is unavailable in demo mode.": "डेमो मोड में Codex उपलब्ध नहीं है।",
   "Quality": "गुणवत्ता",
+  "Video quality": "वीडियो की गुणवत्ता",
   "Duplicates by name": "नाम से डुप्लिकेट",
   "Browse by quality": "गुणवत्ता के अनुसार देखें",
   "Browse duplicates by letter": "अक्षर के अनुसार डुप्लिकेट देखें",

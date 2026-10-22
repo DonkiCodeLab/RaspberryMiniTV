@@ -1810,6 +1810,7 @@
   "Game settings require a backend.": "Для настроек игры нужна серверная часть.",
   "Codex is unavailable in demo mode.": "Codex недоступен в деморежиме.",
   "Quality": "Качество",
+  "Video quality": "Качество видео",
   "Duplicates by name": "Дубликаты по названию",
   "Browse by quality": "Просмотр по качеству",
   "Browse duplicates by letter": "Просмотр дубликатов по буквам",
