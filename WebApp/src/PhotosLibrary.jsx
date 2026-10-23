@@ -29,6 +29,8 @@ function Icon({ type }) {
     map: <><circle cx="32" cy="32" r="22" /><ellipse cx="32" cy="32" rx="10" ry="22" /><path d="M10 32h44M14 20h36M14 44h36" /></>,
     ai: <><path d="m29 10 6 16 16 6-16 6-6 16-6-16-16-6 16-6zM49 7v12M43 13h12" /></>,
     people: <><circle cx="25" cy="23" r="9" /><path d="M8 51v-6c0-14 34-14 34 0v6M43 15a9 9 0 0 1 0 18m4 5c7 1 9 5 9 13" /></>,
+    unknownPerson: <><circle cx="24" cy="21" r="10" /><path d="M7 53v-7c0-15 34-15 34 0v7M43 19a7 7 0 1 1 10 6c-4 2-5 4-5 8" /><circle cx="48" cy="41" r="1" /></>,
+    withoutFaces: <><circle cx="25" cy="21" r="10" /><path d="M8 53v-7c0-15 28-15 32-5M44 38l13 13m0-13L44 51" /></>,
     folder: <><path d="M9 22V14h17l7 8h22v29H9z" /><path d="M9 26h46" /></>,
   };
   return <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shapes[type] || shapes.folder}</svg>;
@@ -146,10 +148,11 @@ function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyD
 export function AlbumCard({ folder, photos, s, language, onOpen, special, portraitPhoto, personActions, selected = false }) {
   const [active, setActive] = useState(false), [step, setStep] = useState(0);
   const isPerson = folder.id.startsWith('person:');
+  const fixedIcon = folder.id === `person:${UNKNOWN_PERSON_ID}` ? 'unknownPerson' : folder.id === 'withoutPeople' ? 'withoutFaces' : null;
   const age = isPerson ? currentAge(folder.birthDate) : null;
   const birthday = age === null ? null : new Intl.DateTimeFormat(intlLocale(language), { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${folder.birthDate}T12:00:00Z`));
   const chosenCover = photos.find(photo => photo.id === folder.coverPhotoId);
-  const covers = isPerson ? [] : chosenCover ? [chosenCover] : photos.slice(0, 8);
+  const covers = isPerson || fixedIcon ? [] : chosenCover ? [chosenCover] : photos.slice(0, 8);
   useEffect(() => {
     setStep(0);
     if (!active || covers.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -162,9 +165,9 @@ export function AlbumCard({ folder, photos, s, language, onOpen, special, portra
     onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(true); }} onPointerLeave={() => setActive(false)}
     onFocusCapture={() => setActive(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }}>
     <button className="movie-library__poster photo-album__cover" type="button" aria-label={`${s.open}: ${folder.name}`} onClick={onOpen}>
-      {isPerson ? <PersonPortrait person={folder} photo={portraitPhoto || photos.find(photo => photo.id === folder.coverFace?.photoId)} s={s} /> :
+      {fixedIcon ? <span className="photo-album__art"><Icon type={fixedIcon} /><span>{folder.name}</span></span> : isPerson ? <PersonPortrait person={folder} photo={portraitPhoto || photos.find(photo => photo.id === folder.coverFace?.photoId)} s={s} /> :
         cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
-      <span className="photo-album__badge"><Icon type={isPerson ? 'people' : special || 'folder'} /></span>
+      <span className="photo-album__badge"><Icon type={fixedIcon || (isPerson ? 'people' : special || 'folder')} /></span>
     </button>
     <div className="movie-library__info"><h2>{folder.name}</h2>{age !== null && <div className="photo-person-card-birthday"><span>{s.personAge.replace('{age}', age)}</span><span><span aria-hidden="true">🎂</span> {birthday}</span></div>}<div className="movie-library__meta"><span>{photos.length} {s.photos}</span></div>
       <small className="photo-album__date">{s.uploaded} · {dateLabel(latest || folder.created, language, '—')}</small>
