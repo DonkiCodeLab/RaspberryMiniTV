@@ -1,3 +1,4 @@
+import { currentAge } from './personBirthday.js';
 import { intlLocale } from "./i18n/languages.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -145,6 +146,8 @@ function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyD
 export function AlbumCard({ folder, photos, s, language, onOpen, special, portraitPhoto, personActions, selected = false }) {
   const [active, setActive] = useState(false), [step, setStep] = useState(0);
   const isPerson = folder.id.startsWith('person:');
+  const age = isPerson ? currentAge(folder.birthDate) : null;
+  const birthday = age === null ? null : new Intl.DateTimeFormat(intlLocale(language), { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${folder.birthDate}T12:00:00Z`));
   const chosenCover = photos.find(photo => photo.id === folder.coverPhotoId);
   const covers = isPerson ? [] : chosenCover ? [chosenCover] : photos.slice(0, 8);
   useEffect(() => {
@@ -163,7 +166,7 @@ export function AlbumCard({ folder, photos, s, language, onOpen, special, portra
         cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
       <span className="photo-album__badge"><Icon type={isPerson ? 'people' : special || 'folder'} /></span>
     </button>
-    <div className="movie-library__info"><h2>{folder.name}</h2><div className="movie-library__meta"><span>{photos.length} {s.photos}</span></div>
+    <div className="movie-library__info"><h2>{folder.name}</h2>{age !== null && <div className="photo-person-card-birthday"><span>{s.personAge.replace('{age}', age)}</span><span><span aria-hidden="true">🎂</span> {birthday}</span></div>}<div className="movie-library__meta"><span>{photos.length} {s.photos}</span></div>
       <small className="photo-album__date">{s.uploaded} · {dateLabel(latest || folder.created, language, '—')}</small>
       <div className="movie-library__actions movie-library__actions--single"><button type="button" onClick={onOpen}>{s.open} <span aria-hidden="true">↗</span></button></div>
       {personActions}
