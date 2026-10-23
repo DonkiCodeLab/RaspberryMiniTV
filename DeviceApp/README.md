@@ -1350,6 +1350,32 @@ Se mantiene una tolerancia conservadora de 0,48. Puede separar a una
 persona en varios grupos o asociar caras parecidas; las coincidencias se pueden
 revisar y quitar desde la web. No identifica personas por un nombre externo.
 
+La asignación automática distingue coincidencias fuertes (distancia menor de
+0,36) de las moderadas (menor de 0,48). Las moderadas necesitan una muestra
+confirmada o coincidencias en dos fotos de referencia distintas. Además, la
+mejor identidad debe separarse de la segunda por al menos 0,05; de lo contrario
+se conserva una persona provisional independiente para revisión. Estos valores
+pertenecen al espacio de dlib y requieren evaluación con fotos reales: no son
+porcentajes de certeza ni umbrales trasladados de otro modelo. No se reagrupan
+automáticamente las identidades existentes. Una fecha de nacimiento conocida
+excluye coincidencias anteriores a ella cuando la foto tiene fecha de captura.
+
+`photo_face_matching.py` compara fuera del bloqueo del catálogo y vuelve a leer
+los datos si hay una corrección concurrente. La búsqueda usa una caché acotada
+de vectores compactos, abandona comparaciones que ya superan la distancia y
+ordena solo identidades próximas. Sigue siendo una búsqueda lineal, sin índice
+vectorial ni dependencias nuevas. El progreso y las detecciones se confirman en
+una sola transacción; pausar durante las comparaciones conserva la foto pendiente.
+Una respuesta con dimensiones incompatibles o valores no finitos se rechaza
+entera, sin borrar caras existentes ni marcar la foto como revisada sin caras.
+
+Quitar una detección guarda un rechazo local a esa foto en `face_rejections`,
+que sobrevive a reinicios y nuevas detecciones. Dibujar manualmente una cara en
+la región permite recuperarla. Los rectángulos confirmados conservan su identidad
+aunque cambie el vector al detectar de nuevo, evitando duplicados sobre la misma
+cara. Los rechazos se eliminan junto con la foto. Los nombres, portadas, revisiones
+pendientes y la carpeta Desconocido conservan sus funciones.
+
 El análisis se inicia explícitamente desde **Personas → Analizar** y revisa
 como máximo **100 fotos por lote**. Al terminar se detiene y libera los modelos;
 **Analizar siguientes 100** inicia otro lote cuando lo decidas. La cola y el

@@ -26,7 +26,8 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import Blueprint, jsonify, request, send_file
 from photo_import import validate_import_records
 from photo_previews import ImageWorkLock, PhotoPreviews
-from photo_faces import FacePaused, LocalFaceEngine, INSTALL_COMMAND
+from photo_faces import FacePaused, FaceEngineError, LocalFaceEngine, INSTALL_COMMAND
+import photo_face_matching as face_matching
 import photo_reviews
 from ai_usage import track_call
 
@@ -216,6 +217,10 @@ class PhotoLibrary:
                 person TEXT REFERENCES people(id), encoding TEXT NOT NULL, box TEXT,
                 manual INTEGER NOT NULL DEFAULT 0);
               CREATE INDEX IF NOT EXISTS face_detections_photo ON face_detections(photo);
+              CREATE TABLE IF NOT EXISTS face_rejections (
+                id TEXT PRIMARY KEY, photo TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+                encoding TEXT NOT NULL, box TEXT);
+              CREATE INDEX IF NOT EXISTS face_rejections_photo ON face_rejections(photo);
               CREATE TABLE IF NOT EXISTS face_photo_jobs (
                 photo TEXT PRIMARY KEY REFERENCES photos(id) ON DELETE CASCADE,
                 state TEXT NOT NULL, error TEXT NOT NULL DEFAULT '');
@@ -813,13 +818,7 @@ class PhotoLibrary:
             with self.image_lock.priority(2, cancel=self.face_stop) as acquired:
                 if not acquired: raise FacePaused()
                 detections = engine.encode(self.safe_file(photo['path']), self.face_stop)
-            with self.db() as db:
-                if self.face_stop.is_set(): raise FacePaused()
-                self.group_faces(photo['id'], detections, db)
-                db.execute("UPDATE face_photo_jobs SET state='complete', error='' WHERE photo=?", (photo['id'],))
-                updated = db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (photo['id'],)).rowcount
-                if updated and not db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone():
-                    db.execute("UPDATE face_analysis SET state='complete', error='' WHERE id=1")
+            self.group_faces(photo['id'], detections, stop=self.face_stop, job='single')
         except FacePaused:
             with self.db() as db: db.execute("UPDATE face_photo_jobs SET state='paused' WHERE photo=?", (photo['id'],))
         except Exception as error:
@@ -867,9 +866,7 @@ class PhotoLibrary:
                         if not acquired or self.face_stop.is_set(): break
                         encodings = engine.encode(self.safe_file(photo['path']), self.face_stop)
                     if self.face_stop.is_set(): break
-                    with self.db() as db:
-                        self.group_faces(photo['id'], encodings, db)
-                        db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (photo['id'],))
+                    self.group_faces(photo['id'], encodings, stop=self.face_stop, job='batch')
                 except FacePaused:
                     break
                 except (OSError, ValueError, RuntimeError):
@@ -894,73 +891,82 @@ class PhotoLibrary:
                 # Resume may arrive after the loop observes a pause but before exit.
                 if resume: self.start_faces()
 
-    def group_faces(self, photo_id, encodings, db=None):
-        if db is None:
-            with self.db() as connection:
-                return self.group_faces(photo_id, encodings, connection)
-        state = db.execute('SELECT face_state FROM photos WHERE id=?', (photo_id,)).fetchone()
-        if not state: return
-        review_batch, review_people = photo_reviews.context(db, photo_id)
-        # A merged person can have several faces in one photo (for example a collage).
-        # The album link keeps one row per photo, but matching needs every face vector.
-        # Unknown is a collection of unrelated faces, not an identity to match.
-        # Explicit assignments are retained through the previous detections below.
-        known = [(r['person'], json.loads(r['encoding'])) for r in db.execute(
-            "SELECT person, encoding FROM face_detections WHERE person IS NOT NULL AND person!=? AND encoding!='[]'",
-            (UNKNOWN_PERSON_ID,))]
-        previous = [dict(row) for row in db.execute('SELECT * FROM face_detections WHERE photo=?', (photo_id,))]
-        for face in previous:
-            face['encoding'] = json.loads(face['encoding'])
-            face['box'] = json.loads(face['box']) if face['box'] else None
-        def distance(a, b):
-            return math.sqrt(sum((x-y)**2 for x, y in zip(a, b))) if len(a) == len(b) == 128 else float('inf')
-        def overlap(a, b):
-            if not a or not b: return 0
-            intersection = max(0, min(a['x'] + a['width'], b['x'] + b['width']) - max(a['x'], b['x'])) * \
-                max(0, min(a['y'] + a['height'], b['y'] + b['height']) - max(a['y'], b['y']))
-            return intersection / (a['width'] * a['height'] + b['width'] * b['height'] - intersection)
-        detections, matched = [], set()
-        used = set()
-        for detection in encodings:
-            # Lists also support catalogues/tests from before boxes were stored.
-            encoding = detection.get('encoding', []) if isinstance(detection, dict) else detection
-            box = detection.get('box') if isinstance(detection, dict) else None
-            if len(encoding) != 128 or not all(math.isfinite(v) for v in encoding): continue
-            if box is not None and (not isinstance(box, dict) or
-                    any(not isinstance(box.get(key), (int, float)) or isinstance(box[key], bool) or not math.isfinite(box[key])
-                        for key in ('x', 'y', 'width', 'height')) or
-                    not (0 <= box['x'] < 1 and 0 <= box['y'] < 1 and box['width'] > 0 and box['height'] > 0
-                         and box['x'] + box['width'] <= 1.000001 and box['y'] + box['height'] <= 1.000001)):
-                raise ValueError('Rectángulo de cara inválido.')
-            candidates = [(0 if face['manual'] and not face['encoding'] and overlap(face['box'], box) > .5
-                           else distance(face['encoding'], encoding), face) for face in previous
-                          if face['id'] not in matched and (overlap(face['box'], box) > .3 or face['box'] is None)]
-            candidates.sort(key=lambda item: item[0])
-            old = candidates[0][1] if candidates and candidates[0][0] < .48 else None
-            if old: matched.add(old['id'])
-            scores = sorted((math.sqrt(sum((a-b)**2 for a, b in zip(vector, encoding))), person)
-                            for person, vector in known if person not in used and len(vector) == 128)
-            person = old['person'] if old else scores[0][1] if scores and scores[0][0] < .48 else uuid.uuid4().hex
-            if person and not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
-                count = db.execute('SELECT count(*) FROM people WHERE id!=?', (UNKNOWN_PERSON_ID,)).fetchone()[0]
-                number = count + 1
-                while db.execute('SELECT 1 FROM people WHERE name=?', ('Persona ' + str(number),)).fetchone():
-                    number += 1
-                db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(number), time.time()))
-            detections.append({'id': old['id'] if old else uuid.uuid4().hex, 'person': person,
-                               'encoding': encoding, 'box': box, 'manual': old['manual'] if old else 0})
-            if not old and person in review_people:
-                photo_reviews.add_match(db, photo_id, detections[-1]['id'], person, review_batch)
-            used.add(person)
-        # A second detection must never erase the user's confirmed assignments,
-        # even when a difficult face is missed this time.
-        detections.extend(face for face in previous if face['manual'] and face['id'] not in matched)
-        db.execute('DELETE FROM face_detections WHERE photo=?', (photo_id,))
-        for face in detections:
-            db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,?)', (face['id'], photo_id, face['person'],
-                       json.dumps(face['encoding']), json.dumps(face['box']) if face['box'] else None, face['manual']))
-        db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photo_id,))
-        self._sync_face_links(photo_id, db, review_batch)
+    def group_faces(self, photo_id, encodings, stop=None, job=None):
+        # Reject the entire response before changing any saved face or job state.
+        incoming = face_matching.validate_detections(encodings)
+        def check_cancel():
+            if stop is not None and stop.is_set(): raise FacePaused()
+        for _attempt in range(5):
+            check_cancel()
+            with self.db() as db:
+                photo = db.execute('SELECT metadata FROM photos WHERE id=?', (photo_id,)).fetchone()
+                if not photo: return
+                revision = self.revision
+                review_batch, review_people = photo_reviews.context(db, photo_id)
+                references = [] if not incoming else [dict(row) for row in db.execute("""SELECT person, photo, encoding, manual
+                    FROM face_detections WHERE person IS NOT NULL AND person!=? AND encoding!='[]' AND photo!=?""",
+                    (UNKNOWN_PERSON_ID, photo_id))]
+                previous = [dict(row) for row in db.execute('SELECT * FROM face_detections WHERE photo=?', (photo_id,))]
+                rejections = [dict(row) for row in db.execute('SELECT * FROM face_rejections WHERE photo=?', (photo_id,))]
+                birthdays = dict(db.execute('SELECT person, birth_date FROM person_birthdays'))
+            # JSON decoding and all vector comparisons happen without the API's
+            # catalogue lock. A concurrent correction invalidates the snapshot.
+            for face in previous + rejections:
+                face['encoding'] = json.loads(face['encoding'])
+                face['box'] = json.loads(face['box']) if face['box'] else None
+            taken = json.loads(photo['metadata']).get('takenAt')
+            try:
+                taken = datetime.fromisoformat(taken).date().isoformat()
+            except (TypeError, ValueError):
+                taken = None
+            if taken:
+                references = [row for row in references if not birthdays.get(row['person']) or birthdays[row['person']] <= taken]
+            ranked = face_matching.rank_candidates(incoming, references, check_cancel)
+            detections, matched, used = [], set(), set()
+            for detection, candidates in zip(incoming, ranked):
+                check_cancel()
+                old = face_matching.previous_face(detection, previous, matched)
+                if not (old and old['manual']):
+                    if face_matching.rejected(detection, rejections): continue
+                    # A second automatic box must not duplicate a confirmed face
+                    # already consumed by another detection in this same result.
+                    if any(face['manual'] and face['id'] in matched and
+                           face_matching.overlap(face['box'], detection['box']) > .65 for face in previous): continue
+                if old: matched.add(old['id'])
+                person = old['person'] if old else face_matching.choose_person(candidates, used) or uuid.uuid4().hex
+                detections.append({'id': old['id'] if old else uuid.uuid4().hex, 'person': person,
+                    'encoding': detection['encoding'],
+                    'box': old['box'] if old and old['manual'] and old['box'] else detection['box'],
+                    'manual': old['manual'] if old else 0, 'new': old is None})
+                used.add(person)
+            # Missed confirmed faces and explicit unassignments remain intact.
+            detections.extend(face for face in previous if face['manual'] and face['id'] not in matched)
+            with self.db() as db:
+                check_cancel()
+                if self.revision != revision: continue
+                for face in detections:
+                    person = face['person']
+                    if person and not db.execute('SELECT 1 FROM people WHERE id=?', (person,)).fetchone():
+                        number = db.execute('SELECT count(*) FROM people WHERE id!=?', (UNKNOWN_PERSON_ID,)).fetchone()[0] + 1
+                        while db.execute('SELECT 1 FROM people WHERE name=?', ('Persona ' + str(number),)).fetchone():
+                            number += 1
+                        db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(number), time.time()))
+                    if face.get('new') and person in review_people:
+                        photo_reviews.add_match(db, photo_id, face['id'], person, review_batch)
+                db.execute('DELETE FROM face_detections WHERE photo=?', (photo_id,))
+                for face in detections:
+                    db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,?)', (face['id'], photo_id, face['person'],
+                        json.dumps(face['encoding']), json.dumps(face['box']) if face['box'] else None, face['manual']))
+                db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photo_id,))
+                self._sync_face_links(photo_id, db, review_batch)
+                if job:
+                    updated = db.execute("UPDATE face_analysis_items SET state='done' WHERE photo=?", (photo_id,)).rowcount
+                    if job == 'single':
+                        db.execute("UPDATE face_photo_jobs SET state='complete', error='' WHERE photo=?", (photo_id,))
+                        if updated and not db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone():
+                            db.execute("UPDATE face_analysis SET state='complete', error='' WHERE id=1")
+                return
+        raise FaceEngineError('La biblioteca está cambiando durante el análisis. Reintenta cuando terminen las ediciones.')
 
     def _sync_face_links(self, photo_id, db, review_batch=None):
         db.execute("DELETE FROM faces WHERE photo=? AND (encoding!='[]' OR person NOT LIKE 'apple-%')", (photo_id,))
@@ -1013,6 +1019,10 @@ class PhotoLibrary:
             if not db.execute('SELECT 1 FROM photos WHERE id=?', (photo_id,)).fetchone():
                 raise PhotoError('No se encuentra la foto.', 404)
             person_id = self._face_person(db, {key: value for key, value in data.items() if key != 'box'})
+            # Explicitly drawing a face restores this region after a rejection.
+            for rejected in db.execute('SELECT id, box FROM face_rejections WHERE photo=?', (photo_id,)).fetchall():
+                if rejected['box'] and face_matching.overlap(json.loads(rejected['box']), box) > .5:
+                    db.execute('DELETE FROM face_rejections WHERE id=?', (rejected['id'],))
             face_id = uuid.uuid4().hex
             # Manual boxes work without a detector or a biometric encoding.
             db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,1)',
@@ -1031,8 +1041,12 @@ class PhotoLibrary:
 
     def remove_face(self, photo_id, face_id):
         with self.db() as db:
-            if not db.execute('DELETE FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).rowcount:
+            face = db.execute('SELECT * FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).fetchone()
+            if not face:
                 raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
+            db.execute('INSERT OR REPLACE INTO face_rejections VALUES (?,?,?,?)',
+                       (face_id, photo_id, face['encoding'], face['box']))
+            db.execute('DELETE FROM face_detections WHERE id=?', (face_id,))
             self._sync_face_links(photo_id, db)
         return {'ok': True, 'faceId': face_id}
 
