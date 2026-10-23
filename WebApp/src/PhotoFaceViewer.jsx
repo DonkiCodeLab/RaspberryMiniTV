@@ -99,7 +99,7 @@ export function FaceRemoveConfirmation({ face, s, busy, error, onConfirm, onClos
   </div>;
 }
 
-export default function PhotoFaceViewer({ photo, people, globalFaces, revision, highlightPersonId, onChanged, s }) {
+export default function PhotoFaceViewer({ photo, quality = 'preview', people, globalFaces, revision, highlightPersonId, onChanged, s }) {
   const [details, setDetails] = useState(null), [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [reload, setReload] = useState(0);
   const [notice, setNotice] = useState('');
@@ -170,7 +170,7 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
     selected ? <FaceNameEditor key={`${selected.id}:${selected.personId || ''}`} face={selected} people={people} s={s} busy={busy}
       onSave={payload => perform(`photos/${photo.id}/faces/${selected.id}/assign`, payload, s.faceSaved)} onClose={closeEditor} /> : null;
   return <div className="photo-face-viewer">
-    <PhotoViewerImage photo={photo} s={s} faces={details?.faces || []} selectedFaceId={selectedId || removingId}
+    <PhotoViewerImage photo={photo} quality={quality} s={s} faces={details?.faces || []} selectedFaceId={selectedId || removingId}
       highlightPersonId={highlightPersonId} onSelectFace={addingFace ? undefined : selectFace}
       addingFace={addingFace} onAddFace={removingId ? undefined : startAddingFace} onFaceBoxChange={setFaceBox} busy={busy} editor={editor} editorBox={faceBox || selected?.box} />
     <aside className="photo-face-sidebar" aria-label={s.people}>

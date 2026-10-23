@@ -134,7 +134,7 @@ export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, langu
   </article>)}</div>;
 }
 
-function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyDown, className = '' }) {
+function Modal({ title, titleActions, s, onClose, children, wide = false, busy = false, onKeyDown, className = '' }) {
   const ref = useRef(null), titleId = useId();
   useBrowserBack(() => { if (!busy) onClose(); }, 40);
   useEffect(() => {
@@ -146,7 +146,7 @@ function Modal({ title, s, onClose, children, wide = false, busy = false, onKeyD
   return createPortal(<dialog ref={ref} className={`photo-dialog${wide ? ' photo-dialog--wide' : ''} ${className}`} aria-labelledby={titleId}
     onCancel={event => { event.preventDefault(); if (!busy) onClose(); }} onKeyDown={onKeyDown}
     onClick={event => { if (event.target === event.currentTarget && !busy) onClose(); }}>
-    <div className="photo-dialog__body"><header><h2 id={titleId}>{title}</h2><button type="button" className="photo-close" onClick={onClose} disabled={busy} aria-label={s.close}>×</button></header>{children}</div>
+    <div className="photo-dialog__body"><header><h2 id={titleId} title={title}>{title}</h2>{titleActions}<button type="button" className="photo-close" onClick={onClose} disabled={busy} aria-label={s.close}>×</button></header>{children}</div>
   </dialog>, document.body);
 }
 
@@ -221,7 +221,7 @@ export function DeletePhotoChoices({ album, person, s, busy, onDelete }) {
   </div>;
 }
 
-function DeleteDialog({ selected, album, person, current, s, onClose, onComplete }) {
+function DeleteDialog({ selected, photo, album, person, current, s, onClose, onComplete }) {
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const working = useRef(false);
   async function remove(scope) {
@@ -234,30 +234,37 @@ function DeleteDialog({ selected, album, person, current, s, onClose, onComplete
     }
     catch (error) { setError(error.message); working.current = false; setBusy(false); }
   }
-  return <Modal title={s.deletePhotos} s={s} onClose={onClose} busy={busy}>
-    <p className="photo-delete-summary">{selected.size} {s.photos} · {album || person ? s.deleteQuestion : s.deleteGalleryHint}</p>
+  return <Modal title={photo ? s.deletePhoto : s.deletePhotos} s={s} onClose={onClose} busy={busy}>
+    <p className="photo-delete-summary">{photo ? <strong>{photo.name}</strong> : <>{selected.size} {s.photos}</>} · {album || person ? s.deleteQuestion : s.deleteGalleryHint}</p>
     <DeletePhotoChoices album={album} person={person} s={s} busy={busy} onDelete={remove} />
     {error && <p role="alert" className="dialog-error">{error}</p>}
     <footer><button type="button" className="dialog-button" disabled={busy} onClick={onClose}>{s.cancel}</button></footer>
   </Modal>;
 }
 
-function Viewer({ photos, initial, onClose, s, language, people = [], knownPeople = people, folders = [], livePhotos, faces, revision, onChanged, highlightPersonId }) {
+function Viewer({ photos, initial, onClose, onDelete, s, language, people = [], knownPeople = people, folders = [], livePhotos, faces, revision, onChanged, highlightPersonId }) {
   const [index, setIndex] = useState(initial);
+  const [quality, setQuality] = useState('preview');
   const [albumPhoto, setAlbumPhoto] = useState(null), [albumNotice, setAlbumNotice] = useState(null);
   const t = photoImportStrings(language);
   const photo = livePhotos?.get(photos[index].id) || photos[index];
   const change = direction => { if (!albumPhoto) { setIndex(value => (value + direction + photos.length) % photos.length); setAlbumNotice(null); } };
-  return <><Modal title={photo?.name || s.root} s={s} onClose={onClose} wide className="photo-dialog--viewer" onKeyDown={event => {
+  return <><Modal title={photo?.name || s.root} titleActions={<select className="photo-viewer__quality" aria-label={s.photoQuality}
+    value={quality} onChange={event => setQuality(event.target.value)}>
+    <option value="preview">JPG</option><option value="original">{s.original}</option>
+  </select>} s={s} onClose={onClose} wide className="photo-dialog--viewer" onKeyDown={event => {
     if (albumPhoto || event.defaultPrevented || event.target.closest?.('input, select, textarea, [contenteditable="true"]')) return;
     if (event.key === 'ArrowRight') { event.preventDefault(); change(1); }
     if (event.key === 'ArrowLeft') { event.preventDefault(); change(-1); }
   }}>
     <div className="photo-viewer"><button type="button" aria-label={s.previous} onClick={() => change(-1)} disabled={photos.length < 2}>‹</button>
-      <PhotoFaceViewer key={photo.id} photo={photo} s={s} people={knownPeople} globalFaces={faces} revision={revision}
+      <PhotoFaceViewer key={photo.id} photo={photo} quality={quality} s={s} people={knownPeople} globalFaces={faces} revision={revision}
         onChanged={onChanged} highlightPersonId={highlightPersonId} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
     <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span>
       <button type="button" className="dialog-button photo-viewer__album" aria-haspopup="dialog" onClick={() => { setAlbumPhoto(photo); setAlbumNotice(null); }}>＋ {s.move}</button>
+      <button type="button" className="dialog-button photo-viewer__delete photo-delete-button" aria-haspopup="dialog" onClick={() => onDelete(photo)}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>{s.deletePhoto}
+      </button>
       <PhotoDownloads key={photo.id} photo={photo} s={s} /></div>
     {albumNotice === photo.id && <p className="photo-viewer__album-notice" role="status">✓ {s.photoAddedToAlbum}</p>}
     {(photo.title || photo.appleFavorite || photo.description || photo.albums?.length > 0 || photo.keywords?.length > 0) && <div className="photo-import-details">
@@ -511,12 +518,14 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     </div>}
     {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'pendingValidation' ? s.noPendingValidation : current === 'withoutPeople' && noFacesView === 'new' ? s.noNewWithoutPeople : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{reviewFolder ? s.reviewEmptyHint : current === 'gallery' ? s.uploadHint : s.emptyHint}</p></div>}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
-    {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} album={isAlbum} person={person} current={current} s={s} onClose={closeDialog} onComplete={complete} />}
+    {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} photo={dialog.photo}
+      {...(dialog.origin || { album: isAlbum, person, current })} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'people-action' && <PeopleActionDialog Modal={Modal} {...dialog} s={s} onClose={closeDialog} onComplete={completePeopleAction} />}
     {dialog?.mode === 'download' && <PhotoDownloadDialog Modal={Modal} selected={selected} s={s} onClose={() => setDialog(null)} onComplete={() => { setDialog(null); setNotice(s.peopleDownloadStarted); }} />}
     {dialog && !['upload', 'delete', 'people-action', 'download'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
     {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} folders={data.folders} livePhotos={index.byId}
       faces={data.faces} revision={data.revision} onChanged={() => refresh()} highlightPersonId={person?.id}
+      onDelete={photo => setDialog({ mode: 'delete', ids: [photo.id], photo, origin: { album: isAlbum, person, current } })}
       s={s} language={language} onClose={() => setViewer(null)} />}
   </section>;
 }

@@ -44,11 +44,12 @@ export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, 
   </button> : null).filter(Boolean);
 }
 
-export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox }) {
+export default function PhotoViewerImage({ photo, quality = 'preview', s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
   const image = useRef(null), shortcut = useRef(null);
+  useLayoutEffect(() => { setReady(false); setError(false); }, [photo.id, photo.relativePath, quality]);
   shortcut.current = { onAddFace, enabled: !!onAddFace && ready && !error && !busy && !addingFace && !editor };
   useEffect(() => attachPhotoFaceShortcut(surface.current, image.current,
     () => shortcut.current.onAddFace(), () => shortcut.current.enabled), [photo.id]);
@@ -69,12 +70,12 @@ export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId,
           transform: `translate(-50%, -50%) translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale})` }}>
           <img className="photo-viewer__placeholder" src={getPictureContentUrl(photo.relativePath, 'thumb') || undefined}
             onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />
-          {!error && <img key={attempt} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, 'preview') || undefined}
+          {!error && <img key={`${quality}:${attempt}`} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, quality === 'original' ? undefined : 'preview') || undefined}
             alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
-          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace} />
+          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} />
           {addingFace && ready && <FaceDrawing onChange={onFaceBoxChange} s={s} disabled={busy} />}
         </div>
-        {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}</div>}
+        {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{quality === 'original' ? s.failedOriginal : s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{quality === 'original' ? s.loadingOriginal : s.loadingPhoto}</span></>}</div>}
       </div>
       {editor && <FacePopover box={editorBox} view={view} surface={surface}>{editor}</FacePopover>}
     </div>

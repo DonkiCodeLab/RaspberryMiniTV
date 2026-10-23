@@ -1315,6 +1315,18 @@ como **Ya incluida**. Al guardar o cancelar sigues en la misma foto del visualiz
 se conservan el original y todas sus referencias anteriores. La acción usa
 `POST /pictures/albums/add`, también disponible en el modo demo local.
 
+Junto al nombre del fichero puedes elegir **JPG** (la vista optimizada, por
+defecto) u **Original** (el archivo guardado, sin reducir su calidad). El visor
+muestra el spinner habitual durante la carga, conserva el zoom al cambiar de
+calidad y mantiene la elección al pasar a otra foto. Si el navegador no admite
+el formato original, puedes volver a JPG o descargarlo.
+
+**Borrar foto** abre una confirmación con el nombre de la foto. Desde un álbum
+o una persona puedes quitar solo esa referencia o borrar la imagen de Galería.
+Desde Galería solo se ofrece el borrado completo, que elimina el original y
+todas sus referencias. Cancelar mantiene abierta la misma foto; al completar
+la eliminación se cierra el visor y se actualiza la biblioteca.
+
 La migración `gallery-v1` cambia la pertenencia principal de todas las fotos a
 `gallery`. Elimina la jerarquía antigua de Uploads sin tocar archivos, fechas,
 GPS o personas, y lleva las carpetas propias de la raíz a `albums`. Las
