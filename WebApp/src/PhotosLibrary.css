@@ -118,9 +118,13 @@
 .photo-selection { position: sticky; top: 12px; z-index: 8; display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; padding: .8rem; margin: 1rem 0; background: #143042f5; border: 1px solid #ffd74d80; border-radius: 14px; box-shadow: 0 8px 25px #0005; }
 .photo-selection > button:not(.dialog-button) { padding: .5rem; border: none; background: transparent; color: #f8e5a5; text-decoration: underline; cursor: pointer; }
 .photo-selection strong { margin-right: auto; }
+.photo-selection button:disabled { opacity: .45; cursor: default; }
 .photo-mosaic { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 1fr)); gap: 1rem; }
-.photo-tile { overflow: hidden; border: 2px solid transparent; border-radius: 15px; background: #122733; box-shadow: 0 7px 20px #0002; }
+.photo-tile { position: relative; overflow: hidden; border: 2px solid transparent; border-radius: 15px; background: #122733; box-shadow: 0 7px 20px #0002; }
 .photo-tile.is-selected { border-color: #ffdc40; background: #344743; }
+.photo-review-check { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: #142a40e6; cursor: pointer; }
+.photo-review-check input { width: 24px; height: 24px; margin: 0; accent-color: #ffdc40; cursor: pointer; }
+.photo-review-check input:disabled { opacity: .5; cursor: default; }
 .photo-tile__image { width: 100%; aspect-ratio: 1.12; display: block; position: relative; padding: 0; border: 0; background: #213b48; cursor: zoom-in; overflow: hidden; }
 .photo-tile__image[aria-pressed] { cursor: pointer; }
 .photo-tile__image img { width: 100%; height: 100%; object-fit: cover; transition: transform .2s ease; }

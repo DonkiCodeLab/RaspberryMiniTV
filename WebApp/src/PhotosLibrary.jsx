@@ -114,11 +114,14 @@ export function PersonPhotoPreview({ photo, person }) {
 export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks, person, onDelete, coverMode = false, coverPhotoId, onCover, coverBusy = false, reviewItems, reviewPeople = [], onReview, reviewBusy = false, reviewingMatches = false }) {
   return <div className="photo-mosaic">{page.items.map((photo, index) => <article key={photo.id} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
     <button type="button" className="photo-tile__image" aria-label={`${coverMode ? s.useCover : actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={coverMode ? coverPhotoId === photo.id : actionMode ? selected.has(photo.id) : undefined}
-      disabled={coverMode && coverBusy} onClick={() => coverMode ? onCover(photo.id) : actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
-      {person || reviewingMatches ? <PersonPhotoPreview key={photo.id} photo={photo} person={person || pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople)} /> : <PhotoImage photo={photo} loading="lazy" decoding="async" />}{actionMode && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
+      disabled={coverMode && coverBusy || reviewingMatches && actionMode && reviewBusy} onClick={() => coverMode ? onCover(photo.id) : actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
+      {person || reviewingMatches ? <PersonPhotoPreview key={photo.id} photo={photo} person={person || pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople)} /> : <PhotoImage photo={photo} loading="lazy" decoding="async" />}{actionMode && !reviewingMatches && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
       {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
       {coverPhotoId === photo.id && <span className="photo-cover-label">{s.cover}</span>}
     </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
+    {reviewingMatches && <label className="photo-review-check">
+      <input type="checkbox" checked={selected.has(photo.id)} disabled={reviewBusy} aria-label={`${s.select}: ${photo.title || photo.name}`} onChange={() => toggle(photo.id)} />
+    </label>}
     {reviewingMatches && <p className="photo-review-names">{pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople).name}</p>}
     {reviewItems && <PhotoReviewAction reviews={(reviewItems.get(photo.id) || []).filter(review => !person || review.personId === person.id)} s={s} busy={reviewBusy} onConfirm={onReview} />}
     {person ? <div className="photo-card-actions">
@@ -364,7 +367,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const pendingPhotos = useMemo(() => data.photos.filter(photo => reviewIndex.matchPhotoIds.has(photo.id)), [data.photos, reviewIndex]);
   const noPeopleNew = useMemo(() => noPeople.filter(photo => reviewIndex.noFacePhotoIds.has(photo.id)), [noPeople, reviewIndex]);
   const noPeopleRest = useMemo(() => noPeople.filter(photo => !reviewIndex.noFacePhotoIds.has(photo.id)), [noPeople, reviewIndex]);
-  const reviewFolder = current === 'pendingValidation' || current === 'withoutPeople';
+  const reviewingMatches = current === 'pendingValidation';
+  const reviewFolder = reviewingMatches || current === 'withoutPeople';
   const trail = person || reviewFolder ? [{ id: 'people', name: s.people }, { id: current, name: person?.name || s[current] }] : ['map', 'people'].includes(current) ? [{ id: current, name: s[current] }] : folderTrail(data.folders, current);
   const parentId = current.startsWith('person:') || reviewFolder ? 'people' : trail.at(-2)?.id || '';
   const backLabel = zone ? s.map : (parentId === 'albums' ? s.personalAlbums : s[parentId]) || data.folders.find(folder => folder.id === parentId)?.name || s.root;
@@ -378,7 +382,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const displayedFolders = folders.filter(f => !query || ((f.id === 'albums' ? s.personalAlbums : s[f.id]) || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
   const page = current === 'gallery' ? galleryWindow(currentPhotos, galleryPosition) : photoPage(currentPhotos, photoNumber);
   const folderPage = photoPage(displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)), folderNumber);
-  const changePage = number => { setPhotoNumber(number); setSelected(new Set()); grid.current?.scrollIntoView({ block: 'start' }); };
+  const changePage = number => { setPhotoNumber(number); if (!reviewingMatches) setSelected(new Set()); grid.current?.scrollIntoView({ block: 'start' }); };
   const isAi = current !== 'ai' && trail.some(f => f.id === 'ai');
   const canWrite = !person && !reviewFolder && !['map', 'people'].includes(current);
   const canCreate = canWrite && current !== 'gallery';
@@ -422,6 +426,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     if (await act('reviews/confirm', { ids })) { setSelected(new Set()); setNotice(s.reviewSaved); }
   }
   const selectedReviews = reviewFolder || person ? reviewsForPhotos(data.reviews, currentPhotos.filter(photo => selected.has(photo.id)), person?.id) : [];
+  const selectedPhotoCount = reviewingMatches ? new Set(selectedReviews.map(review => review.photoId)).size : selected.size;
   function toggle(id) { setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }
   function togglePerson(id) { setSelectedPeople(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }
   function peopleAction(action, people, target) {
@@ -453,7 +458,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     <header className="photo-library__header"><div><h1>{title}</h1><p>{current === 'gallery' ? `${currentPhotos.length} ${s.photos} · ${s.galleryHint}` : current ? `${currentPhotos.length} ${s.photos} · ${folders.length} ${s.albums}` : s.intro}</p></div>
       <div className="photo-toolbar">{canCreate && <button className="dialog-button" type="button" onClick={() => setDialog({ mode: 'create' })}>＋ {s.newFolder}</button>}
         {canWrite && <button className="dialog-button dialog-button--accent" type="button" onClick={() => setDialog({ mode: 'upload', folderId: isAlbum ? current : current === 'ai' ? '' : 'gallery', parent: current === 'ai' ? 'ai' : 'gallery' })}>↑ {s.upload}</button>}
-        {(currentPhotos.length > 0 || actionMode) && <button className="dialog-button" type="button" aria-pressed={actionMode} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}
+        {(currentPhotos.length > 0 || actionMode) && <button className="dialog-button" type="button" aria-pressed={actionMode} disabled={busy} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}
         <button className="photo-refresh" type="button" title={s.refresh} aria-label={s.refresh} onClick={() => { setAttempt(n => n + 1); }}>↻</button>
       </div></header>
     {data.demo && <p className="photo-note">{s.demo}</p>}
@@ -498,12 +503,14 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       <PhotoPagination page={folderPage} onChange={setFolderNumber} s={s} label={s.folders} /></>}
     {current === 'map' && !zone && <Suspense fallback={<p>{s.loading}</p>}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
     {zone && <div className="photo-zone"><h2>{s.zone} · {currentPhotos.length}</h2><button type="button" className="dialog-button" onClick={goBack}>{s.allPlaces}</button></div>}
-    {actionMode && <div className="photo-selection"><strong>{selected.size} {s.selected}</strong>
-      <button type="button" onClick={() => setSelected(new Set(page.items.map(p => p.id)))}>{s.selectPage}</button><button type="button" onClick={() => setSelected(new Set())}>{s.clear}</button>
-      <button type="button" className="dialog-button dialog-button--accent" disabled={!selected.size} onClick={() => setDialog({ mode: 'move' })}>{s.move} →</button>
-      <button type="button" className="dialog-button photo-delete-button" disabled={!selected.size} onClick={() => setDialog({ mode: 'delete' })}>{s.deletePhotos}</button>
-      <button type="button" className="dialog-button" disabled={!selected.size} onClick={() => setDialog({ mode: 'download' })}>{s.downloadPeople}</button>
-      {(reviewFolder || person) && <button type="button" className="dialog-button dialog-button--accent" disabled={!selectedReviews.length || busy} onClick={() => confirmReviews(selectedReviews.map(review => review.id))}>{current === 'withoutPeople' ? s.markReviewedPhotos : s.confirmMatches}</button>}
+    {(actionMode || reviewingMatches && currentPhotos.length > 0) && <div className="photo-selection"><strong role="status">{selectedPhotoCount} {s.selected}</strong>
+      <button type="button" disabled={busy} onClick={() => setSelected(previous => new Set([...(reviewingMatches ? previous : []), ...page.items.map(p => p.id)]))}>{s.selectPage}</button><button type="button" disabled={busy || !selectedPhotoCount} onClick={() => setSelected(new Set())}>{s.clear}</button>
+      {actionMode && <>
+        <button type="button" className="dialog-button dialog-button--accent" disabled={!selected.size || busy} onClick={() => setDialog({ mode: 'move' })}>{s.move} →</button>
+        <button type="button" className="dialog-button photo-delete-button" disabled={!selected.size || busy} onClick={() => setDialog({ mode: 'delete' })}>{s.deletePhotos}</button>
+        <button type="button" className="dialog-button" disabled={!selected.size || busy} onClick={() => setDialog({ mode: 'download' })}>{s.downloadPeople}</button>
+      </>}
+      {(reviewFolder || person) && <button type="button" className="dialog-button dialog-button--accent" disabled={!selectedReviews.length || busy} onClick={() => confirmReviews(selectedReviews.map(review => review.id))}>{reviewingMatches ? s.verifySelection : current === 'withoutPeople' ? s.markReviewedPhotos : s.confirmMatches}</button>}
       {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
     </div>}
     {currentPhotos.length > 0 && <div ref={grid} className="photo-page">

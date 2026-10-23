@@ -99,3 +99,26 @@ test('pending folder tiles highlight matches, name people and offer validation w
   assert.match(folder, /1 fotos/);
   assert.doesNotMatch(folder, /photo-person-portrait/);
 });
+
+test('pending photos can be checked directly while the image still opens for review', () => {
+  const toggled = [], opened = [];
+  const photo = { id: 'shared', name: 'Family', relativePath: 'family.jpg' };
+  for (const actionMode of [false, true]) {
+    const props = { page: { items: [photo], offset: 100 }, selected: new Set(['shared']),
+      s: photoStrings('es'), language: 'es', reviewingMatches: true, actionMode,
+      toggle: id => toggled.push(id), onOpen: index => opened.push(index) };
+    const html = renderToStaticMarkup(React.createElement(PhotoGrid, props));
+    assert.equal((html.match(/type="checkbox"/g) || []).length, 1);
+    assert.match(html, /aria-label="Seleccionar: Family" checked=""/);
+    const tile = PhotoGrid(props).props.children[0];
+    const checkbox = tile.props.children.find(child => child?.props?.className === 'photo-review-check').props.children;
+    checkbox.props.onChange();
+    assert.deepEqual(toggled, actionMode ? ['shared', 'shared'] : ['shared']);
+    tile.props.children[0].props.onClick();
+    assert.deepEqual(opened, [100]);
+    if (actionMode) assert.deepEqual(toggled, ['shared', 'shared', 'shared']);
+    const busyTile = PhotoGrid({ ...props, reviewBusy: true }).props.children[0];
+    assert.equal(busyTile.props.children.find(child => child?.props?.className === 'photo-review-check').props.children.props.disabled, true);
+    if (actionMode) assert.equal(busyTile.props.children[0].props.disabled, true);
+  }
+});
