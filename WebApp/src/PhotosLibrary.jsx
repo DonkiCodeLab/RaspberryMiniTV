@@ -183,31 +183,34 @@ export function AlbumCard({ folder, photos, s, language, onOpen, special, portra
   </article>;
 }
 
-function FolderDialog({ mode, folders, current, selected, person, s, onClose, onComplete }) {
-  const [name, setName] = useState(person?.name || ''), [target, setTarget] = useState(''), [parent, setParent] = useState(current || 'albums');
-  const [isNew, setIsNew] = useState(mode === 'create'), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const working = useRef(false);
-  const title = mode === 'rename' ? s.rename : mode === 'move' ? s.moveTitle : s.create;
+function FolderDialog({ mode, folders, current, selected, person, photo, s, onClose, onComplete }) {
   const parents = folders.filter(folder => ['albums', 'ai'].includes(folderTrail(folders, folder.id)[0]?.id));
   const options = parents.filter(folder => !['albums', 'ai'].includes(folder.id));
+  const memberships = new Set(photo ? [photo.folderId, ...(photo.folderIds || [])] : []);
+  const [name, setName] = useState(person?.name || ''), [target, setTarget] = useState(''), [parent, setParent] = useState(parents.some(folder => folder.id === current) ? current : 'albums');
+  const [isNew, setIsNew] = useState(mode === 'create' || mode === 'move' && !options.length), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const working = useRef(false);
+  const title = mode === 'rename' ? s.rename : mode === 'move' ? s.moveTitle : s.create;
+  const valid = mode === 'rename' || isNew ? !!name.trim() : options.some(folder => folder.id === target && !memberships.has(target));
   const path = id => folderTrail(folders, id).map(folder => (folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name).join(' / ');
   async function submit(event) {
-    event.preventDefault(); if (working.current) return;
+    event.preventDefault(); if (working.current || !valid) return;
     working.current = true; setBusy(true); setError('');
     try {
       const result = mode === 'rename' ? await photoRequest(`people/${person.id}`, { name }) : mode === 'create' ?
         await photoRequest('folders', { name, parent }) : await photoRequest('albums/add', { ids: [...selected], ...(isNew ? { name, parent } : { folderId: target }) });
-      onComplete(result);
+      await onComplete(result);
     } catch (error) { setError(error.message); }
     finally { working.current = false; setBusy(false); }
   }
   return <Modal title={title} s={s} onClose={onClose} busy={busy}><form onSubmit={submit}>
-    {mode === 'move' && <><p>{selected.size} {s.photos} · {s.referenceHint}</p><div className="photo-segments"><button type="button" aria-pressed={!isNew} onClick={() => setIsNew(false)}>{s.existing}</button><button type="button" aria-pressed={isNew} onClick={() => setIsNew(true)}>{s.newFolder}</button></div></>}
-    {mode === 'rename' || isNew ? <label>{mode === 'rename' ? s.personName : s.name}<input autoFocus required maxLength={100} value={name} onChange={event => setName(event.target.value)} /></label> :
-      <label>{s.destination}<select value={target} required onChange={event => setTarget(event.target.value)}><option value="">—</option>{options.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
-    {isNew && <label>{s.parent}<select value={parent} onChange={event => setParent(event.target.value)}>{parents.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
+    {mode === 'move' && <><p>{photo ? photo.title || photo.name : `${selected.size} ${s.photos}`} · {s.referenceHint}</p><div className="photo-segments"><button type="button" disabled={busy} aria-pressed={!isNew} onClick={() => setIsNew(false)}>{s.existingAlbum}</button><button type="button" disabled={busy} aria-pressed={isNew} onClick={() => setIsNew(true)}>{s.createAlbum}</button></div></>}
+    {mode === 'rename' || isNew ? <label>{mode === 'rename' ? s.personName : mode === 'move' ? s.albumName : s.name}<input autoFocus required maxLength={100} value={name} disabled={busy} onChange={event => setName(event.target.value)} /></label> :
+      <label>{s.destination}<select autoFocus value={target} required disabled={busy} onChange={event => setTarget(event.target.value)}><option value="">—</option>{options.map(folder => <option key={folder.id} value={folder.id} disabled={memberships.has(folder.id)}>{path(folder.id)}{memberships.has(folder.id) ? ` · ${s.photoAlreadyInAlbum}` : ''}</option>)}</select></label>}
+    {mode === 'move' && !isNew && !options.length && <p>{s.noAlbumsYet}</p>}
+    {isNew && <label>{s.parent}<select value={parent} disabled={busy} onChange={event => setParent(event.target.value)}>{parents.map(folder => <option key={folder.id} value={folder.id}>{path(folder.id)}</option>)}</select></label>}
     {error && <p className="dialog-error" role="alert">{error}</p>}
-    <footer><button type="button" className="dialog-button dialog-button--secondary" onClick={onClose} disabled={busy}>{s.cancel}</button><button className="dialog-button dialog-button--accent" disabled={busy}>{mode === 'move' ? s.move : s.save}</button></footer>
+    <footer><button type="button" className="dialog-button dialog-button--secondary" onClick={onClose} disabled={busy}>{s.cancel}</button><button className="dialog-button dialog-button--accent" disabled={busy || !valid}>{mode === 'move' ? isNew ? s.createAlbumAndAdd : s.move : s.save}</button></footer>
   </form></Modal>;
 }
 
@@ -239,20 +242,24 @@ function DeleteDialog({ selected, album, person, current, s, onClose, onComplete
   </Modal>;
 }
 
-function Viewer({ photos, initial, onClose, s, language, people = [], knownPeople = people, livePhotos, faces, revision, onChanged, highlightPersonId }) {
+function Viewer({ photos, initial, onClose, s, language, people = [], knownPeople = people, folders = [], livePhotos, faces, revision, onChanged, highlightPersonId }) {
   const [index, setIndex] = useState(initial);
+  const [albumPhoto, setAlbumPhoto] = useState(null), [albumNotice, setAlbumNotice] = useState(null);
   const t = photoImportStrings(language);
   const photo = livePhotos?.get(photos[index].id) || photos[index];
-  const change = direction => setIndex(value => (value + direction + photos.length) % photos.length);
-  return <Modal title={photo?.name || s.root} s={s} onClose={onClose} wide className="photo-dialog--viewer" onKeyDown={event => {
-    if (event.defaultPrevented || event.target.closest?.('input, select, textarea, [contenteditable="true"]')) return;
+  const change = direction => { if (!albumPhoto) { setIndex(value => (value + direction + photos.length) % photos.length); setAlbumNotice(null); } };
+  return <><Modal title={photo?.name || s.root} s={s} onClose={onClose} wide className="photo-dialog--viewer" onKeyDown={event => {
+    if (albumPhoto || event.defaultPrevented || event.target.closest?.('input, select, textarea, [contenteditable="true"]')) return;
     if (event.key === 'ArrowRight') { event.preventDefault(); change(1); }
     if (event.key === 'ArrowLeft') { event.preventDefault(); change(-1); }
   }}>
     <div className="photo-viewer"><button type="button" aria-label={s.previous} onClick={() => change(-1)} disabled={photos.length < 2}>‹</button>
       <PhotoFaceViewer key={photo.id} photo={photo} s={s} people={knownPeople} globalFaces={faces} revision={revision}
         onChanged={onChanged} highlightPersonId={highlightPersonId} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
-    <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span><PhotoDownloads key={photo.id} photo={photo} s={s} /></div>
+    <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span>
+      <button type="button" className="dialog-button photo-viewer__album" aria-haspopup="dialog" onClick={() => { setAlbumPhoto(photo); setAlbumNotice(null); }}>＋ {s.move}</button>
+      <PhotoDownloads key={photo.id} photo={photo} s={s} /></div>
+    {albumNotice === photo.id && <p className="photo-viewer__album-notice" role="status">✓ {s.photoAddedToAlbum}</p>}
     {(photo.title || photo.appleFavorite || photo.description || photo.albums?.length > 0 || photo.keywords?.length > 0) && <div className="photo-import-details">
       {photo.title && <strong>{photo.title}</strong>}
       {photo.appleFavorite && <small>♥ {t.favorite}</small>}
@@ -260,7 +267,11 @@ function Viewer({ photos, initial, onClose, s, language, people = [], knownPeopl
       {photo.albums?.length > 0 && <p>{t.albums}: {photo.albums.join(' · ')}</p>}
       {photo.keywords?.length > 0 && <p>{t.keywords}: {photo.keywords.join(' · ')}</p>}
     </div>}
-  </Modal>;
+  </Modal>
+    {albumPhoto && <FolderDialog mode="move" folders={folders} current="albums" photo={livePhotos?.get(albumPhoto.id) || albumPhoto}
+      selected={new Set([albumPhoto.id])} s={s} onClose={() => setAlbumPhoto(null)}
+      onComplete={async () => { setAlbumNotice(albumPhoto.id); setAlbumPhoto(null); await onChanged?.(); }} />}
+  </>;
 }
 
 export default function PhotosLibrary({ language = 'es', renderMarks, initialFiles, onImportDone, matchesPicture, onRootChange }) {
@@ -504,7 +515,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {dialog?.mode === 'people-action' && <PeopleActionDialog Modal={Modal} {...dialog} s={s} onClose={closeDialog} onComplete={completePeopleAction} />}
     {dialog?.mode === 'download' && <PhotoDownloadDialog Modal={Modal} selected={selected} s={s} onClose={() => setDialog(null)} onComplete={() => { setDialog(null); setNotice(s.peopleDownloadStarted); }} />}
     {dialog && !['upload', 'delete', 'people-action', 'download'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
-    {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} livePhotos={index.byId}
+    {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} folders={data.folders} livePhotos={index.byId}
       faces={data.faces} revision={data.revision} onChanged={() => refresh()} highlightPersonId={person?.id}
       s={s} language={language} onClose={() => setViewer(null)} />}
   </section>;

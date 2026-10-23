@@ -1,5 +1,8 @@
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  existingAlbum: 'Álbum existente', createAlbum: 'Crear nuevo álbum', albumName: 'Nombre del álbum', createAlbumAndAdd: 'Crear álbum y añadir',
+  photoAlreadyInAlbum: 'Ya incluida', noAlbumsYet: 'Todavía no hay álbumes. Elige Crear nuevo álbum para guardar esta referencia.',
+  photoAddedToAlbum: 'Foto añadida al álbum. Se conservan sus referencias anteriores.',
   pendingValidation: 'Pendientes de validar', pendingValidationHint: 'Nuevas coincidencias con personas que ya existían al iniciar el lote. Abre una foto para revisar cada cara, corregir su persona o pasarla a Desconocido. Las personas creadas durante ese lote quedan fuera. Los pendientes se conservan hasta que los valides o corrijas.',
   newAdditions: 'Nuevas', otherPhotos: 'Resto', newAddition: 'Nueva incorporación',
   newWithoutPeopleHint: 'Nuevas reúne las fotos recién incorporadas sin caras detectadas. Márcalas como revisadas para pasarlas a Resto. Abrirlas no las marca como revisadas.',
@@ -113,6 +116,9 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  existingAlbum: 'Existing album', createAlbum: 'Create new album', albumName: 'Album name', createAlbumAndAdd: 'Create album and add',
+  photoAlreadyInAlbum: 'Already included', noAlbumsYet: 'There are no albums yet. Choose Create new album to save this reference.',
+  photoAddedToAlbum: 'Photo added to the album. Its previous references are kept.',
   pendingValidation: 'Pending validation', pendingValidationHint: 'New matches with people who already existed when the batch started. Open a photo to review each face, correct its person or move it to Unknown. People created during that batch are excluded. Pending matches stay here until you confirm or correct them.',
   newAdditions: 'New', otherPhotos: 'Rest', newAddition: 'New addition',
   newWithoutPeopleHint: 'New contains photos newly added without detected faces. Mark them as reviewed to move them to Rest. Opening them does not mark them as reviewed.',
@@ -220,6 +226,9 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  existingAlbum: 'Àlbum existent', createAlbum: 'Crear àlbum nou', albumName: 'Nom de l’àlbum', createAlbumAndAdd: 'Crear àlbum i afegir',
+  photoAlreadyInAlbum: 'Ja inclosa', noAlbumsYet: 'Encara no hi ha àlbums. Tria Crear àlbum nou per desar aquesta referència.',
+  photoAddedToAlbum: 'Foto afegida a l’àlbum. Es conserven les referències anteriors.',
   pendingValidation: 'Pendents de validar', pendingValidationHint: 'Noves coincidències amb persones que ja existien en iniciar el lot. Obre una foto per revisar cada cara, corregir la persona o passar-la a Desconegut. Les persones creades durant aquell lot en queden fora. Els pendents es conserven fins que els validis o corregeixis.',
   newAdditions: 'Noves', otherPhotos: 'Resta', newAddition: 'Nova incorporació',
   newWithoutPeopleHint: 'Noves reuneix les fotos acabades d’incorporar sense cares detectades. Marca-les com a revisades per passar-les a Resta. Obrir-les no les marca com a revisades.',

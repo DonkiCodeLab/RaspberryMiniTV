@@ -1307,6 +1307,14 @@ desde Fotos del Mac. Los álbumes son
 lógicos: añadir una referencia no renombra los ficheros ni pierde las marcas por perfil.
 No muevas archivos manualmente después de indexarlos.
 
+El **visualizador de fotos** (la vista grande compartida por Galería, Personas,
+pendientes, mapa y álbumes) permite **Añadir a álbum** además de asignar caras.
+Puedes elegir un **Álbum existente** o **Crear nuevo álbum** y añadir la foto
+abierta en una sola operación. Los destinos que ya contienen esa foto aparecen
+como **Ya incluida**. Al guardar o cancelar sigues en la misma foto del visualizador;
+se conservan el original y todas sus referencias anteriores. La acción usa
+`POST /pictures/albums/add`, también disponible en el modo demo local.
+
 La migración `gallery-v1` cambia la pertenencia principal de todas las fotos a
 `gallery`. Elimina la jerarquía antigua de Uploads sin tocar archivos, fechas,
 GPS o personas, y lleva las carpetas propias de la raíz a `albums`. Las

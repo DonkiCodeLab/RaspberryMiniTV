@@ -290,6 +290,8 @@
 .photo-dialog--viewer .photo-viewer { flex: 1; min-height: 0; align-items: stretch; margin: .75rem 0; }
 .photo-dialog--viewer .photo-viewer > button { align-self: center; margin: 0; }
 .photo-dialog--viewer .photo-viewer__meta { flex-shrink: 0; gap: .5rem; }
+.photo-dialog--viewer .photo-viewer__album { margin: 0; padding: .55rem .8rem; font-size: .8rem; }
+.photo-dialog--viewer .photo-viewer__album-notice { flex-shrink: 0; margin-top: .35rem; color: #a5e9d2; font-size: .78rem; }
 .photo-dialog--viewer .photo-import-details { flex-shrink: 0; max-height: 65px; overflow: auto; margin-top: .5rem; }
 .photo-face-viewer { display: grid; grid-template-columns: minmax(0, 1fr) 284px; gap: 1rem; min-height: 0; }
 .photo-face-viewer .photo-viewer__stage { display: flex; flex-direction: column; min-height: 0; }
