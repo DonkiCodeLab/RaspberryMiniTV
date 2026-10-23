@@ -1,0 +1,62 @@
+{
+  "baseline_commit": "ab791973069bce2c14a2def9779ec526b78f4b29",
+  "scope": "synthetic 128D vectors; not a recognition accuracy benchmark",
+  "order_ABC": [
+    [
+      "A",
+      "B",
+      "C"
+    ]
+  ],
+  "order_ACB": [
+    [
+      "A",
+      "B"
+    ],
+    [
+      "C"
+    ]
+  ],
+  "after_correcting_bridge_B": [
+    [
+      "A",
+      "C"
+    ],
+    [
+      "B"
+    ]
+  ],
+  "manual_same_box_after_vector_shift": [
+    {
+      "manual": false,
+      "box": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.2,
+        "height": 0.3
+      }
+    },
+    {
+      "manual": true,
+      "box": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.2,
+        "height": 0.3
+      }
+    }
+  ],
+  "removed_face_count_after_redetect": 1,
+  "manual_box_alone_does_not_seed_recognition": [
+    [
+      "A"
+    ],
+    [
+      "B"
+    ]
+  ],
+  "new_512d_vector_is_silently_discarded": {
+    "state": "done",
+    "faceCount": 0
+  }
+}
