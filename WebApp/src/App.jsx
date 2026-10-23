@@ -10054,7 +10054,7 @@ export default function App() {
                             label={`${t("movie_details")}: ${game.name || game.file}`}>
                           <div className="movie-library__info">
                             <h2><button className="games-library__title" type="button" onClick={() => handleOpenGameDetails(game.relativePath)}>{game.name || game.file}</button></h2>
-                            <div className="movie-library__meta"><span>{gameYear(game) || "—"}</span><span>{gameRating(game) ? `★ ${gameRating(game)}` : "—"}</span></div>
+                            <div className="movie-library__meta"><span className="movie-library__year"><small>{t("movie_sort_year")}</small>{gameYear(game) || "—"}</span><span>{gameRating(game) ? `★ ${gameRating(game)}` : "—"}</span></div>
                               <div className="movie-library__actions-reveal" inert={gameLibraryView !== "list" && !gameActionsVisible} aria-hidden={gameLibraryView !== "list" && !gameActionsVisible}>
                                 <div className="movie-library__actions-clip">
                                   <div className="movie-library__actions movie-library__actions--icons">

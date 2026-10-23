@@ -7,24 +7,60 @@ export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creatin
   const choices = photoAssignmentOptions(people, s);
   const [target, setTarget] = useState(() => choices.some(person => person.id === face.personId) ? face.personId : 'new');
   const [name, setName] = useState('');
-  const heading = useId(), editor = useRef(null);
-  useEffect(() => { (editor.current?.querySelector('input') || editor.current?.querySelector('select'))?.focus({ preventScroll: true }); }, []);
+  const heading = useId(), editor = useRef(null), personList = useRef(null), newName = useRef(null), cancel = useRef(null);
+  const search = useRef({ text: '', time: 0 });
+  useEffect(() => { personList.current?.focus({ preventScroll: true }); }, []);
   const valid = (!creating || hasBox) && (target === 'new' ? !!name.trim() : choices.some(person => person.id === target));
   return <form ref={editor} className="photo-face-editor" aria-labelledby={heading} onKeyDown={event => {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); if (!busy) onClose(); }
+    if (event.key === 'Tab') {
+      event.preventDefault(); event.stopPropagation();
+      const controls = [personList.current, newName.current, cancel.current].filter(control => control && !control.disabled);
+      const index = controls.indexOf(event.target);
+      controls[(index + (event.shiftKey ? controls.length - 1 : 1)) % controls.length]?.focus({ preventScroll: true });
+    }
+    if (event.key === 'Enter' && event.target === personList.current && !event.nativeEvent.isComposing) {
+      event.preventDefault(); event.stopPropagation();
+      if (!busy && valid) editor.current?.requestSubmit();
+      else if (target === 'new') newName.current?.focus({ preventScroll: true });
+    }
   }} onSubmit={event => {
     event.preventDefault();
     if (!busy && valid) onSave(target === 'new' ? { name: name.trim() } : { personId: target });
   }}>
     <div className="photo-face-editor__heading"><span className="photo-face-editor__icon" aria-hidden="true">⌖</span><strong id={heading}>{creating ? s.nameThisFace : s.editFace}</strong></div>
     <p>{target === UNKNOWN_PERSON_ID ? s.unknownFaceAssignmentHint : creating ? hasBox ? s.faceReadyHint : s.drawFaceHint : s.faceAssignmentHint}</p>
-    <label>{s.choosePerson}<select value={target} onChange={event => setTarget(event.target.value)} disabled={busy}>
-      {choices.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
+    <label>{s.choosePerson}<select ref={personList} value={target} onChange={event => setTarget(event.target.value)} disabled={busy}
+      onBlur={() => { search.current = { text: '', time: 0 }; }} onKeyDown={event => {
+        if (event.nativeEvent.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+        const ids = ['new', ...choices.map(person => person.id)];
+        const index = ids.indexOf(target);
+        if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+          event.preventDefault(); event.stopPropagation();
+          search.current = { text: '', time: 0 };
+          const next = event.key === 'Home' ? 0 : event.key === 'End' ? ids.length - 1 :
+            Math.max(0, Math.min(ids.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)));
+          setTarget(ids[next]);
+        } else if (event.key.length === 1) {
+          event.preventDefault(); event.stopPropagation();
+          const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
+          const now = Date.now(), letter = normalize(event.key);
+          const text = (now - search.current.time < 1000 ? search.current.text : '') + letter;
+          search.current = { text, time: now };
+          const cycling = [...text].every(character => character === letter);
+          const query = cycling ? letter : text;
+          const start = cycling ? choices.findIndex(person => person.id === target) + 1 : 0;
+          const ordered = [...choices.slice(start), ...choices.slice(0, start)];
+          const match = ordered.find(person => normalize(person.name).startsWith(query));
+          if (match) setTarget(match.id);
+        }
+      }}>
       <option value="new">{s.newPerson}</option>
+      {choices.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
     </select></label>
-    {target === 'new' && <label>{s.personName}<input value={name} placeholder={s.faceNamePlaceholder} onChange={event => setName(event.target.value)} required maxLength={100} autoComplete="off" disabled={busy} /></label>}
-    <div className="photo-face-editor__buttons"><button type="submit" className="dialog-button dialog-button--accent" disabled={busy || !valid}>{creating ? s.confirmFace : s.save}</button>
-      <button type="button" className="dialog-button dialog-button--ghost" onClick={onClose} disabled={busy}>{s.cancel}</button></div>
+    <label>{s.newPersonName}<input ref={newName} value={name} placeholder={s.faceNamePlaceholder} onFocus={() => setTarget('new')} onChange={event => { setTarget('new'); setName(event.target.value); }} required={target === 'new'} maxLength={100} autoComplete="off" disabled={busy} /></label>
+    <div className="photo-face-editor__buttons"><button type="submit" tabIndex={-1} className="dialog-button dialog-button--accent" disabled={busy || !valid}>{creating ? s.confirmFace : s.save}</button>
+      <button ref={cancel} type="button" className="dialog-button dialog-button--ghost" onClick={onClose} disabled={busy}>{s.cancel}</button></div>
   </form>;
 }
 

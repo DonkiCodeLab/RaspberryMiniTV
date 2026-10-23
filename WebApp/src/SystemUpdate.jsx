@@ -102,7 +102,7 @@ export default function SystemUpdate({ language }) {
         <button className="dialog-button" type="button" disabled={demo || busy || !connected || status?.state === "unavailable"} onClick={start}>
           {busy ? t.busy : t.button}
         </button>
-        {status && <SystemUpdateHistory language={language} history={status.history} lastUpdatedAt={status.lastUpdatedAt} />}
+        {status && <SystemUpdateHistory language={language} history={status.history} lastUpdatedAt={status.lastUpdatedAt} repositoryUrl={status.repositoryUrl} />}
         <p role="status" aria-live="polite">{message || ""}</p>
       </article>
     </section>

@@ -41,9 +41,12 @@ test('name editor offers known names and new-person creation in every language',
   for (const language of ['es', 'en', 'ca']) {
     const strings = photoStrings(language);
     const html = renderToStaticMarkup(React.createElement(FaceNameEditor, { face: faces[0], people: [{ id: 'ana', name: 'Ana' }], s: strings }));
-    assert.match(html, new RegExp(`<select[^>]*><option value="unknown">${strings.unknownPerson}</option>`));
+    assert.match(html, new RegExp(`<option value="unknown">${strings.unknownPerson}</option>`));
     assert.match(html, /value="ana" selected=""/);
     assert.ok(html.includes(strings.newPerson));
+    assert.ok(html.includes(strings.newPersonName));
+    assert.match(html, /<input/);
+    assert.doesNotMatch(html, /<input[^>]*required/);
     const unnamed = renderToStaticMarkup(React.createElement(FaceNameEditor, { face: faces[1], people: [], s: strings }));
     assert.match(unnamed, /<input/);
     assert.match(unnamed, /maxLength="100"/);

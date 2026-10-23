@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
+import PersonBirthday from './PersonBirthday.jsx';
 
 export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
   const titleId = useId();
@@ -32,7 +33,7 @@ export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
   </section>;
 }
 
-export function PersonEditor({ person, people = [], cover, s, busy, choosingCover, onSave, onMerge, onChooseCover, renderImage }) {
+export function PersonEditor({ person, people = [], cover, s, busy, choosingCover, onSave, onSaveBirthday, onMerge, onChooseCover, renderImage }) {
   const [name, setName] = useState(person.name);
   const [target, setTarget] = useState('');
   const unknown = person.id === UNKNOWN_PERSON_ID;
@@ -51,6 +52,7 @@ export function PersonEditor({ person, people = [], cover, s, busy, choosingCove
       <label>{s.personName}<input required maxLength={100} value={name} disabled={busy} onChange={event => setName(event.target.value)} /></label>
       <button type="submit" className="dialog-button" disabled={busy || !name.trim() || name.trim() === person.name}>{s.save}</button>
     </form>}
+    {!unknown && <PersonBirthday value={person.birthDate} s={s} busy={busy} onSave={onSaveBirthday} />}
     <button type="button" className="dialog-button" disabled={busy} aria-pressed={choosingCover} onClick={onChooseCover}>{choosingCover ? s.cancelCover : s.chooseCover}</button>
     {choosingCover && <p role="status">{s.chooseCoverHint}</p>}
     {!unknown && <form className="photo-person-editor__merge" onSubmit={event => {

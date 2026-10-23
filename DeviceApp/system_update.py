@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import subprocess
 import threading
-from system_update_history import read_history
+from system_update_history import read_history, github_repository_url
 
 UNIT = "minitv-update.service"
 _start_lock = threading.Lock()
@@ -43,6 +43,7 @@ def update_status():
     history = read_history()
     return {"state": state, "runId": run_id,
             "history": history,
+            "repositoryUrl": github_repository_url(Path(__file__).resolve().parents[1]),
             "lastUpdatedAt": next((entry["completedAt"] for entry in history if entry["state"] == "succeeded"), None),
             "phase": update_phase(run_id) if state in {"running", "failed"} else None,
             "startedAt": properties.get("ExecMainStartTimestamp", ""),

@@ -1,4 +1,5 @@
 .game-library-card .movie-library__poster { position: relative; }
+.game-library-card .movie-library__meta { align-items: flex-end; }
 .game-library-card:is(:hover, :focus-within) .movie-library__poster img { transform: scale(1.035); }
 .game-card-preview { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .game-card-preview__slide { position: absolute; inset: 0; display: block; background: #111a21; }

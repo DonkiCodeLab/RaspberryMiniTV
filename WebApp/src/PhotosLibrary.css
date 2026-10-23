@@ -374,3 +374,9 @@
   .photo-face-editor .dialog-button { min-height: 36px; padding: .5rem .65rem; }
 }
 @media (prefers-reduced-motion: reduce) { .photo-face-list__row { transition: none; } }
+
+.photo-person-editor form.photo-person-birthday { flex: 1 1 100%; border-top: 1px solid #ffffff25; padding-top: 1rem; }
+.photo-person-birthday details { width: 100%; min-width: 0; }
+.photo-person-birthday summary { cursor: pointer; color: #ffdf88; min-height: 44px; align-content: center; overflow-wrap: anywhere; }
+.photo-person-birthday__picker { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(110px, 2fr) minmax(60px, 1fr); gap: .7rem; margin: .7rem 0; }
+.photo-person-birthday__actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .7rem; }

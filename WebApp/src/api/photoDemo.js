@@ -1,5 +1,6 @@
 import { descendantIds, folderTrail, hasLocation, isIdentifiedPhotoPerson, UNKNOWN_PERSON_ID } from '../photoLibrary.js';
 import { hashPhoto } from '../photoHash.js';
+import { validBirthday } from '../personBirthday.js';
 // Local demo albums persist in IndexedDB, including image blobs, without network uploads.
 const urls = new Map();
 let operation = Promise.resolve();
@@ -214,6 +215,7 @@ export function photoDemo(action, data = {}) {
           for (const faces of Object.values(library.manualFaces || {})) for (const face of faces) if (face.personId === source.id) { face.personId = target.id; face.name = target.name; }
           target.photoIds = [...new Set([...target.photoIds, ...source.photoIds])];
           target.coverPhotoId ||= source.coverPhotoId;
+          if (target.id !== UNKNOWN_PERSON_ID) target.birthDate ||= source.birthDate;
         }
         library.people = library.people.filter(person => !sources.includes(person));
         result = { ok: true, ...(action === 'people/merge' ? { personId: target.id } : {}) };
@@ -224,8 +226,14 @@ export function photoDemo(action, data = {}) {
         for (const faces of Object.values(library.manualFaces || {})) for (const face of faces) if (face.personId === source.id) { face.personId = target.id; face.name = target.name; }
         target.photoIds = [...new Set([...target.photoIds, ...source.photoIds])];
         target.coverPhotoId ||= source.coverPhotoId;
+        if (target.id !== UNKNOWN_PERSON_ID) target.birthDate ||= source.birthDate;
         library.people = library.people.filter(p => p !== source);
         result = { ok: true, personId: target.id };
+      } else if (/^people\/[^/]+\/birthday$/.test(action)) {
+        const person = library.people.find(p => p.id === action.split('/')[1]);
+        if (!person || person.id === UNKNOWN_PERSON_ID) throw new Error('Selecciona una persona con nombre.');
+        if (data.birthDate !== '' && !validBirthday(data.birthDate)) throw new Error('Introduce una fecha de nacimiento válida que no sea futura.');
+        person.birthDate = data.birthDate; result = { ok: true };
       } else if (/^people\/[^/]+\/cover$/.test(action)) {
         const person = library.people.find(p => p.id === action.split('/')[1]);
         if (!person?.photoIds.includes(data.photoId)) throw new Error('La portada debe ser una foto de esta persona.');

@@ -4,8 +4,10 @@ import fcntl
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import uuid
+from urllib.parse import urlsplit
 
 HISTORY_PATH = Path("/var/lib/minitv-update/history.jsonl")
 
@@ -28,6 +30,37 @@ def git_output(repo, *args):
 
 def current_commit(repo):
     return git_output(repo, "rev-parse", "--verify", "HEAD") or ""
+
+
+def github_repository_url(repo):
+    """Return a browser URL for the updater's origin, without Git credentials."""
+    remote = git_output(repo, "remote", "get-url", "origin")
+    if not remote:
+        return None
+    if "://" in remote:
+        try:
+            parsed = urlsplit(remote)
+            host, path = parsed.hostname or "", parsed.path.lstrip("/")
+        except ValueError:
+            return None
+        if parsed.scheme not in {"https", "http", "ssh", "git"} or parsed.query or parsed.fragment:
+            return None
+        ssh = parsed.scheme == "ssh"
+    else:
+        match = re.fullmatch(r"(?:[^@\s/:]+@)?([^:/\s]+):/?([^?#\s]+)", remote)
+        if not match:
+            return None
+        host, path = match.groups()
+        ssh = True
+    # Also support the per-account SSH aliases used by this project.
+    if host.lower() != "github.com" and not (ssh and re.fullmatch(r"github\.com-[A-Za-z0-9_.-]+", host, re.I)):
+        return None
+    path = path.rstrip("/")
+    if path.endswith(".git"):
+        path = path[:-4]
+    if not re.fullmatch(r"[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+", path) or path.split("/")[1] in {".", ".."}:
+        return None
+    return f"https://github.com/{path}"
 
 
 def update_commits(repo, previous_commit, commit):
@@ -58,6 +91,7 @@ def record_update(repo, *, started_at, previous_commit, exit_code):
         "exitCode": exit_code,
         "previousCommit": previous_commit,
         "commit": commit,
+        "repositoryUrl": github_repository_url(repo),
         "commits": update_commits(repo, previous_commit, commit),
     }
     HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True, mode=0o755)

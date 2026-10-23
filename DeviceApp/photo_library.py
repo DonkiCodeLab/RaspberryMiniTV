@@ -203,6 +203,8 @@ class PhotoLibrary:
               CREATE TABLE IF NOT EXISTS photo_deleted_files (path TEXT PRIMARY KEY);
               CREATE TABLE IF NOT EXISTS person_covers (person TEXT PRIMARY KEY REFERENCES people(id) ON DELETE CASCADE,
                 photo TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE);
+              CREATE TABLE IF NOT EXISTS person_birthdays (person TEXT PRIMARY KEY REFERENCES people(id) ON DELETE CASCADE,
+                birth_date TEXT NOT NULL);
               CREATE TABLE IF NOT EXISTS face_analysis (id INTEGER PRIMARY KEY CHECK(id=1), state TEXT NOT NULL,
                 error TEXT NOT NULL DEFAULT '');
               INSERT OR IGNORE INTO face_analysis (id, state) VALUES (1, 'idle');
@@ -587,6 +589,9 @@ class PhotoLibrary:
                 person_photos.setdefault(row['person'], []).append(row['photo'])
             for person in people:
                 person['photoIds'] = person_photos.get(person['id'], [])
+            birthdays = dict(db.execute('SELECT person, birth_date FROM person_birthdays'))
+            for person in people:
+                person['birthDate'] = birthdays.get(person['id'], '')
             covers = {row['person']: row['photo'] for row in db.execute('SELECT person, photo FROM person_covers')}
             portraits, face_boxes = {}, {}
             # Lightweight rectangles for checking each match, plus the preferred cover.
@@ -1010,6 +1015,29 @@ class PhotoLibrary:
             self._sync_face_links(photo_id, db)
         return {'ok': True, 'faceId': face_id}
 
+    def set_person_birthday(self, ident, value):
+        if ident == UNKNOWN_PERSON_ID:
+            raise PhotoError('Selecciona una persona con nombre.')
+        if not isinstance(value, str):
+            raise PhotoError('Introduce una fecha de nacimiento válida.')
+        if value:
+            try:
+                if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):
+                    raise ValueError()
+                birth_date = datetime.strptime(value, '%Y-%m-%d').date()
+                if birth_date > datetime.now().date():
+                    raise ValueError()
+            except ValueError:
+                raise PhotoError('Introduce una fecha de nacimiento válida que no sea futura.')
+        with self.db() as db:
+            if not db.execute('SELECT 1 FROM people WHERE id=?', (ident,)).fetchone():
+                raise PhotoError('No se encuentra esta persona.', 404)
+            if value:
+                db.execute('INSERT OR REPLACE INTO person_birthdays VALUES (?, ?)', (ident, value))
+            else:
+                db.execute('DELETE FROM person_birthdays WHERE person=?', (ident,))
+        return {'ok': True}
+
     def rename_person(self, ident, name):
         if ident == UNKNOWN_PERSON_ID:
             raise PhotoError('La carpeta Desconocido es fija y no se puede renombrar.')
@@ -1043,6 +1071,8 @@ class PhotoLibrary:
                 photos = [row[0] for row in db.execute('SELECT DISTINCT photo FROM face_detections WHERE person=?', (source,))]
                 # Keep the destination cover, or inherit the first chosen source cover.
                 db.execute('INSERT OR IGNORE INTO person_covers SELECT ?, photo FROM person_covers WHERE person=?', (target, source))
+                if target != UNKNOWN_PERSON_ID:
+                    db.execute('INSERT OR IGNORE INTO person_birthdays SELECT ?, birth_date FROM person_birthdays WHERE person=?', (target, source))
                 db.execute('UPDATE face_detections SET person=?, manual=1 WHERE person=?', (target, source))
                 # Also retain legacy links; shared photos appear only once in the album.
                 db.execute('INSERT OR IGNORE INTO faces SELECT photo, ?, encoding FROM faces WHERE person=?', (target, source))
@@ -1265,6 +1295,10 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/people/<ident>')
     def rename(ident):
         return jsonify(get_library().rename_person(ident, body().get('name')))
+
+    @bp.post('/pictures/people/<ident>/birthday')
+    def birthday(ident):
+        return jsonify(get_library().set_person_birthday(ident, body().get('birthDate')))
 
     @bp.post('/pictures/people/<ident>/merge')
     def merge(ident):

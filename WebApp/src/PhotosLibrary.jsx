@@ -426,6 +426,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {person && <PersonEditor key={person.id} person={person} people={data.knownPeople || data.people} cover={index.byId.get(person.coverFace?.photoId || person.coverPhotoId || person.photoIds[0])} s={s} busy={busy}
       choosingCover={choosingCover} onChooseCover={() => { setChoosingCover(value => !value); setActionMode(false); setSelected(new Set()); }}
       onSave={async name => { if (await act(`people/${person.id}`, { name })) setNotice(s.saved); }}
+      onSaveBirthday={async birthDate => { if (await act(`people/${person.id}/birthday`, { birthDate })) setNotice(s.saved); }}
       onMerge={async personId => { if (await act(`people/${person.id}/merge`, { personId })) { navigate(`person:${personId}`); setNotice(s.peopleMerged); } }}
       renderImage={photo => <PersonPortrait person={person} photo={photo} s={s} />} />}
     {(current === 'ai' || isAi) && <div className="photo-ai-banner"><Icon type="ai" /><div><p>{s.aiHint}</p>

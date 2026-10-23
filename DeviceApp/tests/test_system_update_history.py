@@ -111,6 +111,37 @@ class UpdateHistoryTests(unittest.TestCase):
         self.assertEqual(result["history"], [entry])
         self.assertEqual(result["lastUpdatedAt"], entry["completedAt"])
 
+    def test_normalizes_github_origins_without_persisting_credentials(self):
+        self.git("remote", "add", "origin", "https://github.com/owner/project.git")
+        for remote in ["https://github.com/owner/project.git", "https://token@github.com/owner/project.git",
+                       "git@github.com:owner/project.git", "ssh://git@github.com/owner/project.git",
+                       "git@github.com-personal:owner/project.git", "ssh://git@github.com-personal/owner/project.git"]:
+            with self.subTest(remote=remote):
+                self.git("remote", "set-url", "origin", remote)
+                self.assertEqual(history.github_repository_url(self.repo), "https://github.com/owner/project")
+        for remote in ["https://gitlab.com/owner/project.git", "https://github.com.evil.example/owner/project.git",
+                       "https://github.com/owner/..", "file:///tmp/project", "https://github.com/owner/project?token=secret"]:
+            with self.subTest(remote=remote):
+                self.git("remote", "set-url", "origin", remote)
+                self.assertIsNone(history.github_repository_url(self.repo))
+
+    def test_history_keeps_the_original_repository_when_origin_changes(self):
+        self.git("remote", "add", "origin", "git@github.com:first/project.git")
+        entry = self.record(history.current_commit(self.repo))
+        self.git("remote", "set-url", "origin", "https://github.com/second/project.git")
+        self.assertEqual(entry["repositoryUrl"], "https://github.com/first/project")
+        self.assertEqual(history.read_history()[0]["repositoryUrl"], entry["repositoryUrl"])
+
+    def test_status_provides_current_repository_for_legacy_history(self):
+        legacy = {"state": "succeeded", "completedAt": "2026-10-22T08:05:06+00:00"}
+        output = "LoadState=loaded\nActiveState=inactive\nExecMainStartTimestamp="
+        with patch.object(system_update.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, output)), \
+                patch.object(system_update, "read_history", return_value=[legacy]), \
+                patch.object(system_update, "github_repository_url", return_value="https://github.com/owner/project"):
+            status = system_update.update_status()
+        self.assertEqual(status["repositoryUrl"], "https://github.com/owner/project")
+        self.assertEqual(status["history"], [legacy])
+
 
 if __name__ == "__main__":
     unittest.main()

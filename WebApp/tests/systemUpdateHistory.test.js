@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { build } from "esbuild";
-import { formatSystemUpdateDate } from "../src/systemUpdateHistory.js";
+import { formatSystemUpdateDate, systemUpdateCommitUrl } from "../src/systemUpdateHistory.js";
 
 const require = createRequire(import.meta.url);
 const result = await build({
@@ -19,6 +19,7 @@ const completedAt = new Date(2026, 9, 22, 9, 5, 6).toISOString();
 const success = {
   runId: "success", state: "succeeded", completedAt,
   previousCommit: "1111111122222222", commit: "abcdef1234567890",
+  repositoryUrl: "https://github.com/example/minitv",
   commits: [{ hash: "abcdef1234567890", subject: "Mejora las fotos <script>alert(1)</script>", body: "Carga más rápida.\n\nConserva los álbumes." }],
 };
 const render = props => renderToStaticMarkup(React.createElement(History, { language: "es", ...props }));
@@ -44,8 +45,41 @@ test("renders the last success and commit summaries in a keyboard-accessible his
   assert.match(html, /abcdef12/);
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   assert.doesNotMatch(html, /<script>/);
-  assert.match(html, /<details><summary>Ver descripción del commit/);
+  assert.match(html, /aria-expanded="false" aria-controls="[^"]+"/);
+  assert.match(html, /<div id="[^"]+" hidden=""/);
+  assert.match(html, /aria-haspopup="dialog"/);
+  assert.doesNotMatch(html, /<a\b|<dialog\b/);
   assert.match(html, /Carga más rápida\.\n\nConserva los álbumes\./);
+});
+
+test("expanding a version includes every commit and its full description", () => {
+  const html = render({ history: [{ ...success, commits: [...success.commits,
+    { hash: "fedcba9876543210", subject: "Corrige los subtítulos", body: "Respeta el idioma elegido." }] }] });
+  assert.equal((html.match(/aria-expanded="false"/g) || []).length, 1);
+  assert.equal((html.match(/aria-haspopup="dialog"/g) || []).length, 2);
+  assert.match(html, /Corrige los subtítulos/);
+  assert.match(html, /Respeta el idioma elegido/);
+});
+
+test("legacy history can use the current repository but explicit unknown origins stay unlinked", () => {
+  const { repositoryUrl, ...legacy } = success;
+  assert.match(render({ history: [legacy], repositoryUrl }), /aria-haspopup="dialog"/);
+  for (const origin of [null, "https://other.example/org/repo", "javascript:alert(1)"]) {
+    const html = render({ history: [{ ...success, repositoryUrl: origin }], repositoryUrl });
+    assert.doesNotMatch(html, /aria-haspopup="dialog"/);
+    assert.match(html, /No se conoce el repositorio/);
+  }
+});
+
+test("commit links use the full hash and only accept canonical GitHub repository URLs", () => {
+  const hash = "abcdef1234567890abcdef1234567890abcdef12";
+  assert.equal(systemUpdateCommitUrl(success.repositoryUrl, hash), `${success.repositoryUrl}/commit/${hash}`);
+  for (const repository of [null, "https://github.com.evil.example/a/b", "https://github.com/a/..", "https://token@github.com/a/b", "https://github.com/a/b?token=secret"]) {
+    assert.equal(systemUpdateCommitUrl(repository, hash), null);
+  }
+  for (const invalidHash of [null, "", "abcdef1/../../settings", "not-a-commit"]) {
+    assert.equal(systemUpdateCommitUrl(success.repositoryUrl, invalidHash), null);
+  }
 });
 
 test("a failed attempt stays in the history without replacing the last completed update", () => {

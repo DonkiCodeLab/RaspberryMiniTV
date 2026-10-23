@@ -359,8 +359,14 @@ reinicie la API. El modo demo no permite iniciarlo.
 Debajo del botón se muestra la última actualización completada con fecha y hora
 locales del navegador (`dd/mm/aaaa hh:mm:ss`) y un historial con scroll, del intento
 más reciente al más antiguo. Cada entrada conserva el resultado, la versión de Git
-y los títulos de todos los commits incorporados; las descripciones más largas se
-pueden desplegar. Si Git ya estaba al día, se indica que solo se recompiló la web
+y los títulos de todos los commits incorporados. Al pulsar el identificador de la
+versión se despliegan los commits con sus descripciones completas; al pulsar uno,
+un diálogo permite abrir su página de GitHub en una pestaña nueva o cancelar.
+Cada actualización guarda la URL web del remoto `origin`, sin credenciales,
+para conservar el repositorio correspondiente aunque el remoto cambie después.
+Las entradas antiguas sin ese dato usan el `origin` actual como referencia; si no
+se puede obtener un repositorio de GitHub, los cambios se muestran sin enlace.
+Si Git ya estaba al día, se indica que solo se recompiló la web
 y se reiniciaron los servicios. Los intentos fallidos también se registran, sin
 cambiar la fecha de la última actualización completada.
 El registro se guarda en `/var/lib/minitv-update/history.jsonl`, fuera del repositorio,
