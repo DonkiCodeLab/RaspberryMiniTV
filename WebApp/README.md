@@ -777,6 +777,11 @@ elegir una persona existente o crear una nueva, igual que en Galería. También 
 puede volver a detectar personas. Si aparecen caras, la foto sale de esta
 carpeta y entra en los grupos correspondientes; el original sigue en Galería.
 
+También puedes activar **Añadir cara** pulsando **F** (de *face*) con el puntero
+del ratón dentro de la imagen, sin hacer clic antes. El atajo no se activa en los
+márgenes del visor ni mientras escribes, guardas o tienes un editor abierto;
+respeta combinaciones como Ctrl+F y no reinicia un recuadro que estés dibujando.
+
 Actualizar WebApp y DeviceApp juntos. Para HEIC y Personas, consulta la
 [instalación del soporte de fotos](../DeviceApp/README.md#biblioteca-de-fotos).
 La maqueta local guarda archivos, carpetas y metadatos importados en IndexedDB,

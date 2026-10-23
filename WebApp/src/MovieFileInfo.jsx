@@ -20,6 +20,23 @@ export function MovieQualityBars({ level = 0, compact = false, language = "es" }
   </span>;
 }
 
+export function MovieCardFileQuality({ fileInfo, label, language = "es" }) {
+  const bytes = fileInfo?.sizeBytes;
+  const size = typeof bytes === "number" && Number.isFinite(bytes) && bytes >= 0
+    ? `${(bytes / 1000000000).toFixed(1).replace(".", "'")}Gb`
+    : null;
+  return <small className="movie-library__file-quality">
+    <span className="movie-library__file-quality-heading">
+      <span>{label}:</span>
+      <MovieQualityBars level={fileInfo?.quality?.level} compact language={language} />
+    </span>
+    <span className="movie-library__file-quality-details">
+      <span>{fileInfo?.quality?.resolution || "—"}</span>
+      {size && <span className="movie-library__file-quality-size">({size})</span>}
+    </span>
+  </small>;
+}
+
 export default function MovieFileInfo({ relativePath, fileName, fileInfo, language = "es" }) {
   const s = strings[language] || strings.es;
   const [loadedInfo, setInfo] = useState(null), [failed, setFailed] = useState(false), [retry, setRetry] = useState(0);

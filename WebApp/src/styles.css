@@ -1962,8 +1962,9 @@ img {
 .movie-library__info h2 { margin: 0; min-height: 2.5em; color: #fff; font-size: 1.05rem; line-height: 1.25; }
 .movie-library__meta { display: flex; justify-content: space-between; gap: .7rem; color: rgba(255,255,255,.75); font-weight: 800; font-size: .88rem; }
 .movie-library__meta span:last-child { color: #ffd429; }
-.movie-library__score { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; text-align: right; }
-.movie-library__score small { font-size: .65rem; color: rgba(255,255,255,.7); }
+.movie-library__score, .movie-library__year { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; text-align: right; color: #ffd429; }
+.movie-library__year { align-items: flex-start; text-align: left; }
+.movie-library__score small, .movie-library__year small { font-size: .65rem; color: rgba(255,255,255,.7); }
 .seasons-section__label--inline { position: static; transform: none; width: fit-content; margin-bottom: 1.2rem; }
 .movie-library__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 .movie-library__actions--single { grid-template-columns: 1fr; }

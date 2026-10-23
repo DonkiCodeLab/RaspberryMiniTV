@@ -68,6 +68,7 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
   const [addingFace, setAddingFace] = useState(false), [faceBox, setFaceBox] = useState(null);
   const [removingId, setRemovingId] = useState(null);
   const addButton = useRef(null), returnFocus = useRef(null);
+  const shortcutHint = useId();
   const mounted = useRef(true), action = useRef(false), changed = useRef(onChanged), previousScan = useRef('idle');
   changed.current = onChanged;
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -101,6 +102,11 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
   const restoreFocus = () => requestAnimationFrame(() => (returnFocus.current?.isConnected ? returnFocus.current : addButton.current)?.focus({ preventScroll: true }));
   const closeEditor = () => { setSelectedId(null); setAddingFace(false); setFaceBox(null); restoreFocus(); };
   const closeRemoval = () => { setRemovingId(null); setError(''); restoreFocus(); };
+  const startAddingFace = () => {
+    if (action.current || addingFace) return;
+    returnFocus.current = addButton.current;
+    setSelectedId(null); setRemovingId(null); setFaceBox(null); setAddingFace(true); setNotice('');
+  };
   async function perform(path, payload, success = '') {
     if (action.current) return;
     action.current = true; setBusy(true); setError(''); setNotice('');
@@ -128,12 +134,14 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
   return <div className="photo-face-viewer">
     <PhotoViewerImage photo={photo} s={s} faces={details?.faces || []} selectedFaceId={selectedId || removingId}
       highlightPersonId={highlightPersonId} onSelectFace={addingFace ? undefined : selectFace}
-      addingFace={addingFace} onFaceBoxChange={setFaceBox} busy={busy} editor={editor} editorBox={faceBox || selected?.box} />
+      addingFace={addingFace} onAddFace={removingId ? undefined : startAddingFace} onFaceBoxChange={setFaceBox} busy={busy} editor={editor} editorBox={faceBox || selected?.box} />
     <aside className="photo-face-sidebar" aria-label={s.people}>
       <div className="photo-face-sidebar__top"><span>{s.faceWorkspace}</span>
         <button ref={addButton} type="button" className={`dialog-button ${addingFace ? 'dialog-button--ghost' : 'dialog-button--accent'}`} disabled={busy} aria-pressed={addingFace}
-          onClick={() => { returnFocus.current = addButton.current; setSelectedId(null); setRemovingId(null); setFaceBox(null); setAddingFace(value => !value); setNotice(''); }}><span aria-hidden="true">{addingFace ? '×' : '＋'}</span> {addingFace ? s.cancel : s.addFace}</button>
+          aria-keyshortcuts={addingFace ? undefined : 'F'} aria-describedby={shortcutHint}
+          onClick={addingFace ? closeEditor : startAddingFace}><span aria-hidden="true">{addingFace ? '×' : '＋'}</span> {addingFace ? s.cancel : s.addFace}</button>
       </div>
+      <p id={shortcutHint} className="photo-face-shortcut">{s.addFaceShortcutHint}</p>
       <PhotoFaceList faces={details?.faces || []} selectedId={selectedId || removingId} highlightPersonId={highlightPersonId}
         onSelect={selectFace} onRemove={id => { returnFocus.current = document.activeElement; setSelectedId(null); setRemovingId(id); setNotice(''); }} busy={busy || addingFace} s={s} />
       {removing && <FaceRemoveConfirmation face={removing} s={s} busy={busy} error={error}

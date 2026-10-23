@@ -307,6 +307,7 @@
 .photo-face-sidebar__top { display: grid; gap: .7rem; flex-shrink: 0; }
 .photo-face-sidebar__top > span { color: #d4c997; text-transform: uppercase; letter-spacing: .12em; font-size: .62rem; font-weight: 700; }
 .photo-face-sidebar__top > button { width: 100%; border: 1px solid #ffdf5240; }
+.photo-dialog .photo-face-shortcut { margin: 0; flex-shrink: 0; color: #afc4cf; font-size: .7rem; line-height: 1.4; }
 .photo-face-list { display: flex; flex-direction: column; gap: .6rem; flex: 1; min-height: 0; }
 .photo-face-list__title { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .photo-face-list__title strong { font-size: .88rem; }
@@ -343,7 +344,7 @@
 @media (max-width: 650px) {
   .photo-dialog--viewer { width: calc(100vw - 12px); height: calc(100dvh - 12px); border-radius: 14px; }
   .photo-dialog--viewer .photo-viewer { grid-template-columns: 22px minmax(0, 1fr) 22px; gap: .2rem; margin: .5rem 0; }
-  .photo-face-viewer { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 164px; gap: .5rem; }
+  .photo-face-viewer { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 204px; gap: .5rem; }
   .photo-face-sidebar { position: relative; padding: .65rem; gap: .5rem; }
   .photo-face-sidebar__top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
   .photo-face-sidebar__top > span { font-size: .56rem; max-width: 110px; }

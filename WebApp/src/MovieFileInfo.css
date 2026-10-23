@@ -33,4 +33,7 @@
 .movie-file-info__bars--compact i:nth-child(3) { height: 9px; }
 .movie-file-info__bars--compact i:nth-child(4) { height: 12px; }
 .movie-file-info__bars--compact i:nth-child(5) { height: 14px; }
-.movie-library__file-quality { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .35rem .5rem; }
+.movie-library__file-quality { display: grid; gap: .3rem; min-width: 0; font-size: .75rem; }
+.movie-library__file-quality-heading { display: flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.movie-library__file-quality-details { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem; white-space: nowrap; }
+.movie-library__file-quality-size { margin-left: auto; font-variant-numeric: tabular-nums; }

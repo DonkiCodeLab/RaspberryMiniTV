@@ -5,6 +5,7 @@ import { attachPhotoZoom, MAX_PHOTO_ZOOM } from './photoZoom.js';
 import { photoPersonName } from './photoLibrary.js';
 import { attachFaceDrawing } from './photoFaceDrawing.js';
 import { facePopoverPosition } from './photoFacePopover.js';
+import { attachPhotoFaceShortcut } from './photoFaceShortcut.js';
 
 function FacePopover({ box, view, surface, children }) {
   const panel = useRef(null);
@@ -43,10 +44,14 @@ export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, 
   </button> : null).filter(Boolean);
 }
 
-export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onFaceBoxChange, busy = false, editor, editorBox }) {
+export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
+  const image = useRef(null), shortcut = useRef(null);
+  shortcut.current = { onAddFace, enabled: !!onAddFace && ready && !error && !busy && !addingFace && !editor };
+  useEffect(() => attachPhotoFaceShortcut(surface.current, image.current,
+    () => shortcut.current.onAddFace(), () => shortcut.current.enabled), [photo.id]);
   useEffect(() => {
     const controller = attachPhotoZoom(surface.current, setView); zoom.current = controller;
     if (natural.current) controller.setImageSize(...natural.current);
@@ -60,7 +65,7 @@ export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId,
     <div className="photo-viewer__canvas">
       <div ref={surface} className={`photo-viewer__image${view.scale > 1 ? ' is-zoomed' : ''}${view.dragging ? ' is-dragging' : ''}`}
         role="group" aria-label={photo.name} aria-describedby={hint} tabIndex={0} aria-busy={!ready && !error}>
-        <div className="photo-viewer__transform" style={{ width: view.width, height: view.height,
+        <div ref={image} className="photo-viewer__transform" style={{ width: view.width, height: view.height,
           transform: `translate(-50%, -50%) translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale})` }}>
           <img className="photo-viewer__placeholder" src={getPictureContentUrl(photo.relativePath, 'thumb') || undefined}
             onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />
