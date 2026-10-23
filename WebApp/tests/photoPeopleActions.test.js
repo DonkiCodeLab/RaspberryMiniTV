@@ -26,6 +26,18 @@ test('merge selector starts without a destination and excludes every source', ()
   }
 });
 
+test('individual and bulk merge selectors never offer provisional identities', () => {
+  const s = photoStrings('es'), provisional = { id: 'auto', name: 'Persona 123', photoIds: ['one'] };
+  for (const html of [
+    render(PersonMergeForm, { people: [...people, provisional], excludedIds: [], s }),
+    render(PeopleToolbar, { people: [...people, provisional], selected: [people[0]], editing: true, s }),
+  ]) {
+    assert.doesNotMatch(html, /value="auto"|Persona 123/);
+    assert.match(html, /value="unknown"/);
+    assert.match(html, /value="b">Luis/);
+  }
+});
+
 test('card editing controls are inert when collapsed, selected when open, and protect Unknown', () => {
   const s = photoStrings('es'), props = { people, person: people[0], s, selected: true, onSelect() {} };
   const hidden = render(PersonCardActions, { ...props, editing: false });

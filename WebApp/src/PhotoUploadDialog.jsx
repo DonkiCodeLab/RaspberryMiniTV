@@ -1,6 +1,8 @@
 import { intlLocale } from "./i18n/languages.js";
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import LoadingSpinner from './LoadingSpinner.jsx';
+import PhotoLocation from './PhotoLocation.jsx';
+import { hasLocation } from './photoLibrary.js';
 import { photoRequest, uploadPictureFiles } from './api/raspberryApi.js';
 import { createPhotoHasher, transferPhotoBatch } from './photoImportTransfer.js';
 import { IMPORT_ACCEPT, accumulateImportResult, createImportId, importBatches, importSummary, preparePhotoImport } from './photoImport.js';
@@ -41,7 +43,7 @@ export function ImportProgress({ title, done, total, countLabel, detail, fileNam
   </section>;
 }
 
-function Preview({ entry, t, remove }) {
+function Preview({ entry, t, s, language, remove }) {
   const [url, setUrl] = useState(''), [failed, setFailed] = useState(false);
   useEffect(() => { const value = URL.createObjectURL(entry.file); setUrl(value); setFailed(false); return () => URL.revokeObjectURL(value); }, [entry.file]);
   return <article className="photo-import-preview">
@@ -51,7 +53,8 @@ function Preview({ entry, t, remove }) {
     </div>
     <strong title={entry.file.name}>{entry.metadata?.title || entry.file.name}</strong>
     <small>{entry.metadata?.people.length ? entry.metadata.people.map(p => p.name).join(', ') : size(entry.file.size)}</small>
-    {entry.metadata?.latitude != null && <span className="photo-import-gps">⌖ {entry.metadata.latitude.toFixed(2)}°, {entry.metadata.longitude.toFixed(2)}°</span>}
+    {hasLocation(entry.metadata || {}) && <PhotoLocation className="photo-import-gps" photo={{ ...entry.metadata, name: entry.file.name }}
+      s={s} language={language} previewUrl={url} precision={2} />}
   </article>;
 }
 
@@ -216,7 +219,7 @@ export default function PhotoUploadDialog({ Modal, initialFiles = [], initialMod
           <p className="photo-note">{t.checkingHint}</p>
           <p className="photo-import-data-note">{stats.enriched ? `✓ ${stats.enriched} / ${stats.count} ${t.enriched}` : t.plainStats}</p>
           {mode === 'mac' && stats.enriched < stats.count && <p className="photo-import-warning">{stats.enriched ? t.partialSidecars : t.noSidecars}</p>}
-          <div className="photo-import-previews">{selection.entries.slice(0, 12).map((entry, index) => <Preview key={`${session.current}-${entry.file.importPath || entry.file.webkitRelativePath || entry.file.name}-${index}`} entry={entry} t={t}
+          <div className="photo-import-previews">{selection.entries.slice(0, 12).map((entry, index) => <Preview key={`${session.current}-${entry.file.importPath || entry.file.webkitRelativePath || entry.file.name}-${index}`} entry={entry} t={t} s={s} language={language}
             remove={!locked ? () => setSelection(value => ({ ...value, entries: value.entries.filter(e => e !== entry) })) : null} />)}</div>
           {stats.count > 12 && <small>+ {stats.count - 12} {t.more}</small>}
           {!folderId && !selection.geolocatedOnly && <label>{s.name}<input required maxLength={100} value={name} onChange={event => setName(event.target.value)} disabled={started || busy} /></label>}

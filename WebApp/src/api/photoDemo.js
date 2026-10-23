@@ -1,4 +1,4 @@
-import { descendantIds, folderTrail, hasLocation, UNKNOWN_PERSON_ID } from '../photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, isIdentifiedPhotoPerson, UNKNOWN_PERSON_ID } from '../photoLibrary.js';
 import { hashPhoto } from '../photoHash.js';
 // Local demo albums persist in IndexedDB, including image blobs, without network uploads.
 const urls = new Map();
@@ -13,6 +13,19 @@ const open = () => new Promise((resolve, reject) => {
   request.onerror = () => reject(new Error('No se puede abrir la biblioteca local.'));
   request.onsuccess = () => resolve(request.result);
 });
+
+function assignmentPerson(library, data) {
+  if (data.personId) {
+    const person = library.people.find(person => person.id === data.personId);
+    if (!isIdentifiedPhotoPerson(person)) throw new Error('Selecciona una persona con nombre, Desconocido o escribe un nombre nuevo.');
+    return person;
+  }
+  const name = String(data.name || '').trim();
+  if (!name || name.length > 100 || /[/\\]/.test(name) || !isIdentifiedPhotoPerson({ id: 'new', name })) throw new Error('Escribe un nombre válido para identificar a esta persona.');
+  let person = library.people.find(person => isIdentifiedPhotoPerson(person) && person.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+  if (!person) { person = { id: crypto.randomUUID(), name, photoIds: [] }; library.people.push(person); }
+  return person;
+}
 export const demoPhotoUrl = path => urls.get(path) || '';
 export function migratePhotoDemo(library) {
   library.people ||= [];
@@ -141,30 +154,27 @@ export function photoDemo(action, data = {}) {
         if (!Object.keys(data).length) return { photoId: photo.id, faces, state: photo.faceState || 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
         const box = data.box;
         if (!box || ['x', 'y', 'width', 'height'].some(key => !Number.isFinite(box[key])) || box.x < 0 || box.y < 0 || box.width <= 0 || box.height <= 0 || box.x + box.width > 1.000001 || box.y + box.height > 1.000001) throw new Error('Define un recuadro válido dentro de la foto.');
-        let person = data.personId ? library.people.find(person => person.id === data.personId && !person.appleKey) : null;
-        if (!data.personId) {
-          const name = String(data.name || '').trim();
-          if (!name || name.length > 100 || /[/\\]/.test(name)) throw new Error('Escribe un nombre válido.');
-          person = library.people.find(person => !person.appleKey && person.name.toLocaleLowerCase() === name.toLocaleLowerCase());
-          if (!person) { person = { id: crypto.randomUUID(), name, photoIds: [] }; library.people.push(person); }
-        }
-        if (!person) throw new Error('Selecciona una persona existente.');
+        const person = assignmentPerson(library, data);
         const face = { id: crypto.randomUUID(), personId: person.id, name: person.name, box, manual: true };
         library.manualFaces ||= {}; library.manualFaces[photo.id] = [...faces, face];
         person.photoIds = [...new Set([...person.photoIds, photo.id])];
         result = { ok: true, faceId: face.id, personId: person.id };
+      } else if (/^photos\/[^/]+\/faces\/[^/]+\/remove$/.test(action)) {
+        const [, photoId, , faceId] = action.split('/');
+        const faces = library.manualFaces?.[photoId] || [], face = faces.find(face => face.id === faceId);
+        if (!face) throw new Error('Esta cara ya no está disponible.');
+        library.manualFaces[photoId] = faces.filter(face => face.id !== faceId);
+        const person = library.people.find(person => person.id === face.personId);
+        if (person && !library.manualFaces[photoId].some(face => face.personId === person.id)) {
+          person.photoIds = person.photoIds.filter(id => id !== photoId);
+          if (person.coverPhotoId === photoId) delete person.coverPhotoId;
+        }
+        result = { ok: true, faceId };
       } else if (/^photos\/[^/]+\/faces\/[^/]+\/assign$/.test(action)) {
         const [, photoId, , faceId] = action.split('/');
         const face = library.manualFaces?.[photoId]?.find(face => face.id === faceId);
         if (!face) throw new Error('Esta cara ya no está disponible.');
-        let target = data.personId ? library.people.find(person => person.id === data.personId && !person.appleKey) : null;
-        if (!data.personId) {
-          const name = String(data.name || '').trim();
-          if (!name || name.length > 100 || /[/\\]/.test(name)) throw new Error('Escribe un nombre válido.');
-          target = library.people.find(person => !person.appleKey && person.name.toLocaleLowerCase() === name.toLocaleLowerCase());
-          if (!target) { target = { id: crypto.randomUUID(), name, photoIds: [] }; library.people.push(target); }
-        }
-        if (!target) throw new Error('Selecciona una persona existente.');
+        const target = assignmentPerson(library, data);
         const previous = library.people.find(person => person.id === face.personId);
         face.personId = target.id; face.name = target.name;
         if (previous && !library.manualFaces[photoId].some(face => face.personId === previous.id)) previous.photoIds = previous.photoIds.filter(id => id !== photoId);
@@ -260,7 +270,7 @@ export function photoDemo(action, data = {}) {
       });
       const { metadata, importSessions, importBatches, importFiles, ...publicLibrary } = library;
       return result || { ...publicLibrary, people: library.people.filter(p => !p.appleKey && (p.photoIds.length || p.id === UNKNOWN_PERSON_ID)),
-        knownPeople: library.people.filter(p => !p.appleKey).map(({ id, name }) => ({ id, name })), photos };
+        knownPeople: library.people.filter(isIdentifiedPhotoPerson).map(({ id, name }) => ({ id, name })), photos };
     } finally { db.close(); }
   };
   const next = operation.then(run, run); operation = next.catch(() => {}); return next;

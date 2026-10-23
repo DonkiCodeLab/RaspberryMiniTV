@@ -4,6 +4,17 @@ export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft'
 export const PHOTO_PAGE_SIZE = 100;
 export const UNKNOWN_PERSON_ID = 'unknown';
 
+// Detector-generated labels are groups awaiting a name, not identified people.
+export function isIdentifiedPhotoPerson(person) {
+  return !!person?.id && !person.id.startsWith('apple-') && !person.appleKey &&
+    (person.id === UNKNOWN_PERSON_ID || (typeof person.name === 'string' && !!person.name.trim() &&
+      !/^(?:persona|person)\s+\d+$/i.test(person.name.trim())));
+}
+
+export function photoAssignmentOptions(people, s) {
+  return photoPeopleOptions(people.filter(isIdentifiedPhotoPerson), s);
+}
+
 export function photoPersonName(person, s) {
   return (person.personId ?? person.id) === UNKNOWN_PERSON_ID ? s.unknownPerson : person.name;
 }

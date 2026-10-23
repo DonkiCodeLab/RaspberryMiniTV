@@ -42,7 +42,7 @@
 .photo-import-preview img { width: 100%; height: 100%; object-fit: cover; }
 .photo-import-preview > strong, .photo-import-preview > small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: .35rem; font-size: .75rem; }
 .photo-import-preview > small { margin-top: .15rem; font-size: .68rem; }
-.photo-import-preview button { position: absolute; right: 5px; top: 5px; width: 26px; height: 26px; padding: 0; border: 1px solid #ffffff80; background: #0e2338d9; color: white; border-radius: 50%; cursor: pointer; }
+.photo-import-preview > div > button { position: absolute; right: 5px; top: 5px; width: 26px; height: 26px; padding: 0; border: 1px solid #ffffff80; background: #0e2338d9; color: white; border-radius: 50%; cursor: pointer; }
 .photo-import-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 2.1rem; color: #8cb3c5; }
 .photo-import-heart { position: absolute; bottom: 5px; left: 6px; color: white; text-shadow: 0 1px 4px black; }
 .photo-import-gps { color: #9fd9c9; font-size: .65rem; }

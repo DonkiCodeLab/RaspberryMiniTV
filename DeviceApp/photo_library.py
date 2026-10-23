@@ -71,6 +71,12 @@ def clean_name(value):
     return name
 
 
+def is_identified_person(person):
+    """Automatic group labels cannot confirm the identity of another face."""
+    return not person['id'].startswith('apple-') and (person['id'] == UNKNOWN_PERSON_ID or
+        bool(person['name'].strip()) and not re.fullmatch(r'(?:persona|person)\s+\d+', person['name'].strip(), re.IGNORECASE))
+
+
 def read_metadata(path, on_image=None):
     """Do not invent capture times or coordinates from filesystem timestamps."""
     with Image.open(path) as image:
@@ -599,7 +605,8 @@ class PhotoLibrary:
                 person['faceBoxes'] = face_boxes.get(person['id'], {})
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
-            known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY id=? DESC, name, id", (UNKNOWN_PERSON_ID,))]
+            known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY id=? DESC, name, id", (UNKNOWN_PERSON_ID,))
+                            if is_identified_person(row)]
         try:
             configured = self.settings.public() if self.settings else {}
         except Exception:
@@ -952,10 +959,15 @@ class PhotoLibrary:
             raise PhotoError('Selecciona una persona existente o escribe un nombre nuevo.')
         if 'personId' in data:
             person_id = data['personId']
-            if not isinstance(person_id, str) or person_id.startswith('apple-') or not db.execute('SELECT 1 FROM people WHERE id=?', (person_id,)).fetchone():
+            person = db.execute('SELECT id, name FROM people WHERE id=?', (person_id,)).fetchone() if isinstance(person_id, str) else None
+            if not person:
                 raise PhotoError('Selecciona una persona existente.', 400)
+            if not is_identified_person(person):
+                raise PhotoError('Selecciona una persona con nombre, Desconocido o escribe un nombre nuevo.')
             return person_id
         name = clean_name(data['name'])
+        if not is_identified_person({'id': 'new', 'name': name}):
+            raise PhotoError('Escribe un nombre para identificar a esta persona; Persona seguido de un número es una etiqueta provisional.')
         existing = next((row for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%'")
                          if row['name'].casefold() == name.casefold()), None)
         if existing:
@@ -990,6 +1002,13 @@ class PhotoLibrary:
             db.execute('UPDATE face_detections SET person=?, manual=1 WHERE id=?', (person_id, face_id))
             self._sync_face_links(photo_id, db)
         return {'ok': True, 'personId': person_id}
+
+    def remove_face(self, photo_id, face_id):
+        with self.db() as db:
+            if not db.execute('DELETE FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).rowcount:
+                raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
+            self._sync_face_links(photo_id, db)
+        return {'ok': True, 'faceId': face_id}
 
     def rename_person(self, ident, name):
         if ident == UNKNOWN_PERSON_ID:
@@ -1233,6 +1252,11 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/photos/<ident>/faces')
     def add_face(ident):
         return jsonify(get_library().add_face(ident, body())), 201
+
+    @bp.post('/pictures/photos/<ident>/faces/<face>/remove')
+    def remove_face(ident, face):
+        body()
+        return jsonify(get_library().remove_face(ident, face))
 
     @bp.post('/pictures/people/<ident>/cover')
     def cover(ident):

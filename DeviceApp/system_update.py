@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import subprocess
 import threading
+from system_update_history import read_history
 
 UNIT = "minitv-update.service"
 _start_lock = threading.Lock()
@@ -39,7 +40,10 @@ def update_status():
     else:
         state = "idle"
     run_id = properties.get("InvocationID", "")
+    history = read_history()
     return {"state": state, "runId": run_id,
+            "history": history,
+            "lastUpdatedAt": next((entry["completedAt"] for entry in history if entry["state"] == "succeeded"), None),
             "phase": update_phase(run_id) if state in {"running", "failed"} else None,
             "startedAt": properties.get("ExecMainStartTimestamp", ""),
             "result": properties.get("Result", ""), "exitCode": properties.get("ExecMainStatus", "")}
@@ -50,7 +54,8 @@ def start_update():
         status = update_status()
         if status["state"] == "unavailable":
             raise RuntimeError("Instala el servicio de actualización en la Raspberry.")
-        if status["state"] != "running":
-            subprocess.run(["systemctl", "restart", "--no-block", UNIT],
-                           capture_output=True, text=True, timeout=10, check=True)
-        return {"state": "running"}
+        if status["state"] == "running":
+            return status
+        subprocess.run(["systemctl", "restart", "--no-block", UNIT],
+                       capture_output=True, text=True, timeout=10, check=True)
+        return {**status, "state": "running", "phase": "preparing"}

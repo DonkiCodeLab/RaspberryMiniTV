@@ -1,9 +1,9 @@
 .movie-file-info { box-sizing: border-box; width: 100%; min-width: 0; padding: 20px; border-radius: 22px; border: 1px solid #ffffff25; background: rgba(22,37,48,.86); color: #fff; }
 .movie-file-info__heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .movie-file-info__summary { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
-.movie-file-info__size { margin: 0; padding: 10px 16px; border: 1px solid #ffda3280; border-radius: 14px; background: #ffda3214; }
-.movie-file-info .movie-file-info__size dt { color: #fff0af; }
-.movie-file-info .movie-file-info__size dd { color: #ffda32; font-size: clamp(24px, 3vw, 32px); font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.movie-file-info__size { margin: 0; padding: 5px 8px; border: .5px solid #ffda3280; border-radius: 7px; background: #ffda3214; }
+.movie-file-info .movie-file-info__size dt { color: #fff0af; font-size: 6px; margin-bottom: 2.5px; }
+.movie-file-info .movie-file-info__size dd { color: #ffda32; font-size: clamp(12px, 1.5vw, 16px); font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .movie-file-info__quality { --quality-color: #b4c3cc; display: inline-flex; align-items: center; gap: 10px; padding: 7px 12px; border: 1px solid currentColor; border-radius: 999px; color: var(--quality-color); font-weight: 800; font-size: 14px; }
 .movie-file-info__quality--1 { --quality-color: #ffaaa5; }
 .movie-file-info__quality--2 { --quality-color: #ffd38a; }

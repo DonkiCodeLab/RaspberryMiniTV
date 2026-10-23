@@ -20,6 +20,23 @@ const { PhotoGrid, PhotoPagination, DeletePhotoChoices, AlbumCard, PersonPortrai
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `Photo ${id}`, relativePath: `${id}.jpg` }));
 const s = photoStrings('es');
 
+test('every photo card with valid GPS offers a minimap without changing selection or cover actions', () => {
+  const located = { id: 'gps', name: 'Barcelona.jpg', relativePath: 'gps.jpg', latitude: 41.3874, longitude: 2.1686 };
+  for (const language of ['es', 'ca', 'en']) for (const mode of [{}, { actionMode: true }, { coverMode: true }, { person: { id: 'ana', name: 'Ana' } }]) {
+    const strings = photoStrings(language);
+    const props = { page: photoPage([located, { ...located, id: 'zero', latitude: 0, longitude: 0 },
+      { ...located, id: 'missing', latitude: null }, { ...located, id: 'invalid', longitude: 200 }]),
+      selected: new Set(), s: strings, language, ...mode };
+    const html = renderToStaticMarkup(React.createElement(PhotoGrid, props));
+    assert.equal((html.match(/class="photo-location-button"/g) || []).length, 2);
+    assert.ok(html.includes(`${strings.showPhotoMap}: Barcelona.jpg`));
+    assert.match(html, /aria-haspopup="dialog"/);
+    assert.match(html, /41.3874°, 2.1686°/);
+    assert.ok(html.includes(strings.noGps));
+    assert.doesNotMatch(html, /leaflet-container|<dialog/);
+  }
+});
+
 test('person photo tiles mark only that person in each photo and keep the full image visible', () => {
   const photos = [{ id: 'a', name: 'Group', relativePath: 'a.jpg', width: 1200, height: 800 },
     { id: 'b', name: 'Portrait', relativePath: 'b.jpg', width: 800, height: 1200 }];

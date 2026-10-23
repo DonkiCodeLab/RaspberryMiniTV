@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { photoPeopleOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
+import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 
 export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
   const titleId = useId();
@@ -36,7 +36,7 @@ export function PersonEditor({ person, people = [], cover, s, busy, choosingCove
   const [name, setName] = useState(person.name);
   const [target, setTarget] = useState('');
   const unknown = person.id === UNKNOWN_PERSON_ID;
-  const choices = photoPeopleOptions(people, s).filter(other => other.id !== person.id);
+  const choices = photoAssignmentOptions(people, s).filter(other => other.id !== person.id);
   const targetPerson = choices.find(other => other.id === target);
   const mergeHintId = useId();
   const savedName = useRef(person.name);

@@ -5,7 +5,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { build } from 'esbuild';
 import { photoStrings } from '../src/photoStrings.js';
-import { photosWithoutPeople, photoPeopleOptions, UNKNOWN_PERSON_ID } from '../src/photoLibrary.js';
+import { photosWithoutPeople, photoPeopleOptions, photoAssignmentOptions, UNKNOWN_PERSON_ID } from '../src/photoLibrary.js';
 
 async function load(file) {
   const result = await build({ entryPoints: [new URL(file, import.meta.url).pathname], bundle: true, write: false,
@@ -15,7 +15,7 @@ async function load(file) {
   return module.exports;
 }
 const { FaceRectangles } = await load('../src/PhotoViewerImage.jsx');
-const { FaceNameEditor, PhotoFaceList } = await load('../src/PhotoFaceViewer.jsx');
+const { FaceNameEditor, PhotoFaceList, FaceRemoveConfirmation } = await load('../src/PhotoFaceViewer.jsx');
 const { PersonEditor } = await load('../src/PhotoPeople.jsx');
 const s = photoStrings('es');
 const faces = [
@@ -61,6 +61,29 @@ test('manual face confirmation requires both a finished box and a selected or en
     assert.ok(render({}, true).includes(`disabled="">${strings.confirmFace}`));
     assert.ok(render({}, false).includes(strings.cancel));
     assert.ok(render({}, false).includes(strings.drawFaceHint));
+  }
+});
+
+test('identity selectors exclude unnamed detector groups while their albums stay available for review', () => {
+  const people = [{ id: 'auto', name: 'Persona 12' }, { id: 'legacy', name: ' person 4 ' },
+    { id: 'empty', name: '' }, { id: 'apple-old', name: 'Imported name' }, { id: 'ana', name: 'Ana' }];
+  for (const language of ['es', 'en', 'ca']) {
+    const strings = photoStrings(language);
+    assert.deepEqual(photoAssignmentOptions(people, strings).map(person => person.id), ['unknown', 'ana']);
+    assert.ok(photoPeopleOptions(people, strings).some(person => person.id === 'auto'));
+    const editor = renderToStaticMarkup(React.createElement(FaceNameEditor, {
+      face: { personId: 'auto', name: 'Persona 12' }, people, s: strings,
+    }));
+    assert.doesNotMatch(editor, /Persona 12|person 4|Imported name/);
+    assert.match(editor, /<option value="new" selected=""/);
+    assert.match(editor, /<input/);
+    assert.ok(editor.includes(`disabled="">${strings.save}`));
+    const album = renderToStaticMarkup(React.createElement(PersonEditor, { person: people[0], people, s: strings }));
+    const select = album.match(/<select[\s\S]*?<\/select>/)[0];
+    assert.doesNotMatch(select, /value="auto"|value="legacy"|value="empty"|value="apple-old"/);
+    const unknown = renderToStaticMarkup(React.createElement(FaceNameEditor, { face: { personId: 'unknown' }, people, s: strings }));
+    assert.ok(unknown.includes(strings.unknownFaceAssignmentHint));
+    assert.match(unknown, /<option value="unknown" selected=""/);
   }
 });
 
@@ -114,16 +137,32 @@ test('Unknown is unique, localized and first, and its permanent album cannot be 
 });
 
 test('face correction list selects the exact detection, including legacy faces without rectangles', () => {
-  let selected;
-  const props = { faces, selectedId: 'face-b', highlightPersonId: 'ana', onSelect: id => { selected = id; }, s };
+  let selected, removing;
+  const props = { faces, selectedId: 'face-b', highlightPersonId: 'ana', onSelect: id => { selected = id; }, onRemove: id => { removing = id; }, s };
   const html = renderToStaticMarkup(React.createElement(PhotoFaceList, props));
-  assert.equal((html.match(/<button/g) || []).length, 3);
-  assert.match(html, /1 · Ana/);
-  assert.match(html, /3 · Old/);
+  assert.equal((html.match(/<button/g) || []).length, 6);
+  assert.match(html, /<strong>Ana<\/strong>/);
+  assert.match(html, /<strong>Old<\/strong>/);
   assert.match(html, /is-highlighted/);
   assert.match(html, /aria-pressed="true"/);
-  PhotoFaceList(props).props.children[2].props.children[2].props.onClick();
+  const row = PhotoFaceList(props).props.children[2].props.children[2];
+  row.props.children[0].props.onClick();
   assert.equal(selected, 'legacy');
+  row.props.children[1].props.onClick();
+  assert.equal(removing, 'legacy');
+  assert.match(html, /aria-label="Quitar cara: Old"/);
   const busy = renderToStaticMarkup(React.createElement(PhotoFaceList, { ...props, busy: true }));
-  assert.equal((busy.match(/disabled=""/g) || []).length, 3);
+  assert.equal((busy.match(/disabled=""/g) || []).length, 6);
+});
+
+test('face removal explains its scope and offers a separate confirmation and cancel action', () => {
+  for (const language of ['es', 'en', 'ca']) {
+    const strings = photoStrings(language);
+    const html = renderToStaticMarkup(React.createElement(FaceRemoveConfirmation, { face: faces[0], s: strings, busy: true }));
+    assert.match(html, /role="alertdialog"/);
+    assert.ok(html.includes(strings.removeFaceQuestion.replace('{name}', 'Ana')));
+    assert.ok(html.includes(strings.removeFaceHint));
+    assert.ok(html.includes(strings.cancel));
+    assert.equal((html.match(/disabled=""/g) || []).length, 2);
+  }
 });

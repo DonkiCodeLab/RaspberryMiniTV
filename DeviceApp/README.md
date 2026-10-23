@@ -356,6 +356,18 @@ se interrumpe al reiniciar el menú. La página consulta el estado y recarga
 la web automáticamente cuando termina correctamente. El proceso continúa aunque cierres el navegador o se
 reinicie la API. El modo demo no permite iniciarlo.
 
+Debajo del botón se muestra la última actualización completada con fecha y hora
+locales del navegador (`dd/mm/aaaa hh:mm:ss`) y un historial con scroll, del intento
+más reciente al más antiguo. Cada entrada conserva el resultado, la versión de Git
+y los títulos de todos los commits incorporados; las descripciones más largas se
+pueden desplegar. Si Git ya estaba al día, se indica que solo se recompiló la web
+y se reiniciaron los servicios. Los intentos fallidos también se registran, sin
+cambiar la fecha de la última actualización completada.
+El registro se guarda en `/var/lib/minitv-update/history.jsonl`, fuera del repositorio,
+y sobrevive a reinicios y actualizaciones aunque el navegador esté cerrado.
+Empieza a recopilar entradas cuando se ejecuta esta versión del actualizador;
+no reconstruye actualizaciones anteriores.
+
 Para habilitar el botón por primera vez, después de copiar esta versión y compilar
 la web en la Raspberry:
 
@@ -1366,7 +1378,10 @@ igual que el resto de la biblioteca.
 Cada detección guarda su rectángulo normalizado sobre la imagen orientada,
 vector y persona en `face_detections`. El visor dibuja todas las caras y resalta
 la persona cuya carpeta se está viendo. Al pulsar una cara puedes asignarla a
-una persona existente o crear un nombre; la corrección solo afecta a esa cara
+una persona identificada o crear un nombre; `knownPeople` excluye los grupos
+provisionales «Persona N», que siguen disponibles en `people` para revisarlos y
+renombrarlos. Las rutas de asignación y alta manual rechazan esos grupos como
+destino hasta que tengan un nombre. La corrección solo afecta a esa cara
 y se conserva al volver a detectar. **Personas → Sin personas** reúne únicamente
 originales revisados sin ninguna cara; excluye pendientes y errores.
 
@@ -1376,7 +1391,10 @@ una carpeta completa. Usa el ID reservado `unknown`; se crea automáticamente
 también en bibliotecas existentes y no se puede renombrar ni unir a otra carpeta.
 Las asignaciones se conservan al repetir el análisis y pueden corregirse cara
 por cara desde el visor. Al contener personas distintas, sus vectores no se usan
-para asignar automáticamente nuevas caras a esta carpeta.
+para asignar automáticamente nuevas caras a esta carpeta. Al pasar una cara a
+Desconocido, su `person` cambia a `unknown`: se elimina la asociación anterior de
+esa cara, se actualizan sus referencias y portada, y su vector deja de servir
+como muestra de la identidad anterior. Las demás caras no cambian de persona.
 
 **Detectar personas** en el visor analiza una sola foto y puede pausarse. Comparte
 los límites de CPU y temperatura con los lotes, no ejecuta otro detector en

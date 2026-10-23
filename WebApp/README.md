@@ -676,6 +676,16 @@ varias fotos y añadir referencias a un álbum existente o crear uno en Álbumes
 personales o dentro de otro álbum. La organización se guarda en SQLite; el archivo físico y su
 ruta permanecen estables para conservar los favoritos de cada usuario.
 
+Todas las tarjetas con coordenadas, incluidas las de Personas y las vistas previas
+de importación, ofrecen **Ver en el mapa** junto al GPS. Abre un minimapa sin
+abandonar la foto ni cambiar la selección. La miniatura marca su posición exacta
+y queda centrada; la escala inicial se calcula con el tamaño del país. Puedes
+ampliar, desplazar y pulsar **Volver al encuadre**. Escape, Atrás o la cruz cierran
+solo el minimapa. Las fotos sin GPS mantienen su indicación y no ofrecen el botón.
+Los límites de países se cargan al abrir el mapa y se consultan en el navegador;
+el fondo usa OpenStreetMap, como el mapa general. Si no se identifica el país,
+se utiliza un encuadre regional centrado en el punto.
+
 **Mapa** utiliza OpenStreetMap y agrupa las fotos de Galería con GPS según la escala.
 Solo se dibujan grupos dentro de la zona visible, con un máximo de 100 miniaturas;
 si hay más, se agrupan sin descartar fotos. Cada pin contiene una miniatura y un contador; al pulsarlo aparece el mosaico de
@@ -702,7 +712,11 @@ generación. Se respeta el límite de consultas configurado entre imágenes.
 
 **Personas** agrupa caras con el detector HOG y la red neuronal ResNet de dlib en
 la Raspberry, sin consultar iCloud ni subirlas a un servicio externo. Los nombres iniciales son Persona 1, Persona 2, etc.; se
-pueden renombrar. Las coincidencias son aproximadas: en Modo de acción,
+pueden renombrar. Estos grupos provisionales siguen disponibles para revisarlos,
+pero no aparecen como destino al identificar una cara o unir personas: los
+selectores ofrecen únicamente nombres identificados y **Desconocido**. Al corregir
+una cara de un grupo provisional se abre la entrada de nombre nuevo; también puedes
+elegir una identidad ya conocida. Las coincidencias son aproximadas: en Modo de acción,
 **Quitar de esta persona** corrige una asociación sin borrar la foto. Los rasgos
 faciales se guardan localmente en el catálogo y no se devuelven al navegador.
 **Analizar** inicia un lote de como máximo **100 originales pendientes**, incluidos
@@ -737,18 +751,28 @@ quedan confirmadas y el álbum duplicado desaparece del listado.
 
 El visor grande de Galería y Personas muestra rectángulos sobre todas las caras;
 al entrar desde la carpeta de una persona se resalta su cara. Pulsa un rectángulo
-o **Corregir persona** en la lista de caras situada bajo la foto para elegir un
-nombre existente o crear uno nuevo. Los números relacionan cada cara con su
+o **Corregir persona** en el panel lateral para elegir un nombre existente o crear
+uno nuevo. El formulario aparece junto al recuadro, también al terminar de dibujar
+una cara nueva, y mantiene su tamaño al ampliar la imagen. La foto permanece
+visible mientras se recorre la lista de personas. En móviles, la lista se muestra
+en una franja compacta bajo la imagen con desplazamiento horizontal. **Quitar cara**
+pide confirmación en el panel y retira solo ese recuadro y su asociación en esa
+foto; conserva el original, las demás caras y la persona en otras fotos. Volver a
+ejecutar la detección automática puede detectar de nuevo una cara retirada. Los números relacionan cada cara con su
 recuadro; las detecciones antiguas sin recuadro también se pueden corregir en la
 lista. El cambio afecta solo a esa cara en esa foto. Las correcciones se guardan
-por cara y se conservan al repetir el análisis. **Detectar personas** vuelve a
+por cara y se conservan al repetir el análisis. Elegir **Desconocido** desvincula
+esa cara de la identidad anterior y deja de usar sus rasgos como muestra de esa
+persona; las otras caras y fotos de esa persona conservan sus asociaciones.
+Desconocido agrupa caras sin identificar, no una identidad compartida.
+**Detectar personas** vuelve a
 analizar solo esa foto, con la posibilidad de pausarlo y sin ejecutar dos
 detectores a la vez.
 
 **Personas → Sin personas** contiene fotos ya revisadas sin caras detectadas,
 no las pendientes ni las fallidas. **Modo edición**, junto al título del álbum,
 permite seleccionar varias fotos para descargarlas en un ZIP o borrarlas de Galería.
-Desde su visor, **Añadir cara**, encima de la foto, permite dibujar un recuadro y
+Desde su visor, **Añadir cara**, en el panel del visor, permite dibujar un recuadro y
 elegir una persona existente o crear una nueva, igual que en Galería. También se
 puede volver a detectar personas. Si aparecen caras, la foto sale de esta
 carpeta y entra en los grupos correspondientes; el original sigue en Galería.

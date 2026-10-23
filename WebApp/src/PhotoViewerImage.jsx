@@ -1,9 +1,25 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { getPictureContentUrl } from './api/raspberryApi.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { attachPhotoZoom, MAX_PHOTO_ZOOM } from './photoZoom.js';
 import { photoPersonName } from './photoLibrary.js';
 import { attachFaceDrawing } from './photoFaceDrawing.js';
+import { facePopoverPosition } from './photoFacePopover.js';
+
+function FacePopover({ box, view, surface, children }) {
+  const panel = useRef(null);
+  const [geometry, setGeometry] = useState(null);
+  useLayoutEffect(() => {
+    const measure = () => setGeometry({ viewport: { width: surface.current.clientWidth, height: surface.current.clientHeight },
+      panel: { width: 296, height: panel.current.offsetHeight } });
+    const observer = new ResizeObserver(measure);
+    observer.observe(surface.current); observer.observe(panel.current); measure();
+    return () => observer.disconnect();
+  }, [surface]);
+  return <div ref={panel} className="photo-face-popover" style={geometry ? facePopoverPosition(box, view, geometry.viewport, geometry.panel) : { left: 12, top: 12 }}>
+    {children}
+  </div>;
+}
 
 function FaceDrawing({ onChange, s, disabled }) {
   const overlay = useRef(null), callback = useRef(onChange);
@@ -17,17 +33,17 @@ function FaceDrawing({ onChange, s, disabled }) {
   </div>;
 }
 
-export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s }) {
+export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s, disabled = false }) {
   return faces.map((face, index) => face.box ? <button type="button" key={face.id}
     className={`photo-face-box${face.personId === highlightPersonId ? ' is-highlighted' : ''}${face.id === selectedFaceId ? ' is-selected' : ''}`}
-    aria-label={`${s.editFace}: ${photoPersonName(face, s) || s.unnamedFace}`} aria-pressed={face.id === selectedFaceId}
+    aria-label={`${s.editFace}: ${photoPersonName(face, s) || s.unnamedFace}`} aria-pressed={face.id === selectedFaceId} disabled={disabled}
     style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}
     onClick={event => { event.stopPropagation(); onSelect?.(face.id); }}>
     <span>{index + 1} · {photoPersonName(face, s) || s.unnamedFace}</span>
   </button> : null).filter(Boolean);
 }
 
-export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onFaceBoxChange, busy = false }) {
+export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onFaceBoxChange, busy = false, editor, editorBox }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
@@ -41,18 +57,21 @@ export default function PhotoViewerImage({ photo, s, faces = [], selectedFaceId,
     zoom.current?.setImageSize(...natural.current);
   };
   return <div className="photo-viewer__stage">
-    <div ref={surface} className={`photo-viewer__image${view.scale > 1 ? ' is-zoomed' : ''}${view.dragging ? ' is-dragging' : ''}`}
-      role="group" aria-label={photo.name} aria-describedby={hint} tabIndex={0} aria-busy={!ready && !error}>
-      <div className="photo-viewer__transform" style={{ width: view.width, height: view.height,
-        transform: `translate(-50%, -50%) translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale})` }}>
-        <img className="photo-viewer__placeholder" src={getPictureContentUrl(photo.relativePath, 'thumb') || undefined}
-          onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />
-        {!error && <img key={attempt} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, 'preview') || undefined}
-          alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
-        <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} />
-        {addingFace && ready && <FaceDrawing onChange={onFaceBoxChange} s={s} disabled={busy} />}
+    <div className="photo-viewer__canvas">
+      <div ref={surface} className={`photo-viewer__image${view.scale > 1 ? ' is-zoomed' : ''}${view.dragging ? ' is-dragging' : ''}`}
+        role="group" aria-label={photo.name} aria-describedby={hint} tabIndex={0} aria-busy={!ready && !error}>
+        <div className="photo-viewer__transform" style={{ width: view.width, height: view.height,
+          transform: `translate(-50%, -50%) translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale})` }}>
+          <img className="photo-viewer__placeholder" src={getPictureContentUrl(photo.relativePath, 'thumb') || undefined}
+            onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />
+          {!error && <img key={attempt} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, 'preview') || undefined}
+            alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
+          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace} />
+          {addingFace && ready && <FaceDrawing onChange={onFaceBoxChange} s={s} disabled={busy} />}
+        </div>
+        {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}</div>}
       </div>
-      {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}</div>}
+      {editor && <FacePopover box={editorBox} view={view} surface={surface}>{editor}</FacePopover>}
     </div>
     <div className="photo-viewer__zoom" role="group" aria-label={s.zoom}>
       <button type="button" aria-label={s.zoomOut} title={s.zoomOut} disabled={view.scale <= 1} onClick={() => zoom.current?.zoomBy(1 / 1.5)}>−</button>

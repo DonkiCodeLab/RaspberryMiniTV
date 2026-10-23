@@ -2,6 +2,7 @@ import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useState } from "react";
 import { getSystemUpdate, startSystemUpdate, isMockMode } from "./api/raspberryApi";
 import { createSystemUpdateReload } from "./systemUpdateReload.js";
+import SystemUpdateHistory from "./SystemUpdateHistory.jsx";
 
 const strings = withLanguages({
   es: {
@@ -101,6 +102,7 @@ export default function SystemUpdate({ language }) {
         <button className="dialog-button" type="button" disabled={demo || busy || !connected || status?.state === "unavailable"} onClick={start}>
           {busy ? t.busy : t.button}
         </button>
+        {status && <SystemUpdateHistory language={language} history={status.history} lastUpdatedAt={status.lastUpdatedAt} />}
         <p role="status" aria-live="polite">{message || ""}</p>
       </article>
     </section>

@@ -1,0 +1,22 @@
+.system-update-history { min-width: 0; color: #ecf3fa; }
+.system-update-history p { margin: 0; line-height: 1.5; }
+.system-update-history__last { color: #c5d2dd; font-size: .88rem; }
+.system-update-history__last time { color: #ffdc35; font-weight: 700; white-space: nowrap; }
+.system-update-history h3 { margin: 1.25rem 0 .75rem; font-size: 1rem; }
+.system-update-history h3 span { color: #aebdcc; font-weight: 400; }
+.system-update-history__scroll { max-height: 340px; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #ffdc35 #151c24; padding: 3px 10px 3px 3px; border-radius: 12px; }
+.system-update-history__scroll:focus-visible { outline: 2px solid #ffdc35; outline-offset: 3px; }
+.system-update-history__list { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.system-update-history__entry { min-width: 0; padding: .9rem 1rem; border: 1px solid #ffffff16; border-radius: 12px; background: #101c2666; overflow-wrap: anywhere; font-size: .88rem; }
+.system-update-history__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-bottom: .4rem; }
+.system-update-history time { font-variant-numeric: tabular-nums; }
+.system-update-history__header time { font-weight: 700; }
+.system-update-history__badge { border-radius: 99px; padding: .2rem .6rem; background: #83dbac1a; color: #a0edbf; font-size: .75rem; font-weight: 700; }
+.system-update-history__badge--failed { background: #ff92921a; color: #ffb0b0; }
+.system-update-history__version { color: #aebdcc; margin-bottom: .55rem !important; font-size: .78rem; }
+.system-update-history code { color: #ffdc35; font-size: .8rem; }
+.system-update-history__commits { display: grid; gap: .65rem; padding-left: 1.15rem; margin: .6rem 0 0; }
+.system-update-history__commits code { margin-right: .3rem; }
+.system-update-history summary { margin-top: .3rem; color: #b7c7d5; cursor: pointer; font-size: .8rem; }
+.system-update-history__body { margin-top: .5rem !important; white-space: pre-wrap; color: #c5d2dd; }
+.system-update-history__empty { color: #aebdcc; font-size: .88rem; }

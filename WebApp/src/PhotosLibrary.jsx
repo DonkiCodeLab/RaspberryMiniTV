@@ -9,6 +9,7 @@ import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import { facePortraitLayout } from './photoFacePortrait.js';
 import PhotoFaceViewer from './PhotoFaceViewer.jsx';
 import PhotoDownloads, { PhotoDownloadDialog } from './PhotoDownloads.jsx';
+import PhotoLocation from './PhotoLocation.jsx';
 import PhotoGallery from './PhotoGallery.jsx';
 import { PeopleAnalysis, PersonEditor } from './PhotoPeople.jsx';
 import { PeopleActionDialog, PeopleToolbar, PersonCardActions } from './PhotoPeopleActions.jsx';
@@ -39,7 +40,7 @@ function dateLabel(value, language, fallback) {
 }
 function PhotoMeta({ photo, s, language }) {
   return <div className="photo-meta"><span title={s.taken}>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
-    <span>⌖ {hasLocation(photo) ? `${photo.latitude.toFixed(4)}°, ${photo.longitude.toFixed(4)}°` : s.noGps}</span></div>;
+    <PhotoLocation key={photo.id} photo={photo} s={s} language={language} /></div>;
 }
 function PhotoImage({ photo, tiny = false, preview = false, alt = photo.name, ...props }) {
   const [error, setError] = useState(false), [ready, setReady] = useState(''), [visible, setVisible] = useState(false);
@@ -230,7 +231,6 @@ function Viewer({ photos, initial, onClose, s, language, people = [], knownPeopl
   const [index, setIndex] = useState(initial);
   const t = photoImportStrings(language);
   const photo = livePhotos?.get(photos[index].id) || photos[index];
-  const names = people.filter(person => person.photoIds.includes(photo.id)).map(person => person.name);
   const change = direction => setIndex(value => (value + direction + photos.length) % photos.length);
   return <Modal title={photo?.name || s.root} s={s} onClose={onClose} wide className="photo-dialog--viewer" onKeyDown={event => {
     if (event.defaultPrevented || event.target.closest?.('input, select, textarea, [contenteditable="true"]')) return;
@@ -241,11 +241,10 @@ function Viewer({ photos, initial, onClose, s, language, people = [], knownPeopl
       <PhotoFaceViewer key={photo.id} photo={photo} s={s} people={knownPeople} globalFaces={faces} revision={revision}
         onChanged={onChanged} highlightPersonId={highlightPersonId} /><button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2}>›</button></div>
     <div className="photo-viewer__meta"><PhotoMeta photo={photo} s={s} language={language} /><span>{index + 1} / {photos.length}</span><PhotoDownloads key={photo.id} photo={photo} s={s} /></div>
-    {(photo.title || photo.appleFavorite || photo.description || names.length > 0 || photo.albums?.length > 0 || photo.keywords?.length > 0) && <div className="photo-import-details">
+    {(photo.title || photo.appleFavorite || photo.description || photo.albums?.length > 0 || photo.keywords?.length > 0) && <div className="photo-import-details">
       {photo.title && <strong>{photo.title}</strong>}
       {photo.appleFavorite && <small>♥ {t.favorite}</small>}
       {photo.description && <p>{photo.description}</p>}
-      {names.length > 0 && <div className="photo-import-tags" aria-label={s.people}>{names.map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</div>}
       {photo.albums?.length > 0 && <p>{t.albums}: {photo.albums.join(' · ')}</p>}
       {photo.keywords?.length > 0 && <p>{t.keywords}: {photo.keywords.join(' · ')}</p>}
     </div>}

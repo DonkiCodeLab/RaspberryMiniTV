@@ -1,12 +1,12 @@
 import React, { useId, useRef, useState } from 'react';
-import { photoPeopleOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
+import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { downloadPhotoPeople, photoRequest } from './api/raspberryApi.js';
 import downloadIcon from './assets/download.png';
 import downloadHoverIcon from './assets/download2.png';
 
 export function PersonMergeForm({ people, excludedIds, s, busy, disabled = false, onMerge }) {
   const [target, setTarget] = useState('');
-  const choices = photoPeopleOptions(people, s).filter(person => !excludedIds.includes(person.id));
+  const choices = photoAssignmentOptions(people, s).filter(person => !excludedIds.includes(person.id));
   const destination = choices.find(person => person.id === target);
   return <form className="photo-person-merge" onSubmit={event => {
     event.preventDefault();
