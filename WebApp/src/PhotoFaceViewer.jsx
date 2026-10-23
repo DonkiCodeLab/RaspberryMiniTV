@@ -64,7 +64,7 @@ export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creatin
   </form>;
 }
 
-export function PhotoFaceList({ faces, selectedId, highlightPersonId, onSelect, onRemove, busy, s }) {
+export function PhotoFaceList({ faces, selectedId, highlightPersonId, onSelect, onRemove, onConfirm, busy, s }) {
   return <section className="photo-face-list" aria-label={s.facesInPhoto}>
     <div className="photo-face-list__title"><strong>{s.facesInPhoto}</strong><span>{faces.length}</span></div>
     <p>{faces.length ? s.faceClickHint : s.faceListEmpty}</p>
@@ -73,12 +73,14 @@ export function PhotoFaceList({ faces, selectedId, highlightPersonId, onSelect, 
       <button type="button" disabled={busy} className="photo-face-list__item"
         aria-pressed={face.id === selectedId} onClick={() => onSelect(face.id)}>
         <span className="photo-face-list__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-        <span><strong>{photoPersonName(face, s) || s.unnamedFace}</strong><small>{s.correctPerson}</small></span>
+        <span><strong>{photoPersonName(face, s) || s.unnamedFace}</strong><small>{face.reviewId ? s.pendingValidation : s.correctPerson}</small></span>
       </button>
       <button type="button" className="photo-face-list__remove" disabled={busy} onClick={() => onRemove(face.id)}
         title={s.removeFace} aria-label={`${s.removeFace}: ${photoPersonName(face, s) || s.unnamedFace}`}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>
       </button>
+      {face.reviewId && <button type="button" className="photo-face-list__confirm" disabled={busy} onClick={() => onConfirm(face.reviewId)}
+        aria-label={`${s.confirmMatch}: ${photoPersonName(face, s)}`} title={s.confirmMatch}>✓</button>}
     </div>)}</div>
   </section>;
 }
@@ -179,7 +181,11 @@ export default function PhotoFaceViewer({ photo, people, globalFaces, revision, 
       </div>
       <p id={shortcutHint} className="photo-face-shortcut">{s.addFaceShortcutHint}</p>
       <PhotoFaceList faces={details?.faces || []} selectedId={selectedId || removingId} highlightPersonId={highlightPersonId}
+        onConfirm={id => perform('reviews/confirm', { ids: [id] }, s.reviewSaved)}
         onSelect={selectFace} onRemove={id => { returnFocus.current = document.activeElement; setSelectedId(null); setRemovingId(id); setNotice(''); }} busy={busy || addingFace} s={s} />
+      {details?.noFacesReviewId && <div className="photo-review-action"><span className="photo-review-badge">{s.newAddition}</span>
+        <button type="button" className="dialog-button" disabled={busy || addingFace} onClick={() => perform('reviews/confirm', { ids: [details.noFacesReviewId] }, s.reviewSaved)}>{s.markReviewed}</button>
+      </div>}
       {removing && <FaceRemoveConfirmation face={removing} s={s} busy={busy} error={error}
         onConfirm={() => perform(`photos/${photo.id}/faces/${removing.id}/remove`, {}, s.faceRemoved)} onClose={closeRemoval} />}
       {notice && <p className="photo-face-notice" role="status">✓ {notice}</p>}

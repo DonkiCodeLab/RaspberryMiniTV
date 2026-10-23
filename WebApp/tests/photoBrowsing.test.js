@@ -102,7 +102,7 @@ test('person tiles offer compact favorite, original download and deletion of jus
   assert.ok(html.includes(`aria-label="${s.deletePhotos}"`));
   assert.doesNotMatch(html, />No favorito</);
   const grid = PhotoGrid(props);
-  grid.props.children[0].props.children[2].props.children[2].props.onClick();
+  grid.props.children[0].props.children.find(child => child?.props?.className === 'photo-card-actions').props.children[2].props.onClick();
   assert.deepEqual(deleted, [photo.id]);
 });
 

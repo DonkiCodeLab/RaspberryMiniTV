@@ -1370,6 +1370,28 @@ portada debe pertenecer al grupo y se retira si se quita esa asociación o foto.
 Las rutas con PIN son `POST /pictures/people/scan`, `/pictures/people/pause` y
 `/pictures/people/<id>/cover` (JSON `{ "photoId": "..." }`).
 
+**Personas → Pendientes de validar** reúne únicamente fotos con coincidencias
+automáticas nuevas en personas que ya existían al comenzar ese lote. Los grupos
+creados durante el propio lote quedan fuera, también al pausarlo y continuarlo
+después de reiniciar. Las tarjetas de las personas indican cuántas fotos tienen
+pendientes. Se pueden validar las coincidencias de una foto desde la miniatura,
+las de varias fotos en Modo edición, o cada cara por separado desde el visor.
+Corregir una cara, pasarla a Desconocido o quitarla resuelve solo su pendiente.
+Una confirmación explícita conserva la asignación al repetir la detección.
+
+En **Sin personas**, **Nuevas** separa las incorporaciones aún sin revisar de
+**Resto**. **Marcar como revisada** las lleva a Resto sin mover ni borrar la foto.
+Abrir una foto no la valida. Ambos tipos de pendientes se guardan en SQLite
+(`photo_reviews`) y se acumulan entre lotes hasta revisarlos. `face_review_batch`
+conserva las personas existentes al inicio del lote. La migración no marca
+coincidencias antiguas como nuevas y deja las fotos anteriores sin caras en Resto.
+El seguimiento empieza con los análisis posteriores a la actualización.
+`POST /pictures/reviews/confirm` recibe `{ "ids": ["id-de-revisión"] }`, requiere
+el mismo PIN y valida toda la selección antes de aplicar cambios; una revisión
+obsoleta devuelve 409 sin confirmar otras por accidente. Actualiza DeviceApp y
+WebApp juntos. Pruebas: `python -m unittest discover -s DeviceApp/tests -p 'test_photo_*.py'`
+y, desde WebApp, `node --test tests/photo*.test.js`.
+
 La edición múltiple usa `POST /pictures/people/merge` con `{ "ids": ["..."],
 "personId": "destino" }` y `POST /pictures/people/delete` con `{ "ids": ["..."] }`.
 Se validan todas las personas antes de aplicar la operación en una transacción.

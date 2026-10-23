@@ -824,6 +824,139 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.assertEqual(client.post(path, json={'name': 'Ana'}).status_code, 200)
         self.assertEqual(client.get('/pictures/photos/missing/faces').status_code, 404)
 
+    def test_review_queue_only_includes_people_existing_before_the_batch(self):
+        photos = self.upload(4)
+        self.store.group_faces(photos[0]['id'], self.detections()[:1])
+        self.engine.encode.side_effect = lambda path, stop: self.detections()[:1] if path.name == Path(photos[1]['relativePath']).name else self.detections()[1:]
+        self.store.start_faces(); self.wait_idle()
+        reviews = self.store.snapshot()['reviews']
+        self.assertEqual([row['photoId'] for row in reviews], [photos[1]['id']])
+        self.assertTrue(reviews[0]['batchId'])
+        self.assertEqual(self.store.photo_faces(photos[2]['id'])['faces'][0]['personId'],
+                         self.store.photo_faces(photos[3]['id'])['faces'][0]['personId'])
+        restored = PhotoLibrary(self.store.root)
+        self.assertEqual(restored.snapshot()['reviews'], reviews)
+        # A later batch retains outstanding matches and considers the new group existing.
+        before = {photo['id'] for photo in photos}
+        extra = next(photo for photo in self.upload(5) if photo['id'] not in before)
+        self.store.start_faces(); self.wait_idle()
+        self.assertEqual({r['photoId'] for r in self.store.snapshot()['reviews']}, {photos[1]['id'], extra['id']})
+
+    def test_paused_batch_keeps_its_original_review_baseline_after_restart(self):
+        photos = self.upload(3)
+        self.store.group_faces(photos[0]['id'], self.detections()[:1])
+        entered = threading.Event()
+        calls = []
+        def encode(path, stop):
+            calls.append(path)
+            if len(calls) == 1: return self.detections()[1:]
+            entered.set()
+            self.assertTrue(stop.wait(5))
+            raise FacePaused()
+        self.engine.encode.side_effect = encode
+        self.store.start_faces()
+        self.assertTrue(entered.wait(5))
+        self.store.pause_faces(); self.wait_idle()
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+        self.store = PhotoLibrary(self.store.root)
+        self.engine.encode.side_effect = None
+        self.engine.encode.return_value = self.detections()[1:]
+        self.store.start_faces(); self.wait_idle()
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+        self.assertEqual(self.store.snapshot()['faces']['remaining'], 0)
+
+    def test_review_confirmation_is_per_face_and_protected_on_redetection(self):
+        photos = self.upload(3)
+        self.store.group_faces(photos[0]['id'], self.detections())
+        self.store.group_faces(photos[1]['id'], self.detections())
+        pending = self.store.snapshot()['reviews']
+        self.assertEqual(len(pending), 2)
+        face_id = pending[0]['faceId']
+        self.store.group_faces(photos[1]['id'], self.detections())
+        self.assertEqual(self.store.snapshot()['reviews'], pending)
+        self.assertEqual(self.store.confirm_reviews([pending[0]['id']]), {'ok': True, 'confirmed': 1})
+        self.assertEqual(len(self.store.snapshot()['reviews']), 1)
+        self.store.group_faces(photos[1]['id'], [])
+        saved = self.store.photo_faces(photos[1]['id'])['faces']
+        self.assertEqual([face['id'] for face in saved], [face_id])
+        self.assertTrue(saved[0]['manual'])
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+
+    def test_corrections_merges_and_deletions_remove_only_affected_reviews(self):
+        photos = self.upload(3)
+        self.store.group_faces(photos[0]['id'], self.detections())
+        self.store.group_faces(photos[1]['id'], self.detections())
+        self.store.group_faces(photos[2]['id'], self.detections()[:1])
+        face = self.store.photo_faces(photos[1]['id'])['faces'][0]
+        self.store.assign_face(photos[1]['id'], face['id'], {'personId': UNKNOWN_PERSON_ID})
+        self.assertEqual(len(self.store.snapshot()['reviews']), 2)
+        self.store.delete_photos([photos[2]['id']], 'gallery')
+        pending = self.store.snapshot()['reviews']
+        self.assertEqual(len(pending), 1)
+        self.store.merge_people(pending[0]['personId'], UNKNOWN_PERSON_ID)
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+
+    def test_no_faces_new_and_history_survive_restarts_and_repeated_detection(self):
+        photos = self.upload(3)
+        # Simulate an existing catalogue during the one-time migration.
+        with self.store.db() as db:
+            db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photos[0]['id'],))
+            db.execute("DELETE FROM photo_library_migrations WHERE name='photo-reviews-v1'")
+        self.store = PhotoLibrary(self.store.root)
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+        self.store.group_faces(photos[0]['id'], [])
+        self.store.group_faces(photos[1]['id'], [])
+        review = self.store.snapshot()['reviews'][0]
+        self.assertEqual((review['photoId'], review['faceId']), (photos[1]['id'], None))
+        self.store.group_faces(photos[1]['id'], [])
+        self.assertEqual(self.store.snapshot()['reviews'], [review])
+        self.store.confirm_reviews([review['id']])
+        self.store = PhotoLibrary(self.store.root)
+        with self.store.db() as db:
+            db.execute("UPDATE photos SET face_state='error' WHERE id=?", (photos[1]['id'],))
+        self.store.group_faces(photos[1]['id'], [])
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+        self.store.group_faces(photos[2]['id'], [])
+        self.assertEqual([r['photoId'] for r in self.store.snapshot()['reviews']], [photos[2]['id']])
+        created = self.store.add_face(photos[2]['id'], {'name': 'Ana', 'box': self.detections()[0]['box']})
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+        self.store.remove_face(photos[2]['id'], created['faceId'])
+        self.assertEqual([r['photoId'] for r in self.store.snapshot()['reviews']], [photos[2]['id']])
+
+    def test_review_endpoint_rejects_stale_or_malformed_selections_atomically(self):
+        from flask import Flask
+        app = Flask(__name__); app.register_blueprint(create_photo_blueprint(lambda: self.store))
+        client = app.test_client()
+        photos = self.upload(3)
+        self.store.group_faces(photos[0]['id'], self.detections()[:1])
+        self.store.group_faces(photos[1]['id'], self.detections()[:1])
+        self.store.group_faces(photos[2]['id'], [])
+        pending = self.store.snapshot()['reviews']
+        path = '/pictures/reviews/confirm'
+        for data in ([], {}, {'ids': []}, {'ids': 'invalid'}, {'ids': [1]}, {'ids': ['']}):
+            self.assertEqual(client.post(path, json=data).status_code, 400)
+        self.assertEqual(client.post(path, json={'ids': [pending[0]['id'], 'stale']}).status_code, 409)
+        self.assertEqual(self.store.snapshot()['reviews'], pending)
+        self.assertNotIn('encoding', client.get(f"/pictures/photos/{photos[1]['id']}/faces").get_data(as_text=True))
+        response = client.post(path, json={'ids': [row['id'] for row in pending]})
+        self.assertEqual((response.status_code, response.json['confirmed']), (200, 2))
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        self.assertEqual(self.store.snapshot()['reviews'], [])
+        self.assertEqual(client.post(path, json={'ids': [pending[0]['id']]}).status_code, 409)
+
+    def test_removing_a_match_or_face_clears_its_pending_review(self):
+        photos = self.upload(3)
+        self.store.group_faces(photos[0]['id'], self.detections()[:1])
+        self.store.group_faces(photos[1]['id'], self.detections()[:1])
+        self.store.group_faces(photos[2]['id'], self.detections()[:1])
+        person = self.store.photo_faces(photos[0]['id'])['faces'][0]['personId']
+        self.store.remove_matches(person, [photos[1]['id']])
+        pending = self.store.snapshot()['reviews']
+        self.assertEqual([r['photoId'] for r in pending], [photos[2]['id']])
+        self.store.remove_face(photos[2]['id'], pending[0]['faceId'])
+        pending = self.store.snapshot()['reviews']
+        self.assertEqual([(r['photoId'], r['faceId']) for r in pending], [(photos[2]['id'], None)])
+
 
 ORIGINAL_REST = PhotoLibrary._face_rest
 if __name__ == '__main__': unittest.main()

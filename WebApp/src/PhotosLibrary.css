@@ -15,6 +15,14 @@
 .photo-toolbar .dialog-button, .photo-browse-tools .dialog-button { margin: 0; }
 .photo-refresh { border: 1px solid #ffffff30; background: #ffffff08; color: #fff; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem !important; cursor: pointer; }
 .photo-browse-tools { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin: 1.2rem 0; }
+.photo-review-filter { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+.photo-review-filter .dialog-button { margin: 0; }
+.photo-review-filter [aria-pressed="true"] { background: #ffdf52; color: #17282c; border-color: #ffdf52; }
+.photo-review-badge { display: inline-block; width: fit-content; padding: .3rem .55rem; border-radius: 7px; color: #ffe783; background: #ffdf5218; font-size: .75rem; }
+.photo-review-action { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .55rem; padding: .7rem; }
+.photo-review-action .dialog-button { margin: 0; font-size: .78rem; padding: .5rem .7rem; }
+.photo-review-names { margin: 0; padding: 0 .8rem; color: #ffe783; font-size: .85rem; }
+.photo-face-list__confirm { flex-shrink: 0; width: 36px; height: 40px; margin-right: .35rem; border: 1px solid #8ee3ce60; border-radius: 9px; background: #63e6c418; color: #8ee3ce; cursor: pointer; font-size: 1.2rem; }
 .photo-browse-tools input { width: min(100%, 370px); border: 1px solid #ffffff35; border-radius: 12px; background: #101f2bb0; color: white; padding: .85rem 1rem; font: inherit; }
 .photo-browse-tools input::placeholder { color: #aabac5; }
 .photo-sort { display: flex; flex-wrap: wrap; gap: .7rem; }

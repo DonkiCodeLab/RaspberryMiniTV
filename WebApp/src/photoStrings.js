@@ -1,5 +1,13 @@
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  pendingValidation: 'Pendientes de validar', pendingValidationHint: 'Nuevas coincidencias con personas que ya existían al iniciar el lote. Abre una foto para revisar cada cara, corregir su persona o pasarla a Desconocido. Las personas creadas durante ese lote quedan fuera. Los pendientes se conservan hasta que los valides o corrijas.',
+  newAdditions: 'Nuevas', otherPhotos: 'Resto', newAddition: 'Nueva incorporación',
+  newWithoutPeopleHint: 'Nuevas reúne las fotos recién incorporadas sin caras detectadas. Márcalas como revisadas para pasarlas a Resto. Abrirlas no las marca como revisadas.',
+  pendingPhotosCount: '{count} fotos por validar', newPhotosCount: '{count} fotos nuevas',
+  pendingPhotoCount: '1 foto por validar', newPhotoCount: '1 foto nueva', markReviewedPhotos: 'Marcar como revisadas',
+  confirmMatch: 'Confirmar coincidencia', confirmMatches: 'Validar coincidencias', markReviewed: 'Marcar como revisada',
+  reviewSaved: 'Revisión guardada.', noPendingValidation: 'No hay coincidencias pendientes de validar', noNewWithoutPeople: 'No hay nuevas fotos sin personas',
+  reviewEmptyHint: 'Las nuevas incorporaciones aparecerán aquí después del análisis. Los pendientes se conservan aunque cierres la página o inicies otro lote.',
   birthDate: 'Fecha de nacimiento', addBirthDate: 'Añadir fecha', birthDay: 'Día',
   birthDateHint: 'Escribe directamente el año, aunque sea antiguo, y elige el mes y el día.',
   personAge: '{age} años', invalidBirthDate: 'Elige una fecha completa y válida que no sea futura.', clearBirthDate: 'Quitar fecha',
@@ -105,6 +113,14 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  pendingValidation: 'Pending validation', pendingValidationHint: 'New matches with people who already existed when the batch started. Open a photo to review each face, correct its person or move it to Unknown. People created during that batch are excluded. Pending matches stay here until you confirm or correct them.',
+  newAdditions: 'New', otherPhotos: 'Rest', newAddition: 'New addition',
+  newWithoutPeopleHint: 'New contains photos newly added without detected faces. Mark them as reviewed to move them to Rest. Opening them does not mark them as reviewed.',
+  pendingPhotosCount: '{count} photos to validate', newPhotosCount: '{count} new photos',
+  pendingPhotoCount: '1 photo to validate', newPhotoCount: '1 new photo', markReviewedPhotos: 'Mark as reviewed',
+  confirmMatch: 'Confirm match', confirmMatches: 'Validate matches', markReviewed: 'Mark as reviewed',
+  reviewSaved: 'Review saved.', noPendingValidation: 'No matches pending validation', noNewWithoutPeople: 'No new photos without people',
+  reviewEmptyHint: 'New additions will appear here after analysis. Pending reviews remain when you close the page or start another batch.',
   birthDate: 'Date of birth', addBirthDate: 'Add date', birthDay: 'Day',
   birthDateHint: 'Type any year directly, including older years, then choose the month and day.',
   personAge: '{age} years old', invalidBirthDate: 'Choose a complete, valid date that is not in the future.', clearBirthDate: 'Remove date',
@@ -204,6 +220,14 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  pendingValidation: 'Pendents de validar', pendingValidationHint: 'Noves coincidències amb persones que ja existien en iniciar el lot. Obre una foto per revisar cada cara, corregir la persona o passar-la a Desconegut. Les persones creades durant aquell lot en queden fora. Els pendents es conserven fins que els validis o corregeixis.',
+  newAdditions: 'Noves', otherPhotos: 'Resta', newAddition: 'Nova incorporació',
+  newWithoutPeopleHint: 'Noves reuneix les fotos acabades d’incorporar sense cares detectades. Marca-les com a revisades per passar-les a Resta. Obrir-les no les marca com a revisades.',
+  pendingPhotosCount: '{count} fotos per validar', newPhotosCount: '{count} fotos noves',
+  pendingPhotoCount: '1 foto per validar', newPhotoCount: '1 foto nova', markReviewedPhotos: 'Marcar com a revisades',
+  confirmMatch: 'Confirmar coincidència', confirmMatches: 'Validar coincidències', markReviewed: 'Marcar com a revisada',
+  reviewSaved: 'Revisió desada.', noPendingValidation: 'No hi ha coincidències pendents de validar', noNewWithoutPeople: 'No hi ha fotos noves sense persones',
+  reviewEmptyHint: 'Les noves incorporacions apareixeran aquí després de l’anàlisi. Els pendents es conserven encara que tanquis la pàgina o iniciïs un altre lot.',
   birthDate: 'Data de naixement', addBirthDate: 'Afegir data', birthDay: 'Dia',
   birthDateHint: 'Escriu directament l’any, encara que sigui antic, i tria el mes i el dia.',
   personAge: '{age} anys', invalidBirthDate: 'Tria una data completa i vàlida que no sigui futura.', clearBirthDate: 'Treure data',

@@ -27,6 +27,7 @@ from flask import Blueprint, jsonify, request, send_file
 from photo_import import validate_import_records
 from photo_previews import ImageWorkLock, PhotoPreviews
 from photo_faces import FacePaused, LocalFaceEngine, INSTALL_COMMAND
+import photo_reviews
 from ai_usage import track_call
 
 try:
@@ -227,6 +228,7 @@ class PhotoLibrary:
             db.execute("UPDATE face_analysis SET state='paused' WHERE state='running'")
             db.execute("UPDATE face_photo_jobs SET state='paused' WHERE state='running'")
             self._migrate_face_boxes(db)
+            photo_reviews.initialize(db)
             db.execute("UPDATE jobs SET state='interrupted', error='Se interrumpió la generación. Reintenta las variantes pendientes.' WHERE state='running'")
         self.cleanup_deleted()
 
@@ -581,18 +583,16 @@ class PhotoLibrary:
                     'name': row['name'], 'uploadedAt': row['uploaded'], 'modifiedAt': row['modified'],
                     'size': row['size'], 'sourceId': row['source'], 'style': row['style'], **json.loads(row['metadata']),
                     'faceState': row['face_state'], 'faceCount': face_counts.get(row['id'], 0)})
-            people = [dict(row) for row in db.execute("""SELECT * FROM people
-                WHERE id=? OR id IN (SELECT person FROM faces WHERE encoding!='[]' OR person NOT LIKE 'apple-%')
-                ORDER BY id=?, created""", (UNKNOWN_PERSON_ID, UNKNOWN_PERSON_ID))]
+            people = [dict(row) for row in db.execute("""SELECT p.*, b.birth_date AS birthDate, c.photo AS coverPhotoId
+                FROM people p LEFT JOIN person_birthdays b ON b.person=p.id LEFT JOIN person_covers c ON c.person=p.id
+                WHERE p.id=? OR p.id IN (SELECT person FROM faces WHERE encoding!='[]' OR person NOT LIKE 'apple-%')
+                ORDER BY p.id=?, p.created""", (UNKNOWN_PERSON_ID, UNKNOWN_PERSON_ID))]
             person_photos = {}
             for row in db.execute("SELECT person, photo FROM faces WHERE encoding!='[]' OR person NOT LIKE 'apple-%' ORDER BY person, photo"):
                 person_photos.setdefault(row['person'], []).append(row['photo'])
             for person in people:
                 person['photoIds'] = person_photos.get(person['id'], [])
-            birthdays = dict(db.execute('SELECT person, birth_date FROM person_birthdays'))
-            for person in people:
-                person['birthDate'] = birthdays.get(person['id'], '')
-            covers = {row['person']: row['photo'] for row in db.execute('SELECT person, photo FROM person_covers')}
+                person['birthDate'] = person['birthDate'] or ''
             portraits, face_boxes = {}, {}
             # Lightweight rectangles for checking each match, plus the preferred cover.
             # Never send facial encodings.
@@ -605,11 +605,12 @@ class PhotoLibrary:
                 if row['person'] not in portraits:
                     portraits[row['person']] = {'id': row['id'], 'photoId': row['photo'], 'box': box}
             for person in people:
-                person['coverPhotoId'] = covers.get(person['id']) if covers.get(person['id']) in person['photoIds'] else None
+                person['coverPhotoId'] = person['coverPhotoId'] if person['coverPhotoId'] in person['photoIds'] else None
                 person['coverFace'] = portraits.get(person['id'])
                 person['faceBoxes'] = face_boxes.get(person['id'], {})
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
+            reviews = photo_reviews.pending(db)
             known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY id=? DESC, name, id", (UNKNOWN_PERSON_ID,))
                             if is_identified_person(row)]
         try:
@@ -619,7 +620,7 @@ class PhotoLibrary:
         return {**status, 'folders': folders, 'photos': photos, 'people': people, 'jobs': jobs,
                 'scanning': self.scanning, 'scanError': self.scan_error,
                 'aiReady': bool(configured.get('enabled') and configured.get('configured')),
-                'faces': faces, 'knownPeople': known_people}
+                'faces': faces, 'knownPeople': known_people, 'reviews': reviews}
 
     def move(self, ids, target='', new_name=None, parent=''):
         """Compatibility endpoint: adding an album reference never moves an original."""
@@ -733,6 +734,10 @@ class PhotoLibrary:
                     db.execute("""INSERT INTO face_analysis_items SELECT id, 'pending' FROM photos
                         WHERE source IS NULL AND face_state IN ('pending','skip','imported','error')
                         ORDER BY (face_state='error'), uploaded, id LIMIT ?""", (FACE_BATCH_SIZE,))
+                    photo_reviews.start_batch(db)
+                elif not db.execute('SELECT 1 FROM face_review_batch').fetchone():
+                    # An upgrade may resume a batch that predates review tracking.
+                    photo_reviews.start_batch(db)
                 remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
                 db.execute("UPDATE face_analysis SET state=?, error='' WHERE id=1", ('running' if remaining else 'complete',))
             self.face_error = ''
@@ -763,12 +768,14 @@ class PhotoLibrary:
             if not photo: raise PhotoError('No se encuentra la foto.', 404)
             detections = [dict(row) for row in db.execute('''SELECT f.id, f.person AS personId, p.name, f.box, f.manual
                 FROM face_detections f LEFT JOIN people p ON p.id=f.person WHERE f.photo=? ORDER BY f.rowid''', (photo_id,))]
+            reviews = {row['faceId']: row['id'] for row in photo_reviews.pending(db, photo_id)}
             for face in detections:
                 face['box'] = json.loads(face['box']) if face['box'] else None
                 face['manual'] = bool(face['manual'])
+                face['reviewId'] = reviews.get(face['id'])
             job = db.execute('SELECT state, error FROM face_photo_jobs WHERE photo=?', (photo_id,)).fetchone()
             batch = db.execute("SELECT 1 FROM face_analysis_items WHERE photo=? AND state='pending'", (photo_id,)).fetchone()
-            return {'photoId': photo_id, 'faces': detections, 'state': photo['face_state'],
+            return {'photoId': photo_id, 'faces': detections, 'state': photo['face_state'], 'noFacesReviewId': reviews.get(None),
                     'canDetect': photo['source'] is None and LocalFaceEngine.available(),
                     'scan': dict(job) if job else {'state': 'idle', 'error': ''},
                     'batchRunning': self.faces_running, 'queued': bool(batch)}
@@ -893,6 +900,7 @@ class PhotoLibrary:
                 return self.group_faces(photo_id, encodings, connection)
         state = db.execute('SELECT face_state FROM photos WHERE id=?', (photo_id,)).fetchone()
         if not state: return
+        review_batch, review_people = photo_reviews.context(db, photo_id)
         # A merged person can have several faces in one photo (for example a collage).
         # The album link keeps one row per photo, but matching needs every face vector.
         # Unknown is a collection of unrelated faces, not an identity to match.
@@ -941,6 +949,8 @@ class PhotoLibrary:
                 db.execute('INSERT INTO people VALUES (?,?,?)', (person, 'Persona ' + str(number), time.time()))
             detections.append({'id': old['id'] if old else uuid.uuid4().hex, 'person': person,
                                'encoding': encoding, 'box': box, 'manual': old['manual'] if old else 0})
+            if not old and person in review_people:
+                photo_reviews.add_match(db, photo_id, detections[-1]['id'], person, review_batch)
             used.add(person)
         # A second detection must never erase the user's confirmed assignments,
         # even when a difficult face is missed this time.
@@ -949,15 +959,26 @@ class PhotoLibrary:
         for face in detections:
             db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,?)', (face['id'], photo_id, face['person'],
                        json.dumps(face['encoding']), json.dumps(face['box']) if face['box'] else None, face['manual']))
-        self._sync_face_links(photo_id, db)
         db.execute("UPDATE photos SET face_state='done' WHERE id=?", (photo_id,))
+        self._sync_face_links(photo_id, db, review_batch)
 
-    def _sync_face_links(self, photo_id, db):
+    def _sync_face_links(self, photo_id, db, review_batch=None):
         db.execute("DELETE FROM faces WHERE photo=? AND (encoding!='[]' OR person NOT LIKE 'apple-%')", (photo_id,))
         db.execute('''INSERT OR IGNORE INTO faces SELECT photo, person, encoding FROM face_detections
             WHERE photo=? AND person IS NOT NULL ORDER BY manual DESC, rowid''', (photo_id,))
         db.execute('''DELETE FROM person_covers WHERE photo=? AND NOT EXISTS
             (SELECT 1 FROM faces WHERE person=person_covers.person AND photo=person_covers.photo)''', (photo_id,))
+        photo_reviews.sync(db, photo_id, review_batch)
+
+    def confirm_reviews(self, ids):
+        with self.db() as db:
+            try:
+                confirmed = photo_reviews.confirm(db, ids)
+            except ValueError as error:
+                raise PhotoError(str(error)) from None
+            except LookupError as error:
+                raise PhotoError(str(error), 409) from None
+        return {'ok': True, 'confirmed': confirmed}
 
     def _face_person(self, db, data):
         if set(data) not in ({'personId'}, {'name'}):
@@ -1125,6 +1146,8 @@ class PhotoLibrary:
             db.executemany('UPDATE face_detections SET person=NULL, manual=1 WHERE person=? AND photo=?', [(person, ident) for ident in ids])
             db.executemany('DELETE FROM faces WHERE person=? AND photo=?', [(person, ident) for ident in ids])
             db.execute('DELETE FROM person_covers WHERE person=? AND NOT EXISTS (SELECT 1 FROM faces WHERE person=? AND photo=person_covers.photo)', (person, person))
+            for ident in ids:
+                photo_reviews.sync(db, ident)
         return {'ok': True}
 
     def set_person_cover(self, person, photo):
@@ -1326,5 +1349,9 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/people/<ident>/remove')
     def remove(ident):
         return jsonify(get_library().remove_matches(ident, body().get('ids')))
+
+    @bp.post('/pictures/reviews/confirm')
+    def confirm_reviews():
+        return jsonify(get_library().confirm_reviews(body().get('ids')))
 
     return bp
