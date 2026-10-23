@@ -123,3 +123,26 @@ test('quality sorting uses saved measurements and keeps unmeasured movies last i
   assert.equal(libraryScrollLabel(items[0], 'quality'), '5/5');
   assert.equal(libraryScrollLabel(items[1], 'quality'), '—');
 });
+
+
+test("size sorting compares exact bytes in both directions and keeps missing or invalid sizes last", async () => {
+  const { compareLibraryItems } = await import("../src/libraryScroll.js");
+  const items = [
+    { name: "Grande", fileInfo: { sizeBytes: 10e9 } },
+    { name: "Pequeña", fileInfo: { sizeBytes: 2e9 } },
+    { name: "Cero", fileInfo: { sizeBytes: 0 } },
+    { name: "Similar B", fileInfo: { sizeBytes: 2e9 + 2 } },
+    { name: "Similar A", fileInfo: { sizeBytes: 2e9 + 1 } },
+    { name: "Sin datos" },
+    ...[null, -1, NaN, Infinity, "3000000000"].map((sizeBytes, index) => ({ name: `Inválida ${index}`, fileInfo: { sizeBytes } })),
+  ];
+  const unknown = ["Inválida 0", "Inválida 1", "Inválida 2", "Inválida 3", "Inválida 4", "Sin datos"];
+  const order = direction => [...items].sort((a, b) => compareLibraryItems(a, b, "size", direction)).map(item => item.name);
+  assert.deepEqual(order("asc"), ["Cero", "Pequeña", "Similar A", "Similar B", "Grande", ...unknown]);
+  assert.deepEqual(order("desc"), ["Grande", "Similar B", "Similar A", "Pequeña", "Cero", ...unknown]);
+  assert.ok(compareLibraryItems({ name: "B", fileInfo: { sizeBytes: 1e9 } }, { name: "A", fileInfo: { sizeBytes: 1e9 } }, "size", "desc") > 0);
+  assert.equal(libraryScrollLabel({ fileInfo: { sizeBytes: 1.25e9 } }, "size", "es"), "1,25 GB");
+  assert.equal(libraryScrollLabel({ fileInfo: { sizeBytes: 1.25e9 } }, "size", "en"), "1.25 GB");
+  assert.equal(libraryScrollLabel(items[2], "size"), "0 GB");
+  for (const item of items.slice(5)) assert.equal(libraryScrollLabel(item, "size"), "—");
+});

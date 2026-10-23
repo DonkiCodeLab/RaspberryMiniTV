@@ -1,7 +1,16 @@
 import { intlLocale } from "./i18n/languages.js";
 import { compareLibraryRatings, formatLibraryRating } from "./libraryRatings.js";
 
+function movieSizeBytes(item) {
+  const bytes = item.fileInfo?.sizeBytes;
+  return typeof bytes === "number" && Number.isFinite(bytes) && bytes >= 0 ? bytes : null;
+}
+
 export function libraryScrollLabel(item, sort = "name", language = "es", ratingSource = "tmdb") {
+  if (sort === "size") {
+    const bytes = movieSizeBytes(item);
+    return bytes === null ? "—" : `${new Intl.NumberFormat(intlLocale(language), { maximumFractionDigits: 2 }).format(bytes / 1e9)} GB`;
+  }
   if (sort === "quality") return item.fileInfo?.quality?.level > 0 ? `${item.fileInfo.quality.level}/5` : "—";
   if (sort === "year") return String(item.year || item.releaseDate || "").match(/\b\d{4}\b/)?.[0] || "—";
   if (sort === "rating") {
@@ -58,6 +67,11 @@ export function compareLibraryItems(left, right, sort = "name", direction = "asc
   const names = String(left.label || left.name || "").localeCompare(String(right.label || right.name || ""), language, { sensitivity: "base", numeric: true });
   const sign = direction === "desc" ? -1 : 1;
   if (sort === "name") return sign * names;
+  if (sort === "size") {
+    const a = movieSizeBytes(left), b = movieSizeBytes(right);
+    if (a === null || b === null) return Number(a === null) - Number(b === null) || names;
+    return sign * (a - b) || names;
+  }
   if (sort === "author") {
     const a = String(left.author || "").trim(), b = String(right.author || "").trim();
     if (!a || !b) return Number(!a) - Number(!b) || names;

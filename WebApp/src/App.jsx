@@ -798,6 +798,7 @@ const UI_STRINGS = withLanguages({
     movie_view_list: "Vista listado",
     movie_sort_name: "Nombre",
     movie_sort_quality: "Calidad del vídeo",
+    movie_sort_size: "Tamaño (GB)",
     movie_card_quality: "Calidad del vídeo",
     movie_sort_year: "Año",
     movie_sort_rating: "Puntuación",
@@ -1313,6 +1314,7 @@ const UI_STRINGS = withLanguages({
     movie_view_list: "Vista llista",
     movie_sort_name: "Nom",
     movie_sort_quality: "Qualitat del vídeo",
+    movie_sort_size: "Mida (GB)",
     movie_card_quality: "Qualitat del vídeo",
     movie_sort_year: "Any",
     movie_sort_rating: "Puntuació",
@@ -1828,6 +1830,7 @@ const UI_STRINGS = withLanguages({
     movie_view_list: "List view",
     movie_sort_name: "Name",
     movie_sort_quality: "Video quality",
+    movie_sort_size: "Size (GB)",
     movie_card_quality: "Video quality",
     movie_sort_year: "Year",
     movie_sort_rating: "Rating",
@@ -9785,6 +9788,7 @@ export default function App() {
                                 {isMoviesMode || isGamesMode ? <option value="year">{t("movie_sort_year")}</option> : null}
                                 {!isGamesMode && <option value="rating">{t("movie_sort_rating")}</option>}
                                 {isMoviesMode && <option value="quality">{t("movie_sort_quality")}</option>}
+                                {isMoviesMode && <option value="size">{t("movie_sort_size")}</option>}
                               </select>
                             </label>}
                             {!isOscarView && (isMoviesMode || isSeriesMode) && <label className="movie-library__sort movie-library__rating-source">
