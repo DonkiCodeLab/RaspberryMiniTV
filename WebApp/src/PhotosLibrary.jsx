@@ -162,7 +162,7 @@ function Modal({ title, titleActions, s, onClose, children, wide = false, busy =
   </dialog>, document.body);
 }
 
-export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, special, portraitPhoto, personActions, selected = false }) {
+export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, previewOnly = false, special, portraitPhoto, personActions, selected = false }) {
   const [active, setActive] = useState(false), [step, setStep] = useState(0);
   const isPerson = folder.id.startsWith('person:');
   const fixedIcon = folder.id === `person:${UNKNOWN_PERSON_ID}` ? 'unknownPerson' : folder.id === 'withoutPeople' ? 'withoutFaces' : folder.id === 'pendingValidation' ? 'pendingValidation' : null;
@@ -181,15 +181,20 @@ export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, spec
   return <article className={`movie-library__card photo-album photo-album--${isPerson ? 'person' : folder.id === 'withoutPeople' ? 'without-people' : special || 'folder'}${selected ? ' is-selected' : ''}`}
     onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(true); }} onPointerLeave={() => setActive(false)}
     onFocusCapture={() => setActive(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }}>
-    <button className="movie-library__poster photo-album__cover" type="button" aria-label={`${onPreview ? s.personPhotoPreview : s.open}: ${folder.name}`} onClick={onPreview || onOpen}>
+    <button className={`movie-library__poster photo-album__cover${onPreview ? ' photo-album__cover--preview' : ''}`} type="button"
+      aria-label={`${onPreview ? s.personPhotoPreview : s.open}: ${folder.name}`} aria-haspopup={onPreview ? 'dialog' : undefined} onClick={onPreview || onOpen}>
       {fixedIcon ? <span className="photo-album__art"><Icon type={fixedIcon} /><span>{folder.name}</span></span> : isPerson ? <PersonPortrait person={folder} photo={portraitPhoto || photos.find(photo => photo.id === folder.coverFace?.photoId)} s={s} /> :
         cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
       <span className="photo-album__badge"><Icon type={fixedIcon || (isPerson ? 'people' : special || 'folder')} /></span>
+      {previewOnly && onPreview && <span className="photo-album__preview-hint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="10" cy="10" r="6" /><path d="m15 15 6 6M10 7v6m-3-3h6" /></svg>
+        <span>{s.enlargePhoto}</span>{photos.length > 1 && <span className="photo-album__preview-count">{photos.length} {s.photos}</span>}
+      </span>}
     </button>
     <div className="movie-library__info"><h2>{folder.name}</h2>{age !== null && <div className="photo-person-card-birthday"><span>{s.personAge.replace('{age}', age)}</span><span><span aria-hidden="true">🎂</span> {birthday}</span></div>}<div className="movie-library__meta"><span>{photos.length} {s.photos}</span></div>
       {folder.reviewCount > 0 && <span className="photo-review-badge">{(folder.id === 'withoutPeople' ? (folder.reviewCount === 1 ? s.newPhotoCount : s.newPhotosCount) : (folder.reviewCount === 1 ? s.pendingPhotoCount : s.pendingPhotosCount)).replace('{count}', folder.reviewCount)}</span>}
       <small className="photo-album__date">{s.uploaded} · {dateLabel(latest || folder.created, language, '—')}</small>
-      <div className="movie-library__actions movie-library__actions--single"><button type="button" onClick={onOpen}>{s.open} <span aria-hidden="true">↗</span></button></div>
+      {!previewOnly && <div className="movie-library__actions movie-library__actions--single"><button type="button" onClick={onOpen}>{s.open} <span aria-hidden="true">↗</span></button></div>}
       {personActions}
     </div>
   </article>;
@@ -489,6 +494,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       portraitPhoto={index.byId.get(folder.coverFace?.photoId)}
       selected={!!cardPerson && (newPeopleOnly ? !!peopleDrafts[cardPerson.id] : selectedPeople.has(cardPerson.id))}
       onPreview={cardPerson && photos.length ? () => setPreviewPersonId(cardPerson.id) : undefined}
+      previewOnly={newPeopleOnly && !!cardPerson}
       personActions={cardPerson && (newPeopleOnly ? <NewPersonCardActions person={cardPerson} people={data.knownPeople || data.people}
         draft={peopleDrafts[cardPerson.id]} entry={batchEntriesById.get(cardPerson.id)} s={s} busy={busy}
         onChange={change => setPeopleDrafts(previous => updatePersonDraft(previous, cardPerson, change))} /> :

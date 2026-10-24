@@ -1,5 +1,6 @@
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  enlargePhoto: 'Ampliar',
   newPeople: 'Nuevas personas', allPeople: 'Todas las personas', noNewPeople: 'No quedan personas nuevas por identificar',
   newPeopleHint: "Prepara una acción en cada ficha: poner nombre, unir con alguien, eliminar la persona conservando sus fotos o borrar sus fotos originales. Después pulsa Aplicar cambios para guardar todas las fichas preparadas. Pulsa una cara para ampliar sus fotos sin salir del listado.",
   deletePersonKeepPhotos: "Eliminar persona y conservar fotos",
@@ -147,6 +148,7 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  enlargePhoto: 'Enlarge',
   newPeople: 'New people', allPeople: 'All people', noNewPeople: 'No new people left to identify',
   newPeopleHint: "Prepare one action per card: give them a name, merge with someone, remove the person while keeping their photos, or delete their original photos. Then select Apply changes to save all prepared cards. Click a face to enlarge their photos without leaving the list.",
   deletePersonKeepPhotos: "Remove person and keep photos",
@@ -288,6 +290,7 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  enlargePhoto: 'Amplia',
   newPeople: 'Persones noves', allPeople: 'Totes les persones', noNewPeople: 'No queden persones noves per identificar',
   newPeopleHint: "Prepara una acció a cada fitxa: posar nom, unir amb algú, eliminar la persona conservant les fotos o esborrar les fotos originals. Després prem Aplica els canvis per desar totes les fitxes preparades. Prem una cara per ampliar les fotos sense sortir de la llista.",
   deletePersonKeepPhotos: "Eliminar persona i conservar fotos",

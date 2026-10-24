@@ -821,7 +821,10 @@ Al pulsar la portada de una persona se amplía su foto con el recuadro de su car
 sin entrar en el álbum ni en el visor de edición de fotos. Las flechas recorren
 sus imágenes y vuelven a la primera después de la última. Cerrar o pulsar Escape
 devuelve al mismo listado, conservando el filtro y las casillas marcadas.
-El botón **Entrar** sigue abriendo el álbum de la persona.
+En **Nuevas personas**, la imagen muestra **Ampliar** y el número de fotos si hay
+varias; las flechas del visor aparecen solo cuando se puede pasar a otra foto.
+Este modo no muestra **Entrar**: la revisión permanece en el listado. En
+**Todas las personas**, **Entrar** sigue abriendo el álbum de la persona.
 
 Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,
 `python -m unittest discover -s DeviceApp/tests -p 'test_photo_library.py'`.
