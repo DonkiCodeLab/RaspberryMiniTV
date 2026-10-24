@@ -1,3 +1,4 @@
+import { deleteDemoPhotos, reviewDemoPeople } from './photoDemoPeopleBatch.js';
 import { descendantIds, folderTrail, hasLocation, isIdentifiedPhotoPerson, UNKNOWN_PERSON_ID } from '../photoLibrary.js';
 import { hashPhoto } from '../photoHash.js';
 import { validBirthday } from '../personBirthday.js';
@@ -135,13 +136,7 @@ export function photoDemo(action, data = {}) {
           for (const photo of photos) photo.folderIds = photo.folderIds.filter(id => id !== data.folderId);
           result = { ok: true, removed: photos.length };
         } else {
-          const paths = new Set(photos.map(photo => photo.relativePath));
-          library.photos = library.photos.filter(photo => !ids.has(photo.id));
-          for (const person of library.people) person.photoIds = person.photoIds.filter(id => !ids.has(id));
-          for (const id of ids) if (library.metadata) delete library.metadata[id];
-          for (const id of ids) if (library.manualFaces) delete library.manualFaces[id];
-          for (const [digest, id] of Object.entries(library.importFiles || {})) if (ids.has(id)) delete library.importFiles[digest];
-          for (const [batch, receipt] of Object.entries(library.importBatches || {})) if (receipt.saved.some(path => paths.has(path))) delete library.importBatches[batch];
+          deleteDemoPhotos(library, ids);
           result = { ok: true, deleted: photos.length };
         }
       } else if (action.startsWith('metadata/')) {
@@ -191,6 +186,8 @@ export function photoDemo(action, data = {}) {
         const zip = new JSZip();
         for (const photo of photos) zip.file(`${photo.id}/${photo.name.replace(/[/\\]/g, '_')}`, await photo.blob.arrayBuffer());
         return zip.generateAsync({ type: 'blob', compression: 'STORE' });
+      } else if (action === 'people/review') {
+        result = reviewDemoPeople(library, data);
       } else if (['people/merge', 'people/delete', 'people/download'].includes(action)) {
         if (!Array.isArray(data.ids) || !data.ids.length || data.ids.some(id => typeof id !== 'string')) throw new Error('Selecciona las personas para esta acción.');
         const sources = [...new Set(data.ids)].map(id => library.people.find(person => person.id === id && !person.appleKey));
@@ -276,7 +273,7 @@ export function photoDemo(action, data = {}) {
         if (blob && !urls.has(photo.relativePath)) urls.set(photo.relativePath, URL.createObjectURL(blob));
         return photo;
       });
-      const { metadata, importSessions, importBatches, importFiles, ...publicLibrary } = library;
+      const { metadata, importSessions, importBatches, importFiles, personReviewBatches, ...publicLibrary } = library;
       return result || { ...publicLibrary, people: library.people.filter(p => !p.appleKey && (p.photoIds.length || p.id === UNKNOWN_PERSON_ID)),
         knownPeople: library.people.filter(isIdentifiedPhotoPerson).map(({ id, name }) => ({ id, name })), photos };
     } finally { db.close(); }

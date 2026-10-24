@@ -1,5 +1,5 @@
 import React, { useId, useRef, useState } from 'react';
-import { isNewPhotoPerson, photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
+import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { downloadPhotoPeople, photoRequest } from './api/raspberryApi.js';
 import downloadIcon from './assets/download.png';
 import downloadHoverIcon from './assets/download2.png';
@@ -45,31 +45,13 @@ export function PersonCardActions({ person, people, editing, selected, s, busy, 
   </>;
 }
 
-export function NewPersonCardActions({ person, people, selected, s, busy, onSelect, onAction, onRename }) {
-  const [name, setName] = useState('');
-  const valid = !!name.trim() && !isNewPhotoPerson({ id: person.id, name });
-  return <div className="photo-new-person-actions">
-    <PersonMergeForm people={people} excludedIds={[person.id]} s={s} busy={busy}
-      onMerge={target => onAction('merge', [person], target)} />
-    <form className="photo-person-name" onSubmit={event => {
-      event.preventDefault(); if (!busy && valid) onRename(name.trim());
-    }}>
-      <label>{s.newPersonName}<input value={name} placeholder={s.faceNamePlaceholder} maxLength={100} required disabled={busy}
-        onChange={event => setName(event.target.value)} /></label>
-      <button type="submit" className="dialog-button" disabled={busy || !valid}>{s.save}</button>
-    </form>
-    <label className="photo-new-person-check"><input type="checkbox" checked={selected} disabled={busy}
-      aria-label={`${s.selectPersonToDelete}: ${person.name}`} onChange={onSelect} /><span>{s.selectPersonToDelete}</span></label>
-  </div>;
-}
-
-export function PeopleToolbar({ editing, onToggle, reviewing = false, selected, people, s, busy, onSelectPage, onClear, onAction }) {
+export function PeopleToolbar({ editing, onToggle, selected, people, s, busy, onSelectPage, onClear, onAction }) {
   const actionsId = useId();
   const fixedSelected = selected.some(person => person.id === UNKNOWN_PERSON_ID);
   const mergeSources = selected.filter(person => person.id !== UNKNOWN_PERSON_ID);
   return <div className="photo-people-toolbar">
-    {!reviewing && <button type="button" className="dialog-button" aria-pressed={editing} aria-expanded={editing} aria-controls={actionsId}
-      disabled={busy} onClick={onToggle}>{editing ? s.finishPeopleEdit : s.editPeople}</button>}
+    <button type="button" className="dialog-button" aria-pressed={editing} aria-expanded={editing} aria-controls={actionsId}
+      disabled={busy} onClick={onToggle}>{editing ? s.finishPeopleEdit : s.editPeople}</button>
     {editing && <div id={actionsId} className="photo-people-bulk">
       <strong role="status">{s.selectedPeople.replace('{count}', selected.length)}</strong>
       <button type="button" className="dialog-button" disabled={busy} onClick={onSelectPage}>{s.selectPage}</button>

@@ -207,6 +207,7 @@ class PhotoLibrary:
                 photo TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE);
               CREATE TABLE IF NOT EXISTS person_birthdays (person TEXT PRIMARY KEY REFERENCES people(id) ON DELETE CASCADE,
                 birth_date TEXT NOT NULL);
+              CREATE TABLE IF NOT EXISTS person_review_batches (id TEXT PRIMARY KEY, payload TEXT NOT NULL, result TEXT NOT NULL);
               CREATE TABLE IF NOT EXISTS face_analysis (id INTEGER PRIMARY KEY CHECK(id=1), state TEXT NOT NULL,
                 error TEXT NOT NULL DEFAULT '');
               INSERT OR IGNORE INTO face_analysis (id, state) VALUES (1, 'idle');
@@ -663,16 +664,19 @@ class PhotoLibrary:
                             raise PhotoError('Una referencia ya no está en este álbum. Actualiza la biblioteca.', 409)
                     db.executemany('DELETE FROM photo_albums WHERE photo=? AND folder=?', [(ident, folder_id) for ident in ids])
                     return {'ok': True, 'removed': len(ids)}
-                for ident in ids:
-                    db.execute('INSERT OR IGNORE INTO photo_deleted_files SELECT path FROM photos WHERE id=?', (ident,))
-                    for table in ('photo_albums', 'photo_metadata', 'photo_import_files'):
-                        db.execute('DELETE FROM ' + table + ' WHERE photo=?', (ident,))
-                    db.execute('DELETE FROM photos WHERE id=?', (ident,))  # Cascades to faces.
-                db.execute('''DELETE FROM photo_import_batches WHERE EXISTS (
-                    SELECT 1 FROM json_each(photo_import_batches.result, '$.saved') saved
-                    JOIN photo_deleted_files deleted ON deleted.path=saved.value)''')
+                self._delete_photo_rows(db, ids)
             pending = self.cleanup_deleted()
         return {'ok': True, 'deleted': len(ids), 'cleanupPending': pending}
+
+    def _delete_photo_rows(self, db, ids):
+        for ident in ids:
+            db.execute('INSERT OR IGNORE INTO photo_deleted_files SELECT path FROM photos WHERE id=?', (ident,))
+            for table in ('photo_albums', 'photo_metadata', 'photo_import_files'):
+                db.execute('DELETE FROM ' + table + ' WHERE photo=?', (ident,))
+            db.execute('DELETE FROM photos WHERE id=?', (ident,))  # Cascades to faces.
+        db.execute('''DELETE FROM photo_import_batches WHERE EXISTS (
+            SELECT 1 FROM json_each(photo_import_batches.result, '$.saved') saved
+            JOIN photo_deleted_files deleted ON deleted.path=saved.value)''')
 
     def cleanup_deleted(self):
         with self.db() as db:
@@ -1102,20 +1106,80 @@ class PhotoLibrary:
             self._people_selection([target], db, allow_unknown=True)
             if target in ids:
                 raise PhotoError('Selecciona otra persona existente para unir los álbumes.')
-            for source in ids:
-                photos = [row[0] for row in db.execute('SELECT DISTINCT photo FROM face_detections WHERE person=?', (source,))]
-                # Keep the destination cover, or inherit the first chosen source cover.
-                db.execute('INSERT OR IGNORE INTO person_covers SELECT ?, photo FROM person_covers WHERE person=?', (target, source))
-                if target != UNKNOWN_PERSON_ID:
-                    db.execute('INSERT OR IGNORE INTO person_birthdays SELECT ?, birth_date FROM person_birthdays WHERE person=?', (target, source))
-                db.execute('UPDATE face_detections SET person=?, manual=1 WHERE person=?', (target, source))
-                # Also retain legacy links; shared photos appear only once in the album.
-                db.execute('INSERT OR IGNORE INTO faces SELECT photo, ?, encoding FROM faces WHERE person=?', (target, source))
-                db.execute('DELETE FROM faces WHERE person=?', (source,))
-                for photo in photos:
-                    self._sync_face_links(photo, db)
-                db.execute('DELETE FROM people WHERE id=?', (source,))
+            self._merge_people_rows(db, ids, target)
         return {'ok': True, 'personId': target}
+
+    def _merge_people_rows(self, db, ids, target):
+        for source in ids:
+            photos = [row[0] for row in db.execute('SELECT DISTINCT photo FROM face_detections WHERE person=?', (source,))]
+            # Keep the destination cover, or inherit the first chosen source cover.
+            db.execute('INSERT OR IGNORE INTO person_covers SELECT ?, photo FROM person_covers WHERE person=?', (target, source))
+            if target != UNKNOWN_PERSON_ID:
+                db.execute('INSERT OR IGNORE INTO person_birthdays SELECT ?, birth_date FROM person_birthdays WHERE person=?', (target, source))
+            db.execute('UPDATE face_detections SET person=?, manual=1 WHERE person=?', (target, source))
+            # Also retain legacy links; shared photos appear only once in the album.
+            db.execute('INSERT OR IGNORE INTO faces SELECT photo, ?, encoding FROM faces WHERE person=?', (target, source))
+            db.execute('DELETE FROM faces WHERE person=?', (source,))
+            for photo in photos:
+                self._sync_face_links(photo, db)
+            db.execute('DELETE FROM people WHERE id=?', (source,))
+
+    def review_people(self, changes, request_id):
+        if not isinstance(request_id, str) or not re.fullmatch(r'[a-zA-Z0-9_-]{16,100}', request_id):
+            raise PhotoError('Identificador de revisión inválido.')
+        if not isinstance(changes, list) or not 1 <= len(changes) <= 5000:
+            raise PhotoError('Prepara entre 1 y 5000 cambios.')
+        payload = json.dumps(changes, sort_keys=True, separators=(',', ':'))
+        # Use the same lock order as original-photo deletion. Nothing is deleted
+        # from disk until the complete, validated catalogue transaction commits.
+        with self.image_lock:
+            with self.db() as db:
+                previous = db.execute('SELECT payload, result FROM person_review_batches WHERE id=?', (request_id,)).fetchone()
+                if previous:
+                    if previous['payload'] != payload:
+                        raise PhotoError('Esta revisión ya se usó para otros cambios.', 409)
+                    result = json.loads(previous['result'])
+                else:
+                    prepared, sources, photo_ids = [], set(), set()
+                    fields = {'rename': {'id', 'action', 'name'}, 'merge': {'id', 'action', 'personId'},
+                              'delete': {'id', 'action'}, 'deletePhotos': {'id', 'action', 'photoIds'}}
+                    for change in changes:
+                        if not isinstance(change, dict) or not isinstance(change.get('action'), str) or change['action'] not in fields or set(change) != fields[change['action']]:
+                            raise PhotoError('Prepara una sola acción válida por persona.')
+                        ident = self._people_selection([change.get('id')], db)[0]
+                        if ident in sources: raise PhotoError('Hay más de una acción para la misma persona.')
+                        sources.add(ident)
+                        person = db.execute('SELECT id, name FROM people WHERE id=?', (ident,)).fetchone()
+                        if not re.fullmatch(r'(?:persona|person)\s+\d+', person['name'].strip(), re.IGNORECASE):
+                            raise PhotoError('Una persona ya se ha identificado. Actualiza y revisa sus cambios.', 409)
+                        item = dict(change)
+                        if item['action'] == 'rename':
+                            item['name'] = clean_name(item['name'])
+                            if not is_identified_person({'id': ident, 'name': item['name']}):
+                                raise PhotoError('Escribe un nombre nuevo, no una etiqueta Persona seguida de un número.')
+                        elif item['action'] == 'merge':
+                            target = self._people_selection([item['personId']], db, allow_unknown=True)[0]
+                            target_person = db.execute('SELECT id, name FROM people WHERE id=?', (target,)).fetchone()
+                            if target == ident or not is_identified_person(target_person):
+                                raise PhotoError('Elige una persona identificada como destino.')
+                        elif item['action'] == 'deletePhotos':
+                            selected = set(self.validate_photo_ids(db, item['photoIds']))
+                            current = {row[0] for row in db.execute('SELECT photo FROM faces WHERE person=?', (ident,))}
+                            if selected != current:
+                                raise PhotoError('Han cambiado las fotos de una ficha. Actualiza y vuelve a marcar su borrado.', 409)
+                            photo_ids.update(selected)
+                        prepared.append(item)
+                    if len(photo_ids) > 5000: raise PhotoError('Selecciona como máximo 5000 fotos por revisión.')
+                    for item in prepared:
+                        if item['action'] == 'rename':
+                            db.execute('UPDATE people SET name=? WHERE id=?', (item['name'], item['id']))
+                        elif item['action'] in {'merge', 'delete'}:
+                            self._merge_people_rows(db, [item['id']], item.get('personId', UNKNOWN_PERSON_ID))
+                    if photo_ids: self._delete_photo_rows(db, sorted(photo_ids))
+                    result = {'ok': True, 'applied': len(prepared), 'deletedPhotos': len(photo_ids)}
+                    db.execute('INSERT INTO person_review_batches VALUES (?,?,?)', (request_id, payload, json.dumps(result)))
+            pending = self.cleanup_deleted() if result['deletedPhotos'] else 0
+        return {**result, 'cleanupPending': pending}
 
     def delete_people(self, ids):
         # Removing an identity never deletes the underlying original images.
@@ -1349,6 +1413,11 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/people/delete')
     def delete_people():
         return jsonify(get_library().delete_people(body().get('ids')))
+
+    @bp.post('/pictures/people/review')
+    def review_people():
+        data = body()
+        return jsonify(get_library().review_people(data.get('changes'), data.get('requestId')))
 
     @bp.post('/pictures/people/download')
     def download_people():

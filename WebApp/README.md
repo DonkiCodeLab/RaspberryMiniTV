@@ -800,11 +800,23 @@ destino. Eliminar una persona conserva los originales y pasa sus caras a
 y conjuntas generan un ZIP de originales, sin duplicar fotos compartidas.
 
 **Nuevas personas** filtra los grupos provisionales llamados Persona 1, Persona 2,
-etc. Cada ficha permite elegir una identidad existente y **Unir**, escribir un
-nombre nuevo y **Guardar**, o **Marcar para eliminar** y después **Eliminar personas**.
-Unir y eliminar mantienen la confirmación con los afectados; eliminar conserva
-las fotos originales y pasa las caras a Desconocido. Las personas identificadas
-salen de este filtro. **Todas las personas** recupera el listado completo.
+etc. Cada ficha prepara **una acción pendiente**: escribir un nombre nuevo,
+unir con una persona identificada, **Eliminar persona y conservar fotos** o
+**Borrar sus fotos de la biblioteca**. Las dos casillas de borrado son excluyentes;
+elegir otra acción sustituye la anterior. No hay que guardar ficha por ficha.
+La barra **Aplicar cambios (N)** reúne todas las fichas modificadas, incluso al
+buscar, cambiar de página o abrir el visor. **Deshacer cambio** limpia una ficha
+y **Descartar cambios** limpia el lote. Los pendientes duran mientras la biblioteca
+permanece abierta; se avisa antes de recargar o cerrar la página con cambios.
+Antes de guardar se muestra el detalle de nombres, destinos y fotos afectadas.
+Eliminar una persona conserva los originales y pasa las caras a Desconocido;
+borrar sus fotos elimina los originales también de las otras personas y álbumes
+donde aparezcan. Las fotos compartidas se cuentan y borran una sola vez.
+El lote se valida y guarda en una transacción: si una ficha ya no está disponible
+o ha cambiado su selección de fotos, no se aplica ninguna acción. Un error o
+cancelar la confirmación conserva los pendientes para revisarlos o reintentar.
+Las personas identificadas salen del filtro; **Todas las personas** recupera el
+listado completo. Actualiza DeviceApp y WebApp juntos para usar este flujo.
 Al pulsar la portada de una persona se amplía su foto con el recuadro de su cara,
 sin entrar en el álbum ni en el visor de edición de fotos. Las flechas recorren
 sus imágenes y vuelven a la primera después de la última. Cerrar o pulsar Escape

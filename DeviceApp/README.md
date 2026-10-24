@@ -1449,6 +1449,20 @@ compartidas. El ZIP usa un archivo temporal en disco, que se cierra al terminar
 la respuesta, y no comprime de nuevo las imágenes. Estas rutas requieren el PIN
 igual que el resto de la biblioteca.
 
+La revisión de **Nuevas personas** usa `POST /pictures/people/review` con
+`{ "requestId": "identificador-unico", "changes": [...] }`. Cada cambio contiene
+`id` y una única `action`: `rename` con `name`, `merge` con `personId`, `delete`
+(conserva fotos y pasa las caras a Desconocido) o `deletePhotos` con `photoIds`.
+Solo admite grupos provisionales «Persona N» y destinos ya identificados.
+Se valida el lote entero antes de escribir; `photoIds` debe coincidir exactamente
+con las fotos de esa ficha para no borrar incorporaciones posteriores sin revisar.
+Los originales compartidos se borran una sola vez, junto con todas sus referencias.
+El recibo de `requestId` se guarda en la misma transacción: repetir la petición
+con el mismo contenido devuelve el resultado previo, incluso tras reiniciar.
+Reutilizarlo con otro contenido devuelve 409. Los archivos se limpian después del
+commit y se informa de `cleanupPending` si queda algún borrado físico pendiente.
+Esta ruta requiere el mismo PIN. El lote admite hasta 5000 fichas y 5000 originales.
+
 Cada detección guarda su rectángulo normalizado sobre la imagen orientada,
 vector y persona en `face_detections`. El visor dibuja todas las caras y resalta
 la persona cuya carpeta se está viendo. Al pulsar una cara puedes asignarla a

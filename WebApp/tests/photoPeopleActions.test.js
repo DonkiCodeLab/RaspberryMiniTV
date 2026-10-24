@@ -11,27 +11,9 @@ const result = await build({ entryPoints: [new URL('../src/PhotoPeopleActions.js
   loader: { '.png': 'dataurl' }, define: { 'import.meta.env': '{}' } });
 const module = { exports: {} };
 new Function('require', 'module', 'exports', result.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
-const { PersonMergeForm, PersonCardActions, NewPersonCardActions, PeopleToolbar, PeopleActionSummary } = module.exports;
+const { PersonMergeForm, PersonCardActions, PeopleToolbar, PeopleActionSummary } = module.exports;
 const people = [{ id: 'a', name: 'Ana', photoIds: ['one', 'shared'] }, { id: 'b', name: 'Luis', photoIds: ['shared'] }, { id: 'c', name: 'Destino', photoIds: [] }];
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
-
-test('new person cards expose rename, known merge destinations and deletion selection without edit mode', () => {
-  for (const language of ['es', 'en', 'ca']) {
-    const s = photoStrings(language), person = { id: 'new', name: 'Persona 1', photoIds: ['one'] };
-    const html = render(NewPersonCardActions, { person, people: [person, ...people], selected: true, s, onSelect() {} });
-    assert.match(html, /<input[^>]*value=""/);
-    assert.match(html, /type="checkbox"[^>]*checked=""/);
-    assert.match(html, /<option value="a">Ana/);
-    assert.doesNotMatch(html, /<option value="new"|inert=""/);
-    assert.ok(html.includes(s.selectPersonToDelete));
-    assert.ok(html.includes(`disabled="">${s.save}`));
-    const busy = render(NewPersonCardActions, { person, people, selected: false, s, busy: true });
-    assert.match(busy, /type="checkbox"[^>]*disabled=""/);
-    const toolbar = render(PeopleToolbar, { people, selected: [person], editing: true, reviewing: true, s });
-    assert.ok(toolbar.includes(s.deletePeople));
-    assert.ok(!toolbar.includes(s.finishPeopleEdit));
-  }
-});
 
 test('merge selector starts without a destination and excludes every source', () => {
   for (const language of ['es', 'en', 'ca']) {
