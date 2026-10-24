@@ -15,6 +15,7 @@ import PhotoGallery from './PhotoGallery.jsx';
 import { PeopleAnalysis, PersonEditor } from './PhotoPeople.jsx';
 import { NewPersonCardActions, PeopleActionDialog, PeopleToolbar, PersonCardActions } from './PhotoPeopleActions.jsx';
 import PersonPhotoDialog from './PersonPhotoDialog.jsx';
+import LoadingSpinner from './LoadingSpinner.jsx';
 import { galleryWindow } from './photoTimeline.js';
 import { photoStrings } from './photoStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
@@ -25,6 +26,10 @@ import { NoFacesReviewFilter, PhotoReviewAction } from './PhotoReviews.jsx';
 import './PhotosLibrary.css';
 const PhotoMap = lazy(() => import('./PhotoMap.jsx'));
 const blank = { folders: [], photos: [], people: [], jobs: [], faces: {} };
+
+function PhotoLibraryLoading({ s }) {
+  return <div className="photo-library-loading" role="status"><LoadingSpinner inline /><span>{s.loading}</span></div>;
+}
 
 function Icon({ type }) {
   const shapes = {
@@ -332,7 +337,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   }, [current, onRootChange]);
   async function refresh(signal) {
     const generation = ++requestRef.current;
-    refreshing.current = true;
+    refreshing.current = true; setLoading(true);
     try {
       const result = await photoRequest('library', undefined, signal);
       if (!mounted.current || signal?.aborted || generation !== requestRef.current) return;
@@ -514,11 +519,11 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       selected={selectedPersonList} people={data.knownPeople || data.people} s={s} busy={busy}
       onSelectPage={() => setSelectedPeople(previous => new Set([...previous, ...folderPage.items.filter(folder => folder.id.startsWith('person:') && folder.id !== `person:${UNKNOWN_PERSON_ID}`).map(folder => folder.id.slice(7))]))}
       onClear={() => setSelectedPeople(new Set())} onAction={peopleAction} /></>}
-    {loading && <p role="status">{s.loading}</p>}
+    {loading && <PhotoLibraryLoading s={s} />}
     {!current && <div className="movie-library__items--grid photo-folder-grid">{SPECIAL_FOLDERS.map(id => album({ id, name: id === 'albums' ? s.personalAlbums : s[id], created: null }, id))}</div>}
     {folderPage.total > 0 && <><div className={`movie-library__items--grid photo-folder-grid movie-library__items--reveal-actions${peopleEditing ? ' is-actions-visible' : ''}`}>{folderPage.items.map(folder => album(folder))}</div>
       <PhotoPagination page={folderPage} onChange={setFolderNumber} s={s} label={s.folders} /></>}
-    {current === 'map' && !zone && <Suspense fallback={<p>{s.loading}</p>}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
+    {current === 'map' && !zone && <Suspense fallback={loading ? null : <PhotoLibraryLoading s={s} />}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
     {zone && <div className="photo-zone"><h2>{s.zone} · {currentPhotos.length}</h2><button type="button" className="dialog-button" onClick={goBack}>{s.allPlaces}</button></div>}
     {(actionMode || reviewingMatches && currentPhotos.length > 0) && <div className="photo-selection"><strong role="status">{selectedPhotoCount} {s.selected}</strong>
       <button type="button" disabled={busy} onClick={() => setSelected(previous => new Set([...(reviewingMatches ? previous : []), ...page.items.map(p => p.id)]))}>{s.selectPage}</button><button type="button" disabled={busy || !selectedPhotoCount} onClick={() => setSelected(new Set())}>{s.clear}</button>
