@@ -2,7 +2,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import PersonBirthday from './PersonBirthday.jsx';
 
-export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
+export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction, onReview, reviewCount = 0 }) {
   const titleId = useId();
   const active = (faces.running && faces.state !== 'paused') || faces.singleRunning;
   const resumable = ['paused', 'error'].includes(faces.state) && faces.remaining > 0;
@@ -17,6 +17,7 @@ export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction }) {
         {faces.pausing ? s.facesPausing : active ? s.pauseFaces : resumable ? s.resumeFaces : faces.state === 'complete' && faces.pending ? s.scanNextBatch : s.scan}
       </button>
     </div>
+    {onReview && (reviewCount > 0 || active) && <button type="button" className="dialog-button" disabled={busy} onClick={onReview}>{active ? s.reviewWizard : `${s.reviewStart} · ${reviewCount}`}</button>}
     {!faces.singleRunning && <div className="photo-people-analysis__progress">
       <progress aria-label={s.facesProgress} max={100} value={percent} />
       <strong>{percent}%</strong>

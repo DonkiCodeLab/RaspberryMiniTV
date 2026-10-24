@@ -1,5 +1,40 @@
 # WebApp
 
+**Fotos → Personas → Analizar** abre un asistente de tres pasos. El primero
+muestra el progreso del lote de hasta 100 fotos, permite pausar y habilita
+**Siguiente: validar personas** cuando termina. El segundo resume las propuestas
+del lote y muestra una cara por tarjeta, con el contador **Persona X de Y**.
+El tercero recorre solo **Nuevas sin personas**, con **Foto X de Y**, sin repetir
+las fotos de **Resto**. Si no hay coincidencias en el segundo paso, se puede
+continuar directamente al tercero. **Revisar una a una** permite retomar los
+pendientes de todos los lotes; **Sin personas → Nuevas → Revisar fotos nuevas**
+abre directamente el tercer paso.
+
+En el tercer paso, pulsa la foto para ampliarla y añadir caras de personas
+existentes o nuevas. **Marcar como revisada** avanza con la misma animación;
+si añadiste caras, **Guardar y marcar como revisada** guarda todo junto y avanza.
+**Quitar referencia de Nuevas** la pasa a **Resto** y conserva el original y sus
+álbumes. **Borrar de Galería** elimina el original y todas sus referencias, previa
+confirmación. Las fotos que cierres sin revisar siguen pendientes.
+
+Arrastra la foto a la izquierda para marcar la cara como **Desconocido** o a la
+derecha para aprobar su identidad; también hay botones para ambas acciones.
+Pulsa la foto para ampliarla, ver los recuadros y añadir caras. Puedes elegir
+una persona existente o escribir un nombre nuevo. Las correcciones se preparan
+hasta pulsar **Guardar cambios**, que las guarda juntas y avanza. Cada tarjeta
+sale hacia la izquierda y la siguiente entra por la derecha; se respeta la
+preferencia de reducir movimiento. Un error conserva la tarjeta para reintentar.
+
+Debajo se puede quitar la referencia de esa cara conservando la imagen o borrar
+la foto de toda la Galería, con una confirmación que explica el alcance. Cerrar
+con correcciones pendientes permite seguir editando o descartarlas. Los pendientes
+sin resolver permanecen guardados. Actualiza DeviceApp y WebApp juntos: el asistente
+usa `reviews/resolve` para guardar cada tarjeta de forma atómica y sin duplicar
+caras al reintentar una respuesta perdida.
+
+Pruebas: `node --test tests/photoReviewWizard.test.js tests/photoReviews.test.js`
+y `python -m unittest discover -s DeviceApp/tests -p 'test_photo_review_wizard.py'`.
+
 En Películas, **Ordenar por → Calidad del vídeo** usa la calidad guardada al importar cada
 vídeo; los archivos sin valoración quedan al final en ambos sentidos. La calidad
 y la resolución aparecen en las tarjetas y en el listado.

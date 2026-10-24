@@ -10,6 +10,7 @@ import { descendantIds, folderTrail, hasLocation, indexPhotos, isNewPhotoPerson,
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import { facePortraitLayout } from './photoFacePortrait.js';
 import PhotoFaceViewer from './PhotoFaceViewer.jsx';
+import PhotoReviewWizard from './PhotoReviewWizard.jsx';
 import PhotoDownloads, { PhotoDownloadDialog } from './PhotoDownloads.jsx';
 import PhotoLocation from './PhotoLocation.jsx';
 import PhotoGallery from './PhotoGallery.jsx';
@@ -371,6 +372,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       if (!mounted.current || signal?.aborted || generation !== requestRef.current) return;
       catalogue.current = result;
       setData(result); setError('');
+      return result;
     } catch (error) { if (mounted.current && !signal?.aborted && generation === requestRef.current) setError(error.message); }
     finally { if (generation === requestRef.current) { refreshing.current = false; if (mounted.current && !signal?.aborted) { setLoading(false); watcher.current?.sync(); } } }
   }
@@ -535,11 +537,14 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {error && <div className="photo-alert" role="alert">{error} <button type="button" onClick={() => setAttempt(n => n + 1)}>{s.retry}</button></div>}
     {notice && <p role="status">{notice}</p>}
     {(current === 'albums' || isAlbum && !isAi) && <p className="photo-note">{s.referenceHint}</p>}
-    {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={faceBusy} onAction={faceAction} />}
+    {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={faceBusy} onAction={(path, payload) => path === 'people/scan' ? setDialog({ mode: 'review-wizard', start: 'scan' }) : faceAction(path, payload)}
+      onReview={() => setDialog({ mode: 'review-wizard', start: data.faces.running ? 'scan' : 'review' })} reviewCount={data.reviews?.length || 0} />}
     {current === 'withoutPeople' && <p className="photo-note">{s.withoutPeopleHint}</p>}
     {current === 'pendingValidation' && <p className="photo-note">{s.pendingValidationHint}</p>}
     {current === 'withoutPeople' && <><p className="photo-note">{s.newWithoutPeopleHint}</p><NoFacesReviewFilter value={noFacesView} newCount={noPeopleNew.length} restCount={noPeopleRest.length} s={s}
-      onChange={value => { setNoFacesView(value); setSelected(new Set()); }} /></>}
+      onChange={value => { setNoFacesView(value); setSelected(new Set()); }} />
+      {noFacesView === 'new' && noPeopleNew.length > 0 && <div className="photo-people-toolbar"><button type="button" className="dialog-button dialog-button--accent" disabled={busy}
+        onClick={() => setDialog({ mode: 'review-wizard', start: 'noFaces' })}>{s.reviewBeginPhotos} · {noPeopleNew.length} →</button></div>}</>}
     {person && <PersonEditor key={person.id} person={person} people={data.knownPeople || data.people} cover={index.byId.get(person.coverFace?.photoId || person.coverPhotoId || person.photoIds[0])} s={s} busy={busy}
       choosingCover={choosingCover} onChooseCover={() => { setChoosingCover(value => !value); setActionMode(false); setSelected(new Set()); }}
       onSave={async name => { if (await act(`people/${person.id}`, { name })) setNotice(s.saved); }}
@@ -594,6 +599,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       {(reviewFolder || person) && <button type="button" className="dialog-button dialog-button--accent" disabled={!selectedReviews.length || busy} onClick={() => confirmReviews(selectedReviews.map(review => review.id))}>{reviewingMatches ? s.verifySelection : current === 'withoutPeople' ? s.markReviewedPhotos : s.confirmMatches}</button>}
       {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
     </div>}
+    {reviewingMatches && currentPhotos.length > 0 && <div className="photo-people-toolbar"><button type="button" className="dialog-button dialog-button--accent" disabled={busy} onClick={() => setDialog({ mode: 'review-wizard', start: 'review' })}>{s.reviewStart} →</button></div>}
     {reviewingMatches && actionMode && currentPhotos.length > 0 && <p className="photo-drag-select-hint">{s.dragSelectPhotosHint}</p>}
     {currentPhotos.length > 0 && <div ref={grid} className="photo-page">
       {current === 'gallery' ? <PhotoGallery key={`${search}-${order.direction}`} photos={currentPhotos} position={galleryPosition} onPosition={position => { setGalleryPosition(position); setSelected(new Set()); }} s={s} language={language}
@@ -609,13 +615,14 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {previewPerson && (newPeopleOnly ? <PersonPhotoPopover key={previewPerson.id} person={previewPerson} photosById={index.byId}
       anchor={previewAnchor.current} s={s} onClose={closePersonPreview} /> :
       <PersonPhotoDialog key={previewPerson.id} Modal={Modal} person={previewPerson} photosById={index.byId} s={s} onClose={closePersonPreview} />)}
+    {dialog?.mode === 'review-wizard' && <PhotoReviewWizard Modal={Modal} library={data} mode={dialog.start} s={s} onRefresh={refresh} onClose={() => setDialog(null)} />}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} photo={dialog.photo}
       {...(dialog.origin || { album: isAlbum, person, current })} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'people-action' && <PeopleActionDialog Modal={Modal} {...dialog} s={s} onClose={closeDialog} onComplete={completePeopleAction} />}
     {dialog?.mode === 'people-review' && <PeopleBatchDialog Modal={Modal} {...dialog} photosById={index.byId} s={s} onClose={() => setDialog(null)} onComplete={completePeopleBatch} />}
     {dialog?.mode === 'download' && <PhotoDownloadDialog Modal={Modal} selected={selected} s={s} onClose={() => setDialog(null)} onComplete={() => { setDialog(null); setNotice(s.peopleDownloadStarted); }} />}
-    {dialog && !['upload', 'delete', 'people-action', 'people-review', 'download'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
+    {dialog && !['upload', 'delete', 'people-action', 'people-review', 'download', 'review-wizard'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={canCreate ? current : ''} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
     {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} folders={data.folders} livePhotos={index.byId}
       faces={data.faces} revision={data.revision} onChanged={() => refresh()} highlightPersonId={person?.id}
       onDelete={photo => setDialog({ mode: 'delete', ids: [photo.id], photo, origin: { album: isAlbum, person, current } })}

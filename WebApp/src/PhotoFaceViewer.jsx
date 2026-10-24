@@ -3,10 +3,10 @@ import { photoRequest } from './api/raspberryApi.js';
 import PhotoViewerImage from './PhotoViewerImage.jsx';
 import { photoAssignmentOptions, photoPersonName, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 
-export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creating = false, hasBox = false }) {
+export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creating = false, hasBox = false, initialName = '' }) {
   const choices = photoAssignmentOptions(people, s);
   const [target, setTarget] = useState(() => choices.some(person => person.id === face.personId) ? face.personId : 'new');
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName);
   const heading = useId(), editor = useRef(null), personList = useRef(null), newName = useRef(null), cancel = useRef(null);
   const search = useRef({ text: '', time: 0 });
   useEffect(() => { personList.current?.focus({ preventScroll: true }); }, []);

@@ -1,5 +1,7 @@
+import { reviewWizardStrings } from './photoReviewWizardStrings.js';
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  ...reviewWizardStrings.es,
   dragSelectPhotosHint: 'Mantén pulsado el ratón sobre una foto o su casilla y arrastra por otras para seleccionarlas. Si empiezas en una marcada, las desmarcas. Acércate al borde de la pantalla para seguir por otras filas.',
   peopleKeyboardHint: "Teclado: Tab / Mayús+Tab recorre los campos de la misma ficha y vuelve al inicio. En el desplegable: escribe para buscar, ↑ ↓ elige, Enter o Tab confirma y Esc cancela. En los demás campos: ← → cambia de ficha y ↑ ↓ de fila. Enter activa la opción. Mayús+flechas permite seleccionar texto.",
   enlargePhoto: 'Ampliar',
@@ -150,6 +152,7 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  ...reviewWizardStrings.en,
   dragSelectPhotosHint: 'Hold the mouse button on a photo or its checkbox and drag across others to select them. Start on a selected photo to deselect. Move near the screen edge to scroll through more rows.',
   peopleKeyboardHint: "Keyboard: Tab / Shift+Tab cycles through the fields in the same card. In the picker: type to search, ↑ ↓ chooses, Enter or Tab confirms and Esc cancels. In other fields: ← → changes cards and ↑ ↓ changes rows. Enter activates the control. Shift+arrows selects text.",
   enlargePhoto: 'Enlarge',
@@ -294,6 +297,7 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  ...reviewWizardStrings.ca,
   dragSelectPhotosHint: 'Mantén premut el ratolí sobre una foto o la seva casella i arrossega per altres per seleccionar-les. Si comences en una de marcada, les desmarques. Acosta’t a la vora de la pantalla per continuar per altres files.',
   peopleKeyboardHint: "Teclat: Tab / Maj+Tab recorre els camps de la mateixa fitxa i torna a l’inici. Al desplegable: escriu per cercar, ↑ ↓ tria, Enter o Tab confirma i Esc cancel·la. Als altres camps: ← → canvia de fitxa i ↑ ↓ de fila. Enter activa l’opció. Maj+fletxes permet seleccionar text.",
   enlargePhoto: 'Amplia',

@@ -1,0 +1,64 @@
+.photo-dialog.photo-dialog--review-wizard { width: min(740px, calc(100vw - 28px)); }
+.photo-dialog.photo-dialog--review-wizard.is-expanded { width: min(1240px, calc(100vw - 28px)); }
+.photo-dialog--review-wizard .photo-dialog__body { overflow: hidden; }
+.photo-review-steps { display: flex; gap: 1rem; list-style: none; padding: 0; margin: .75rem 0 1rem; }
+.photo-review-steps li { flex: 1; display: flex; align-items: center; gap: .65rem; padding: .7rem .5rem; border-bottom: 2px solid #ffffff20; color: #a3b5c2; font-size: .88rem; }
+.photo-review-steps li > span { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: #ffffff10; flex-shrink: 0; }
+.photo-review-steps [aria-current=step] { color: #ffdf52; border-color: #ffdf52; }
+.photo-review-steps [aria-current=step] > span { background: #ffdf52; color: #142d3e; font-weight: 800; }
+.photo-review-steps .is-complete { color: #9be0c1; }
+.photo-review-intro { display: grid; justify-items: center; text-align: center; gap: 1rem; padding: 1.25rem .5rem 1.75rem; }
+.photo-review-intro h3 { font-size: 1.5rem; margin: 0; }
+.photo-review-intro__symbol { display: grid; place-items: center; width: 68px; height: 68px; border: 1px solid #ffdf5260; border-radius: 50%; background: #ffdf5212; color: #ffdf52; font-size: 2rem; }
+.photo-review-intro > .dialog-button { margin-top: .5rem; }
+.photo-review-scan { display: grid; gap: 1rem; }
+.photo-review-scan .photo-people-analysis { margin: 0; }
+.photo-dialog .photo-review-ready { color: #a2e4c9; }
+.photo-review-card { display: grid; gap: .75rem; animation: photo-review-enter .28s ease-out both; }
+.photo-review-card.is-leaving { animation: photo-review-leave .24s ease-in both; pointer-events: none; }
+.photo-review-card__progress { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.photo-review-card__progress strong { font-size: .9rem; }
+.photo-dialog--review-wizard .photo-review-card__progress progress { width: 24%; height: 5px; }
+.photo-review-deck { min-width: 0; padding: 4px; position: relative; }
+.photo-review-photo { position: relative; display: grid; gap: 0; width: 100%; border: 1px solid #ffffff36; padding: 0; background: #071a27; color: #fff; border-radius: 16px; box-shadow: 0 12px 28px #0004; overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none; transition: transform .2s ease; }
+.photo-review-card--without-faces .photo-review-photo { cursor: zoom-in; }
+.photo-review-photo.is-dragging { transition: none; cursor: grabbing; }
+.photo-review-photo:disabled { cursor: default; }
+.photo-review-photo__image { display: block; position: relative; margin: auto; width: min(100%, calc(34dvh * var(--review-ratio, 1.5))); max-height: 34dvh; }
+.photo-review-photo__image img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.photo-review-photo .photo-face-box { pointer-events: none; box-sizing: border-box; }
+.photo-review-photo__caption { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; font-size: .8rem; text-align: left; overflow-wrap: anywhere; }
+.photo-review-photo__caption > span { color: #ffdf52; flex-shrink: 0; }
+.photo-review-stamp { position: absolute; left: 5%; top: 15%; padding: .8rem; border: 3px solid currentColor; border-radius: 8px; color: #ffb3a9; background: #3c2024e6; font-weight: 800; transform: rotate(-10deg); pointer-events: none; }
+.photo-review-stamp.is-approved { left: auto; right: 5%; color: #9af0c8; background: #123c32e6; transform: rotate(10deg); }
+.photo-dialog .photo-review-swipe-hint { text-align: center; font-size: .78rem; margin-top: .8rem; }
+.photo-review-identity { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: .75rem; }
+.photo-review-decisions { display: flex; justify-content: center; gap: .75rem; }
+.photo-review-decisions > button { flex: 1; min-height: 48px; }
+.photo-review-unknown { border: 1px solid #b6c5d2; background: #213f52; color: #f3f7fa; }
+.photo-review-removal { display: flex; gap: .75rem 1rem; justify-content: center; flex-wrap: wrap; padding-top: .2rem; }
+.photo-review-removal > button, .photo-review-draft > button { border: 0; background: transparent; color: #c4d4df; font-size: .78rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: .4rem; }
+.photo-review-removal > button:last-child { color: #ffb8b2; }
+.photo-review-removal > button:disabled, .photo-review-draft > button:disabled { opacity: .45; cursor: default; }
+.photo-review-delete, .photo-review-close { display: grid; gap: .7rem; background: #281f29; border: 1px solid #ffb8b250; border-radius: 12px; padding: 1rem; }
+.photo-review-close { margin-bottom: 1rem; }
+.photo-dialog .photo-review-draft { color: #ffdf52; }
+.photo-review-expanded { display: grid; gap: .75rem; --photo-viewer-height: min(52dvh, 600px); }
+.photo-review-expanded__toolbar { display: flex; justify-content: space-between; gap: .75rem; }
+.photo-review-face-tabs { display: flex; gap: .5rem; flex-wrap: wrap; }
+.photo-review-face-tabs [aria-pressed=true] { border-color: #ffdf52; }
+@keyframes photo-review-enter { from { opacity: 0; transform: translateX(80px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes photo-review-leave { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-100px); } }
+@media (max-width: 600px) {
+  .photo-review-steps { gap: .3rem; margin: .75rem 0 1rem; }
+  .photo-review-steps li { flex-direction: column; text-align: center; font-size: .75rem; gap: .4rem; min-width: 0; }
+  .photo-review-card__progress { align-items: flex-start; flex-direction: column; gap: .5rem; }
+  .photo-dialog--review-wizard .photo-review-card__progress progress { width: 100%; }
+  .photo-review-photo__caption > span { max-width: 45%; }
+  .photo-review-decisions > button { padding: .65rem .5rem; font-size: .85rem; }
+  .photo-review-expanded { --photo-viewer-height: 48dvh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-review-card, .photo-review-card.is-leaving { animation: none; }
+  .photo-review-photo { transition: none; }
+}
