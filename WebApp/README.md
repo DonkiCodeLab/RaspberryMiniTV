@@ -808,6 +808,15 @@ La barra **Aplicar cambios (N)** reúne todas las fichas modificadas, incluso al
 buscar, cambiar de página o abrir el visor. **Deshacer cambio** limpia una ficha
 y **Descartar cambios** limpia el lote. Los pendientes duran mientras la biblioteca
 permanece abierta; se avisa antes de recargar o cerrar la página con cambios.
+El teclado permite revisar la cuadrícula sin usar el ratón: **←/→** lleva al mismo
+campo de la ficha anterior/siguiente y **↑/↓** al de la fila anterior/siguiente,
+según las columnas visibles. **Tab/Mayús+Tab** recorre los controles de edición,
+saltando las portadas entre fichas; en los extremos sale de la cuadrícula.
+**Enter** marca o desmarca las casillas y activa **Deshacer cambio**, que devuelve
+el foco al selector de esa ficha. **Enter/Espacio** abre los nombres: con la lista
+abierta las flechas eligen una opción, escribir busca por prefijo, **Enter** confirma
+y **Esc** cancela. **Mayús+flechas** conserva la selección de texto en el nombre.
+Estos atajos solo preparan cambios y no ejecutan el lote.
 Antes de guardar se muestra el detalle de nombres, destinos y fotos afectadas.
 Eliminar una persona conserva los originales y pasa las caras a Desconocido;
 borrar sus fotos elimina los originales también de las otras personas y álbumes

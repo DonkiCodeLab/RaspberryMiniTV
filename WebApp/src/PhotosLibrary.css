@@ -64,7 +64,18 @@
 .photo-person-merge .dialog-button { flex-shrink: 0; min-height: 40px; margin: 0; padding: .5rem .65rem; border-radius: 8px; font-size: .8rem; }
 .photo-new-person-actions { display: grid; gap: .8rem; margin-top: .6rem; }
 .photo-person-draft-field { display: grid; min-width: 0; gap: .4rem; color: #c0d0d9; font-size: .75rem; }
-.photo-person-draft-field :is(input, select) { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: .5rem; border: 1px solid #ffffff45; border-radius: 8px; background: #0c2231; color: white; font: inherit; font-size: .85rem; }
+.photo-person-draft-field :is(input, select, .photo-person-picker) { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: .5rem; border: 1px solid #ffffff45; border-radius: 8px; background: #0c2231; color: white; font: inherit; font-size: .85rem; }
+.photo-person-picker { display: flex; align-items: center; justify-content: space-between; gap: .4rem; text-align: left; cursor: pointer; }
+.photo-person-picker > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.photo-person-picker__list { position: fixed; z-index: 100; box-sizing: border-box; overflow: auto; overscroll-behavior: contain; padding: .3rem; border: 1px solid #ffdf5270; border-radius: 12px; background: #102735; color: #fff; box-shadow: 0 12px 32px #0008; outline: none; }
+.photo-person-picker__option { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-height: 44px; padding: .5rem .7rem; border-radius: 8px; box-sizing: border-box; font-size: .9rem; cursor: pointer; }
+.photo-person-picker__option.is-focused { background: #ffdf52; color: #17282c; }
+.photo-person-picker__option > span:first-child { overflow-wrap: anywhere; }
+.photo-person-picker__option > span:last-child { flex-shrink: 0; }
+.photo-people-keyboard-hint { margin: -.4rem 0 1rem; color: #d5e4ec; font-size: .8rem; line-height: 1.6; }
+[data-person-review-grid] { position: relative; }
+[data-person-review-card]:focus-within { outline: 2px solid #dcefff; outline-offset: 3px; }
+[data-person-field] { scroll-margin-bottom: 24px; }
 .photo-person-draft-note { margin: 0; color: #ffdf88; font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
 .photo-person-draft-note.is-error { color: #ffb4ab; }
 .photo-person-draft-reset { min-height: 40px; padding: .4rem; background: none; color: #c0d0d9; text-decoration: underline; cursor: pointer; }

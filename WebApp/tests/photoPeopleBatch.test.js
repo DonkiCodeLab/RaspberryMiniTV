@@ -33,7 +33,9 @@ test('cards stage mutually exclusive actions with no individual submit buttons',
   const input = (type, current = card()) => controls(current).filter(element => element.type === type);
   input('input')[0].props.onChange({ target: { value: 'Luis' } });
   assert.equal(drafts.p0.action, 'rename');
-  input('select')[0].props.onChange({ target: { value: 'ana' } });
+  const picker = () => controls(card()).find(element => element.props.choices);
+  assert.deepEqual(picker().props.choices.map(person => person.id), ['unknown', 'ana']);
+  picker().props.onChange('ana');
   assert.equal(drafts.p0.action, 'merge');
   assert.equal(input('input')[0].props.value, '');
   const checkboxes = () => input('input').filter(element => element.props.type === 'checkbox');
@@ -42,16 +44,17 @@ test('cards stage mutually exclusive actions with no individual submit buttons',
   checkboxes()[1].props.onChange({ target: { checked: true } });
   assert.deepEqual(checkboxes().map(element => element.props.checked), [false, true]);
   assert.deepEqual(drafts.p0.photoIds, ['photo0']);
-  assert.equal(input('select')[0].props.value, '');
+  assert.equal(picker().props.value, '');
   assert.equal(input('button').length, 1); // Undo is the only card button.
-  input('button')[0].props.onClick();
+  input('button')[0].props.onClick({ currentTarget: { closest: () => ({ querySelector: () => null }) } });
   assert.deepEqual(drafts, {});
   for (const language of ['es', 'en', 'ca']) {
     const translated = photoStrings(language);
     const html = render(NewPersonCardActions, { person: people[0], people: [...people, target], s: translated, onChange });
     assert.ok(html.includes(translated.deletePersonKeepPhotos));
     assert.ok(html.includes(translated.deletePersonOriginals));
-    assert.match(html, /<option value="ana">Ana/);
+    assert.match(html, /role="combobox"/);
+    assert.match(html, /aria-expanded="false"/);
     assert.doesNotMatch(html, /<option value="p\d"|type="submit"|<form/);
   }
 });

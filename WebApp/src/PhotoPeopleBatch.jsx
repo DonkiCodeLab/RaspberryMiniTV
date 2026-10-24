@@ -3,29 +3,30 @@ import { photoAssignmentOptions } from './photoLibrary.js';
 import { photoRequest } from './api/raspberryApi.js';
 import { peopleBatchCounts, peopleBatchDescription } from './photoPeopleBatch.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
+import PersonReviewPicker from './PersonReviewPicker.jsx';
+import { focusPersonField } from './photoPeopleKeyboard.js';
 
 export function NewPersonCardActions({ person, people, draft, entry, s, busy, onChange }) {
   const choices = photoAssignmentOptions(people, s).filter(other => other.id !== person.id);
   return <div className="photo-new-person-actions">
-    <label className="photo-person-draft-field">{s.mergeWith}<select aria-label={`${s.mergeWith}: ${person.name}`}
-      value={draft?.action === 'merge' ? draft.personId : ''} disabled={busy}
-      onChange={event => onChange(event.target.value ? { action: 'merge', personId: event.target.value } : null)}>
-      <option value="">{s.choosePerson}</option>
-      {draft?.action === 'merge' && !choices.some(other => other.id === draft.personId) && <option value={draft.personId} disabled>{s.batchTargetChanged}</option>}
-      {choices.map(other => <option key={other.id} value={other.id}>{other.name}</option>)}
-    </select></label>
-    <label className="photo-person-draft-field">{s.newPersonName}<input value={draft?.action === 'rename' ? draft.name : ''}
+    <div className="photo-person-draft-field"><span>{s.mergeWith}</span><PersonReviewPicker choices={choices}
+      label={`${s.mergeWith}: ${person.name}`} s={s} value={draft?.action === 'merge' ? draft.personId : ''} disabled={busy}
+      onChange={personId => onChange(personId ? { action: 'merge', personId } : null)} /></div>
+    <label className="photo-person-draft-field">{s.newPersonName}<input data-person-field="rename" value={draft?.action === 'rename' ? draft.name : ''}
       placeholder={s.faceNamePlaceholder} maxLength={100} disabled={busy} aria-label={`${s.newPersonName}: ${person.name}`}
       onChange={event => onChange(event.target.value ? { action: 'rename', name: event.target.value } : null)} /></label>
     <div className="photo-person-delete-options">
       {[['delete', s.deletePersonKeepPhotos], ['deletePhotos', s.deletePersonOriginals]].map(([action, label]) =>
-        <label className="photo-new-person-check" key={action}><input type="checkbox" checked={draft?.action === action}
+        <label className="photo-new-person-check" key={action}><input type="checkbox" data-person-field={action} checked={draft?.action === action}
           disabled={busy || action === 'deletePhotos' && !person.photoIds?.length} aria-label={`${label}: ${person.name}`}
           onChange={event => onChange(event.target.checked ? { action } : null)} /><span>{label}</span></label>)}
     </div>
     {entry && <><p className={`photo-person-draft-note${entry.error ? ' is-error' : ''}`} role="status">
       {entry.error || `${s.batchPending}: ${peopleBatchDescription(entry, s)}`}</p>
-      <button type="button" className="photo-person-draft-reset" disabled={busy} onClick={() => onChange(null)}>{s.undoPersonChange}</button></>}
+      <button type="button" data-person-field="undo" className="photo-person-draft-reset" disabled={busy} onClick={event => {
+        focusPersonField(event.currentTarget.closest('.photo-new-person-actions').querySelector('[data-person-field="merge"]'));
+        onChange(null);
+      }}>{s.undoPersonChange}</button></>}
   </div>;
 }
 

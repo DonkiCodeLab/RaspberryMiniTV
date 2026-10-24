@@ -16,6 +16,7 @@ import { PeopleAnalysis, PersonEditor } from './PhotoPeople.jsx';
 import { PeopleActionDialog, PeopleToolbar, PersonCardActions } from './PhotoPeopleActions.jsx';
 import { NewPersonCardActions, NewPeopleToolbar, PeopleBatchDialog } from './PhotoPeopleBatch.jsx';
 import { peopleBatchEntries, updatePersonDraft } from './photoPeopleBatch.js';
+import { handlePeopleReviewKey } from './photoPeopleKeyboard.js';
 import { createImportId } from './photoImport.js';
 import PersonPhotoDialog from './PersonPhotoDialog.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
@@ -179,6 +180,7 @@ export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, prev
   const cover = covers.length ? covers[step % covers.length] : null;
   const latest = photos.reduce((value, photo) => Math.max(value, photo.uploadedAt || 0), 0);
   return <article className={`movie-library__card photo-album photo-album--${isPerson ? 'person' : folder.id === 'withoutPeople' ? 'without-people' : special || 'folder'}${selected ? ' is-selected' : ''}`}
+    data-person-review-card={previewOnly ? folder.id : undefined}
     onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(true); }} onPointerLeave={() => setActive(false)}
     onFocusCapture={() => setActive(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }}>
     <button className={`movie-library__poster photo-album__cover${onPreview ? ' photo-album__cover--preview' : ''}`} type="button"
@@ -553,7 +555,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
           {onlyNew ? `${s.newPeople} (${newPeople.length})` : s.allPeople}
         </button>)}
       </div>
-      {newPeopleOnly && <p className="photo-note">{s.newPeopleHint}</p>}
+      {newPeopleOnly && <><p className="photo-note">{s.newPeopleHint}</p><p className="photo-people-keyboard-hint">{s.peopleKeyboardHint}</p></>}
       {newPeopleOnly ? <NewPeopleToolbar entries={batchEntries} s={s} busy={busy} onApply={reviewPeopleChanges}
         onClear={() => setPeopleDrafts({})} onRemove={clearPersonDraft} /> :
       <PeopleToolbar editing={peopleEditing} onToggle={() => { setPeopleEditing(value => !value); setSelectedPeople(new Set()); }}
@@ -562,7 +564,9 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       onClear={() => setSelectedPeople(new Set())} onAction={peopleAction} />}</>}
     {loading && <PhotoLibraryLoading s={s} />}
     {!current && <div className="movie-library__items--grid photo-folder-grid">{SPECIAL_FOLDERS.map(id => album({ id, name: id === 'albums' ? s.personalAlbums : s[id], created: null }, id))}</div>}
-    {folderPage.total > 0 && <><div className={`movie-library__items--grid photo-folder-grid movie-library__items--reveal-actions${peopleEditing ? ' is-actions-visible' : ''}`}>{folderPage.items.map(folder => album(folder))}</div>
+    {folderPage.total > 0 && <><div className={`movie-library__items--grid photo-folder-grid movie-library__items--reveal-actions${peopleEditing ? ' is-actions-visible' : ''}`}
+      data-person-review-grid={current === 'people' && newPeopleOnly ? '' : undefined}
+      onKeyDown={current === 'people' && newPeopleOnly ? handlePeopleReviewKey : undefined}>{folderPage.items.map(folder => album(folder))}</div>
       <PhotoPagination page={folderPage} onChange={setFolderNumber} s={s} label={s.folders} /></>}
     {current === 'map' && !zone && <Suspense fallback={loading ? null : <PhotoLibraryLoading s={s} />}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
     {zone && <div className="photo-zone"><h2>{s.zone} · {currentPhotos.length}</h2><button type="button" className="dialog-button" onClick={goBack}>{s.allPlaces}</button></div>}
