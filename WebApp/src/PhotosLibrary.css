@@ -161,6 +161,10 @@
 .photo-selection strong { margin-right: auto; }
 .photo-selection button:disabled { opacity: .45; cursor: default; }
 .photo-mosaic { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 1fr)); gap: 1rem; }
+.photo-drag-select-hint { margin: .7rem 0; color: #d5e1e7; font-size: .85rem; }
+.photo-mosaic--drag-select { user-select: none; -webkit-user-select: none; }
+.photo-mosaic--drag-select img { -webkit-user-drag: none; }
+.is-drag-selecting, .is-drag-selecting .photo-tile, .is-drag-selecting .photo-tile * { cursor: crosshair; }
 .photo-tile { position: relative; overflow: hidden; border: 2px solid transparent; border-radius: 15px; background: #122733; box-shadow: 0 7px 20px #0002; }
 .photo-tile.is-selected { border-color: #ffdc40; background: #344743; }
 .photo-review-check { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: #142a40e6; cursor: pointer; }

@@ -1,5 +1,6 @@
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  dragSelectPhotosHint: 'Mantén pulsado el ratón sobre una foto o su casilla y arrastra por otras para seleccionarlas. Si empiezas en una marcada, las desmarcas. Acércate al borde de la pantalla para seguir por otras filas.',
   peopleKeyboardHint: "Teclado: ← → ficha anterior o siguiente · ↑ ↓ cambiar de fila · Tab / Mayús+Tab recorrer campos · Enter activar o abrir nombres. Con la lista abierta: ↑ ↓ elegir, Enter confirmar y Esc cerrar. Mayús+flechas permite seleccionar texto.",
   enlargePhoto: 'Ampliar',
   newPeople: 'Nuevas personas', allPeople: 'Todas las personas', noNewPeople: 'No quedan personas nuevas por identificar',
@@ -149,6 +150,7 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  dragSelectPhotosHint: 'Hold the mouse button on a photo or its checkbox and drag across others to select them. Start on a selected photo to deselect. Move near the screen edge to scroll through more rows.',
   peopleKeyboardHint: "Keyboard: ← → previous or next card · ↑ ↓ change rows · Tab / Shift+Tab move through fields · Enter activate or open names. With the list open: ↑ ↓ choose, Enter confirm and Esc close. Shift+arrows selects text.",
   enlargePhoto: 'Enlarge',
   newPeople: 'New people', allPeople: 'All people', noNewPeople: 'No new people left to identify',
@@ -292,6 +294,7 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  dragSelectPhotosHint: 'Mantén premut el ratolí sobre una foto o la seva casella i arrossega per altres per seleccionar-les. Si comences en una de marcada, les desmarques. Acosta’t a la vora de la pantalla per continuar per altres files.',
   peopleKeyboardHint: "Teclat: ← → fitxa anterior o següent · ↑ ↓ canviar de fila · Tab / Maj+Tab recórrer camps · Enter activar o obrir noms. Amb la llista oberta: ↑ ↓ triar, Enter confirmar i Esc tancar. Maj+fletxes permet seleccionar text.",
   enlargePhoto: 'Amplia',
   newPeople: 'Persones noves', allPeople: 'Totes les persones', noNewPeople: 'No queden persones noves per identificar',

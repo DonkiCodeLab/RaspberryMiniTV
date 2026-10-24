@@ -3,6 +3,7 @@ import { intlLocale } from "./i18n/languages.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import useBrowserBack from './useBrowserBack.js';
+import usePhotoDragSelection from './usePhotoDragSelection.js';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
 import { descendantIds, folderTrail, hasLocation, indexPhotos, isNewPhotoPerson, photoPage, photoDeleteRequest, pendingVariants, photosWithoutPeople, photoPeopleOptions, sortPhotos, SPECIAL_FOLDERS, STYLES, UNKNOWN_PERSON_ID } from './photoLibrary.js';
@@ -123,15 +124,16 @@ export function PersonPhotoPreview({ photo, person }) {
 }
 
 export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks, person, onDelete, coverMode = false, coverPhotoId, onCover, coverBusy = false, reviewItems, reviewPeople = [], onReview, reviewBusy = false, reviewingMatches = false }) {
-  return <div className="photo-mosaic">{page.items.map((photo, index) => <article key={photo.id} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
-    <button type="button" className="photo-tile__image" aria-label={`${coverMode ? s.useCover : actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={coverMode ? coverPhotoId === photo.id : actionMode ? selected.has(photo.id) : undefined}
+  const dragSelection = reviewingMatches && actionMode && !reviewBusy && !coverMode;
+  return <div className={`photo-mosaic${dragSelection ? ' photo-mosaic--drag-select' : ''}`}>{page.items.map((photo, index) => <article key={photo.id} data-photo-select-id={dragSelection ? photo.id : undefined} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
+    <button type="button" className="photo-tile__image" data-photo-select-start={dragSelection ? '' : undefined} aria-label={`${coverMode ? s.useCover : actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={coverMode ? coverPhotoId === photo.id : actionMode ? selected.has(photo.id) : undefined}
       disabled={coverMode && coverBusy || reviewingMatches && actionMode && reviewBusy} onClick={() => coverMode ? onCover(photo.id) : actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
       {person || reviewingMatches ? <PersonPhotoPreview key={photo.id} photo={photo} person={person || pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople)} /> : <PhotoImage photo={photo} loading="lazy" decoding="async" />}{actionMode && !reviewingMatches && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
       {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
       {coverPhotoId === photo.id && <span className="photo-cover-label">{s.cover}</span>}
     </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} /></div>
-    {reviewingMatches && <label className="photo-review-check">
-      <input type="checkbox" checked={selected.has(photo.id)} disabled={reviewBusy} aria-label={`${s.select}: ${photo.title || photo.name}`} onChange={() => toggle(photo.id)} />
+    {reviewingMatches && <label className="photo-review-check" data-photo-select-start={dragSelection ? '' : undefined}>
+      <input type="checkbox" data-photo-select-start={dragSelection ? '' : undefined} checked={selected.has(photo.id)} disabled={reviewBusy} aria-label={`${s.select}: ${photo.title || photo.name}`} onChange={() => toggle(photo.id)} />
     </label>}
     {reviewingMatches && <p className="photo-review-names">{pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople).name}</p>}
     {reviewItems && <PhotoReviewAction reviews={(reviewItems.get(photo.id) || []).filter(review => !person || review.personId === person.id)} s={s} busy={reviewBusy} onConfirm={onReview} />}
@@ -416,6 +418,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const folders = current === 'gallery' ? [] : current === 'people' ? [...(newPeopleOnly ? [] : [{ id: 'pendingValidation', name: s.pendingValidation }, { id: 'withoutPeople', name: s.withoutPeople, reviewCount: noPeopleNew.length }]), ...listedPeople.map(p => ({ ...p, id: `person:${p.id}`, reviewCount: reviewIndex.byPerson.get(p.id)?.size || 0 }))] : data.folders.filter(f => f.parent === current);
   const displayedFolders = folders.filter(f => !query || ((f.id === 'albums' ? s.personalAlbums : s[f.id]) || f.name).toLocaleLowerCase().includes(query) || inFolder(f.id).some(visible));
   const page = current === 'gallery' ? galleryWindow(currentPhotos, galleryPosition) : photoPage(currentPhotos, photoNumber);
+  usePhotoDragSelection(grid, { enabled: reviewingMatches && actionMode && !busy && !dialog && !viewer,
+    selected, setSelected, pageKey: page.items.map(photo => photo.id).join('\0') });
   const folderPage = photoPage(displayedFolders.filter(folder => current || !SPECIAL_FOLDERS.includes(folder.id)), folderNumber);
   const changePage = number => { setPhotoNumber(number); if (!reviewingMatches) setSelected(new Set()); grid.current?.scrollIntoView({ block: 'start' }); };
   const isAi = current !== 'ai' && trail.some(f => f.id === 'ai');
@@ -588,6 +592,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       {(reviewFolder || person) && <button type="button" className="dialog-button dialog-button--accent" disabled={!selectedReviews.length || busy} onClick={() => confirmReviews(selectedReviews.map(review => review.id))}>{reviewingMatches ? s.verifySelection : current === 'withoutPeople' ? s.markReviewedPhotos : s.confirmMatches}</button>}
       {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
     </div>}
+    {reviewingMatches && actionMode && currentPhotos.length > 0 && <p className="photo-drag-select-hint">{s.dragSelectPhotosHint}</p>}
     {currentPhotos.length > 0 && <div ref={grid} className="photo-page">
       {current === 'gallery' ? <PhotoGallery key={`${search}-${order.direction}`} photos={currentPhotos} position={galleryPosition} onPosition={position => { setGalleryPosition(position); setSelected(new Set()); }} s={s} language={language}
         renderTiny={photo => <PhotoImage photo={photo} tiny loading="lazy" decoding="async" />}
