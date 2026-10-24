@@ -20,6 +20,12 @@
 .photo-review-filter { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
 .photo-review-filter .dialog-button { margin: 0; }
 .photo-review-filter [aria-pressed="true"] { background: #ffdf52; color: #17282c; border-color: #ffdf52; }
+.photo-people-switch { display: flex; width: fit-content; max-width: 100%; gap: .25rem; padding: .3rem; margin: 1rem 0; border: 1px solid #ffffff35; border-radius: 28px; background: #102735d9; }
+.photo-people-switch > button { flex: 1 1 auto; min-width: 0; min-height: 44px; padding: .6rem 1rem; border: 0; border-radius: 24px; background: transparent; color: #d5e1e7; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.photo-people-switch > button[aria-pressed="true"] { background: #ffdf52; color: #17282c; }
+.photo-people-switch > button:hover:not(:disabled):not([aria-pressed="true"]) { background: #ffffff12; }
+.photo-people-switch > button:disabled { opacity: .5; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .photo-people-switch > button { transition: none; } }
 .photo-review-badge { display: inline-block; width: fit-content; padding: .3rem .55rem; border-radius: 7px; color: #ffe783; background: #ffdf5218; font-size: .75rem; }
 .photo-review-action { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .55rem; padding: .7rem; }
 .photo-review-action .dialog-button { margin: 0; font-size: .78rem; padding: .5rem .7rem; }

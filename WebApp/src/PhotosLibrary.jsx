@@ -338,7 +338,9 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const index = useMemo(() => indexPhotos(data.photos, data.people), [data.photos, data.people]);
   const reviewIndex = useMemo(() => indexPhotoReviews(data.reviews), [data.reviews]);
   const newPeople = useMemo(() => data.people.filter(isNewPhotoPerson), [data.people]);
-  const listedPeople = newPeopleOnly ? newPeople : data.people;
+  const recognizedPeople = useMemo(() => data.people.filter(person => !isNewPhotoPerson(person)), [data.people]);
+  const recognizedPeopleCount = recognizedPeople.filter(person => person.id !== UNKNOWN_PERSON_ID).length;
+  const listedPeople = newPeopleOnly ? newPeople : recognizedPeople;
   const batchEntries = useMemo(() => peopleBatchEntries(peopleDrafts, data.people, data.knownPeople || data.people, s), [peopleDrafts, data.people, data.knownPeople, s]);
   const batchEntriesById = useMemo(() => new Map(batchEntries.map(entry => [entry.person.id, entry])), [batchEntries]);
   useEffect(() => {
@@ -561,10 +563,10 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
         <label>{s.sortOrder}<select value={order.direction} onChange={event => setOrder(value => ({ ...value, direction: event.target.value }))}>
           <option value="desc">{s.newestFirst}</option><option value="asc">{s.oldestFirst}</option></select></label></div>}</div>
     {current === 'people' && <>
-      <div className="photo-review-filter" role="group" aria-label={s.people}>
-        {[false, true].map(onlyNew => <button key={String(onlyNew)} type="button" className="dialog-button" aria-pressed={newPeopleOnly === onlyNew} disabled={busy}
-          onClick={() => { setNewPeopleOnly(onlyNew); setSelectedPeople(new Set()); setPeopleEditing(false); }}>
-          {onlyNew ? `${s.newPeople} (${newPeople.length})` : s.allPeople}
+      <div className="photo-people-switch" role="group" aria-label={s.people}>
+        {[true, false].map(onlyNew => <button key={String(onlyNew)} type="button" aria-pressed={newPeopleOnly === onlyNew} disabled={busy}
+          onClick={() => { setNewPeopleOnly(onlyNew); setSelectedPeople(new Set()); setPeopleEditing(false); setPreviewPersonId(null); }}>
+          {onlyNew ? `${s.newPeople} (${newPeople.length})` : `${s.recognizedPeople} (${recognizedPeopleCount})`}
         </button>)}
       </div>
       {newPeopleOnly && <><p className="photo-note">{s.newPeopleHint}</p><p className="photo-people-keyboard-hint">{s.peopleKeyboardHint}</p></>}
