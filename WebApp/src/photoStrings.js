@@ -1,7 +1,7 @@
 import { withLanguages } from "./i18n/index.js";
 const es = {
   dragSelectPhotosHint: 'Mantén pulsado el ratón sobre una foto o su casilla y arrastra por otras para seleccionarlas. Si empiezas en una marcada, las desmarcas. Acércate al borde de la pantalla para seguir por otras filas.',
-  peopleKeyboardHint: "Teclado: ← → ficha anterior o siguiente · ↑ ↓ cambiar de fila · Tab / Mayús+Tab recorrer campos · Enter activar o abrir nombres. Con la lista abierta: ↑ ↓ elegir, Enter confirmar y Esc cerrar. Mayús+flechas permite seleccionar texto.",
+  peopleKeyboardHint: "Teclado: Tab / Mayús+Tab recorre los campos de la misma ficha y vuelve al inicio. En el desplegable: escribe para buscar, ↑ ↓ elige, Enter o Tab confirma y Esc cancela. En los demás campos: ← → cambia de ficha y ↑ ↓ de fila. Enter activa la opción. Mayús+flechas permite seleccionar texto.",
   enlargePhoto: 'Ampliar',
   newPeople: 'Nuevas personas', allPeople: 'Todas las personas', noNewPeople: 'No quedan personas nuevas por identificar',
   newPeopleHint: "Prepara una acción en cada ficha: poner nombre, unir con alguien, eliminar la persona conservando sus fotos o borrar sus fotos originales. Después pulsa Aplicar cambios para guardar todas las fichas preparadas. Pulsa una cara para ampliar sus fotos sin salir del listado.",
@@ -151,7 +151,7 @@ const es = {
 };
 const en = {
   dragSelectPhotosHint: 'Hold the mouse button on a photo or its checkbox and drag across others to select them. Start on a selected photo to deselect. Move near the screen edge to scroll through more rows.',
-  peopleKeyboardHint: "Keyboard: ← → previous or next card · ↑ ↓ change rows · Tab / Shift+Tab move through fields · Enter activate or open names. With the list open: ↑ ↓ choose, Enter confirm and Esc close. Shift+arrows selects text.",
+  peopleKeyboardHint: "Keyboard: Tab / Shift+Tab cycles through the fields in the same card. In the picker: type to search, ↑ ↓ chooses, Enter or Tab confirms and Esc cancels. In other fields: ← → changes cards and ↑ ↓ changes rows. Enter activates the control. Shift+arrows selects text.",
   enlargePhoto: 'Enlarge',
   newPeople: 'New people', allPeople: 'All people', noNewPeople: 'No new people left to identify',
   newPeopleHint: "Prepare one action per card: give them a name, merge with someone, remove the person while keeping their photos, or delete their original photos. Then select Apply changes to save all prepared cards. Click a face to enlarge their photos without leaving the list.",
@@ -295,7 +295,7 @@ const en = {
 };
 const ca = {
   dragSelectPhotosHint: 'Mantén premut el ratolí sobre una foto o la seva casella i arrossega per altres per seleccionar-les. Si comences en una de marcada, les desmarques. Acosta’t a la vora de la pantalla per continuar per altres files.',
-  peopleKeyboardHint: "Teclat: ← → fitxa anterior o següent · ↑ ↓ canviar de fila · Tab / Maj+Tab recórrer camps · Enter activar o obrir noms. Amb la llista oberta: ↑ ↓ triar, Enter confirmar i Esc tancar. Maj+fletxes permet seleccionar text.",
+  peopleKeyboardHint: "Teclat: Tab / Maj+Tab recorre els camps de la mateixa fitxa i torna a l’inici. Al desplegable: escriu per cercar, ↑ ↓ tria, Enter o Tab confirma i Esc cancel·la. Als altres camps: ← → canvia de fitxa i ↑ ↓ de fila. Enter activa l’opció. Maj+fletxes permet seleccionar text.",
   enlargePhoto: 'Amplia',
   newPeople: 'Persones noves', allPeople: 'Totes les persones', noNewPeople: 'No queden persones noves per identificar',
   newPeopleHint: "Prepara una acció a cada fitxa: posar nom, unir amb algú, eliminar la persona conservant les fotos o esborrar les fotos originals. Després prem Aplica els canvis per desar totes les fitxes preparades. Prem una cara per ampliar les fotos sense sortir de la llista.",

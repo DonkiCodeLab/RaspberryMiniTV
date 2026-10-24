@@ -1,6 +1,5 @@
 const fieldSelector = '[data-person-field]';
 const cardSelector = '[data-person-review-card]';
-const gridSelector = '[data-person-review-grid]';
 const fieldOrder = ['merge', 'rename', 'delete', 'deletePhotos', 'undo'];
 
 export function neighboringPerson(rects, index, key) {
@@ -28,13 +27,28 @@ export function focusPersonField(field) {
   field.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
-// Tab follows the editing controls in DOM order, skipping portrait buttons
-// between cards. At the ends it retains normal browser traversal out of the grid.
+// Tab stays within the current card, including when its optional undo button
+// appears or disappears. Arrows are used to move to another card.
 export function nextPersonField(field, backwards = false) {
-  const grid = field.closest(gridSelector);
-  if (!grid) return null;
-  const fields = enabledFields(grid), index = fields.indexOf(field);
-  return index < 0 ? null : fields[index + (backwards ? -1 : 1)] || null;
+  const card = field.closest(cardSelector);
+  if (!card) return null;
+  const fields = enabledFields(card), index = fields.indexOf(field);
+  return index < 0 ? null : fields[(index + (backwards ? -1 : 1) + fields.length) % fields.length];
+}
+
+const normalizeName = text => text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
+
+export function searchPersonOptions(options, active, previous, key, now = Date.now()) {
+  const prefix = now - previous.time < 1000 ? previous.text : '';
+  const letter = normalizeName(key);
+  const text = key === 'Backspace' ? prefix.slice(0, -1) : prefix === letter ? letter : prefix + letter;
+  const start = text.length === 1 && key !== 'Backspace' ? active + 1 : active;
+  let index = active;
+  if (text) for (let offset = 0; offset < options.length; offset++) {
+    const candidate = (start + offset) % options.length;
+    if (options[candidate].id && normalizeName(options[candidate].name).startsWith(text)) { index = candidate; break; }
+  }
+  return { index, search: { text, time: now } };
 }
 
 export function handlePeopleReviewKey(event) {
@@ -56,6 +70,7 @@ export function handlePeopleReviewKey(event) {
   }
   // Shift+arrows keeps text selection/caret editing available inside name inputs.
   if (event.shiftKey || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+  if (field.dataset.personField === 'merge' && ['ArrowUp', 'ArrowDown'].includes(event.key)) return;
   event.preventDefault(); event.stopPropagation();
   const card = field.closest(cardSelector), cards = [...grid.querySelectorAll(cardSelector)];
   const index = cards.indexOf(card);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { neighboringPerson, handlePeopleReviewKey, nextPersonField } from '../src/photoPeopleKeyboard.js';
+import { neighboringPerson, handlePeopleReviewKey, nextPersonField, searchPersonOptions } from '../src/photoPeopleKeyboard.js';
 const geometry = (count, columns) => Array.from({ length: count }, (_, i) => ({ top: Math.floor(i / columns) * 700, center: (i % columns) * 220 + 100 }));
 
 test('arrows follow visible rows, wrap horizontally and clamp partial rows at different widths', () => {
@@ -55,17 +55,58 @@ test('moving cards preserves the field, avoids the sticky toolbar and never chan
   assert.equal(f.focused(), f.field(2, 'delete'));
 });
 
-test('Tab visits editing controls, skips unavailable ones and exits at grid ends', () => {
+test('Tab and Shift+Tab wrap inside the same card, including its optional undo button', () => {
   const f = fixture();
   for (const [from, to] of [['merge', 'rename'], ['rename', 'delete'], ['delete', 'deletePhotos'], ['deletePhotos', 'undo']]) {
     f.fire(f.field(0, from), 'Tab'); assert.equal(f.focused(), f.field(0, to));
   }
-  f.fire(f.field(0, 'undo'), 'Tab'); assert.equal(f.focused(), f.field(1, 'merge'));
-  f.fire(f.field(1, 'merge'), 'Tab', { shiftKey: true }); assert.equal(f.focused(), f.field(0, 'undo'));
+  f.fire(f.field(0, 'undo'), 'Tab'); assert.equal(f.focused(), f.field(0, 'merge'));
+  f.fire(f.field(0, 'merge'), 'Tab', { shiftKey: true }); assert.equal(f.focused(), f.field(0, 'undo'));
+  f.fire(f.field(1, 'merge'), 'Tab', { shiftKey: true }); assert.equal(f.focused(), f.field(1, 'deletePhotos'));
   f.field(1, 'deletePhotos').disabled = true;
-  assert.equal(nextPersonField(f.field(1, 'delete')), f.field(2, 'merge'));
-  assert.equal(f.fire(f.field(6, 'deletePhotos'), 'Tab').defaultPrevented, undefined);
-  assert.equal(f.fire(f.field(0, 'merge'), 'Tab', { shiftKey: true }).defaultPrevented, undefined);
+  assert.equal(nextPersonField(f.field(1, 'delete')), f.field(1, 'merge'));
+  assert.equal(nextPersonField(f.field(1, 'merge'), true), f.field(1, 'delete'));
+  assert.equal(f.fire(f.field(6, 'deletePhotos'), 'Tab').defaultPrevented, true);
+  assert.equal(f.focused(), f.field(6, 'merge'));
+  f.field(1, 'delete').disabled = true; f.field(1, 'rename').disabled = true;
+  assert.equal(nextPersonField(f.field(1, 'merge')), f.field(1, 'merge'));
+});
+
+test('vertical arrows stay in the person picker but move rows from every other field', () => {
+  const f = fixture();
+  for (const key of ['ArrowUp', 'ArrowDown']) {
+    assert.equal(f.fire(f.field(0, 'merge'), key).defaultPrevented, undefined);
+    assert.equal(f.focused(), null);
+  }
+  for (const name of ['rename', 'delete', 'deletePhotos']) {
+    f.fire(f.field(0, name), 'ArrowDown'); assert.equal(f.focused(), f.field(3, name));
+    f.fire(f.field(3, name), 'ArrowUp'); assert.equal(f.focused(), f.field(0, name));
+  }
+});
+
+test('person name search builds prefixes, ignores accents and supports compound names and correction', () => {
+  const options = [{ id: '', name: 'Seleccionar persona' }, { id: 'a', name: 'Álvaro' },
+    { id: 'm1', name: 'María Dolores' }, { id: 'm2', name: 'Maria José' }, { id: 'l', name: 'Laura' }];
+  let result = { index: 0, search: { text: '', time: 0 } }, now = 5000;
+  const type = key => { result = searchPersonOptions(options, result.index, result.search, key, now += 50); return result.index; };
+  assert.equal(type('A'), 1);
+  now += 1500;
+  for (const key of 'maria j') type(key);
+  assert.equal(result.index, 3);
+  assert.equal(type('z'), 3); // An unmatched prefix must not select another person.
+  type('Backspace'); type('Backspace'); type('d');
+  assert.equal(result.index, 2);
+  now += 1500; assert.equal(type('L'), 4);
+  now += 1500; assert.equal(type('s'), 4); // The placeholder isn't a person match.
+});
+
+test('repeated initials cycle matching people and restart after a pause', () => {
+  const options = [{ id: '', name: 'Seleccionar persona' }, { id: 'a1', name: 'Ana' }, { id: 'a2', name: 'Arnau' }];
+  let result = searchPersonOptions(options, 0, { text: '', time: 0 }, 'a', 5000);
+  assert.equal(result.index, 1);
+  result = searchPersonOptions(options, result.index, result.search, 'a', 5100); assert.equal(result.index, 2);
+  result = searchPersonOptions(options, result.index, result.search, 'a', 5200); assert.equal(result.index, 1);
+  result = searchPersonOptions(options, result.index, result.search, 'a', 7000); assert.equal(result.index, 2);
 });
 
 test('Enter toggles checkboxes once; ordinary button and space activation stays native', () => {

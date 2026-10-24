@@ -1,16 +1,24 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { focusPersonField, nextPersonField } from './photoPeopleKeyboard.js';
+import { focusPersonField, nextPersonField, searchPersonOptions } from './photoPeopleKeyboard.js';
 
-// A closed picker leaves arrows to card navigation; an open picker owns them.
+// Typing and vertical arrows always belong to the picker, even while closed.
 export default function PersonReviewPicker({ choices, value, label, s, disabled, onChange }) {
   const options = [{ id: '', name: s.choosePerson }, ...choices];
   const [open, setOpen] = useState(false), [active, setActive] = useState(0), [position, setPosition] = useState({});
   const trigger = useRef(null), list = useRef(null), search = useRef({ text: '', time: 0 }), id = useId();
+  const tabDirection = useRef(null);
   const selected = options.find(option => option.id === value);
   const close = (restore = false) => { setOpen(false); if (restore) trigger.current?.focus({ preventScroll: true }); };
   const show = () => { search.current = { text: '', time: 0 }; setActive(Math.max(0, options.findIndex(option => option.id === value))); setOpen(true); };
   const choose = index => { if (disabled || !options[index]) return; close(true); onChange(options[index].id); };
+  useLayoutEffect(() => {
+    if (tabDirection.current === null) return;
+    const backwards = tabDirection.current;
+    tabDirection.current = null;
+    // Confirming may add/remove the undo button before we wrap inside the card.
+    focusPersonField(nextPersonField(trigger.current, backwards));
+  });
   useLayoutEffect(() => {
     if (!open) return;
     const place = () => {
@@ -43,31 +51,40 @@ export default function PersonReviewPicker({ choices, value, label, s, disabled,
     event.stopPropagation();
     if (event.isComposing || event.nativeEvent?.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === 'Tab') {
-      const next = nextPersonField(trigger.current, event.shiftKey);
+      event.preventDefault(); tabDirection.current = event.shiftKey;
       close(true);
-      if (next) { event.preventDefault(); focusPersonField(next); }
+      if (!disabled && options[active] && options[active].id !== value) onChange(options[active].id);
     } else if (event.key === 'Escape') { event.preventDefault(); close(true); }
-    else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (!event.repeat) choose(active); }
+    else if (event.key === 'Enter' || event.key === ' ' && (!search.current.text || Date.now() - search.current.time >= 1000)) { event.preventDefault(); if (!event.repeat) choose(active); }
     else if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageDown', 'PageUp'].includes(event.key)) {
       event.preventDefault();
+      search.current = { text: '', time: 0 };
       const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : event.key === 'PageDown' ? 10 : event.key === 'PageUp' ? -10 : 0;
       setActive(index => event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : Math.max(0, Math.min(options.length - 1, index + step)));
-    } else if (event.key.length === 1) {
+    } else if (event.key.length === 1 || event.key === 'Backspace') {
       event.preventDefault();
-      const letter = event.key.toLocaleLowerCase(), previous = Date.now() - search.current.time < 700 ? search.current.text : '';
-      const text = previous === letter ? letter : previous + letter;
-      search.current = { text, time: Date.now() };
-      const start = text.length === 1 ? active + 1 : active;
-      for (let i = 0; i < options.length; i++) {
-        const index = (start + i) % options.length;
-        if (options[index].name.toLocaleLowerCase().startsWith(text)) { setActive(index); break; }
-      }
+      const result = searchPersonOptions(options, active, search.current, event.key);
+      search.current = result.search; setActive(result.index);
     }
+  }
+  function triggerKey(event) {
+    if (disabled || event.isComposing || event.nativeEvent?.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+    const vertical = ['ArrowUp', 'ArrowDown'].includes(event.key);
+    if (!vertical && (event.key.length !== 1 || event.key === ' ')) return;
+    event.preventDefault(); event.stopPropagation();
+    const current = Math.max(0, options.findIndex(option => option.id === value));
+    search.current = { text: '', time: 0 };
+    if (vertical) setActive(Math.max(0, Math.min(options.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1))));
+    else {
+      const result = searchPersonOptions(options, current, search.current, event.key);
+      search.current = result.search; setActive(result.index);
+    }
+    setOpen(true);
   }
   return <>
     <button ref={trigger} type="button" role="combobox" data-person-field="merge" className="photo-person-picker" disabled={disabled}
       aria-label={label} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? id : undefined}
-      onClick={() => open ? close() : show()}>
+      onKeyDown={triggerKey} onClick={() => open ? close() : show()}>
       <span>{selected?.name || s.batchTargetChanged}</span><span aria-hidden="true">⌄</span>
     </button>
     {open && createPortal(<div ref={list} id={id} role="listbox" tabIndex={-1} aria-label={label}
