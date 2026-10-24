@@ -19,6 +19,7 @@ import { peopleBatchEntries, updatePersonDraft } from './photoPeopleBatch.js';
 import { handlePeopleReviewKey } from './photoPeopleKeyboard.js';
 import { createImportId } from './photoImport.js';
 import PersonPhotoDialog from './PersonPhotoDialog.jsx';
+import PersonPhotoPopover from './PersonPhotoPopover.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { galleryWindow } from './photoTimeline.js';
 import { photoStrings } from './photoStrings.js';
@@ -163,7 +164,7 @@ function Modal({ title, titleActions, s, onClose, children, wide = false, busy =
   </dialog>, document.body);
 }
 
-export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, previewOnly = false, special, portraitPhoto, personActions, selected = false }) {
+export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, previewOnly = false, previewOpen = false, special, portraitPhoto, personActions, selected = false }) {
   const [active, setActive] = useState(false), [step, setStep] = useState(0);
   const isPerson = folder.id.startsWith('person:');
   const fixedIcon = folder.id === `person:${UNKNOWN_PERSON_ID}` ? 'unknownPerson' : folder.id === 'withoutPeople' ? 'withoutFaces' : folder.id === 'pendingValidation' ? 'pendingValidation' : null;
@@ -184,7 +185,8 @@ export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, prev
     onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(true); }} onPointerLeave={() => setActive(false)}
     onFocusCapture={() => setActive(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }}>
     <button className={`movie-library__poster photo-album__cover${onPreview ? ' photo-album__cover--preview' : ''}`} type="button"
-      aria-label={`${onPreview ? s.personPhotoPreview : s.open}: ${folder.name}`} aria-haspopup={onPreview ? 'dialog' : undefined} onClick={onPreview || onOpen}>
+      aria-label={`${onPreview ? s.personPhotoPreview : s.open}: ${folder.name}`} aria-haspopup={onPreview && !previewOnly ? 'dialog' : undefined}
+      aria-expanded={onPreview && previewOnly ? previewOpen : undefined} onClick={onPreview || onOpen}>
       {fixedIcon ? <span className="photo-album__art"><Icon type={fixedIcon} /><span>{folder.name}</span></span> : isPerson ? <PersonPortrait person={folder} photo={portraitPhoto || photos.find(photo => photo.id === folder.coverFace?.photoId)} s={s} /> :
         cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
       <span className="photo-album__badge"><Icon type={fixedIcon || (isPerson ? 'people' : special || 'folder')} /></span>
@@ -308,6 +310,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
   const [peopleEditing, setPeopleEditing] = useState(false), [selectedPeople, setSelectedPeople] = useState(new Set());
   const [newPeopleOnly, setNewPeopleOnly] = useState(false), [previewPersonId, setPreviewPersonId] = useState(null);
+  const previewAnchor = useRef(null);
+  const closePersonPreview = useCallback(() => setPreviewPersonId(null), []);
   const [peopleDrafts, setPeopleDrafts] = useState({});
   const batchRequest = useRef(null);
   const [choosingCover, setChoosingCover] = useState(false);
@@ -495,8 +499,12 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     return <AlbumCard key={folder.id} folder={{ ...folder, name: (folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name }} photos={photos.filter(visible)} special={special}
       portraitPhoto={index.byId.get(folder.coverFace?.photoId)}
       selected={!!cardPerson && (newPeopleOnly ? !!peopleDrafts[cardPerson.id] : selectedPeople.has(cardPerson.id))}
-      onPreview={cardPerson && photos.length ? () => setPreviewPersonId(cardPerson.id) : undefined}
+      onPreview={cardPerson && photos.length ? event => {
+        previewAnchor.current = event.currentTarget;
+        setPreviewPersonId(previous => previous === cardPerson.id ? null : cardPerson.id);
+      } : undefined}
       previewOnly={newPeopleOnly && !!cardPerson}
+      previewOpen={previewPersonId === cardPerson?.id}
       personActions={cardPerson && (newPeopleOnly ? <NewPersonCardActions person={cardPerson} people={data.knownPeople || data.people}
         draft={peopleDrafts[cardPerson.id]} entry={batchEntriesById.get(cardPerson.id)} s={s} busy={busy}
         onChange={change => setPeopleDrafts(previous => updatePersonDraft(previous, cardPerson, change))} /> :
@@ -591,7 +599,9 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       <PhotoPagination page={page} onChange={changePage} s={s} /></>}
     </div>}
     {!loading && current && current !== 'map' && !displayedFolders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{query ? s.matches : current === 'pendingValidation' ? s.noPendingValidation : current === 'withoutPeople' && noFacesView === 'new' ? s.noNewWithoutPeople : current === 'people' ? newPeopleOnly ? s.noNewPeople : s.peopleEmpty : s.empty}</h2><p>{current === 'people' && newPeopleOnly ? s.newPeopleEmptyHint : reviewFolder ? s.reviewEmptyHint : current === 'gallery' ? s.uploadHint : s.emptyHint}</p></div>}
-    {previewPerson && <PersonPhotoDialog key={previewPerson.id} Modal={Modal} person={previewPerson} photosById={index.byId} s={s} onClose={() => setPreviewPersonId(null)} />}
+    {previewPerson && (newPeopleOnly ? <PersonPhotoPopover key={previewPerson.id} person={previewPerson} photosById={index.byId}
+      anchor={previewAnchor.current} s={s} onClose={closePersonPreview} /> :
+      <PersonPhotoDialog key={previewPerson.id} Modal={Modal} person={previewPerson} photosById={index.byId} s={s} onClose={closePersonPreview} />)}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} photo={dialog.photo}
       {...(dialog.origin || { album: isAlbum, person, current })} s={s} onClose={closeDialog} onComplete={complete} />}
