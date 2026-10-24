@@ -709,14 +709,15 @@ class PhotoLibrary:
         self.previews.start([row['path'] for row in rows], self.safe_file)
 
     def face_status(self, db):
-        scan = db.execute('SELECT state, error FROM face_analysis WHERE id=1').fetchone()
+        scan = db.execute('''SELECT state, error, (SELECT token FROM face_review_batch WHERE id=1) AS batchId
+            FROM face_analysis WHERE id=1''').fetchone()
         counts = dict(db.execute('SELECT state, count(*) FROM face_analysis_items GROUP BY state').fetchall())
         total = sum(counts.values())
         done = total - counts.get('pending', 0)
         pending = db.execute("SELECT count(*) FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','imported','error')").fetchone()[0]
         if scan['state'] == 'idle' and not total:
             total = min(FACE_BATCH_SIZE, pending)
-        return {'available': LocalFaceEngine.available(), 'engine': 'dlib-local',
+        return {'batchId': scan['batchId'], 'available': LocalFaceEngine.available(), 'engine': 'dlib-local',
                 'installCommand': INSTALL_COMMAND, 'lowPower': True, 'batchSize': FACE_BATCH_SIZE,
                 'singleRunning': self.single_face_running,
                 'state': scan['state'], 'running': self.faces_running,
@@ -990,6 +991,62 @@ class PhotoLibrary:
                 raise PhotoError(str(error), 409) from None
         return {'ok': True, 'confirmed': confirmed}
 
+    def resolve_review(self, data):
+        """Save a card and all its face edits atomically, with safe response-loss retries."""
+        if not isinstance(data, dict) or set(data) != {'reviewId', 'changes'}:
+            raise PhotoError('Indica la revisión y sus cambios.')
+        review_id, changes = data['reviewId'], data['changes']
+        if not isinstance(review_id, str) or not review_id or not isinstance(changes, list) or len(changes) > 100:
+            raise PhotoError('Revisión inválida.')
+        payload = json.dumps(data, sort_keys=True)
+        with self.db() as db:
+            receipt = db.execute('SELECT payload, result FROM photo_review_results WHERE review=?', (review_id,)).fetchone()
+            if receipt:
+                if receipt['payload'] != payload:
+                    raise PhotoError('Esta revisión ya se guardó con otros cambios. Actualiza los pendientes.', 409)
+                return json.loads(receipt['result'])
+            review = next((row for row in photo_reviews.pending(db) if row['id'] == review_id), None)
+            if not review:
+                raise PhotoError('Esta propuesta ha cambiado. Actualiza los pendientes.', 409)
+            # Validate the full shape and avoid editing the same face twice.
+            seen = set()
+            for change in changes:
+                if not isinstance(change, dict): raise PhotoError('Cambio de cara inválido.')
+                action = change.get('action')
+                keys = set(change)
+                valid = (action == 'remove' and keys == {'action', 'faceId'} or
+                         action == 'assign' and keys in ({'action', 'faceId', 'personId'}, {'action', 'faceId', 'name'}) or
+                         action == 'add' and keys in ({'action', 'box', 'personId'}, {'action', 'box', 'name'}))
+                if not valid: raise PhotoError('Cambio de cara inválido.')
+                if not review['faceId'] and action != 'add':
+                    raise PhotoError('En una foto sin caras solo puedes añadir caras nuevas.')
+                if action != 'add':
+                    face_id = change['faceId']
+                    if not isinstance(face_id, str) or not face_id or face_id in seen:
+                        raise PhotoError('Selecciona cada cara una sola vez.')
+                    seen.add(face_id)
+            # Confirm before adding faces: the first addition removes the no-face
+            # queue entry. Both the confirmation and additions roll back together.
+            if not review['faceId']:
+                photo_reviews.confirm(db, [review_id])
+            for change in changes:
+                action = change['action']
+                assignment = {key: value for key, value in change.items() if key not in ('action', 'faceId')}
+                if action == 'add': self.add_face(review['photoId'], assignment, db=db)
+                elif action == 'assign': self.assign_face(review['photoId'], change['faceId'], assignment, db=db)
+                else: self.remove_face(review['photoId'], change['faceId'], db=db)
+            # Saving other faces also approves the current proposal, unless corrected or removed.
+            if review['faceId'] and review['faceId'] not in seen:
+                photo_reviews.confirm(db, [review_id])
+            if review['faceId']:
+                # Removing the final detected face creates a new no-face review;
+                # keep it in the same batch for the wizard's third step.
+                db.execute('''UPDATE photo_reviews SET batch=?
+                    WHERE photo=? AND face IS NULL AND reviewed=0''', (review['batchId'], review['photoId']))
+            result = {'ok': True, 'reviewId': review_id, 'photoId': review['photoId']}
+            db.execute('INSERT INTO photo_review_results VALUES (?,?,?)', (review_id, payload, json.dumps(result)))
+        return result
+
     def _face_person(self, db, data):
         if set(data) not in ({'personId'}, {'name'}):
             raise PhotoError('Selecciona una persona existente o escribe un nombre nuevo.')
@@ -1012,46 +1069,52 @@ class PhotoLibrary:
         db.execute('INSERT INTO people VALUES (?,?,?)', (person_id, name, time.time()))
         return person_id
 
-    def add_face(self, photo_id, data):
+    def add_face(self, photo_id, data, db=None):
+        if db is None:
+            with self.db() as connection:
+                return self.add_face(photo_id, data, db=connection)
         box = data.get('box')
         if (not isinstance(box, dict) or set(box) != {'x', 'y', 'width', 'height'} or
                 any(type(box[key]) not in (int, float) or not math.isfinite(box[key]) for key in box) or
                 not (0 <= box['x'] < 1 and 0 <= box['y'] < 1 and box['width'] > 0 and box['height'] > 0
                      and box['x'] + box['width'] <= 1.000001 and box['y'] + box['height'] <= 1.000001)):
             raise PhotoError('Define un recuadro válido dentro de la foto.')
-        with self.db() as db:
-            if not db.execute('SELECT 1 FROM photos WHERE id=?', (photo_id,)).fetchone():
-                raise PhotoError('No se encuentra la foto.', 404)
-            person_id = self._face_person(db, {key: value for key, value in data.items() if key != 'box'})
-            # Explicitly drawing a face restores this region after a rejection.
-            for rejected in db.execute('SELECT id, box FROM face_rejections WHERE photo=?', (photo_id,)).fetchall():
-                if rejected['box'] and face_matching.overlap(json.loads(rejected['box']), box) > .5:
-                    db.execute('DELETE FROM face_rejections WHERE id=?', (rejected['id'],))
-            face_id = uuid.uuid4().hex
-            # Manual boxes work without a detector or a biometric encoding.
-            db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,1)',
-                       (face_id, photo_id, person_id, '[]', json.dumps(box)))
-            self._sync_face_links(photo_id, db)
+        if not db.execute('SELECT 1 FROM photos WHERE id=?', (photo_id,)).fetchone():
+            raise PhotoError('No se encuentra la foto.', 404)
+        person_id = self._face_person(db, {key: value for key, value in data.items() if key != 'box'})
+        # Explicitly drawing a face restores this region after a rejection.
+        for rejected in db.execute('SELECT id, box FROM face_rejections WHERE photo=?', (photo_id,)).fetchall():
+            if rejected['box'] and face_matching.overlap(json.loads(rejected['box']), box) > .5:
+                db.execute('DELETE FROM face_rejections WHERE id=?', (rejected['id'],))
+        face_id = uuid.uuid4().hex
+        # Manual boxes work without a detector or a biometric encoding.
+        db.execute('INSERT INTO face_detections VALUES (?,?,?,?,?,1)',
+                   (face_id, photo_id, person_id, '[]', json.dumps(box)))
+        self._sync_face_links(photo_id, db)
         return {'ok': True, 'faceId': face_id, 'personId': person_id}
 
-    def assign_face(self, photo_id, face_id, data):
-        with self.db() as db:
-            face = db.execute('SELECT * FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).fetchone()
-            if not face: raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
-            person_id = self._face_person(db, data)
-            db.execute('UPDATE face_detections SET person=?, manual=1 WHERE id=?', (person_id, face_id))
-            self._sync_face_links(photo_id, db)
+    def assign_face(self, photo_id, face_id, data, db=None):
+        if db is None:
+            with self.db() as connection:
+                return self.assign_face(photo_id, face_id, data, db=connection)
+        face = db.execute('SELECT * FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).fetchone()
+        if not face: raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
+        person_id = self._face_person(db, data)
+        db.execute('UPDATE face_detections SET person=?, manual=1 WHERE id=?', (person_id, face_id))
+        self._sync_face_links(photo_id, db)
         return {'ok': True, 'personId': person_id}
 
-    def remove_face(self, photo_id, face_id):
-        with self.db() as db:
-            face = db.execute('SELECT * FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).fetchone()
-            if not face:
-                raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
-            db.execute('INSERT OR REPLACE INTO face_rejections VALUES (?,?,?,?)',
-                       (face_id, photo_id, face['encoding'], face['box']))
-            db.execute('DELETE FROM face_detections WHERE id=?', (face_id,))
-            self._sync_face_links(photo_id, db)
+    def remove_face(self, photo_id, face_id, db=None):
+        if db is None:
+            with self.db() as connection:
+                return self.remove_face(photo_id, face_id, db=connection)
+        face = db.execute('SELECT * FROM face_detections WHERE id=? AND photo=?', (face_id, photo_id)).fetchone()
+        if not face:
+            raise PhotoError('Esta cara ya no está disponible. Actualiza la foto.', 409)
+        db.execute('INSERT OR REPLACE INTO face_rejections VALUES (?,?,?,?)',
+                   (face_id, photo_id, face['encoding'], face['box']))
+        db.execute('DELETE FROM face_detections WHERE id=?', (face_id,))
+        self._sync_face_links(photo_id, db)
         return {'ok': True, 'faceId': face_id}
 
     def set_person_birthday(self, ident, value):
@@ -1432,6 +1495,10 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/people/<ident>/remove')
     def remove(ident):
         return jsonify(get_library().remove_matches(ident, body().get('ids')))
+
+    @bp.post('/pictures/reviews/resolve')
+    def resolve_review():
+        return jsonify(get_library().resolve_review(body()))
 
     @bp.post('/pictures/reviews/confirm')
     def confirm_reviews():

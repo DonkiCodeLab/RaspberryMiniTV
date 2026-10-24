@@ -12,6 +12,8 @@ def initialize(db):
             batch TEXT, created REAL NOT NULL, reviewed INTEGER NOT NULL DEFAULT 0);
         CREATE INDEX IF NOT EXISTS photo_reviews_photo ON photo_reviews(photo);
         CREATE UNIQUE INDEX IF NOT EXISTS photo_reviews_no_faces ON photo_reviews(photo) WHERE face IS NULL;
+        CREATE TABLE IF NOT EXISTS photo_review_results (
+            review TEXT PRIMARY KEY, payload TEXT NOT NULL, result TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS face_review_batch (
             id INTEGER PRIMARY KEY CHECK(id=1), token TEXT NOT NULL, people TEXT NOT NULL);
     ''')
