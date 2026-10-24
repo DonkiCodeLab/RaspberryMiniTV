@@ -56,6 +56,15 @@
 .photo-person-merge select { min-width: 0; flex: 1; width: 0; min-height: 40px; border: 1px solid #ffffff45; border-radius: 8px; background: #0c2231; color: white; padding: .5rem; font: inherit; font-size: .8rem; text-overflow: ellipsis; }
 .photo-person-merge select:focus-visible { outline: 3px solid #ffdf52; outline-offset: 2px; }
 .photo-person-merge .dialog-button { flex-shrink: 0; min-height: 40px; margin: 0; padding: .5rem .65rem; border-radius: 8px; font-size: .8rem; }
+.photo-new-person-actions { display: grid; gap: .8rem; margin-top: .6rem; }
+.photo-new-person-actions .photo-person-merge { margin: 0; }
+.photo-person-name { display: flex; align-items: flex-end; gap: .4rem; min-width: 0; }
+.photo-person-name label { display: grid; flex: 1; min-width: 0; gap: .4rem; color: #c0d0d9; font-size: .75rem; }
+.photo-person-name input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 40px; padding: .5rem; border: 1px solid #ffffff45; border-radius: 8px; background: #0c2231; color: white; font: inherit; font-size: .85rem; }
+.photo-person-name .dialog-button { flex-shrink: 0; min-height: 40px; margin: 0; padding: .5rem .65rem; border-radius: 8px; font-size: .8rem; }
+.photo-person-name button:disabled { opacity: .45; cursor: default; }
+.photo-new-person-check { display: flex; align-items: center; gap: .65rem; min-height: 44px; padding-top: .5rem; border-top: 1px solid #ffffff25; color: #ffb4ab; font-size: .8rem; cursor: pointer; }
+.photo-new-person-check input { width: 22px; height: 22px; flex-shrink: 0; margin: 0; accent-color: #ffdc40; }
 .photo-people-toolbar, .photo-people-bulk { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; min-width: 0; }
 .photo-people-toolbar { margin: 0 0 1.2rem; padding: .8rem; border: 1px solid #ffffff30; border-radius: 14px; background: #143042e8; }
 .photo-people-toolbar .dialog-button { margin: 0; }
@@ -79,7 +88,13 @@
 .photo-people-destination { color: #ffe18b; overflow-wrap: anywhere; }
 .photo-dialog__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .7rem; }
 .photo-people-toolbar .photo-delete-button, .photo-dialog__actions .photo-delete-button { background: #6e2729; border: 1px solid #df827a; }
-@media (max-width: 600px) { .photo-people-bulk { flex-basis: 100%; } .photo-people-bulk .photo-person-merge { max-width: none; } }
+@media (max-width: 600px) {
+  .photo-people-bulk { flex-basis: 100%; }
+  .photo-people-bulk .photo-person-merge { max-width: none; }
+  .photo-new-person-actions .photo-person-merge, .photo-person-name { flex-direction: column; align-items: stretch; }
+  .photo-new-person-actions .photo-person-merge select { flex: auto; width: 100%; }
+  .photo-person-name label { flex: auto; }
+}
 .photo-note, .photo-ai-banner { padding: 1rem 1.2rem; border: 1px solid #ffffff25; border-radius: 15px; background: #152b3b80; color: #cbd7de; font-size: .9rem; line-height: 1.6; }
 .photo-note p { margin: .25rem 0; }
 .photo-people-analysis { margin: 0 0 1.2rem; padding: 1.2rem; border: 1px solid #ffdc4050; border-radius: 16px; background: linear-gradient(120deg, #263e48, #122a36); }
@@ -190,6 +205,15 @@
 .photo-viewer > button:disabled { opacity: .25; }
 .photo-viewer__meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .7rem; }
 .photo-viewer__meta > span { font-size: .85rem; color: #b8c9d3; }
+.photo-dialog--person-preview { width: min(1120px, calc(100vw - 28px)); }
+.photo-dialog--person-preview .photo-viewer { --photo-viewer-height: min(64dvh, 720px); }
+.photo-dialog--person-preview .photo-face-box { pointer-events: none; cursor: default; box-sizing: border-box; }
+.photo-person-preview__caption { display: flex; gap: 1rem; align-items: baseline; margin-bottom: .6rem; }
+.photo-person-preview__caption strong { flex-shrink: 0; color: #ffdc40; font-variant-numeric: tabular-nums; }
+.photo-person-preview__caption span { overflow-wrap: anywhere; min-width: 0; font-size: .9rem; }
+@media (max-width: 600px) {
+  .photo-dialog--person-preview .photo-viewer { --photo-viewer-height: min(52dvh, max(160px, calc(100dvh - 350px))); }
+}
 @media (max-width: 600px) {
   .photo-toolbar { width: 100%; }
   .photo-toolbar .dialog-button { flex: 1; padding: .7rem; font-size: .8rem; }

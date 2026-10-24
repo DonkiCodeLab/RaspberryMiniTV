@@ -34,17 +34,21 @@ function FaceDrawing({ onChange, s, disabled }) {
   </div>;
 }
 
-export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s, disabled = false }) {
-  return faces.map((face, index) => face.box ? <button type="button" key={face.id}
+export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s, disabled = false, readOnly = false }) {
+  const Tag = readOnly ? 'span' : 'button';
+  return faces.map((face, index) => face.box ? <Tag key={face.id}
     className={`photo-face-box${face.personId === highlightPersonId ? ' is-highlighted' : ''}${face.id === selectedFaceId ? ' is-selected' : ''}`}
-    aria-label={`${s.editFace}: ${photoPersonName(face, s) || s.unnamedFace}`} aria-pressed={face.id === selectedFaceId} disabled={disabled}
-    style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}
-    onClick={event => { event.stopPropagation(); onSelect?.(face.id); }}>
+    {...(readOnly ? { role: 'img', 'aria-label': photoPersonName(face, s) || s.unnamedFace } : {
+      type: 'button', 'aria-label': `${s.editFace}: ${photoPersonName(face, s) || s.unnamedFace}`,
+      'aria-pressed': face.id === selectedFaceId, disabled,
+      onClick: event => { event.stopPropagation(); onSelect?.(face.id); },
+    })}
+    style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}>
     <span>{index + 1} · {photoPersonName(face, s) || s.unnamedFace}</span>
-  </button> : null).filter(Boolean);
+  </Tag> : null).filter(Boolean);
 }
 
-export default function PhotoViewerImage({ photo, quality = 'preview', s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox }) {
+export default function PhotoViewerImage({ photo, quality = 'preview', s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, readOnlyFaces = false, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
@@ -72,7 +76,7 @@ export default function PhotoViewerImage({ photo, quality = 'preview', s, faces 
             onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />
           {!error && <img key={`${quality}:${attempt}`} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={getPictureContentUrl(photo.relativePath, quality === 'original' ? undefined : 'preview') || undefined}
             alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
-          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} />
+          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} readOnly={readOnlyFaces} />
           {addingFace && ready && <FaceDrawing onChange={onFaceBoxChange} s={s} disabled={busy} />}
         </div>
         {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{quality === 'original' ? s.failedOriginal : s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{quality === 'original' ? s.loadingOriginal : s.loadingPhoto}</span></>}</div>}

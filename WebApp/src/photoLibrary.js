@@ -4,6 +4,11 @@ export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft'
 export const PHOTO_PAGE_SIZE = 100;
 export const UNKNOWN_PERSON_ID = 'unknown';
 
+export function isNewPhotoPerson(person) {
+  return !!person?.id && person.id !== UNKNOWN_PERSON_ID && !person.id.startsWith('apple-') && !person.appleKey &&
+    typeof person.name === 'string' && /^(?:persona|person)\s+\d+$/i.test(person.name.trim());
+}
+
 // Detector-generated labels are groups awaiting a name, not identified people.
 export function isIdentifiedPhotoPerson(person) {
   return !!person?.id && !person.id.startsWith('apple-') && !person.appleKey &&

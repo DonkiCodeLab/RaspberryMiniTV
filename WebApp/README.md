@@ -799,6 +799,18 @@ destino. Eliminar una persona conserva los originales y pasa sus caras a
 **Desconocido**. Esta carpeta fija solo admite descarga. Las descargas individuales
 y conjuntas generan un ZIP de originales, sin duplicar fotos compartidas.
 
+**Nuevas personas** filtra los grupos provisionales llamados Persona 1, Persona 2,
+etc. Cada ficha permite elegir una identidad existente y **Unir**, escribir un
+nombre nuevo y **Guardar**, o **Marcar para eliminar** y después **Eliminar personas**.
+Unir y eliminar mantienen la confirmación con los afectados; eliminar conserva
+las fotos originales y pasa las caras a Desconocido. Las personas identificadas
+salen de este filtro. **Todas las personas** recupera el listado completo.
+Al pulsar la portada de una persona se amplía su foto con el recuadro de su cara,
+sin entrar en el álbum ni en el visor de edición de fotos. Las flechas recorren
+sus imágenes y vuelven a la primera después de la última. Cerrar o pulsar Escape
+devuelve al mismo listado, conservando el filtro y las casillas marcadas.
+El botón **Entrar** sigue abriendo el álbum de la persona.
+
 Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,
 `python -m unittest discover -s DeviceApp/tests -p 'test_photo_library.py'`.
 

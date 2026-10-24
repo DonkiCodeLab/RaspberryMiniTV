@@ -1,5 +1,10 @@
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  newPeople: 'Nuevas personas', allPeople: 'Todas las personas', noNewPeople: 'No quedan personas nuevas por identificar',
+  newPeopleHint: 'Aquí aparecen los grupos Persona 1, Persona 2… Elige con quién unirlos, guarda un nombre nuevo o marca las casillas y pulsa Eliminar personas. Pulsa una cara para ampliar sus fotos sin salir del listado.',
+  newPeopleEmptyHint: 'Los nuevos grupos sin nombre aparecerán aquí después del análisis.',
+  selectPersonToDelete: 'Marcar para eliminar', personPhotoPreview: 'Ver fotos de la persona',
+  personPhotoPreviewHint: 'El recuadro señala la cara de esta persona. Usa las flechas para recorrer sus fotos; al cerrar volverás al listado.',
   existingAlbum: 'Álbum existente', createAlbum: 'Crear nuevo álbum', albumName: 'Nombre del álbum', createAlbumAndAdd: 'Crear álbum y añadir',
   photoAlreadyInAlbum: 'Ya incluida', noAlbumsYet: 'Todavía no hay álbumes. Elige Crear nuevo álbum para guardar esta referencia.',
   photoAddedToAlbum: 'Foto añadida al álbum. Se conservan sus referencias anteriores.',
@@ -120,6 +125,11 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  newPeople: 'New people', allPeople: 'All people', noNewPeople: 'No new people left to identify',
+  newPeopleHint: 'These are the Person 1, Person 2… groups. Choose someone to merge them with, save a new name, or tick the boxes and select Delete people. Click a face to enlarge their photos without leaving the list.',
+  newPeopleEmptyHint: 'New unnamed groups will appear here after analysis.',
+  selectPersonToDelete: 'Mark for deletion', personPhotoPreview: 'View person’s photos',
+  personPhotoPreviewHint: 'The rectangle highlights this person’s face. Use the arrows to browse their photos; closing returns to the list.',
   existingAlbum: 'Existing album', createAlbum: 'Create new album', albumName: 'Album name', createAlbumAndAdd: 'Create album and add',
   photoAlreadyInAlbum: 'Already included', noAlbumsYet: 'There are no albums yet. Choose Create new album to save this reference.',
   photoAddedToAlbum: 'Photo added to the album. Its previous references are kept.',
@@ -234,6 +244,11 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  newPeople: 'Persones noves', allPeople: 'Totes les persones', noNewPeople: 'No queden persones noves per identificar',
+  newPeopleHint: 'Aquí apareixen els grups Persona 1, Persona 2… Tria amb qui unir-los, desa un nom nou o marca les caselles i prem Eliminar persones. Prem una cara per ampliar les seves fotos sense sortir de la llista.',
+  newPeopleEmptyHint: 'Els grups nous sense nom apareixeran aquí després de l’anàlisi.',
+  selectPersonToDelete: 'Marcar per eliminar', personPhotoPreview: 'Veure fotos de la persona',
+  personPhotoPreviewHint: 'El requadre assenyala la cara d’aquesta persona. Fes servir les fletxes per recórrer les seves fotos; en tancar tornaràs a la llista.',
   existingAlbum: 'Àlbum existent', createAlbum: 'Crear àlbum nou', albumName: 'Nom de l’àlbum', createAlbumAndAdd: 'Crear àlbum i afegir',
   photoAlreadyInAlbum: 'Ja inclosa', noAlbumsYet: 'Encara no hi ha àlbums. Tria Crear àlbum nou per desar aquesta referència.',
   photoAddedToAlbum: 'Foto afegida a l’àlbum. Es conserven les referències anteriors.',

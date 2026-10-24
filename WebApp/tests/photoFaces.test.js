@@ -24,6 +24,13 @@ const faces = [
   { id: 'legacy', personId: 'old', name: 'Old', box: null },
 ];
 
+test('person preview rectangles highlight detections without exposing photo editing controls', () => {
+  const html = renderToStaticMarkup(React.createElement(FaceRectangles, { faces: faces.slice(0, 1), highlightPersonId: 'ana', readOnly: true, s }));
+  assert.match(html, /<span[^>]*is-highlighted[^>]*role="img" aria-label="Ana"/);
+  assert.match(html, /left:10%;top:20%;width:25%;height:30%/);
+  assert.doesNotMatch(html, /<button|aria-pressed|Nombre de esta cara/);
+});
+
 test('face rectangles use oriented image fractions, highlight the selected person and select a face ID', () => {
   let chosen;
   const props = { faces, selectedFaceId: 'face-b', highlightPersonId: 'ana', onSelect: id => { chosen = id; }, s };
