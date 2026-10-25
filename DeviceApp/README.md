@@ -1,5 +1,19 @@
 # DeviceApp
 
+La app nativa **MiniTV Fotos** enlaza el iPhone desde el QR de
+**Dashboard → Subidas → Fotos**. Requiere actualizar también WebApp y añadir
+`photo_mobile.py` junto a `control_api.py`. Consulta [instalación, límites y
+subidas en segundo plano](../iOSApp/README.md).
+
+`POST /pictures/mobile/pairing`, `GET /pictures/mobile/pairing/<id>` y
+`POST /pictures/mobile/revoke` requieren el PIN. `POST /pictures/mobile/claim`
+canjea el código temporal por un token Bearer limitado a `POST /pictures/upload`,
+`POST /pictures/import/check`, `GET /pictures/mobile/session` y
+`POST /pictures/mobile/disconnect`. El QR dura cinco minutos y el token 24 horas.
+Los enlaces se guardan en memoria: reiniciar el servidor o cambiar el PIN exige
+emparejar de nuevo. Las respuestas del enlace no se cachean. La subida utiliza
+los mismos originales, huellas y recibos idempotentes que la importación web.
+
 ## Información de los archivos de películas
 
 La resolución, códec, duración, tamaño, bitrates y calidad orientativa se calculan
@@ -1587,3 +1601,7 @@ simultáneas, 45 segundos de espera y una caché en memoria de hasta 32 resultad
 por diez minutos. Si ningún peer responde, el visor permite reintentar.
 El instalador de torrents incluye `python3-libtorrent`; en instalaciones existentes,
 ejecuta de nuevo `bash DeviceApp/install_torrent_support.sh` y reinicia la API.
+
+### Importación desde Android
+
+MiniTV Fotos para Android comparte el QR de Subidas → Fotos con la app iOS. Incluye cola persistente, subidas en segundo plano, detección de duplicados e informe CSV. Proyecto e instrucciones: [AndroidApp](../AndroidApp/README.md).

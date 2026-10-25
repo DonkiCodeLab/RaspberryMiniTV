@@ -1,6 +1,7 @@
 from ui_translations import translate as ui_translate
 from languages import SUPPORTED_LANGUAGES, LANGUAGES as UI_LANGUAGES, normalize_language, language_info
 from photo_library import PhotoLibrary, PhotoError, create_photo_blueprint
+from photo_mobile import PhotoMobilePairings, create_mobile_blueprint, mobile_token
 from game_platforms import GAME_SYSTEMS, SYSTEMS, EXTENSIONS, resolve_platform
 from tmdb_cache import TmdbCache, TmdbError
 from omdb_ratings import OmdbSettings, OmdbRatings, OmdbError
@@ -34,9 +35,11 @@ from collections import deque
 from contextlib import contextmanager
 from user_profiles import ProfileStore, ProfileError
 from profile_playback import ProfilePlayback
+from tv_access import register_tv_access
 from game_metadata import GameMetadata, MetadataError, title_key
 from epub_cover import extract_epub_cover
 from comic_reader import ComicError, comic_pdf, comic_cover
+from tv_books import create_tv_books_blueprint
 from functools import wraps
 import json
 import gzip
@@ -164,6 +167,7 @@ DEFAULT_SETTINGS = {
 }
 
 app = Flask(__name__)
+register_tv_access(app)
 app.register_blueprint(create_codex_blueprint())
 
 lock = threading.Lock()
@@ -210,6 +214,10 @@ def get_photo_library():
 
 
 app.register_blueprint(create_photo_blueprint(lambda: get_photo_library()))
+photo_mobile_pairings = PhotoMobilePairings()
+app.register_blueprint(create_tv_books_blueprint(lambda path: resolve_book_path(path)))
+app.register_blueprint(create_mobile_blueprint(photo_mobile_pairings,
+    lambda: current_web_pin(), lambda: f'http://{get_local_ip()}:{PORT}'))
 
 
 @app.errorhandler(PhotoError)
@@ -997,6 +1005,9 @@ def is_public_frontend_request():
 
 
 def is_authorized_request():
+    token = mobile_token()
+    if token and photo_mobile_pairings.authorized(token, current_web_pin(), request.method, request.path):
+        return True
     submitted_pin = request.headers.get("X-Web-Pin", "").strip()
     if (request.path in {"/media/stream", "/books/content", "/books/cover", "/pictures/content", "/games/browser", "/games/content", "/games/metadata/image"}
             or request.endpoint == "browser_game_content") and not submitted_pin:
@@ -1053,6 +1064,7 @@ def require_web_pin():
         )
     if (
         request.path in {"/web/auth", "/ip", "/favicon.ico"}
+        or (request.path == "/pictures/mobile/claim" and request.method == "POST")
         or request.path.startswith("/alarm-sounds")
         or request.path.startswith("/emulatorjs/")
         or request.path.startswith("/game-covers")
