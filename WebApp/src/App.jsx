@@ -125,6 +125,7 @@ import tvshowIconYellow from "./assets/icon_tvshow_yellow.png";
 import tvGreen from "./assets/tele_green_2_fixed.png";
 import uploadDropzoneWhite from "./assets/upload_drag&drop_zone_white.png";
 import uploadDropzoneYellow from "./assets/upload_drag&drop_zone_yellow.png";
+import PhotoMobilePairing from './PhotoMobilePairing.jsx';
 import raspberryIntroVideo from "../../DeviceApp/menu/video_intro.mp4";
 import donkicodeLogo from "../../DeviceApp/menu/miniLogo_donkicodeLab.png";
 
@@ -6100,6 +6101,7 @@ function RaspberryPage({
 
             {uploadMediaType === "books" ? <BookTypeField language={raspberryLanguage} batch checked={uploadBookIsGraphicNovel} onChange={onUploadBookTypeChange} /> : null}
 
+            <div className={uploadMediaType === 'pictures' ? 'raspberry-upload-layout--photos' : undefined}>
             <label
               className={`raspberry-upload-dropzone${uploadDragActive ? " is-dragging" : ""}`}
               onDragEnter={() => onUploadDragStateChange(true)}
@@ -6144,6 +6146,8 @@ function RaspberryPage({
               </span>
               <p>{t(uploadDropzoneCopyKey)}</p>
             </label>
+            {uploadMediaType === 'pictures' && <PhotoMobilePairing language={raspberryLanguage} />}
+            </div>
 
             {["movies", "series"].includes(uploadMediaType) && <div className="raspberry-upload-summary raspberry-upload-summary--option">
               <strong>{freeDownloadStrings(raspberryLanguage).importTitle}</strong>

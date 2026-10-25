@@ -40,11 +40,25 @@ test('cards stage mutually exclusive actions with no individual submit buttons',
   assert.equal(input('input')[0].props.value, '');
   const checkboxes = () => input('input').filter(element => element.props.type === 'checkbox');
   checkboxes()[0].props.onChange({ target: { checked: true } });
-  assert.deepEqual(checkboxes().map(element => element.props.checked), [true, false]);
+  assert.deepEqual(checkboxes().map(element => element.props.checked), [true, false, false]);
   checkboxes()[1].props.onChange({ target: { checked: true } });
-  assert.deepEqual(checkboxes().map(element => element.props.checked), [false, true]);
+  assert.deepEqual(checkboxes().map(element => element.props.checked), [false, true, false]);
   assert.deepEqual(drafts.p0.photoIds, ['photo0']);
   assert.equal(picker().props.value, '');
+  for (const change of allChanges) {
+    onChange(change);
+    checkboxes()[2].props.onChange({ target: { checked: true } });
+    assert.deepEqual(checkboxes().map(element => element.props.checked), [false, false, true]);
+    assert.equal(picker().props.value, 'unknown');
+    assert.equal(input('input')[0].props.value, '');
+    assert.deepEqual(entriesFor(drafts)[0].payload, { id: 'p0', action: 'merge', personId: 'unknown' });
+    checkboxes()[2].props.onChange({ target: { checked: false } });
+    assert.deepEqual(drafts, {});
+  }
+  picker().props.onChange('unknown');
+  assert.equal(checkboxes()[2].props.checked, true);
+  picker().props.onChange('ana');
+  assert.equal(checkboxes()[2].props.checked, false);
   assert.equal(input('button').length, 1); // Undo is the only card button.
   input('button')[0].props.onClick({ currentTarget: { closest: () => ({ querySelector: () => null }) } });
   assert.deepEqual(drafts, {});
@@ -53,9 +67,15 @@ test('cards stage mutually exclusive actions with no individual submit buttons',
     const html = render(NewPersonCardActions, { person: people[0], people: [...people, target], s: translated, onChange });
     assert.ok(html.includes(translated.deletePersonKeepPhotos));
     assert.ok(html.includes(translated.deletePersonOriginals));
+    assert.ok(html.includes(translated.mergeWithUnknown));
     assert.match(html, /role="combobox"/);
     assert.match(html, /aria-expanded="false"/);
     assert.doesNotMatch(html, /<option value="p\d"|type="submit"|<form/);
+    const pending = updatePersonDraft({}, people[0], { action: 'merge', personId: 'unknown' });
+    const marked = render(NewPersonCardActions, { person: people[0], people: [target], s: translated, busy: true,
+      draft: pending.p0, entry: entriesFor(pending)[0], onChange });
+    assert.match(marked, /data-person-field="unknown" disabled=""[^>]*checked=""/);
+    assert.doesNotMatch(marked, /photo-person-draft-note/);
   }
 });
 
@@ -113,6 +133,18 @@ test('demo batch applies mixed actions, deletes shared references and accepts sa
   assert.deepEqual(reviewDemoPeople(library, data), result);
   assert.deepEqual(library, before);
   assert.throws(() => reviewDemoPeople(library, { ...data, changes: changes.slice(0, 1) }));
+  const unknownLibrary = demoLibrary(), originals = structuredClone(unknownLibrary.photos);
+  const unknownDrafts = people.reduce((drafts, person) => updatePersonDraft(drafts, person, { action: 'merge', personId: 'unknown' }), {});
+  const unknownEntries = entriesFor(unknownDrafts);
+  assert.ok(unknownEntries.every(entry => !entry.error));
+  assert.equal(peopleBatchCounts(unknownEntries).merge, people.length);
+  const unknownResult = reviewDemoPeople(unknownLibrary, { requestId: 'test-review-unknown', changes: unknownEntries.map(entry => entry.payload) });
+  assert.equal(unknownResult.applied, people.length);
+  assert.equal(unknownResult.deletedPhotos, 0);
+  assert.deepEqual(unknownLibrary.photos, originals);
+  assert.deepEqual(unknownLibrary.people.map(person => person.id), ['ana', 'unknown']);
+  assert.deepEqual(unknownLibrary.people.find(person => person.id === 'unknown').photoIds, ['photo0', 'photo1', 'photo2', 'shared']);
+  assert.ok(Object.values(unknownLibrary.manualFaces).flat().every(face => face.personId === 'unknown'));
 });
 
 test('invalid final demo action leaves earlier actions and originals unchanged', () => {

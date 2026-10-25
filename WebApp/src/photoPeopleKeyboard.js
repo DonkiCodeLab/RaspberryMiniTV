@@ -1,6 +1,6 @@
 const fieldSelector = '[data-person-field]';
 const cardSelector = '[data-person-review-card]';
-const fieldOrder = ['merge', 'rename', 'delete', 'deletePhotos', 'undo'];
+const fieldOrder = ['merge', 'rename', 'delete', 'deletePhotos', 'unknown', 'undo'];
 
 export function neighboringPerson(rects, index, key) {
   if (key === 'ArrowLeft' || key === 'ArrowRight') {

@@ -21,9 +21,9 @@ function fixture() {
     contains: field => cards.some(card => card.fields.includes(field)) };
   const cards = geometry(7, 3).map((rect, i) => {
     const card = { offsetTop: rect.top, offsetLeft: rect.center - 100, offsetWidth: 200, querySelectorAll: () => card.fields };
-    card.fields = ['merge', 'rename', 'delete', 'deletePhotos', ...(i === 0 ? ['undo'] : [])].map(name => ({
+    card.fields = ['merge', 'rename', 'delete', 'deletePhotos', 'unknown', ...(i === 0 ? ['undo'] : [])].map(name => ({
       dataset: { personField: name }, style: {}, disabled: false,
-      type: name.startsWith('delete') ? 'checkbox' : name === 'rename' ? 'text' : 'button',
+      type: name.startsWith('delete') || name === 'unknown' ? 'checkbox' : name === 'rename' ? 'text' : 'button',
       closest: selector => selector === '[data-person-field]' ? card.fields.find(field => field.dataset.personField === name) :
         selector === '[data-person-review-grid]' ? grid : selector === '[data-person-review-card]' ? card : library,
       focus(options) { focused = this; assert.equal(options.preventScroll, true); },
@@ -49,7 +49,7 @@ test('moving cards preserves the field, avoids the sticky toolbar and never chan
   f.fire(f.field(0, 'merge'), 'ArrowRight');
   assert.equal(f.focused(), f.field(1, 'merge')); assert.equal(f.clicks(), 0);
   f.fire(f.field(0, 'undo'), 'ArrowRight');
-  assert.equal(f.focused(), f.field(1, 'deletePhotos'));
+  assert.equal(f.focused(), f.field(1, 'unknown'));
   f.field(2, 'deletePhotos').disabled = true;
   f.fire(f.field(1, 'deletePhotos'), 'ArrowRight');
   assert.equal(f.focused(), f.field(2, 'delete'));
@@ -57,18 +57,18 @@ test('moving cards preserves the field, avoids the sticky toolbar and never chan
 
 test('Tab and Shift+Tab wrap inside the same card, including its optional undo button', () => {
   const f = fixture();
-  for (const [from, to] of [['merge', 'rename'], ['rename', 'delete'], ['delete', 'deletePhotos'], ['deletePhotos', 'undo']]) {
+  for (const [from, to] of [['merge', 'rename'], ['rename', 'delete'], ['delete', 'deletePhotos'], ['deletePhotos', 'unknown'], ['unknown', 'undo']]) {
     f.fire(f.field(0, from), 'Tab'); assert.equal(f.focused(), f.field(0, to));
   }
   f.fire(f.field(0, 'undo'), 'Tab'); assert.equal(f.focused(), f.field(0, 'merge'));
   f.fire(f.field(0, 'merge'), 'Tab', { shiftKey: true }); assert.equal(f.focused(), f.field(0, 'undo'));
-  f.fire(f.field(1, 'merge'), 'Tab', { shiftKey: true }); assert.equal(f.focused(), f.field(1, 'deletePhotos'));
+  f.fire(f.field(1, 'merge'), 'Tab', { shiftKey: true }); assert.equal(f.focused(), f.field(1, 'unknown'));
   f.field(1, 'deletePhotos').disabled = true;
-  assert.equal(nextPersonField(f.field(1, 'delete')), f.field(1, 'merge'));
-  assert.equal(nextPersonField(f.field(1, 'merge'), true), f.field(1, 'delete'));
-  assert.equal(f.fire(f.field(6, 'deletePhotos'), 'Tab').defaultPrevented, true);
+  assert.equal(nextPersonField(f.field(1, 'delete')), f.field(1, 'unknown'));
+  assert.equal(nextPersonField(f.field(1, 'unknown'), true), f.field(1, 'delete'));
+  assert.equal(f.fire(f.field(6, 'unknown'), 'Tab').defaultPrevented, true);
   assert.equal(f.focused(), f.field(6, 'merge'));
-  f.field(1, 'delete').disabled = true; f.field(1, 'rename').disabled = true;
+  f.field(1, 'delete').disabled = true; f.field(1, 'rename').disabled = true; f.field(1, 'unknown').disabled = true;
   assert.equal(nextPersonField(f.field(1, 'merge')), f.field(1, 'merge'));
 });
 
@@ -78,7 +78,7 @@ test('vertical arrows stay in the person picker but move rows from every other f
     assert.equal(f.fire(f.field(0, 'merge'), key).defaultPrevented, undefined);
     assert.equal(f.focused(), null);
   }
-  for (const name of ['rename', 'delete', 'deletePhotos']) {
+  for (const name of ['rename', 'delete', 'deletePhotos', 'unknown']) {
     f.fire(f.field(0, name), 'ArrowDown'); assert.equal(f.focused(), f.field(3, name));
     f.fire(f.field(3, name), 'ArrowUp'); assert.equal(f.focused(), f.field(0, name));
   }
@@ -113,8 +113,10 @@ test('Enter toggles checkboxes once; ordinary button and space activation stays 
   const f = fixture();
   assert.equal(f.fire(f.field(0, 'delete'), 'Enter').defaultPrevented, true);
   assert.equal(f.fire(f.field(0, 'deletePhotos'), 'Enter').defaultPrevented, true);
-  assert.equal(f.clicks(), 2);
-  f.fire(f.field(0, 'delete'), 'Enter', { repeat: true }); assert.equal(f.clicks(), 2);
+  assert.equal(f.fire(f.field(0, 'unknown'), 'Enter').defaultPrevented, true);
+  assert.equal(f.clicks(), 3);
+  f.fire(f.field(0, 'delete'), 'Enter', { repeat: true }); assert.equal(f.clicks(), 3);
+  f.fire(f.field(0, 'unknown'), 'Enter', { repeat: true }); assert.equal(f.clicks(), 3);
   for (const field of ['undo', 'merge']) assert.equal(f.fire(f.field(0, field), 'Enter').defaultPrevented, undefined);
   assert.equal(f.fire(f.field(0, 'delete'), ' ').defaultPrevented, undefined);
 });

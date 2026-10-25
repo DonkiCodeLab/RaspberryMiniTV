@@ -86,6 +86,7 @@
 .photo-person-draft-note.is-error { color: #ffb4ab; }
 .photo-person-draft-reset { min-height: 40px; padding: .4rem; background: none; color: #c0d0d9; text-decoration: underline; cursor: pointer; }
 .photo-new-person-check { display: flex; align-items: center; gap: .65rem; min-height: 44px; padding-top: .5rem; border-top: 1px solid #ffffff25; color: #ffb4ab; font-size: .8rem; cursor: pointer; }
+.photo-new-person-check--unknown { color: #ffdf88; }
 .photo-new-person-check input { width: 22px; height: 22px; flex-shrink: 0; margin: 0; accent-color: #ffdc40; }
 .photo-people-toolbar, .photo-people-bulk { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; min-width: 0; }
 .photo-people-toolbar { margin: 0 0 1.2rem; padding: .8rem; border: 1px solid #ffffff30; border-radius: 14px; background: #143042e8; }

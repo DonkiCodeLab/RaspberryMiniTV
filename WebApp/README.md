@@ -35,6 +35,15 @@ caras al reintentar una respuesta perdida.
 Pruebas: `node --test tests/photoReviewWizard.test.js tests/photoReviews.test.js`
 y `python -m unittest discover -s DeviceApp/tests -p 'test_photo_review_wizard.py'`.
 
+**Dashboard → Subidas → Fotos** divide la carga en dos columnas: arrastra fotos
+a la izquierda y enlaza **MiniTV Fotos** para iPhone con el QR de la derecha.
+La dirección incluye IP y puerto y puede corregirse antes de escanear. El QR
+caduca en cinco minutos, no contiene el PIN y muestra cuándo se conecta el
+iPhone. **Desconectar iPhone** revoca su acceso. En pantallas pequeñas las
+columnas se apilan. El modo demo indica que necesita una MiniTV real.
+Requiere actualizar DeviceApp y compilar WebApp. Consulta
+[instalación de la app y segundo plano](../iOSApp/README.md).
+
 En Películas, **Ordenar por → Calidad del vídeo** usa la calidad guardada al importar cada
 vídeo; los archivos sin valoración quedan al final en ambos sentidos. La calidad
 y la resolución aparecen en las tarjetas y en el listado.
@@ -839,6 +848,9 @@ etc. Cada ficha prepara **una acción pendiente**: escribir un nombre nuevo,
 unir con una persona identificada, **Eliminar persona y conservar fotos** o
 **Borrar sus fotos de la biblioteca**. Las dos casillas de borrado son excluyentes;
 elegir otra acción sustituye la anterior. No hay que guardar ficha por ficha.
+La casilla **Unir con desconocido** sustituye el aviso de acción pendiente: permite
+marcar varias fichas para pasar sus caras a **Desconocido**, conservando las fotos,
+al aplicar el lote. Se sincroniza con el desplegable y desmarcarla cancela esa unión.
 La barra **Aplicar cambios (N)** reúne todas las fichas modificadas, incluso al
 buscar, cambiar de página o abrir el visor. **Deshacer cambio** limpia una ficha
 y **Descartar cambios** limpia el lote. Los pendientes duran mientras la biblioteca
@@ -934,3 +946,7 @@ en su álbum. Actualiza WebApp y DeviceApp juntos antes de usar esta función.
 
 Pruebas: `node --test tests/photo*.test.js` y,
 desde la raíz, `python -m unittest discover -s DeviceApp/tests -p 'test_photo*.py'`.
+
+### Importación desde Android
+
+MiniTV Fotos para Android comparte el QR de Subidas → Fotos con la app iOS. Incluye cola persistente, subidas en segundo plano, detección de duplicados e informe CSV. Proyecto e instrucciones: [AndroidApp](../AndroidApp/README.md).

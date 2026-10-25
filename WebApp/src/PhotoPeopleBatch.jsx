@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { photoAssignmentOptions } from './photoLibrary.js';
+import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { photoRequest } from './api/raspberryApi.js';
 import { peopleBatchCounts, peopleBatchDescription } from './photoPeopleBatch.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
@@ -21,8 +21,11 @@ export function NewPersonCardActions({ person, people, draft, entry, s, busy, on
           disabled={busy || action === 'deletePhotos' && !person.photoIds?.length} aria-label={`${label}: ${person.name}`}
           onChange={event => onChange(event.target.checked ? { action } : null)} /><span>{label}</span></label>)}
     </div>
-    {entry && <><p className={`photo-person-draft-note${entry.error ? ' is-error' : ''}`} role="status">
-      {entry.error || `${s.batchPending}: ${peopleBatchDescription(entry, s)}`}</p>
+    <label className="photo-new-person-check photo-new-person-check--unknown"><input type="checkbox" data-person-field="unknown"
+      checked={draft?.action === 'merge' && draft.personId === UNKNOWN_PERSON_ID} disabled={busy}
+      aria-label={`${s.mergeWithUnknown}: ${person.name}`}
+      onChange={event => onChange(event.target.checked ? { action: 'merge', personId: UNKNOWN_PERSON_ID } : null)} /><span>{s.mergeWithUnknown}</span></label>
+    {entry && <>{entry.error && <p className="photo-person-draft-note is-error" role="status">{entry.error}</p>}
       <button type="button" data-person-field="undo" className="photo-person-draft-reset" disabled={busy} onClick={event => {
         focusPersonField(event.currentTarget.closest('.photo-new-person-actions').querySelector('[data-person-field="merge"]'));
         onChange(null);
