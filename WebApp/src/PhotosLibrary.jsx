@@ -25,6 +25,7 @@ import PersonPhotoPopover from './PersonPhotoPopover.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { galleryWindow } from './photoTimeline.js';
 import { photoStrings } from './photoStrings.js';
+import { photoImportStrings } from './photoImportStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
 import PhotoSectionCarousel from './PhotoSectionCarousel.jsx';
 import Icon from './PhotoIcon.jsx';
@@ -253,7 +254,7 @@ function DeleteDialog({ selected, photo, album, person, current, s, onClose, onC
   </Modal>;
 }
 
-function Viewer({ photos, initial, onClose, onDelete, s, language, people = [], knownPeople = people, folders = [], livePhotos, faces, revision, onChanged, highlightPersonId }) {
+export function Viewer({ photos, initial, onClose, onDelete, s, language, people = [], knownPeople = people, folders = [], livePhotos, faces, revision, onChanged, highlightPersonId }) {
   const [index, setIndex] = useState(initial);
   const [quality, setQuality] = useState('preview');
   const [albumPhoto, setAlbumPhoto] = useState(null), [albumNotice, setAlbumNotice] = useState(null);

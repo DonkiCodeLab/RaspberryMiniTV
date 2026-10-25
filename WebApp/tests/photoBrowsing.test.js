@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { build } from 'esbuild';
 import { photoPage, photoDeleteRequest } from '../src/photoLibrary.js';
 import { photoStrings } from '../src/photoStrings.js';
+import { photoImportStrings } from '../src/photoImportStrings.js';
 
 const require = createRequire(import.meta.url);
 const result = await build({
@@ -15,10 +16,40 @@ const result = await build({
   define: { 'import.meta.env': '{"VITE_WEB_DEV_MODE":"mock"}' },
 });
 const module = { exports: {} };
-new Function('require', 'module', 'exports', result.outputFiles[0].text)(require, module, module.exports);
-const { PhotoGrid, PhotoPagination, DeletePhotoChoices, AlbumCard, PersonPortrait } = module.exports;
+// Render dialog content inline while keeping the real viewer and face editor.
+const requireForRender = name => name === 'react-dom' ? { ...require(name), createPortal: children => children } : require(name);
+new Function('require', 'module', 'exports', 'document', result.outputFiles[0].text)(requireForRender, module, module.exports, { body: {} });
+const { PhotoGrid, PhotoPagination, DeletePhotoChoices, AlbumCard, PersonPortrait, Viewer } = module.exports;
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `Photo ${id}`, relativePath: `${id}.jpg` }));
 const s = photoStrings('es');
+
+test('opening a photo from No people renders its image and Add face controls', () => {
+  const photo = { id: 'no-faces', name: 'IMG_0746.JPG', relativePath: 'IMG_0746.JPG', faceState: 'done', faceCount: 0 };
+  let initial;
+  const grid = PhotoGrid({ page: photoPage([photo]), selected: new Set(), s, language: 'es',
+    onOpen: index => { initial = index; } });
+  grid.props.children[0].props.children[0].props.onClick();
+  assert.equal(initial, 0);
+  const html = renderToStaticMarkup(React.createElement(Viewer, { photos: [photo], initial, faces: {}, s, language: 'es' }));
+  assert.match(html, /<dialog[^>]*photo-dialog--viewer/);
+  assert.match(html, /<img[^>]*photo-viewer__full[^>]*alt="IMG_0746.JPG"/);
+  assert.ok(html.includes(s.addFace));
+  assert.ok(html.includes(s.faceListEmpty));
+  assert.ok(html.includes(`aria-label="${s.close}"`));
+});
+
+test('the photo viewer renders imported metadata in the selected language', () => {
+  const photo = { id: 'imported', name: 'Holiday.jpg', relativePath: 'Holiday.jpg', title: 'London',
+    appleFavorite: true, description: 'A family trip', albums: ['Summer'], keywords: ['Travel'] };
+  for (const language of ['es', 'ca', 'en']) {
+    const strings = photoStrings(language), imported = photoImportStrings(language);
+    const html = renderToStaticMarkup(React.createElement(Viewer, { photos: [photo], initial: 0, faces: {}, s: strings, language }));
+    for (const value of [imported.favorite, imported.albums, imported.keywords, 'London', 'A family trip', 'Summer', 'Travel']) {
+      assert.ok(html.includes(value), `Missing ${value} in ${language}`);
+    }
+    assert.ok(html.includes(strings.addFace));
+  }
+});
 
 test('every photo card with valid GPS offers a minimap without changing selection or cover actions', () => {
   const located = { id: 'gps', name: 'Barcelona.jpg', relativePath: 'gps.jpg', latitude: 41.3874, longitude: 2.1686 };
