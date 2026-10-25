@@ -1,5 +1,12 @@
 # WebApp
 
+**Fotos** abre directamente **Galería**. El carrusel de la cabecera, como el de
+plataformas de Videojuegos, permite cambiar entre **Galería**, **Mapa**,
+**Personas**, **Álbumes personales** y **Diviértete con la IA**. Dentro de una
+persona o un álbum, la sección sigue seleccionada; pulsarla vuelve a su inicio.
+La biblioteca ya no muestra **Nueva carpeta**, **Subir fotos** ni el acceso
+**Del iPhone a tu MiniTV**: la incorporación de fotos se realiza desde las apps.
+
 **Fotos → Personas → Analizar** abre un asistente de tres pasos. El primero
 muestra el progreso del lote de hasta 100 fotos, permite pausar y habilita
 **Siguiente: validar personas** cuando termina. El segundo resume las propuestas

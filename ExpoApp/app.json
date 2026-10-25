@@ -28,7 +28,8 @@
         ],
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true
-        }
+        },
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -43,6 +44,9 @@
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "permissions": [
+        "android.permission.CAMERA"
       ]
     },
     "plugins": [
@@ -68,6 +72,12 @@
         }
       ],
       "./plugins/withMiniTV.cjs"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4c534c7c-2d21-4ae3-a333-4a81d7f3fb6f"
+      }
+    },
+    "owner": "donkikochan"
   }
 }

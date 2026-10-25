@@ -95,15 +95,26 @@ cd android
 
 El template de Expo firma ese Release local con una clave de desarrollo. Sirve para pruebas; configura una firma propia antes de distribuir en una tienda. Omite la restricción de arquitectura para construir todas las ABI configuradas.
 
-También se incluye **eas.json**, sin subir ni publicar nada automáticamente:
+También se incluye **eas.json**, sin subir ni publicar nada automáticamente. Ejecuta EAS desde **ExpoApp** y limita la raíz de subida a esta carpeta; así no se envían las otras aplicaciones del repositorio. **.easignore** excluye compilaciones, cachés y credenciales locales, conservando los módulos nativos:
 
 ~~~sh
-npx eas-cli build --profile preview --platform android
-npx eas-cli build --profile simulator --platform ios
-npx eas-cli build --profile development --platform ios
+npx eas-cli login --browser
+EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD" npx eas-cli project:init
+EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD" npx eas-cli build --profile preview --platform android
+EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD" npx eas-cli build --profile preview --platform ios
 ~~~
 
-EAS requiere configurar tu cuenta/proyecto y, para un iPhone físico, credenciales de Apple. El perfil preview produce un APK; simulator es una development build para simulador; production sirve de base para las tiendas, que requieren firma y revisión.
+EAS requiere configurar tu cuenta/proyecto y, para distribuir a un iPhone físico, una cuenta Apple Developer de pago y registrar el dispositivo con **eas device:create** antes de compilar. El perfil **preview** incluye el JavaScript y produce un APK Android o un IPA iOS de distribución interna; el enlace de instalación se puede compartir mediante QR. **simulator** es una development build para simulador; **production** sirve de base para las tiendas, que requieren firma y revisión. Un QR de instalación no sustituye al QR de emparejamiento del dashboard.
+
+### Proyecto remoto
+
+El proyecto está vinculado a [donkikochan/minitv-fotos-expo](https://expo.dev/accounts/donkikochan/projects/minitv-fotos-expo), con ID **4c534c7c-2d21-4ae3-a333-4a81d7f3fb6f**.
+
+- [Compilación Android de prueba](https://expo.dev/accounts/donkikochan/projects/minitv-fotos-expo/builds/fb144409-381b-49e6-987b-bfa47ae9bab4): enviada a EAS el 25/10/2026. La página muestra el estado y permite instalar el APK cuando termine.
+- [Registro del iPhone](https://expo.dev/register-device/7d040616-bf00-4494-9b10-79ab24469d26): abrir en Safari desde el iPhone. Este enlace registra su UDID para distribución interna; **no instala la app**. La compilación de iOS queda pendiente de completar el acceso a Apple y la firma.
+- Los QR están en **output/minitv-expo-android-install-qr.png** y **output/minitv-expo-iphone-register-qr.png**, en la raíz del repositorio.
+
+El APK de EAS utiliza una clave propia almacenada en Expo. Si ya instalaste el APK local con la firma de desarrollo, Android puede rechazar actualizarlo por tener otra firma. En ese caso, termina cualquier transferencia pendiente antes de desinstalar la versión local e instalar la de EAS; desinstalar borra la conexión y la cola guardadas en el teléfono.
 
 ## Comprobaciones
 
@@ -122,7 +133,7 @@ Las pruebas del motor Android cubren QR inválidos, límites, SHA-256, cancelaci
 - APK Release ARM64 y app Release para iOS Simulator compilados. 11 pruebas unitarias Android superadas y dos pruebas de interfaz iOS superadas (importación y formulario QR con teclado).
 - Android 15: tres fotos nuevas, segunda pasada con tres existentes y cero errores; envío con pantalla apagada; pausa a 0 %, cierre forzado y reanudación; apertura del informe CSV y permiso/apertura del escáner Expo.
 - iOS 18.3: nueve fotos del simulador, de las cuales ocho se importaron y luego se reconocieron como existentes; una HEIC fue rechazada con su motivo porque el servidor temporal no tenía pillow-heif. Ambas pasadas continuaron al salir a Inicio. El permiso de Fotos y el enlace entrante se comprobaron mediante automatización.
-- La cámara física, las restricciones de batería de fabricantes, los iPhone reales y el servicio alternativo de Android 10–13 requieren una prueba en esos dispositivos. No se ha publicado en tiendas ni subido el proyecto a EAS.
+- La cámara física, las restricciones de batería de fabricantes, los iPhone reales y el servicio alternativo de Android 10–13 requieren una prueba en esos dispositivos. Estas comprobaciones se hicieron localmente, antes de subir el proyecto a EAS. No se ha publicado en tiendas.
 - npm audit conserva avisos de dependencias transitivas de herramientas (node-forge, postcss, image-size). No se aplica el cambio incompatible de SDK que propone audit --force.
 
 El APK listo para pruebas está en **ExpoApp/dist/MiniTVFotosExpo-android-arm64.apk** y su huella en **ExpoApp/dist/SHA256SUMS**. Usa una firma de distribución propia para publicar.

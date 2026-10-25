@@ -6529,6 +6529,7 @@ export default function App() {
   const [gameLibraryView, setGameLibraryView] = useState("grid");
   const [selectedBookCollection, setSelectedBookCollection] = useState("");
   const [picturesAtRoot, setPicturesAtRoot] = useState(true);
+  const [photoHeaderTarget, setPhotoHeaderTarget] = useState(null);
   const [bookDetailPath, setBookDetailPath] = useState("");
   const [bookLibraryType, setBookLibraryType] = useState("novel");
   const [bookLibrarySort, setBookLibrarySort] = useState("name");
@@ -9765,7 +9766,7 @@ export default function App() {
                       </div>
                     ) : null}
 
-                    {!isMediaDetail && !isPicturesMode ? <div className="series-hero__controls-layer">
+                    {!isMediaDetail ? <div className="series-hero__controls-layer">
                       <div
                         className="series-hero__controls-backdrop"
                         aria-hidden="true"
@@ -9805,7 +9806,7 @@ export default function App() {
                       ) : null}
                       {isOscarView && <AwardSelector value={awardType} onChange={setAwardType} language={raspberryLanguage} />}
                       {isBookAwardView && <BookAwardSelector value={bookAwardType} onChange={setBookAwardType} language={raspberryLanguage} />}
-                      {isGamesMode ? <div className="series-hero__controls-row series-hero__controls-row--selector-only"><GameConsoleCarousel systemId={selectedSystemId} onSystemChange={(id) => { setSelectedSystemId(id); setSelectedGamePath(""); }} language={raspberryLanguage} /></div> : !isOscarView && !isBookAwardView && <div
+                      {isPicturesMode ? <div ref={setPhotoHeaderTarget} className="series-hero__controls-row series-hero__controls-row--selector-only" /> : isGamesMode ? <div className="series-hero__controls-row series-hero__controls-row--selector-only"><GameConsoleCarousel systemId={selectedSystemId} onSystemChange={(id) => { setSelectedSystemId(id); setSelectedGamePath(""); }} language={raspberryLanguage} /></div> : !isOscarView && !isBookAwardView && <div
                         className={`series-hero__controls-row series-hero__controls-row--ai${filterTotal || isGamesMode ? "" : " series-hero__controls-row--selector-only"}`}
                       >
                         {filterTotal ? (
@@ -10004,6 +10005,7 @@ export default function App() {
                     }} />
                 ) : isPicturesMode ? (
                   <PhotosLibrary key={profiles.activeId} language={raspberryLanguage} onRootChange={setPicturesAtRoot}
+                    headerTarget={photoHeaderTarget}
                     initialFiles={pendingPhotoFiles} onImportDone={() => setPendingPhotoFiles(null)}
                     matchesPicture={matchesPicture} renderMarks={renderMarks} />
                 ) : !isGamesMode && libraryFiltersActive && !filterVisible ? (

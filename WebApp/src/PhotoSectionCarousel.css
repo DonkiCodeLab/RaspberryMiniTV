@@ -1,0 +1,19 @@
+.series-hero__controls-row .photo-section-navigation .console-rail button {
+  flex-basis: 19.52%;
+  gap: 4%;
+}
+.photo-section-navigation .console-rail svg {
+  flex-shrink: 0;
+  width: 100%;
+  height: 55%;
+  color: #ffdf52;
+}
+.series-hero__controls-row .photo-section-navigation .console-rail span {
+  white-space: normal;
+  text-wrap: balance;
+  line-height: 1.2;
+}
+@media (max-width: 600px) {
+  .series-hero__controls-row .photo-section-navigation .console-rail button { flex-basis: 46%; }
+  .photo-section-navigation .console-rail svg { display: none; }
+}
