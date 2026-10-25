@@ -1,0 +1,255 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5A34BAA677501730074ACE63 /* ImportJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0D7206DE1105B4460B19BA /* ImportJournal.swift */; };
+		679109391312D85335AEA614 /* PhotoExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CDCD12B0EECC9D92B6404E /* PhotoExporter.swift */; };
+		879FDE897C285471E1175FC8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D83F07454677FBC767DA19 /* ContentView.swift */; };
+		97752D7FD1FF1B6B369046C8 /* BackgroundTransfers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09BD23D842AE391B4E014C81 /* BackgroundTransfers.swift */; };
+		D53930A731AE97BA476D1E97 /* MiniTVFotosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6493410934013765F8B8239C /* MiniTVFotosApp.swift */; };
+		DE8CCE4E1F29C65204414752 /* PhotoAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4948691B47906969570AFF30 /* PhotoAPI.swift */; };
+		E28473504DBC7557EFD4A320 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6DCE3486F8FF8083ED9583 /* QRScanner.swift */; };
+		E499DC82AC5D432FEE0EF625 /* Pairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5323DC241EA522446D3F57EA /* Pairing.swift */; };
+		E9CBE01E661C594FADB2373D /* UploadOutbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDD3F5B46D08A9AA632746B /* UploadOutbox.swift */; };
+		FADAA49A5690B07ED8592032 /* ImportModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD3B19E4EB2503FD159E6B4 /* ImportModel.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		09BD23D842AE391B4E014C81 /* BackgroundTransfers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTransfers.swift; sourceTree = "<group>"; };
+		4948691B47906969570AFF30 /* PhotoAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoAPI.swift; sourceTree = "<group>"; };
+		5323DC241EA522446D3F57EA /* Pairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pairing.swift; sourceTree = "<group>"; };
+		6493410934013765F8B8239C /* MiniTVFotosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniTVFotosApp.swift; sourceTree = "<group>"; };
+		7A6DCE3486F8FF8083ED9583 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
+		9A0D7206DE1105B4460B19BA /* ImportJournal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportJournal.swift; sourceTree = "<group>"; };
+		9CEEC13202AFBF12EE3ABB99 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A6D83F07454677FBC767DA19 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A8792157CB4F27FB949C035F /* MiniTVFotos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = MiniTVFotos.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDD3B19E4EB2503FD159E6B4 /* ImportModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportModel.swift; sourceTree = "<group>"; };
+		EEDD3F5B46D08A9AA632746B /* UploadOutbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadOutbox.swift; sourceTree = "<group>"; };
+		F1CDCD12B0EECC9D92B6404E /* PhotoExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoExporter.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E2AA269EB967A8853A258BFA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A3E27B8CA818264D75C8D81 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A8792157CB4F27FB949C035F /* MiniTVFotos.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0D6E4079E36703EBD37C0072 = {
+			isa = PBXGroup;
+			children = (
+				F810A3947224DC074E90BB0D /* MiniTVFotos */,
+				0A3E27B8CA818264D75C8D81 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F810A3947224DC074E90BB0D /* MiniTVFotos */ = {
+			isa = PBXGroup;
+			children = (
+				09BD23D842AE391B4E014C81 /* BackgroundTransfers.swift */,
+				EEDD3F5B46D08A9AA632746B /* UploadOutbox.swift */,
+				A6D83F07454677FBC767DA19 /* ContentView.swift */,
+				9A0D7206DE1105B4460B19BA /* ImportJournal.swift */,
+				CDD3B19E4EB2503FD159E6B4 /* ImportModel.swift */,
+				6493410934013765F8B8239C /* MiniTVFotosApp.swift */,
+				5323DC241EA522446D3F57EA /* Pairing.swift */,
+				4948691B47906969570AFF30 /* PhotoAPI.swift */,
+				F1CDCD12B0EECC9D92B6404E /* PhotoExporter.swift */,
+				7A6DCE3486F8FF8083ED9583 /* QRScanner.swift */,
+				9CEEC13202AFBF12EE3ABB99 /* Info.plist */,
+			);
+			path = MiniTVFotos;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		34A04005BCAF206EEC990BD9 /* MiniTVFotos */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4A807E8A027297B0B93701FB /* Build configuration list for PBXNativeTarget "MiniTVFotos" */;
+			buildPhases = (
+				878A52FC5FF6A57D50B7B870 /* Sources */,
+				E2AA269EB967A8853A258BFA /* Frameworks */,
+				41D311A605520FC7B8B9A980 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MiniTVFotos;
+			productName = MiniTVFotos;
+			productReference = A8792157CB4F27FB949C035F /* MiniTVFotos.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		244210E48437B6556980A702 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 2600;
+			};
+			buildConfigurationList = B4E10CAA9C5E22150B71559C /* Build configuration list for PBXProject "MiniTVFotos" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = es;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				es,
+				en,
+				Base,
+			);
+			mainGroup = 0D6E4079E36703EBD37C0072;
+			productRefGroup = 0A3E27B8CA818264D75C8D81 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				34A04005BCAF206EEC990BD9 /* MiniTVFotos */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		41D311A605520FC7B8B9A980 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		878A52FC5FF6A57D50B7B870 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				97752D7FD1FF1B6B369046C8 /* BackgroundTransfers.swift in Sources */,
+				E9CBE01E661C594FADB2373D /* UploadOutbox.swift in Sources */,
+				879FDE897C285471E1175FC8 /* ContentView.swift in Sources */,
+				5A34BAA677501730074ACE63 /* ImportJournal.swift in Sources */,
+				FADAA49A5690B07ED8592032 /* ImportModel.swift in Sources */,
+				D53930A731AE97BA476D1E97 /* MiniTVFotosApp.swift in Sources */,
+				E499DC82AC5D432FEE0EF625 /* Pairing.swift in Sources */,
+				DE8CCE4E1F29C65204414752 /* PhotoAPI.swift in Sources */,
+				679109391312D85335AEA614 /* PhotoExporter.swift in Sources */,
+				E28473504DBC7557EFD4A320 /* QRScanner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		35B1014F135DE9B45529B733 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		488864B3D19480A82F7F1786 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		952548237D7F645F11D1E7B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = MASV494F73;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MiniTVFotos/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.donkicodelab.minitvphotos;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E2D3A31BEAA1368FC62DA77A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = MASV494F73;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MiniTVFotos/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.donkicodelab.minitvphotos;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4A807E8A027297B0B93701FB /* Build configuration list for PBXNativeTarget "MiniTVFotos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				952548237D7F645F11D1E7B6 /* Debug */,
+				E2D3A31BEAA1368FC62DA77A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B4E10CAA9C5E22150B71559C /* Build configuration list for PBXProject "MiniTVFotos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				488864B3D19480A82F7F1786 /* Debug */,
+				35B1014F135DE9B45529B733 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 244210E48437B6556980A702 /* Project object */;
+}

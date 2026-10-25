@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["MiniTVTransferModule"],
+    "appDelegateSubscribers": ["MiniTVTransferDelegate"]
+  },
+  "android": {
+    "modules": ["com.donkicodelab.minitvphotos.MiniTVTransferModule"]
+  }
+}

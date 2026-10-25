@@ -1,0 +1,16 @@
+{
+  "id": "com.donkicodelab.minitv",
+  "version": "1.0.0",
+  "vendor": "Donkicode Lab",
+  "type": "web",
+  "main": "index.html",
+  "title": "MiniTV",
+  "appDescription": "Tu biblioteca, en pantalla grande.",
+  "icon": "assets/icon.png",
+  "largeIcon": "assets/icon-large.png",
+  "resolution": "1920x1080",
+  "bgColor": "#101217",
+  "iconColor": "#101217",
+  "disableBackHistoryAPI": true,
+  "requiredACG": []
+}

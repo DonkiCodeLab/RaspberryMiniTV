@@ -1,0 +1,41 @@
+// !$*UTF8*$!
+{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+B7B62FDA4C4CC63BD963D520 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+2E5D281934C7F0DEFE06ECDE = { isa = PBXBuildFile; fileRef = B7B62FDA4C4CC63BD963D520; };
+73313C094FAC8B0136C7B18E = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReaderView.swift; sourceTree = "<group>"; };
+0D7E66D2D4C3AA237D4C2DB9 = { isa = PBXBuildFile; fileRef = 73313C094FAC8B0136C7B18E; };
+3578311B1A63D61A715AC71E = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
+EE0D0EEC56384ECB6E278A19 = { isa = PBXBuildFile; fileRef = 3578311B1A63D61A715AC71E; };
+06D0394DDEEC9C4C8DEB6484 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceViews.swift; sourceTree = "<group>"; };
+398982334D56540D15C9B138 = { isa = PBXBuildFile; fileRef = 06D0394DDEEC9C4C8DEB6484; };
+4DD3EDB3188B0D243BF4EAF7 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViews.swift; sourceTree = "<group>"; };
+2A973E219D1DF260958B56A7 = { isa = PBXBuildFile; fileRef = 4DD3EDB3188B0D243BF4EAF7; };
+9E28E00D1639ECA95E24583C = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniTVApp.swift; sourceTree = "<group>"; };
+312279868E79916621803AB7 = { isa = PBXBuildFile; fileRef = 9E28E00D1639ECA95E24583C; };
+A575BE74B04B1E83D6B989DE = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosView.swift; sourceTree = "<group>"; };
+A31743D942D41CEE71F1E8DC = { isa = PBXBuildFile; fileRef = A575BE74B04B1E83D6B989DE; };
+D27092EC2C3EF520C2DBBF53 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
+BDAF6292BAE7571C845E5B7E = { isa = PBXBuildFile; fileRef = D27092EC2C3EF520C2DBBF53; };
+17FB6A751B56D9C243122F4D = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+DBF98757470A18DE7B5D9938 = { isa = PBXBuildFile; fileRef = 17FB6A751B56D9C243122F4D; };
+C6EB812C0FBD0F8D75257E02 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtitles.swift; sourceTree = "<group>"; };
+4D55C523B98E953A3E8E476C = { isa = PBXBuildFile; fileRef = C6EB812C0FBD0F8D75257E02; };
+33F8A37911FE07BD65B5CF77 = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+700B83ADC775D2E081AEFFCA = { isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+DBEF2E213C6157CC266828A7 = { isa = PBXBuildFile; fileRef = 700B83ADC775D2E081AEFFCA; };
+CBEEE817FDE37BA1321BBB99 = { isa = PBXFileReference; explicitFileType = wrapper.application; path = MiniTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+8643F25E30DF5A7AC2B0955B = { isa = PBXGroup; children = (CBEEE817FDE37BA1321BBB99,); name = Products; sourceTree = "<group>"; };
+9429BACFBD6BFB8B29E035DB = { isa = PBXGroup; children = (B7B62FDA4C4CC63BD963D520, 73313C094FAC8B0136C7B18E, 3578311B1A63D61A715AC71E, 06D0394DDEEC9C4C8DEB6484, 4DD3EDB3188B0D243BF4EAF7, 9E28E00D1639ECA95E24583C, A575BE74B04B1E83D6B989DE, D27092EC2C3EF520C2DBBF53, 17FB6A751B56D9C243122F4D, C6EB812C0FBD0F8D75257E02, 33F8A37911FE07BD65B5CF77, 700B83ADC775D2E081AEFFCA,); path = MiniTV; sourceTree = "<group>"; };
+BDE234563622C5DBAF5AD3BA = { isa = PBXGroup; children = (9429BACFBD6BFB8B29E035DB, 8643F25E30DF5A7AC2B0955B,); sourceTree = "<group>"; };
+0FF0BC9C1E295F42AF3A7919 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (2E5D281934C7F0DEFE06ECDE, 0D7E66D2D4C3AA237D4C2DB9, EE0D0EEC56384ECB6E278A19, 398982334D56540D15C9B138, 2A973E219D1DF260958B56A7, 312279868E79916621803AB7, A31743D942D41CEE71F1E8DC, BDAF6292BAE7571C845E5B7E, DBF98757470A18DE7B5D9938, 4D55C523B98E953A3E8E476C,); runOnlyForDeploymentPostprocessing = 0; };
+1EBC5FAEA0ACDB8969F47B5B = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+AEF37ADC8A70C32DDD8BE49C = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (DBEF2E213C6157CC266828A7,); runOnlyForDeploymentPostprocessing = 0; };
+5195C3DCD7CD785390758D55 = { isa = XCBuildConfiguration; name = Debug; buildSettings = {SDKROOT = "appletvos"; TVOS_DEPLOYMENT_TARGET = "17.0"; SWIFT_VERSION = "5.0"; SWIFT_STRICT_CONCURRENCY = "targeted"; CLANG_ENABLE_MODULES = "YES"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; DEBUG_INFORMATION_FORMAT = "dwarf"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG";}; };
+75BE093FDF0CF3FC59CA286B = { isa = XCBuildConfiguration; name = Release; buildSettings = {SDKROOT = "appletvos"; TVOS_DEPLOYMENT_TARGET = "17.0"; SWIFT_VERSION = "5.0"; SWIFT_STRICT_CONCURRENCY = "targeted"; CLANG_ENABLE_MODULES = "YES"; SWIFT_OPTIMIZATION_LEVEL = "-O"; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";}; };
+EC2F15E9C1608117207989B6 = { isa = XCConfigurationList; buildConfigurations = (5195C3DCD7CD785390758D55, 75BE093FDF0CF3FC59CA286B,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+E9D047349ABC7D8DF4BE5202 = { isa = XCBuildConfiguration; name = Debug; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = "com.donkicodelab.minitv.tv"; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = "MiniTV/Info.plist"; GENERATE_INFOPLIST_FILE = "NO"; TARGETED_DEVICE_FAMILY = "3"; SUPPORTED_PLATFORMS = "appletvos appletvsimulator"; CODE_SIGN_STYLE = "Automatic"; ENABLE_PREVIEWS = "YES"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";}; };
+B50B54EB5F3A4BDE4F74B244 = { isa = XCBuildConfiguration; name = Release; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = "com.donkicodelab.minitv.tv"; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = "MiniTV/Info.plist"; GENERATE_INFOPLIST_FILE = "NO"; TARGETED_DEVICE_FAMILY = "3"; SUPPORTED_PLATFORMS = "appletvos appletvsimulator"; CODE_SIGN_STYLE = "Automatic"; ENABLE_PREVIEWS = "YES"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";}; };
+43255B74472EAAC205A94644 = { isa = XCConfigurationList; buildConfigurations = (E9D047349ABC7D8DF4BE5202, B50B54EB5F3A4BDE4F74B244,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+0B0863B5D7DC2358ED754055 = { isa = PBXNativeTarget; buildConfigurationList = 43255B74472EAAC205A94644; buildPhases = (0FF0BC9C1E295F42AF3A7919, 1EBC5FAEA0ACDB8969F47B5B, AEF37ADC8A70C32DDD8BE49C,); buildRules = (); dependencies = (); name = MiniTV; productName = MiniTV; productReference = CBEEE817FDE37BA1321BBB99; productType = "com.apple.product-type.application"; };
+2F3F2AD0EF937DB4B6CDE5EE = { isa = PBXProject; attributes = {LastUpgradeCheck = 2600;}; buildConfigurationList = EC2F15E9C1608117207989B6; compatibilityVersion = "Xcode 14.0"; developmentRegion = es; knownRegions = (es, en, Base); mainGroup = BDE234563622C5DBAF5AD3BA; productRefGroup = 8643F25E30DF5A7AC2B0955B; projectDirPath = ""; projectRoot = ""; targets = (0B0863B5D7DC2358ED754055,); };
+}; rootObject = 2F3F2AD0EF937DB4B6CDE5EE; }

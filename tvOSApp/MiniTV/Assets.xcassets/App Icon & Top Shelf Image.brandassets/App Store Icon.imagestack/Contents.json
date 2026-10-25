@@ -1,0 +1,17 @@
+{
+  "info" : {
+    "author" : "com.donkicodelab.minitv.tv",
+    "version" : 1
+  },
+  "layers" : [
+    {
+      "filename" : "Foreground.imagestacklayer"
+    },
+    {
+      "filename" : "Television.imagestacklayer"
+    },
+    {
+      "filename" : "Background.imagestacklayer"
+    }
+  ]
+}

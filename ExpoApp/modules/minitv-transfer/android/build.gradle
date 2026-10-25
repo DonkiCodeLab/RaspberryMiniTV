@@ -1,0 +1,21 @@
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+
+group = 'com.donkicodelab.minitvphotos'
+version = '1.0.0'
+
+android {
+  namespace 'com.donkicodelab.minitvphotos'
+  defaultConfig {
+    minSdkVersion 29
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+dependencies {
+  implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+  testImplementation 'junit:junit:4.13.2'
+  testImplementation 'org.json:json:20240303'
+  testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+}
