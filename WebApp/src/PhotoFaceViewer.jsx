@@ -2,6 +2,15 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoRequest } from './api/raspberryApi.js';
 import PhotoViewerImage from './PhotoViewerImage.jsx';
 import { photoAssignmentOptions, photoPersonName, UNKNOWN_PERSON_ID } from './photoLibrary.js';
+import { visiblePersonFaces } from './photoPersonPreview.js';
+import { validNewPersonName } from './photoPeopleBatch.js';
+
+export function PersonFaceControls({ showOtherFaces, onShowOtherFaces, editing, onEditing, disabled, s }) {
+  return <div className="photo-person-face-controls">
+    <label><input type="checkbox" checked={showOtherFaces} disabled={disabled} onChange={event => onShowOtherFaces(event.target.checked)} />{s.showOtherFaces}</label>
+    <button type="button" className="dialog-button" aria-pressed={editing} disabled={disabled} onClick={() => onEditing(!editing)}>{editing ? s.finishFaceEditing : s.editFaces}</button>
+  </div>;
+}
 
 export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creating = false, hasBox = false, initialName = '' }) {
   const choices = photoAssignmentOptions(people, s);
@@ -10,7 +19,7 @@ export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creatin
   const heading = useId(), editor = useRef(null), personList = useRef(null), newName = useRef(null), cancel = useRef(null);
   const search = useRef({ text: '', time: 0 });
   useEffect(() => { personList.current?.focus({ preventScroll: true }); }, []);
-  const valid = (!creating || hasBox) && (target === 'new' ? !!name.trim() : choices.some(person => person.id === target));
+  const valid = (!creating || hasBox) && (target === 'new' ? validNewPersonName(name) : choices.some(person => person.id === target));
   return <form ref={editor} className="photo-face-editor" aria-labelledby={heading} onKeyDown={event => {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); if (!busy) onClose(); }
     if (event.key === 'Tab') {
@@ -99,7 +108,8 @@ export function FaceRemoveConfirmation({ face, s, busy, error, onConfirm, onClos
   </div>;
 }
 
-export default function PhotoFaceViewer({ photo, quality = 'preview', people, globalFaces, revision, highlightPersonId, onChanged, s }) {
+export default function PhotoFaceViewer({ photo, quality = 'preview', people = [], globalFaces = {}, revision, highlightPersonId, onChanged, s,
+  editing = true, showOtherFaces = true, initialFaces = [], onInteractionChange, closeLayer }) {
   const [details, setDetails] = useState(null), [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [reload, setReload] = useState(0);
   const [notice, setNotice] = useState('');
@@ -110,6 +120,17 @@ export default function PhotoFaceViewer({ photo, quality = 'preview', people, gl
   const mounted = useRef(true), action = useRef(false), changed = useRef(onChanged), previousScan = useRef('idle');
   changed.current = onChanged;
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => { onInteractionChange?.({ busy, editing: !!selectedId || addingFace || !!removingId }); }, [busy, selectedId, addingFace, removingId, onInteractionChange]);
+  useEffect(() => {
+    if (!closeLayer) return;
+    closeLayer.current = () => {
+      if (action.current) return true;
+      if (selectedId || addingFace) { closeEditor(); return true; }
+      if (removingId) { closeRemoval(); return true; }
+      return false;
+    };
+    return () => { closeLayer.current = null; };
+  }, [closeLayer, selectedId, addingFace, removingId]);
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(''), 5000);
@@ -135,13 +156,14 @@ export default function PhotoFaceViewer({ photo, quality = 'preview', people, gl
   }, [photo.id, revision, reload]);
   const selected = details?.faces.find(face => face.id === selectedId);
   const removing = details?.faces.find(face => face.id === removingId);
+  const visibleFaces = visiblePersonFaces(details?.faces || initialFaces, highlightPersonId, showOtherFaces, selectedId || removingId);
   const running = details?.scan.state === 'running';
   const anyRunning = globalFaces.running || globalFaces.singleRunning || running;
   const restoreFocus = () => requestAnimationFrame(() => (returnFocus.current?.isConnected ? returnFocus.current : addButton.current)?.focus({ preventScroll: true }));
   const closeEditor = () => { setSelectedId(null); setAddingFace(false); setFaceBox(null); restoreFocus(); };
   const closeRemoval = () => { setRemovingId(null); setError(''); restoreFocus(); };
   const startAddingFace = () => {
-    if (action.current || addingFace) return;
+    if (!editing || action.current || addingFace) return;
     returnFocus.current = addButton.current;
     setSelectedId(null); setRemovingId(null); setFaceBox(null); setAddingFace(true); setNotice('');
   };
@@ -164,16 +186,16 @@ export default function PhotoFaceViewer({ photo, quality = 'preview', people, gl
       if (mounted.current) setBusy(false);
     }
   }
-  const selectFace = id => { if (!action.current) { returnFocus.current = document.activeElement; setSelectedId(id); setRemovingId(null); setNotice(''); } };
+  const selectFace = id => { if (editing && !action.current) { returnFocus.current = document.activeElement; setSelectedId(id); setRemovingId(null); setNotice(''); } };
   const editor = addingFace && faceBox ? <FaceNameEditor face={{}} people={people} s={s} busy={busy} creating hasBox
     onSave={payload => perform(`photos/${photo.id}/faces`, { ...payload, box: faceBox }, s.faceSaved)} onClose={closeEditor} /> :
-    selected ? <FaceNameEditor key={`${selected.id}:${selected.personId || ''}`} face={selected} people={people} s={s} busy={busy}
+    selected ? <FaceNameEditor key={`${selected.id}:${selected.personId || ''}`} face={selected} people={people} s={{ ...s, save: s.validateFaceChange }} busy={busy}
       onSave={payload => perform(`photos/${photo.id}/faces/${selected.id}/assign`, payload, s.faceSaved)} onClose={closeEditor} /> : null;
-  return <div className="photo-face-viewer">
-    <PhotoViewerImage photo={photo} quality={quality} s={s} faces={details?.faces || []} selectedFaceId={selectedId || removingId}
-      highlightPersonId={highlightPersonId} onSelectFace={addingFace ? undefined : selectFace}
-      addingFace={addingFace} onAddFace={removingId ? undefined : startAddingFace} onFaceBoxChange={setFaceBox} busy={busy} editor={editor} editorBox={faceBox || selected?.box} />
-    <aside className="photo-face-sidebar" aria-label={s.people}>
+  return <div className={`photo-face-viewer${editing ? '' : ' photo-face-viewer--browsing'}`}>
+    <PhotoViewerImage photo={photo} quality={quality} s={s} faces={visibleFaces} selectedFaceId={selectedId || removingId}
+      highlightPersonId={highlightPersonId} onSelectFace={!editing || addingFace ? undefined : selectFace} readOnlyFaces={!editing}
+      addingFace={addingFace} onAddFace={!editing || removingId ? undefined : startAddingFace} onFaceBoxChange={setFaceBox} busy={busy} editor={editor} editorBox={faceBox || selected?.box} />
+    {editing ? <aside className="photo-face-sidebar" aria-label={s.people}>
       <div className="photo-face-sidebar__top"><span>{s.faceWorkspace}</span>
         <button ref={addButton} type="button" className={`dialog-button ${addingFace ? 'dialog-button--ghost' : 'dialog-button--accent'}`} disabled={busy} aria-pressed={addingFace}
           aria-keyshortcuts={addingFace ? undefined : 'F'} aria-describedby={shortcutHint}
@@ -201,6 +223,6 @@ export default function PhotoFaceViewer({ photo, quality = 'preview', people, gl
         {details?.scan.state === 'paused' && <p role="status">{s.facesPaused}</p>}
         {details?.scan.error && <p role="alert">{details.scan.error}</p>}
       </div></details>}
-    </aside>
+    </aside> : error && <p className="photo-alert" role="alert">{error} <button type="button" onClick={() => { setError(''); setReload(value => value + 1); }}>{s.retry}</button></p>}
   </div>;
 }

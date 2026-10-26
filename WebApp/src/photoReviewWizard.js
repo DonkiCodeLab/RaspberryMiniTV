@@ -1,4 +1,5 @@
 import { isNewPhotoPerson, photosWithoutPeople } from './photoLibrary.js';
+import { validNewPersonName } from './photoPeopleBatch.js';
 
 // A proposal is a single face; shared photos must not collapse distinct identities.
 export function faceReviewQueue(reviews = [], photos = [], batchId) {
@@ -37,6 +38,20 @@ export function newPeopleReviewQueue(library, batchOnly = false) {
   const ids = new Set(library.faces.batchPhotoIds || []);
   return library.people.filter(person => isNewPhotoPerson(person) &&
     (!batchOnly || person.photoIds.some(id => ids.has(id))));
+}
+
+// A group needs no further identity when every one of its faces was edited
+// individually. Use the loaded faces, including detections without rectangles.
+export function newPersonReviewHandled(person, drafts) {
+  return person.photoIds.length > 0 && person.photoIds.every(photoId => {
+    const draft = drafts[photoId];
+    if (!draft) return false;
+    if (draft.delete) return true;
+    const faces = draft.sourceFaces?.filter(face => face.personId === person.id) || [];
+    return faces.length > 0 && faces.every(face => draft.croppedFaceIds?.includes(face.id) || draft.changes.some(change =>
+      change.faceId === face.id && (change.action === 'remove' || change.action === 'assign' &&
+        (change.personId || validNewPersonName(change.name)))));
+  });
 }
 
 export function reviewHandled(review, drafts) {

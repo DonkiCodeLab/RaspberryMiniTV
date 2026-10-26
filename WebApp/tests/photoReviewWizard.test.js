@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { build } from 'esbuild';
-import { afterReviewStage, attachReviewSwipe, faceReviewQueue, nextReviewCard, noFacesReviewQueue, reviewChanges, reviewIsCurrent, reviewSwipeAction } from '../src/photoReviewWizard.js';
+import { afterReviewStage, attachReviewSwipe, faceReviewQueue, nextReviewCard, noFacesReviewQueue, newPersonReviewHandled, reviewBatchPhotos, reviewChanges, reviewIsCurrent, reviewSwipeAction } from '../src/photoReviewWizard.js';
 import { photoStrings } from '../src/photoStrings.js';
 
 const photos = [{ id: 'family' }, { id: 'older' }];
@@ -26,6 +26,40 @@ test('staged face corrections and additions produce one bounded photo operation'
     { action: 'assign', faceId: 'a', personId: 'unknown' }, { action: 'assign', faceId: 'b', name: 'Eva' },
     { action: 'add', box, name: 'Marta' },
   ]);
+});
+test('editing all new faces in a shared photo resolves their groups without changing the recognized person', () => {
+  const people = ['one', 'two', 'three'].map(id => ({ id, photoIds: ['group-photo'] }));
+  const draft = { photoId: 'group-photo', sourceFaces: [
+    ...people.map(person => ({ id: `face-${person.id}`, personId: person.id })), { id: 'me', personId: 'known' },
+  ], changes: people.map(person => ({ action: 'assign', faceId: `face-${person.id}`, personId: 'unknown' })), reviewIds: [] };
+  assert.ok(people.every(person => newPersonReviewHandled(person, { 'group-photo': draft })));
+  assert.equal(newPersonReviewHandled({ id: 'known', photoIds: ['group-photo'] }, { 'group-photo': draft }), false);
+  const [payload] = reviewBatchPhotos({ 'group-photo': draft });
+  assert.deepEqual(payload.changes, draft.changes);
+  assert.equal('sourceFaces' in payload, false); // local progress metadata is not sent to the API
+});
+test('a new group remains pending until all its faces in all photos have valid decisions', () => {
+  const person = { id: 'one', photoIds: ['first', 'second'] };
+  const drafts = { first: { sourceFaces: [{ id: 'a', personId: 'one' }], changes: [{ action: 'assign', faceId: 'a', personId: 'unknown' }] },
+    second: { sourceFaces: [{ id: 'b', personId: 'one' }, { id: 'boxless', personId: 'one' }], changes: [] } };
+  assert.equal(newPersonReviewHandled(person, drafts), false);
+  drafts.second.changes.push({ action: 'assign', faceId: 'b', name: '' });
+  assert.equal(newPersonReviewHandled(person, drafts), false);
+  drafts.second.changes[0].name = 'Eva';
+  assert.equal(newPersonReviewHandled(person, drafts), false);
+  drafts.second.changes.push({ action: 'assign', faceId: 'boxless', personId: 'unknown' });
+  assert.equal(newPersonReviewHandled(person, drafts), true);
+  assert.equal(newPersonReviewHandled(person, { first: drafts.first }), false);
+  assert.equal(newPersonReviewHandled(person, { first: drafts.first, second: { changes: [] } }), false);
+  assert.equal(newPersonReviewHandled({ id: 'one', photoIds: [] }, {}), false);
+});
+test('removed, cropped and deleted faces also finish a group without assigning its remaining photos by accident', () => {
+  const person = { id: 'one', photoIds: ['first', 'second'] };
+  const drafts = { first: { sourceFaces: [{ id: 'a', personId: 'one' }, { id: 'b', personId: 'one' }],
+    changes: [{ action: 'remove', faceId: 'a' }], croppedFaceIds: ['b'] }, second: { delete: true } };
+  assert.equal(newPersonReviewHandled(person, drafts), true);
+  drafts.first.croppedFaceIds = [];
+  assert.equal(newPersonReviewHandled(person, drafts), false);
 });
 test('swipe requires a deliberate horizontal gesture and maps left/right consistently on narrow and wide screens', () => {
   assert.equal(reviewSwipeAction(-80, 5, 300), 'unknown');
@@ -70,7 +104,7 @@ test('wizard labels are translated and counters preserve their placeholders', ()
     assert.match(s.reviewPosition, /\{current\}.*\{total\}/);
     assert.match(s.reviewIntro, /\{faces\}.*\{people\}.*\{photos\}/);
     assert.match(s.reviewNoFacesPosition, /\{current\}.*\{total\}/);
-    for (const key of ['reviewSave', 'reviewApprove', 'reviewUnsaved', 'reviewRemoveHint', 'reviewStepNoFaces', 'reviewSaveReviewed', 'reviewRemoveNewHint']) assert.ok(s[key]);
+    for (const key of ['reviewSave', 'reviewApprove', 'reviewUnsaved', 'reviewRemoveHint', 'reviewStepNoFaces', 'reviewSaveReviewed', 'reviewRemoveNewHint', 'reviewResume', 'reviewResumeHint', 'reviewNewPeopleResolved', 'reviewNewPeopleNeedsIdentity']) assert.ok(s[key]);
   }
 });
 
@@ -141,4 +175,12 @@ test('direct new-photo entry counts only New, and an empty person step still off
   const emptyPeople = renderToStaticMarkup(React.createElement(Wizard, { ...props, mode: 'review' }));
   assert.match(emptyPeople, /Siguiente: fotos sin personas reconocidas/);
   assert.doesNotMatch(emptyPeople, /¡Revisión terminada!/);
+});
+
+test('new people can reopen the fourth step even when there are no pending matches or faceless photos', () => {
+  const html = renderToStaticMarkup(React.createElement(Wizard, { s: photoStrings('es'), mode: 'newPeople',
+    Modal: ({ children }) => React.createElement('section', null, children),
+    library: { photos: [], reviews: [], people: [{ id: 'new', name: 'Persona 1', photoIds: ['group'] }], faces: {} } }));
+  assert.match(html, /Personas nuevas por identificar: 1/);
+  assert.match(html, /aria-current="step"[^>]*><span>4<\/span>/);
 });

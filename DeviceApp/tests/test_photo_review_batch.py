@@ -125,6 +125,26 @@ class ReviewBatchTests(unittest.TestCase):
         self.assertEqual(face['name'], 'Marta')
         self.assertTrue(face['manual'])
 
+    def test_group_photo_can_resolve_new_faces_individually_and_keep_recognized_person(self):
+        known = self.store.photo_faces(self.photos[0]['id'])['faces'][0]['personId']
+        self.store.group_faces(self.photos[3]['id'], self.detections[:1] + [
+            {'encoding': [n] * 128, 'box': self.box} for n in [8., 16., 24.]])
+        item = self.item(3, reviewIds=[])
+        faces = self.store.photo_faces(item['photoId'])['faces']
+        new_faces = [face for face in faces if face['personId'] != known]
+        self.assertEqual(len(new_faces), 3)
+        item['changes'] = [{'action': 'assign', 'faceId': face['id'], 'personId': 'unknown'} for face in new_faces]
+        data = self.payload([item])
+        response = self.client.post('/pictures/reviews/batch', json=data)
+        self.assertEqual(response.status_code, 200, response.json)
+        restored = PhotoLibrary(self.store.root)
+        self.assertEqual(apply_batch(restored, data), response.json)
+        final = restored.photo_faces(item['photoId'])['faces']
+        self.assertEqual([face['personId'] for face in final].count('unknown'), 3)
+        self.assertEqual([face['personId'] for face in final].count(known), 1)
+        self.assertTrue(self.store.safe_file(item['expectedPath']).is_file())
+        self.assertEqual(len(restored.snapshot()['photos']), 4)
+
     def test_edit_keeps_import_deduplication_and_restart(self):
         item = self.item(2, edits=[{'rotate': 1}])
         digest = 'a' * 64

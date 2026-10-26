@@ -15,7 +15,7 @@ async function load(file) {
   return module.exports;
 }
 const { FaceRectangles } = await load('../src/PhotoViewerImage.jsx');
-const { FaceNameEditor, PhotoFaceList, FaceRemoveConfirmation } = await load('../src/PhotoFaceViewer.jsx');
+const { default: PhotoFaceViewer, FaceNameEditor, PhotoFaceList, FaceRemoveConfirmation, PersonFaceControls } = await load('../src/PhotoFaceViewer.jsx');
 const { PersonEditor } = await load('../src/PhotoPeople.jsx');
 const s = photoStrings('es');
 const faces = [
@@ -23,6 +23,49 @@ const faces = [
   { id: 'face-b', personId: null, name: null, box: { x: .6, y: .3, width: .2, height: .4 } },
   { id: 'legacy', personId: 'old', name: 'Old', box: null },
 ];
+
+test('person browsing hides other faces and editing actions until editing is enabled', () => {
+  const props = { photo: { id: 'photo', name: 'Family', relativePath: 'family.jpg' }, initialFaces: faces, highlightPersonId: 'ana', s };
+  const browsing = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: false, showOtherFaces: false }));
+  assert.match(browsing, /role="img" aria-label="Ana"/);
+  assert.doesNotMatch(browsing, /aria-label="Sin asignar"|photo-face-sidebar|Añadir cara|Nombre de esta cara:/);
+  const all = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: false, showOtherFaces: true }));
+  assert.match(all, /role="img" aria-label="Sin asignar"/);
+  const editing = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: true, showOtherFaces: true }));
+  assert.match(editing, /Nombre de esta cara: Ana/);
+  assert.match(editing, /Nombre de esta cara: Sin asignar/);
+  assert.match(editing, /photo-face-sidebar/);
+  assert.ok(editing.includes(s.addFace));
+});
+
+test('face visibility and edit controls expose their state and work in every language', () => {
+  let visible, editing;
+  for (const language of ['es', 'en', 'ca']) {
+    const strings = photoStrings(language);
+    const props = { showOtherFaces: false, editing: false, onShowOtherFaces: value => { visible = value; }, onEditing: value => { editing = value; }, s: strings };
+    const html = renderToStaticMarkup(React.createElement(PersonFaceControls, props));
+    assert.match(html, /type="checkbox"/);
+    assert.match(html, /aria-pressed="false"/);
+    for (const key of ['showOtherFaces', 'editFaces', 'finishFaceEditing', 'validateFaceChange', 'personPhotoBrowseHint']) assert.ok(strings[key]);
+    assert.ok(html.includes(strings.showOtherFaces));
+    assert.ok(html.includes(strings.editFaces));
+    const controls = PersonFaceControls(props).props.children;
+    controls[0].props.children[0].props.onChange({ target: { checked: true } });
+    controls[1].props.onClick();
+    assert.equal(visible, true); assert.equal(editing, true);
+    const locked = renderToStaticMarkup(React.createElement(PersonFaceControls, { ...props, disabled: true }));
+    assert.equal((locked.match(/disabled=""/g) || []).length, 2);
+  }
+});
+
+test('new face identities reject provisional labels and invalid names before validation', () => {
+  for (const initialName of ['Persona 12', '../invalid', ' ', 'bad/name']) {
+    const html = renderToStaticMarkup(React.createElement(FaceNameEditor, { face: {}, people: [], initialName, s }));
+    assert.ok(html.includes(`disabled="">${s.save}`));
+  }
+  const html = renderToStaticMarkup(React.createElement(FaceNameEditor, { face: {}, people: [], initialName: 'Marta', s }));
+  assert.ok(!html.includes(`disabled="">${s.save}`));
+});
 
 test('person preview rectangles highlight detections without exposing photo editing controls', () => {
   const html = renderToStaticMarkup(React.createElement(FaceRectangles, { faces: faces.slice(0, 1), highlightPersonId: 'ana', readOnly: true, s }));

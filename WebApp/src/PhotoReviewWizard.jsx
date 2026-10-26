@@ -3,7 +3,7 @@ import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
 import { isNewPhotoPerson, photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { validNewPersonName } from './photoPeopleBatch.js';
 import { createImportId } from './photoImport.js';
-import { attachReviewSwipe, faceReviewQueue, noFacesReviewQueue, newPeopleReviewQueue, reviewChanges, reviewIsCurrent, reviewHandled, reviewBatchPhotos } from './photoReviewWizard.js';
+import { attachReviewSwipe, faceReviewQueue, noFacesReviewQueue, newPeopleReviewQueue, newPersonReviewHandled, reviewChanges, reviewIsCurrent, reviewHandled, reviewBatchPhotos } from './photoReviewWizard.js';
 import { editBox, visibleBox, imageEditPreview } from './photoImageEdits.js';
 import { PeopleAnalysis } from './PhotoPeople.jsx';
 import PhotoViewerImage, { FaceRectangles } from './PhotoViewerImage.jsx';
@@ -12,6 +12,11 @@ import PhotoLocation from './PhotoLocation.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import './PhotoReviewWizard.css';
 
+const reviewStorageKey = () => `minitv-review-draft:${getPictureContentUrl('review-session').split('?')[0]}`;
+export function readPhotoReviewDraft() {
+  try { return JSON.parse(sessionStorage.getItem(reviewStorageKey())) || {}; } catch { return {}; }
+}
+
 export function ReviewSteps({ step, s }) {
   return <ol className="photo-review-steps" aria-label={s.reviewWizard}>
     {[s.reviewStepScan, s.reviewStepValidate, s.reviewStepNoFaces, s.reviewStepNewPeople].map((label, index) => <li key={label} aria-current={step === index + 1 ? 'step' : undefined}
@@ -19,7 +24,7 @@ export function ReviewSteps({ step, s }) {
   </ol>;
 }
 
-export function ReviewCard({ review, photo, people, position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onExpanded, groupPerson, hideDecisions = false }) {
+export function ReviewCard({ review, photo, people, position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onExpanded, onReadyChange, closeLayer, groupPerson, hideDecisions = false }) {
   const withoutFaces = !review.faceId && !groupPerson;
   const [details, setDetails] = useState(null), [attempt, setAttempt] = useState(0);
   const [assignments, setAssignments] = useState(() => Object.fromEntries((draft?.changes || []).filter(c => c.action === 'assign').map(({ faceId, action, ...a }) => [faceId, a])));
@@ -52,9 +57,21 @@ export function ReviewCard({ review, photo, people, position, total, s, language
   const canDecide = !blocked && !invalid && !adding && !cropping && !selectedId && !deleting && ready;
   const pendingDraft = () => ({ photoId: photo.id, expectedPath: draft?.expectedPath || photo.relativePath, version: draft?.version || details?.version,
     reviewIds: draft?.reviewIds || [], changes: [...removals, ...reviewChanges(assignments, additions)], edits, delete: false,
+    sourceFaces: (details?.faces || []).map(({ id, personId }) => ({ id, personId })),
     croppedFaceIds: (details?.faces || []).filter(face => face.box && !visibleBox(editBox(face.box, edits))).map(face => face.id) });
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => { callbacks.current.onDirty?.(changed || adding || cropping || !!selectedId); }, [changed, adding, cropping, selectedId]);
+  useEffect(() => { onReadyChange?.(!!canDecide && !error); }, [canDecide, error, onReadyChange]);
+  useEffect(() => {
+    if (!closeLayer) return;
+    closeLayer.current = () => {
+      if (adding || cropping || selectedId) { closeEditor(); return true; }
+      if (deleting) { setDeleting(null); return true; }
+      if (expanded) { enlarge(false); return true; }
+      return false;
+    };
+    return () => { closeLayer.current = null; };
+  }, [closeLayer, adding, cropping, selectedId, deleting, expanded]);
   useEffect(() => {
     if (details && !stale && (changed || draft)) callbacks.current.onDraft?.(pendingDraft());
   }, [details, assignments, additions, edits]);
@@ -176,29 +193,33 @@ export function ReviewCard({ review, photo, people, position, total, s, language
   </div>;
 }
 
-function NewPersonReview({ person, library, drafts, assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, s, language, position, total }) {
+export function NewPersonReview({ person, library, drafts, assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, closeLayer, s, language, position, total }) {
   const [photoIndex, setPhotoIndex] = useState(0), [target, setTarget] = useState(assignment?.personId || 'new'), [name, setName] = useState(assignment?.name || '');
-  const [editing, setEditing] = useState(false);
+  const [ready, setReady] = useState(false);
   const photos = person.photoIds.map(id => library.photos.find(p => p.id === id)).filter(Boolean);
   const photo = photos[photoIndex], faceId = person.faceBoxes?.[photo?.id]?.[0]?.id;
   const choices = photoAssignmentOptions(library.knownPeople || library.people, s);
+  const handled = newPersonReviewHandled(person, drafts);
+  const validAssignment = target === 'new' ? validNewPersonName(name) : choices.some(p => p.id === target);
+  function changePhoto(index) { setReady(false); onExpanded(false); setPhotoIndex(index); }
   return <div className="photo-review-new-person"><h3>{person.name} · {position} / {total}</h3>
     <div className="photo-review-identity"><label>{s.choosePerson}<select value={target} onChange={event => { setTarget(event.target.value); onAssignment(event.target.value === 'new' ? { id: person.id, name } : { id: person.id, personId: event.target.value }); }}><option value="new">{s.newPerson}</option>
       {choices.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
       {target === 'new' && <label>{s.newPersonName}<input value={name} maxLength={100} onChange={event => { setName(event.target.value); onAssignment({ id: person.id, name: event.target.value }); }} /></label>}</div>
     {photo && <ReviewCard key={photo.id} photo={photo} review={{ id: `person-${person.id}`, faceId }} groupPerson={person} hideDecisions people={library.knownPeople || library.people}
-      draft={drafts[photo.id]} onDraft={onDraft} position={photoIndex + 1} total={photos.length} s={s} language={language} onExpanded={value => { setEditing(value); onExpanded(value); }} onDirty={onDirty} />}
-    <div className="photo-dialog__actions"><button type="button" className="dialog-button" disabled={photoIndex === 0 || editing} onClick={() => setPhotoIndex(i => i - 1)}>← {s.previous}</button>
-      <span>{photoIndex + 1} / {photos.length}</span><button type="button" className="dialog-button" disabled={photoIndex + 1 >= photos.length || editing} onClick={() => setPhotoIndex(i => i + 1)}>{s.next} →</button></div>
-    <button type="button" className="dialog-button dialog-button--accent" disabled={editing || target === 'new' && !validNewPersonName(name)}
-      onClick={() => onAdvance(target === 'new' ? { id: person.id, name: name.trim() } : { id: person.id, personId: target })}>{s.reviewSave} →</button>
+      draft={drafts[photo.id]} onDraft={onDraft} position={photoIndex + 1} total={photos.length} s={s} language={language} onExpanded={onExpanded} onDirty={onDirty} onReadyChange={setReady} closeLayer={closeLayer} />}
+    <div className="photo-dialog__actions"><button type="button" className="dialog-button" disabled={photoIndex === 0 || !ready} onClick={() => changePhoto(photoIndex - 1)}>← {s.previous}</button>
+      <span>{photoIndex + 1} / {photos.length}</span><button type="button" className="dialog-button" disabled={photoIndex + 1 >= photos.length || !ready} onClick={() => changePhoto(photoIndex + 1)}>{s.next} →</button></div>
+    {(handled || !validAssignment) && <p role="status">{handled ? s.reviewNewPeopleResolved : s.reviewNewPeopleNeedsIdentity}</p>}
+    <button type="button" className="dialog-button dialog-button--accent" disabled={!ready || !handled && !validAssignment}
+      onClick={() => onAdvance(handled ? null : target === 'new' ? { id: person.id, name: name.trim() } : { id: person.id, personId: target })}>{s.reviewSave} →</button>
   </div>;
 }
 
 export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanPayload, s, language = 'es', onRefresh, onClose }) {
-  const storageKey = `minitv-review-draft:${getPictureContentUrl('review-session').split('?')[0]}`;
-  const [saved] = useState(() => { try { return JSON.parse(sessionStorage.getItem(storageKey)) || {}; } catch { return {}; } });
-  const [step, setStep] = useState(saved.step || (mode === 'scan' ? 'scan' : mode === 'noFaces' ? 'no-faces-intro' : 'intro'));
+  const storageKey = reviewStorageKey();
+  const [saved] = useState(readPhotoReviewDraft);
+  const [step, setStep] = useState(saved.step || (mode === 'scan' ? 'scan' : mode === 'noFaces' ? 'no-faces-intro' : mode === 'newPeople' ? 'new-people-intro' : 'intro'));
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [queue, setQueue] = useState(saved.queue || []), [cursor, setCursor] = useState(saved.cursor || 0);
   const [drafts, setDrafts] = useState(saved.drafts || {}), [peopleDrafts, setPeopleDrafts] = useState(saved.peopleDrafts || []);
@@ -209,6 +230,7 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
   const [batchContext, setBatchContext] = useState(saved.batchContext || null);
   const [history, setHistory] = useState([]);
   const working = useRef(false), launched = useRef(false), wasScanning = useRef(false);
+  const closeLayer = useRef(null);
   const faces = library.faces, active = faces.running || faces.singleRunning;
   const scope = batchOnly ? batchContext?.id ?? faces.batchId ?? null : undefined;
   const unnamed = new Set(library.people.filter(isNewPhotoPerson).map(p => p.id));
@@ -222,7 +244,7 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     if (step === 'scan' && faces.batchId) setBatchContext({ id: faces.batchId, photoIds: faces.batchPhotoIds || [] });
   }, [step, faces.batchId]);
   useEffect(() => {
-    try { if (step === 'done' || !hasDrafts && !queue.length) sessionStorage.removeItem(storageKey); else sessionStorage.setItem(storageKey, JSON.stringify(snapshot)); }
+    try { if (step === 'done') sessionStorage.removeItem(storageKey); else sessionStorage.setItem(storageKey, JSON.stringify(snapshot)); }
     catch { setError(s.reviewDraftStorageError); }
   }, [step, queue, cursor, drafts, peopleDrafts, requestId, committed, submission, batchOnly, batchContext]);
   useEffect(() => {
@@ -262,8 +284,10 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
   }
   function advancePerson(item) {
     setHistory(previous => [...previous, { drafts, peopleDrafts, cursor, step }]);
-    setPeopleDrafts(previous => [...previous.filter(p => p.id !== item.id), item]); setDirty(false); setExpanded(false);
-    setCursor(cursor + 1); if (cursor + 1 >= queue.length) setStep('new-people-confirm');
+    setPeopleDrafts(previous => [...previous.filter(p => p.id !== queue[cursor].id), ...(item ? [item] : [])]); setDirty(false); setExpanded(false);
+    let next = cursor + 1;
+    while (next < queue.length && newPersonReviewHandled(queue[next], drafts)) next++;
+    setCursor(next); if (next >= queue.length) setStep('new-people-confirm');
   }
   function undo() {
     const previous = history.at(-1);
@@ -276,7 +300,10 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     working.current = true; setBusy(true); setError('');
     try {
       if (!committed && hasDrafts) {
-        const payload = submission || { requestId, photos: reviewBatchPhotos(drafts), people: peopleDrafts };
+        const payload = submission || { requestId, photos: reviewBatchPhotos(drafts), people: peopleDrafts.filter(item => {
+          const person = library.people.find(p => p.id === item.id);
+          return !person || !newPersonReviewHandled(person, drafts);
+        }) };
         setSubmission(payload);
         await photoRequest('reviews/batch', payload); setCommitted(true);
       }
@@ -289,7 +316,7 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
   }
   const current = queue[cursor], photo = library.photos.find(photo => photo.id === current?.photoId);
   const confirming = step.endsWith('-confirm');
-  return <Modal title={s.reviewWizard} s={s} busy={busy} onClose={() => { if (!busy) onClose(); }} wide={expanded}
+  return <Modal title={s.reviewWizard} s={s} busy={busy} onClose={() => { if (!busy && !closeLayer.current?.()) onClose(); }} wide={expanded}
     className={`photo-dialog--review-wizard${expanded ? ' is-expanded' : ''}`}>
     <ReviewSteps step={step === 'done' ? 5 : stage} s={s} />
     {hasDrafts && <p className="photo-review-draft" role="status">{s.reviewDraftCount.replace('{count}', Object.keys(drafts).length + peopleDrafts.length)}</p>}
@@ -311,11 +338,11 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     {step === 'new-people-intro' && <div className="photo-review-intro"><h3>{s.reviewStepNewPeople}</h3><strong>{s.reviewNewPeopleCount.replace('{count}', newPeople.length)}</strong>
       <p>{s.reviewNewPeopleHint}</p><button type="button" className="dialog-button dialog-button--accent" onClick={() => begin('new-people')}>{newPeople.length ? s.reviewBegin : s.done} →</button></div>}
     {['faces-review', 'no-faces-review'].includes(step) && (current && photo ? <ReviewCard key={`${current.id}:${history.length}`} review={current} photo={photo} people={library.knownPeople || library.people}
-      draft={drafts[photo.id]} onDraft={storeDraft} position={cursor + 1} total={queue.length} s={s} language={language} onAdvance={advance} onDirty={setDirty} onExpanded={setExpanded} /> :
+      draft={drafts[photo.id]} onDraft={storeDraft} position={cursor + 1} total={queue.length} s={s} language={language} onAdvance={advance} onDirty={setDirty} onExpanded={setExpanded} closeLayer={closeLayer} /> :
       <p role="alert">{s.reviewPhotoChanged}</p>)}
     {step === 'new-people-review' && current && <NewPersonReview key={current.id} person={current} library={library} drafts={drafts} onDraft={storeDraft}
       assignment={peopleDrafts.find(p => p.id === current.id)} onAssignment={item => setPeopleDrafts(previous => [...previous.filter(p => p.id !== item.id), item])}
-      onAdvance={advancePerson} onDirty={setDirty} onExpanded={setExpanded} s={s} language={language} position={cursor + 1} total={queue.length} />}
+      onAdvance={advancePerson} onDirty={setDirty} onExpanded={setExpanded} closeLayer={closeLayer} s={s} language={language} position={cursor + 1} total={queue.length} />}
     {confirming && <div className="photo-review-intro"><h3>{s.reviewReadyToCommit}</h3><p>{s.reviewDeferredHint}</p>
       <strong>{s.reviewDraftCount.replace('{count}', Object.keys(drafts).length + peopleDrafts.length)}</strong>
       <button type="button" className="dialog-button dialog-button--accent" disabled={busy} onClick={commit}>{busy ? <><LoadingSpinner inline /> {s.reviewSaving}</> : committed ? s.retry : s.reviewValidateAll} →</button></div>}

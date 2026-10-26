@@ -7,6 +7,15 @@ persona o un álbum, la sección sigue seleccionada; pulsarla vuelve a su inicio
 La biblioteca ya no muestra **Nueva carpeta**, **Subir fotos** ni el acceso
 **Del iPhone a tu MiniTV**: la incorporación de fotos se realiza desde las apps.
 
+Al ver las fotos de una persona, **Mostrar otras caras** permite alternar entre
+sus recuadros y todas las caras de la foto. **Editar caras** abre las herramientas
+para reasignar cualquier cara, incluida la principal, a una persona existente o
+a un nombre nuevo. **Validar cambio** guarda esa cara; **Añadir cara** permite
+dibujar otra y confirmarla. El visor conserva la foto abierta aunque la corrección
+la saque de la carpeta de la persona. Los controles están disponibles tanto al
+pulsar su retrato como al abrir una foto dentro de su carpeta; las vistas flotantes
+de Nuevas personas ofrecen también acceso al editor.
+
 **Fotos → Personas → Analizar** abre un asistente de cuatro pasos:
 
 1. **Analizar lote**: elige cuántas fotos analizar. El valor inicial es 100
@@ -17,7 +26,9 @@ La biblioteca ya no muestra **Nueva carpeta**, **Subir fotos** ni el acceso
 3. **Fotos sin personas reconocidas**: revisa las fotos nuevas sin caras,
    añade las que falten y márcalas como revisadas. No repite las históricas.
 4. **Revisar nuevas personas detectadas**: pon nombre a cada grupo provisional
-   o únelo a una identidad existente; puedes recorrer todas sus fotos.
+   o únelo a una identidad existente; puedes recorrer todas sus fotos. Corregir
+   individualmente todas sus caras también permite continuar, incluida la opción
+   Desconocido. Los grupos resueltos en una foto compartida no se vuelven a pedir.
 
 En los pasos 2–4 aparecen la fecha y el botón de mapa si hay GPS. Al ampliar
 una foto puedes añadir caras, girar a izquierda/derecha, recortar libremente,
@@ -32,6 +43,9 @@ actualiza la biblioteca una sola vez. Los borradores se conservan en esta pesta�
 al cerrar/reabrir el asistente o recargar la página. Puedes volver a la decisión
 anterior durante el repaso o descartar los cambios del paso. Si falla el envío,
 el borrador permite reintentar sin duplicar caras ni aplicar dos veces las ediciones.
+Se puede avanzar con la foto ampliada al terminar de editar. Escape cierra primero
+el editor de cara o la ampliación; al cerrar el asistente aparece **Continuar revisión
+pendiente** para retomar el mismo paso, también si solo quedan personas nuevas.
 
 **Revisar una a una** retoma los pendientes de todos los lotes;
 **Sin personas → Nuevas → Revisar fotos nuevas** abre el tercer paso.

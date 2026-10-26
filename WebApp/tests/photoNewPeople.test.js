@@ -1,8 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isNewPhotoPerson, photoAssignmentOptions, photoPage } from '../src/photoLibrary.js';
-import { personPreviewFaces, personPreviewGeometry, personPreviewPhotos } from '../src/photoPersonPreview.js';
+import { personPreviewFaces, personPreviewGeometry, personPreviewPhotos, visiblePersonFaces } from '../src/photoPersonPreview.js';
 import { photoStrings } from '../src/photoStrings.js';
+
+test('person browsing can show other known, unknown and unassigned faces without losing the selected edit', () => {
+  const faces = [{ id: 'main', personId: 'ana' }, { id: 'other', personId: 'luis' },
+    { id: 'unknown', personId: 'unknown' }, { id: 'unassigned', personId: null }];
+  assert.deepEqual(visiblePersonFaces(faces, 'ana', false), [faces[0]]);
+  assert.deepEqual(visiblePersonFaces(faces, 'ana', true), faces);
+  assert.deepEqual(visiblePersonFaces(faces, 'ana', false, 'other'), faces.slice(0, 2));
+  assert.deepEqual(visiblePersonFaces(faces, 'unknown', false), [faces[2]]);
+  assert.deepEqual(visiblePersonFaces(faces, undefined, false), faces);
+  assert.deepEqual(visiblePersonFaces(faces, 'no-longer-present', false), []);
+});
 
 test('new people includes only detector labels, excluding fixed, imported and named people', () => {
   for (const name of ['Persona 1', 'Persona 2345', ' person 12 ', 'PERSONA 42']) {

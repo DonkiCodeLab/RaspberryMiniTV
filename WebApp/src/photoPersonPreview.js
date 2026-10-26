@@ -25,3 +25,7 @@ export function personPreviewFaces(person, photoId) {
   return candidates.filter(face => facePortraitLayout(face.box, 1, 1))
     .map(face => ({ ...face, personId: person.id, name: person.name }));
 }
+
+export function visiblePersonFaces(faces, personId, showOtherFaces, selectedFaceId) {
+  return !personId || showOtherFaces ? faces : faces.filter(face => face.personId === personId || face.id === selectedFaceId);
+}

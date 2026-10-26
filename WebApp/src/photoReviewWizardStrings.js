@@ -1,6 +1,10 @@
 export const reviewWizardStrings = {
   es: {
     reviewPhotoPosition: 'Foto {current} de {total}',
+    reviewResume: 'Continuar revisión pendiente',
+    reviewResumeHint: 'Retoma el paso donde lo dejaste, con los cambios preparados en esta pestaña.',
+    reviewNewPeopleResolved: 'Todas las caras de esta persona ya están resueltas en el borrador. Puedes continuar.',
+    reviewNewPeopleNeedsIdentity: 'Quedan caras de este grupo sin identificar. Elige una persona, Desconocido o escribe un nombre; también puedes corregir cada cara desde sus fotos.',
     reviewStepNewPeople: "Revisar nuevas personas detectadas",
     reviewNextNewPeople: "Siguiente: nuevas personas",
     reviewNewPeopleCount: "Personas nuevas por identificar: {count}",
@@ -54,6 +58,10 @@ export const reviewWizardStrings = {
   },
   en: {
     reviewPhotoPosition: 'Photo {current} of {total}',
+    reviewResume: 'Continue pending review',
+    reviewResumeHint: 'Resume the step where you left off, with the changes prepared in this tab.',
+    reviewNewPeopleResolved: 'All faces of this person are resolved in the draft. You can continue.',
+    reviewNewPeopleNeedsIdentity: 'Some faces in this group still need an identity. Choose a person or Unknown, enter a name, or correct each face in its photo.',
     reviewStepNewPeople: "Review newly detected people",
     reviewNextNewPeople: "Next: new people",
     reviewNewPeopleCount: "New people to identify: {count}",
@@ -107,6 +115,10 @@ export const reviewWizardStrings = {
   },
   ca: {
     reviewPhotoPosition: 'Foto {current} de {total}',
+    reviewResume: 'Continuar la revisió pendent',
+    reviewResumeHint: 'Reprèn el pas on ho vas deixar, amb els canvis preparats en aquesta pestanya.',
+    reviewNewPeopleResolved: 'Totes les cares d’aquesta persona ja estan resoltes a l’esborrany. Pots continuar.',
+    reviewNewPeopleNeedsIdentity: 'Queden cares d’aquest grup sense identificar. Tria una persona, Desconegut o escriu un nom; també pots corregir cada cara des de les fotos.',
     reviewStepNewPeople: "Revisar persones noves detectades",
     reviewNextNewPeople: "Següent: persones noves",
     reviewNewPeopleCount: "Persones noves per identificar: {count}",
