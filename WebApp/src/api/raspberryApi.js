@@ -1472,7 +1472,7 @@ export function photoRequest(action, data, signal) {
   return aiRequestWithTimeout(activeSignal => request(`/pictures/${action}`, {
     method: data === undefined ? "GET" : "POST", cache: "no-store", signal: activeSignal,
     ...(data === undefined ? {} : { body: JSON.stringify(data) }),
-  }), signal, 30000);
+  }), signal, action === 'reviews/batch' ? 600000 : 30000);
 }
 
 export function downloadPhotoPeople(ids, signal) {

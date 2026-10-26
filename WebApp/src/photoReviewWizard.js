@@ -1,4 +1,4 @@
-import { photosWithoutPeople } from './photoLibrary.js';
+import { isNewPhotoPerson, photosWithoutPeople } from './photoLibrary.js';
 
 // A proposal is a single face; shared photos must not collapse distinct identities.
 export function faceReviewQueue(reviews = [], photos = [], batchId) {
@@ -30,7 +30,24 @@ export function nextReviewCard(queue, cursor, fresh, withoutFaces = false) {
 }
 
 export function afterReviewStage(withoutFaces) {
-  return withoutFaces ? 'done' : 'no-faces-intro';
+  return withoutFaces ? 'new-people-intro' : 'no-faces-intro';
+}
+
+export function newPeopleReviewQueue(library, batchOnly = false) {
+  const ids = new Set(library.faces.batchPhotoIds || []);
+  return library.people.filter(person => isNewPhotoPerson(person) &&
+    (!batchOnly || person.photoIds.some(id => ids.has(id))));
+}
+
+export function reviewHandled(review, drafts) {
+  const draft = drafts[review.photoId];
+  return !!draft && (draft.delete || draft.reviewIds.includes(review.id) ||
+    draft.croppedFaceIds?.includes(review.faceId) || draft.changes.some(change => change.faceId === review.faceId));
+}
+
+export function reviewBatchPhotos(drafts) {
+  return Object.values(drafts).map(({ photoId, expectedPath, version, reviewIds, changes, edits, delete: remove }) =>
+    ({ photoId, expectedPath, version, reviewIds, changes, edits, delete: !!remove }));
 }
 
 export function reviewChanges(assignments, additions) {

@@ -29,6 +29,7 @@ from photo_previews import ImageWorkLock, PhotoPreviews
 from photo_faces import FacePaused, FaceEngineError, LocalFaceEngine, INSTALL_COMMAND
 import photo_face_matching as face_matching
 import photo_reviews
+import photo_review_batch
 from ai_usage import track_call
 
 try:
@@ -208,6 +209,9 @@ class PhotoLibrary:
               CREATE TABLE IF NOT EXISTS person_birthdays (person TEXT PRIMARY KEY REFERENCES people(id) ON DELETE CASCADE,
                 birth_date TEXT NOT NULL);
               CREATE TABLE IF NOT EXISTS person_review_batches (id TEXT PRIMARY KEY, payload TEXT NOT NULL, result TEXT NOT NULL);
+              CREATE TABLE IF NOT EXISTS photo_review_batches (id TEXT PRIMARY KEY, payload TEXT NOT NULL, result TEXT NOT NULL);
+              CREATE TABLE IF NOT EXISTS photo_edit_sources (photo TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+                path TEXT PRIMARY KEY);
               CREATE TABLE IF NOT EXISTS face_analysis (id INTEGER PRIMARY KEY CHECK(id=1), state TEXT NOT NULL,
                 error TEXT NOT NULL DEFAULT '');
               INSERT OR IGNORE INTO face_analysis (id, state) VALUES (1, 'idle');
@@ -493,7 +497,9 @@ class PhotoLibrary:
                         metadata, raw, _people = records[index]
                         if raw is not None:
                             current = json.loads(db.execute('SELECT metadata FROM photos WHERE id=?', (ident,)).fetchone()['metadata'])
+                            dimensions = {k: current[k] for k in ('width', 'height') if k in current} if db.execute('SELECT 1 FROM photo_edit_sources WHERE photo=?', (ident,)).fetchone() else {}
                             current.update(metadata)
+                            current.update(dimensions)
                             db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(current), ident))
                             db.execute('INSERT OR REPLACE INTO photo_metadata VALUES (?,?)', (ident, raw))
                             # Apple labels remain in the original metadata only. People
@@ -535,8 +541,9 @@ class PhotoLibrary:
             with self.db() as db:
                 known = {row['path'] for row in db.execute('SELECT path FROM photos')}
                 known.update(row['path'] for row in db.execute('SELECT path FROM photo_deleted_files'))
+                known.update(row['path'] for row in db.execute('SELECT path FROM photo_edit_sources'))
             for root, dirs, files in os.walk(self.root, followlinks=False):
-                dirs[:] = sorted(d for d in dirs if not d.startswith(('.', 'batch-', 'generated-')) and not (Path(root) / d).is_symlink())
+                dirs[:] = sorted(d for d in dirs if not d.startswith(('.', 'batch-', 'generated-', 'edited-photos')) and not (Path(root) / d).is_symlink())
                 for name in sorted(files):
                     path = Path(root) / name
                     relative = path.relative_to(self.root).as_posix()
@@ -671,6 +678,7 @@ class PhotoLibrary:
     def _delete_photo_rows(self, db, ids):
         for ident in ids:
             db.execute('INSERT OR IGNORE INTO photo_deleted_files SELECT path FROM photos WHERE id=?', (ident,))
+            db.execute('INSERT OR IGNORE INTO photo_deleted_files SELECT path FROM photo_edit_sources WHERE photo=?', (ident,))
             for table in ('photo_albums', 'photo_metadata', 'photo_import_files'):
                 db.execute('DELETE FROM ' + table + ' WHERE photo=?', (ident,))
             db.execute('DELETE FROM photos WHERE id=?', (ident,))  # Cascades to faces.
@@ -709,7 +717,8 @@ class PhotoLibrary:
         self.previews.start([row['path'] for row in rows], self.safe_file)
 
     def face_status(self, db):
-        scan = db.execute('''SELECT state, error, (SELECT token FROM face_review_batch WHERE id=1) AS batchId
+        scan = db.execute('''SELECT state, error, (SELECT token FROM face_review_batch WHERE id=1) AS batchId,
+            (SELECT json_group_array(photo) FROM face_analysis_items) AS batchPhotos
             FROM face_analysis WHERE id=1''').fetchone()
         counts = dict(db.execute('SELECT state, count(*) FROM face_analysis_items GROUP BY state').fetchall())
         total = sum(counts.values())
@@ -718,7 +727,8 @@ class PhotoLibrary:
         if scan['state'] == 'idle' and not total:
             total = min(FACE_BATCH_SIZE, pending)
         return {'batchId': scan['batchId'], 'available': LocalFaceEngine.available(), 'engine': 'dlib-local',
-                'installCommand': INSTALL_COMMAND, 'lowPower': True, 'batchSize': FACE_BATCH_SIZE,
+                'installCommand': INSTALL_COMMAND, 'lowPower': True, 'batchSize': total or FACE_BATCH_SIZE,
+                'batchPhotoIds': json.loads(scan['batchPhotos']),
                 'singleRunning': self.single_face_running,
                 'state': scan['state'], 'running': self.faces_running,
                 'pausing': scan['state'] == 'paused' and self.faces_running,
@@ -726,7 +736,9 @@ class PhotoLibrary:
                 'pending': pending, 'remaining': counts.get('pending', 0), 'failed': counts.get('error', 0),
                 'error': scan['error']}
 
-    def start_faces(self):
+    def start_faces(self, limit=None):
+        if limit is not None and (type(limit) is not int or limit < 1):
+            raise PhotoError('Selecciona al menos una foto para analizar.')
         if not LocalFaceEngine.available():
             raise PhotoError('Instala el motor local de Personas: ' + INSTALL_COMMAND, 503)
         # Serialize transitions with worker exit, including a quick pause/resume.
@@ -737,13 +749,16 @@ class PhotoLibrary:
                 scan = db.execute('SELECT state FROM face_analysis WHERE id=1').fetchone()
                 remaining = db.execute("SELECT 1 FROM face_analysis_items WHERE state='pending' LIMIT 1").fetchone()
                 if not self.faces_running and not (scan['state'] in ('running', 'paused', 'error') and remaining):
+                    pending_count = db.execute("SELECT count(*) FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','imported','error')").fetchone()[0]
+                    if limit is not None and limit > pending_count:
+                        raise PhotoError('El lote no puede superar las fotos pendientes.')
                     if not db.execute("SELECT 1 FROM photos WHERE source IS NULL AND face_state IN ('pending','skip','imported','error') LIMIT 1").fetchone():
                         if scan['state'] == 'idle': db.execute("UPDATE face_analysis SET state='complete' WHERE id=1")
                         return {'ok': True}
                     db.execute('DELETE FROM face_analysis_items')
                     db.execute("""INSERT INTO face_analysis_items SELECT id, 'pending' FROM photos
                         WHERE source IS NULL AND face_state IN ('pending','skip','imported','error')
-                        ORDER BY (face_state='error'), uploaded, id LIMIT ?""", (FACE_BATCH_SIZE,))
+                        ORDER BY (face_state='error'), uploaded, id LIMIT ?""", (limit or FACE_BATCH_SIZE,))
                     photo_reviews.start_batch(db)
                 elif not db.execute('SELECT 1 FROM face_review_batch').fetchone():
                     # An upgrade may resume a batch that predates review tracking.
@@ -785,7 +800,8 @@ class PhotoLibrary:
                 face['reviewId'] = reviews.get(face['id'])
             job = db.execute('SELECT state, error FROM face_photo_jobs WHERE photo=?', (photo_id,)).fetchone()
             batch = db.execute("SELECT 1 FROM face_analysis_items WHERE photo=? AND state='pending'", (photo_id,)).fetchone()
-            return {'photoId': photo_id, 'faces': detections, 'state': photo['face_state'], 'noFacesReviewId': reviews.get(None),
+            return {'photoId': photo_id, 'faces': detections, 'version': photo_review_batch.face_version(db, photo_id),
+                    'state': photo['face_state'], 'noFacesReviewId': reviews.get(None),
                     'canDetect': photo['source'] is None and LocalFaceEngine.available(),
                     'scan': dict(job) if job else {'state': 'idle', 'error': ''},
                     'batchRunning': self.faces_running, 'queued': bool(batch)}
@@ -1421,8 +1437,7 @@ def create_photo_blueprint(get_library):
 
     @bp.post('/pictures/people/scan')
     def scan():
-        body()
-        get_library().start_faces()
+        get_library().start_faces(body().get('limit'))
         return jsonify({'ok': True}), 202
 
     @bp.post('/pictures/people/pause')
@@ -1499,6 +1514,10 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/reviews/resolve')
     def resolve_review():
         return jsonify(get_library().resolve_review(body()))
+
+    @bp.post('/pictures/reviews/batch')
+    def resolve_review_batch():
+        return jsonify(photo_review_batch.apply_batch(get_library(), body()))
 
     @bp.post('/pictures/reviews/confirm')
     def confirm_reviews():

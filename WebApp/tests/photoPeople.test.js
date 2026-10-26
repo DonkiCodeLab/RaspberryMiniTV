@@ -46,8 +46,9 @@ test('setup explains local installation and low power mode without Apple labels'
 test('completed batches stop and offer an explicit next batch, while a single photo has Pause', () => {
   const html = render({ available: true, state: 'complete', done: 100, total: 100, percent: 100, pending: 4470 });
   assert.match(html, /Lote terminado/);
-  assert.match(html, />Analizar siguientes 100<\/button>/);
-  assert.match(html, /como máximo 100 fotos/);
+  assert.match(html, />Analizar otro lote<\/button>/);
+  assert.match(html, /min="1" max="4470" step="1" value="100"/);
+  assert.match(render({ available: true, pending: 3 }), /max="3" step="1" value="3"/);
   const single = render({ available: true, state: 'paused', singleRunning: true, remaining: 70 });
   assert.match(single, />Pausar<\/button>/);
   assert.match(single, /Analizando esta foto/);

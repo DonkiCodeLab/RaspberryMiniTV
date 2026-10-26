@@ -108,7 +108,7 @@ test('advancing skips reviewed, deleted or externally assigned photos without re
   assert.equal(nextReviewCard(queue, 1, { ...fresh, photos: noFacePhotos.map(photo => ({ ...photo, faceCount: 1 })) }, true), 2);
   assert.equal(nextReviewCard(queue, 0, { reviews: noFaceReviews, photos: noFacePhotos }, true), 0); // failed save stays here
   assert.equal(afterReviewStage(false), 'no-faces-intro'); // no face matches still lead to step 3
-  assert.equal(afterReviewStage(true), 'done');
+  assert.equal(afterReviewStage(true), 'new-people-intro');
 });
 
 const bundle = await build({ entryPoints: [new URL('../src/PhotoReviewWizard.jsx', import.meta.url).pathname], bundle: true, write: false,
@@ -129,7 +129,7 @@ test('third step shows photo counter and reviewed action instead of face identit
   assert.match(html, /Borrar la imagen de Galería/);
   assert.doesNotMatch(html, /Aprobar identidad|Identidad propuesta|← Desconocido/);
   const steps = renderToStaticMarkup(React.createElement(ReviewSteps, { step: 3, s }));
-  assert.match(steps, /aria-current="step"[^>]*><span>3<\/span>Sin personas/);
+  assert.match(steps, /aria-current="step"[^>]*><span>3<\/span>Fotos sin personas reconocidas/);
 });
 
 test('direct new-photo entry counts only New, and an empty person step still offers step three', () => {
@@ -139,6 +139,6 @@ test('direct new-photo entry counts only New, and an empty person step still off
   assert.match(direct, /Fotos nuevas por revisar: 2/);
   assert.match(direct, /Revisar fotos nuevas/);
   const emptyPeople = renderToStaticMarkup(React.createElement(Wizard, { ...props, mode: 'review' }));
-  assert.match(emptyPeople, /Siguiente: fotos nuevas sin personas/);
+  assert.match(emptyPeople, /Siguiente: fotos sin personas reconocidas/);
   assert.doesNotMatch(emptyPeople, /¡Revisión terminada!/);
 });

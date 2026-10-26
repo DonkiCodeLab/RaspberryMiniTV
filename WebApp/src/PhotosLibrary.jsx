@@ -525,7 +525,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {error && <div className="photo-alert" role="alert">{error} <button type="button" onClick={() => setAttempt(n => n + 1)}>{s.retry}</button></div>}
     {notice && <p role="status">{notice}</p>}
     {(current === 'albums' || isAlbum && !isAi) && <p className="photo-note">{s.referenceHint}</p>}
-    {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={faceBusy} onAction={(path, payload) => path === 'people/scan' ? setDialog({ mode: 'review-wizard', start: 'scan' }) : faceAction(path, payload)}
+    {(current === 'people' || current === 'withoutPeople' || person) && <PeopleAnalysis faces={data.faces} peopleCount={data.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={faceBusy} onAction={(path, payload) => path === 'people/scan' ? setDialog({ mode: 'review-wizard', start: 'scan', scanPayload: payload }) : faceAction(path, payload)}
       onReview={() => setDialog({ mode: 'review-wizard', start: data.faces.running ? 'scan' : 'review' })} reviewCount={data.reviews?.length || 0} />}
     {current === 'withoutPeople' && <p className="photo-note">{s.withoutPeopleHint}</p>}
     {current === 'pendingValidation' && <p className="photo-note">{s.pendingValidationHint}</p>}
@@ -599,7 +599,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {previewPerson && (newPeopleOnly ? <PersonPhotoPopover key={previewPerson.id} person={previewPerson} photosById={index.byId}
       anchor={previewAnchor.current} s={s} onClose={closePersonPreview} /> :
       <PersonPhotoDialog key={previewPerson.id} Modal={Modal} person={previewPerson} photosById={index.byId} s={s} onClose={closePersonPreview} />)}
-    {dialog?.mode === 'review-wizard' && <PhotoReviewWizard Modal={Modal} library={data} mode={dialog.start} s={s} onRefresh={refresh} onClose={() => setDialog(null)} />}
+    {dialog?.mode === 'review-wizard' && <PhotoReviewWizard Modal={Modal} library={data} mode={dialog.start} scanPayload={dialog.scanPayload} s={s} language={language} onRefresh={refresh} onClose={() => setDialog(null)} />}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} photo={dialog.photo}
       {...(dialog.origin || { album: isAlbum, person, current })} s={s} onClose={closeDialog} onComplete={complete} />}

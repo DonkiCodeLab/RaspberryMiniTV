@@ -2,18 +2,24 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import PersonBirthday from './PersonBirthday.jsx';
 
-export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction, onReview, reviewCount = 0 }) {
+export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction, onReview, reviewCount = 0, initialLimit = 100 }) {
   const titleId = useId();
+  const [limit, setLimit] = useState(() => Math.min(initialLimit, faces.pending || initialLimit));
+  useEffect(() => { setLimit(value => Math.min(Number(value) || initialLimit, faces.pending || initialLimit)); }, [faces.pending, initialLimit]);
   const active = (faces.running && faces.state !== 'paused') || faces.singleRunning;
   const resumable = ['paused', 'error'].includes(faces.state) && faces.remaining > 0;
+  const maximum = Math.max(1, faces.pending || 1);
+  const validLimit = Number.isInteger(Number(limit)) && Number(limit) >= 1 && Number(limit) <= maximum;
   const percent = Math.min(100, Math.max(0, faces.percent || 0));
   const label = faces.pausing ? s.facesPausing : active ? s.scanningFaces : faces.state === 'paused' ? s.facesPaused :
     faces.state === 'complete' ? (faces.pending ? s.facesBatchComplete : s.facesComplete) : s.facesTitle;
   return <section className="photo-people-analysis" aria-labelledby={titleId}>
     <div className="photo-people-analysis__heading">
-      <div><h2 id={titleId}>{faces.singleRunning ? s.detectingPhoto : label}</h2><p>{s.facesBackground}</p><p>{s.facesBatchHint}</p></div>
-      <button type="button" className="dialog-button dialog-button--accent" disabled={busy || faces.pausing || (!active && (!faces.available || (!resumable && !faces.pending)))}
-        onClick={() => onAction(active ? 'people/pause' : 'people/scan', {})}>
+      <div><h2 id={titleId}>{faces.singleRunning ? s.detectingPhoto : label}</h2><p>{s.facesBackground}</p><p>{s.reviewBatchSizeHint}</p>
+        {!active && !resumable && <label className="photo-review-batch-size">{s.reviewBatchSize}<input type="number" min="1" max={maximum} step="1" value={limit} disabled={busy || !faces.pending}
+          onChange={event => setLimit(event.target.value)} /><span>{s.reviewBatchMaximum.replace('{count}', faces.pending || 0)}</span></label>}</div>
+      <button type="button" className="dialog-button dialog-button--accent" disabled={busy || faces.pausing || (!active && (!faces.available || (!resumable && (!faces.pending || !validLimit))))}
+        onClick={() => onAction(active ? 'people/pause' : 'people/scan', active || resumable ? {} : { limit: Number(limit) })}>
         {faces.pausing ? s.facesPausing : active ? s.pauseFaces : resumable ? s.resumeFaces : faces.state === 'complete' && faces.pending ? s.scanNextBatch : s.scan}
       </button>
     </div>

@@ -1411,8 +1411,8 @@ cara. Los rechazos se eliminan junto con la foto. Los nombres, portadas, revisio
 pendientes y la carpeta Desconocido conservan sus funciones.
 
 El análisis se inicia explícitamente desde **Personas → Analizar** y revisa
-como máximo **100 fotos por lote**. Al terminar se detiene y libera los modelos;
-**Analizar siguientes 100** inicia otro lote cuando lo decidas. La cola y el
+**100 fotos por lote por defecto**, con tamaño editable entre 1 y las pendientes. Al terminar se detiene y libera los modelos;
+**Analizar otro lote** permite elegir la cantidad del siguiente. La cola y el
 avance se guardan en SQLite (`face_analysis` y `face_analysis_items`); **Pausar**
 interrumpe el proceso incluso durante una foto y libera sus modelos; esa foto
 permanece pendiente. **Continuar analizando** retoma las pendientes. Cerrar
@@ -1427,6 +1427,19 @@ El porcentaje cuenta fotos revisadas, incluidas las fallidas, que se muestran
 por separado y pueden reintentarse. Los grupos se publican tras cada foto.
 Se puede renombrar una persona y guardar su portada durante el análisis; la
 portada debe pertenecer al grupo y se retira si se quita esa asociación o foto.
+El análisis acepta `POST /pictures/people/scan` con `{ "limit": 100 }`.
+El límite solo se aplica a lotes nuevos; reanudar conserva la cola existente.
+El estado incluye `batchPhotoIds` para delimitar el último paso del asistente.
+
+`POST /pictures/reviews/batch` recibe un `requestId`, fotos con sus tokens de
+revisión y versión de caras, cambios, ediciones y borrados, y las identidades
+nuevas que se nombran o unen. Valida el conjunto y guarda una sola transacción;
+un reintento con el mismo contenido devuelve el recibo anterior. Los giros,
+recortes y cambios de tamaño generan versiones en `Pictures/edited-photos`,
+conservan los originales en `photo_edit_sources`, ajustan los recuadros y mantienen
+fecha/GPS del catálogo. Un fallo revierte el catálogo y elimina las versiones
+recién generadas. La eliminación de Galería incluye los originales conservados.
+
 Las rutas con PIN son `POST /pictures/people/scan`, `/pictures/people/pause` y
 `/pictures/people/<id>/cover` (JSON `{ "photoId": "..." }`).
 

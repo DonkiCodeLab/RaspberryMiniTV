@@ -62,3 +62,20 @@
   .photo-review-card, .photo-review-card.is-leaving { animation: none; }
   .photo-review-photo { transition: none; }
 }
+.photo-dialog.photo-dialog--review-wizard { width: min(960px, calc(100vw - 28px)); }
+.photo-review-steps li { font-size: .8rem; padding-inline: .2rem; }
+.photo-review-batch-size { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: 1rem; }
+.photo-review-batch-size input { width: 110px; }
+.photo-review-batch-size > span { font-size: .8rem; color: #bbcbd6; }
+.photo-review-image-tools { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.photo-review-image-tools .dialog-button { font-size: .8rem; padding: .55rem .8rem; }
+.photo-dialog .photo-review-image-tools label { display: flex; align-items: center; gap: .3rem; font-size: .8rem; }
+.photo-dialog .photo-review-image-tools input { width: 75px; padding: .45rem; }
+.photo-review-new-person { display: grid; gap: 1rem; }
+.photo-review-new-person > h3 { margin: 0; }
+.photo-review-card { animation-duration: .12s; }
+@media (max-width: 600px) {
+  .photo-review-steps { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .photo-review-steps li { flex-direction: row; text-align: left; }
+  .photo-review-image-tools { gap: .35rem; }
+}

@@ -7,40 +7,40 @@ persona o un álbum, la sección sigue seleccionada; pulsarla vuelve a su inicio
 La biblioteca ya no muestra **Nueva carpeta**, **Subir fotos** ni el acceso
 **Del iPhone a tu MiniTV**: la incorporación de fotos se realiza desde las apps.
 
-**Fotos → Personas → Analizar** abre un asistente de tres pasos. El primero
-muestra el progreso del lote de hasta 100 fotos, permite pausar y habilita
-**Siguiente: validar personas** cuando termina. El segundo resume las propuestas
-del lote y muestra una cara por tarjeta, con el contador **Persona X de Y**.
-El tercero recorre solo **Nuevas sin personas**, con **Foto X de Y**, sin repetir
-las fotos de **Resto**. Si no hay coincidencias en el segundo paso, se puede
-continuar directamente al tercero. **Revisar una a una** permite retomar los
-pendientes de todos los lotes; **Sin personas → Nuevas → Revisar fotos nuevas**
-abre directamente el tercer paso.
+**Fotos → Personas → Analizar** abre un asistente de cuatro pasos:
 
-En el tercer paso, pulsa la foto para ampliarla y añadir caras de personas
-existentes o nuevas. **Marcar como revisada** avanza con la misma animación;
-si añadiste caras, **Guardar y marcar como revisada** guarda todo junto y avanza.
-**Quitar referencia de Nuevas** la pasa a **Resto** y conserva el original y sus
-álbumes. **Borrar de Galería** elimina el original y todas sus referencias, previa
-confirmación. Las fotos que cierres sin revisar siguen pendientes.
+1. **Analizar lote**: elige cuántas fotos analizar. El valor inicial es 100
+   (o las pendientes si quedan menos), con mínimo 1 y máximo las pendientes.
+   Pausar conserva el lote; continuar retoma su tamaño y progreso.
+2. **Validar personas identificadas**: aprueba, marca como desconocido o corrige
+   cada coincidencia. Arrastrar a derecha/izquierda sigue funcionando.
+3. **Fotos sin personas reconocidas**: revisa las fotos nuevas sin caras,
+   añade las que falten y márcalas como revisadas. No repite las históricas.
+4. **Revisar nuevas personas detectadas**: pon nombre a cada grupo provisional
+   o únelo a una identidad existente; puedes recorrer todas sus fotos.
 
-Arrastra la foto a la izquierda para marcar la cara como **Desconocido** o a la
-derecha para aprobar su identidad; también hay botones para ambas acciones.
-Pulsa la foto para ampliarla, ver los recuadros y añadir caras. Puedes elegir
-una persona existente o escribir un nombre nuevo. Las correcciones se preparan
-hasta pulsar **Guardar cambios**, que las guarda juntas y avanza. Cada tarjeta
-sale hacia la izquierda y la siguiente entra por la derecha; se respeta la
-preferencia de reducir movimiento. Un error conserva la tarjeta para reintentar.
+En los pasos 2–4 aparecen la fecha y el botón de mapa si hay GPS. Al ampliar
+una foto puedes añadir caras, girar a izquierda/derecha, recortar libremente,
+cambiar el tamaño y deshacer ediciones. Los recuadros siguen la imagen al editarla.
+Las versiones editadas se guardan en `Pictures/edited-photos`; los archivos
+anteriores se conservan y no se vuelven a importar al explorar la carpeta.
+Borrar una foto de Galería elimina también sus versiones conservadas.
 
-Debajo se puede quitar la referencia de esa cara conservando la imagen o borrar
-la foto de toda la Galería, con una confirmación que explica el alcance. Cerrar
-con correcciones pendientes permite seguir editando o descartarlas. Los pendientes
-sin resolver permanecen guardados. Actualiza DeviceApp y WebApp juntos: el asistente
-usa `reviews/resolve` para guardar cada tarjeta de forma atómica y sin duplicar
-caras al reintentar una respuesta perdida.
+Cada decisión avanza inmediatamente, sin guardar ni recargar toda la biblioteca.
+**Validar todo y continuar** aplica el paso completo en una transacción y después
+actualiza la biblioteca una sola vez. Los borradores se conservan en esta pestaña
+al cerrar/reabrir el asistente o recargar la página. Puedes volver a la decisión
+anterior durante el repaso o descartar los cambios del paso. Si falla el envío,
+el borrador permite reintentar sin duplicar caras ni aplicar dos veces las ediciones.
 
-Pruebas: `node --test tests/photoReviewWizard.test.js tests/photoReviews.test.js`
-y `python -m unittest discover -s DeviceApp/tests -p 'test_photo_review_wizard.py'`.
+**Revisar una a una** retoma los pendientes de todos los lotes;
+**Sin personas → Nuevas → Revisar fotos nuevas** abre el tercer paso.
+**Quitar referencia de Nuevas** la pasa a Resto conservando el original.
+**Borrar de Galería** pide confirmación y anota el borrado para la validación final.
+Actualiza WebApp y DeviceApp juntos: el asistente usa `POST /pictures/reviews/batch`.
+
+Pruebas: `node --test tests/photoReviewWizard.test.js tests/photoImageEdits.test.js`
+y `python -m unittest discover -s DeviceApp/tests -p 'test_photo_review*.py'`.
 
 **Dashboard → Subidas → Fotos** divide la carga en dos columnas: arrastra fotos
 a la izquierda y enlaza **MiniTV Fotos** para iPhone con el QR de la derecha.
@@ -770,9 +770,9 @@ una cara de un grupo provisional se abre la entrada de nombre nuevo; también pu
 elegir una identidad ya conocida. Las coincidencias son aproximadas: en Modo de acción,
 **Quitar de esta persona** corrige una asociación sin borrar la foto. Los rasgos
 faciales se guardan localmente en el catálogo y no se devuelven al navegador.
-**Analizar** inicia un lote de como máximo **100 originales pendientes**, incluidos
+**Analizar** permite elegir el tamaño del lote, por defecto **100 originales pendientes**, incluidos
 los importados con GPS que antes se omitían. Al terminar se detiene automáticamente;
-**Analizar siguientes 100** inicia otro lote bajo petición. Una franja superior muestra porcentaje,
+**Analizar otro lote** permite elegir el tamaño del siguiente lote. Una franja superior muestra porcentaje,
 fotos revisadas y errores, con **Pausar** y **Continuar analizando**, sin diálogo
 bloqueante. Al pausar se interrumpe el proceso incluso en mitad de una foto, que
 queda pendiente para reintentar; el avance ya guardado se conserva al cerrar
