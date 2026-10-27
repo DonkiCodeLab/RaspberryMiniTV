@@ -16,6 +16,15 @@ la saque de la carpeta de la persona. Los controles están disponibles tanto al
 pulsar su retrato como al abrir una foto dentro de su carpeta; las vistas flotantes
 de Nuevas personas ofrecen también acceso al editor.
 
+El visor muestra la fecha y **Ver en el mapa**. **Editar fecha** abre un calendario;
+**Guardar fecha** conserva la hora y la zona horaria originales cuando existen.
+En el minimapa, **Editar ubicación** permite pulsar una nueva posición, arrastrar
+el marcador o escribir las coordenadas, y **Guardar ubicación** confirma el cambio.
+También se pueden añadir fecha y posición a fotos sin esos datos. Los cambios
+se guardan en la biblioteca y se reflejan en Galería, Mapa y las demás personas
+de la foto; los archivos originales se conservan. Cancelar descarta la edición;
+Escape vuelve primero del editor al mapa y después a la foto.
+
 **Fotos → Personas → Analizar** abre un asistente de cuatro pasos:
 
 1. **Analizar lote**: elige cuántas fotos analizar. El valor inicial es 100
@@ -746,7 +755,8 @@ de importación, ofrecen **Ver en el mapa** junto al GPS. Abre un minimapa sin
 abandonar la foto ni cambiar la selección. La miniatura marca su posición exacta
 y queda centrada; la escala inicial se calcula con el tamaño del país. Puedes
 ampliar, desplazar y pulsar **Volver al encuadre**. Escape, Atrás o la cruz cierran
-solo el minimapa. Las fotos sin GPS mantienen su indicación y no ofrecen el botón.
+solo el minimapa; durante una edición, primero cancelan los cambios sin guardar.
+En el visor, las fotos sin GPS también ofrecen el mapa para añadir una ubicación.
 Los límites de países se cargan al abrir el mapa y se consultan en el navegador;
 el fondo usa OpenStreetMap, como el mapa general. Si no se identifica el país,
 se utiliza un encuadre regional centrado en el punto.
@@ -799,10 +809,14 @@ variantes de IA. El modo de bajo consumo usa un núcleo, prioridad baja, fotos d
 Las carpetas se actualizan durante el análisis. Al entrar en una persona, su
 nombre se edita directamente y **Elegir portada** permite pulsar cualquiera de
 sus fotos, también usando búsqueda y paginación. La portada elegida permanece
-fija al pasar el ratón y se conserva al volver a abrir la biblioteca. Las tarjetas
+fija al pasar el ratón, al añadir fotos o unir otras personas a esa carpeta y al
+volver a abrir la biblioteca. Un nuevo análisis que no detecte la cara de la
+portada tampoco elimina la elección. Las tarjetas
 de Personas y la miniatura del editor muestran solo el recuadro de su cara,
 conservando sus proporciones. Se usa la foto elegida como portada o la primera
-del álbum que tenga un recuadro de esa persona. Las portadas de Personas no
+del álbum que tenga un recuadro de esa persona cuando no hay una portada elegida.
+Si la portada elegida aún no tiene recuadro, se muestra esa foto completa hasta
+que se detecte o añada la cara, sin sustituirla por otra foto. Las portadas de Personas no
 rotan al pasar el ratón. Si todavía no hay ningún recuadro, aparece un icono de
 persona; abre una foto y pulsa **Detectar personas** para obtenerlo. La interfaz
 indica si falta instalar el motor en la Raspberry y permite reintentar errores.

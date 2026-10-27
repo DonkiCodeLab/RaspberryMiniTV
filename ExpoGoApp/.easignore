@@ -1,0 +1,18 @@
+# Upload from ExpoGoApp with EAS_NO_VCS=1 and EAS_PROJECT_ROOT set to this directory.
+node_modules
+.expo
+/android
+/ios
+/dist
+**/build
+**/.cxx
+.DS_Store
+*.log
+.env*
+!.env.example
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.tsbuildinfo

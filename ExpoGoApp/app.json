@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "MiniTV Fotos Go",
+    "slug": "minitv-fotos-go",
+    "owner": "donkikochan",
+    "version": "1.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#101827"
+      }
+    },
+    "plugins": [
+      "expo-sharing",
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e4c22d26-4a55-4361-a102-9534467a9c2a"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a"
+    }
+  }
+}

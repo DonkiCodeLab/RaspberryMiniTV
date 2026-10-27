@@ -22,6 +22,21 @@
 .photo-location-map__canvas .photo-location-marker .photo-location-pin img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 9px; }
 .photo-location-marker:focus-visible { outline: 3px solid #173141; outline-offset: 5px; }
 .photo-location-dialog__coordinates { margin-top: .75rem; color: #a5d7cb; font-size: .77rem; font-variant-numeric: tabular-nums; }
+.photo-date { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
+.photo-meta { flex-shrink: 0; }
+.photo-detail-link { border: 0; padding: .35rem .15rem; background: transparent; color: #ffe38a; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.photo-detail-link:focus-visible { outline: 2px solid #ffdf52; outline-offset: 2px; border-radius: 3px; }
+.photo-detail-link:disabled, .photo-location-dialog button:disabled { opacity: .5; cursor: default; }
+.photo-location-edit { margin-bottom: .9rem; }
+.photo-location-edit-hint { font-size: .8rem; color: #b4cbd5; line-height: 1.5; }
+.photo-location-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.photo-detail-field { display: grid; gap: .45rem; font-size: .85rem; color: #e0edf2; }
+.photo-detail-field input { box-sizing: border-box; width: 100%; min-width: 0; padding: .7rem; border: 1px solid #ffffff40; border-radius: 9px; color: #f1f7f9; background: #0c2230; font: inherit; color-scheme: dark; }
+.photo-detail-field input:focus-visible { outline: 2px solid #ffdf52; outline-offset: 2px; }
+.photo-detail-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+.photo-location-map.is-editing .photo-location-map__canvas { cursor: crosshair; }
+.photo-location-map.is-editing .photo-location-marker { cursor: grab; }
+.photo-date-dialog { width: min(430px, calc(100vw - 28px)); }
 .photo-location-loading { display: grid; place-items: center; min-height: 220px; color: #b5ccd6; font-size: .85rem; }
 .photo-location-map__offline { margin: .65rem 0 0; color: #ffdaa0; font-size: .76rem; line-height: 1.5; }
 @media (max-width: 480px) {

@@ -14,7 +14,7 @@ export function personPreviewGeometry(anchor, image, viewport) {
 
 export function personPreviewPhotos(person, photosById) {
   const ids = new Set(person.photoIds || []);
-  const cover = [person.coverFace?.photoId, person.coverPhotoId].find(id => ids.has(id) && photosById.has(id));
+  const cover = [person.coverPhotoId, person.coverFace?.photoId].find(id => ids.has(id) && photosById.has(id));
   return [...new Set([cover, ...ids])].map(id => photosById.get(id)).filter(Boolean);
 }
 

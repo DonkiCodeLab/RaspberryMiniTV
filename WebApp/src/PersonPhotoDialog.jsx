@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
 import PhotoFaceViewer, { PersonFaceControls } from './PhotoFaceViewer.jsx';
 import { personPreviewFaces, personPreviewPhotos } from './photoPersonPreview.js';
+import PhotoMeta from './PhotoMeta.jsx';
 
-export default function PersonPhotoDialog({ Modal, person, photosById, people, globalFaces, revision, onChanged, s, onClose, initialPhotoId, initialEditing = false }) {
+export default function PersonPhotoDialog({ Modal, person, photosById, people, globalFaces, revision, onChanged, s, language, onClose, initialPhotoId, initialEditing = false, initialDetail }) {
   // Keep the browsing session open when correcting its main person's last face.
   const [photoIds] = useState(() => personPreviewPhotos(person, photosById).map(photo => photo.id));
   const photos = photoIds.map(id => photosById.get(id)).filter(Boolean);
@@ -31,6 +32,7 @@ export default function PersonPhotoDialog({ Modal, person, photosById, people, g
         {photos.length > 1 && <button type="button" className="photo-person-preview__nav" disabled={locked} aria-label={s.next} title={s.next} onClick={() => move(1)}>›</button>}
       </div>
       <div className="photo-person-preview__caption" role="status"><strong>{index + 1} / {photos.length}</strong><span>{photo.title || photo.name}</span></div>
+      <PhotoMeta key={photo.id} photo={photo} s={s} language={language} onChanged={onChanged} disabled={locked} initialDetail={photo.id === initialPhotoId ? initialDetail : undefined} />
       {!editing && <p>{s.personPhotoBrowseHint}</p>}
     </> : <p>{s.empty}</p>}
   </Modal>;

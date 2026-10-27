@@ -339,7 +339,24 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.assertEqual(remaining['coverFace']['photoId'], remaining['photoIds'][0])
         self.assertNotEqual(remaining['coverFace']['photoId'], next_cover)
 
-    def test_legacy_person_portrait_falls_back_only_to_a_known_rectangle(self):
+    def test_chosen_cover_survives_new_matches_and_reanalysis_that_misses_its_face(self):
+        photos = sorted(self.upload(3), key=lambda photo: photo['id'])
+        chosen = photos[-1]['id']
+        self.store.group_faces(chosen, self.detections()[:1])
+        person = self.store.snapshot()['people'][0]
+        self.store.set_person_cover(person['id'], chosen)
+        cover = person['coverFace']
+        # New photos sort before the chosen cover, but cannot replace it.
+        for photo in photos[:-1]:
+            self.store.group_faces(photo['id'], self.detections()[:1])
+            saved = next(p for p in self.store.snapshot()['people'] if p['id'] == person['id'])
+            self.assertEqual((saved['coverPhotoId'], saved['coverFace']), (chosen, cover))
+        self.store.group_faces(chosen, [])
+        saved = next(p for p in PhotoLibrary(self.store.root).snapshot()['people'] if p['id'] == person['id'])
+        self.assertEqual((saved['coverPhotoId'], saved['coverFace']), (chosen, cover))
+        self.assertEqual(len(saved['photoIds']), 3)
+
+    def test_chosen_legacy_photo_does_not_switch_to_a_new_photo_with_a_rectangle(self):
         photos = self.upload(2)
         self.store.group_faces(photos[0]['id'], [[0.] * 128])
         person = self.store.snapshot()['people'][0]
@@ -348,7 +365,12 @@ class PeopleAnalysisTests(unittest.TestCase):
         self.store.group_faces(photos[1]['id'], self.detections()[:1])
         person = self.store.snapshot()['people'][0]
         self.assertEqual(person['coverPhotoId'], photos[0]['id'])
-        self.assertEqual(person['coverFace']['photoId'], photos[1]['id'])
+        self.assertIsNone(person['coverFace'])
+        self.assertIn(photos[1]['id'], person['faceBoxes'])
+        self.store.group_faces(photos[0]['id'], self.detections()[:1])
+        person = self.store.snapshot()['people'][0]
+        self.assertEqual(person['coverPhotoId'], photos[0]['id'])
+        self.assertEqual(person['coverFace']['photoId'], photos[0]['id'])
 
     def test_engine_failure_preserves_pending_work_for_an_explicit_retry(self):
         self.upload()

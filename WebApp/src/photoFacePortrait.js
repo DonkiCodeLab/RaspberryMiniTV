@@ -1,3 +1,7 @@
+export function personCoverPhotoId(person) {
+  return person.coverPhotoId || person.coverFace?.photoId;
+}
+
 // Leave room around the head instead of enlarging the detector's tight face box.
 // Work in oriented image pixels so the framing never stretches the photograph.
 export function facePortraitLayout(box, width, height) {

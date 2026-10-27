@@ -217,3 +217,16 @@ test('person albums use face portraits and never fall back to a misleading group
   assert.doesNotMatch(album, /photo-person-portrait/);
   assert.match(album, /alt="Photo 0"/);
 });
+
+test('an explicit cover without a face rectangle keeps the selected photo instead of an automatic replacement', () => {
+  const person = { id: 'person:ana', name: 'Ana', coverPhotoId: '0',
+    coverFace: { photoId: '1', box: { x: .6, y: .2, width: .2, height: .3 } } };
+  for (const photoList of [photos.slice(0, 2), photos.slice(0, 3).reverse()]) {
+    const html = renderToStaticMarkup(React.createElement(AlbumCard, { folder: person, photos: photoList, s, language: 'es' }));
+    assert.match(html, /photo-person-portrait__full/);
+    assert.doesNotMatch(html, /photo-person-portrait__crop/);
+    assert.match(html, /alt="Ana"/);
+  }
+  const noPhoto = renderToStaticMarkup(React.createElement(PersonPortrait, { person: { name: 'Ana' }, s }));
+  assert.doesNotMatch(noPhoto, /<img/);
+});

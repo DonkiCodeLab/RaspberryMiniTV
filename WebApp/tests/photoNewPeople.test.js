@@ -38,10 +38,11 @@ test('filtering precedes pagination and a renamed group becomes a merge destinat
   assert.deepEqual(options.map(person => person.name), ['Desconocido', 'Ana', 'Luis']);
 });
 
-test('preview opens the portrait source first, includes only associated existing photos, and deduplicates', () => {
+test('preview opens the chosen cover before automatic portraits, includes only associated existing photos, and deduplicates', () => {
   const photos = new Map(['a', 'b', 'c'].map(id => [id, { id }]));
   const person = { photoIds: ['a', 'missing', 'b', 'a'], coverFace: { photoId: 'b' }, coverPhotoId: 'a' };
-  assert.deepEqual(personPreviewPhotos(person, photos).map(photo => photo.id), ['b', 'a']);
+  assert.deepEqual(personPreviewPhotos(person, photos).map(photo => photo.id), ['a', 'b']);
+  assert.deepEqual(personPreviewPhotos({ ...person, coverPhotoId: null }, photos).map(photo => photo.id), ['b', 'a']);
   assert.deepEqual(personPreviewPhotos({ ...person, coverFace: { photoId: 'c' } }, photos).map(photo => photo.id), ['a', 'b']);
   assert.deepEqual(personPreviewPhotos({ photoIds: ['missing'] }, photos), []);
 });

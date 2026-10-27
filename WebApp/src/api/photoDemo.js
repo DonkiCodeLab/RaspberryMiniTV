@@ -2,6 +2,7 @@ import { deleteDemoPhotos, reviewDemoPeople } from './photoDemoPeopleBatch.js';
 import { descendantIds, folderTrail, hasLocation, isIdentifiedPhotoPerson, UNKNOWN_PERSON_ID } from '../photoLibrary.js';
 import { hashPhoto } from '../photoHash.js';
 import { validBirthday } from '../personBirthday.js';
+import { photoMetadataPatch } from '../photoMetadata.js';
 // Local demo albums persist in IndexedDB, including image blobs, without network uploads.
 const urls = new Map();
 let operation = Promise.resolve();
@@ -139,6 +140,12 @@ export function photoDemo(action, data = {}) {
           deleteDemoPhotos(library, ids);
           result = { ok: true, deleted: photos.length };
         }
+      } else if (/^photos\/[^/]+\/metadata$/.test(action)) {
+        const photo = library.photos.find(photo => photo.id === action.split('/')[1]);
+        if (!photo) throw new Error('Esta foto ya no está disponible.');
+        const patch = photoMetadataPatch(photo, data);
+        Object.assign(photo, patch);
+        result = { ok: true, metadata: patch };
       } else if (action.startsWith('metadata/')) {
         const raw = library.metadata?.[action.slice('metadata/'.length)];
         if (!raw) throw new Error('Esta foto no tiene metadatos importados.');
@@ -255,7 +262,7 @@ export function photoDemo(action, data = {}) {
           for (const face of matches) face.name = person.name;
           if (matches.length) {
             person.faceBoxes[photoId] = matches.map(({ id, box }) => ({ id, box }));
-            person.coverFace ||= { ...person.faceBoxes[photoId][0], photoId };
+            if (!person.coverPhotoId || person.coverPhotoId === photoId) person.coverFace ||= { ...person.faceBoxes[photoId][0], photoId };
           }
         }
       }

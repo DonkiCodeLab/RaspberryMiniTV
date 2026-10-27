@@ -1,0 +1,17 @@
+node_modules/
+.expo/
+/android/
+/ios/
+/dist/
+**/build/
+**/.cxx/
+*.log
+.env*
+!.env.example
+!package-lock.json
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.tsbuildinfo

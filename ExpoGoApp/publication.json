@@ -1,0 +1,33 @@
+{
+  "publishedAt": "2026-10-25T16:27:26.779Z",
+  "projectId": "e4c22d26-4a55-4361-a102-9534467a9c2a",
+  "groupId": "6da28a1b-4729-4e02-a244-d69d1539b78f",
+  "sdkVersion": "58.0.0",
+  "expoGoUrl": "exp://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a/group/6da28a1b-4729-4e02-a244-d69d1539b78f",
+  "pageUrl": "https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/6da28a1b-4729-4e02-a244-d69d1539b78f",
+  "qrPath": "../output/minitv-expo-go-sdk58-qr.png",
+  "updates": [
+    {
+      "id": "01a173e3-6cbb-71f9-8274-442c36ea4b29",
+      "createdAt": "2026-10-25T16:27:26.779Z",
+      "group": "6da28a1b-4729-4e02-a244-d69d1539b78f",
+      "branch": "expo-go",
+      "message": "MiniTV Fotos Go 1.1.0: compatible con Expo Go SDK 58",
+      "runtimeVersion": "1.1.0",
+      "platform": "android",
+      "manifestPermalink": "https://u.expo.dev/update/01a173e3-6cbb-71f9-8274-442c36ea4b29",
+      "isRollBackToEmbedded": false
+    },
+    {
+      "id": "01a173e3-6cbb-70d6-8db8-6020c73c7740",
+      "createdAt": "2026-10-25T16:27:26.779Z",
+      "group": "6da28a1b-4729-4e02-a244-d69d1539b78f",
+      "branch": "expo-go",
+      "message": "MiniTV Fotos Go 1.1.0: compatible con Expo Go SDK 58",
+      "runtimeVersion": "1.1.0",
+      "platform": "ios",
+      "manifestPermalink": "https://u.expo.dev/update/01a173e3-6cbb-70d6-8db8-6020c73c7740",
+      "isRollBackToEmbedded": false
+    }
+  ]
+}

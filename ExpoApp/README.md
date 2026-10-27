@@ -2,6 +2,8 @@
 
 Una interfaz TypeScript compartida para **Android 10+ e iOS 17+**. Escanea el QR del dashboard, confirma el servidor y exporta la fototeca autorizada. Muestra porcentaje, nuevas, existentes, errores, últimas fotos e informe CSV. Admite pausa y reanudación después de recuperar el proceso.
 
+Para probar sin compilar ni firmar, usa la edición [MiniTV Fotos Go](../ExpoGoApp/README.md). Se abre con QR dentro de Expo Go y requiere mantener la app abierta; en Android utiliza el selector de fotos.
+
 El proyecto está en **ExpoApp**. Su identificador es **com.donkicodelab.minitvphotos.expo**, distinto de las apps nativas anteriores.
 
 ## Abrir y desarrollar
@@ -110,11 +112,13 @@ EAS requiere configurar tu cuenta/proyecto y, para distribuir a un iPhone físic
 
 El proyecto está vinculado a [donkikochan/minitv-fotos-expo](https://expo.dev/accounts/donkikochan/projects/minitv-fotos-expo), con ID **4c534c7c-2d21-4ae3-a333-4a81d7f3fb6f**.
 
-- [Compilación Android de prueba](https://expo.dev/accounts/donkikochan/projects/minitv-fotos-expo/builds/fb144409-381b-49e6-987b-bfa47ae9bab4): enviada a EAS el 25/10/2026. La página muestra el estado y permite instalar el APK cuando termine.
+- [Compilación Android de prueba](https://expo.dev/accounts/donkikochan/projects/minitv-fotos-expo/builds/fb144409-381b-49e6-987b-bfa47ae9bab4): completada en EAS el 25/10/2026. La página permite instalar el APK. [Descarga directa del APK](https://expo.dev/artifacts/eas/0YbMUt9E_13mE2sV44y6cOPyYtuVf7cVmkVOAibhMS8.apk).
 - [Registro del iPhone](https://expo.dev/register-device/7d040616-bf00-4494-9b10-79ab24469d26): abrir en Safari desde el iPhone. Este enlace registra su UDID para distribución interna; **no instala la app**. La compilación de iOS queda pendiente de completar el acceso a Apple y la firma.
 - Los QR están en **output/minitv-expo-android-install-qr.png** y **output/minitv-expo-iphone-register-qr.png**, en la raíz del repositorio.
 
 El APK de EAS utiliza una clave propia almacenada en Expo. Si ya instalaste el APK local con la firma de desarrollo, Android puede rechazar actualizarlo por tener otra firma. En ese caso, termina cualquier transferencia pendiente antes de desinstalar la versión local e instalar la de EAS; desinstalar borra la conexión y la cola guardadas en el teléfono.
+
+EAS CLI debe ser **24.4.1 o posterior**, requisito fijado en **eas.json**. Versiones anteriores pueden fallar al iniciar sesión en Apple con **iTunes service key is empty**; Expo [corrigió ese problema en 24.4.1](https://github.com/expo/eas-cli/issues/4392). En este Mac se ha actualizado a **25.3.0**. Para actualizar otra instalación: **npm install --global eas-cli@latest**.
 
 ## Comprobaciones
 

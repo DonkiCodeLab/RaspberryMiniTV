@@ -49,6 +49,7 @@
 .photo-person-portrait__placeholder svg { width: 50%; height: 50%; }
 .photo-person-portrait__crop { position: absolute; width: 100%; height: 100%; left: 50%; top: 50%; transform: translate(-50%, -50%); overflow: hidden; }
 .photo-person-portrait .photo-person-portrait__crop img { position: absolute; max-width: none; object-fit: fill; }
+.photo-person-portrait img.photo-person-portrait__full { display: block; width: 100%; height: 100%; object-fit: contain; transform: none; }
 .photo-album .photo-person-portrait .photo-person-portrait__crop img { transform: none; }
 .photo-album__art { display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; color: #ffdb53; padding: 1.5rem; background: radial-gradient(ellipse at 20% 15%, #dec46228, transparent 65%), linear-gradient(145deg, #294c5c, #102a37); }
 .photo-album__art > svg { width: 48%; max-width: 105px; filter: drop-shadow(0 12px 16px #0005); }
@@ -250,7 +251,8 @@
 .photo-person-preview__close { top: 10px; right: 10px; }
 .photo-person-preview__previous { top: calc(50% - 21px); left: 10px; }
 .photo-person-preview__next { top: calc(50% - 21px); right: 10px; }
-.photo-person-preview__count { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); padding: .3rem .65rem; border-radius: 20px; background: #102735eb; color: #fff; font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none; }
+.photo-person-preview__count { position: absolute; top: 10px; left: 10px; padding: .3rem .65rem; border-radius: 20px; background: #102735eb; color: #fff; font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; pointer-events: none; }
+.photo-person-preview__details { position: absolute; bottom: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .7rem; padding: .45rem .75rem; background: #102735eb; color: #eef5f7; font-size: .75rem; }
 .photo-person-preview__loading { position: absolute; inset: 54px 12px; display: flex; align-items: center; justify-content: center; gap: .6rem; flex-wrap: wrap; color: #fff; text-align: center; }
 @keyframes photo-person-expand { from { opacity: .4; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .photo-person-preview { animation: none; } }
@@ -383,7 +385,6 @@
 .photo-dialog .photo-person-face-controls label { display: flex; align-items: center; gap: .55rem; font-size: .85rem; cursor: pointer; }
 .photo-dialog .photo-person-face-controls input { width: 18px; height: 18px; margin: 0; accent-color: #ffdf52; }
 .photo-person-face-controls .dialog-button { padding: .55rem .85rem; font-size: .85rem; }
-.photo-person-preview > .photo-person-preview__edit { bottom: 10px; left: 10px; width: auto; height: auto; padding: .55rem .8rem; border-radius: 10px; font-size: .8rem; }
 .photo-face-viewer .photo-viewer__stage { display: flex; flex-direction: column; min-height: 0; }
 .photo-viewer__canvas { position: relative; min-height: 0; }
 .photo-face-viewer .photo-viewer__canvas { flex: 1; }

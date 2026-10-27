@@ -4,8 +4,9 @@ import { getPictureContentUrl } from './api/raspberryApi.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import useBrowserBack from './useBrowserBack.js';
 import { personPreviewFaces, personPreviewGeometry, personPreviewPhotos } from './photoPersonPreview.js';
+import { dateLabel } from './photoMetadata.js';
 
-export default function PersonPhotoPopover({ person, photosById, anchor, s, onClose, onEdit }) {
+export default function PersonPhotoPopover({ person, photosById, anchor, s, language, onClose, onEdit, onDetails }) {
   const photos = personPreviewPhotos(person, photosById);
   const [photoId, setPhotoId] = useState(() => photos[0]?.id);
   const [loaded, setLoaded] = useState(null), [failed, setFailed] = useState(null), [attempt, setAttempt] = useState(0);
@@ -61,7 +62,12 @@ export default function PersonPhotoPopover({ person, photosById, anchor, s, onCl
       {error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setFailed(null); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}
     </div>}
     <button type="button" className="photo-person-preview__close" onClick={close} aria-label={s.close} title={s.close}>×</button>
-    {onEdit && <button type="button" className="photo-person-preview__edit" onClick={() => onEdit(photo.id)}>{s.editFaces}</button>}
+    <div className="photo-person-preview__details">
+      <span>◷ {dateLabel(photo.takenAt, language, s.noDate)}</span>
+      {onDetails && <><button type="button" className="photo-detail-link" onClick={() => onDetails(photo.id, 'date')}>{s.editPhotoDate}</button>
+        <button type="button" className="photo-detail-link" onClick={() => onDetails(photo.id, 'location')}>{s.showPhotoMap}</button></>}
+      {onEdit && <button type="button" className="photo-detail-link" onClick={() => onEdit(photo.id)}>{s.editFaces}</button>}
+    </div>
     {photos.length > 1 && <>
       <button type="button" className="photo-person-preview__previous" onClick={() => move(-1)} aria-label={s.previous} title={s.previous}>‹</button>
       <button type="button" className="photo-person-preview__next" onClick={() => move(1)} aria-label={s.next} title={s.next}>›</button>

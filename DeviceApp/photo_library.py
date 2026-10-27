@@ -609,13 +609,13 @@ class PhotoLibrary:
             portraits, face_boxes = {}, {}
             # Lightweight rectangles for checking each match, plus the preferred cover.
             # Never send facial encodings.
-            for row in db.execute('''SELECT f.id, f.person, f.photo, f.box FROM face_detections f
+            for row in db.execute('''SELECT f.id, f.person, f.photo, f.box, c.photo AS chosen_cover FROM face_detections f
                     LEFT JOIN person_covers c ON c.person=f.person
                     WHERE f.person IS NOT NULL AND f.box IS NOT NULL
                     ORDER BY f.person, (f.photo=c.photo) DESC, f.photo, f.manual DESC, f.rowid'''):
                 box = json.loads(row['box'])
                 face_boxes.setdefault(row['person'], {}).setdefault(row['photo'], []).append({'id': row['id'], 'box': box})
-                if row['person'] not in portraits:
+                if row['person'] not in portraits and (row['chosen_cover'] is None or row['photo'] == row['chosen_cover']):
                     portraits[row['person']] = {'id': row['id'], 'photoId': row['photo'], 'box': box}
             for person in people:
                 person['coverPhotoId'] = person['coverPhotoId'] if person['coverPhotoId'] in person['photoIds'] else None
@@ -634,6 +634,36 @@ class PhotoLibrary:
                 'scanning': self.scanning, 'scanError': self.scan_error,
                 'aiReady': bool(configured.get('enabled') and configured.get('configured')),
                 'faces': faces, 'knownPeople': known_people, 'reviews': reviews}
+
+    def update_photo_metadata(self, photo_id, data):
+        if not isinstance(data, dict) or not data or set(data) - {'takenAt', 'latitude', 'longitude'}:
+            raise PhotoError('Indica una fecha o ubicación válida.')
+        if 'takenAt' in data:
+            value = data['takenAt']
+            if not isinstance(value, str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):
+                raise PhotoError('Selecciona una fecha válida.')
+            try:
+                datetime.fromisoformat(value)
+            except ValueError:
+                raise PhotoError('Selecciona una fecha válida.')
+        if 'latitude' in data or 'longitude' in data:
+            for key, limit in [('latitude', 90), ('longitude', 180)]:
+                value = data.get(key)
+                if type(value) not in (int, float) or not math.isfinite(value) or not -limit <= value <= limit:
+                    raise PhotoError('Selecciona una ubicación válida.')
+        with self.db() as db:
+            row = db.execute('SELECT metadata FROM photos WHERE id=?', (photo_id,)).fetchone()
+            if not row:
+                raise PhotoError('Esta foto ya no está disponible. Actualiza la biblioteca.', 404)
+            metadata = json.loads(row['metadata'])
+            patch = dict(data)
+            if 'takenAt' in patch:
+                previous = metadata.get('takenAt')
+                if isinstance(previous, str) and re.match(r'\d{4}-\d{2}-\d{2}T', previous):
+                    patch['takenAt'] += previous[10:]
+            metadata.update(patch)
+            db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(metadata), photo_id))
+        return {'ok': True, 'metadata': metadata}
 
     def move(self, ids, target='', new_name=None, parent=''):
         """Compatibility endpoint: adding an album reference never moves an original."""
@@ -928,6 +958,7 @@ class PhotoLibrary:
                     FROM face_detections WHERE person IS NOT NULL AND person!=? AND encoding!='[]' AND photo!=?""",
                     (UNKNOWN_PERSON_ID, photo_id))]
                 previous = [dict(row) for row in db.execute('SELECT * FROM face_detections WHERE photo=?', (photo_id,))]
+                cover_people = {row[0] for row in db.execute('SELECT person FROM person_covers WHERE photo=?', (photo_id,))}
                 rejections = [dict(row) for row in db.execute('SELECT * FROM face_rejections WHERE photo=?', (photo_id,))]
                 birthdays = dict(db.execute('SELECT person, birth_date FROM person_birthdays'))
             # JSON decoding and all vector comparisons happen without the API's
@@ -960,8 +991,10 @@ class PhotoLibrary:
                     'box': old['box'] if old and old['manual'] and old['box'] else detection['box'],
                     'manual': old['manual'] if old else 0, 'new': old is None})
                 used.add(person)
-            # Missed confirmed faces and explicit unassignments remain intact.
-            detections.extend(face for face in previous if face['manual'] and face['id'] not in matched)
+            # A detector miss must not discard an explicitly chosen cover.
+            # Keep its identity without implicitly confirming pending reviews.
+            detections.extend(face for face in previous
+                              if (face['manual'] or face['person'] in cover_people) and face['id'] not in matched)
             with self.db() as db:
                 check_cancel()
                 if self.revision != revision: continue
@@ -1420,6 +1453,10 @@ def create_photo_blueprint(get_library):
     def delete():
         data = body()
         return jsonify(get_library().delete_photos(data.get('ids'), data.get('scope'), data.get('folderId')))
+
+    @bp.post('/pictures/photos/<ident>/metadata')
+    def update_metadata(ident):
+        return jsonify(get_library().update_photo_metadata(ident, body()))
 
     @bp.post('/pictures/photos/download')
     def download_photos():

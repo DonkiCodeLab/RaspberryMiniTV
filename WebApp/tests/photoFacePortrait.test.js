@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { facePortraitLayout } from '../src/photoFacePortrait.js';
+import { facePortraitLayout, personCoverPhotoId } from '../src/photoFacePortrait.js';
+
+test('a saved cover takes priority over changing automatic portrait candidates', () => {
+  const person = { coverPhotoId: 'chosen', coverFace: { photoId: 'automatic' } };
+  assert.equal(personCoverPhotoId(person), 'chosen');
+  assert.equal(personCoverPhotoId({ ...person, coverFace: { photoId: 'newer' } }), 'chosen');
+  assert.equal(personCoverPhotoId({ ...person, coverFace: null }), 'chosen');
+  assert.equal(personCoverPhotoId({ coverFace: { photoId: 'automatic' } }), 'automatic');
+  assert.equal(personCoverPhotoId({}), undefined);
+});
 
 function cropPixels(box, width, height) {
   const { frame, image } = facePortraitLayout(box, width, height);
