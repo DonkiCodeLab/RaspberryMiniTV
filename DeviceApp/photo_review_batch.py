@@ -129,7 +129,7 @@ def apply_batch(library, data):
                 pending = {row['id']: row for row in photo_reviews.pending(db)}
                 seen, prepared = set(), []
                 for item in photos:
-                    if not isinstance(item, dict) or set(item) - {'albums'} != {'photoId', 'expectedPath', 'version', 'reviewIds', 'changes', 'edits', 'delete'}:
+                    if not isinstance(item, dict) or set(item) - {'albums', 'metadata'} != {'photoId', 'expectedPath', 'version', 'reviewIds', 'changes', 'edits', 'delete'}:
                         raise PhotoError('Foto de revisión inválida.')
                     ident = item['photoId']
                     if not isinstance(ident, str) or ident in seen: raise PhotoError('Selecciona cada foto una sola vez.')
@@ -140,7 +140,12 @@ def apply_batch(library, data):
                     ids = item['reviewIds']
                     if not isinstance(ids, list) or len(ids) > 5000 or any(not isinstance(i, str) or i not in pending or pending[i]['photoId'] != ident for i in ids):
                         raise PhotoError('Una propuesta ya no está pendiente. Actualiza la revisión.', 409)
-                    if type(item['delete']) is not bool or not isinstance(item['changes'], list) or len(item['changes']) > 100:
+                    # A crowded photo may have more than 100 existing detections.
+                    # Permit one decision per detection, plus up to 100 manual additions.
+                    face_count = db.execute('SELECT COUNT(*) FROM face_detections WHERE photo=?', (ident,)).fetchone()[0]
+                    if (type(item['delete']) is not bool or not isinstance(item['changes'], list) or
+                            len(item['changes']) > face_count + 100 or
+                            sum(isinstance(change, dict) and change.get('action') == 'add' for change in item['changes']) > 100):
                         raise PhotoError('Cambios de foto inválidos.')
                     prepared.append((item, photo))
                 # Check unnamed groups before changing any face in those groups.
@@ -181,6 +186,7 @@ def apply_batch(library, data):
                         elif action == 'assign': library.assign_face(photo['id'], face, assignment, db=db)
                         else: library.remove_face(photo['id'], face, db=db)
                     save_image(library, db, photo, item['edits'], created)
+                    if 'metadata' in item: library.update_photo_metadata(photo['id'], item['metadata'], db=db)
                     batch = next((pending[i]['batchId'] for i in item['reviewIds']), None)
                     db.execute('UPDATE photo_reviews SET batch=? WHERE photo=? AND face IS NULL AND reviewed=0', (batch, photo['id']))
                 for item in people:

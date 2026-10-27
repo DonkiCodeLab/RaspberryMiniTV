@@ -8,7 +8,7 @@ import { photoCountryView } from './photoCountryView.js';
 import { intlLocale } from './i18n/languages.js';
 import { hasLocation } from './photoLibrary.js';
 
-export default function PhotoLocationMap({ photo, s, language, previewUrl, editing = false, position = photo, onPositionChange }) {
+export default function PhotoLocationMap({ photo, s, language, previewUrl, editing = false, position = photo, onPositionChange, placeLabel }) {
   const element = useRef(null), reset = useRef(null), map = useRef(null), pin = useRef(null);
   const callbacks = useRef(null);
   callbacks.current = { editing, onPositionChange };
@@ -65,7 +65,7 @@ export default function PhotoLocationMap({ photo, s, language, previewUrl, editi
     if (editing) marker.dragging?.enable(); else marker.dragging?.disable();
   }, [position?.latitude, position?.longitude, editing, photo.id, photo.latitude, photo.longitude, photo.relativePath, previewUrl, s]);
   return <div className={`photo-location-map${editing ? ' is-editing' : ''}`}>
-    <div className="photo-location-map__toolbar"><div><strong>{country || s.photoLocation}</strong><span>{editing ? s.choosePhotoLocation : s.countryMapHint}</span></div>
+    <div className="photo-location-map__toolbar"><div><strong>{placeLabel || (editing ? s.photoLocation : country) || s.photoLocation}</strong><span>{editing ? s.choosePhotoLocation : s.countryMapHint}</span></div>
       <button type="button" onClick={() => reset.current?.()}>{s.resetCountryView}</button></div>
     <div ref={element} className="photo-location-map__canvas" role="region" aria-label={`${s.photoLocation}: ${photo.title || photo.name}`} />
     {offline && <p className="photo-location-map__offline" role="status">{s.mapOffline}</p>}

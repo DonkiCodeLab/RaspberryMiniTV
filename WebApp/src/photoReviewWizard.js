@@ -104,15 +104,41 @@ export function newPersonReviewHandled(person, drafts) {
   });
 }
 
+// Only unresolved detections in this photo: keep both per-face decisions and
+// identities staged for entire groups, even before the batch is validated.
+export function remainingReviewFaceIds(faces, draft, peopleDrafts = []) {
+  const assignedGroups = new Set(peopleDrafts.filter(item => item.personId || validNewPersonName(item.name)).map(item => item.id));
+  const decided = new Set((draft.changes || []).filter(change => change.action === 'remove' ||
+    change.action === 'assign' && (change.personId || validNewPersonName(change.name))).map(change => change.faceId));
+  return faces.filter(face => !decided.has(face.id) && !draft.croppedFaceIds?.includes(face.id) &&
+    !assignedGroups.has(face.personId) && (!face.personId || isNewPhotoPerson({ id: face.personId, name: face.name })))
+    .map(face => face.id);
+}
+
 export function reviewHandled(review, drafts) {
   const draft = drafts[review.photoId];
   return !!draft && (draft.delete || draft.reviewIds.includes(review.id) ||
     draft.croppedFaceIds?.includes(review.faceId) || draft.changes.some(change => change.faceId === review.faceId));
 }
 
+export function upcomingReviewPhotos(queue, cursor, photos, drafts) {
+  const current = queue[cursor], seen = new Set(current?.photoIds || [current?.photoId]);
+  const available = new Map(photos.map(photo => [photo.id, photo])), result = [];
+  for (const item of queue.slice(cursor + 1)) {
+    if (item.photoIds ? newPersonReviewHandled(item, drafts) : reviewHandled(item, drafts)) continue;
+    for (const id of item.photoIds || [item.photoId]) {
+      if (seen.has(id) || drafts[id]?.delete || !available.has(id)) continue;
+      seen.add(id); result.push(available.get(id));
+      if (result.length === 2) return result;
+    }
+  }
+  return result;
+}
+
 export function reviewBatchPhotos(drafts) {
-  return Object.values(drafts).map(({ photoId, expectedPath, version, reviewIds, changes, edits, albums, delete: remove }) =>
-    ({ photoId, expectedPath, version, reviewIds, changes, edits, ...(albums?.length ? { albums } : {}), delete: !!remove }));
+  return Object.values(drafts).map(({ photoId, expectedPath, version, reviewIds, changes, edits, albums, metadata, delete: remove }) =>
+    ({ photoId, expectedPath, version, reviewIds, changes, edits, ...(albums?.length ? { albums } : {}),
+      ...(metadata && Object.keys(metadata).length ? { metadata } : {}), delete: !!remove }));
 }
 
 export function reviewChanges(assignments, additions) {

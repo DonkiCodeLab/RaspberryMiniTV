@@ -254,7 +254,8 @@ class PhotoApiTests(unittest.TestCase):
         self.store = PhotoLibrary(Path(self.temp.name) / 'Pictures')
         for name, value in [('get_photo_library', lambda: self.store), ('current_web_pin', lambda: 'test')]:
             patcher = patch.object(control_api, name, value); patcher.start(); self.addCleanup(patcher.stop)
-        for name in ('start_sync', 'start_faces'):
+        # Background workers must not outlive this API fixture's temporary library.
+        for name in ('start_sync', 'start_faces', 'start_previews'):
             patcher = patch.object(self.store, name); patcher.start(); self.addCleanup(patcher.stop)
         self.client = control_api.app.test_client()
         self.headers = {'X-Web-Pin': 'test'}
@@ -262,7 +263,7 @@ class PhotoApiTests(unittest.TestCase):
     def test_all_routes_require_pin(self):
         for path, method in [('library', 'get'), ('status', 'get'), ('content', 'get'), ('upload', 'post'), ('folders', 'post'), ('move', 'post'),
                              ('albums/add', 'post'), ('photos/delete', 'post'), ('generate', 'post'), ('people/scan', 'post'), ('people/pause', 'post'), ('people/a/cover', 'post'), ('people/a', 'post'), ('people/a/remove', 'post'),
-                             ('photos/a/metadata', 'post'), ('photos/a/faces', 'get'), ('photos/a/detect', 'post'), ('photos/a/faces/b/assign', 'post'), ('photos/a/faces/b/remove', 'post')]:
+                             ('photos/a/metadata', 'post'), ('places/resolve', 'post'), ('photos/a/faces', 'get'), ('photos/a/detect', 'post'), ('photos/a/faces/b/assign', 'post'), ('photos/a/faces/b/remove', 'post')]:
             self.assertEqual(getattr(self.client, method)('/pictures/' + path).status_code, 401, path)
 
     def test_status_is_small_private_and_does_not_build_or_scan_catalogue(self):
@@ -290,5 +291,17 @@ class PhotoApiTests(unittest.TestCase):
         for route in ('folders', 'move', 'generate'):
             self.assertEqual(self.client.post('/pictures/' + route, headers=self.headers, json=[]).status_code, 400)
         self.assertEqual(self.client.get('/pictures/content?relativePath=../secret.jpg', headers=self.headers).status_code, 400)
+
+    def test_location_lookup_is_private_and_does_not_modify_catalogue(self):
+        result = {'status': 'found', 'city': 'Barcelona', 'country': 'España', 'countryCode': 'ES'}
+        revision = self.store.revision
+        with patch.object(self.store.places, '_fetch', return_value=result):
+            response = self.client.post('/pictures/places/resolve', headers=self.headers, json={'latitude': 41.385, 'longitude': 2.173})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json, result)
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        self.assertEqual(self.store.revision, revision)
+        self.assertEqual(self.client.post('/pictures/places/resolve', headers=self.headers, json={'latitude': 91, 'longitude': 2}).status_code, 400)
+        self.assertEqual(self.client.post('/pictures/places/resolve', headers=self.headers, json=[]).status_code, 400)
 
 if __name__ == '__main__': unittest.main()

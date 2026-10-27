@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { build } from 'esbuild';
-import { afterReviewStage, attachReviewSwipe, faceReviewQueue, nextReviewCard, noFacesReviewQueue, newPersonReviewHandled, reviewBatchPhotos, reviewChanges, reviewIsCurrent, reviewSwipeAction, reviewPeopleOptions, reviewAlbumOptions, validReviewAlbumName } from '../src/photoReviewWizard.js';
+import { afterReviewStage, attachReviewSwipe, faceReviewQueue, nextReviewCard, noFacesReviewQueue, newPersonReviewHandled, remainingReviewFaceIds, reviewBatchPhotos, reviewChanges, reviewIsCurrent, reviewSwipeAction, reviewPeopleOptions, reviewAlbumOptions, validReviewAlbumName } from '../src/photoReviewWizard.js';
 import { photoAssignmentValue } from '../src/photoLibrary.js';
 import { photoStrings } from '../src/photoStrings.js';
 
@@ -82,6 +82,16 @@ test('staged face corrections and additions produce one bounded photo operation'
     { action: 'add', box, name: 'Marta' },
   ]);
 });
+test('batch payload includes only staged metadata, alongside face edits and albums', () => {
+  const draft = { photoId: 'photo', expectedPath: 'original.jpg', version: 'version', reviewIds: ['review'],
+    changes: [{ action: 'assign', faceId: 'face', personId: 'ana' }], edits: [{ rotate: 1 }], albums: [{ name: 'Verano' }],
+    metadata: { takenAt: '1985-01-03', latitude: 0, longitude: -180 }, sourceFaces: [{ id: 'face' }] };
+  const [payload] = reviewBatchPhotos({ photo: draft });
+  assert.deepEqual(payload, { photoId: 'photo', expectedPath: 'original.jpg', version: 'version', reviewIds: ['review'],
+    changes: draft.changes, edits: draft.edits, albums: draft.albums, metadata: draft.metadata, delete: false });
+  assert.equal('metadata' in reviewBatchPhotos({ photo: { ...draft, metadata: {} } })[0], false);
+  assert.equal('metadata' in reviewBatchPhotos({ photo: { ...draft, metadata: undefined } })[0], false);
+});
 test('editing all new faces in a shared photo resolves their groups without changing the recognized person', () => {
   const people = ['one', 'two', 'three'].map(id => ({ id, photoIds: ['group-photo'] }));
   const draft = { photoId: 'group-photo', sourceFaces: [
@@ -107,6 +117,32 @@ test('a new group remains pending until all its faces in all photos have valid d
   assert.equal(newPersonReviewHandled(person, { first: drafts.first }), false);
   assert.equal(newPersonReviewHandled(person, { first: drafts.first, second: { changes: [] } }), false);
   assert.equal(newPersonReviewHandled({ id: 'one', photoIds: [] }, {}), false);
+});
+test('unknown remainder preserves identified faces, individual edits and named group drafts, including boxless faces', () => {
+  const automatic = id => ({ id, personId: `group-${id}`, name: 'Persona 12' });
+  const faces = ['remaining', 'boxless', 'edited', 'named', 'removed', 'cropped', 'current', 'previous', 'invalid-name'].map(automatic);
+  faces.push({ id: 'known', personId: 'ana', name: 'Ana' }, { id: 'unknown', personId: 'unknown', name: 'Desconocido' },
+    { id: 'apple', personId: 'apple-1', name: 'Persona 1' }, { id: 'unassigned', personId: null, name: null });
+  const draft = { changes: [
+    { action: 'assign', faceId: 'edited', personId: 'ana' }, { action: 'assign', faceId: 'named', name: 'Eva' },
+    { action: 'remove', faceId: 'removed' }, { action: 'add', name: 'Manual', box: { x: .1, y: .1, width: .2, height: .2 } },
+  ], croppedFaceIds: ['cropped'] };
+  const peopleDrafts = [{ id: 'group-current', name: 'Marta' }, { id: 'group-previous', personId: 'luis' },
+    { id: 'group-invalid-name', name: 'Persona 2' }];
+  const before = structuredClone({ faces, draft, peopleDrafts });
+  assert.deepEqual(remainingReviewFaceIds(faces, draft, peopleDrafts), ['remaining', 'boxless', 'invalid-name', 'unassigned']);
+  assert.deepEqual({ faces, draft, peopleDrafts }, before);
+});
+test('bulk unknown decisions skip resolved groups but leave unseen photos pending', () => {
+  const faces = Array.from({ length: 120 }, (_, n) => ({ id: `face-${n}`, personId: `group-${n}`, name: `Persona ${n + 1}` }));
+  const draft = { photoId: 'crowd', changes: [], sourceFaces: faces };
+  draft.changes = remainingReviewFaceIds(faces, draft).map(faceId => ({ action: 'assign', faceId, personId: 'unknown' }));
+  const drafts = { crowd: draft };
+  assert.equal(draft.changes.length, 120);
+  assert.deepEqual(remainingReviewFaceIds(faces, draft), []);
+  assert.ok(faces.every(face => newPersonReviewHandled({ id: face.personId, photoIds: ['crowd'] }, drafts)));
+  assert.equal(newPersonReviewHandled({ id: 'group-0', photoIds: ['crowd', 'unseen'] }, drafts), false);
+  assert.equal(newPersonReviewHandled({ id: 'unrelated', photoIds: ['unseen'] }, drafts), false);
 });
 test('removed, cropped and deleted faces also finish a group without assigning its remaining photos by accident', () => {
   const person = { id: 'one', photoIds: ['first', 'second'] };
@@ -159,6 +195,8 @@ test('wizard labels are translated and counters preserve their placeholders', ()
     assert.match(s.reviewPosition, /\{current\}.*\{total\}/);
     assert.match(s.reviewIntro, /\{faces\}.*\{people\}.*\{photos\}/);
     assert.match(s.reviewNoFacesPosition, /\{current\}.*\{total\}/);
+    assert.match(s.reviewUnknownRemainder, /\{count\}/);
+    assert.ok(s.reviewUnknownRemainderHint);
     for (const key of ['reviewSave', 'reviewApprove', 'reviewUnsaved', 'reviewRemoveHint', 'reviewStepNoFaces', 'reviewSaveReviewed', 'reviewRemoveNewHint', 'reviewResume', 'reviewResumeHint', 'reviewNewPeopleResolved', 'reviewNewPeopleNeedsIdentity']) assert.ok(s[key]);
   }
 });
@@ -224,6 +262,23 @@ test('all three photo review modes expose personal albums and retain staged link
     assert.match(html, /✓ Familia/);
     assert.doesNotMatch(html, /AI only/);
     if (mode === 'faces') assert.match(html, /← Desconocido/); // linking an album must not decide the identity
+  }
+});
+
+test('every review mode exposes a clickable date and map with or without initial metadata, and reopens the draft', () => {
+  for (const mode of ['faces', 'no-faces', 'new-person']) {
+    for (const staged of [false, true]) {
+      const html = renderToStaticMarkup(React.createElement(ReviewCard, {
+        review: { id: 'review', ...(mode === 'no-faces' ? {} : { faceId: 'face' }) },
+        groupPerson: mode === 'new-person' ? { id: 'new' } : undefined,
+        photo: { id: 'photo', name: 'Photo' }, people: [], position: 1, total: 2, s: photoStrings('es'),
+        draft: staged ? { changes: [], metadata: { takenAt: '1985-01-03', latitude: 0, longitude: -180 } } : undefined,
+      }));
+      assert.match(html, /aria-label="Editar fecha: ◷ /);
+      assert.match(html, /aria-label="Ver en el mapa: Photo"/);
+      assert.match(html, staged ? /3 ene 1985/ : /Fecha de captura desconocida/);
+      assert.match(html, staged ? /0.0000°, -180.0000°/ : /Sin ubicación GPS/);
+    }
   }
 });
 

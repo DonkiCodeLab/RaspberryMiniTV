@@ -43,6 +43,48 @@ class ReviewBatchTests(unittest.TestCase):
     def payload(self, photos=None, people=None):
         return {'requestId': 'test-batch-id-12345', 'photos': photos or [], 'people': people or []}
 
+    def test_batch_metadata_for_all_review_modes_preserves_time_image_edits_and_faces(self):
+        with self.store.db() as db:
+            for photo in self.photos:
+                metadata = json.loads(db.execute('SELECT metadata FROM photos WHERE id=?', (photo['id'],)).fetchone()[0])
+                metadata['takenAt'] = '2022-08-17T23:45:12-07:00'
+                db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(metadata), photo['id']))
+        items = [self.item(i, metadata={'takenAt': '1985-01-03', 'latitude': 0, 'longitude': -180}) for i in (0, 2, 3)]
+        originals = [(self.store.safe_file(item['expectedPath']), self.store.safe_file(item['expectedPath']).read_bytes()) for item in items]
+        faces_before = {item['photoId']: self.store.photo_faces(item['photoId'])['faces'] for item in items}
+        items[0]['edits'] = [{'rotate': 1}]
+        items[0]['albums'] = [{'name': 'Viaje'}]
+        data = self.payload(items)
+        response = self.client.post('/pictures/reviews/batch', json=data)
+        self.assertEqual(response.status_code, 200, response.json)
+        restored = PhotoLibrary(self.store.root)
+        self.assertEqual(apply_batch(restored, data), response.json)
+        restored.sync()
+        photos = {photo['id']: photo for photo in restored.snapshot()['photos']}
+        for item in items:
+            photo = photos[item['photoId']]
+            self.assertEqual(photo['takenAt'], '1985-01-03T23:45:12-07:00')
+            self.assertEqual((photo['latitude'], photo['longitude']), (0, -180))
+            self.assertEqual([face['id'] for face in restored.photo_faces(photo['id'])['faces']],
+                             [face['id'] for face in faces_before[photo['id']]])
+        rotated = photos[items[0]['photoId']]
+        self.assertEqual((rotated['width'], rotated['height']), (80, 120))
+        self.assertTrue(rotated['folderIds'])
+        for path, original in originals: self.assertEqual(path.read_bytes(), original)
+
+    def test_invalid_batch_metadata_rolls_back_other_photos_faces_albums_and_image_edits(self):
+        for metadata in [{}, None, {'takenAt': '2023-02-29'}, {'takenAt': '2024-01-02T10:00:00'},
+                         {'latitude': 0}, {'latitude': 91, 'longitude': 0}, {'title': 'Invalid'}]:
+            with self.subTest(metadata=metadata):
+                before = self.store.snapshot()
+                first = self.item(2, metadata={'takenAt': '1960-02-29'}, edits=[{'rotate': 1}],
+                                  albums=[{'name': 'Do not persist'}], changes=[{'action': 'add', 'box': self.box, 'name': 'Eva'}])
+                second = self.item(3, metadata=metadata)
+                response = self.client.post('/pictures/reviews/batch', json=self.payload([first, second]))
+                self.assertEqual(response.status_code, 400, response.json)
+                self.assertEqual(self.store.snapshot(), before)
+                self.assertEqual(list((self.store.root / 'edited-photos').glob('*.jpg')), [])
+
     def test_personal_albums_are_added_atomically_and_new_names_reused_after_retry(self):
         parent = self.store.create_folder('Familia')['id']
         nested = self.store.create_folder('Viaje', parent)['id']
@@ -222,6 +264,39 @@ class ReviewBatchTests(unittest.TestCase):
         self.assertEqual([face['personId'] for face in final].count(known), 1)
         self.assertTrue(self.store.safe_file(item['expectedPath']).is_file())
         self.assertEqual(len(restored.snapshot()['photos']), 4)
+
+    def test_crowded_photo_can_mark_more_than_100_faces_unknown_and_preserve_a_draft_name(self):
+        detections = [{'encoding': [float(n + 100)] * 128,
+                       'box': {'x': (n % 12) / 12, 'y': (n // 12) / 12, 'width': .06, 'height': .06}}
+                      for n in range(121)]
+        photo_id = self.photos[2]['id']
+        self.store.group_faces(photo_id, detections)
+        faces = self.store.photo_faces(photo_id)['faces']
+        named = faces[0]
+        item = self.item(2, reviewIds=[], changes=[
+            {'action': 'assign', 'faceId': face['id'], 'personId': 'unknown'} for face in faces[1:]])
+        data = self.payload([item], people=[{'id': named['personId'], 'name': 'Eva'}])
+        response = self.client.post('/pictures/reviews/batch', json=data)
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(apply_batch(self.store, data), response.json)
+        # Unknown is a confirmed decision: reanalysis must not recreate the groups.
+        restored = PhotoLibrary(self.store.root)
+        restored.group_faces(photo_id, detections)
+        final = restored.photo_faces(photo_id)['faces']
+        self.assertEqual(len(final), 121)
+        self.assertEqual(sum(face['personId'] == 'unknown' for face in final), 120)
+        self.assertEqual(sum(face['name'] == 'Eva' for face in final), 1)
+        self.assertTrue(all(face['manual'] for face in final))
+        self.assertFalse(any(review['photoId'] == photo_id for review in restored.snapshot()['reviews']))
+        self.assertTrue(all(not person['name'].startswith('Persona ') for person in restored.snapshot()['people']
+                            if photo_id in person['photoIds']))
+
+    def test_large_review_still_limits_manual_additions_and_rolls_back(self):
+        item = self.item(0, changes=[{'action': 'add', 'box': self.box, 'name': 'Eva'}] * 101)
+        before = self.store.photo_faces(item['photoId'])
+        response = self.client.post('/pictures/reviews/batch', json=self.payload([item]))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.store.photo_faces(item['photoId']), before)
 
     def test_edit_keeps_import_deduplication_and_restart(self):
         item = self.item(2, edits=[{'rotate': 1}])

@@ -1,5 +1,9 @@
 .photo-location { display: inline-flex; align-items: center; gap: .45rem; flex-wrap: wrap; min-width: 0; }
 .photo-location > span { overflow-wrap: anywhere; }
+.photo-place { display: inline-flex; align-items: baseline; gap: .35rem; min-width: 0; max-width: 100%; color: #c0e1d8; }
+.photo-place__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 32ch; }
+.photo-place__credit { flex-shrink: 0; color: #b4cbd5; font-size: .65rem; text-decoration: underline; text-underline-offset: 2px; }
+.photo-location-place { display: flex; align-items: center; min-height: 1.3em; margin-top: .6rem; color: #b4cbd5; font-size: .8rem; }
 .photo-location-button { display: inline-grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; padding: 7px; border: 1px solid #ffdf5245; border-radius: 9px; background: #ffdf520c; color: #ffe38a; cursor: pointer; transition: background .15s, border-color .15s; }
 .photo-location-button svg { width: 18px; height: 18px; }
 .photo-location-button:hover { background: #ffdf5225; border-color: #ffdf52; }

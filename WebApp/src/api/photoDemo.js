@@ -50,6 +50,7 @@ export function migratePhotoDemo(library) {
   return true;
 }
 export function photoDemo(action, data = {}) {
+  if (action === 'places/resolve') return Promise.resolve({ status: 'disabled' });
   const run = async () => {
     const db = await open();
     try {

@@ -26,6 +26,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import Blueprint, jsonify, request, send_file
 from photo_import import validate_import_records
 from photo_previews import ImageWorkLock, PhotoPreviews
+from photo_places import PhotoPlaces
 from photo_faces import FacePaused, FaceEngineError, LocalFaceEngine, INSTALL_COMMAND
 import photo_face_matching as face_matching
 import photo_reviews
@@ -171,6 +172,7 @@ class PhotoLibrary:
         # Full-resolution decoders can consume hundreds of MB per image.
         self.image_lock = ImageWorkLock()
         self.previews = PhotoPreviews(self.root, self.cache, self.image_lock)
+        self.places = PhotoPlaces(self.cache)
         self.face_lock = threading.Lock()
         self.face_stop = threading.Event()
         self.scan_lock = threading.Lock()
@@ -635,7 +637,10 @@ class PhotoLibrary:
                 'aiReady': bool(configured.get('enabled') and configured.get('configured')),
                 'faces': faces, 'knownPeople': known_people, 'reviews': reviews}
 
-    def update_photo_metadata(self, photo_id, data):
+    def update_photo_metadata(self, photo_id, data, db=None):
+        if db is None:
+            with self.db() as connection:
+                return self.update_photo_metadata(photo_id, data, db=connection)
         if not isinstance(data, dict) or not data or set(data) - {'takenAt', 'latitude', 'longitude'}:
             raise PhotoError('Indica una fecha o ubicación válida.')
         if 'takenAt' in data:
@@ -651,18 +656,17 @@ class PhotoLibrary:
                 value = data.get(key)
                 if type(value) not in (int, float) or not math.isfinite(value) or not -limit <= value <= limit:
                     raise PhotoError('Selecciona una ubicación válida.')
-        with self.db() as db:
-            row = db.execute('SELECT metadata FROM photos WHERE id=?', (photo_id,)).fetchone()
-            if not row:
-                raise PhotoError('Esta foto ya no está disponible. Actualiza la biblioteca.', 404)
-            metadata = json.loads(row['metadata'])
-            patch = dict(data)
-            if 'takenAt' in patch:
-                previous = metadata.get('takenAt')
-                if isinstance(previous, str) and re.match(r'\d{4}-\d{2}-\d{2}T', previous):
-                    patch['takenAt'] += previous[10:]
-            metadata.update(patch)
-            db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(metadata), photo_id))
+        row = db.execute('SELECT metadata FROM photos WHERE id=?', (photo_id,)).fetchone()
+        if not row:
+            raise PhotoError('Esta foto ya no está disponible. Actualiza la biblioteca.', 404)
+        metadata = json.loads(row['metadata'])
+        patch = dict(data)
+        if 'takenAt' in patch:
+            previous = metadata.get('takenAt')
+            if isinstance(previous, str) and re.match(r'\d{4}-\d{2}-\d{2}T', previous):
+                patch['takenAt'] += previous[10:]
+        metadata.update(patch)
+        db.execute('UPDATE photos SET metadata=? WHERE id=?', (json.dumps(metadata), photo_id))
         return {'ok': True, 'metadata': metadata}
 
     def move(self, ids, target='', new_name=None, parent=''):
@@ -1457,6 +1461,16 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/photos/<ident>/metadata')
     def update_metadata(ident):
         return jsonify(get_library().update_photo_metadata(ident, body()))
+
+    @bp.post('/pictures/places/resolve')
+    def resolve_place():
+        if request.content_length is None or request.content_length > 1024:
+            raise PhotoError('Consulta de ubicación demasiado grande.', 413)
+        data = body()
+        try:
+            return jsonify(get_library().places.resolve(data))
+        except ValueError as error:
+            raise PhotoError(str(error)) from None
 
     @bp.post('/pictures/photos/download')
     def download_photos():

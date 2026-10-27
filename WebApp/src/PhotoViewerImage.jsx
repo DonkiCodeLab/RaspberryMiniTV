@@ -73,9 +73,9 @@ export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl
         role="group" aria-label={photo.name} aria-describedby={hint} tabIndex={0} aria-busy={!ready && !error}>
         <div ref={image} className="photo-viewer__transform" style={{ width: view.width, height: view.height,
           transform: `translate(-50%, -50%) translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale})` }}>
-          <img className="photo-viewer__placeholder" src={sourceUrl || getPictureContentUrl(photo.relativePath, 'thumb') || undefined}
-            onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />
-          {!error && <img key={`${quality}:${attempt}:${sourceUrl || ''}`} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, quality === 'original' ? undefined : 'preview') || undefined}
+          {quality !== 'thumb' && !sourceUrl && <img className="photo-viewer__placeholder" src={getPictureContentUrl(photo.relativePath, 'thumb') || undefined}
+            onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />}
+          {!error && <img key={`${quality}:${attempt}:${sourceUrl || ''}`} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, quality === 'original' ? undefined : quality === 'thumb' ? 'thumb' : 'preview') || undefined}
             alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
           <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} readOnly={readOnlyFaces} />
           {addingFace && ready && <FaceDrawing onChange={onFaceBoxChange} s={s} disabled={busy} />}

@@ -41,10 +41,24 @@ Escape vuelve primero del editor al mapa y después a la foto.
    o únelo a una identidad existente; puedes recorrer todas sus fotos. Corregir
    individualmente todas sus caras también permite continuar, incluida la opción
    Desconocido. Los grupos resueltos en una foto compartida no se vuelven a pedir.
+   **El resto de esta foto son desconocidos** resuelve de una vez las caras aún sin
+   identificar, conservando las identidades indicadas y los nombres del borrador.
+   Avanza a lo que quede pendiente sin repetir esos desconocidos; si el grupo tiene
+   otras fotos sin revisar, continúa por ellas. Se puede deshacer y se guarda al
+   validar el paso, sin marcar como desconocidas las caras de otras fotos.
 
-En los pasos 2–4 aparecen la fecha y el botón de mapa si hay GPS. Al ampliar
+En los pasos 2–4 puedes pulsar la fecha para elegir otro día (conserva la hora y
+la zona horaria originales). El botón de mapa permite editar la ubicación pulsando
+el mapa, arrastrando el marcador o escribiendo las coordenadas, también si la foto
+no tenía GPS. **Anotar fecha/ubicación** incorpora el cambio al borrador: se conserva
+al avanzar o reabrir y se aplica con **Validar todo y continuar**. Al ampliar
 una foto (o directamente en el paso 3) puedes añadir caras, girar a izquierda/derecha, recortar libremente,
 cambiar el tamaño y deshacer ediciones. Los recuadros siguen la imagen al editarla.
+El asistente usa miniaturas de hasta 600 píxeles en lugar de las vistas de 2400,
+también al ampliar o editar. Una vez cargada la foto actual, prepara como máximo
+las dos siguientes, una a una. Las miniaturas conservan el encuadre y la orientación;
+las caras se guardan como proporciones del original, independientemente de la
+resolución mostrada. Si falta una miniatura, se genera sin esperar a la versión grande.
 Las versiones editadas se guardan en `Pictures/edited-photos`; los archivos
 anteriores se conservan y no se vuelven a importar al explorar la carpeta.
 Borrar una foto de Galería elimina también sus versiones conservadas.
@@ -773,6 +787,25 @@ En el visor, las fotos sin GPS también ofrecen el mapa para añadir una ubicaci
 Los límites de países se cargan al abrir el mapa y se consultan en el navegador;
 el fondo usa OpenStreetMap, como el mapa general. Si no se identifica el país,
 se utiliza un encuadre regional centrado en el punto.
+
+El visor y los pasos de revisión por lotes muestran la **localidad y el país** junto
+a las coordenadas. El minimapa también los muestra y los actualiza al cambiar la
+posición; el país se traduce al idioma de la aplicación. Se consulta
+[Photon](https://github.com/komoot/photon), un geocodificador de código abierto
+basado en OpenStreetMap. Solo se envían latitud y longitud redondeadas a cuatro
+decimales (unos 11 m), sin la imagen, su nombre ni las personas. La localidad es
+la del elemento cercano que devuelve Photon; puede faltar o ser aproximada.
+
+Las consultas se hacen al ver una foto o abrir su mapa, después de 400 ms sin
+cambiar de posición, y no se lanzan para todas las tarjetas de la galería.
+La Raspberry permite una consulta simultánea y como máximo una cada 1,1 s;
+guarda los resultados durante 30 días en `PhotoCache/places.sqlite3` (un día si
+no hay coincidencia). La caché no cambia la revisión del catálogo. Los errores
+y límites del proveedor activan una pausa; nunca bloquean editar o pasar de foto.
+La API pública de Photon admite un uso moderado y no garantiza disponibilidad.
+`MINITV_PHOTON_URL` permite sustituir `https://photon.komoot.io` por una instancia
+propia compatible, indicando su URL base, o desactivar las consultas con `off`.
+Las coordenadas, la edición y el encuadre de país siguen funcionando sin ella.
 
 **Mapa** utiliza OpenStreetMap y agrupa las fotos de Galería con GPS según la escala.
 Solo se dibujan grupos dentro de la zona visible, con un máximo de 100 miniaturas;

@@ -1,5 +1,9 @@
 export const reviewWizardStrings = {
   es: {
+    reviewStageDate: 'Anotar fecha', reviewStageLocation: 'Anotar ubicación',
+    reviewLocationHint: 'Elige la nueva posición o escribe sus coordenadas. Anótala para incluirla en el borrador; se guardará al validar el paso.',
+    reviewUnknownRemainder: 'El resto de esta foto son desconocidos ({count})',
+    reviewUnknownRemainderHint: 'Conserva las identidades ya indicadas y marca las otras caras de esta foto como desconocidas. Se guarda al validar el paso.',
     reviewChooseAlbum: 'Añadir a álbum personal…', reviewNewAlbum: 'Nuevo álbum personal', reviewAlbumName: 'Nombre del nuevo álbum',
     reviewAddAlbum: 'Añadir', reviewDraftAlbum: '{name} · pendiente de validar', reviewUndoAlbum: 'Deshacer la incorporación a «{name}»',
     reviewDraftPerson: '{name} · pendiente de validar',
@@ -61,6 +65,10 @@ export const reviewWizardStrings = {
     reviewLoadingError: 'No se pudo actualizar la biblioteca. Reintenta para continuar.',
   },
   en: {
+    reviewStageDate: 'Stage date', reviewStageLocation: 'Stage location',
+    reviewLocationHint: 'Choose a new position or enter its coordinates. Stage it in the draft; it will be saved when you validate this step.',
+    reviewUnknownRemainder: 'Everyone else in this photo is unknown ({count})',
+    reviewUnknownRemainderHint: 'Keep the identities already chosen and mark the other faces in this photo as unknown. Saved when you validate this step.',
     reviewChooseAlbum: 'Add to personal album…', reviewNewAlbum: 'New personal album', reviewAlbumName: 'New album name',
     reviewAddAlbum: 'Add', reviewDraftAlbum: '{name} · pending validation', reviewUndoAlbum: 'Undo adding to “{name}”',
     reviewDraftPerson: '{name} · pending validation',
@@ -122,6 +130,10 @@ export const reviewWizardStrings = {
     reviewLoadingError: 'The library could not be refreshed. Retry to continue.',
   },
   ca: {
+    reviewStageDate: 'Anotar data', reviewStageLocation: 'Anotar ubicació',
+    reviewLocationHint: 'Tria la nova posició o escriu-ne les coordenades. Anota-la a l’esborrany; es desarà en validar el pas.',
+    reviewUnknownRemainder: 'La resta d’aquesta foto són desconeguts ({count})',
+    reviewUnknownRemainderHint: 'Conserva les identitats ja indicades i marca les altres cares d’aquesta foto com a desconegudes. Es desa en validar el pas.',
     reviewChooseAlbum: 'Afegir a un àlbum personal…', reviewNewAlbum: 'Nou àlbum personal', reviewAlbumName: 'Nom del nou àlbum',
     reviewAddAlbum: 'Afegir', reviewDraftAlbum: '{name} · pendent de validar', reviewUndoAlbum: 'Desfer la incorporació a «{name}»',
     reviewDraftPerson: '{name} · pendent de validar',

@@ -4,7 +4,7 @@ import PhotoDetailDialog from './PhotoDetailDialog.jsx';
 import PhotoLocation from './PhotoLocation.jsx';
 import { dateLabel, photoDateValue, validPhotoDate } from './photoMetadata.js';
 
-function PhotoDateDialog({ photo, s, onSaved, onClose }) {
+function PhotoDateDialog({ photo, s, onSaved, onSave, onClose }) {
   const [date, setDate] = useState(() => photoDateValue(photo.takenAt));
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const saving = useRef(false);
@@ -13,7 +13,7 @@ function PhotoDateDialog({ photo, s, onSaved, onClose }) {
     if (saving.current || !validPhotoDate(date)) return;
     saving.current = true; setBusy(true); setError('');
     try {
-      const result = await photoRequest(`photos/${photo.id}/metadata`, { takenAt: date });
+      const result = onSave ? await onSave({ takenAt: date }) : await photoRequest(`photos/${photo.id}/metadata`, { takenAt: date });
       await onSaved(result.metadata); onClose();
     } catch (error) { setError(error.message); }
     finally { saving.current = false; setBusy(false); }
@@ -29,15 +29,18 @@ function PhotoDateDialog({ photo, s, onSaved, onClose }) {
   </PhotoDetailDialog>;
 }
 
-export default function PhotoMeta({ photo, s, language, onChanged, disabled = false, initialDetail }) {
+// onSave lets batch review stage date/GPS corrections until its atomic commit.
+export default function PhotoMeta({ photo, s, language, onChanged, onSave, compact = false, disabled = false, initialDetail, resolvePlace = false }) {
   const [editingDate, setEditingDate] = useState(false), [saved, setSaved] = useState(null);
   useEffect(() => { if (initialDetail === 'date') setEditingDate(true); }, []);
   const current = saved?.source === photo ? { ...photo, ...saved.metadata } : photo;
   const changed = async metadata => { setSaved({ source: photo, metadata }); await onChanged?.(); };
+  const editable = !!(onChanged || onSave), date = `◷ ${dateLabel(current.takenAt, language, s.noDate)}`;
   return <div className="photo-meta">
-    <span className="photo-date"><span title={s.taken}>◷ {dateLabel(current.takenAt, language, s.noDate)}</span>
-      {onChanged && <button type="button" className="photo-detail-link" disabled={disabled} aria-haspopup="dialog" onClick={() => setEditingDate(true)}>{s.editPhotoDate}</button>}</span>
-    <PhotoLocation key={photo.id} photo={current} s={s} language={language} onChanged={onChanged ? changed : undefined} disabled={disabled} showLabel={!!onChanged} initialOpen={initialDetail === 'location'} />
-    {editingDate && <PhotoDateDialog photo={current} s={s} onSaved={changed} onClose={() => setEditingDate(false)} />}
+    <span className="photo-date">{compact && editable ? <button type="button" className="photo-detail-link" title={s.editPhotoDate} aria-label={`${s.editPhotoDate}: ${date}`}
+      disabled={disabled} aria-haspopup="dialog" onClick={() => setEditingDate(true)}>{date}</button> : <><span title={s.taken}>{date}</span>
+      {editable && <button type="button" className="photo-detail-link" disabled={disabled} aria-haspopup="dialog" onClick={() => setEditingDate(true)}>{s.editPhotoDate}</button>}</>}</span>
+    <PhotoLocation key={photo.id} photo={current} s={s} language={language} onChanged={editable ? changed : undefined} onSave={onSave} disabled={disabled} showLabel={editable && !compact} initialOpen={initialDetail === 'location'} resolvePlace={resolvePlace} />
+    {editingDate && <PhotoDateDialog photo={current} s={s} onSaved={changed} onSave={onSave} onClose={() => setEditingDate(false)} />}
   </div>;
 }

@@ -273,7 +273,7 @@ export function Viewer({ photos, initial, onClose, onDelete, s, language, people
       <PhotoFaceViewer key={photo.id} photo={photo} quality={quality} s={s} people={knownPeople} globalFaces={faces} revision={revision}
         onChanged={onChanged} highlightPersonId={highlightPersonId} showOtherFaces={showOtherFaces} editing={editingFaces} onInteractionChange={setFaceInteraction} closeLayer={closeFaceLayer} />
       <button type="button" aria-label={s.next} onClick={() => change(1)} disabled={photos.length < 2 || faceLocked}>›</button></div>
-    <div className="photo-viewer__meta"><PhotoMeta key={`meta:${photo.id}`} photo={photo} s={s} language={language} onChanged={onChanged} disabled={faceLocked} /><span>{index + 1} / {photos.length}</span>
+    <div className="photo-viewer__meta"><PhotoMeta key={`meta:${photo.id}`} photo={photo} s={s} language={language} onChanged={onChanged} disabled={faceLocked} resolvePlace /><span>{index + 1} / {photos.length}</span>
       <button type="button" className="dialog-button photo-viewer__album" disabled={faceLocked} aria-haspopup="dialog" onClick={() => { setAlbumPhoto(photo); setAlbumNotice(null); }}>＋ {s.move}</button>
       <button type="button" className="dialog-button photo-viewer__delete photo-delete-button" disabled={faceLocked} aria-haspopup="dialog" onClick={() => onDelete(photo)}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>{s.deletePhoto}

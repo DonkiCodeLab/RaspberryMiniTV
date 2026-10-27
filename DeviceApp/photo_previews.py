@@ -66,14 +66,16 @@ class PhotoPreviews:
         return tuple(self.cache / (hashlib.sha256((relative + stamp + str(full)).encode()).hexdigest() + '.jpg')
                      for full in (False, True))
 
-    def save(self, path, image):
+    def save(self, path, image, full=True):
         """Called with the decoder lock, including while an upload is already decoded."""
         thumb, large = self.paths(path)
-        if thumb.exists() and large.exists(): return
-        image.draft('RGB', (2400, 2400))
-        image.thumbnail((2400, 2400))
+        if thumb.exists() and (not full or large.exists()): return
+        limit = 2400 if full else 600
+        image.draft('RGB', (limit, limit))
+        image.thumbnail((limit, limit))
         image = ImageOps.exif_transpose(image).convert('RGB')
-        for destination, target, quality in [(large, 2400, 86), (thumb, 600, 80)]:
+        sizes = [(large, 2400, 86), (thumb, 600, 80)] if full else [(thumb, 600, 80)]
+        for destination, target, quality in sizes:
             if destination.exists(): continue
             if target == 600: image.thumbnail((600, 600))
             temporary = self.cache / (uuid.uuid4().hex + '.tmp')
@@ -92,7 +94,9 @@ class PhotoPreviews:
             # A missing thumbnail can be made from an existing JPEG preview.
             with Image.open(large if large.exists() else path) as image:
                 if image.width * image.height > 50_000_000: raise ValueError('Photo exceeds pixel limit')
-                self.save(path, image)
+                # A foreground thumbnail must not wait for a 2400px encode.
+                # Imports and the background worker still prepare both sizes.
+                self.save(path, image, full=full or background)
         return requested
 
     def discard(self, path):

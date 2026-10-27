@@ -29,8 +29,8 @@ class PhotoPreviewTests(unittest.TestCase):
         original = hashlib.sha256(source.read_bytes()).hexdigest()
         opener = Image.open
         with patch('photo_previews.Image.open', wraps=opener) as decode:
-            thumb = self.store.preview('camera.jpg')
             large = self.store.preview('camera.jpg', full=True)
+            thumb = self.store.preview('camera.jpg')
             self.assertEqual(decode.call_count, 1)
         with opener(thumb) as image: self.assertEqual(image.size, (450, 600))
         with opener(large) as image:
@@ -38,6 +38,33 @@ class PhotoPreviewTests(unittest.TestCase):
             self.assertFalse(image.getexif())
         self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), original)
         self.assertEqual(list(self.store.cache.glob('*.tmp')), [])
+
+    def test_fast_thumbnail_never_encodes_large_preview_and_keeps_oriented_image_coordinates(self):
+        source = self.store.root / 'camera.jpg'
+        exif = Image.Exif(); exif[274] = 6
+        original = Image.new('RGB', (4000, 3000), 'blue')
+        original.paste('red', (0, 0, 2000, 1500))
+        original.save(source, 'JPEG', exif=exif)
+        from PIL import ImageOps
+        transpose = ImageOps.exif_transpose
+        def small_only(image):
+            self.assertLessEqual(max(image.size), 600)
+            return transpose(image)
+        with patch('photo_previews.ImageOps.exif_transpose', side_effect=small_only):
+            thumb = self.store.preview('camera.jpg')
+        large = self.store.previews.paths(source)[1]
+        self.assertFalse(large.exists())
+        with patch('photo_previews.Image.open', side_effect=AssertionError('cached thumbnails must not decode')):
+            self.assertEqual(self.store.preview('camera.jpg'), thumb)
+        self.store.preview('camera.jpg', full=True)
+        for path, size in [(thumb, (450, 600)), (large, (1800, 2400))]:
+            with Image.open(path) as image:
+                self.assertEqual(image.size, size)
+                self.assertFalse(image.getexif())
+                # The same image fractions point to the same pixels at either resolution.
+                for x, y, channel in [(.75, .25, 0), (.25, .25, 2)]:
+                    color = image.getpixel((int(x * image.width), int(y * image.height)))
+                    self.assertGreater(color[channel], 240)
 
     def test_new_import_has_both_previews_without_reopening_the_original(self):
         with patch('photo_previews.Image.open', wraps=Image.open) as decode:

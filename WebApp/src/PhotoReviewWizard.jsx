@@ -3,12 +3,14 @@ import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
 import { isNewPhotoPerson, photoAssignmentOptions, photoAssignmentLabel, photoAssignmentValue, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { validNewPersonName } from './photoPeopleBatch.js';
 import { createImportId } from './photoImport.js';
-import { attachReviewSwipe, faceReviewQueue, noFacesReviewQueue, newPeopleReviewQueue, newPersonReviewHandled, reviewChanges, reviewIsCurrent, reviewHandled, reviewBatchPhotos, reviewPeopleOptions, reviewAlbumOptions } from './photoReviewWizard.js';
+import { attachReviewSwipe, faceReviewQueue, noFacesReviewQueue, newPeopleReviewQueue, newPersonReviewHandled, remainingReviewFaceIds, reviewChanges, reviewIsCurrent, reviewHandled, reviewBatchPhotos, reviewPeopleOptions, reviewAlbumOptions, upcomingReviewPhotos } from './photoReviewWizard.js';
 import { editBox, visibleBox, imageEditPreview } from './photoImageEdits.js';
+import { REVIEW_IMAGE_RENDER, preloadReviewImages } from './photoReviewImages.js';
 import { PeopleAnalysis } from './PhotoPeople.jsx';
 import PhotoViewerImage, { FaceRectangles } from './PhotoViewerImage.jsx';
 import { FaceNameEditor } from './PhotoFaceViewer.jsx';
-import PhotoLocation from './PhotoLocation.jsx';
+import PhotoMeta from './PhotoMeta.jsx';
+import { photoMetadataPatch } from './photoMetadata.js';
 import PhotoReviewAlbums from './PhotoReviewAlbums.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import './PhotoReviewWizard.css';
@@ -25,7 +27,7 @@ export function ReviewSteps({ step, s }) {
   </ol>;
 }
 
-export function ReviewCard({ review, photo, people, albumOptions = [], position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onExpanded, onReadyChange, closeLayer, groupPerson, hideDecisions = false }) {
+export function ReviewCard({ review, photo, people, albumOptions = [], nextPhotos = [], position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onExpanded, onReadyChange, closeLayer, groupPerson, peopleDrafts = [], onUnknownRemainder, hideDecisions = false }) {
   const withoutFaces = !review.faceId && !groupPerson;
   const [details, setDetails] = useState(null), [attempt, setAttempt] = useState(0);
   const [assignments, setAssignments] = useState(() => Object.fromEntries((draft?.changes || []).filter(c => c.action === 'assign').map(({ faceId, action, ...a }) => [faceId, a])));
@@ -35,6 +37,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
   const [expanded, setExpanded] = useState(false), [selectedId, setSelectedId] = useState(null);
   const [identityTarget, setIdentityTarget] = useState(null);
   const [albums, setAlbums] = useState(draft?.albums || []), [albumEditing, setAlbumEditing] = useState(false);
+  const [metadata, setMetadata] = useState(draft?.metadata || {});
   const albumLayer = useRef(null);
   const [adding, setAdding] = useState(false), [cropping, setCropping] = useState(false), [box, setBox] = useState(null);
   const [error, setError] = useState(''), [deleting, setDeleting] = useState(null), [offset, setOffset] = useState(0);
@@ -45,7 +48,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
   const choices = photoAssignmentOptions(people, s);
   const original = details?.faces.find(face => face.id === review.faceId);
   const changedFaces = Object.keys(assignments).length > 0 || additions.length > 0 || edits.length > 0 || removals.length > 0;
-  const changed = changedFaces || albums.length > 0;
+  const changed = changedFaces || albums.length > 0 || Object.keys(metadata).length > 0;
   const invalid = Object.values(assignments).some(value => 'name' in value && !validNewPersonName(value.name));
   const stale = details && (!groupPerson && !reviewIsCurrent(review, details) || draft?.version && details.version !== draft.version);
   const blocked = !details || previewBusy || stale;
@@ -61,9 +64,10 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
   const target = identityTarget ?? (primaryDraft && 'name' in primaryDraft ? 'new' : primary?.personId || '');
   const canDecide = !blocked && !invalid && !adding && !cropping && !selectedId && !deleting && !albumEditing && ready;
   const pendingDraft = () => ({ photoId: photo.id, expectedPath: draft?.expectedPath || photo.relativePath, version: draft?.version || details?.version,
-    reviewIds: draft?.reviewIds || [], changes: [...removals, ...reviewChanges(assignments, additions)], edits, albums, delete: false,
+    reviewIds: draft?.reviewIds || [], changes: [...removals, ...reviewChanges(assignments, additions)], edits, albums, metadata, delete: false,
     sourceFaces: (details?.faces || []).map(({ id, personId }) => ({ id, personId })),
     croppedFaceIds: (details?.faces || []).filter(face => face.box && !visibleBox(editBox(face.box, edits))).map(face => face.id) });
+  const remainingFaceIds = groupPerson ? remainingReviewFaceIds(details?.faces || [], pendingDraft(), peopleDrafts) : [];
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => { callbacks.current.onDirty?.(changed || adding || cropping || !!selectedId || albumEditing); }, [changed, adding, cropping, selectedId, albumEditing]);
   useEffect(() => { onReadyChange?.(!!canDecide && !error); }, [canDecide, error, onReadyChange]);
@@ -80,7 +84,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
   }, [closeLayer, adding, cropping, selectedId, deleting, expanded]);
   useEffect(() => {
     if (details && !stale && (changed || draft)) callbacks.current.onDraft?.(pendingDraft());
-  }, [details, assignments, additions, edits, albums]);
+  }, [details, assignments, additions, edits, albums, metadata]);
   useEffect(() => {
     const controller = new AbortController();
     photoRequest(`photos/${photo.id}/faces`, undefined, controller.signal).then(result => {
@@ -92,7 +96,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
     let active = true;
     if (!edits.length) { setSourceUrl(''); setPreviewBusy(false); return; }
     setPreviewBusy(true);
-    imageEditPreview(getPictureContentUrl(photo.relativePath, 'preview'), edits).then(url => {
+    imageEditPreview(getPictureContentUrl(photo.relativePath, REVIEW_IMAGE_RENDER), edits).then(url => {
       if (active) { setSourceUrl(url); setPreviewBusy(false); }
     }).catch(() => { if (active) { setError(s.reviewImageEditError); setPreviewBusy(false); } });
     return () => { active = false; };
@@ -100,7 +104,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
   useEffect(() => {
     if (!withoutFaces && !groupPerson && !expanded && canDecide && !changedFaces && surface.current)
       return attachReviewSwipe(surface.current, setOffset, decide);
-  }, [expanded, canDecide, changedFaces, albums, withoutFaces, groupPerson]);
+  }, [expanded, canDecide, changedFaces, albums, metadata, withoutFaces, groupPerson]);
   function enlarge(value) { setExpanded(value); onExpanded?.(value); }
   function closeEditor() { setAdding(false); setCropping(false); setBox(null); setSelectedId(null); }
   function stage(faceId, assignment) { setError(''); setAssignments(previous => ({ ...previous, [faceId]: assignment })); }
@@ -118,6 +122,12 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
     if (action === 'unknown') next.changes = [...next.changes.filter(c => c.faceId !== review.faceId), { action: 'assign', faceId: review.faceId, personId: UNKNOWN_PERSON_ID }];
     onAdvance?.(next);
   }
+  function markRemainderUnknown() {
+    if (!canDecide || error || !remainingFaceIds.length) return;
+    const next = pendingDraft();
+    next.changes = [...next.changes, ...remainingFaceIds.map(faceId => ({ action: 'assign', faceId, personId: UNKNOWN_PERSON_ID }))];
+    onUnknownRemainder(next);
+  }
   function remove() {
     const next = pendingDraft();
     if (deleting === 'gallery') next.delete = true;
@@ -133,7 +143,17 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
     initialName={selected?.assignment?.name || assignments[selectedId]?.name || ''}
     s={{ ...s, ...(withoutFaces ? { drawFaceHint: s.reviewDrawFaceHint } : {}), save: s.reviewStageEdit, confirmFace: s.reviewStageFace }} busy={blocked} creating={adding} hasBox={!!box}
     onSave={stageEditor} onClose={closeEditor} /> : null;
-  const date = photo.takenAt && new Date(photo.takenAt);
+  const preloadPaths = JSON.stringify([...new Set(nextPhotos.filter(next => next.id !== photo.id).map(next => next.relativePath).filter(Boolean))].slice(0, 2));
+  useEffect(() => {
+    if (ready && !previewBusy) return preloadReviewImages(JSON.parse(preloadPaths).map(path => getPictureContentUrl(path, REVIEW_IMAGE_RENDER)));
+  }, [ready, previewBusy, preloadPaths]);
+  const currentPhoto = Object.keys(metadata).length ? { ...photo, ...photoMetadataPatch(photo, metadata) } : photo;
+  const detailStrings = { ...s, savePhotoDate: s.reviewStageDate, savePhotoLocation: s.reviewStageLocation, editPhotoLocationHint: s.reviewLocationHint };
+  const stageMetadata = data => {
+    const patch = photoMetadataPatch(currentPhoto, data);
+    setMetadata(previous => ({ ...previous, ...data }));
+    return { metadata: patch };
+  };
   const addFaceButton = <button type="button" className="dialog-button dialog-button--accent" disabled={blocked || cropping || !ready} aria-pressed={adding}
     onClick={adding ? closeEditor : startAdding}>{adding ? s.cancel : `＋ ${s.addFace}`}</button>;
   const faceTabs = <div className="photo-review-face-tabs" role="group" aria-label={s.facesInPhoto}>{faces.map(face => <button type="button" key={face.id}
@@ -141,8 +161,8 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
   return <div className={`photo-review-card${withoutFaces ? ' photo-review-card--without-faces' : ''}`}>
     <div className="photo-review-card__progress"><strong ref={heading} tabIndex={-1} role="status">{(groupPerson ? s.reviewPhotoPosition : withoutFaces ? s.reviewNoFacesPosition : s.reviewPosition).replace('{current}', position).replace('{total}', total)}</strong>
       <progress max={total} value={position - 1} aria-label={withoutFaces ? s.reviewStepNoFaces : s.reviewStepValidate} /></div>
-    <div className="photo-review-context"><div className="photo-meta"><span title={s.taken}>◷ {date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(language, { day: 'numeric', month: 'short', year: 'numeric' }) : s.noDate}</span>
-      <PhotoLocation photo={photo} s={s} language={language} /></div>
+    <div className="photo-review-context"><PhotoMeta photo={currentPhoto} s={detailStrings} language={language} compact resolvePlace onSave={stageMetadata}
+      disabled={blocked || adding || cropping || !!selectedId || !!deleting} />
     <PhotoReviewAlbums photo={photo} options={albumOptions} albums={albums} onChange={setAlbums} onEditing={setAlbumEditing}
       closeLayer={albumLayer} disabled={blocked || adding || cropping || !!selectedId || !!deleting} s={s} /></div>
     {expanded || withoutFaces ? <div className={withoutFaces ? 'photo-review-workbench' : 'photo-review-expanded'}>
@@ -159,7 +179,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
       </div>
       {cropping && <p>{s.reviewCropHint} <button type="button" className="dialog-button dialog-button--accent" disabled={!box || blocked} onClick={() => applyEdit({ crop: box })}>{s.reviewApplyCrop}</button></p>}
       <div className={withoutFaces ? 'photo-review-workbench__content' : undefined}>
-        <PhotoViewerImage photo={photo} sourceUrl={sourceUrl || undefined} faces={faces} s={cropping || withoutFaces ? { ...s, drawFaceHint: cropping ? s.reviewCropHint : s.reviewDrawFaceHint } : s} selectedFaceId={selectedId || review.faceId} busy={blocked}
+        <PhotoViewerImage photo={photo} quality={REVIEW_IMAGE_RENDER} sourceUrl={sourceUrl || undefined} faces={faces} s={cropping || withoutFaces ? { ...s, drawFaceHint: cropping ? s.reviewCropHint : s.reviewDrawFaceHint } : s} selectedFaceId={selectedId || review.faceId} busy={blocked}
           onSelectFace={adding || cropping ? undefined : setSelectedId} addingFace={adding || cropping} onAddFace={cropping ? undefined : startAdding} onFaceBoxChange={setBox}
           editor={withoutFaces ? undefined : editor} editorBox={box || selected?.box} onReadyChange={setReady} />
         {withoutFaces && <aside className={`photo-review-workbench__people${editor ? ' is-editing' : ''}`} aria-label={s.facesInPhoto}>
@@ -171,7 +191,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
       <button ref={surface} type="button" className={`photo-review-photo${offset ? ' is-dragging' : ''}`} aria-label={`${s.enlargePhoto}: ${photo.name}`} onClick={() => enlarge(true)}
         style={{ transform: `translateX(${offset}px) rotate(${offset / 30}deg)` }}>
         <span className="photo-review-photo__image" style={{ aspectRatio: ratio, '--review-ratio': ratio }}>
-          <img key={`${attempt}:${sourceUrl}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, 'preview') || undefined} alt={photo.name} draggable={false}
+          <img key={`${attempt}:${sourceUrl}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, REVIEW_IMAGE_RENDER) || undefined} alt={photo.name} draggable={false} decoding="async" fetchPriority="high"
             onLoad={event => { setReady(true); setRatio(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight); }} onError={() => { setReady(false); setError(s.failedImage); }} />
           {ready && <FaceRectangles faces={primary ? [primary] : faces} selectedFaceId={primary?.id} s={s} readOnly />}
         </span>
@@ -192,6 +212,8 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
     {changed && <p className="photo-review-draft" role="status">● {s.reviewStaged}</p>}
     {(error || stale) && <div className="photo-alert" role="alert">{stale ? s.reviewPhotoChanged : error}
       {!stale && <button type="button" className="dialog-button" onClick={() => { setError(''); setAttempt(value => value + 1); }}>{s.retry}</button>}</div>}
+    {groupPerson && onUnknownRemainder && <button type="button" className="dialog-button photo-review-unknown" disabled={!canDecide || !!error || !remainingFaceIds.length}
+      title={s.reviewUnknownRemainderHint} onClick={markRemainderUnknown}>{s.reviewUnknownRemainder.replace('{count}', remainingFaceIds.length)} →</button>}
     {!hideDecisions && <div className="photo-review-card__actions"><div className="photo-review-decisions">
       {withoutFaces || changedFaces ? <button type="button" className="dialog-button dialog-button--accent" disabled={!canDecide || !!error} onClick={() => decide()}>✓ {withoutFaces ? changed ? s.reviewSaveReviewed : s.markReviewed : s.reviewSave} →</button> : <>
         <button type="button" className="dialog-button photo-review-unknown" disabled={!canDecide} onClick={() => decide('unknown')}>← {s.unknownPerson}</button>
@@ -209,26 +231,34 @@ export function ReviewCard({ review, photo, people, albumOptions = [], position,
   </div>;
 }
 
-export function NewPersonReview({ person, library, people = library.knownPeople || library.people, albumOptions = [], drafts, assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, closeLayer, s, language, position, total }) {
-  const [photoIndex, setPhotoIndex] = useState(0), [target, setTarget] = useState(assignment?.personId || 'new'), [name, setName] = useState(assignment?.name || '');
-  const [ready, setReady] = useState(false);
+export function NewPersonReview({ person, library, people = library.knownPeople || library.people, albumOptions = [], nextPhotos = [], drafts, peopleDrafts = [], assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, closeLayer, s, language, position, total }) {
   const photos = person.photoIds.map(id => library.photos.find(p => p.id === id)).filter(Boolean);
+  const [photoIndex, setPhotoIndex] = useState(() => Math.max(0, photos.findIndex(photo => !newPersonReviewHandled({ ...person, photoIds: [photo.id] }, drafts))));
+  const [target, setTarget] = useState(assignment?.personId || 'new'), [name, setName] = useState(assignment?.name || '');
+  const [ready, setReady] = useState(false);
   const photo = photos[photoIndex], faceId = person.faceBoxes?.[photo?.id]?.[0]?.id;
   const choices = photoAssignmentOptions(people, s);
   const handled = newPersonReviewHandled(person, drafts);
   const validAssignment = target === 'new' ? validNewPersonName(name) : choices.some(p => p.id === target);
+  const currentAssignment = () => ({ id: person.id, ...(target === 'new' ? { name: name.trim() } : photoAssignmentValue(choices, target)) });
   function changePhoto(index) { setReady(false); onExpanded(false); setPhotoIndex(index); }
+  function markRemainderUnknown(draft) {
+    const resolved = newPersonReviewHandled(person, { ...drafts, [draft.photoId]: draft });
+    onAdvance(resolved ? null : validAssignment ? currentAssignment() : null, draft, !resolved && !validAssignment);
+  }
   return <div className="photo-review-new-person"><h3>{person.name} · {position} / {total}</h3>
     <div className="photo-review-identity"><label>{s.choosePerson}<select value={target} onChange={event => { setTarget(event.target.value); onAssignment({ id: person.id, ...(event.target.value === 'new' ? { name } : photoAssignmentValue(choices, event.target.value)) }); }}><option value="new">{s.newPerson}</option>
       {choices.map(p => <option key={p.id} value={p.id}>{photoAssignmentLabel(p, s)}</option>)}</select></label>
       {target === 'new' && <label>{s.newPersonName}<input value={name} maxLength={100} onChange={event => { setName(event.target.value); onAssignment({ id: person.id, name: event.target.value }); }} /></label>}</div>
     {photo && <ReviewCard key={photo.id} photo={photo} review={{ id: `person-${person.id}`, faceId }} groupPerson={person} hideDecisions people={people} albumOptions={albumOptions}
+      peopleDrafts={peopleDrafts} onUnknownRemainder={markRemainderUnknown}
+      nextPhotos={[...photos.slice(photoIndex + 1).filter(item => !drafts[item.id]?.delete), ...nextPhotos]}
       draft={drafts[photo.id]} onDraft={onDraft} position={photoIndex + 1} total={photos.length} s={s} language={language} onExpanded={onExpanded} onDirty={onDirty} onReadyChange={setReady} closeLayer={closeLayer} />}
     <div className="photo-dialog__actions"><button type="button" className="dialog-button" disabled={photoIndex === 0 || !ready} onClick={() => changePhoto(photoIndex - 1)}>← {s.previous}</button>
       <span>{photoIndex + 1} / {photos.length}</span><button type="button" className="dialog-button" disabled={photoIndex + 1 >= photos.length || !ready} onClick={() => changePhoto(photoIndex + 1)}>{s.next} →</button></div>
     {(handled || !validAssignment) && <p role="status">{handled ? s.reviewNewPeopleResolved : s.reviewNewPeopleNeedsIdentity}</p>}
     <button type="button" className="dialog-button dialog-button--accent" disabled={!ready || !handled && !validAssignment}
-      onClick={() => onAdvance(handled ? null : { id: person.id, ...(target === 'new' ? { name: name.trim() } : photoAssignmentValue(choices, target)) })}>{s.reviewSave} →</button>
+      onClick={() => onAdvance(handled ? null : currentAssignment())}>{s.reviewSave} →</button>
   </div>;
 }
 
@@ -300,11 +330,14 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     setCursor(next);
     if (next >= queue.length) setStep(stage === 3 ? 'no-faces-confirm' : 'faces-confirm');
   }
-  function advancePerson(item) {
+  function advancePerson(item, photoDraft, stayOnPerson = false) {
     setHistory(previous => [...previous, { drafts, peopleDrafts, cursor, step }]);
-    setPeopleDrafts(previous => [...previous.filter(p => p.id !== queue[cursor].id), ...(item ? [item] : [])]); setDirty(false); setExpanded(false);
+    const nextDrafts = photoDraft ? { ...drafts, [photoDraft.photoId]: photoDraft } : drafts;
+    setDrafts(nextDrafts); setDirty(false); setExpanded(false);
+    if (stayOnPerson) return;
+    setPeopleDrafts(previous => [...previous.filter(p => p.id !== queue[cursor].id), ...(item ? [item] : [])]);
     let next = cursor + 1;
-    while (next < queue.length && newPersonReviewHandled(queue[next], drafts)) next++;
+    while (next < queue.length && newPersonReviewHandled(queue[next], nextDrafts)) next++;
     setCursor(next); if (next >= queue.length) setStep('new-people-confirm');
   }
   function undo() {
@@ -333,6 +366,7 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     finally { working.current = false; setBusy(false); }
   }
   const current = queue[cursor], photo = library.photos.find(photo => photo.id === current?.photoId);
+  const nextPhotos = upcomingReviewPhotos(queue, cursor, library.photos, drafts);
   const confirming = step.endsWith('-confirm');
   const inlineEditor = step === 'no-faces-review';
   return <Modal title={s.reviewWizard} s={s} busy={busy} onClose={() => { if (!busy && !closeLayer.current?.()) onClose(); }} wide={expanded}
@@ -356,10 +390,10 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     </div>}
     {step === 'new-people-intro' && <div className="photo-review-intro"><h3>{s.reviewStepNewPeople}</h3><strong>{s.reviewNewPeopleCount.replace('{count}', newPeople.length)}</strong>
       <p>{s.reviewNewPeopleHint}</p><button type="button" className="dialog-button dialog-button--accent" onClick={() => begin('new-people')}>{newPeople.length ? s.reviewBegin : s.done} →</button></div>}
-    {['faces-review', 'no-faces-review'].includes(step) && (current && photo ? <ReviewCard key={`${current.id}:${history.length}`} review={current} photo={photo} people={assignmentPeople} albumOptions={albumOptions}
+    {['faces-review', 'no-faces-review'].includes(step) && (current && photo ? <ReviewCard key={`${current.id}:${history.length}`} review={current} photo={photo} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos}
       draft={drafts[photo.id]} onDraft={storeDraft} position={cursor + 1} total={queue.length} s={s} language={language} onAdvance={advance} onDirty={setDirty} onExpanded={setExpanded} closeLayer={closeLayer} /> :
       <p role="alert">{s.reviewPhotoChanged}</p>)}
-    {step === 'new-people-review' && current && <NewPersonReview key={current.id} person={current} library={library} people={assignmentPeople} albumOptions={albumOptions} drafts={drafts} onDraft={storeDraft}
+    {step === 'new-people-review' && current && <NewPersonReview key={`${current.id}:${history.length}`} person={current} library={library} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos} drafts={drafts} peopleDrafts={peopleDrafts} onDraft={storeDraft}
       assignment={peopleDrafts.find(p => p.id === current.id)} onAssignment={item => setPeopleDrafts(previous => [...previous.filter(p => p.id !== item.id), item])}
       onAdvance={advancePerson} onDirty={setDirty} onExpanded={setExpanded} closeLayer={closeLayer} s={s} language={language} position={cursor + 1} total={queue.length} />}
     {confirming && <div className="photo-review-intro"><h3>{s.reviewReadyToCommit}</h3><p>{s.reviewDeferredHint}</p>

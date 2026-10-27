@@ -17,7 +17,8 @@ function fixture(rect = { left: 100, top: 50, width: 800, height: 400 }) {
 }
 
 test('dragging in either direction stores image fractions independently of zoom and pan', () => {
-  for (const rect of [{ left: 100, top: 50, width: 800, height: 400 }, { left: -300, top: -150, width: 1600, height: 800 }]) {
+  for (const rect of [{ left: 100, top: 50, width: 800, height: 400 }, { left: -300, top: -150, width: 1600, height: 800 },
+    { left: 0, top: 0, width: 600, height: 450 }, { left: 0, top: 0, width: 4000, height: 3000 }]) {
     const f = fixture(rect), point = (x, y) => [rect.left + x * rect.width, rect.top + y * rect.height];
     const down = f.fire('pointerdown', ...point(.6, .8));
     assert.equal(down.stopped, true); assert.equal(down.prevented, true);
