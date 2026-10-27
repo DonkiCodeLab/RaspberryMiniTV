@@ -20,6 +20,17 @@ export function photoAssignmentOptions(people, s) {
   return photoPeopleOptions(people.filter(isIdentifiedPhotoPerson), s);
 }
 
+// Draft identities only exist in the browser. Submit their name so the batch
+// resolves every occurrence to the same real person inside its transaction.
+export function photoAssignmentValue(people, personId) {
+  const person = people.find(person => person.id === personId);
+  return person?.draftName ? { name: person.draftName } : { personId };
+}
+
+export function photoAssignmentLabel(person, s) {
+  return person.draftName ? s.reviewDraftPerson.replace('{name}', person.name) : person.name;
+}
+
 export function photoPersonName(person, s) {
   return (person.personId ?? person.id) === UNKNOWN_PERSON_ID ? s.unknownPerson : person.name;
 }

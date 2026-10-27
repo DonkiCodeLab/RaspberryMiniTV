@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoRequest } from './api/raspberryApi.js';
 import PhotoViewerImage from './PhotoViewerImage.jsx';
-import { photoAssignmentOptions, photoPersonName, UNKNOWN_PERSON_ID } from './photoLibrary.js';
+import { photoAssignmentOptions, photoAssignmentLabel, photoAssignmentValue, photoPersonName, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { visiblePersonFaces } from './photoPersonPreview.js';
 import { validNewPersonName } from './photoPeopleBatch.js';
 
@@ -14,7 +14,8 @@ export function PersonFaceControls({ showOtherFaces, onShowOtherFaces, editing, 
 
 export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creating = false, hasBox = false, initialName = '' }) {
   const choices = photoAssignmentOptions(people, s);
-  const [target, setTarget] = useState(() => choices.some(person => person.id === face.personId) ? face.personId : 'new');
+  const [target, setTarget] = useState(() => choices.some(person => person.id === face.personId) ? face.personId :
+    choices.find(person => person.draftName && person.draftName.toLowerCase() === initialName.trim().toLowerCase())?.id || 'new');
   const [name, setName] = useState(initialName);
   const heading = useId(), editor = useRef(null), personList = useRef(null), newName = useRef(null), cancel = useRef(null);
   const search = useRef({ text: '', time: 0 });
@@ -35,7 +36,7 @@ export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creatin
     }
   }} onSubmit={event => {
     event.preventDefault();
-    if (!busy && valid) onSave(target === 'new' ? { name: name.trim() } : { personId: target });
+    if (!busy && valid) onSave(target === 'new' ? { name: name.trim() } : photoAssignmentValue(choices, target));
   }}>
     <div className="photo-face-editor__heading"><span className="photo-face-editor__icon" aria-hidden="true">⌖</span><strong id={heading}>{creating ? s.nameThisFace : s.editFace}</strong></div>
     <p>{target === UNKNOWN_PERSON_ID ? s.unknownFaceAssignmentHint : creating ? hasBox ? s.faceReadyHint : s.drawFaceHint : s.faceAssignmentHint}</p>
@@ -65,7 +66,7 @@ export function FaceNameEditor({ face, people, s, busy, onSave, onClose, creatin
         }
       }}>
       <option value="new">{s.newPerson}</option>
-      {choices.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
+      {choices.map(person => <option key={person.id} value={person.id}>{photoAssignmentLabel(person, s)}</option>)}
     </select></label>
     <label>{s.newPersonName}<input ref={newName} value={name} placeholder={s.faceNamePlaceholder} onFocus={() => setTarget('new')} onChange={event => { setTarget('new'); setName(event.target.value); }} required={target === 'new'} maxLength={100} autoComplete="off" disabled={busy} /></label>
     <div className="photo-face-editor__buttons"><button type="submit" tabIndex={-1} className="dialog-button dialog-button--accent" disabled={busy || !valid}>{creating ? s.confirmFace : s.save}</button>

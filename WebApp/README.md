@@ -33,20 +33,33 @@ Escape vuelve primero del editor al mapa y después a la foto.
 2. **Validar personas identificadas**: aprueba, marca como desconocido o corrige
    cada coincidencia. Arrastrar a derecha/izquierda sigue funcionando.
 3. **Fotos sin personas reconocidas**: revisa las fotos nuevas sin caras,
-   añade las que falten y márcalas como revisadas. No repite las históricas.
+   añade las que falten y márcalas como revisadas. Añadir caras, girar, recortar,
+   cambiar tamaño y zoom están disponibles directamente. El editor de nombres
+   ocupa un panel lateral y el botón para avanzar permanece visible; la foto se
+   adapta a la altura disponible. No repite las históricas.
 4. **Revisar nuevas personas detectadas**: pon nombre a cada grupo provisional
    o únelo a una identidad existente; puedes recorrer todas sus fotos. Corregir
    individualmente todas sus caras también permite continuar, incluida la opción
    Desconocido. Los grupos resueltos en una foto compartida no se vuelven a pedir.
 
 En los pasos 2–4 aparecen la fecha y el botón de mapa si hay GPS. Al ampliar
-una foto puedes añadir caras, girar a izquierda/derecha, recortar libremente,
+una foto (o directamente en el paso 3) puedes añadir caras, girar a izquierda/derecha, recortar libremente,
 cambiar el tamaño y deshacer ediciones. Los recuadros siguen la imagen al editarla.
 Las versiones editadas se guardan en `Pictures/edited-photos`; los archivos
 anteriores se conservan y no se vuelven a importar al explorar la carpeta.
 Borrar una foto de Galería elimina también sus versiones conservadas.
 
 Cada decisión avanza inmediatamente, sin guardar ni recargar toda la biblioteca.
+Los nombres nuevos del borrador aparecen en los selectores de las siguientes fotos
+con la etiqueta **pendiente de validar**. Puedes reutilizarlos también al corregir
+caras o identificar otros grupos. Al validar se resuelven como una única persona;
+descartar el borrador retira esos nombres sin crear personas en la biblioteca.
+En cada foto de los pasos 2–4, **Añadir a álbum personal…** permite elegir un
+álbum existente (incluidos los anidados) o crear uno nuevo en Álbumes personales.
+Puedes vincular varios álbumes y deshacer las incorporaciones desde sus etiquetas.
+Los nuevos álbumes también aparecen como **pendiente de validar** en las siguientes
+fotos. Las referencias y la creación se guardan con el resto del paso, sin duplicar
+álbumes ni sustituir las referencias que ya tenía la foto.
 **Validar todo y continuar** aplica el paso completo en una transacción y después
 actualiza la biblioteca una sola vez. Los borradores se conservan en esta pestaña
 al cerrar/reabrir el asistente o recargar la página. Puedes volver a la decisión

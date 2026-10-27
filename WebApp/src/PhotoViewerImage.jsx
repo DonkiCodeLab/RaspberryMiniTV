@@ -48,12 +48,13 @@ export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, 
   </Tag> : null).filter(Boolean);
 }
 
-export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, readOnlyFaces = false, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox }) {
+export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, readOnlyFaces = false, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox, onReadyChange }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
   const image = useRef(null), shortcut = useRef(null);
   useLayoutEffect(() => { setReady(false); setError(false); }, [photo.id, photo.relativePath, quality, sourceUrl]);
+  useEffect(() => { onReadyChange?.(ready && !error); }, [ready, error, onReadyChange]);
   shortcut.current = { onAddFace, enabled: !!onAddFace && ready && !error && !busy && !addingFace && !editor };
   useEffect(() => attachPhotoFaceShortcut(surface.current, image.current,
     () => shortcut.current.onAddFace(), () => shortcut.current.enabled), [photo.id]);

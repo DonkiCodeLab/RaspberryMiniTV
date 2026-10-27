@@ -1,5 +1,55 @@
-import { isNewPhotoPerson, photosWithoutPeople } from './photoLibrary.js';
+import { folderTrail, isIdentifiedPhotoPerson, isNewPhotoPerson, photosWithoutPeople } from './photoLibrary.js';
 import { validNewPersonName } from './photoPeopleBatch.js';
+import { editBox, visibleBox } from './photoImageEdits.js';
+
+export function validReviewAlbumName(value) {
+  return typeof value === 'string' && !!value.trim() && value.trim().length <= 100 &&
+    !['.', '..'].includes(value.trim()) && !/[\\/\u0000-\u001f]/.test(value);
+}
+
+export function reviewAlbumKey(album) {
+  return album.folderId ? `folder:${album.folderId}` : `name:${album.name.trim().toLowerCase()}`;
+}
+
+export function reviewAlbumOptions(folders = [], drafts = {}) {
+  const options = folders.filter(folder => folder.id !== 'albums' && folderTrail(folders, folder.id)[0]?.id === 'albums')
+    .map(folder => ({ id: reviewAlbumKey({ folderId: folder.id }), name: folder.name,
+      label: folderTrail(folders, folder.id).slice(1).map(item => item.name).join(' / '),
+      parent: folder.parent, assignment: { folderId: folder.id } }));
+  const names = new Set(options.filter(option => option.parent === 'albums').map(option => option.name.trim().toLowerCase()));
+  for (const draft of Object.values(drafts)) {
+    if (draft.delete) continue;
+    for (const album of draft.albums || []) {
+      if (!validReviewAlbumName(album.name)) continue;
+      const name = album.name.trim(), key = name.toLowerCase();
+      if (names.has(key)) continue;
+      names.add(key);
+      options.push({ id: reviewAlbumKey({ name }), name, label: name, parent: 'albums', assignment: { name }, pending: true });
+    }
+  }
+  return options;
+}
+
+export function reviewPeopleOptions(people, drafts, peopleDrafts = []) {
+  const options = people.filter(isIdentifiedPhotoPerson);
+  const names = new Set(options.map(person => (person.name || '').trim().toLowerCase()));
+  const include = value => {
+    if (!validNewPersonName(value)) return;
+    const name = value.trim(), key = name.toLowerCase();
+    if (names.has(key)) return;
+    names.add(key);
+    options.push({ id: `review-draft:${encodeURIComponent(key)}`, name, draftName: name });
+  };
+  for (const draft of Object.values(drafts)) {
+    if (draft.delete) continue;
+    for (const change of draft.changes || []) {
+      if (change.action === 'assign' && !draft.croppedFaceIds?.includes(change.faceId) ||
+          change.action === 'add' && visibleBox(editBox(change.box, draft.edits))) include(change.name);
+    }
+  }
+  for (const draft of peopleDrafts) include(draft.name);
+  return options;
+}
 
 // A proposal is a single face; shared photos must not collapse distinct identities.
 export function faceReviewQueue(reviews = [], photos = [], batchId) {
@@ -61,8 +111,8 @@ export function reviewHandled(review, drafts) {
 }
 
 export function reviewBatchPhotos(drafts) {
-  return Object.values(drafts).map(({ photoId, expectedPath, version, reviewIds, changes, edits, delete: remove }) =>
-    ({ photoId, expectedPath, version, reviewIds, changes, edits, delete: !!remove }));
+  return Object.values(drafts).map(({ photoId, expectedPath, version, reviewIds, changes, edits, albums, delete: remove }) =>
+    ({ photoId, expectedPath, version, reviewIds, changes, edits, ...(albums?.length ? { albums } : {}), delete: !!remove }));
 }
 
 export function reviewChanges(assignments, additions) {

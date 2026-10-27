@@ -4,7 +4,8 @@ import { createRequire } from 'node:module';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { build } from 'esbuild';
-import { afterReviewStage, attachReviewSwipe, faceReviewQueue, nextReviewCard, noFacesReviewQueue, newPersonReviewHandled, reviewBatchPhotos, reviewChanges, reviewIsCurrent, reviewSwipeAction } from '../src/photoReviewWizard.js';
+import { afterReviewStage, attachReviewSwipe, faceReviewQueue, nextReviewCard, noFacesReviewQueue, newPersonReviewHandled, reviewBatchPhotos, reviewChanges, reviewIsCurrent, reviewSwipeAction, reviewPeopleOptions, reviewAlbumOptions, validReviewAlbumName } from '../src/photoReviewWizard.js';
+import { photoAssignmentValue } from '../src/photoLibrary.js';
 import { photoStrings } from '../src/photoStrings.js';
 
 const photos = [{ id: 'family' }, { id: 'older' }];
@@ -15,6 +16,60 @@ const reviews = [
   { id: 'none', photoId: 'family', faceId: null, batchId: 'new' },
   { id: 'missing', photoId: 'deleted', faceId: 'd', batchId: 'new' },
 ];
+const folders = [{ id: 'albums', name: 'Personal' }, { id: 'ai', name: 'AI' }, { id: 'gallery', name: 'Gallery' },
+  { id: 'family-album', name: 'Familia', parent: 'albums' }, { id: 'trip', name: 'Viaje', parent: 'family-album' },
+  { id: 'generated', name: 'AI only', parent: 'ai' }];
+test('album options include nested personal albums and reusable drafts, excluding duplicates and deleted photos', () => {
+  const drafts = { one: { albums: [{ name: ' Verano ' }, { name: 'FAMILIA' }, { name: 'bad/name' }] },
+    two: { albums: [{ name: 'verano' }] }, deleted: { delete: true, albums: [{ name: 'Deleted' }] } };
+  const options = reviewAlbumOptions(folders, drafts);
+  assert.deepEqual(options.map(option => option.label), ['Familia', 'Familia / Viaje', 'Verano']);
+  const verano = options.find(option => option.pending);
+  assert.deepEqual(verano.assignment, { name: 'Verano' });
+  const nextDraft = { photoId: 'three', changes: [], reviewIds: [], albums: [verano.assignment] };
+  assert.deepEqual(reviewBatchPhotos({ three: nextDraft })[0].albums, [{ name: 'Verano' }]);
+  assert.deepEqual(reviewAlbumOptions(folders, JSON.parse(JSON.stringify(drafts))), options);
+  assert.deepEqual(reviewAlbumOptions(folders, { three: nextDraft }), options);
+  assert.equal(reviewAlbumOptions(folders, {}).length, 2);
+  assert.equal(newPersonReviewHandled({ id: 'new', photoIds: ['three'] }, { three: nextDraft }), false);
+});
+test('new album names use the folder naming rules without imposing person naming rules', () => {
+  for (const name of ['', '  ', '.', '..', 'bad/name', 'bad\\name', 'bad\nname', 'x'.repeat(101), null]) assert.equal(validReviewAlbumName(name), false, String(name));
+  for (const name of [' Viaje 2026 ', 'Persona 1', 'Álbum familiar']) assert.equal(validReviewAlbumName(name), true);
+});
+test('draft names become reusable choices without creating people or sending temporary IDs', () => {
+  const known = [{ id: 'ana', name: 'Ana' }], box = { x: .2, y: .3, width: .1, height: .2 };
+  const drafts = { first: { photoId: 'first', changes: [{ action: 'add', box, name: ' Eva ' }] } };
+  const choices = reviewPeopleOptions(known, drafts), eva = choices.find(p => p.name === 'Eva');
+  assert.ok(eva.draftName);
+  assert.equal(known.length, 1);
+  assert.deepEqual(photoAssignmentValue(choices, 'ana'), { personId: 'ana' });
+  drafts.second = { photoId: 'second', changes: [{ action: 'add', box, ...photoAssignmentValue(choices, eva.id) }] };
+  assert.deepEqual(reviewBatchPhotos(drafts).map(p => p.changes[0].name.trim()), ['Eva', 'Eva']);
+  assert.ok(reviewBatchPhotos(drafts).every(p => !('personId' in p.changes[0])));
+  const restored = reviewPeopleOptions(known, JSON.parse(JSON.stringify(drafts)));
+  assert.deepEqual(restored, choices); // reopening preserves the same option, without duplicates
+  delete drafts.first;
+  assert.deepEqual(reviewPeopleOptions(known, drafts), choices); // a surviving reference keeps the name
+  delete drafts.second;
+  assert.deepEqual(reviewPeopleOptions(known, drafts), known); // discard removes unused names
+});
+
+test('draft choices exclude invalid, removed, deleted and cropped faces and deduplicate existing names', () => {
+  const known = [{ id: 'unknown' }, { id: 'ana', name: 'Ana' }, { id: 'auto', name: 'Persona 2' }];
+  const drafts = {
+    one: { changes: [
+      ...['', 'Persona 3', 'bad/name', ' ANA ', 'Eva', 'eva'].map(name => ({ action: 'assign', faceId: name, name })),
+      { action: 'remove', name: 'Removed' }, { action: 'assign', faceId: 'cropped', name: 'Outside' },
+    ], croppedFaceIds: ['cropped'] },
+    deleted: { delete: true, changes: [{ action: 'assign', name: 'Deleted' }] },
+    cropped: { changes: [{ action: 'add', name: 'Outside crop', box: { x: .7, y: .7, width: .1, height: .1 } }],
+      edits: [{ crop: { x: 0, y: 0, width: .4, height: .4 } }] },
+  };
+  const choices = reviewPeopleOptions(known, drafts, [{ id: 'group', name: 'Marta' }, { id: 'other', name: 'EVA' }]);
+  assert.deepEqual(choices.map(p => p.name), [undefined, 'Ana', 'Eva', 'Marta']);
+});
+
 test('batch review keeps two faces in one photo separate and excludes old, deleted and faceless entries', () => {
   assert.deepEqual(faceReviewQueue(reviews, photos, 'new').map(r => r.id), ['ana', 'luis']);
   assert.deepEqual(faceReviewQueue(reviews, photos).map(r => r.id), ['ana', 'luis', 'old']);
@@ -152,7 +207,27 @@ const module = { exports: {} };
 new Function('require', 'module', 'exports', bundle.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
 const { default: Wizard, ReviewCard, ReviewSteps } = module.exports;
 
-test('third step shows photo counter and reviewed action instead of face identity decisions', () => {
+test('all three photo review modes expose personal albums and retain staged links on reopening', () => {
+  for (const mode of ['faces', 'no-faces', 'new-person']) {
+    const draft = { changes: [], edits: [], albums: [{ name: 'Verano' }] };
+    const html = renderToStaticMarkup(React.createElement(ReviewCard, {
+      review: { id: 'review', ...(mode === 'no-faces' ? {} : { faceId: 'face' }) },
+      groupPerson: mode === 'new-person' ? { id: 'new' } : undefined,
+      photo: { id: 'photo', name: 'Photo', folderIds: ['family-album'] }, people: [], position: 1, total: 2, s: photoStrings('es'),
+      albumOptions: reviewAlbumOptions(folders, { photo: draft }), draft,
+    }));
+    assert.match(html, /Añadir a álbum personal/);
+    assert.match(html, /Nuevo álbum personal/);
+    assert.match(html, /Familia \/ Viaje/);
+    assert.match(html, /Verano · pendiente de validar/);
+    assert.match(html, /Deshacer la incorporación a «Verano»/);
+    assert.match(html, /✓ Familia/);
+    assert.doesNotMatch(html, /AI only/);
+    if (mode === 'faces') assert.match(html, /← Desconocido/); // linking an album must not decide the identity
+  }
+});
+
+test('third step exposes face editing, rotation, resizing and zoom immediately, alongside the next action', () => {
   const s = photoStrings('es');
   const html = renderToStaticMarkup(React.createElement(ReviewCard, {
     review: noFaceReviews[0], photo: { ...noFacePhotos[0], name: 'Paisaje', relativePath: 'test.png' }, people: [], position: 2, total: 5, s,
@@ -161,9 +236,21 @@ test('third step shows photo counter and reviewed action instead of face identit
   assert.match(html, /Marcar como revisada/);
   assert.match(html, /Quitar referencia de Nuevas/);
   assert.match(html, /Borrar la imagen de Galería/);
-  assert.doesNotMatch(html, /Aprobar identidad|Identidad propuesta|← Desconocido/);
+  for (const label of [s.addFace, s.reviewRotateLeft, s.reviewRotateRight, s.reviewResize, s.zoomIn, s.zoomOut, s.facesInPhoto]) assert.ok(html.includes(label), label);
+  assert.doesNotMatch(html, /Aprobar identidad|Identidad propuesta|← Desconocido|Volver a la tarjeta|photo-review-deck/);
   const steps = renderToStaticMarkup(React.createElement(ReviewSteps, { step: 3, s }));
   assert.match(steps, /aria-current="step"[^>]*><span>3<\/span>Fotos sin personas reconocidas/);
+});
+
+test('returning to a faceless photo keeps its staged person and image edits visible in the inline editor', () => {
+  const html = renderToStaticMarkup(React.createElement(ReviewCard, {
+    review: noFaceReviews[0], photo: { ...noFacePhotos[0], name: 'Paisaje', relativePath: 'test.png' }, people: [], position: 1, total: 2, s: photoStrings('es'),
+    draft: { changes: [{ action: 'add', box: { x: .2, y: .3, width: .1, height: .2 }, name: 'Eva' }], edits: [{ rotate: 1 }, { scale: .8 }] },
+  }));
+  assert.match(html, /Eva/);
+  assert.match(html, /Deshacer edición/);
+  assert.match(html, /Anotar cambios y marcar revisada/);
+  assert.doesNotMatch(html, /photo-review-deck/);
 });
 
 test('direct new-photo entry counts only New, and an empty person step still offers step three', () => {

@@ -79,3 +79,93 @@
   .photo-review-steps li { flex-direction: row; text-align: left; }
   .photo-review-image-tools { gap: .35rem; }
 }
+
+.photo-review-card__actions { display: grid; gap: .75rem; }
+.photo-review-history { display: flex; flex-wrap: wrap; gap: .5rem; }
+.photo-review-history:empty { display: none; }
+.photo-review-context { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; min-width: 0; }
+.photo-dialog .photo-review-context .photo-meta { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; gap: .4rem .8rem; margin: 0; }
+.photo-review-context .photo-location { margin: 0; }
+.photo-review-albums { display: flex; flex: 1; gap: .5rem; align-items: center; min-width: 260px; max-width: 100%; }
+.photo-dialog.photo-dialog--review-wizard .photo-review-albums > select { width: 240px; max-width: 100%; min-height: 34px; padding: .4rem .5rem; font-size: .78rem; flex-shrink: 0; }
+.photo-review-albums__create { display: flex; align-items: center; gap: .4rem; min-width: 0; flex-shrink: 1; }
+.photo-dialog.photo-dialog--review-wizard .photo-review-albums__create input { width: 220px; min-width: 0; min-height: 34px; padding: .4rem .5rem; font-size: .78rem; }
+.photo-dialog.photo-dialog--review-wizard .photo-review-albums__create .dialog-button { min-height: 34px; padding: .4rem .6rem; font-size: .78rem; }
+.photo-review-albums__links { display: flex; gap: .4rem; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.photo-review-albums__links:empty { display: none; }
+.photo-review-albums__links > * { flex-shrink: 0; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .75rem; padding: .4rem .6rem; border: 1px solid #a5c8d038; border-radius: 20px; background: #0b223080; color: #bbd3dc; }
+.photo-review-albums__links > button { color: #ffdf52; border-color: #ffdf5250; cursor: pointer; }
+@media (max-width: 700px) {
+  .photo-review-albums { flex-basis: 100%; min-width: 0; flex-wrap: wrap; gap: .25rem; }
+  .photo-dialog.photo-dialog--review-wizard .photo-review-albums > select { width: 100%; }
+  .photo-review-albums__create { width: 100%; }
+  .photo-dialog.photo-dialog--review-wizard .photo-review-albums__create input { width: 0; flex: 1; }
+  .photo-review-albums__links { max-width: 100%; }
+}
+/* Keep the current photo and next action on screen while the face editor changes. */
+.photo-dialog.photo-dialog--inline-review { width: min(1240px, calc(100vw - 28px)); height: min(900px, calc(100dvh - 28px)); max-height: calc(100dvh - 28px); overflow: hidden; }
+.photo-dialog--inline-review .photo-dialog__body { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; gap: .5rem; padding: 1rem; min-height: 0; }
+.photo-dialog--inline-review .photo-dialog__body > :not(.photo-review-card) { flex-shrink: 0; }
+.photo-dialog--inline-review .photo-review-steps { margin: 0; gap: .75rem; }
+.photo-dialog--inline-review .photo-review-steps li { padding-block: .4rem; }
+.photo-dialog--inline-review .photo-review-draft { font-size: .72rem; line-height: 1.3; }
+.photo-dialog--inline-review .photo-review-card { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: .4rem; animation: none; }
+.photo-dialog--inline-review .photo-review-card > :not(.photo-review-workbench) { flex-shrink: 0; }
+.photo-dialog--inline-review .photo-meta { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: .5rem 1rem; }
+.photo-dialog--inline-review .photo-meta .photo-location { margin: 0; }
+.photo-dialog--inline-review .photo-location__open { width: 30px; height: 30px; min-height: 30px; }
+.photo-review-workbench { display: flex; flex: 1; flex-direction: column; min-height: 0; gap: .4rem; }
+.photo-review-workbench .photo-review-image-tools { flex-shrink: 0; }
+.photo-dialog--inline-review .dialog-button { min-height: 36px; padding: .45rem .7rem; font-size: .8rem; }
+.photo-dialog--inline-review .photo-review-image-tools input { box-sizing: border-box; width: 65px; min-height: 36px; padding: .4rem; }
+.photo-review-workbench__content { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: .75rem; flex: 1; min-height: 0; }
+.photo-review-workbench .photo-viewer__stage { display: flex; flex-direction: column; min-height: 0; }
+.photo-review-workbench .photo-viewer__canvas { flex: 1; min-height: 0; }
+.photo-review-workbench .photo-viewer__image { height: 100%; }
+.photo-review-workbench .photo-viewer__zoom { flex-shrink: 0; margin: .3rem 0; }
+.photo-review-workbench .photo-viewer__zoom button { min-height: 34px; }
+.photo-dialog .photo-review-workbench .photo-viewer__hint { font-size: .7rem; line-height: 1.3; }
+.photo-review-workbench__people { min-width: 0; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: .6rem; padding: .75rem; border: 1px solid #a5c8d028; border-radius: 12px; background: #0b223080; }
+.photo-review-workbench__people > strong { font-size: .85rem; }
+.photo-dialog .photo-review-workbench__people > p { font-size: .78rem; line-height: 1.5; }
+.photo-review-workbench__people .photo-review-face-tabs { flex-direction: column; }
+.photo-review-workbench__people .photo-review-face-tabs button { overflow-wrap: anywhere; }
+.photo-dialog .photo-review-workbench__people .photo-face-editor { padding: 0; gap: .55rem; }
+.photo-dialog .photo-review-workbench__people .photo-face-editor :is(input, select) { min-height: 36px; padding: .45rem; }
+.photo-review-workbench__filename { font-size: .72rem; color: #a9bdc9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.photo-dialog--inline-review .photo-review-card__actions { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .5rem 1rem; }
+.photo-dialog--inline-review .photo-review-decisions > button { min-height: 42px; }
+.photo-dialog--inline-review .photo-review-removal { flex-direction: column; gap: .15rem; padding: 0; align-items: flex-end; }
+.photo-dialog--inline-review .photo-review-removal > button { padding: .15rem; font-size: .72rem; }
+.photo-dialog--inline-review .photo-review-delete { grid-column: 1 / -1; max-height: 25dvh; overflow-y: auto; }
+.photo-dialog--inline-review .photo-alert { max-height: 15dvh; overflow-y: auto; }
+.photo-dialog--inline-review .photo-review-history { justify-content: flex-end; }
+.photo-dialog--inline-review .photo-review-history .dialog-button { min-height: 30px; font-size: .72rem; }
+@media (max-width: 700px) {
+  .photo-dialog--inline-review .photo-dialog__body { padding: .65rem; gap: .35rem; }
+  .photo-dialog--inline-review .photo-review-steps { display: flex; gap: .25rem; }
+  .photo-dialog--inline-review .photo-review-steps li { font-size: 0; justify-content: center; }
+  .photo-dialog--inline-review .photo-review-steps li > span { font-size: .8rem; width: 1.5rem; height: 1.5rem; }
+  .photo-dialog--inline-review .photo-review-card__progress { flex-direction: row; align-items: center; }
+  .photo-dialog--inline-review .photo-review-card__progress strong { font-size: .75rem; }
+  .photo-dialog--inline-review .photo-review-card__progress progress { width: 15%; }
+  .photo-dialog--inline-review .photo-review-image-tools { gap: .25rem; }
+  .photo-dialog--inline-review .photo-review-image-tools .dialog-button { padding-inline: .5rem; font-size: .72rem; }
+  .photo-review-workbench__content { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: .4rem; }
+  .photo-review-workbench__people { max-height: 190px; padding: .5rem; gap: .35rem; }
+  .photo-review-workbench__people:not(.is-editing) > p { display: none; }
+  .photo-review-workbench__people .photo-review-face-tabs { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; }
+  .photo-review-workbench__people .photo-review-face-tabs button { flex-shrink: 0; }
+  .photo-dialog .photo-review-workbench__people .photo-face-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+  .photo-review-workbench__people .photo-face-editor__heading, .photo-review-workbench__people .photo-face-editor > p, .photo-review-workbench__people .photo-face-editor__buttons { grid-column: 1 / -1; }
+  .photo-review-workbench__people .photo-face-editor__icon { display: none; }
+  .photo-dialog--inline-review .photo-review-card__actions { grid-template-columns: minmax(0, 1fr); }
+  .photo-dialog--inline-review .photo-review-removal { flex-direction: row; justify-content: space-between; }
+}
+@media (max-height: 600px) and (min-width: 701px) {
+  .photo-dialog--inline-review .photo-dialog__body { padding: .6rem; gap: .25rem; }
+  .photo-dialog--inline-review .photo-review-steps li { padding-block: .2rem; }
+  .photo-dialog--inline-review .photo-review-workbench__people { padding: .5rem; }
+  .photo-dialog--inline-review .photo-face-editor { gap: .35rem; }
+  .photo-dialog--inline-review .photo-face-editor__heading, .photo-dialog--inline-review .photo-face-editor > p { display: none; }
+}

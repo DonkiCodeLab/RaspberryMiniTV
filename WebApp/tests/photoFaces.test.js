@@ -67,6 +67,19 @@ test('new face identities reject provisional labels and invalid names before val
   assert.ok(!html.includes(`disabled="">${s.save}`));
 });
 
+test('the face picker labels draft identities and restores their selection in every language', () => {
+  const person = { id: 'review-draft:eva', name: 'Eva', draftName: 'Eva' };
+  for (const language of ['es', 'en', 'ca']) {
+    const strings = photoStrings(language);
+    const html = renderToStaticMarkup(React.createElement(FaceNameEditor, {
+      face: {}, people: [person], initialName: 'Eva', creating: true, hasBox: true, s: strings,
+    }));
+    assert.ok(html.includes(`<option value="${person.id}" selected="">${strings.reviewDraftPerson.replace('{name}', person.name)}</option>`));
+    assert.ok(!html.includes(`disabled="">${strings.confirmFace}`));
+    assert.doesNotMatch(html, /<input[^>]*required/);
+  }
+});
+
 test('person preview rectangles highlight detections without exposing photo editing controls', () => {
   const html = renderToStaticMarkup(React.createElement(FaceRectangles, { faces: faces.slice(0, 1), highlightPersonId: 'ana', readOnly: true, s }));
   assert.match(html, /<span[^>]*is-highlighted[^>]*role="img" aria-label="Ana"/);

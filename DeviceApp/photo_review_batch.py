@@ -36,6 +36,29 @@ def transform_box(box, edits):
     return {'x': x, 'y': y, 'width': right - x, 'height': bottom - y} if right > x and bottom > y else None
 
 
+def add_review_albums(library, db, photo, albums):
+    """Resolve new root albums once per transaction and preserve all memberships."""
+    from photo_library import PhotoError, clean_name
+    if not isinstance(albums, list) or len(albums) > 100:
+        raise PhotoError('Selecciona como máximo 100 álbumes personales por foto.')
+    for album in albums:
+        if not isinstance(album, dict) or set(album) not in ({'folderId'}, {'name'}):
+            raise PhotoError('Álbum de revisión inválido.')
+        if 'folderId' in album:
+            try: target = library.folder(db, album['folderId'])['id']
+            except PhotoError as error:
+                if error.status == 404: raise PhotoError('Un álbum ya no está disponible. Revisa la selección.', 409) from error
+                raise
+            if target == 'albums' or library.folder_root(db, target) != 'albums':
+                raise PhotoError('Selecciona un álbum personal.')
+        else:
+            name = clean_name(album['name'])
+            target = next((row['id'] for row in db.execute("SELECT id, name FROM folders WHERE parent='albums'")
+                           if row['name'].casefold() == name.casefold()), None)
+            if not target: target = library.create_folder(name, 'albums', db)['id']
+        db.execute('INSERT OR IGNORE INTO photo_albums VALUES (?,?)', (photo, target))
+
+
 def save_image(library, db, photo, edits, created):
     from photo_library import PhotoError
     if not isinstance(edits, list) or len(edits) > 50: raise PhotoError('Demasiadas ediciones en una foto.')
@@ -106,7 +129,7 @@ def apply_batch(library, data):
                 pending = {row['id']: row for row in photo_reviews.pending(db)}
                 seen, prepared = set(), []
                 for item in photos:
-                    if not isinstance(item, dict) or set(item) != {'photoId', 'expectedPath', 'version', 'reviewIds', 'changes', 'edits', 'delete'}:
+                    if not isinstance(item, dict) or set(item) - {'albums'} != {'photoId', 'expectedPath', 'version', 'reviewIds', 'changes', 'edits', 'delete'}:
                         raise PhotoError('Foto de revisión inválida.')
                     ident = item['photoId']
                     if not isinstance(ident, str) or ident in seen: raise PhotoError('Selecciona cada foto una sola vez.')
@@ -139,6 +162,7 @@ def apply_batch(library, data):
                 for item, photo in prepared:
                     if item['delete']:
                         library._delete_photo_rows(db, [photo['id']]); continue
+                    add_review_albums(library, db, photo['id'], item.get('albums', []))
                     if item['reviewIds']: photo_reviews.confirm(db, item['reviewIds'])
                     changed_faces = set()
                     for change in item['changes']:

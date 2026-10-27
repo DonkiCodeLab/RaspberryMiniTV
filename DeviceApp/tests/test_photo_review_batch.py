@@ -43,6 +43,64 @@ class ReviewBatchTests(unittest.TestCase):
     def payload(self, photos=None, people=None):
         return {'requestId': 'test-batch-id-12345', 'photos': photos or [], 'people': people or []}
 
+    def test_personal_albums_are_added_atomically_and_new_names_reused_after_retry(self):
+        parent = self.store.create_folder('Familia')['id']
+        nested = self.store.create_folder('Viaje', parent)['id']
+        one = self.item(1, albums=[{'folderId': nested}, {'name': ' Verano '}, {'name': 'FAMILIA'}])
+        two = self.item(2, albums=[{'name': 'verano'}, {'folderId': nested}], edits=[{'rotate': 1}])
+        previous = next(p for p in self.store.snapshot()['photos'] if p['id'] == one['photoId'])['folderIds']
+        data = self.payload([one, two])
+        self.assertFalse(any(f['name'] == 'Verano' for f in self.store.snapshot()['folders']))
+        response = self.client.post('/pictures/reviews/batch', json=data)
+        self.assertEqual(response.status_code, 200, response.json)
+        restored = PhotoLibrary(self.store.root)
+        self.assertEqual(apply_batch(restored, data), response.json)
+        snapshot = restored.snapshot()
+        created = [f for f in snapshot['folders'] if f['name'].casefold() == 'verano']
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0]['parent'], 'albums')
+        self.assertEqual(len([f for f in snapshot['folders'] if f['name'].casefold() == 'familia']), 1)
+        for item in [one, two]:
+            photo = next(p for p in snapshot['photos'] if p['id'] == item['photoId'])
+            self.assertTrue({nested, created[0]['id']} <= set(photo['folderIds']))
+        first = next(p for p in snapshot['photos'] if p['id'] == one['photoId'])
+        self.assertTrue(set(previous) | {parent} <= set(first['folderIds']))
+        second = next(p for p in snapshot['photos'] if p['id'] == two['photoId'])
+        self.assertEqual((second['width'], second['height']), (80, 120))
+
+    def test_later_error_rolls_back_album_creation_memberships_and_face_reviews(self):
+        existing = self.store.create_folder('Familia')['id']
+        one = self.item(1, albums=[{'folderId': existing}, {'name': 'Never created'}])
+        two = self.item(2, changes=[{'action': 'add', 'box': {}, 'name': 'Invalid face'}])
+        before = self.store.snapshot()
+        with self.assertRaises(PhotoError): apply_batch(self.store, self.payload([one, two]))
+        self.assertEqual(self.store.snapshot(), before)
+
+    def test_album_links_reject_nonpersonal_folders_missing_targets_and_bad_names(self):
+        generated = self.store.create_folder('Generated', 'ai')['id']
+        before = self.store.snapshot()
+        for albums in [None, {}, [{'folderId': value} for value in ['albums']] * 101,
+                       *[[{'folderId': value}] for value in ['albums', 'gallery', 'ai', generated, 'missing', None]],
+                       *[[{'name': value}] for value in ['', '..', 'bad/name', 'bad\\name', 'bad\nname', 'x' * 101, None]],
+                       [{'folderId': generated, 'name': 'Ambiguous'}]]:
+            with self.subTest(albums=albums):
+                with self.assertRaises(PhotoError): apply_batch(self.store, self.payload([self.item(2, albums=albums)]))
+                self.assertEqual(self.store.snapshot(), before)
+
+    def test_new_person_step_links_album_without_confirming_unresolved_faces(self):
+        item = self.item(3, reviewIds=[], albums=[{'name': 'Familia'}])
+        before = self.store.photo_faces(item['photoId'])['faces']
+        apply_batch(self.store, self.payload([item]))
+        self.assertEqual(self.store.photo_faces(item['photoId'])['faces'], before)
+        snapshot = self.store.snapshot()
+        album = next(f for f in snapshot['folders'] if f['name'] == 'Familia')
+        photo = next(p for p in snapshot['photos'] if p['id'] == item['photoId'])
+        self.assertIn(album['id'], photo['folderIds'])
+
+    def test_deleting_photo_does_not_create_its_staged_album(self):
+        apply_batch(self.store, self.payload([self.item(2, delete=True, albums=[{'name': 'Unused'}])]))
+        self.assertFalse(any(f['name'] == 'Unused' for f in self.store.snapshot()['folders']))
+
     def test_commits_shared_faces_and_manual_additions_once_with_response_loss(self):
         one = self.item(1); two = self.item(2, changes=[{'action': 'add', 'box': self.box, 'name': 'Eva'}])
         other = self.store.photo_faces(one['photoId'])['faces'][1]
@@ -67,6 +125,26 @@ class ReviewBatchTests(unittest.TestCase):
         self.assertEqual(self.store.snapshot(), before)
         self.assertEqual(list((self.store.root / 'edited-photos').glob('*')), [])
         with self.store.db() as db: self.assertEqual(db.execute('SELECT count(*) FROM photo_review_batches').fetchone()[0], 0)
+
+    def test_reused_draft_name_is_one_person_across_photos_groups_and_retries(self):
+        one = self.item(1)
+        face = self.store.photo_faces(one['photoId'])['faces'][0]
+        one['changes'] = [{'action': 'assign', 'faceId': face['id'], 'name': 'Eva'}]
+        two = self.item(2, changes=[{'action': 'add', 'box': self.box, 'name': 'Eva'}])
+        group = self.store.photo_faces(self.photos[3]['id'])['faces'][0]['personId']
+        data = self.payload([one, two], [{'id': group, 'name': 'Eva'}])
+        self.assertFalse(any(p['name'] == 'Eva' for p in self.store.snapshot()['people']))
+        response = self.client.post('/pictures/reviews/batch', json=data)
+        self.assertEqual(response.status_code, 200, response.json)
+        restored = PhotoLibrary(self.store.root)
+        self.assertEqual(apply_batch(restored, data), response.json)
+        people = [p for p in restored.snapshot()['people'] if p['name'] == 'Eva']
+        self.assertEqual(len(people), 1)
+        self.assertEqual(set(people[0]['photoIds']), {one['photoId'], two['photoId'], self.photos[3]['id']})
+        for photo_id in people[0]['photoIds']:
+            matches = [f for f in restored.photo_faces(photo_id)['faces'] if f['name'] == 'Eva']
+            self.assertEqual(len(matches), 1)
+            self.assertEqual(matches[0]['personId'], people[0]['id'])
 
     def test_stale_face_rejects_whole_batch_before_other_photos_are_written(self):
         one, two = self.item(1), self.item(2)
