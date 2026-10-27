@@ -115,3 +115,27 @@ test('leaving the map removes listeners and cancels pending zoom', t => {
   assert.equal(f.frames.size, 0);
   assert.equal(f.updates.length, 0);
 });
+
+test('MapLibre retains native wheel zoom and uses Safari gestures around the cursor', async t => {
+  const { attachMapLibrePhotoZoom } = await import('../src/photoMapZoom.js');
+  const frames = new Map(), listeners = new Map(), updates = [];
+  let id = 0, zoom = 5;
+  t.mock.method(globalThis, 'requestAnimationFrame', fn => { frames.set(++id, fn); return id; });
+  t.mock.method(globalThis, 'cancelAnimationFrame', key => frames.delete(key));
+  const element = { clientWidth: 800, clientHeight: 600, getBoundingClientRect: () => ({ left: 100, top: 50 }),
+    addEventListener(type, fn) { listeners.set(type, fn); }, removeEventListener(type) { listeners.delete(type); } };
+  const detach = attachMapLibrePhotoZoom({ getContainer: () => element, getZoom: () => zoom, getMinZoom: () => 0, getMaxZoom: () => 18,
+    unproject: point => point, easeTo: options => { zoom = options.zoom; updates.push(options); } });
+  t.after(detach);
+  const fire = (type, data = {}) => {
+    const e = { cancelable: true, preventDefault() { this.prevented = true; }, stopPropagation() {}, ...data };
+    listeners.get(type)(e); return e;
+  };
+  assert.equal(fire('wheel', { ctrlKey: true, deltaY: -100 }).prevented, undefined);
+  fire('mousemove', { clientX: 300, clientY: 200 });
+  fire('gesturestart'); fire('gesturechange', { scale: 2 });
+  for (const fn of frames.values()) fn(); frames.clear();
+  assert.deepEqual(updates, [{ zoom: 6, around: [200, 150], duration: 0 }]);
+  assert.equal(fire('wheel', { ctrlKey: true, deltaY: -100 }).prevented, true);
+  fire('gestureend'); detach(); assert.equal(listeners.size, 0);
+});

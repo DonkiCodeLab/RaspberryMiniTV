@@ -314,6 +314,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const faceActionPending = useRef(false);
   const actionPending = useRef(false);
   const [dialog, setDialog] = useState(null), [viewer, setViewer] = useState(null), [zone, setZone] = useState(null), [busy, setBusy] = useState(false);
+  const mapViewState = useRef(null);
   const [reviewDraft, setReviewDraft] = useState(readPhotoReviewDraft);
   const requestRef = useRef(0), refreshing = useRef(false), mounted = useRef(true), importing = useRef(false);
   const catalogue = useRef(blank), watcher = useRef(null);
@@ -581,7 +582,9 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       data-person-review-grid={current === 'people' && newPeopleOnly ? '' : undefined}
       onKeyDown={current === 'people' && newPeopleOnly ? handlePeopleReviewKey : undefined}>{folderPage.items.map(folder => album(folder))}</div>
       <PhotoPagination page={folderPage} onChange={setFolderNumber} s={s} label={s.folders} /></>}
-    {current === 'map' && !zone && <Suspense fallback={loading ? null : <PhotoLibraryLoading s={s} />}><PhotoMap photos={mapPhotos} s={s} onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
+    {current === 'map' && !zone && <Suspense fallback={loading ? null : <PhotoLibraryLoading s={s} />}><PhotoMap photos={mapPhotos} s={s} viewState={mapViewState}
+      onPhoto={photo => setViewer({ photos: [photo], initial: 0 })}
+      onCluster={photos => { setZone(photos.map(p => p.id)); setSelected(new Set()); setActionMode(false); }} /></Suspense>}
     {zone && <div className="photo-zone"><h2>{s.zone} · {currentPhotos.length}</h2><button type="button" className="dialog-button" onClick={goBack}>{s.allPlaces}</button></div>}
     {(actionMode || reviewingMatches && currentPhotos.length > 0) && <div className="photo-selection"><strong role="status">{selectedPhotoCount} {s.selected}</strong>
       <button type="button" disabled={busy} onClick={() => setSelected(previous => new Set([...(reviewingMatches ? previous : []), ...page.items.map(p => p.id)]))}>{s.selectPage}</button><button type="button" disabled={busy || !selectedPhotoCount} onClick={() => setSelected(new Set())}>{s.clear}</button>

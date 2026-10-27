@@ -1,6 +1,6 @@
 // Desktop trackpads use Ctrl+wheel in Chromium/Firefox and GestureEvent in Safari.
 // Leave ordinary scrolling and Leaflet's touchscreen pinch handling alone.
-export function attachPhotoMapZoom(map) {
+export function attachPhotoMapZoom(map, { nativeWheel = false } = {}) {
   const element = map.getContainer(), listeners = [];
   let frame = null, pending = null, safari = null, touching = false;
   let cursor = map.getSize().divideBy(2);
@@ -25,13 +25,14 @@ export function attachPhotoMapZoom(map) {
   };
   listen('mousemove', event => { cursor = map.mouseEventToContainerPoint(event); });
   listen('wheel', event => {
+    if (nativeWheel && !safari) return;
     if (!event.ctrlKey || touching) return;
     prevent(event);
     if (safari) return;
     const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? map.getSize().y : 1;
     // One map zoom level doubles its scale; match the photo viewer's pinch speed.
     zoomAround(currentZoom() - event.deltaY * factor / (100 * Math.LN2), map.mouseEventToContainerPoint(event));
-  }, { passive: false });
+  }, { passive: false, capture: true });
   listen('gesturestart', event => {
     if (touching) return;
     prevent(event);
@@ -60,4 +61,20 @@ export function attachPhotoMapZoom(map) {
     for (const [type, handler, options] of listeners) element.removeEventListener(type, handler, options);
     if (frame !== null) cancelAnimationFrame(frame);
   };
+}
+
+// MapLibre handles wheel and touchscreen pinch itself; retain Safari's desktop
+// GestureEvent support so pinch zoom never scales the whole application page.
+export function attachMapLibrePhotoZoom(map) {
+  const size = () => ({ x: map.getContainer().clientWidth, y: map.getContainer().clientHeight,
+    divideBy(value) { return { x: this.x / value, y: this.y / value }; } });
+  return attachPhotoMapZoom({
+    getContainer: () => map.getContainer(), getSize: size,
+    getZoom: () => map.getZoom(), getMinZoom: () => map.getMinZoom(), getMaxZoom: () => map.getMaxZoom(),
+    mouseEventToContainerPoint: event => {
+      const bounds = map.getContainer().getBoundingClientRect();
+      return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+    },
+    setZoomAround: (point, zoom) => map.easeTo({ zoom, around: map.unproject([point.x, point.y]), duration: 0 }),
+  }, { nativeWheel: true });
 }

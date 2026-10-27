@@ -7,6 +7,18 @@ persona o un álbum, la sección sigue seleccionada; pulsarla vuelve a su inicio
 La biblioteca ya no muestra **Nueva carpeta**, **Subir fotos** ni el acceso
 **Del iPhone a tu MiniTV**: la incorporación de fotos se realiza desde las apps.
 
+**Mapa** utiliza MapLibre GL y el mismo estilo claro de
+[Immich](https://docs.immich.app/guides/custom-map-styles/), con **Mapa 2D** y
+**Globo 3D**. Las fotos individuales son círculos que se amplían al pasar el
+puntero y abren su ficha al pulsarlos. Clic en un grupo acerca hasta separar
+sus marcadores; clic derecho abre la galería con todos los miembros del grupo.
+También se puede abrir con pulsación larga o Mayús + Intro, incluso si todas las
+fotos comparten posición. Volver conserva el encuadre y la proyección.
+No hay panel lateral ni botón para mostrar fotos del área.
+**Ir a mi ubicación** solicita permiso solo al pulsarlo; requiere HTTPS o
+localhost. El fondo necesita conexión a Internet. Para un proveedor propio,
+configura `VITE_PHOTO_MAP_STYLE_URL` con la URL de un estilo MapLibre; se admite PMTiles.
+
 Al ver las fotos de una persona, **Mostrar otras caras** permite alternar entre
 sus recuadros y todas las caras de la foto. **Editar caras** abre las herramientas
 para reasignar cualquier cara, incluida la principal, a una persona existente o
