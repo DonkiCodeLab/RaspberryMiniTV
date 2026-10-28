@@ -50,7 +50,15 @@ Escape vuelve primero del editor al mapa y después a la foto.
    ocupa un panel lateral y el botón para avanzar permanece visible; la foto se
    adapta a la altura disponible. No repite las históricas.
 4. **Revisar nuevas personas detectadas**: pon nombre a cada grupo provisional
-   o únelo a una identidad existente; puedes recorrer todas sus fotos. Corregir
+   o únelo a una identidad existente; puedes recorrer todas sus fotos. Se muestran
+   los recuadros de todas las caras detectadas, incluidas las ya validadas, con el
+   grupo actual resaltado. **Mostrar todas las caras detectadas** está activado
+   por defecto y permite ocultar los recuadros tanto en la tarjeta como al ampliar.
+   La opción se mantiene al cambiar de foto o persona durante la revisión.
+   El foco inicial está en el selector de personas: tras elegir **Desconocido**
+   u otra identidad, **Tab** lleva directamente a **Anotar y siguiente** y **Intro**
+   avanza. Al cambiar de foto o persona, el foco vuelve al selector. Si creas una
+   persona nueva, Tab pasa primero por su nombre. Corregir
    individualmente todas sus caras también permite continuar, incluida la opción
    Desconocido. Los grupos resueltos en una foto compartida no se vuelven a pedir.
    **El resto de esta foto son desconocidos** resuelve de una vez las caras aún sin
