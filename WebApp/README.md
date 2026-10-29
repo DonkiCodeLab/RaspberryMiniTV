@@ -19,14 +19,28 @@ No hay panel lateral ni botón para mostrar fotos del área.
 localhost. El fondo necesita conexión a Internet. Para un proveedor propio,
 configura `VITE_PHOTO_MAP_STYLE_URL` con la URL de un estilo MapLibre; se admite PMTiles.
 
-Al ver las fotos de una persona, **Mostrar otras caras** permite alternar entre
-sus recuadros y todas las caras de la foto. **Editar caras** abre las herramientas
+Al ver las fotos de una persona, **Mostrar cara de [nombre]** y **Mostrar otras caras**
+controlan sus recuadros de forma independiente: puedes ver solo esa persona, solo
+las demás, todas o ninguna. La elección se conserva al cambiar de foto dentro del
+visor. **Editar caras** abre las herramientas
 para reasignar cualquier cara, incluida la principal, a una persona existente o
 a un nombre nuevo. **Validar cambio** guarda esa cara; **Añadir cara** permite
 dibujar otra y confirmarla. El visor conserva la foto abierta aunque la corrección
 la saque de la carpeta de la persona. Los controles están disponibles tanto al
 pulsar su retrato como al abrir una foto dentro de su carpeta; las vistas flotantes
 de Nuevas personas ofrecen también acceso al editor.
+
+Todas las fotos usan el mismo visor, tanto en Galería, Mapa, álbumes personales,
+IA, Sin personas y Pendientes de validar como al abrir el retrato de una persona.
+**Mostrar todas las caras detectadas** permite ocultar o mostrar sus recuadros;
+en las personas se conservan los dos controles independientes. **Editar caras**
+activa o desactiva sus herramientas. **Editar foto** permite girar a izquierda o
+derecha, recortar, cambiar el tamaño entre 10 y 200 % y deshacer antes de pulsar
+**Guardar imagen**. Los recuadros siguen las transformaciones. El original se
+conserva y se actualiza la misma foto en todos sus álbumes, sin validar revisiones
+pendientes. Cerrar una edición sin guardar ofrece seguir editando o descartarla.
+**Añadir a álbum** permite asignar la referencia a un álbum existente o crear
+otro, también desde los retratos, conservando las referencias anteriores.
 
 El visor muestra la fecha y **Ver en el mapa**. **Editar fecha** abre un calendario;
 **Guardar fecha** conserva la hora y la zona horaria originales cuando existen.
@@ -41,6 +55,8 @@ Escape vuelve primero del editor al mapa y después a la foto.
 
 1. **Analizar lote**: elige cuántas fotos analizar. El valor inicial es 100
    (o las pendientes si quedan menos), con mínimo 1 y máximo las pendientes.
+   Abrir el asistente o pulsar **Analizar otro lote** solo muestra este paso;
+   el análisis comienza al pulsar **Empezar** dentro del diálogo.
    Pausar conserva el lote; continuar retoma su tamaño y progreso.
 2. **Validar personas identificadas**: aprueba, marca como desconocido o corrige
    cada coincidencia. Arrastrar a derecha/izquierda sigue funcionando.

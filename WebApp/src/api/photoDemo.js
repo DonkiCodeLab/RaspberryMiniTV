@@ -1,4 +1,5 @@
 import { deleteDemoPhotos, reviewDemoPeople } from './photoDemoPeopleBatch.js';
+import { demoFaceVersion, editDemoImage } from './photoDemoImageEdits.js';
 import { descendantIds, folderTrail, hasLocation, isIdentifiedPhotoPerson, UNKNOWN_PERSON_ID } from '../photoLibrary.js';
 import { hashPhoto } from '../photoHash.js';
 import { validBirthday } from '../personBirthday.js';
@@ -141,6 +142,8 @@ export function photoDemo(action, data = {}) {
           deleteDemoPhotos(library, ids);
           result = { ok: true, deleted: photos.length };
         }
+      } else if (action === 'reviews/batch') {
+        result = await editDemoImage(library, data);
       } else if (/^photos\/[^/]+\/metadata$/.test(action)) {
         const photo = library.photos.find(photo => photo.id === action.split('/')[1]);
         if (!photo) throw new Error('Esta foto ya no está disponible.');
@@ -155,7 +158,7 @@ export function photoDemo(action, data = {}) {
         const photo = library.photos.find(photo => photo.id === action.split('/')[1]);
         if (!photo) throw new Error('No se encuentra la foto.');
         const faces = library.manualFaces?.[photo.id] || [];
-        if (!Object.keys(data).length) return { photoId: photo.id, faces, state: photo.faceState || 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
+        if (!Object.keys(data).length) return { photoId: photo.id, faces, version: demoFaceVersion(library, photo.id), state: photo.faceState || 'pending', canDetect: false, scan: { state: 'idle', error: '' }, batchRunning: false };
         const box = data.box;
         if (!box || ['x', 'y', 'width', 'height'].some(key => !Number.isFinite(box[key])) || box.x < 0 || box.y < 0 || box.width <= 0 || box.height <= 0 || box.x + box.width > 1.000001 || box.y + box.height > 1.000001) throw new Error('Define un recuadro válido dentro de la foto.');
         const person = assignmentPerson(library, data);
@@ -281,7 +284,7 @@ export function photoDemo(action, data = {}) {
         if (blob && !urls.has(photo.relativePath)) urls.set(photo.relativePath, URL.createObjectURL(blob));
         return photo;
       });
-      const { metadata, importSessions, importBatches, importFiles, personReviewBatches, ...publicLibrary } = library;
+      const { metadata, importSessions, importBatches, importFiles, personReviewBatches, imageEditSources, imageEditBatches, ...publicLibrary } = library;
       return result || { ...publicLibrary, people: library.people.filter(p => !p.appleKey && (p.photoIds.length || p.id === UNKNOWN_PERSON_ID)),
         knownPeople: library.people.filter(isIdentifiedPhotoPerson).map(({ id, name }) => ({ id, name })), photos };
     } finally { db.close(); }

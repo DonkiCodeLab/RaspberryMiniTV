@@ -187,8 +187,9 @@ def apply_batch(library, data):
                         else: library.remove_face(photo['id'], face, db=db)
                     save_image(library, db, photo, item['edits'], created)
                     if 'metadata' in item: library.update_photo_metadata(photo['id'], item['metadata'], db=db)
-                    batch = next((pending[i]['batchId'] for i in item['reviewIds']), None)
-                    db.execute('UPDATE photo_reviews SET batch=? WHERE photo=? AND face IS NULL AND reviewed=0', (batch, photo['id']))
+                    if item['reviewIds']:
+                        batch = next((pending[i]['batchId'] for i in item['reviewIds']), None)
+                        db.execute('UPDATE photo_reviews SET batch=? WHERE photo=? AND face IS NULL AND reviewed=0', (batch, photo['id']))
                 for item in people:
                     if 'name' in item:
                         # Reuse an existing name rather than creating duplicate identities.

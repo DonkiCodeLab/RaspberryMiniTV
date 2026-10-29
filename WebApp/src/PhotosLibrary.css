@@ -393,9 +393,12 @@
 .photo-dialog--viewer .photo-import-details { flex-shrink: 0; max-height: 65px; overflow: auto; margin-top: .5rem; }
 .photo-face-viewer { display: grid; grid-template-columns: minmax(0, 1fr) 284px; gap: 1rem; min-height: 0; }
 .photo-person-face-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .6rem 1rem; flex-shrink: 0; margin-top: .65rem; }
-.photo-dialog .photo-person-face-controls label { display: flex; align-items: center; gap: .55rem; font-size: .85rem; cursor: pointer; }
-.photo-dialog .photo-person-face-controls input { width: 18px; height: 18px; margin: 0; accent-color: #ffdf52; }
+.photo-dialog .photo-person-face-controls label { display: flex; align-items: center; gap: .55rem; max-width: 100%; overflow-wrap: anywhere; font-size: .85rem; cursor: pointer; }
+.photo-dialog .photo-person-face-controls input { width: 18px; height: 18px; flex-shrink: 0; margin: 0; accent-color: #ffdf52; }
 .photo-person-face-controls .dialog-button { padding: .55rem .85rem; font-size: .85rem; }
+.photo-viewer__tools { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem 1rem; flex-shrink: 0; margin-top: .65rem; }
+.photo-viewer__tools .photo-person-face-controls { flex: 1; margin-top: 0; }
+.photo-viewer__tools > .dialog-button { margin: 0; padding: .55rem .85rem; font-size: .85rem; }
 .photo-face-viewer .photo-viewer__stage { display: flex; flex-direction: column; min-height: 0; }
 .photo-viewer__canvas { position: relative; min-height: 0; }
 .photo-face-viewer .photo-viewer__canvas { flex: 1; }

@@ -5,9 +5,17 @@ import { photoAssignmentOptions, photoAssignmentLabel, photoAssignmentValue, pho
 import { visiblePersonFaces } from './photoPersonPreview.js';
 import { validNewPersonName } from './photoPeopleBatch.js';
 
-export function PersonFaceControls({ showOtherFaces, onShowOtherFaces, editing, onEditing, disabled, s }) {
+export function PersonFaceControls({ personName, showPersonFaces, onShowPersonFaces, showOtherFaces, onShowOtherFaces, editing, onEditing, disabled, s }) {
   return <div className="photo-person-face-controls">
+    <label><input type="checkbox" checked={showPersonFaces} disabled={disabled} onChange={event => onShowPersonFaces(event.target.checked)} />{s.showPersonFaces.replace('{name}', () => personName)}</label>
     <label><input type="checkbox" checked={showOtherFaces} disabled={disabled} onChange={event => onShowOtherFaces(event.target.checked)} />{s.showOtherFaces}</label>
+    <button type="button" className="dialog-button" aria-pressed={editing} disabled={disabled} onClick={() => onEditing(!editing)}>{editing ? s.finishFaceEditing : s.editFaces}</button>
+  </div>;
+}
+
+export function PhotoFaceControls({ showFaces, onShowFaces, editing, onEditing, disabled, s }) {
+  return <div className="photo-person-face-controls">
+    <label><input type="checkbox" checked={showFaces} disabled={disabled} onChange={event => onShowFaces(event.target.checked)} />{s.reviewShowFaceBoxes}</label>
     <button type="button" className="dialog-button" aria-pressed={editing} disabled={disabled} onClick={() => onEditing(!editing)}>{editing ? s.finishFaceEditing : s.editFaces}</button>
   </div>;
 }
@@ -110,7 +118,7 @@ export function FaceRemoveConfirmation({ face, s, busy, error, onConfirm, onClos
 }
 
 export default function PhotoFaceViewer({ photo, quality = 'preview', people = [], globalFaces = {}, revision, highlightPersonId, onChanged, s,
-  editing = true, showOtherFaces = true, initialFaces = [], onInteractionChange, closeLayer }) {
+  editing = true, showPersonFaces = true, showOtherFaces = true, initialFaces = [], onInteractionChange, closeLayer }) {
   const [details, setDetails] = useState(null), [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [reload, setReload] = useState(0);
   const [notice, setNotice] = useState('');
@@ -157,7 +165,9 @@ export default function PhotoFaceViewer({ photo, quality = 'preview', people = [
   }, [photo.id, revision, reload]);
   const selected = details?.faces.find(face => face.id === selectedId);
   const removing = details?.faces.find(face => face.id === removingId);
-  const visibleFaces = visiblePersonFaces(details?.faces || initialFaces, highlightPersonId, showOtherFaces, selectedId || removingId);
+  const allFaces = details?.faces || initialFaces;
+  const visibleFaces = !highlightPersonId && !showOtherFaces ? allFaces.filter(face => face.id === (selectedId || removingId)) :
+    visiblePersonFaces(allFaces, highlightPersonId, showOtherFaces, selectedId || removingId, showPersonFaces);
   const running = details?.scan.state === 'running';
   const anyRunning = globalFaces.running || globalFaces.singleRunning || running;
   const restoreFocus = () => requestAnimationFrame(() => (returnFocus.current?.isConnected ? returnFocus.current : addButton.current)?.focus({ preventScroll: true }));

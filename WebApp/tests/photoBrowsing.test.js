@@ -23,6 +23,18 @@ const { PhotoGrid, PhotoPagination, DeletePhotoChoices, AlbumCard, PersonPortrai
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `Photo ${id}`, relativePath: `${id}.jpg` }));
 const s = photoStrings('es');
 
+test('all album viewers expose image, face, date, location and album tools in every language', () => {
+  const photo = { id: 'shared', name: 'Shared.jpg', relativePath: 'shared.jpg', folderIds: ['holiday'] };
+  for (const language of ['es', 'ca', 'en']) for (const person of [undefined, 'ana', 'unknown']) {
+    const strings = photoStrings(language);
+    const html = renderToStaticMarkup(React.createElement(Viewer, { photos: [photo], initial: 0, s: strings, language,
+      onChanged() {}, highlightPersonId: person, highlightPersonName: 'Ana' }));
+    for (const key of ['editPhotoImage', 'editPhotoDate', 'showPhotoMap', 'move']) assert.ok(html.includes(strings[key]), key);
+    assert.ok(html.includes(person ? strings.showOtherFaces : strings.reviewShowFaceBoxes));
+    assert.ok(html.includes(person ? strings.editFaces : strings.finishFaceEditing));
+  }
+});
+
 test('opening a photo from No people renders its image and Add face controls', () => {
   const photo = { id: 'no-faces', name: 'IMG_0746.JPG', relativePath: 'IMG_0746.JPG', faceState: 'done', faceCount: 0 };
   let initial;

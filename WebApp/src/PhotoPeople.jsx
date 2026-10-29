@@ -2,7 +2,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import PersonBirthday from './PersonBirthday.jsx';
 
-export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction, onReview, reviewCount = 0, initialLimit = 100 }) {
+export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction, onReview, reviewCount = 0, initialLimit = 100, startLabel }) {
   const titleId = useId();
   const [limit, setLimit] = useState(() => Math.min(initialLimit, faces.pending || initialLimit));
   useEffect(() => { setLimit(value => Math.min(Number(value) || initialLimit, faces.pending || initialLimit)); }, [faces.pending, initialLimit]);
@@ -20,7 +20,7 @@ export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction, onReview
           onChange={event => setLimit(event.target.value)} /><span>{s.reviewBatchMaximum.replace('{count}', faces.pending || 0)}</span></label>}</div>
       <button type="button" className="dialog-button dialog-button--accent" disabled={busy || faces.pausing || (!active && (!faces.available || (!resumable && (!faces.pending || !validLimit))))}
         onClick={() => onAction(active ? 'people/pause' : 'people/scan', active || resumable ? {} : { limit: Number(limit) })}>
-        {faces.pausing ? s.facesPausing : active ? s.pauseFaces : resumable ? s.resumeFaces : faces.state === 'complete' && faces.pending ? s.scanNextBatch : s.scan}
+        {faces.pausing ? s.facesPausing : active ? s.pauseFaces : resumable ? s.resumeFaces : startLabel || (faces.state === 'complete' && faces.pending ? s.scanNextBatch : s.scan)}
       </button>
     </div>
     {onReview && (reviewCount > 0 || active) && <button type="button" className="dialog-button" disabled={busy} onClick={onReview}>{active ? s.reviewWizard : `${s.reviewStart} · ${reviewCount}`}</button>}

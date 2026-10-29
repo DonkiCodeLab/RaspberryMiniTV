@@ -268,7 +268,7 @@ export function NewPersonReview({ person, library, people = library.knownPeople 
   </div>;
 }
 
-export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanPayload, s, language = 'es', onRefresh, onClose }) {
+export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initialLimit = 100, s, language = 'es', onRefresh, onClose }) {
   const storageKey = reviewStorageKey();
   const [saved] = useState(readPhotoReviewDraft);
   const [step, setStep] = useState(saved.step || (mode === 'scan' ? 'scan' : mode === 'noFaces' ? 'no-faces-intro' : mode === 'newPeople' ? 'new-people-intro' : 'intro'));
@@ -282,7 +282,7 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
   const [batchOnly, setBatchOnly] = useState(saved.batchOnly ?? mode === 'scan');
   const [batchContext, setBatchContext] = useState(saved.batchContext || null);
   const [history, setHistory] = useState([]);
-  const working = useRef(false), launched = useRef(false), wasScanning = useRef(false);
+  const working = useRef(false), wasScanning = useRef(false);
   const closeLayer = useRef(null);
   const faces = library.faces, active = faces.running || faces.singleRunning;
   const scope = batchOnly ? batchContext?.id ?? faces.batchId ?? null : undefined;
@@ -315,9 +315,6 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     catch (e) { setError(e.message); }
     finally { working.current = false; setBusy(false); }
   }
-  useEffect(() => {
-    if (!launched.current && scanPayload && !saved.step) { launched.current = true; void scanAction('people/scan', scanPayload); }
-  }, []);
   useEffect(() => {
     if (step !== 'scan') return;
     if (active) wasScanning.current = true;
@@ -382,7 +379,7 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', scanP
     {hasDrafts && <p className="photo-review-draft" role="status">{s.reviewDraftCount.replace('{count}', Object.keys(drafts).length + peopleDrafts.length)}</p>}
     {error && <p className="photo-alert" role="alert">{error}</p>}
     {step === 'scan' && <div className="photo-review-scan">
-      <PeopleAnalysis faces={faces} peopleCount={library.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={busy} onAction={scanAction} initialLimit={scanPayload?.limit || 100} />
+      <PeopleAnalysis faces={faces} peopleCount={library.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={busy} onAction={scanAction} initialLimit={initialLimit} startLabel={s.reviewStartBatch} />
       <div className="photo-dialog__actions"><button type="button" className="dialog-button" disabled={busy} onClick={onClose}>{s.reviewLater}</button>
         <button type="button" className="dialog-button dialog-button--accent" disabled={busy || active || faces.state !== 'complete'} onClick={() => setStep('intro')}>{s.reviewNextStep} →</button></div>
     </div>}

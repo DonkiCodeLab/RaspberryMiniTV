@@ -43,6 +43,26 @@ class ReviewBatchTests(unittest.TestCase):
     def payload(self, photos=None, people=None):
         return {'requestId': 'test-batch-id-12345', 'photos': photos or [], 'people': people or []}
 
+    def test_single_image_editor_preserves_album_references_and_pending_reviews(self):
+        items = [self.item(i, reviewIds=[], edits=[{'rotate': 1}, {'scale': .5}]) for i in (1, 2)]
+        with self.store.db() as db:
+            db.execute("UPDATE photo_reviews SET batch='keep-this-batch' WHERE reviewed=0")
+        before = self.store.snapshot()
+        sources = {item['photoId']: self.store.safe_file(item['expectedPath']).read_bytes() for item in items}
+        data = self.payload(items)
+        response = self.client.post('/pictures/reviews/batch', json=data)
+        self.assertEqual(response.status_code, 200, response.json)
+        after = self.store.snapshot()
+        self.assertEqual(after['reviews'], before['reviews'])
+        for item in items:
+            photo = next(photo for photo in after['photos'] if photo['id'] == item['photoId'])
+            previous = next(photo for photo in before['photos'] if photo['id'] == item['photoId'])
+            self.assertEqual(photo['folderIds'], previous['folderIds'])
+            self.assertEqual((photo['width'], photo['height']), (40, 60))
+            self.assertEqual(self.store.safe_file(item['expectedPath']).read_bytes(), sources[photo['id']])
+        self.assertEqual(self.client.post('/pictures/reviews/batch', json=data).json, response.json)
+        self.assertEqual(self.store.snapshot(), after)
+
     def test_batch_metadata_for_all_review_modes_preserves_time_image_edits_and_faces(self):
         with self.store.db() as db:
             for photo in self.photos:

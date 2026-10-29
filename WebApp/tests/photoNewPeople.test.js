@@ -13,6 +13,12 @@ test('person browsing can show other known, unknown and unassigned faces without
   assert.deepEqual(visiblePersonFaces(faces, 'unknown', false), [faces[2]]);
   assert.deepEqual(visiblePersonFaces(faces, undefined, false), faces);
   assert.deepEqual(visiblePersonFaces(faces, 'no-longer-present', false), []);
+  assert.deepEqual(visiblePersonFaces(faces, 'ana', false, undefined, false), []);
+  assert.deepEqual(visiblePersonFaces(faces, 'ana', true, undefined, false), faces.slice(1));
+  assert.deepEqual(visiblePersonFaces(faces, 'ana', false, 'main', false), [faces[0]]);
+  assert.deepEqual(visiblePersonFaces(faces, 'ana', false, 'other', false), [faces[1]]);
+  assert.deepEqual(visiblePersonFaces(faces, 'unknown', true, undefined, false), [faces[0], faces[1], faces[3]]);
+  assert.deepEqual(visiblePersonFaces(faces, undefined, false, undefined, false), faces);
 });
 
 test('new people includes only detector labels, excluding fixed, imported and named people', () => {

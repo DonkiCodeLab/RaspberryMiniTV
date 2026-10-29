@@ -5,7 +5,7 @@ export function deleteDemoPhotos(library, ids) {
   const paths = new Set(library.photos.filter(photo => ids.has(photo.id)).map(photo => photo.relativePath));
   library.photos = library.photos.filter(photo => !ids.has(photo.id));
   for (const person of library.people) person.photoIds = person.photoIds.filter(id => !ids.has(id));
-  for (const id of ids) { delete library.metadata?.[id]; delete library.manualFaces?.[id]; }
+  for (const id of ids) { delete library.metadata?.[id]; delete library.manualFaces?.[id]; delete library.imageEditSources?.[id]; }
   for (const [digest, id] of Object.entries(library.importFiles || {})) if (ids.has(id)) delete library.importFiles[digest];
   for (const [batch, receipt] of Object.entries(library.importBatches || {})) if (receipt.saved.some(path => paths.has(path))) delete library.importBatches[batch];
 }

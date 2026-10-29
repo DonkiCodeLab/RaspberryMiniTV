@@ -30,7 +30,13 @@ test('person browsing hides other faces and editing actions until editing is ena
   assert.match(browsing, /role="img" aria-label="Ana"/);
   assert.doesNotMatch(browsing, /aria-label="Sin asignar"|photo-face-sidebar|Añadir cara|Nombre de esta cara:/);
   const all = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: false, showOtherFaces: true }));
+  assert.match(all, /role="img" aria-label="Ana"/);
   assert.match(all, /role="img" aria-label="Sin asignar"/);
+  const others = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: false, showPersonFaces: false, showOtherFaces: true }));
+  assert.doesNotMatch(others, /role="img" aria-label="Ana"/);
+  assert.match(others, /role="img" aria-label="Sin asignar"/);
+  const hidden = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: false, showPersonFaces: false, showOtherFaces: false }));
+  assert.doesNotMatch(hidden, /photo-face-box|photo-face-sidebar/);
   const editing = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: true, showOtherFaces: true }));
   assert.match(editing, /Nombre de esta cara: Ana/);
   assert.match(editing, /Nombre de esta cara: Sin asignar/);
@@ -38,23 +44,38 @@ test('person browsing hides other faces and editing actions until editing is ena
   assert.ok(editing.includes(s.addFace));
 });
 
-test('face visibility and edit controls expose their state and work in every language', () => {
-  let visible, editing;
+test('face rectangles can be hidden in a general album while keeping face editing available', () => {
+  const props = { photo: { id: 'photo', name: 'Family', relativePath: 'family.jpg' }, initialFaces: faces, s };
+  const shown = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, showOtherFaces: true }));
+  const hidden = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, showOtherFaces: false }));
+  assert.match(shown, /Nombre de esta cara: Ana/);
+  assert.doesNotMatch(hidden, /photo-face-box/);
+  assert.ok(hidden.includes(s.addFace));
+});
+
+test('face visibility and edit controls expose their independent states and work in every language', () => {
   for (const language of ['es', 'en', 'ca']) {
+    let personVisible = true, othersVisible = false, editing = false;
     const strings = photoStrings(language);
-    const props = { showOtherFaces: false, editing: false, onShowOtherFaces: value => { visible = value; }, onEditing: value => { editing = value; }, s: strings };
+    const props = { personName: 'Pepito', showPersonFaces: personVisible, onShowPersonFaces: value => { personVisible = value; },
+      showOtherFaces: othersVisible, editing, onShowOtherFaces: value => { othersVisible = value; }, onEditing: value => { editing = value; }, s: strings };
     const html = renderToStaticMarkup(React.createElement(PersonFaceControls, props));
-    assert.match(html, /type="checkbox"/);
+    assert.equal((html.match(/type="checkbox"/g) || []).length, 2);
+    assert.equal((html.match(/checked=""/g) || []).length, 1);
     assert.match(html, /aria-pressed="false"/);
-    for (const key of ['showOtherFaces', 'editFaces', 'finishFaceEditing', 'validateFaceChange', 'personPhotoBrowseHint']) assert.ok(strings[key]);
+    for (const key of ['showPersonFaces', 'showOtherFaces', 'editFaces', 'finishFaceEditing', 'validateFaceChange', 'personPhotoBrowseHint']) assert.ok(strings[key]);
+    assert.ok(html.includes(strings.showPersonFaces.replace('{name}', 'Pepito')));
     assert.ok(html.includes(strings.showOtherFaces));
     assert.ok(html.includes(strings.editFaces));
     const controls = PersonFaceControls(props).props.children;
-    controls[0].props.children[0].props.onChange({ target: { checked: true } });
-    controls[1].props.onClick();
-    assert.equal(visible, true); assert.equal(editing, true);
+    controls[0].props.children[0].props.onChange({ target: { checked: false } });
+    assert.equal(personVisible, false); assert.equal(othersVisible, false);
+    controls[1].props.children[0].props.onChange({ target: { checked: true } });
+    assert.equal(personVisible, false); assert.equal(othersVisible, true);
+    controls[2].props.onClick();
+    assert.equal(editing, true);
     const locked = renderToStaticMarkup(React.createElement(PersonFaceControls, { ...props, disabled: true }));
-    assert.equal((locked.match(/disabled=""/g) || []).length, 2);
+    assert.equal((locked.match(/disabled=""/g) || []).length, 3);
   }
 });
 

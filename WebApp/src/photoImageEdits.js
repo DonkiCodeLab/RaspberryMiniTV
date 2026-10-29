@@ -1,4 +1,10 @@
-// Boxes remain in original-image coordinates until the whole step is committed.
+// A single image edit uses the same atomic, retryable save as the review wizard.
+export function photoImageEditBatch(photo, version, edits, requestId) {
+  return { requestId, people: [], photos: [{ photoId: photo.id, expectedPath: photo.relativePath, version,
+    reviewIds: [], changes: [], edits: structuredClone(edits), delete: false }] };
+}
+
+// Boxes remain in original-image coordinates until the edits are committed.
 export function editBox(box, edits = [], inverse = false) {
   if (!box) return null;
   let b = { ...box };
@@ -22,7 +28,7 @@ export function visibleBox(box) {
   return width > .00001 && height > .00001 ? { x, y, width, height } : null;
 }
 
-export async function imageEditPreview(url, edits) {
+export async function imageEditPreview(url, edits, { preview = true } = {}) {
   const image = new Image();
   image.crossOrigin = 'anonymous';
   image.src = url;
@@ -42,10 +48,13 @@ export async function imageEditPreview(url, edits) {
       canvas.getContext('2d').drawImage(source, w * c.x, h * c.y, w * c.width, h * c.height, 0, 0, canvas.width, canvas.height);
     } else {
       // Upscaling changes saved resolution, not the fitted preview. Keep memory bounded.
-      canvas.width = Math.max(1, Math.round(w * Math.min(1, edit.scale))); canvas.height = Math.max(1, Math.round(h * Math.min(1, edit.scale)));
+      const scale = preview ? Math.min(1, edit.scale) : edit.scale;
+      const width = Math.max(1, Math.round(w * scale)), height = Math.max(1, Math.round(h * scale));
+      if (!preview && width * height > 50_000_000) throw new Error('La foto supera el límite de 50 megapíxeles.');
+      canvas.width = width; canvas.height = height;
       canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
     }
     source = canvas;
   }
-  return source.toDataURL('image/jpeg', .92);
+  return source.toDataURL('image/jpeg', preview ? .92 : .95);
 }
