@@ -20,6 +20,10 @@
 .photo-review-card__progress strong { font-size: .9rem; }
 .photo-dialog--review-wizard .photo-review-card__progress progress { width: 24%; height: 5px; }
 .photo-review-deck { min-width: 0; padding: 4px; position: relative; }
+.photo-review-inspect { min-width: 0; --photo-viewer-height: 34dvh; }
+.photo-review-inspect .photo-face-box { pointer-events: none; }
+.photo-review-inspect .photo-review-photo__caption { align-items: center; padding: .25rem 0; }
+.photo-review-inspect .photo-review-photo__caption > span { color: inherit; flex-shrink: 1; }
 .photo-review-photo { position: relative; display: grid; gap: 0; width: 100%; border: 1px solid #ffffff36; padding: 0; background: #071a27; color: #fff; border-radius: 16px; box-shadow: 0 12px 28px #0004; overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none; transition: transform .2s ease; }
 .photo-review-card--without-faces .photo-review-photo { cursor: zoom-in; }
 .photo-review-photo.is-dragging { transition: none; cursor: grabbing; }

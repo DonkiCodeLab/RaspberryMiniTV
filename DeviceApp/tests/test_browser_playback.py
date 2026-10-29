@@ -36,6 +36,17 @@ def info(codec="ac3", video="h264", duration="2.0"):
 
 
 class PlanTests(unittest.TestCase):
+    def test_manual_repair_converts_even_declared_compatible_audio(self):
+        self.assertFalse(playback.playback_plan(info("aac"), SUPPORT, repair_audio=True)["direct"])
+        with self.assertRaisesRegex(playback.PlaybackError, "VIDEO_UNSUPPORTED"):
+            playback.playback_plan(info("aac", video="mpeg2video"), SUPPORT, repair_audio=True)
+        with self.assertRaisesRegex(playback.PlaybackError, "AAC_UNSUPPORTED"):
+            playback.playback_plan(info(), {"mp4": ["ac3"]}, repair_audio=True)
+        silent = info()
+        silent["streams"].pop()
+        with self.assertRaisesRegex(playback.PlaybackError, "NO_AUDIO"):
+            playback.playback_plan(silent, SUPPORT, repair_audio=True)
+
     def test_compatible_audio_and_silent_video_do_not_convert(self):
         self.assertTrue(playback.playback_plan(info("aac"), SUPPORT)["direct"])
         silent = info()
@@ -69,6 +80,20 @@ class JobTests(unittest.TestCase):
         self.source = self.root / "movie.mp4"
         self.source.write_bytes(b"original")
         self.manager = playback.BrowserPlayback(self.root / "cache")
+
+    def test_manual_repair_does_not_reuse_a_direct_play_decision_but_reuses_a_copy(self):
+        key = playback.fingerprint(self.source)
+        self.manager.root.mkdir()
+        (self.manager.root / (key + ".mp4")).write_bytes(b"compatible movie")
+        with patch.object(playback, "probe", return_value=info("aac")), patch.object(self.manager, "_prepare", side_effect=AssertionError("must reuse completed copy")):
+            direct = wait(self.manager, self.manager.prepare(self.source, SUPPORT))
+            repaired = wait(self.manager, self.manager.prepare(self.source, SUPPORT, repair_audio=True))
+            duplicate = self.manager.prepare(self.source, SUPPORT, repair_audio=True)
+        self.assertFalse(direct["converted"])
+        self.assertNotEqual(direct["id"], repaired["id"])
+        self.assertEqual(repaired["id"], duplicate["id"])
+        self.assertTrue(repaired["converted"])
+        self.assertEqual(repaired["cacheKey"], key)
 
     def test_failures_are_retriable_and_do_not_modify_original(self):
         with patch.object(playback, "probe", side_effect=playback.PlaybackError("TOOLS_MISSING")):
@@ -157,6 +182,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.post("/media/playback", json={}).status_code, 401)
         self.assertEqual(self.client.get("/media/playback?id=test").status_code, 401)
         self.assertEqual(self.post(supportedAudio={"mp4": ["bad"], "webm": []}).status_code, 400)
+        self.assertEqual(self.post(repairAudio="true").status_code, 400)
         self.assertEqual(self.post(relativePath="../escape.mp4").status_code, 404)
         external = self.root / "external.mp4"
         external.write_bytes(b"private")
@@ -192,6 +218,17 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.json["state"], "ready")
         self.assertEqual(self.client.get("/media/playback?id=unknown", headers=self.headers).json["errorCode"], "JOB_NOT_FOUND")
 
+    def test_manual_repair_option_reaches_the_conversion_manager(self):
+        key = playback.fingerprint(self.source)
+        self.manager.root.mkdir()
+        (self.manager.root / (key + ".mp4")).write_bytes(b"compatible movie")
+        with patch.object(playback, "probe", return_value=info("aac")):
+            response = self.post(repairAudio=True)
+            self.assertEqual(response.status_code, 200)
+            result = wait(self.manager, response.json)
+        self.assertTrue(result["converted"])
+        self.assertEqual(result["cacheKey"], key)
+
 
 @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "FFmpeg integration requires installed tools")
 class RealConversionTests(unittest.TestCase):
@@ -213,7 +250,8 @@ class RealConversionTests(unittest.TestCase):
                 updates.append(values.copy())
                 real_update(job_id, **values)
             with patch.object(manager, "_update", side_effect=update):
-                result = wait(manager, manager.prepare(source, SUPPORT))
+                # Even a browser claiming AC-3 support must honor manual repair.
+                result = wait(manager, manager.prepare(source, {**SUPPORT, "mp4": ["aac", "ac3"]}, repair_audio=True))
             self.assertEqual(result["state"], "ready", result)
             target = manager.cached_path(source, result["cacheKey"])
             output = playback.probe(target)
@@ -229,7 +267,7 @@ class RealConversionTests(unittest.TestCase):
             self.assertTrue(any(u.get("state") == "finalizing" and u.get("percent") == 99 for u in updates))
             restarted = playback.BrowserPlayback(root / "cache")
             with patch.object(restarted, "_prepare", side_effect=AssertionError("must reuse completed copy")):
-                cached = wait(restarted, restarted.prepare(source, SUPPORT))
+                cached = wait(restarted, restarted.prepare(source, SUPPORT, repair_audio=True))
             self.assertEqual(cached["cacheKey"], result["cacheKey"])
             self.assertFalse(list(manager.root.glob("*.part.mp4")))
 

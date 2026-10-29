@@ -30,6 +30,12 @@ la saque de la carpeta de la persona. Los controles están disponibles tanto al
 pulsar su retrato como al abrir una foto dentro de su carpeta; las vistas flotantes
 de Nuevas personas ofrecen también acceso al editor.
 
+La rueda amplía o reduce la foto manteniendo el punto bajo el cursor; clic y
+arrastre desplazan la imagen ampliada. Funciona también directamente en la
+tarjeta de **Revisar nuevas personas detectadas**. Al añadir una cara, la rueda
+sigue ampliando; **Mover foto** permite desplazarla y **Dibujar recuadro** vuelve
+a la selección. Tras terminar el recuadro se puede mover la imagen sin perderlo.
+
 Todas las fotos usan el mismo visor, tanto en Galería, Mapa, álbumes personales,
 IA, Sin personas y Pendientes de validar como al abrir el retrato de una persona.
 **Mostrar todas las caras detectadas** permite ocultar o mostrar sus recuadros;
@@ -154,27 +160,28 @@ biblioteca, Atrás permite salir de la web normalmente.
 
 Pruebas de navegación: `node --test tests/browserBack.test.js` desde `WebApp`.
 
-Al pulsar **Reproducir en navegador**, se comprueba el audio de forma silenciosa
-antes de abrir el vídeo. Los archivos compatibles y las copias ya preparadas se
-abren sin mostrar el diálogo de conversión. Este solo aparece cuando hay una
-conversión confirmada en cola o en curso. Si el navegador no admite la pista
-(por ejemplo, AC-3), la MiniTV prepara
-una copia con AAC estéreo, conservando la imagen sin recodificar y el original
-intacto. El reproductor muestra la cola, el porcentaje real, el tiempo transcurrido
+Al pulsar **Reproducir en navegador**, se abre directamente el vídeo original,
+sin comprobar el audio ni iniciar conversiones. Si no se oye o da problemas,
+**Intentar corregir audio** está disponible bajo el reproductor y en el aviso de
+error. Solo al pulsarlo la MiniTV comprueba las pistas y prepara una copia con
+AAC estéreo, incluso si el navegador declara admitir el audio original,
+conservando la imagen sin recodificar y el original intacto.
+El reproductor muestra la comprobación, la cola, el porcentaje real, el tiempo transcurrido
 y una estimación del restante; al finalizar intenta comenzar automáticamente.
 Si el navegador bloquea la reproducción automática, aparece un botón **Reproducir**.
 Se conservan el perfil, la posición de reanudación y los subtítulos externos.
 
-Puedes cerrar la ventana durante la preparación y abrirla después para recuperar
-el avance. La copia se reutiliza en las siguientes reproducciones. Los fallos
+Puedes volver al original o cerrar la ventana durante la preparación. Al abrir
+el vídeo y pulsar de nuevo **Intentar corregir audio**, se recupera el avance o
+se reutiliza la copia terminada. Los fallos
 de conexión, conversión, herramientas o espacio se indican con **Reintentar**.
 Actualiza también DeviceApp; consulta [la caché y los requisitos](../DeviceApp/README.md#audio-compatible-al-reproducir-desde-la-web).
 
 Si la reproducción se interrumpe después de comenzar, el aviso distingue entre
 un fallo de descarga, de decodificación y un archivo que el navegador no puede
 reproducir. Estos errores no se presentan como fallos de preparación del audio.
-**Reintentar** conserva el punto alcanzado en esta sesión y comprueba de nuevo
-la disponibilidad del vídeo. Un error de los subtítulos no cierra el reproductor.
+**Reintentar** conserva el punto alcanzado en esta sesión y vuelve a cargar el
+vídeo sin iniciar una conversión. Un error de los subtítulos no cierra el reproductor.
 
 **Reproducir en navegador** en películas y episodios abre el vídeo dentro de la
 carcasa de Los Simpson, ampliada hasta ocupar el espacio disponible. El interruptor

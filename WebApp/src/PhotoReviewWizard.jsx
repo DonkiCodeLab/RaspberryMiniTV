@@ -190,6 +190,11 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
         </aside>}
       </div>
       {withoutFaces ? <span className="photo-review-workbench__filename" title={photo.name}>{photo.title || photo.name}</span> : faceTabs}
+    </div> : groupPerson ? <div className="photo-review-inspect">
+      <PhotoViewerImage photo={photo} quality={REVIEW_IMAGE_RENDER} sourceUrl={sourceUrl || undefined} faces={visibleFaces}
+        highlightPersonId={groupPerson.id} readOnlyFaces s={s} onReadyChange={setReady} />
+      <div className="photo-review-photo__caption"><span>{photo.title || photo.name}</span>
+        <button type="button" className="dialog-button" onClick={() => enlarge(true)}>⤢ {s.enlargePhoto}</button></div>
     </div> : <div className="photo-review-deck">
       <button ref={surface} type="button" className={`photo-review-photo${offset ? ' is-dragging' : ''}`} aria-label={`${s.enlargePhoto}: ${photo.name}`} onClick={() => enlarge(true)}
         style={{ transform: `translateX(${offset}px) rotate(${offset / 30}deg)` }}>

@@ -5,7 +5,6 @@ import { build } from "esbuild";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { browserPlaybackStrings } from "../src/browserPlaybackStrings.js";
-import { prepareBrowserPlayback } from "../src/browserPlayback.js";
 
 const result = await build({
   entryPoints: [new URL("../src/PreparedBrowserVideo.jsx", import.meta.url).pathname],
@@ -16,25 +15,26 @@ const module = { exports: {} };
 new Function("require", "module", "exports", result.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
 const render = props => renderToStaticMarkup(React.createElement(module.exports.PlaybackPreparation, props));
 
-test("compatible videos and saved browser copies never show a conversion dialog", async () => {
+test("opening a movie renders the original immediately with an optional audio repair button", () => {
   const url = "http://minitv.test/media/stream?relativePath=Movies/test.mp4&pin=fixture";
-  assert.equal(renderToStaticMarkup(React.createElement(module.exports.default, { url })), "");
-  for (const converted of [false, true]) {
-    const states = [{ id: "job", state: "checking" },
-      { id: "job", state: "ready", converted, cacheKey: "a".repeat(64) }];
-    const displayed = [];
-    await prepareBrowserPlayback(url, {
-      supportedAudio: { mp4: ["aac"], webm: ["opus"] }, pollMs: 0,
-      onStatus: status => displayed.push(render({ status })),
-    }, async () => new Response(JSON.stringify(states.shift()), { status: 200 }));
-    assert.deepEqual(displayed, ["", ""]);
-  }
+  const html = renderToStaticMarkup(React.createElement(module.exports.default, { url, t: key => key }));
+  assert.match(html, /<video[^>]*src="http:\/\/minitv.test\/media\/stream\?relativePath=Movies\/test.mp4&amp;pin=fixture"/);
+  assert.match(html, /Intentar corregir audio/);
+  assert.doesNotMatch(html, /browser-preparation|<progress|Comprobando el audio/);
+  assert.equal(render({ status: { state: "ready" } }), "");
 });
 
-test("confirmed queued conversions show progress and failed checks still offer retry", () => {
-  for (const state of ["queued", "converting", "finalizing"]) {
+test("external previews play directly without offering an unavailable audio repair", () => {
+  const html = renderToStaticMarkup(React.createElement(module.exports.default, { url: "https://example.org/preview.mp4", t: key => key }));
+  assert.match(html, /<video[^>]*src="https:\/\/example.org\/preview.mp4"/);
+  assert.doesNotMatch(html, /Intentar corregir audio|browser-preparation/);
+});
+
+test("manual repair shows checking and conversion progress, with an option to return to the original", () => {
+  for (const state of ["checking", "queued", "converting", "finalizing"]) {
     assert.match(render({ status: { state } }), /<progress/);
   }
+  assert.match(render({ status: { state: "checking" }, onOriginal() {} }), /Volver al original/);
   const failed = render({ status: { state: "checking" }, error: "NETWORK" });
   assert.match(failed, /role="alert"/);
   assert.match(failed, /Reintentar/);
@@ -44,7 +44,7 @@ test("interrupted playback never claims that audio is being prepared", () => {
   for (const language of ["es", "ca", "en"]) {
     const s = browserPlaybackStrings(language);
     for (const error of ["PLAYBACK_NETWORK", "PLAYBACK_DECODE", "PLAYBACK_UNSUPPORTED", "PLAYBACK_ABORTED", "PLAYBACK_FAILED"]) {
-      const html = render({ language, status: { state: "ready", percent: 100 }, error });
+      const html = render({ language, status: { state: "ready", percent: 100 }, error, onRepairAudio() {} });
       assert.ok(html.includes(s.playbackFailed));
       assert.ok(html.includes(s.errors[error]));
       assert.ok(!html.includes(s.converting));
@@ -53,6 +53,7 @@ test("interrupted playback never claims that audio is being prepared", () => {
       assert.match(html, /aria-busy="false"/);
       assert.doesNotMatch(html, /<progress|library-loading__spinner/);
       assert.ok(html.includes(s.retry));
+      assert.ok(html.includes(s.repairAudio));
     }
   }
 });

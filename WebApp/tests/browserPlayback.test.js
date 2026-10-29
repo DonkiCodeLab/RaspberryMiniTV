@@ -1,12 +1,29 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { browserVideoError, prepareBrowserPlayback, supportedBrowserAudio, playbackTime } from "../src/browserPlayback.js";
+import { browserVideoError, canRepairBrowserAudio, prepareBrowserPlayback, supportedBrowserAudio, playbackTime } from "../src/browserPlayback.js";
 import { browserPlaybackStrings } from "../src/browserPlaybackStrings.js";
 
 const url = "http://minitv.test/media/stream?relativePath=TVShows%2FAlien%2FS01E01.mp4&pin=fixture";
 const supportedAudio = { mp4: ["aac"], webm: ["opus"] };
 const key = "a".repeat(64);
 const response = (body, status = 200) => new Response(JSON.stringify(body), { status });
+
+test("audio repair is only offered for videos backed by the preparation API", () => {
+  assert.equal(canRepairBrowserAudio(url), true);
+  assert.equal(canRepairBrowserAudio("/media/stream?relativePath=Movies/test.mkv"), true);
+  assert.equal(canRepairBrowserAudio("/media/stream?relativePath="), false);
+  assert.equal(canRepairBrowserAudio("https://example.org/preview.mp4"), false);
+});
+
+test("manual audio repair is explicit even when the browser reports compatible audio", async () => {
+  const result = await prepareBrowserPlayback(url, { supportedAudio, repairAudio: true, retry: true }, async (_, options) => {
+    assert.deepEqual(JSON.parse(options.body), { relativePath: "TVShows/Alien/S01E01.mp4", supportedAudio, retry: true, repairAudio: true });
+    return response({ id: "job", state: "ready", converted: true, cacheKey: key });
+  });
+  assert.equal(new URL(result).searchParams.get("browserCopy"), key);
+  await assert.rejects(prepareBrowserPlayback(url, { supportedAudio, repairAudio: true }, async () =>
+    response({ id: "job", state: "ready", converted: false })), /BACKEND_MISSING/);
+});
 
 test("a video that already played reports the actual media error and its interruption position", () => {
   for (const [code, expected] of [[1, "PLAYBACK_ABORTED"], [2, "PLAYBACK_NETWORK"], [3, "PLAYBACK_DECODE"], [4, "PLAYBACK_UNSUPPORTED"], [99, "PLAYBACK_FAILED"]]) {

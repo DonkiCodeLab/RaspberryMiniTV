@@ -41,10 +41,23 @@ test('drawing clamps to image edges, rejects clicks, and discards cancelled gest
   assert.equal(f.completed.at(-1), null);
   f.fire('pointerdown', 500, 250); f.fire('pointermove', 700, 350); f.fire('pointercancel', 700, 350);
   assert.equal(f.completed.at(-1), null); assert.equal(f.previews.at(-1), null);
-  assert.equal(f.fire('wheel', 500, 250).stopped, true);
+  assert.equal(f.fire('wheel', 500, 250).stopped, undefined);
   assert.equal(f.fire('dblclick', 500, 250).stopped, true);
   const count = f.completed.length;
   f.fire('pointerdown', 500, 250, { button: 2 });
   assert.equal(f.completed.length, count);
+  f.destroy();
+});
+
+test('wheel reaches the photo zoom between boxes but cannot change geometry during a drawing gesture', () => {
+  const f = fixture();
+  assert.equal(f.fire('wheel', 500, 250).stopped, undefined);
+  f.fire('pointerdown', 500, 250);
+  const wheel = f.fire('wheel', 500, 250);
+  assert.equal(wheel.stopped, true); assert.equal(wheel.prevented, true);
+  f.fire('pointerup', 700, 350);
+  assert.deepEqual(f.completed.at(-1), { x: .5, y: .5, width: .25, height: .25 });
+  assert.equal(f.fire('wheel', 500, 250).stopped, undefined);
+  assert.deepEqual(f.completed.at(-1), { x: .5, y: .5, width: .25, height: .25 });
   f.destroy();
 });

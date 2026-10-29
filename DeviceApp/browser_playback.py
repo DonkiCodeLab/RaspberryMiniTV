@@ -51,17 +51,19 @@ def selected_stream(streams, kind):
                 candidates[0] if candidates else None)
 
 
-def playback_plan(info, supported):
+def playback_plan(info, supported, repair_audio=False):
     streams = info.get("streams", [])
     video, audio = selected_stream(streams, "video"), selected_stream(streams, "audio")
     if not video:
         raise PlaybackError("NO_VIDEO")
+    if repair_audio and not audio:
+        raise PlaybackError("NO_AUDIO")
     formats = set(info.get("format", {}).get("format_name", "").split(","))
     container = "mp4" if "mp4" in formats else "webm" if "webm" in formats else None
     # ffprobe reports Matroska and WebM together. Only WebM codecs can be direct-played.
     if container == "webm" and video.get("codec_name") not in {"vp8", "vp9", "av1"}:
         container = None
-    direct = bool(container) and (not audio or audio.get("codec_name") in supported.get(container, []))
+    direct = not repair_audio and bool(container) and (not audio or audio.get("codec_name") in supported.get(container, []))
     if not direct and video.get("codec_name") not in MP4_VIDEO_CODECS:
         raise PlaybackError("VIDEO_UNSUPPORTED")
     if not direct and audio and "aac" not in supported.get("mp4", []):
@@ -84,9 +86,9 @@ class BrowserPlayback:
         self.check_queue = queue.Queue()
         self.worker = None
 
-    def prepare(self, path, supported, retry=False):
+    def prepare(self, path, supported, retry=False, repair_audio=False):
         source = fingerprint(path)
-        job_id = hashlib.sha256((source + json.dumps(supported, sort_keys=True)).encode()).hexdigest()
+        job_id = hashlib.sha256((source + json.dumps([supported, repair_audio], sort_keys=True)).encode()).hexdigest()
         with self.lock:
             existing = self.jobs.get(job_id)
             if existing and not (retry and existing["state"] == "failed"):
@@ -102,7 +104,7 @@ class BrowserPlayback:
                     del self.jobs[key]
             self.jobs[job_id] = {"id": job_id, "state": "checking", "percent": None,
                                  "created": time.time(), "path": str(path), "source": source,
-                                 "supported": supported}
+                                 "supported": supported, "repair_audio": repair_audio}
             self.check_queue.put_nowait(job_id)
             if self.worker is None:
                 self.worker = threading.Thread(target=self._work, daemon=True, name="browser-audio")
@@ -182,7 +184,7 @@ class BrowserPlayback:
         if fingerprint(path) != source:
             raise PlaybackError("SOURCE_CHANGED")
         info = probe(path)
-        plan = playback_plan(info, job["supported"])
+        plan = playback_plan(info, job["supported"], repair_audio=job["repair_audio"])
         if plan["direct"]:
             self._update(job_id, state="ready", percent=100, converted=False)
             return

@@ -9,8 +9,10 @@ export function fittedPhoto(view, image) {
 
 export function constrainPhoto(transform, view, image) {
   const scale = clamp(transform.scale, 1, MAX_PHOTO_ZOOM);
-  const x = Math.max(0, (image.width * scale - view.width) / 2);
-  const y = Math.max(0, (image.height * scale - view.height) / 2);
+  // Retain the fitted image's margins so portrait/landscape photos can also
+  // stay anchored to the cursor along an axis that does not fill the viewport.
+  const x = Math.max(0, (image.width * scale - Math.min(view.width, image.width)) / 2);
+  const y = Math.max(0, (image.height * scale - Math.min(view.height, image.height)) / 2);
   return { scale, x: x ? clamp(transform.x, -x, x) : 0, y: y ? clamp(transform.y, -y, y) : 0 };
 }
 
@@ -92,16 +94,12 @@ export function attachPhotoZoom(element, onChange) {
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) listen(type, endPointer);
   listen('dblclick', event => { if (!interactive(event)) { prevent(event); if (performance.now() - lastTouchZoom > 500) toggle(point(event)); } });
   listen('wheel', event => {
-    if (interactive(event)) return;
-    if (event.ctrlKey || event.metaKey) {
-      prevent(event);
-      if (!safari && !pointers.size) zoom(transform.scale * Math.exp(-event.deltaY * (event.deltaMode === 1 ? .08 : .01)), point(event));
-    } else if (transform.scale > 1) {
-      prevent(event);
-      const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? view.height : 1;
-      apply({ ...transform, x: transform.x - (event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX) * factor,
-        y: transform.y - (event.shiftKey && !event.deltaX ? 0 : event.deltaY) * factor });
-    }
+    if (interactive(event) && !event.target.closest?.('.photo-face-box')) return;
+    prevent(event);
+    const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? view.height : 1;
+    const sensitivity = event.ctrlKey || event.metaKey ? .01 : .002;
+    if (!safari && !pointers.size && Number.isFinite(event.deltaY))
+      zoom(transform.scale * Math.exp(-event.deltaY * factor * sensitivity), point(event));
   }, { passive: false });
   // Safari trackpads emit GestureEvent; iPad touch uses the pointer path above.
   listen('gesturestart', event => { prevent(event); if (!pointers.size) safari = { transform: { ...transform }, center: cursor }; }, { passive: false });

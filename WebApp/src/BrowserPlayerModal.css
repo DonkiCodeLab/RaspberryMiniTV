@@ -158,5 +158,9 @@ dialog.browser-video-player:not([open]) { display: none; }
 .browser-preparation dd { margin: 5px 0 0; font-size: 16px; font-variant-numeric: tabular-nums; }
 .browser-preparation__card > p:not(.browser-preparation__eyebrow) { color: #d2c9dc; line-height: 1.6; font-size: 14px; }
 .browser-preparation__card small { display: block; color: #a99bb9; line-height: 1.5; }
+.browser-preparation__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.browser-preparation__original { margin-top: 16px; }
+.browser-video__audio-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; padding: 6px 16px max(10px, env(safe-area-inset-bottom)); color: #b5abc7; font-size: 12px; }
+.browser-video__audio-actions .dialog-button { padding: 8px 16px; font-size: 12px; }
 .browser-video__start { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 10px; padding: 14px 24px; border: 0; border-radius: 999px; background: #ffd542; color: #211b2b; font: 800 16px/1.2 system-ui, sans-serif; box-shadow: 0 8px 30px #0006; cursor: pointer; }
 .browser-video__start:focus-visible { outline: 3px solid white; outline-offset: 4px; }

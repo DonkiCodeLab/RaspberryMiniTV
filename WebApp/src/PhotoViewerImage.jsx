@@ -22,14 +22,14 @@ function FacePopover({ box, view, surface, children }) {
   </div>;
 }
 
-function FaceDrawing({ onChange, s, disabled }) {
+function FaceDrawing({ onChange, s, disabled, active }) {
   const overlay = useRef(null), callback = useRef(onChange);
   const [box, setBox] = useState(null);
   callback.current = onChange;
   useEffect(() => {
-    if (!disabled) return attachFaceDrawing(overlay.current, setBox, value => callback.current(value));
-  }, [disabled]);
-  return <div ref={overlay} className="photo-face-drawing" role="group" aria-label={s.drawFaceHint}>
+    if (!disabled && active) return attachFaceDrawing(overlay.current, setBox, value => callback.current(value));
+  }, [disabled, active]);
+  return <div ref={overlay} className={`photo-face-drawing${disabled || !active ? ' is-inactive' : ''}`} role="group" aria-label={s.drawFaceHint}>
     {box && <span className="photo-face-box photo-face-box--draft" style={{ left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.width * 100}%`, height: `${box.height * 100}%` }} />}
   </div>;
 }
@@ -51,9 +51,11 @@ export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, 
 export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, readOnlyFaces = false, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox, onReadyChange }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
+  const [drawing, setDrawing] = useState(true);
   const surface = useRef(null), zoom = useRef(null), natural = useRef(null), hint = useId();
   const image = useRef(null), shortcut = useRef(null);
   useLayoutEffect(() => { setReady(false); setError(false); }, [photo.id, photo.relativePath, quality, sourceUrl]);
+  useEffect(() => { setDrawing(true); }, [addingFace, photo.id]);
   useEffect(() => { onReadyChange?.(ready && !error); }, [ready, error, onReadyChange]);
   shortcut.current = { onAddFace, enabled: !!onAddFace && ready && !error && !busy && !addingFace && !editor };
   useEffect(() => attachPhotoFaceShortcut(surface.current, image.current,
@@ -69,7 +71,7 @@ export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl
   };
   return <div className="photo-viewer__stage">
     <div className="photo-viewer__canvas">
-      <div ref={surface} className={`photo-viewer__image${view.scale > 1 ? ' is-zoomed' : ''}${view.dragging ? ' is-dragging' : ''}`}
+      <div ref={surface} className={`photo-viewer__image${view.scale > 1 ? ' is-zoomed' : ''}${view.dragging ? ' is-dragging' : ''}${addingFace ? ' is-adding-face' : ''}`}
         role="group" aria-label={photo.name} aria-describedby={hint} tabIndex={0} aria-busy={!ready && !error}>
         <div ref={image} className="photo-viewer__transform" style={{ width: view.width, height: view.height,
           transform: `translate(-50%, -50%) translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale})` }}>
@@ -78,7 +80,7 @@ export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl
           {!error && <img key={`${quality}:${attempt}:${sourceUrl || ''}`} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, quality === 'original' ? undefined : quality === 'thumb' ? 'thumb' : 'preview') || undefined}
             alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
           <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} readOnly={readOnlyFaces} />
-          {addingFace && ready && <FaceDrawing onChange={onFaceBoxChange} s={s} disabled={busy} />}
+          {addingFace && ready && <FaceDrawing onChange={box => { onFaceBoxChange?.(box); if (box) setDrawing(false); }} s={s} disabled={busy} active={drawing} />}
         </div>
         {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{quality === 'original' ? s.failedOriginal : s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{quality === 'original' ? s.loadingOriginal : s.loadingPhoto}</span></>}</div>}
       </div>
@@ -88,7 +90,8 @@ export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl
       <button type="button" aria-label={s.zoomOut} title={s.zoomOut} disabled={view.scale <= 1} onClick={() => zoom.current?.zoomBy(1 / 1.5)}>−</button>
       <button type="button" className="photo-viewer__reset" aria-label={s.fitPhoto} title={s.fitPhoto} onClick={() => zoom.current?.reset()}>{Math.round(view.scale * 100)} %</button>
       <button type="button" aria-label={s.zoomIn} title={s.zoomIn} disabled={view.scale >= MAX_PHOTO_ZOOM} onClick={() => zoom.current?.zoomBy(1.5)}>＋</button>
+      {addingFace && <button type="button" className="photo-viewer__draw-mode" disabled={busy || !ready} onClick={() => setDrawing(value => !value)}>{drawing ? s.panPhoto : s.drawBox}</button>}
     </div>
-    <p id={hint} className="photo-viewer__hint">{addingFace ? s.drawFaceHint : s.zoomHint}</p>
+    <p id={hint} className="photo-viewer__hint">{addingFace && drawing ? s.drawFaceHint : s.zoomHint}</p>
   </div>;
 }

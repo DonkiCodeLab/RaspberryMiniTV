@@ -1,5 +1,10 @@
 const codecs = { aac: "mp4a.40.2", mp3: "mp3", opus: "opus", vorbis: "vorbis", flac: "flac", ac3: "ac-3", eac3: "ec-3" };
 
+export function canRepairBrowserAudio(url) {
+  const source = new URL(url, typeof window === "undefined" ? "http://localhost" : window.location.href);
+  return source.pathname === "/media/stream" && Boolean(source.searchParams.get("relativePath"));
+}
+
 export function browserVideoError(event) {
   const video = event.currentTarget;
   // Resource errors can propagate through React. A subtitle failure must not
@@ -29,13 +34,13 @@ function pause(ms, signal) {
   });
 }
 
-export async function prepareBrowserPlayback(url, { supportedAudio, signal, onStatus, retry = false, pollMs = 1000 } = {}, fetcher = fetch) {
+export async function prepareBrowserPlayback(url, { supportedAudio, signal, onStatus, retry = false, repairAudio = false, pollMs = 1000 } = {}, fetcher = fetch) {
   const source = new URL(url, typeof window === "undefined" ? "http://localhost" : window.location.href);
   // Demo videos and external previews are not backed by the MiniTV preparation API.
-  if (source.pathname !== "/media/stream" || !source.searchParams.has("relativePath")) return url;
+  if (!canRepairBrowserAudio(url)) return url;
   const endpoint = new URL("/media/playback", source);
   const headers = { "Content-Type": "application/json", "X-Web-Pin": source.searchParams.get("pin") || "" };
-  const body = JSON.stringify({ relativePath: source.searchParams.get("relativePath"), supportedAudio: supportedAudio || supportedBrowserAudio(), retry });
+  const body = JSON.stringify({ relativePath: source.searchParams.get("relativePath"), supportedAudio: supportedAudio || supportedBrowserAudio(), retry, repairAudio });
   async function request(method, id) {
     signal?.throwIfAborted();
     const controller = new AbortController();
@@ -66,6 +71,8 @@ export async function prepareBrowserPlayback(url, { supportedAudio, signal, onSt
     onStatus?.(status);
     if (status.state === "failed") throw new Error(status.errorCode || "CONVERSION_FAILED");
     if (status.state === "ready") {
+      // Older APIs ignore repairAudio and may incorrectly approve silent audio.
+      if (repairAudio && !status.converted) throw new Error("BACKEND_MISSING");
       if (!status.converted) return url;
       if (!/^[a-f0-9]{64}$/.test(status.cacheKey || "")) throw new Error("CONVERSION_FAILED");
       source.searchParams.delete("download");

@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import BrowserVideo from "./BrowserVideo.jsx";
 import LoadingSpinner from "./LoadingSpinner.jsx";
-import { prepareBrowserPlayback, playbackTime } from "./browserPlayback.js";
+import { canRepairBrowserAudio, prepareBrowserPlayback, playbackTime } from "./browserPlayback.js";
 import { browserPlaybackStrings } from "./browserPlaybackStrings.js";
 
-export function PlaybackPreparation({ status, error, onRetry, language = "es" }) {
-  // Checking compatibility does not mean a conversion is needed. Only show
-  // progress once the backend has queued a real conversion; keep errors visible.
-  if (!error && !["queued", "converting", "finalizing"].includes(status.state)) return null;
+export function PlaybackPreparation({ status, error, onRetry, onRepairAudio, onOriginal, language = "es" }) {
+  // Preparation is only entered after the user asks to repair audio.
+  if (!error && !["checking", "queued", "converting", "finalizing"].includes(status.state)) return null;
   const s = browserPlaybackStrings(language);
   const playbackFailed = error?.startsWith("PLAYBACK_");
   const label = playbackFailed ? s.playback : s.converting;
@@ -20,7 +19,10 @@ export function PlaybackPreparation({ status, error, onRetry, language = "es" })
       <h2 role={error ? "alert" : "status"}>{title}</h2>
       {error ? <>
         <p>{s.errors[error] || s.errors.NETWORK}</p>
-        <button type="button" className="dialog-button" onClick={onRetry}>{s.retry}</button>
+        <div className="browser-preparation__actions">
+          <button type="button" className="dialog-button" onClick={onRetry}>{s.retry}</button>
+          {onRepairAudio && <button type="button" className="dialog-button dialog-button--ghost" onClick={onRepairAudio}>{s.repairAudio}</button>}
+        </div>
       </> : <>
         <div className="browser-preparation__percent" aria-hidden="true">{percent === null ? "…" : `${Math.floor(percent)} %`}</div>
         <progress max="100" value={percent === null ? undefined : percent} aria-label={s[status.state] || s.checking} />
@@ -32,43 +34,68 @@ export function PlaybackPreparation({ status, error, onRetry, language = "es" })
         <p>{s.hint}</p>
         <small>{s.background}</small>
       </>}
+      {onOriginal && <button type="button" className="dialog-button dialog-button--ghost browser-preparation__original" onClick={onOriginal}>{s.original}</button>}
     </section>
   </div>;
 }
 
-export default function PreparedBrowserVideo({ url, language, initialProgress, onProgress, ...props }) {
+function BrowserPlaybackSession({ url, language, initialProgress, onProgress, ...props }) {
   const [attempt, setAttempt] = useState(0);
-  const [ready, setReady] = useState(null);
-  const [status, setStatus] = useState({ state: "checking" });
+  const [ready, setReady] = useState(url);
+  const [status, setStatus] = useState({ state: "ready" });
   const [error, setError] = useState("");
-  const resume = useRef({ source: url, progress: initialProgress });
-  if (resume.current.source !== url) resume.current = { source: url, progress: initialProgress };
-  useEffect(() => {
-    const controller = new AbortController();
+  const resume = useRef({ ...initialProgress });
+  const s = browserPlaybackStrings(language);
+  const canRepair = canRepairBrowserAudio(url);
+  const repairAudio = () => {
     setReady(null);
     setError("");
     setStatus({ state: "checking" });
-    prepareBrowserPlayback(url, { signal: controller.signal, retry: attempt > 0,
+    setAttempt(value => value + 1);
+  };
+  const playOriginal = () => {
+    setAttempt(0);
+    setReady(url);
+    setError("");
+    setStatus({ state: "ready" });
+  };
+  useEffect(() => {
+    if (!attempt) return;
+    const controller = new AbortController();
+    prepareBrowserPlayback(url, { signal: controller.signal, retry: true, repairAudio: true,
       onStatus: next => { if (!controller.signal.aborted) setStatus(next); } })
-      .then(next => { if (!controller.signal.aborted) setReady({ source: url, url: next }); })
+      .then(next => { if (!controller.signal.aborted) setReady(next); })
       .catch(next => { if (!controller.signal.aborted) setError(next.message); });
     return () => controller.abort();
   }, [url, attempt]);
-  return ready?.source === url
-    ? <BrowserVideo {...props} url={ready.url} subtitleSourceUrl={url} language={language}
-        initialProgress={resume.current.progress}
+  return ready && !error
+    ? <><BrowserVideo key={ready} {...props} url={ready} subtitleSourceUrl={url} language={language}
+        initialProgress={resume.current}
         onProgress={progress => {
-          // A late cleanup from a previous source must not overwrite this movie.
-          if (resume.current.source !== url) return;
-          resume.current.progress = progress;
+          // Source switches render before the old video flushes its final time.
+          // Keep the object shared so the new video's mount sees that final save.
+          Object.assign(resume.current, progress);
           onProgress?.(progress);
         }}
         onPlaybackError={failure => {
           if (failure.seconds > 0) {
-            resume.current.progress = { ...resume.current.progress, kind: "video", seconds: failure.seconds, completed: false };
+            Object.assign(resume.current, { kind: "video", seconds: failure.seconds, completed: false });
           }
-          setReady(null);
           setError(failure.code);
         }} />
-    : <PlaybackPreparation status={status} error={error} language={language} onRetry={() => setAttempt(value => value + 1)} />;
+        {canRepair && <div className="browser-video__audio-actions">
+          {ready === url
+            ? <button type="button" className="dialog-button dialog-button--ghost" onClick={repairAudio} title={s.repairHint}>{s.repairAudio}</button>
+            : <><span>{s.repairedAudio}</span><button type="button" className="dialog-button dialog-button--ghost" onClick={playOriginal}>{s.original}</button></>}
+        </div>}
+      </>
+    : <PlaybackPreparation status={status} error={error} language={language}
+        onRetry={ready ? () => setError("") : repairAudio}
+        onRepairAudio={ready === url && canRepair ? repairAudio : undefined}
+        onOriginal={attempt > 0 ? playOriginal : undefined} />;
+}
+
+export default function PreparedBrowserVideo(props) {
+  // Each source owns its repair request and resume position, including cleanup.
+  return <BrowserPlaybackSession key={props.url} {...props} />;
 }

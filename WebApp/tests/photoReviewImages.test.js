@@ -73,3 +73,23 @@ test('all review modes request just the thumbnail and the face editor accepts it
   const original = renderToStaticMarkup(React.createElement(PhotoViewerImage, { photo, s, quality: 'original' }));
   assert.match(original, /photo-viewer__full[^>]+src="[^"]+relativePath=one.jpg"/);
 });
+
+test('new people expose the zoomable photo inline and a separate action opens editing', t => {
+  const previous = globalThis.window;
+  globalThis.window = { location: { hostname: 'raspberry', origin: 'http://raspberry' }, sessionStorage: { getItem: () => null } };
+  t.after(() => { globalThis.window = previous; });
+  for (const language of ['es', 'en', 'ca']) {
+    const s = photoStrings(language);
+    const html = renderToStaticMarkup(React.createElement(ReviewCard, {
+      photo, s, people: [], position: 1, total: 2, review: { id: 'r1', faceId: 'f1' }, groupPerson: { id: 'new' },
+    }));
+    assert.match(html, /photo-review-inspect/);
+    assert.match(html, /photo-viewer__image/);
+    assert.ok(html.includes(s.zoomHint));
+    assert.match(html, /<button[^>]*>⤢ /);
+    assert.doesNotMatch(html, /<button[^>]*class="photo-review-photo/);
+    const drawing = renderToStaticMarkup(React.createElement(PhotoViewerImage, { photo, s, addingFace: true }));
+    assert.ok(drawing.includes(s.panPhoto));
+    assert.ok(s.drawBox);
+  }
+});

@@ -2,6 +2,8 @@ import { withLanguages } from "./i18n/index.js";
 const strings = withLanguages({
   es: {
     play: "Reproducir",
+    repairAudio: "Intentar corregir audio", original: "Volver al original", repairedAudio: "Audio compatible",
+    repairHint: "Si no se oye o el audio falla, intenta preparar una copia compatible.",
     playback: "Reproducción de vídeo", playbackFailed: "Se ha interrumpido la reproducción",
     checking: "Comprobando el audio", queued: "En espera", converting: "Preparando audio compatible", finalizing: "Terminando la preparación",
     hint: "El vídeo conserva su calidad. La copia compatible se guardará para la próxima vez.",
@@ -11,6 +13,8 @@ const strings = withLanguages({
   },
   ca: {
     play: "Reprodueix",
+    repairAudio: "Intenta corregir l’àudio", original: "Torna a l’original", repairedAudio: "Àudio compatible",
+    repairHint: "Si no se sent o l’àudio falla, intenta preparar una còpia compatible.",
     playback: "Reproducció de vídeo", playbackFailed: "S’ha interromput la reproducció",
     checking: "Comprovant l’àudio", queued: "En espera", converting: "Preparant àudio compatible", finalizing: "Acabant la preparació",
     hint: "El vídeo conserva la qualitat. La còpia compatible es desarà per a la pròxima vegada.",
@@ -20,6 +24,8 @@ const strings = withLanguages({
   },
   en: {
     play: "Play",
+    repairAudio: "Try to fix audio", original: "Back to original", repairedAudio: "Compatible audio",
+    repairHint: "If there is no sound or audio fails, try preparing a compatible copy.",
     playback: "Video playback", playbackFailed: "Playback was interrupted",
     checking: "Checking audio", queued: "Waiting", converting: "Preparing compatible audio", finalizing: "Finishing preparation",
     hint: "Video quality is preserved. The compatible copy will be saved for next time.",
@@ -31,6 +37,7 @@ const strings = withLanguages({
 export const browserPlaybackStrings = language => strings[language] || strings.es;
 
 Object.assign(strings.es.errors, {
+  NO_AUDIO: "Este archivo no contiene una pista de audio que se pueda corregir.",
   PLAYBACK_ABORTED: "Se ha cancelado la carga del vídeo. Pulsa Reintentar para continuar desde el punto guardado.",
   PLAYBACK_NETWORK: "Se ha interrumpido la descarga del vídeo. Comprueba la conexión con la MiniTV y pulsa Reintentar para continuar desde el punto guardado.",
   PLAYBACK_DECODE: "El navegador no ha podido decodificar una parte del vídeo o del audio. Pulsa Reintentar para continuar desde el punto guardado. Si vuelve a fallar en el mismo punto, prueba otro navegador o reproduce el original en la MiniTV.",
@@ -38,6 +45,7 @@ Object.assign(strings.es.errors, {
   PLAYBACK_FAILED: "Se ha producido un error al reproducir el vídeo. Pulsa Reintentar para continuar desde el punto guardado, o reproduce el original en la MiniTV.",
 });
 Object.assign(strings.ca.errors, {
+  NO_AUDIO: "Aquest fitxer no conté cap pista d’àudio que es pugui corregir.",
   PLAYBACK_ABORTED: "S’ha cancel·lat la càrrega del vídeo. Torna-ho a provar per continuar des del punt desat.",
   PLAYBACK_NETWORK: "S’ha interromput la descàrrega del vídeo. Comprova la connexió amb la MiniTV i torna-ho a provar per continuar des del punt desat.",
   PLAYBACK_DECODE: "El navegador no ha pogut descodificar una part del vídeo o de l’àudio. Torna-ho a provar per continuar des del punt desat. Si torna a fallar al mateix punt, prova un altre navegador o reprodueix l’original a la MiniTV.",
@@ -45,6 +53,7 @@ Object.assign(strings.ca.errors, {
   PLAYBACK_FAILED: "S’ha produït un error en reproduir el vídeo. Torna-ho a provar per continuar des del punt desat, o reprodueix l’original a la MiniTV.",
 });
 Object.assign(strings.en.errors, {
+  NO_AUDIO: "This file has no audio track to repair.",
   PLAYBACK_ABORTED: "Video loading was cancelled. Retry to continue from the saved position.",
   PLAYBACK_NETWORK: "The video download was interrupted. Check the connection to the MiniTV and retry to continue from the saved position.",
   PLAYBACK_DECODE: "The browser could not decode part of the video or audio. Retry to continue from the saved position. If it fails again at the same point, try another browser or play the original on the MiniTV.",

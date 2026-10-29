@@ -4127,6 +4127,8 @@ def prepare_browser_playback():
                 not 0 < len(data["relativePath"]) <= 4096 or "\x00" in data["relativePath"]):
             return jsonify({"errorCode": "INVALID_REQUEST"}), 400
         supported = data.get("supportedAudio")
+        if not isinstance(data.get("repairAudio", False), bool):
+            return jsonify({"errorCode": "INVALID_REQUEST"}), 400
         if (not isinstance(supported, dict) or set(supported) != {"mp4", "webm"} or
                 any(not isinstance(values, list) or len(values) > len(AUDIO_CODECS) or
                     any(not isinstance(value, str) or value not in AUDIO_CODECS for value in values)
@@ -4137,7 +4139,8 @@ def prepare_browser_playback():
                 os.path.commonpath([os.path.realpath(VIDEOS_DIR), os.path.realpath(target)]) != os.path.realpath(VIDEOS_DIR)):
             return jsonify({"errorCode": "SOURCE_NOT_FOUND"}), 404
         supported = {key: sorted(set(values)) for key, values in supported.items()}
-        result = manager.prepare(target, supported, retry=data.get("retry") is True)
+        result = manager.prepare(target, supported, retry=data.get("retry") is True,
+                                 repair_audio=data.get("repairAudio") is True)
     response = jsonify(result)
     response.headers["Cache-Control"] = "no-store"
     return response

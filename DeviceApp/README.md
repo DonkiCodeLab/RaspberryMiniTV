@@ -45,9 +45,11 @@ Pruebas: `python -m unittest discover -s DeviceApp/tests -p 'test_media_file_inf
 
 ## Audio compatible al reproducir desde la web
 
-Al pulsar **Reproducir en navegador**, `POST /media/playback` comprueba las pistas
-con FFprobe y las capacidades de audio declaradas por el navegador. Los vídeos
-compatibles se reproducen directamente. Si hace falta adaptar el audio, FFmpeg
+Al pulsar **Reproducir en navegador**, la web reproduce directamente el original.
+Solo **Intentar corregir audio** llama a `POST /media/playback` con
+`repairAudio: true`. FFprobe comprueba las pistas y FFmpeg prepara una copia
+aunque el navegador declare admitir el audio original. Sin esa opción, la API
+conserva la comprobación de compatibilidad para clientes anteriores. FFmpeg
 crea un MP4 con la pista predeterminada en AAC estéreo a 192 kb/s y copia el vídeo
 sin recodificar. Conserva los subtítulos `mov_text`; los SRT externos se siguen
 leyendo junto al original. No convierte códecs de vídeo incompatibles con MP4.
@@ -56,7 +58,8 @@ leyendo junto al original. No convierte códecs de vídeo incompatibles con MP4.
 estimación restante y posición en cola. Ambas rutas requieren `X-Web-Pin`.
 Solo hay una conversión simultánea; las comprobaciones de archivos compatibles
 se atienden por separado. Se admiten hasta 16 preparaciones pendientes. Cerrar
-el navegador no detiene la tarea; volver a abrir el mismo vídeo recupera su estado.
+el navegador no detiene la tarea; volver a pulsar **Intentar corregir audio**
+en el mismo vídeo recupera su estado o reutiliza la copia terminada.
 Los errores admiten reintento explícito y nunca reproducen silenciosamente el
 original como alternativa. Un reinicio de la API permite reintentar las tareas
 interrumpidas y conserva las copias terminadas.

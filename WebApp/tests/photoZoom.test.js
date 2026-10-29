@@ -2,18 +2,30 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { attachPhotoZoom, constrainPhoto, fittedPhoto, transformPhoto } from '../src/photoZoom.js';
 
-test('zoom preserves the point under a moving pinch and clamps to actual portrait/landscape edges', () => {
+test('zoom preserves the point under a moving pinch and bounds panning including fitted margins', () => {
   const view = {width:800,height:600}, wide = fittedPhoto(view,{width:2400,height:1200});
   assert.deepEqual(wide,{width:800,height:400});
   const zoom = transformPhoto({scale:1,x:0,y:0},3,{x:100,y:50},{x:150,y:80},view,wide);
   assert.deepEqual(zoom,{scale:3,x:-150,y:-70});
   assert.equal((150-zoom.x)/zoom.scale,100);
   assert.equal((80-zoom.y)/zoom.scale,50);
-  assert.deepEqual(constrainPhoto({scale:2,x:999,y:-999},view,wide),{scale:2,x:400,y:-100});
+  assert.deepEqual(constrainPhoto({scale:2,x:999,y:-999},view,wide),{scale:2,x:400,y:-200});
   const portrait=fittedPhoto(view,{width:1200,height:2400});
-  assert.deepEqual(constrainPhoto({scale:2,x:999,y:999},view,portrait),{scale:2,x:0,y:300});
+  assert.deepEqual(constrainPhoto({scale:2,x:999,y:999},view,portrait),{scale:2,x:150,y:300});
   assert.deepEqual(constrainPhoto({scale:.2,x:999,y:-999},view,portrait),{scale:1,x:0,y:0});
   assert.equal(constrainPhoto({scale:100,x:0,y:0},view,wide).scale,8);
+});
+
+test('wheel zoom keeps the image point under the cursor even with portrait or landscape margins', () => {
+  const view = { width: 800, height: 600 };
+  for (const natural of [{ width: 2400, height: 1200 }, { width: 1200, height: 2400 }]) {
+    const image = fittedPhoto(view, natural), anchor = { x: image.width * .4, y: image.height * .4 };
+    const start = { scale: 1, x: 0, y: 0 };
+    const zoom = transformPhoto(start, 1.5, anchor, anchor, view, image);
+    assert.equal((anchor.x - zoom.x) / zoom.scale, anchor.x);
+    assert.equal((anchor.y - zoom.y) / zoom.scale, anchor.y);
+    assert.deepEqual(transformPhoto(zoom, 1, anchor, anchor, view, image), start);
+  }
 });
 
 function fixture() {
@@ -49,17 +61,52 @@ test('two touch pointers pinch, pan, transition to one finger and cancel without
   } finally {f.destroy();}
 });
 
-test('trackpad pinch, two-finger scroll and Safari gestures do not zoom twice or scroll the page', () => {
+test('plain wheel zoom is anchored at the cursor and a primary mouse drag pans the enlarged photo', () => {
+  const f = fixture(), e = f.element;
+  try {
+    assert.equal(e.fire('wheel', { deltaY: -Math.log(2) * 500, deltaMode: 0, clientX: 600, clientY: 400 }).prevented, true);
+    assert.deepEqual(f.flush(), { scale: 2, x: -200, y: -100, width: 800, height: 600, dragging: false });
+    e.fire('pointerdown', { pointerType: 'mouse', pointerId: 1, clientX: 600, clientY: 400 });
+    e.fire('pointermove', { pointerType: 'mouse', pointerId: 1, clientX: 650, clientY: 430 });
+    assert.equal(f.flush().x, -150); assert.equal(f.flush().y, -70);
+    assert.equal(f.flush().scale, 2); assert.equal(f.flush().dragging, true);
+    e.fire('pointerup', { pointerType: 'mouse', pointerId: 1 });
+    assert.equal(f.flush().dragging, false);
+    e.fire('wheel', { deltaY: Math.log(2) * 500, clientX: 650, clientY: 430 });
+    assert.deepEqual(f.flush(), { scale: 1, x: 0, y: 0, width: 800, height: 600, dragging: false });
+  } finally { f.destroy(); }
+});
+
+test('wheel units, limits and face overlays keep zoom usable without capturing form controls', () => {
+  const f = fixture(), e = f.element;
+  try {
+    for (const [deltaMode, factor] of [[0, 1], [1, 16], [2, 600]]) {
+      f.controller.reset();
+      e.fire('wheel', { deltaY: -Math.log(2) * 500 / factor, deltaMode });
+      assert.ok(Math.abs(f.flush().scale - 2) < 1e-10);
+    }
+    const face = { closest: selector => selector === '.photo-face-box' || selector.includes('button') ? face : null };
+    e.fire('wheel', { target: face, deltaY: -10000 }); assert.equal(f.flush().scale, 8);
+    e.fire('wheel', { deltaY: NaN }); assert.equal(f.flush().scale, 8);
+    e.fire('wheel', { deltaY: Infinity }); assert.equal(f.flush().scale, 8);
+    const control = { closest: selector => selector.includes('button') ? control : null };
+    assert.equal(e.fire('wheel', { target: control, deltaY: 100 }).prevented, undefined);
+    assert.equal(f.flush().scale, 8);
+    assert.equal(e.fire('wheel', { deltaY: 10000 }).prevented, true);
+    assert.equal(f.flush().scale, 1);
+    assert.equal(e.fire('wheel', { deltaY: 100 }).prevented, true);
+  } finally { f.destroy(); }
+});
+
+test('trackpad pinch and Safari gestures do not zoom twice or scroll the page', () => {
   const f=fixture(), e=f.element;
   try {
     assert.equal(e.fire('wheel',{ctrlKey:true,deltaY:-Math.log(2)*100,deltaMode:0}).prevented,true);
     assert.equal(f.flush().scale,2);
-    assert.equal(e.fire('wheel',{deltaX:35,deltaY:-45,deltaMode:0}).prevented,true);
-    assert.equal(f.flush().x,-35);assert.equal(f.flush().y,45);
     e.fire('gesturestart');e.fire('gesturechange',{scale:1.5});assert.equal(f.flush().scale,3);
     e.fire('wheel',{ctrlKey:true,deltaY:-100,deltaMode:0});assert.equal(f.flush().scale,3);
     e.fire('gestureend');f.controller.reset();f.flush();
-    assert.equal(e.fire('wheel',{deltaX:0,deltaY:30,deltaMode:0}).prevented,undefined);
+    assert.equal(e.fire('wheel',{deltaX:0,deltaY:30,deltaMode:0}).prevented,true);
   } finally {f.destroy();}
 });
 

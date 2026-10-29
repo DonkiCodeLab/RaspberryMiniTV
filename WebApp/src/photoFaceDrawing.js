@@ -35,7 +35,7 @@ export function attachFaceDrawing(element, onPreview, onComplete) {
     onPreview(valid ? box : null); onComplete(valid ? box : null);
   };
   const listeners = { pointerdown: down, pointermove: move, pointerup: end, pointercancel: end,
-    lostpointercapture: end, wheel: stop, dblclick: stop };
+    lostpointercapture: end, wheel: event => { if (drag) stop(event); }, dblclick: stop };
   for (const [type, handler] of Object.entries(listeners)) element.addEventListener(type, handler, { passive: false });
   return () => {
     for (const [type, handler] of Object.entries(listeners)) element.removeEventListener(type, handler);
