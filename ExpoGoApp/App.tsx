@@ -7,9 +7,9 @@ import * as Sharing from 'expo-sharing';
 import Transfer, { TransferState } from './src/transfer';
 
 const C = { bg: '#101827', card: '#1C293B', line: '#344258', muted: '#A9B9CD', text: '#F6F8FD', yellow: '#FFD45A', green: '#80D9B3', blue: '#9BC4FF' };
-function Button({ title, onPress, secondary = false, disabled = false }: { title: string; onPress: () => void; secondary?: boolean; disabled?: boolean }) {
-  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [s.button, secondary && s.secondary, (disabled || pressed) && { opacity: disabled ? .4 : .7 }]}>
-    <Text style={[s.buttonText, secondary && { color: C.text }]}>{title}</Text>
+function Button({ title, onPress, secondary = false, danger = false, disabled = false }: { title: string; onPress: () => void; secondary?: boolean; danger?: boolean; disabled?: boolean }) {
+  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [s.button, secondary && s.secondary, danger && s.danger, (disabled || pressed) && { opacity: disabled ? .4 : .7 }]}>
+    <Text style={[s.buttonText, secondary && { color: C.text }, danger && { color: '#FFC3B2' }]}>{title}</Text>
   </Pressable>;
 }
 const errorText = (error: unknown) => error instanceof Error ? error.message : String(error);
@@ -76,7 +76,16 @@ function Home() {
       { text: 'Cancelar', style: 'cancel' }, { text: 'Revisar y subir', onPress: execute }
     ]); else execute();
   };
-  const disabled = busy || !!state?.preparing;
+  // Interruption must stay available while prepare() is waiting for Photos/iCloud.
+  const interrupt = async (intent: 'pause' | 'stop') => {
+    setError('');
+    try {
+      const action = intent === 'stop' ? Transfer.stop() : Transfer.pause();
+      void refresh().catch(() => {});
+      await action; await refresh();
+    } catch (e) { if (alive.current) setError(errorText(e)); }
+  };
+  const disabled = busy || !!state?.preparing || !!state?.interruption;
   const percent = Math.round((state?.percentage ?? 0) * 100);
   const done = (state?.imported ?? 0) + (state?.existing ?? 0) + (state?.failed ?? 0);
   return <SafeAreaView style={s.safe}>
@@ -102,16 +111,16 @@ function Home() {
           <View style={s.progressHeader}><Text style={s.percent}>{percent}<Text style={s.percentSign}>%</Text></Text><Text style={s.count}>{done} de {state?.total ?? 0}{'\n'}fotos comprobadas</Text></View>
           <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: percent }} style={s.track}><View style={[s.fill, { width: (percent + '%') as '0%' }]} /></View>
           <View style={s.metrics}>
-            {[[state?.imported ?? 0, 'Nuevas', C.green], [state?.existing ?? 0, 'Ya estaban', C.blue], [state?.failed ?? 0, 'Errores', C.yellow]].map(([count, label, color]) => <View key={label} style={s.metric}><Text style={[s.metricValue, { color: String(color) }]}>{count}</Text><Text style={s.metricLabel}>{label}</Text></View>)}
+            {[[state?.imported ?? 0, 'Exportadas', C.green], [state?.existing ?? 0, 'Ya estaban', C.blue], [state?.failed ?? 0, 'Errores', C.yellow]].map(([count, label, color]) => <View key={label} style={s.metric}><Text style={[s.metricValue, { color: String(color) }]}>{count}</Text><Text style={s.metricLabel}>{label}</Text></View>)}
           </View>
-          <Text accessibilityLiveRegion="polite" style={s.message}>{busy ? 'Preparando…' : state?.message ?? 'Leyendo el progreso guardado…'}</Text>
+          <Text accessibilityLiveRegion="polite" style={s.message}>{state?.message ?? 'Leyendo el progreso guardado…'}</Text>
           {!!state?.fileName && state.running && <Text numberOfLines={2} style={s.file}>{state.fileName}{state.fileProgress >= 0 ? ' · ' + Math.round(state.fileProgress * 100) + '%' : ''}</Text>}
           {state?.limited && <Text style={s.notice}>Acceso limitado: solo se exportarán las fotos que has autorizado. El porcentaje corresponde a estas fotos autorizadas.</Text>}
-          {state?.running ? <Button title="Pausar subida" secondary onPress={() => void act(() => Transfer!.pause())} disabled={busy} /> : <>
-            {state?.canResume && <Button title="Continuar subida" onPress={() => void act(async () => { await Transfer!.start(); })} disabled={disabled || !state.connected} />}
+          {!state?.running && !state?.preparing && !state?.interruption && <>
             <Button title={Platform.OS === 'android' ? 'Elegir fotos y subir' : state?.hasJob ? 'Revisar y subir todas de nuevo' : 'Subir mis fotos'} secondary={!!state?.canResume} onPress={() => prepare()} disabled={disabled || !state?.connected} />
             {Platform.OS === 'ios' && <Button title="Elegir fotos" secondary onPress={() => prepare(true)} disabled={disabled || !state?.connected} />}
           </>}
+          <Text style={s.small}>Exportadas cuenta las fotos nuevas confirmadas por tu MiniTV. Pausar guarda el progreso; Detener finaliza la exportación y conserva las fotos enviadas.</Text>
         </View>
       </>
       {!!(error || state?.error) && <View style={s.error}><Text selectable style={s.errorText}>{error || state?.error}</Text><Pressable accessibilityRole="button" onPress={() => void Linking.openSettings()}><Text style={s.settings}>Abrir ajustes</Text></Pressable></View>}
@@ -122,6 +131,20 @@ function Home() {
       })} /></View>}
       <Text style={s.footer}>{'Sin borrar originales · Sin duplicar fotos\nAndroid + iOS · MiniTV Fotos'}</Text>
     </ScrollView>
+    {(state?.hasJob || state?.canPause || state?.interruption) && <View style={s.transferDock}>
+      <View style={s.dockContent}>
+        <View style={s.row}>
+          <Text accessibilityLiveRegion="polite" style={s.exportedCount}>{state.imported}<Text style={s.exportedLabel}> fotos exportadas</Text></Text>
+          <Text style={s.count}>{done} de {state.total}{'\n'}comprobadas · {percent}%</Text>
+        </View>
+        <View accessibilityRole="progressbar" accessibilityLabel="Fotos comprobadas" accessibilityValue={{ min: 0, max: state.total || 1, now: done }} style={s.track}><View style={[s.fill, { width: (percent + '%') as '0%' }]} /></View>
+        <Text accessibilityLiveRegion="polite" style={s.dockStatus}>{state.interruption === 'stop' ? 'Deteniendo… Guardando el resumen.' : state.interruption === 'pause' ? 'Pausando… Guardando el progreso.' : state.preparing ? 'Leyendo las fotos autorizadas…' : state.running ? 'Exportación en curso' : state.stopped ? 'Detenida · Tus fotos enviadas se conservan' : state.canResume ? 'Pausada · Puedes continuar cuando quieras' : 'Exportación terminada'}</Text>
+        {(state.canPause || state.canResume || state.canStop || state.interruption) && <View style={s.dockActions}>
+          <View style={{ flex: 1 }}>{state.canResume ? <Button title="Continuar subida" onPress={() => void act(() => Transfer.start())} disabled={disabled || !state.connected} /> : <Button title={state.interruption === 'pause' ? 'Pausando…' : 'Pausar'} secondary onPress={() => void interrupt('pause')} disabled={!state.canPause} />}</View>
+          <View style={{ flex: 1 }}><Button title={state.interruption === 'stop' ? 'Deteniendo…' : 'Detener'} danger onPress={() => void interrupt('stop')} disabled={!state.canStop} /></View>
+        </View>}
+      </View>
+    </View>}
     <Modal visible={scanner} animationType="slide" onRequestClose={() => setScanner(false)}>
       <SafeAreaView style={s.safe}><View style={s.modalHeader}><Text style={s.cardTitle}>Escanea el QR de MiniTV</Text><Button title="Cerrar" secondary onPress={() => setScanner(false)} /></View>
         {scanner && cameraPermission?.granted && <CameraView style={{ flex: 1 }} barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={({ data }) => { void pair(data); }} />}
@@ -133,6 +156,10 @@ function Home() {
 }
 export default function App() { return <SafeAreaProvider><Home /></SafeAreaProvider>; }
 const s = StyleSheet.create({
+  transferDock: { backgroundColor: C.card, borderTopWidth: 1, borderTopColor: C.line, paddingHorizontal: 22, paddingVertical: 14 },
+  dockContent: { width: '100%', maxWidth: 636, alignSelf: 'center', gap: 10 }, dockActions: { flexDirection: 'row', gap: 12 },
+  exportedCount: { color: C.green, fontSize: 27, fontWeight: '800', flex: 1 }, exportedLabel: { color: C.text, fontSize: 14, fontWeight: '600' },
+  dockStatus: { color: C.muted, fontSize: 12, lineHeight: 17 }, danger: { backgroundColor: '#422B30', borderColor: '#855057', borderWidth: 1 },
   safe: { flex: 1, backgroundColor: C.bg }, content: { padding: 22, gap: 18, maxWidth: 680, width: '100%', alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }, logo: { borderWidth: 2, borderColor: C.yellow, borderRadius: 10, width: 44, height: 35, flexDirection: 'row', alignItems: 'center', padding: 5, gap: 4 }, logoScreen: { flex: 1, height: 20, borderRadius: 4, borderWidth: 1, borderColor: C.yellow }, logoDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: C.yellow }, brand: { color: C.text, fontSize: 21, fontWeight: '800' }, kicker: { color: C.muted, fontSize: 8, letterSpacing: 1.4, marginTop: 4 }, tag: { paddingHorizontal: 8, paddingVertical: 5, borderWidth: 1, borderColor: C.line, borderRadius: 7 }, tagText: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: C.muted },
   title: { fontSize: 32, lineHeight: 37, letterSpacing: -.8, color: C.text, fontWeight: '800' }, description: { color: C.muted, fontSize: 14, lineHeight: 21 }, card: { padding: 20, gap: 15, backgroundColor: C.card, borderRadius: 22, borderWidth: 1, borderColor: '#29374A' }, cardTitle: { color: C.text, fontSize: 16, fontWeight: '700' }, row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, status: { color: C.muted, fontSize: 10, fontWeight: '700', letterSpacing: .7 }, server: { color: C.green, fontSize: 15 }, actions: { flexDirection: 'row', gap: 14, alignItems: 'center' }, paste: { paddingVertical: 12 }, pasteText: { color: C.muted, fontWeight: '600', fontSize: 12 }, button: { padding: 15, backgroundColor: C.yellow, borderRadius: 12, alignItems: 'center', justifyContent: 'center', minHeight: 48 }, buttonText: { color: C.bg, fontWeight: '800', fontSize: 14, textAlign: 'center' }, secondary: { borderWidth: 1, borderColor: C.line, backgroundColor: '#223147' },

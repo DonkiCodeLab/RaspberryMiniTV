@@ -1,32 +1,32 @@
 {
-  "publishedAt": "2026-10-25T16:27:26.779Z",
+  "publishedAt": "2026-10-30T19:41:41.820Z",
   "projectId": "e4c22d26-4a55-4361-a102-9534467a9c2a",
-  "groupId": "6da28a1b-4729-4e02-a244-d69d1539b78f",
+  "groupId": "ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
   "sdkVersion": "58.0.0",
-  "expoGoUrl": "exp://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a/group/6da28a1b-4729-4e02-a244-d69d1539b78f",
-  "pageUrl": "https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/6da28a1b-4729-4e02-a244-d69d1539b78f",
-  "qrPath": "../output/minitv-expo-go-sdk58-qr.png",
+  "expoGoUrl": "exp://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a/group/ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
+  "pageUrl": "https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
+  "qrPath": "../output/minitv-expo-go-controls-qr.png",
   "updates": [
     {
-      "id": "01a173e3-6cbb-71f9-8274-442c36ea4b29",
-      "createdAt": "2026-10-25T16:27:26.779Z",
-      "group": "6da28a1b-4729-4e02-a244-d69d1539b78f",
+      "id": "01a18e55-103c-7fe6-a267-d83a2fef25e8",
+      "createdAt": "2026-10-30T19:41:41.820Z",
+      "group": "ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
       "branch": "expo-go",
-      "message": "MiniTV Fotos Go 1.1.0: compatible con Expo Go SDK 58",
+      "message": "MiniTV Fotos Go: contador fijo de fotos exportadas, pausa y detener",
       "runtimeVersion": "1.1.0",
       "platform": "android",
-      "manifestPermalink": "https://u.expo.dev/update/01a173e3-6cbb-71f9-8274-442c36ea4b29",
+      "manifestPermalink": "https://u.expo.dev/update/01a18e55-103c-7fe6-a267-d83a2fef25e8",
       "isRollBackToEmbedded": false
     },
     {
-      "id": "01a173e3-6cbb-70d6-8db8-6020c73c7740",
-      "createdAt": "2026-10-25T16:27:26.779Z",
-      "group": "6da28a1b-4729-4e02-a244-d69d1539b78f",
+      "id": "01a18e55-103c-708c-b71a-c09bfe0944fd",
+      "createdAt": "2026-10-30T19:41:41.820Z",
+      "group": "ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
       "branch": "expo-go",
-      "message": "MiniTV Fotos Go 1.1.0: compatible con Expo Go SDK 58",
+      "message": "MiniTV Fotos Go: contador fijo de fotos exportadas, pausa y detener",
       "runtimeVersion": "1.1.0",
       "platform": "ios",
-      "manifestPermalink": "https://u.expo.dev/update/01a173e3-6cbb-70d6-8db8-6020c73c7740",
+      "manifestPermalink": "https://u.expo.dev/update/01a18e55-103c-708c-b71a-c09bfe0944fd",
       "isRollBackToEmbedded": false
     }
   ]

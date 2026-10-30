@@ -50,17 +50,25 @@ async function request(server: string, path: string, body: string | FormData, to
     throw new Error('No se ha podido confirmar la transferencia. Comprueba la Wi-Fi y que la MiniTV siga abierta; pulsa Continuar para reintentar.');
   } finally { clearTimeout(timer); signal?.removeEventListener('abort', abort); }
 }
-async function selectPhotos() {
+function checkInterrupted(signal: AbortSignal) {
+  if (signal.aborted) throw new Error('Transferencia interrumpida.');
+}
+async function selectPhotos(signal: AbortSignal) {
+  checkInterrupted(signal);
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true,
     selectionLimit: 0, quality: 1, exif: false, preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Current });
   if (result.canceled) throw new Error('Selección cancelada. Tu importación anterior se conserva.');
   const copied: File[] = [];
   try {
+    checkInterrupted(signal);
     const ids: string[] = [];
     for (const asset of result.assets) {
+      checkInterrupted(signal);
       const name = asset.fileName || asset.uri.split('/').pop() || 'foto.jpg';
       const file = new File(files, 'picked-' + Crypto.randomUUID() + '-' + name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120));
-      await LegacyFileSystem.copyAsync({ from: asset.uri, to: file.uri }); copied.push(file);
+      copied.push(file);
+      await LegacyFileSystem.copyAsync({ from: asset.uri, to: file.uri });
+      checkInterrupted(signal);
       ids.push('picked:' + JSON.stringify({ uri: file.uri, name }));
     }
     return { ids, limited: true };
@@ -87,6 +95,7 @@ const Transfer = new TransferEngine({
       }
     } catch { /* The new job is already committed; cleanup must not roll it back in memory. */ }
   },
+  async updateJob(job) { await put('job', job); },
   async savePending(p) { await put('pending', p); },
   async saveOutcome(o) {
     const db = await database();
@@ -102,14 +111,18 @@ const Transfer = new TransferEngine({
     const reply = await request(server, '/pictures/mobile/claim', JSON.stringify({ code, clientId, deviceName: Platform.OS === 'ios' ? 'iPhone · Expo Go' : 'Android · Expo Go' }));
     return { server, token: reply.token, expiresAt: reply.expiresAt };
   },
-  async listPhotos(selected) {
+  async listPhotos(selected, signal) {
+    checkInterrupted(signal);
     // Expo Go for Android does not declare broad READ_MEDIA_IMAGES access.
-    if (selected || Platform.OS === 'android') return selectPhotos();
+    if (selected || Platform.OS === 'android') return selectPhotos(signal);
     const permission = await MediaLibrary.requestPermissionsAsync(false, ['photo']);
+    checkInterrupted(signal);
     if (!permission.granted && permission.accessPrivileges !== 'limited') throw new Error('Permite el acceso a Fotos en Ajustes o usa Elegir fotos.');
     const ids: string[] = []; let after: string | undefined;
     do {
+      checkInterrupted(signal);
       const page = await MediaLibrary.getAssetsAsync({ first: 200, after, mediaType: ['photo'], sortBy: [['creationTime', true]] });
+      checkInterrupted(signal);
       ids.push(...page.assets.map(asset => asset.id));
       if (!page.hasNextPage) break;
       if (!page.endCursor || after === page.endCursor) throw new Error('No se pudo terminar de leer la fototeca. Vuelve a intentarlo.');
@@ -118,30 +131,45 @@ const Transfer = new TransferEngine({
     } while (true);
     return { ids, limited: permission.accessPrivileges === 'limited' };
   },
-  async exportPhoto(id, index) {
-    let name: string; let file: File;
-    const metadata: Record<string, unknown> = { albums: [], keywords: [], people: [] };
-    if (id.startsWith('picked:')) {
-      const picked = JSON.parse(id.slice(7)); name = picked.name; file = new File(picked.uri);
-    } else {
-      const info = await MediaLibrary.getAssetInfoAsync(id, { shouldDownloadFromNetwork: true });
-      name = info.filename;
-      const uri = info.localUri || info.uri;
-      if (!uri || uri.startsWith('ph:')) throw new Error('No se pudo descargar esta foto de iCloud. Ábrela en Fotos y vuelve a revisarla.');
-      file = new File(files, 'pending-' + Crypto.randomUUID());
-      await LegacyFileSystem.copyAsync({ from: uri, to: file.uri });
-      if (info.creationTime > 0) metadata.takenAt = new Date(info.creationTime).toISOString();
-      if (info.location && Number.isFinite(info.location.latitude) && Number.isFinite(info.location.longitude))
-        Object.assign(metadata, { locationKnown: true, latitude: info.location.latitude, longitude: info.location.longitude });
-      if (Platform.OS === 'ios') Object.assign(metadata, { appleId: id, appleFavorite: info.isFavorite === true });
+  async discardPhotos(ids) {
+    for (const id of ids) if (id.startsWith('picked:')) {
+      const file = new File(JSON.parse(id.slice(7)).uri);
+      if (file.uri.startsWith(files.uri) && file.exists) file.delete();
     }
+  },
+  async exportPhoto(id, index, signal) {
+    checkInterrupted(signal);
+    let name: string; let file: File | undefined;
+    const metadata: Record<string, unknown> = { albums: [], keywords: [], people: [] };
     try {
+      if (id.startsWith('picked:')) {
+        const picked = JSON.parse(id.slice(7)); name = picked.name; file = new File(picked.uri);
+      } else {
+        const info = await MediaLibrary.getAssetInfoAsync(id, { shouldDownloadFromNetwork: true });
+        checkInterrupted(signal);
+        name = info.filename;
+        const uri = info.localUri || info.uri;
+        if (!uri || uri.startsWith('ph:')) throw new Error('No se pudo descargar esta foto de iCloud. Ábrela en Fotos y vuelve a revisarla.');
+        file = new File(files, 'pending-' + Crypto.randomUUID());
+        await LegacyFileSystem.copyAsync({ from: uri, to: file.uri });
+        if (info.creationTime > 0) metadata.takenAt = new Date(info.creationTime).toISOString();
+        if (info.location && Number.isFinite(info.location.latitude) && Number.isFinite(info.location.longitude))
+          Object.assign(metadata, { locationKnown: true, latitude: info.location.latitude, longitude: info.location.longitude });
+        if (Platform.OS === 'ios') Object.assign(metadata, { appleId: id, appleFavorite: info.isFavorite === true });
+      }
+      checkInterrupted(signal);
       if (!file.exists || !file.size) throw new Error('La foto ya no está disponible. Selecciónala de nuevo.');
       if (file.size > 50 * 1024 * 1024) throw new Error('Esta foto supera el límite de 50 MB.');
       const bytes = await file.bytes();
+      checkInterrupted(signal);
       const digest = Array.from(new Uint8Array(await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, bytes))).map(b => b.toString(16).padStart(2, '0')).join('');
+      checkInterrupted(signal);
       return { index, name, uri: file.uri, digest, metadata };
-    } catch (e) { if (file.exists) file.delete(); throw e; }
+    } catch (e) {
+      // A selected photo is the persistent source for a retry after pausing.
+      if (file?.exists && !(signal.aborted && id.startsWith('picked:'))) file.delete();
+      throw e;
+    }
   },
   async removeFile(uri) { const file = new File(uri); if (file.exists && uri.startsWith(files.uri)) file.delete(); },
   async isMissing(c, digest, signal) {
