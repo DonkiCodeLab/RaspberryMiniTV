@@ -4,7 +4,7 @@ Prueba para **Expo Go en iPhone y Android**, sin compilar una app propia ni usar
 
 ## Abrir la prueba publicada
 
-[Publicación en Expo](https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2). Su QR está en [minitv-expo-go-controls-qr.png](../output/minitv-expo-go-controls-qr.png) y los identificadores en `publication.json`. Instala Expo Go compatible con SDK 58. En iPhone escanea el QR con Cámara; en Android usa el escáner de Expo Go.
+[Publicación en Expo](https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/579d79cd-7ac3-4e8c-a551-efe5aa38484a). Su QR está en [minitv-expo-go-filename-fix-qr.png](../output/minitv-expo-go-filename-fix-qr.png) y los identificadores en `publication.json`. Instala Expo Go compatible con SDK 58. En iPhone escanea el QR con Cámara; en Android usa el escáner de Expo Go.
 
 1. Abre MiniTV Fotos Go con el QR de publicación.
 2. Mantén el teléfono en la misma Wi-Fi que tu servidor MiniTV y abre la web/API.
@@ -26,6 +26,11 @@ El primer QR descarga la app de Expo; el segundo la conecta con tu servidor. Las
 - El porcentaje cuenta fotos resueltas, incluidos los errores; no mide bytes. Una transferencia interrumpida se reintenta por foto completa.
 - Si caduca el enlace o se reinicia la API, escanea un nuevo QR de la misma dirección y continúa. No se mezclan importaciones pendientes de servidores diferentes.
 - Solo imágenes, hasta 50 MB por foto. Live Photos envía la imagen fija. HEIC/HEIF requiere soporte en el servidor. Los originales del móvil no se borran ni se modifican.
+- Los envíos conservan el nombre y la extensión originales aunque la copia local
+  se llame `pending-…`. Esto corrige el rechazo «La selección contiene un formato
+  no compatible: pending-…». La corrección también sirve para las fotos pendientes
+  guardadas por versiones anteriores: al abrir la versión corregida, pulsa
+  **Continuar subida** para retomar la misma importación y conservar sus contadores.
 - El selector puede devolver nombres y representaciones administrados por el sistema. Se usa la representación actual sin editar ni recortar; no se garantiza exportar el recurso original sin editar de PhotoKit ni los álbumes. En iPhone, la revisión de fototeca puede descargar fotos de iCloud y conserva fecha/localización disponibles.
 - Las fotos elegidas en el selector se copian al almacenamiento de la app para poder reanudar. Es necesario espacio libre para esa selección; las copias se eliminan tras confirmar su envío. Las copias antiguas se limpian al iniciar otra revisión.
 
@@ -46,10 +51,18 @@ Después de publicar, actualiza `publication.json` con los enlaces e identificad
 de la nueva actualización y recompila `../WebApp`. La web usa ese registro para
 mostrar el QR al pulsar **MiniTV Fotos** en **Dashboard → Subidas → Fotos**.
 
-La versión 1.1.0 usa SDK 58 / React Native 0.88 para abrirse en el Expo Go instalado por el usuario. Los QR anteriores siguen abriendo sus publicaciones originales: usa el QR actualizado de arriba para ver el contador fijo y los controles de pausa y detención. EAS Update no instala módulos nativos nuevos.
+La versión 1.1.0 usa SDK 58 / React Native 0.88 para abrirse en el Expo Go instalado por el usuario. Los QR anteriores siguen abriendo sus publicaciones originales: usa el QR actualizado de arriba para corregir el envío de nombres `pending-…` y conservar el contador y los controles de pausa y detención. EAS Update no instala módulos nativos nuevos.
 
 ## Validación
 
+- Nombre de archivo: TypeScript y 20 pruebas, incluidas dos del serializador real
+  de Expo para copias `pending-…`, selección manual y nombres de multipart.
+  Prueba nativa en Expo Go / iOS 26 con bytes sintéticos: se reproduce el envío
+  incorrecto del nombre temporal y se confirma el nombre original tras el arreglo,
+  con bytes idénticos y sin mover ni borrar el archivo pendiente. Paquetes de iOS
+  y Android generados y publicados el 30/10/2026 a las 22:16 (Europe/Madrid).
+  QR decodificado y verificado contra la publicación; enlace remoto abierto en
+  Expo Go iOS 26 sin Metro. Pendiente la comprobación con la fototeca del usuario.
 - Controles de exportación: TypeScript y 18 pruebas cubren contadores confirmados, pausa/reanudación, detención persistente, interrupciones al leer/preparar/guardar, confirmación en camino, fallo de disco, QR, duplicados, pérdida de respuesta y CSV. Actualización publicada el 30/10/2026 para iOS y Android; el enlace y el QR de arriba abren esta versión.
 - Interfaz de los controles comprobada en Expo Go / iPhone 17 Pro Simulator (iOS 26), con una cola sintética: contador actualizado, pausa, continuación y detención conservando el resumen. Paquetes de iOS y Android generados. Queda la prueba con fotos reales en el móvil.
 - Publicación del 30/10/2026: disponibilidad de iOS y Android verificada en EAS, QR generado y decodificado, y enlace remoto abierto en Expo Go iOS 26 mostrando la interfaz actualizada, sin Metro.

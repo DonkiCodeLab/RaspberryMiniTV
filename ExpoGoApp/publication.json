@@ -1,32 +1,32 @@
 {
-  "publishedAt": "2026-10-30T19:41:41.820Z",
+  "publishedAt": "2026-10-30T21:16:00.372Z",
   "projectId": "e4c22d26-4a55-4361-a102-9534467a9c2a",
-  "groupId": "ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
+  "groupId": "579d79cd-7ac3-4e8c-a551-efe5aa38484a",
   "sdkVersion": "58.0.0",
-  "expoGoUrl": "exp://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a/group/ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
-  "pageUrl": "https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
-  "qrPath": "../output/minitv-expo-go-controls-qr.png",
+  "expoGoUrl": "exp://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a/group/579d79cd-7ac3-4e8c-a551-efe5aa38484a",
+  "pageUrl": "https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/579d79cd-7ac3-4e8c-a551-efe5aa38484a",
+  "qrPath": "../output/minitv-expo-go-filename-fix-qr.png",
   "updates": [
     {
-      "id": "01a18e55-103c-7fe6-a267-d83a2fef25e8",
-      "createdAt": "2026-10-30T19:41:41.820Z",
-      "group": "ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
+      "id": "01a18eab-67f4-750d-b7d6-7219270bf5fc",
+      "createdAt": "2026-10-30T21:16:00.372Z",
+      "group": "579d79cd-7ac3-4e8c-a551-efe5aa38484a",
       "branch": "expo-go",
-      "message": "MiniTV Fotos Go: contador fijo de fotos exportadas, pausa y detener",
+      "message": "Fix original photo filenames and resume pending uploads",
       "runtimeVersion": "1.1.0",
       "platform": "android",
-      "manifestPermalink": "https://u.expo.dev/update/01a18e55-103c-7fe6-a267-d83a2fef25e8",
+      "manifestPermalink": "https://u.expo.dev/update/01a18eab-67f4-750d-b7d6-7219270bf5fc",
       "isRollBackToEmbedded": false
     },
     {
-      "id": "01a18e55-103c-708c-b71a-c09bfe0944fd",
-      "createdAt": "2026-10-30T19:41:41.820Z",
-      "group": "ebdc9bf3-f85e-4727-b5e2-b4421aea7bc2",
+      "id": "01a18eab-67f4-7431-ab9d-8514fd306d2d",
+      "createdAt": "2026-10-30T21:16:00.372Z",
+      "group": "579d79cd-7ac3-4e8c-a551-efe5aa38484a",
       "branch": "expo-go",
-      "message": "MiniTV Fotos Go: contador fijo de fotos exportadas, pausa y detener",
+      "message": "Fix original photo filenames and resume pending uploads",
       "runtimeVersion": "1.1.0",
       "platform": "ios",
-      "manifestPermalink": "https://u.expo.dev/update/01a18e55-103c-708c-b71a-c09bfe0944fd",
+      "manifestPermalink": "https://u.expo.dev/update/01a18eab-67f4-7431-ab9d-8514fd306d2d",
       "isRollBackToEmbedded": false
     }
   ]

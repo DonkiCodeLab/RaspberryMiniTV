@@ -11,6 +11,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { TransferEngine } from './engine.ts';
 import type { Job, Outcome, Pending } from './engine.ts';
 import { ServerError } from './protocol.ts';
+import { withUploadName } from './multipart.ts';
 import type { Connection } from './protocol.ts';
 export type { TransferState } from './engine.ts';
 
@@ -182,8 +183,8 @@ const Transfer = new TransferEngine({
     const metadata = new File(Paths.cache, 'minitv-metadata.json');
     metadata.write(JSON.stringify(data));
     const form = new FormData();
-    form.append('metadata', metadata, 'metadata.json');
-    if (data.fileIndices.length) form.append('files', new File(p.uri), p.name.replace(/[\r\n"\\/]/g, '_'));
+    form.append('metadata', withUploadName(metadata, 'metadata.json'));
+    if (data.fileIndices.length) form.append('files', withUploadName(new File(p.uri), p.name));
     return request(c.server, '/pictures/upload', form, c.token, signal);
   },
   async keepAwake(active) { if (active) await activateKeepAwakeAsync('minitv-import'); else await deactivateKeepAwake('minitv-import'); },
