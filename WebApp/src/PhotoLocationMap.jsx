@@ -10,6 +10,7 @@ import { hasLocation } from './photoLibrary.js';
 
 export default function PhotoLocationMap({ photo, s, language, previewUrl, editing = false, position = photo, onPositionChange, placeLabel }) {
   const element = useRef(null), reset = useRef(null), map = useRef(null), pin = useRef(null);
+  const pinImage = useRef(null);
   const callbacks = useRef(null);
   callbacks.current = { editing, onPositionChange };
   const [offline, setOffline] = useState(false);
@@ -19,28 +20,18 @@ export default function PhotoLocationMap({ photo, s, language, previewUrl, editi
     try { country = new Intl.DisplayNames([intlLocale(language)], { type: 'region' }).of(framing.code); } catch { /* Use the dataset name. */ }
   }
   useEffect(() => {
+    // Keep Leaflet alive while the dialog is open. Review polling creates new
+    // photo/string objects; those renders must not reset the user's viewport.
     const view = L.map(element.current, { minZoom: 1, maxZoom: 18, zoomSnap: 0, worldCopyJump: true, scrollWheelZoom: false, zoomControl: false });
     map.current = view;
-    L.control.zoom({ zoomInTitle: s.zoomIn, zoomOutTitle: s.zoomOut }).addTo(view);
     const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
     }).on('tileerror', () => setOffline(true)).addTo(view);
-    reset.current = () => {
-      view.invalidateSize({ pan: false });
-      const zoom = framing?.bounds ? Math.min(framing.maxZoom,
-        view.getBoundsZoom(L.latLngBounds(framing.bounds), false, L.point(90, 90))) : framing?.zoom ?? 2;
-      // Keep the photo at the center, using the country's extent to choose scale.
-      // The +/− controls then zoom toward the photograph instead of losing its pin.
-      view.setView(framing?.center || [20, 0], zoom, { animate: false });
-    };
-    reset.current();
     const content = document.createElement('div'); content.className = 'photo-location-pin';
-    const image = document.createElement('img'); image.src = previewUrl || PHOTO_PLACEHOLDER; image.alt = ''; content.append(image);
-    const controller = new AbortController();
-    if (!previewUrl && photo.relativePath) requestThumbnail(getPictureContentUrl(photo.relativePath, 'thumb'), controller.signal)
-      .then(url => { if (!controller.signal.aborted) image.src = url; }).catch(() => {});
-    const marker = L.marker(framing?.center || [0, 0], { icon: L.divIcon({ html: content, className: 'photo-location-marker', iconSize: [58, 66], iconAnchor: [29, 64] }),
-      draggable: false, autoPan: true, title: photo.title || photo.name, alt: photo.title || photo.name });
+    const image = document.createElement('img'); image.src = PHOTO_PLACEHOLDER; image.alt = ''; content.append(image);
+    pinImage.current = image;
+    const marker = L.marker([0, 0], { icon: L.divIcon({ html: content, className: 'photo-location-marker', iconSize: [58, 66], iconAnchor: [29, 64] }),
+      draggable: false, autoPan: true });
     pin.current = marker;
     const choose = latlng => {
       if (!callbacks.current.editing) return;
@@ -49,12 +40,26 @@ export default function PhotoLocationMap({ photo, s, language, previewUrl, editi
     };
     view.on('click', event => choose(event.latlng));
     marker.on('dragend', () => choose(marker.getLatLng()));
-    const label = document.createElement('span'); label.textContent = photo.title || photo.name;
-    marker.bindTooltip(label, { direction: 'top', offset: [0, -65] });
+    marker.bindTooltip(document.createElement('span'), { direction: 'top', offset: [0, -65] });
     const detachZoom = attachPhotoMapZoom(view);
     const observer = new ResizeObserver(() => view.invalidateSize({ pan: false })); observer.observe(element.current);
-    return () => { controller.abort(); observer.disconnect(); detachZoom(); tiles.off(); view.remove(); reset.current = null; map.current = null; pin.current = null; };
-  }, [photo.id, photo.latitude, photo.longitude, photo.relativePath, previewUrl, s]);
+    return () => { observer.disconnect(); detachZoom(); tiles.off(); view.remove(); reset.current = null; map.current = null; pin.current = null; pinImage.current = null; };
+  }, []);
+  useEffect(() => {
+    const view = map.current;
+    reset.current = () => {
+      view.invalidateSize({ pan: false });
+      const zoom = framing?.bounds ? Math.min(framing.maxZoom,
+        view.getBoundsZoom(L.latLngBounds(framing.bounds), false, L.point(90, 90))) : framing?.zoom ?? 2;
+      // Only a different photo/location or the reset button changes framing.
+      view.setView(framing?.center || [20, 0], zoom, { animate: false });
+    };
+    reset.current();
+  }, [photo.id, framing]);
+  useEffect(() => {
+    const control = L.control.zoom({ zoomInTitle: s.zoomIn, zoomOutTitle: s.zoomOut }).addTo(map.current);
+    return () => control.remove();
+  }, [s.zoomIn, s.zoomOut]);
   useEffect(() => {
     const view = map.current, marker = pin.current;
     if (!view || !marker) return;
@@ -63,7 +68,23 @@ export default function PhotoLocationMap({ photo, s, language, previewUrl, editi
       if (!view.hasLayer(marker)) marker.addTo(view);
     } else if (view.hasLayer(marker)) view.removeLayer(marker);
     if (editing) marker.dragging?.enable(); else marker.dragging?.disable();
-  }, [position?.latitude, position?.longitude, editing, photo.id, photo.latitude, photo.longitude, photo.relativePath, previewUrl, s]);
+  }, [position?.latitude, position?.longitude, editing, photo.id]);
+  useEffect(() => {
+    const image = pinImage.current, controller = new AbortController();
+    image.src = previewUrl || PHOTO_PLACEHOLDER;
+    if (!previewUrl && photo.relativePath) requestThumbnail(getPictureContentUrl(photo.relativePath, 'thumb'), controller.signal)
+      .then(url => { if (!controller.signal.aborted) image.src = url; }).catch(() => {});
+    return () => controller.abort();
+  }, [photo.id, photo.relativePath, previewUrl]);
+  const title = photo.title || photo.name;
+  useEffect(() => {
+    const marker = pin.current;
+    marker.options.title = title;
+    marker.options.alt = title;
+    marker.getElement()?.setAttribute('title', title || '');
+    const label = document.createElement('span'); label.textContent = title;
+    marker.setTooltipContent(label);
+  }, [title, photo.id]);
   return <div className={`photo-location-map${editing ? ' is-editing' : ''}`}>
     <div className="photo-location-map__toolbar"><div><strong>{placeLabel || (editing ? s.photoLocation : country) || s.photoLocation}</strong><span>{editing ? s.choosePhotoLocation : s.countryMapHint}</span></div>
       <button type="button" onClick={() => reset.current?.()}>{s.resetCountryView}</button></div>
