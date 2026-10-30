@@ -38,7 +38,8 @@ export function photoPersonName(person, s) {
 export function photoPeopleOptions(people, s) {
   const unknown = people.find(person => person.id === UNKNOWN_PERSON_ID) || { id: UNKNOWN_PERSON_ID, photoIds: [] };
   return [{ ...unknown, name: s.unknownPerson }, ...people.filter(person => person.id !== UNKNOWN_PERSON_ID)
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))];
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }) ||
+      (b.photoIds?.length ?? 0) - (a.photoIds?.length ?? 0))];
 }
 
 export function photoDeleteRequest(ids, scope, folderId, personId) {
