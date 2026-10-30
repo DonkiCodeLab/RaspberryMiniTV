@@ -449,7 +449,9 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
     {notice && <p className="photo-review-ready" role="status">{notice}</p>}
     {error && <p className="photo-alert" role="alert">{error}</p>}
     {step === 'scan' && <div className="photo-review-scan">
-      <PeopleAnalysis faces={faces} peopleCount={library.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={busy} onAction={scanAction} initialLimit={initialLimit} startLabel={s.reviewStartBatch} />
+      <PeopleAnalysis faces={faces} peopleCount={library.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={busy} onAction={scanAction} initialLimit={initialLimit} startLabel={s.reviewStartBatch}
+        reviewCount={(library.reviews?.length || 0) + unnamed.size}
+        onReview={() => { setBatchOnly(false); setBatchContext(null); setStep('intro'); }} />
       <div className="photo-dialog__actions"><button type="button" className="dialog-button" disabled={busy} onClick={onClose}>{s.reviewLater}</button>
         <button type="button" className="dialog-button dialog-button--accent" disabled={busy || active || faces.state !== 'complete'} onClick={() => setStep('intro')}>{s.reviewNextStep} →</button></div>
     </div>}

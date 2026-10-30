@@ -6,6 +6,7 @@ export default function PhotoIcon({ type }) {
     map: <><circle cx="32" cy="32" r="22" /><ellipse cx="32" cy="32" rx="10" ry="22" /><path d="M10 32h44M14 20h36M14 44h36" /></>,
     ai: <><path d="m29 10 6 16 16 6-16 6-6 16-6-16-16-6 16-6zM49 7v12M43 13h12" /></>,
     people: <><circle cx="25" cy="23" r="9" /><path d="M8 51v-6c0-14 34-14 34 0v6M43 15a9 9 0 0 1 0 18m4 5c7 1 9 5 9 13" /></>,
+    analysis: <><path d="M22 8H8v14m34-14h14v14M8 42v14h14m34-14v14H42" /><circle cx="32" cy="27" r="8" /><path d="M18 47c0-14 28-14 28 0" /></>,
     unknownPerson: <><circle cx="24" cy="21" r="10" /><path d="M7 53v-7c0-15 34-15 34 0v7M43 19a7 7 0 1 1 10 6c-4 2-5 4-5 8" /><circle cx="48" cy="41" r="1" /></>,
     withoutFaces: <><circle cx="25" cy="21" r="10" /><path d="M8 53v-7c0-15 28-15 32-5M44 38l13 13m0-13L44 51" /></>,
     pendingValidation: <><circle cx="25" cy="21" r="10" /><path d="M8 53v-7c0-15 28-15 32-5M42 44l6 6 11-14" /></>,

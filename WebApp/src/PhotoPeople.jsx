@@ -2,6 +2,17 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import PersonBirthday from './PersonBirthday.jsx';
 
+export function PeopleSortControl({ value, onChange, s }) {
+  return <label className="movie-library__sort">
+    <span>{s.sortBy}</span>
+    <select value={value} onChange={event => onChange(event.target.value)}>
+      <option value="name">{s.peopleSortName}</option>
+      <option value="photoCount">{s.peopleSortPhotos}</option>
+      <option value="age">{s.peopleSortAge}</option>
+    </select>
+  </label>;
+}
+
 export function PeopleAnalysis({ faces, peopleCount, s, busy, onAction, onReview, reviewCount = 0, initialLimit = 100, startLabel }) {
   const titleId = useId();
   const [limit, setLimit] = useState(() => Math.min(initialLimit, faces.pending || initialLimit));

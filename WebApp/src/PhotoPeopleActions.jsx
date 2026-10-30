@@ -1,4 +1,4 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import { downloadPhotoPeople, photoRequest } from './api/raspberryApi.js';
 import downloadIcon from './assets/download.png';
@@ -21,13 +21,11 @@ export function PersonMergeForm({ people, excludedIds, s, busy, disabled = false
   </form>;
 }
 
-export function PersonCardActions({ person, people, editing, selected, s, busy, onSelect, onAction }) {
+export function PersonCardActions({ person, editing, selected, s, busy, onSelect, onAction }) {
   const fixed = person.id === UNKNOWN_PERSON_ID;
-  return <>
-    {!fixed && <PersonMergeForm people={people} excludedIds={[person.id]} s={s} busy={busy}
-      onMerge={target => onAction('merge', [person], target)} />}
-    <div className="movie-library__actions-reveal photo-person-actions-reveal" inert={!editing} aria-hidden={!editing}>
-      <div className="movie-library__actions-clip"><div className="photo-person-actions">
+  return <div className="movie-library__actions-reveal photo-person-actions-reveal" inert={!editing} aria-hidden={!editing}>
+      <div className="movie-library__actions-clip">
+        <div className="photo-person-actions">
         <button type="button" className="movie-download" disabled={busy || !person.photoIds?.length}
           title={s.downloadPerson} aria-label={`${s.downloadPerson}: ${person.name}`} onClick={() => onAction('download', [person])}>
           <img className="movie-download__default" src={downloadIcon} alt="" aria-hidden="true" />
@@ -41,27 +39,24 @@ export function PersonCardActions({ person, people, editing, selected, s, busy, 
           <input type="checkbox" checked={selected} disabled={busy} aria-label={`${s.select}: ${person.name}`} onChange={onSelect} />
         </label>
       </div></div>
-    </div>
-  </>;
+    </div>;
 }
 
-export function PeopleToolbar({ editing, onToggle, selected, people, s, busy, onSelectPage, onClear, onAction }) {
-  const actionsId = useId();
+export function PeopleToolbar({ editing, selected, people, s, busy, onSelectPage, onClear, onAction }) {
+  if (!editing) return null;
   const fixedSelected = selected.some(person => person.id === UNKNOWN_PERSON_ID);
   const mergeSources = selected.filter(person => person.id !== UNKNOWN_PERSON_ID);
   return <div className="photo-people-toolbar">
-    <button type="button" className="dialog-button" aria-pressed={editing} aria-expanded={editing} aria-controls={actionsId}
-      disabled={busy} onClick={onToggle}>{editing ? s.finishPeopleEdit : s.editPeople}</button>
-    {editing && <div id={actionsId} className="photo-people-bulk">
+    <div className="photo-people-bulk">
       <strong role="status">{s.selectedPeople.replace('{count}', selected.length)}</strong>
-      <button type="button" className="dialog-button" disabled={busy} onClick={onSelectPage}>{s.selectPage}</button>
+      <button type="button" className="dialog-button" disabled={busy} onClick={onSelectPage}>{s.selectAllPeople}</button>
       <button type="button" className="dialog-button" disabled={busy || !selected.length} onClick={onClear}>{s.clear}</button>
       <button type="button" className="dialog-button photo-delete-button" disabled={busy || !selected.length || fixedSelected} onClick={() => onAction('delete', selected)}>{s.deletePeople}</button>
       <button type="button" className="dialog-button" disabled={busy || !selected.some(person => person.photoIds?.length)} onClick={() => onAction('download', selected)}>{s.downloadPeople}</button>
       <PersonMergeForm people={people} excludedIds={mergeSources.length === 1 ? [mergeSources[0].id] : []} s={s} busy={busy} disabled={!mergeSources.length}
         onMerge={target => onAction('merge', mergeSources.filter(person => person.id !== target.id), target)} />
       {fixedSelected && <small className="photo-people-fixed-hint">{s.fixedPerson}</small>}
-    </div>}
+    </div>
   </div>;
 }
 

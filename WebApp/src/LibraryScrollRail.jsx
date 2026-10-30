@@ -3,7 +3,7 @@ import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useRef, useState } from "react";
 import { scrollIndexAtPosition, buildDecadeTicks, buildRatingScale, nearestRailTick } from "./libraryScroll.js";
 
-export default function LibraryScrollRail({ labels, language = "es", sort = "name", ratingSource = "tmdb", direction = "asc", onDirectionChange, actionsVisible = false, onActionsChange, actionLabels }) {
+export default function LibraryScrollRail({ labels, language = "es", sort = "name", label, ratingSource = "tmdb", direction = "asc", onDirectionChange, actionsVisible = false, onActionsChange, actionLabels }) {
   const host = useRef(null);
   const geometry = useRef({ positions: [], start: 0, end: 0 });
   const selectedEntry = useRef(null);
@@ -74,11 +74,12 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
   const yearTicks = currentDecade?.label !== "—" ? currentDecade?.years || [] : [];
   const currentYearTick = Math.max(0, yearTicks.findIndex(([label]) => label === currentLabel));
   const decadeText = withLanguages({ es: "Recorrer por década", ca: "Recórrer per dècada", en: "Browse by decade" })[code] || "Browse by decade";
+  const scrollLabel = label || text[sort] || text.name;
   const compact = !state.visible || labels.length <= 24;
   return <div ref={host} className={`library-scroll-rail${yearMode ? " library-scroll-rail--years" : ""}${compact ? " library-scroll-rail--compact" : ""}${active ? " is-active" : ""}`}
     style={{ "--compact-scale-height": `${Math.min(280, Math.max(120, ticks.length * 20 + 44))}px` }} hidden={!labels.length}>
     {onDirectionChange ? <button className="library-scroll-rail__control" type="button"
-      aria-label={`${text[sort]}: ${controls[direction]}`} title={`${text[sort]}: ${controls[direction]}`}
+      aria-label={`${scrollLabel}: ${controls[direction]}`} title={`${scrollLabel}: ${controls[direction]}`}
       onClick={() => onDirectionChange(direction === "asc" ? "desc" : "asc")}>
       <span aria-hidden="true">{direction === "asc" ? "↑" : "↓"}</span>
       <small>{direction === "asc" ? controls.ascShort : controls.descShort}</small>
@@ -88,7 +89,7 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
         <RailScale ticks={yearTicks} currentTick={currentYearTick} label={`${text.year}: ${currentDecade.label}–${Number(currentDecade.label) + 9}`}
           onSelect={jumpToEntry} onActive={setActive} />
       </div> : null}
-      <RailScale ticks={sort === "rating" ? ticks.map(([value, index]) => [value.replace(/^★\s*/, ""), index]) : ticks} currentTick={currentTick} label={yearMode ? decadeText : text[sort]}
+      <RailScale ticks={sort === "rating" ? ticks.map(([value, index]) => [value.replace(/^★\s*/, ""), index]) : ticks} currentTick={currentTick} label={yearMode ? decadeText : scrollLabel}
         ratingScale={ratingScale} onSelect={jumpToEntry} onActive={setActive} />
     </div>
     {onActionsChange ? <button className="library-scroll-rail__control library-scroll-rail__options" type="button"

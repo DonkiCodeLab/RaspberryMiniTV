@@ -6530,6 +6530,7 @@ export default function App() {
   const [selectedBookCollection, setSelectedBookCollection] = useState("");
   const [picturesAtRoot, setPicturesAtRoot] = useState(true);
   const [photoHeaderTarget, setPhotoHeaderTarget] = useState(null);
+  const [photoSortTarget, setPhotoSortTarget] = useState(null);
   const [bookDetailPath, setBookDetailPath] = useState("");
   const [bookLibraryType, setBookLibraryType] = useState("novel");
   const [bookLibrarySort, setBookLibrarySort] = useState("name");
@@ -9775,6 +9776,7 @@ export default function App() {
                           maskImage: `url(${cartellMask})`,
                         }}
                       />
+                      {isPicturesMode && <div ref={setPhotoSortTarget} />}
                       {isBooksMode ? <BookLibraryControls language={raspberryLanguage} view={bookLibraryView} onViewChange={setBookLibraryView} viewLabels={{ grid: t("movie_view_grid"), list: t("movie_view_list") }} sort={bookLibrarySort} onSortChange={setBookLibrarySort}
                         type={bookLibraryType} onTypeChange={setBookLibraryType} /> : isSeriesMode || isMoviesMode || isGamesMode ? (
                         <div className="movie-library__browse-tools">
@@ -10005,7 +10007,7 @@ export default function App() {
                     }} />
                 ) : isPicturesMode ? (
                   <PhotosLibrary key={profiles.activeId} language={raspberryLanguage} onRootChange={setPicturesAtRoot}
-                    headerTarget={photoHeaderTarget}
+                    headerTarget={photoHeaderTarget} sortTarget={photoSortTarget}
                     initialFiles={pendingPhotoFiles} onImportDone={() => setPendingPhotoFiles(null)}
                     matchesPicture={matchesPicture} renderMarks={renderMarks} />
                 ) : !isGamesMode && libraryFiltersActive && !filterVisible ? (

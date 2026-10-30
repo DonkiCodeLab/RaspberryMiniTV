@@ -98,7 +98,7 @@ test('bulk merge confirmation receives only movable sources, excluding Unknown a
     let action;
     const toolbar = inspected.exports.PeopleToolbar({ s: photoStrings('es'), people: [unknown, ...people],
       selected: [unknown, ...people], editing: true, onAction: (...args) => { action = args; } });
-    const bulk = React.Children.toArray(toolbar.props.children)[1];
+    const bulk = toolbar.props.children;
     const merge = React.Children.toArray(bulk.props.children).find(child => child.type === inspected.exports.PersonMergeForm);
     merge.props.onMerge(target);
     assert.deepEqual(action, ['merge', people.filter(person => person.id !== target.id), target]);

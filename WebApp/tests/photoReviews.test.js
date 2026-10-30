@@ -15,7 +15,7 @@ async function load(file) {
   new Function('require', 'module', 'exports', result.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
   return module.exports;
 }
-const { NoFacesReviewFilter, PhotoReviewAction } = await load('../src/PhotoReviews.jsx');
+const { PhotoReviewAction } = await load('../src/PhotoReviews.jsx');
 const { PhotoFaceList } = await load('../src/PhotoFaceViewer.jsx');
 const { PhotoGrid, AlbumCard } = await load('../src/PhotosLibrary.jsx');
 const reviews = [
@@ -49,19 +49,6 @@ test('pending previews show only pending faces with the correct person for each 
   const preview = pendingFacePreview('shared', reviews, people);
   assert.equal(preview.name, 'Ana, Luis');
   assert.deepEqual(preview.faceBoxes.shared.map(face => [face.id, face.name]), [['ana-face', 'Ana'], ['luis-face', 'Luis']]);
-});
-
-test('new and historical no-face views have counts and explicit selection in every language', () => {
-  let selected;
-  for (const language of ['es', 'en', 'ca']) {
-    const s = photoStrings(language);
-    const props = { value: 'new', newCount: 4, restCount: 20, onChange: value => { selected = value; }, s };
-    const html = renderToStaticMarkup(React.createElement(NoFacesReviewFilter, props));
-    assert.ok(html.includes(`aria-pressed="true">${s.newAdditions} · 4`));
-    assert.ok(html.includes(`aria-pressed="false">${s.otherPhotos} · 20`));
-    NoFacesReviewFilter(props).props.children[1].props.onClick();
-    assert.equal(selected, 'rest');
-  }
 });
 
 test('photo and per-face confirmation send the exact review tokens and disable during saving', () => {

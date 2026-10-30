@@ -289,7 +289,7 @@ test('third step exposes face editing, rotation, resizing and zoom immediately, 
   }));
   assert.match(html, /Foto 2 de 5/);
   assert.match(html, /Marcar como revisada/);
-  assert.match(html, /Quitar referencia de Nuevas/);
+  assert.match(html, /Quitar de pendientes de validar/);
   assert.match(html, /Borrar la imagen de Galería/);
   for (const label of [s.addFace, s.reviewRotateLeft, s.reviewRotateRight, s.reviewResize, s.zoomIn, s.zoomOut, s.facesInPhoto]) assert.ok(html.includes(label), label);
   assert.doesNotMatch(html, /Aprobar identidad|Identidad propuesta|← Desconocido|Volver a la tarjeta|photo-review-deck/);

@@ -28,7 +28,7 @@ a un nombre nuevo. **Validar cambio** guarda esa cara; **Añadir cara** permite
 dibujar otra y confirmarla. El visor conserva la foto abierta aunque la corrección
 la saque de la carpeta de la persona. Los controles están disponibles tanto al
 pulsar su retrato como al abrir una foto dentro de su carpeta; las vistas flotantes
-de Nuevas personas ofrecen también acceso al editor.
+del asistente de revisión ofrecen también acceso al editor.
 
 La rueda amplía o reduce la foto manteniendo el punto bajo el cursor; clic y
 arrastre desplazan la imagen ampliada. Funciona también directamente en la
@@ -37,7 +37,7 @@ sigue ampliando; **Mover foto** permite desplazarla y **Dibujar recuadro** vuelv
 a la selección. Tras terminar el recuadro se puede mover la imagen sin perderlo.
 
 Todas las fotos usan el mismo visor, tanto en Galería, Mapa, álbumes personales,
-IA, Sin personas y Pendientes de validar como al abrir el retrato de una persona.
+IA y Sin personas como al abrir el retrato de una persona.
 **Mostrar todas las caras detectadas** permite ocultar o mostrar sus recuadros;
 en las personas se conservan los dos controles independientes. **Editar caras**
 activa o desactiva sus herramientas. **Editar foto** permite girar a izquierda o
@@ -57,7 +57,23 @@ se guardan en la biblioteca y se reflejan en Galería, Mapa y las demás persona
 de la foto; los archivos originales se conservan. Cancelar descarta la edición;
 Escape vuelve primero del editor al mapa y después a la foto.
 
-**Fotos → Personas → Analizar** abre un asistente de cuatro pasos:
+**Fotos → Personas** muestra directamente las personas reconocidas, sin selector
+entre personas nuevas y reconocidas ni carpeta de coincidencias pendientes.
+El icono a la derecha del título abre **Analizar y validar**; el progreso del
+análisis y sus controles aparecen dentro del diálogo. **Revisar una a una**
+permite retomar los pendientes de todos los lotes, incluidas las personas nuevas.
+La biblioteca no muestra el campo «Buscar fotos o carpetas».
+
+En el header, **Ordenar por** permite elegir **Nombre**, **Número de fotos** o
+**Edad**, con el mismo diseño que Películas. El slider lateral recorre toda la
+lista, sin limitarse a una página, y cambia su escala según el criterio elegido.
+Su flecha alterna entre ascendente y descendente. Las edades desconocidas siempre
+van al final y las personas con la misma edad se ordenan por nombre.
+Cada ficha muestra el nombre, el número de fotos y, si consta, cumpleaños y edad.
+El nombre abre el álbum y el retrato abre el visor. **Modo edición**, en el propio
+slider, despliega las herramientas de las fichas y las acciones conjuntas.
+
+El asistente de análisis tiene cuatro pasos:
 
 1. **Analizar lote**: elige cuántas fotos analizar. El valor inicial es 100
    (o las pendientes si quedan menos), con mínimo 1 y máximo las pendientes.
@@ -134,12 +150,13 @@ al cerrar/reabrir el asistente o recargar la página. Puedes volver a la decisi�
 anterior durante el repaso o descartar los cambios del paso. Si falla el envío,
 el borrador permite reintentar sin duplicar caras ni aplicar dos veces las ediciones.
 Se puede avanzar con la foto ampliada al terminar de editar. Escape cierra primero
-el editor de cara o la ampliación; al cerrar el asistente aparece **Continuar revisión
-pendiente** para retomar el mismo paso, también si solo quedan personas nuevas.
+el editor de cara o la ampliación. El icono de análisis permite retomar el mismo
+paso al reabrir el asistente, también si solo quedan personas nuevas.
 
 **Revisar una a una** retoma los pendientes de todos los lotes;
-**Sin personas → Nuevas → Revisar fotos nuevas** abre el tercer paso.
-**Quitar referencia de Nuevas** la pasa a Resto conservando el original.
+**Sin personas → Pendientes de validar → Revisar fotos nuevas** abre el tercer paso.
+**Quitar de pendientes de validar** muestra la foto directamente en Sin personas,
+conservando el original.
 **Borrar de Galería** pide confirmación y anota el borrado para la validación final.
 Actualiza WebApp y DeviceApp juntos: el asistente usa `POST /pictures/reviews/batch`.
 
@@ -949,8 +966,10 @@ Desconocido agrupa caras sin identificar, no una identidad compartida.
 analizar solo esa foto, con la posibilidad de pausarlo y sin ejecutar dos
 detectores a la vez.
 
-**Personas → Sin personas** contiene fotos ya revisadas sin caras detectadas,
-no las pendientes ni las fallidas. **Modo edición**, junto al título del álbum,
+**Personas → Sin personas** muestra directamente las fotos revisadas sin caras
+detectadas y una subcarpeta **Pendientes de validar** con las nuevas aún sin revisar.
+No hay una carpeta ni una pestaña «Resto». Las fotos sin analizar o con errores
+no aparecen en esta sección. **Modo edición**, junto al título del álbum,
 permite seleccionar varias fotos para descargarlas en un ZIP o borrarlas de Galería.
 Desde su visor, **Añadir cara**, en el panel del visor, permite dibujar un recuadro y
 elegir una persona existente o crear una nueva, igual que en Galería. También se
@@ -969,54 +988,21 @@ y permite probar el visor, los movimientos y los álbumes. Personas necesita el
 motor local de la Raspberry. Si falta, se muestra el comando de instalación.
 No lee EXIF de imágenes sin JSON ni simula reconocimiento facial o resultados de IA.
 
-En **Personas**, cada tarjeta permite entrar en la carpeta y elegir otra persona
-junto al botón **Unir**. Cambiar el desplegable no aplica cambios. **Modo edición**
-despliega los controles de descargar, eliminar y seleccionar con la misma animación
-que las películas. La barra permite actuar sobre las personas marcadas, incluso
-en distintas páginas; cambiar la búsqueda o terminar la edición limpia la selección.
+En **Personas**, el nombre de cada tarjeta permite entrar en la carpeta.
+**Modo edición**, en el slider, despliega los controles de descargar,
+eliminar y seleccionar con la misma animación que las películas.
+**Unir** está en la barra de selección; cambiar su desplegable no aplica cambios. La barra permite actuar
+sobre las personas marcadas; terminar la edición limpia la selección.
 Las acciones muestran una confirmación con las personas afectadas y, al unir, el
 destino. Eliminar una persona conserva los originales y pasa sus caras a
 **Desconocido**. Esta carpeta fija solo admite descarga. Las descargas individuales
 y conjuntas generan un ZIP de originales, sin duplicar fotos compartidas.
 
-**Nuevas personas** filtra los grupos provisionales llamados Persona 1, Persona 2,
-etc. Cada ficha prepara **una acción pendiente**: escribir un nombre nuevo,
-unir con una persona identificada, **Eliminar persona y conservar fotos** o
-**Borrar sus fotos de la biblioteca**. Las dos casillas de borrado son excluyentes;
-elegir otra acción sustituye la anterior. No hay que guardar ficha por ficha.
-La casilla **Unir con desconocido** sustituye el aviso de acción pendiente: permite
-marcar varias fichas para pasar sus caras a **Desconocido**, conservando las fotos,
-al aplicar el lote. Se sincroniza con el desplegable y desmarcarla cancela esa unión.
-La barra **Aplicar cambios (N)** reúne todas las fichas modificadas, incluso al
-buscar, cambiar de página o abrir el visor. **Deshacer cambio** limpia una ficha
-y **Descartar cambios** limpia el lote. Los pendientes duran mientras la biblioteca
-permanece abierta; se avisa antes de recargar o cerrar la página con cambios.
-El teclado permite revisar la cuadrícula sin usar el ratón: **←/→** lleva al mismo
-campo de la ficha anterior/siguiente y **↑/↓** al de la fila anterior/siguiente,
-según las columnas visibles. **Tab/Mayús+Tab** recorre los controles de edición,
-saltando las portadas entre fichas; en los extremos sale de la cuadrícula.
-**Enter** marca o desmarca las casillas y activa **Deshacer cambio**, que devuelve
-el foco al selector de esa ficha. **Enter/Espacio** abre los nombres: con la lista
-abierta las flechas eligen una opción, escribir busca por prefijo, **Enter** confirma
-y **Esc** cancela. **Mayús+flechas** conserva la selección de texto en el nombre.
-Estos atajos solo preparan cambios y no ejecutan el lote.
-Antes de guardar se muestra el detalle de nombres, destinos y fotos afectadas.
-Eliminar una persona conserva los originales y pasa las caras a Desconocido;
-borrar sus fotos elimina los originales también de las otras personas y álbumes
-donde aparezcan. Las fotos compartidas se cuentan y borran una sola vez.
-El lote se valida y guarda en una transacción: si una ficha ya no está disponible
-o ha cambiado su selección de fotos, no se aplica ninguna acción. Un error o
-cancelar la confirmación conserva los pendientes para revisarlos o reintentar.
-Las personas identificadas salen del filtro; **Todas las personas** recupera el
-listado completo. Actualiza DeviceApp y WebApp juntos para usar este flujo.
-Al pulsar la portada de una persona se amplía su foto con el recuadro de su cara,
-sin entrar en el álbum ni en el visor de edición de fotos. Las flechas recorren
-sus imágenes y vuelven a la primera después de la última. Cerrar o pulsar Escape
-devuelve al mismo listado, conservando el filtro y las casillas marcadas.
-En **Nuevas personas**, la imagen muestra **Ampliar** y el número de fotos si hay
-varias; las flechas del visor aparecen solo cuando se puede pasar a otra foto.
-Este modo no muestra **Entrar**: la revisión permanece en el listado. En
-**Todas las personas**, **Entrar** sigue abriendo el álbum de la persona.
+Los grupos provisionales llamados Persona 1, Persona 2, etc. se revisan en el
+cuarto paso del asistente de análisis. Allí se les puede poner nombre o unirlos
+con una identidad existente, conservando los cambios en el borrador hasta guardar.
+Al pulsar la portada de una persona reconocida se abre su foto con el recuadro
+de su cara. Las flechas recorren sus imágenes y pulsar su nombre abre su álbum.
 
 Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,
 `python -m unittest discover -s DeviceApp/tests -p 'test_photo_library.py'`.

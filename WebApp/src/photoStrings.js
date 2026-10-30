@@ -1,6 +1,9 @@
 import { reviewWizardStrings } from './photoReviewWizardStrings.js';
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  selectAllPeople: 'Seleccionar todas',
+  peopleSortName: 'Nombre', peopleSortPhotos: 'Número de fotos', peopleSortAge: 'Edad',
+  peopleBrowsePhotos: 'Recorrer por número de fotos', peopleBrowseAge: 'Recorrer por edad',
   previousSection: 'Sección anterior', nextSection: 'Sección siguiente',
   mobileSyncHint: 'Añade tus fotos desde la app MiniTV Fotos para Android o iPhone.',
   ...reviewWizardStrings.es,
@@ -44,7 +47,7 @@ const es = {
   pendingValidation: 'Pendientes de validar', pendingValidationHint: 'Marca las casillas de las fotos que quieras validar y pulsa Verificar selección para confirmar todas sus coincidencias pendientes. Puedes seleccionar fotos de varias páginas. Abre una foto para revisar cada cara, corregir su persona o pasarla a Desconocido. Aquí aparecen las nuevas coincidencias con personas que ya existían al iniciar el lote; los pendientes se conservan hasta que los valides o corrijas.',
   verifySelection: 'Verificar selección',
   newAdditions: 'Nuevas', otherPhotos: 'Resto', newAddition: 'Nueva incorporación',
-  newWithoutPeopleHint: 'Nuevas reúne las fotos recién incorporadas sin caras detectadas. Márcalas como revisadas para pasarlas a Resto. Abrirlas no las marca como revisadas.',
+  newWithoutPeopleHint: 'Aquí están las fotos sin caras detectadas pendientes de validar. Márcalas como revisadas para mostrarlas directamente en Sin personas. Abrirlas no las marca como revisadas.',
   pendingPhotosCount: '{count} fotos por validar', newPhotosCount: '{count} fotos nuevas',
   pendingPhotoCount: '1 foto por validar', newPhotoCount: '1 foto nueva', markReviewedPhotos: 'Marcar como revisadas',
   confirmMatch: 'Confirmar coincidencia', confirmMatches: 'Validar coincidencias', markReviewed: 'Marcar como revisada',
@@ -93,7 +96,7 @@ const es = {
   faceCoverMissing: 'Esta persona aún no tiene un recuadro de cara. Abre una de sus fotos y pulsa Detectar personas.',
   facesBatchHint: 'Cada lote revisa el número de fotos elegido y se detiene al terminar.',
   facesBatchComplete: 'Lote terminado', scanNextBatch: 'Analizar otro lote',
-  withoutPeople: 'Sin personas', withoutPeopleHint: 'Fotos ya analizadas sin caras detectadas. Usa Modo edición para seleccionar varias y descargarlas o borrarlas. Abre una foto y pulsa Añadir cara para asignarla a una persona, o Detectar personas para repetir el análisis. Las fotos pendientes o con errores no aparecen aquí.',
+  withoutPeople: 'Sin personas', withoutPeopleHint: 'Fotos revisadas sin caras detectadas. Las nuevas están en Pendientes de validar. Usa Modo edición para seleccionar varias y descargarlas o borrarlas. Abre una foto y pulsa Añadir cara para asignarla a una persona, o Detectar personas para repetir el análisis. Las fotos sin analizar o con errores no aparecen aquí.',
   detectPeople: 'Detectar personas', detectingPhoto: 'Analizando esta foto…',
   faceClickHint: 'Pulsa un nombre o un recuadro para editarlo.',
   facesInPhoto: 'Personas en esta foto', correctPerson: 'Corregir persona',
@@ -174,6 +177,9 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  selectAllPeople: 'Select all',
+  peopleSortName: 'Name', peopleSortPhotos: 'Number of photos', peopleSortAge: 'Age',
+  peopleBrowsePhotos: 'Browse by number of photos', peopleBrowseAge: 'Browse by age',
   previousSection: 'Previous section', nextSection: 'Next section',
   mobileSyncHint: 'Add your photos from the MiniTV Fotos app for Android or iPhone.',
   ...reviewWizardStrings.en,
@@ -217,7 +223,7 @@ const en = {
   pendingValidation: 'Pending validation', pendingValidationHint: 'Check the photos you want to validate and press Verify selection to confirm all their pending matches. You can select photos across multiple pages. Open a photo to review each face, correct its person or move it to Unknown. This view shows new matches with people who already existed when the batch started; pending matches stay here until you confirm or correct them.',
   verifySelection: 'Verify selection',
   newAdditions: 'New', otherPhotos: 'Rest', newAddition: 'New addition',
-  newWithoutPeopleHint: 'New contains photos newly added without detected faces. Mark them as reviewed to move them to Rest. Opening them does not mark them as reviewed.',
+  newWithoutPeopleHint: 'These photos without detected faces are pending validation. Mark them as reviewed to show them directly in No people. Opening them does not mark them as reviewed.',
   pendingPhotosCount: '{count} photos to validate', newPhotosCount: '{count} new photos',
   pendingPhotoCount: '1 photo to validate', newPhotoCount: '1 new photo', markReviewedPhotos: 'Mark as reviewed',
   confirmMatch: 'Confirm match', confirmMatches: 'Validate matches', markReviewed: 'Mark as reviewed',
@@ -266,7 +272,7 @@ const en = {
   faceCoverMissing: 'This person has no face rectangle yet. Open one of their photos and select Detect people.',
   facesBatchHint: 'Each batch reviews the selected number of photos and stops when finished.',
   facesBatchComplete: 'Batch complete', scanNextBatch: 'Analyze another batch',
-  withoutPeople: 'No people', withoutPeopleHint: 'Analyzed photos with no detected faces. Use Edit mode to select multiple photos and download or delete them. Open a photo and choose Add face to assign it to a person, or Detect people to analyze it again. Pending and failed photos are not included.',
+  withoutPeople: 'No people', withoutPeopleHint: 'Reviewed photos with no detected faces. New photos are in Pending validation. Use Edit mode to select multiple photos and download or delete them. Open a photo and choose Add face to assign it to a person, or Detect people to analyze it again. Photos awaiting analysis or with errors are not included.',
   detectPeople: 'Detect people', detectingPhoto: 'Analyzing this photo…',
   faceClickHint: 'Select a face in the list or its rectangle in the photo to correct the person.',
   facesInPhoto: 'People detected in this photo', correctPerson: 'Correct person',
@@ -341,6 +347,9 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  selectAllPeople: 'Seleccionar-les totes',
+  peopleSortName: 'Nom', peopleSortPhotos: 'Nombre de fotos', peopleSortAge: 'Edat',
+  peopleBrowsePhotos: 'Recórrer per nombre de fotos', peopleBrowseAge: 'Recórrer per edat',
   previousSection: 'Secció anterior', nextSection: 'Secció següent',
   mobileSyncHint: 'Afegeix les teves fotos des de l’app MiniTV Fotos per a Android o iPhone.',
   ...reviewWizardStrings.ca,
@@ -384,7 +393,7 @@ const ca = {
   pendingValidation: 'Pendents de validar', pendingValidationHint: 'Marca les caselles de les fotos que vulguis validar i prem Verificar selecció per confirmar totes les seves coincidències pendents. Pots seleccionar fotos de diverses pàgines. Obre una foto per revisar cada cara, corregir la persona o passar-la a Desconegut. Aquí apareixen les noves coincidències amb persones que ja existien en iniciar el lot; els pendents es conserven fins que els validis o corregeixis.',
   verifySelection: 'Verificar selecció',
   newAdditions: 'Noves', otherPhotos: 'Resta', newAddition: 'Nova incorporació',
-  newWithoutPeopleHint: 'Noves reuneix les fotos acabades d’incorporar sense cares detectades. Marca-les com a revisades per passar-les a Resta. Obrir-les no les marca com a revisades.',
+  newWithoutPeopleHint: 'Aquí hi ha les fotos sense cares detectades pendents de validar. Marca-les com a revisades per mostrar-les directament a Sense persones. Obrir-les no les marca com a revisades.',
   pendingPhotosCount: '{count} fotos per validar', newPhotosCount: '{count} fotos noves',
   pendingPhotoCount: '1 foto per validar', newPhotoCount: '1 foto nova', markReviewedPhotos: 'Marcar com a revisades',
   confirmMatch: 'Confirmar coincidència', confirmMatches: 'Validar coincidències', markReviewed: 'Marcar com a revisada',
@@ -433,7 +442,7 @@ const ca = {
   faceCoverMissing: 'Aquesta persona encara no té un requadre de cara. Obre una de les seves fotos i prem Detectar persones.',
   facesBatchHint: 'Cada lot revisa el nombre de fotos triat i s’atura en acabar.',
   facesBatchComplete: 'Lot acabat', scanNextBatch: 'Analitzar un altre lot',
-  withoutPeople: 'Sense persones', withoutPeopleHint: 'Fotos ja analitzades sense cares detectades. Fes servir Mode edició per seleccionar-ne diverses i descarregar-les o esborrar-les. Obre una foto i prem Afegir cara per assignar-la a una persona, o Detectar persones per repetir l’anàlisi. Les fotos pendents o amb errors no hi apareixen.',
+  withoutPeople: 'Sense persones', withoutPeopleHint: 'Fotos revisades sense cares detectades. Les noves són a Pendents de validar. Fes servir Mode edició per seleccionar-ne diverses i descarregar-les o esborrar-les. Obre una foto i prem Afegir cara per assignar-la a una persona, o Detectar persones per repetir l’anàlisi. Les fotos sense analitzar o amb errors no hi apareixen.',
   detectPeople: 'Detectar persones', detectingPhoto: 'Analitzant aquesta foto…',
   faceClickHint: 'Selecciona una cara a la llista o prem el seu requadre a la foto per corregir la persona.',
   facesInPhoto: 'Persones detectades en aquesta foto', correctPerson: 'Corregir persona',
