@@ -5,6 +5,9 @@
 .photo-mobile h3 { margin: .6rem 0; font-size: 1.55rem; }
 .photo-mobile p, .photo-mobile small { color: #bfcbd2; line-height: 1.5; }
 .photo-mobile > p { max-width: 30rem; margin: .7rem auto; font-size: .9rem; }
+.photo-mobile__app-link { display: inline; padding: 0; border: 0; border-radius: 3px; background: none; color: #ffdf52; font: inherit; font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; cursor: pointer; }
+.photo-mobile__app-link:hover { color: #fff1a8; text-decoration-thickness: 3px; }
+.photo-mobile__app-link:focus-visible { outline: 2px solid #ffdf52; outline-offset: 4px; }
 .photo-mobile__code { width: 240px; min-height: 240px; max-width: 100%; margin: 1.4rem auto; display: grid; place-items: center; border-radius: 16px; background: #fff; color: #182834; overflow: hidden; }
 .photo-mobile__code img { display: block; width: 100%; height: auto; }
 .photo-mobile__code span { padding: 1.5rem; overflow-wrap: anywhere; }
@@ -15,4 +18,10 @@
 .photo-mobile__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin: 1rem 0; }
 .photo-mobile__actions a { text-decoration: none; }
 .photo-mobile small { display: block; font-size: .75rem; }
+.photo-mobile-app-dialog { width: min(510px, calc(100vw - 28px)); padding: 1.4rem; text-align: center; }
+.photo-mobile-app-dialog > header { text-align: left; }
+.photo-mobile-app-dialog > p { color: #bfcbd2; line-height: 1.5; font-size: .9rem; }
+.photo-mobile-app-dialog__code { width: 280px; min-height: 280px; }
+.photo-mobile-app-dialog > .photo-mobile-app-dialog__date { font-size: .8rem; }
+.photo-mobile-app-dialog .photo-mobile__actions a:focus-visible { outline: 2px solid #ffdf52; outline-offset: 4px; }
 @media (max-width: 800px) { .raspberry-upload-layout--photos { grid-template-columns: 1fr; } .raspberry-upload-layout--photos .raspberry-upload-dropzone { min-height: 280px; } .photo-mobile { padding: 1.5rem; } }

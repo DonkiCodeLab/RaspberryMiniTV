@@ -164,7 +164,13 @@ Pruebas: `node --test tests/photoReviewWizard.test.js tests/photoImageEdits.test
 y `python -m unittest discover -s DeviceApp/tests -p 'test_photo_review*.py'`.
 
 **Dashboard → Subidas → Fotos** divide la carga en dos columnas: arrastra fotos
-a la izquierda y enlaza **MiniTV Fotos** para iPhone con el QR de la derecha.
+a la izquierda y enlaza **MiniTV Fotos** para Android o iPhone con el QR de la derecha.
+En «Escanea con MiniTV Fotos», **MiniTV Fotos** es un enlace amarillo y subrayado
+que abre el QR de la última publicación de Expo Go, con su fecha y un botón
+para abrirla directamente en el móvil. Después, el QR de conexión de esta
+pantalla enlaza la app con la MiniTV. El QR de publicación se genera a partir de
+`ExpoGoApp/publication.json`: actualiza ese registro al publicar una nueva versión
+y recompila WebApp para que el enlace y el QR apunten a ella.
 La dirección incluye IP y puerto y puede corregirse antes de escanear. El QR
 caduca en cinco minutos, no contiene el PIN y muestra cuándo se conecta el
 iPhone. **Desconectar iPhone** revoca su acceso. En pantallas pequeñas las

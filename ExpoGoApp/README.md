@@ -42,6 +42,10 @@ npx expo export --platform all
 EAS_NO_VCS=1 EAS_PROJECT_ROOT="$PWD" eas update --branch expo-go --environment preview --platform all --message "Descripción de la actualización"
 ```
 
+Después de publicar, actualiza `publication.json` con los enlaces e identificadores
+de la nueva actualización y recompila `../WebApp`. La web usa ese registro para
+mostrar el QR al pulsar **MiniTV Fotos** en **Dashboard → Subidas → Fotos**.
+
 La versión 1.1.0 usa SDK 58 / React Native 0.88 para abrirse en el Expo Go instalado por el usuario. Los QR anteriores siguen abriendo sus publicaciones originales: usa el QR actualizado de arriba para ver el contador fijo y los controles de pausa y detención. EAS Update no instala módulos nativos nuevos.
 
 ## Validación
