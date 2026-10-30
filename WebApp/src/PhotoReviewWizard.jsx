@@ -13,11 +13,13 @@ import PhotoMeta from './PhotoMeta.jsx';
 import { photoMetadataPatch } from './photoMetadata.js';
 import PhotoReviewAlbums from './PhotoReviewAlbums.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
+import { requestWithTimeout } from './requestWithTimeout.js';
+import { reviewSubmission, saveReviewSubmission, readReviewSnapshot, writeReviewSnapshot, clearReviewSnapshot } from './photoReviewSave.js';
 import './PhotoReviewWizard.css';
 
 const reviewStorageKey = () => `minitv-review-draft:${getPictureContentUrl('review-session').split('?')[0]}`;
 export function readPhotoReviewDraft() {
-  try { return JSON.parse(sessionStorage.getItem(reviewStorageKey())) || {}; } catch { return {}; }
+  return readReviewSnapshot(reviewStorageKey());
 }
 
 export function ReviewSteps({ step, s }) {
@@ -27,7 +29,7 @@ export function ReviewSteps({ step, s }) {
   </ol>;
 }
 
-export function ReviewCard({ review, photo, people, albumOptions = [], nextPhotos = [], position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onExpanded, onReadyChange, closeLayer, groupPerson, peopleDrafts = [], onUnknownRemainder, hideDecisions = false, showFaceBoxes = true, onShowFaceBoxesChange }) {
+export function ReviewCard({ review, photo, people, albumOptions = [], nextPhotos = [], position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onEditing, onExpanded, onReadyChange, closeLayer, groupPerson, peopleDrafts = [], onUnknownRemainder, hideDecisions = false, showFaceBoxes = true, onShowFaceBoxesChange }) {
   const withoutFaces = !review.faceId && !groupPerson;
   const [details, setDetails] = useState(null), [attempt, setAttempt] = useState(0);
   const [assignments, setAssignments] = useState(() => Object.fromEntries((draft?.changes || []).filter(c => c.action === 'assign').map(({ faceId, action, ...a }) => [faceId, a])));
@@ -71,6 +73,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
   const remainingFaceIds = groupPerson ? remainingReviewFaceIds(details?.faces || [], pendingDraft(), peopleDrafts) : [];
   useEffect(() => { if (!groupPerson) heading.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => { callbacks.current.onDirty?.(changed || adding || cropping || !!selectedId || albumEditing); }, [changed, adding, cropping, selectedId, albumEditing]);
+  useEffect(() => { onEditing?.(adding || cropping || !!selectedId || albumEditing); return () => onEditing?.(false); }, [adding, cropping, selectedId, albumEditing, onEditing]);
   useEffect(() => { onReadyChange?.(!!canDecide && !error); }, [canDecide, error, onReadyChange]);
   useEffect(() => {
     if (!closeLayer) return;
@@ -239,7 +242,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
   </div>;
 }
 
-export function NewPersonReview({ person, library, people = library.knownPeople || library.people, albumOptions = [], nextPhotos = [], drafts, peopleDrafts = [], assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, closeLayer, s, language, position, total, showFaceBoxes = true, onShowFaceBoxesChange }) {
+export function NewPersonReview({ person, library, people = library.knownPeople || library.people, albumOptions = [], nextPhotos = [], drafts, peopleDrafts = [], assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, onEditing, closeLayer, s, language, position, total, showFaceBoxes = true, onShowFaceBoxesChange }) {
   const photos = person.photoIds.map(id => library.photos.find(p => p.id === id)).filter(Boolean);
   const [photoIndex, setPhotoIndex] = useState(() => Math.max(0, photos.findIndex(photo => !newPersonReviewHandled({ ...person, photoIds: [photo.id] }, drafts))));
   const [target, setTarget] = useState(assignment?.personId || 'new'), [name, setName] = useState(assignment?.name || '');
@@ -266,7 +269,7 @@ export function NewPersonReview({ person, library, people = library.knownPeople 
       peopleDrafts={peopleDrafts} onUnknownRemainder={markRemainderUnknown}
       showFaceBoxes={showFaceBoxes} onShowFaceBoxesChange={onShowFaceBoxesChange}
       nextPhotos={[...photos.slice(photoIndex + 1).filter(item => !drafts[item.id]?.delete), ...nextPhotos]}
-      draft={drafts[photo.id]} onDraft={onDraft} position={photoIndex + 1} total={photos.length} s={s} language={language} onExpanded={onExpanded} onDirty={onDirty} onReadyChange={setReady} closeLayer={closeLayer} />}
+      draft={drafts[photo.id]} onDraft={onDraft} position={photoIndex + 1} total={photos.length} s={s} language={language} onExpanded={onExpanded} onDirty={onDirty} onEditing={onEditing} onReadyChange={setReady} closeLayer={closeLayer} />}
     <div className="photo-dialog__actions"><button type="button" className="dialog-button" disabled={photoIndex === 0 || !ready} onClick={() => changePhoto(photoIndex - 1)}>← {s.previous}</button>
       <span>{photoIndex + 1} / {photos.length}</span><button type="button" className="dialog-button" disabled={photoIndex + 1 >= photos.length || !ready} onClick={() => changePhoto(photoIndex + 1)}>{s.next} →</button></div>
     {(handled || !validAssignment) && <p role="status">{handled ? s.reviewNewPeopleResolved : s.reviewNewPeopleNeedsIdentity}</p>}
@@ -283,10 +286,13 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
   const [requestId, setRequestId] = useState(saved.requestId || createImportId), [committed, setCommitted] = useState(!!saved.committed);
   const [submission, setSubmission] = useState(saved.submission || null);
   const [dirty, setDirty] = useState(false), [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [showFaceBoxes, setShowFaceBoxes] = useState(true);
   const [batchOnly, setBatchOnly] = useState(saved.batchOnly ?? mode === 'scan');
   const [batchContext, setBatchContext] = useState(saved.batchContext || null);
   const [history, setHistory] = useState([]);
+  const [notice, setNotice] = useState(''), [pausing, setPausing] = useState(false);
+  const pauseSave = useRef(false);
   const working = useRef(false), wasScanning = useRef(false);
   const closeLayer = useRef(null);
   const faces = library.faces, active = faces.running || faces.singleRunning;
@@ -304,15 +310,17 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
     if (step === 'scan' && faces.batchId) setBatchContext({ id: faces.batchId, photoIds: faces.batchPhotoIds || [] });
   }, [step, faces.batchId]);
   useEffect(() => {
-    try { if (step === 'done') sessionStorage.removeItem(storageKey); else sessionStorage.setItem(storageKey, JSON.stringify(snapshot)); }
+    // During a save, checkpoints are written synchronously before the next request.
+    if (working.current) return;
+    try { if (step === 'done' && !hasDrafts && !submission) clearReviewSnapshot(storageKey); else writeReviewSnapshot(storageKey, snapshot); }
     catch { setError(s.reviewDraftStorageError); }
   }, [step, queue, cursor, drafts, peopleDrafts, requestId, committed, submission, batchOnly, batchContext]);
   useEffect(() => {
-    if (!hasDrafts && !dirty) return;
+    if (!hasDrafts && !dirty && !submission) return;
     const warn = event => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn);
-  }, [hasDrafts, dirty]);
-  const storeDraft = useCallback(draft => setDrafts(previous => ({ ...previous, [draft.photoId]: draft })), []);
+  }, [hasDrafts, dirty, submission]);
+  const storeDraft = useCallback(draft => { setNotice(''); setDrafts(previous => ({ ...previous, [draft.photoId]: draft })); }, []);
   async function scanAction(path, payload = {}) {
     if (working.current) return;
     working.current = true; setBusy(true); setError('');
@@ -326,11 +334,13 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
     else if (wasScanning.current && !busy && faces.state === 'complete') { wasScanning.current = false; setStep('intro'); }
   }, [step, active, busy, faces.state]);
   function begin(kind) {
-    const items = kind === 'no-faces' ? noFaces : kind === 'new-people' ? newPeople : pending;
+    const items = (kind === 'no-faces' ? noFaces : kind === 'new-people' ? newPeople : pending).filter(item =>
+      kind === 'new-people' ? !peopleDrafts.some(person => person.id === item.id && (person.personId || validNewPersonName(person.name))) && !newPersonReviewHandled(item, drafts) : !reviewHandled(item, drafts));
     setQueue(items); setCursor(0); setHistory([]);
-    setStep(items.length ? `${kind}-review` : kind === 'faces' ? 'no-faces-intro' : kind === 'no-faces' ? 'new-people-intro' : 'done');
+    setStep(items.length ? `${kind}-review` : kind === 'faces' ? 'no-faces-intro' : kind === 'no-faces' ? 'new-people-intro' : hasDrafts || submission ? 'new-people-confirm' : 'done');
   }
   function advance(draft) {
+    setNotice('');
     setHistory(previous => [...previous, { drafts, peopleDrafts, cursor, step }]);
     const nextDrafts = { ...drafts, [draft.photoId]: draft };
     setDrafts(nextDrafts); setDirty(false); setExpanded(false);
@@ -340,6 +350,7 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
     if (next >= queue.length) setStep(stage === 3 ? 'no-faces-confirm' : 'faces-confirm');
   }
   function advancePerson(item, photoDraft, stayOnPerson = false) {
+    setNotice('');
     setHistory(previous => [...previous, { drafts, peopleDrafts, cursor, step }]);
     const nextDrafts = photoDraft ? { ...drafts, [photoDraft.photoId]: photoDraft } : drafts;
     setDrafts(nextDrafts); setDirty(false); setExpanded(false);
@@ -355,23 +366,60 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
     setDrafts(previous.drafts); setPeopleDrafts(previous.peopleDrafts); setCursor(previous.cursor); setStep(previous.step);
     setHistory(items => items.slice(0, -1)); setError(''); setDirty(false); setExpanded(false);
   }
-  async function commit() {
-    if (working.current) return;
-    working.current = true; setBusy(true); setError('');
+  function nextStep() {
+    if (working.current || editing) return;
+    if (stage === 4) { onClose(); return; }
+    setQueue([]); setCursor(0); setHistory([]); setDirty(false); setExpanded(false); setNotice('');
+    setStep(stage === 2 ? 'no-faces-intro' : 'new-people-intro');
+  }
+  function downloadDraft() {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = `minitv-revision-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  const invalidDraft = Object.values(drafts).some(draft => !draft.delete && (draft.changes || []).some(change =>
+    'name' in change && !validNewPersonName(change.name))) || peopleDrafts.some(person => !person.personId && !validNewPersonName(person.name));
+  async function commit(moveNext = false) {
+    if (working.current || editing) return;
+    working.current = true; pauseSave.current = false; setPausing(false); setBusy(true); setError(''); setNotice('');
+    let state = snapshot;
+    const checkpoint = next => {
+      // Never discard the remaining draft, even if the server fails later.
+      state = next;
+      setDrafts(next.drafts); setPeopleDrafts(next.peopleDrafts); setSubmission(next.submission); setCommitted(next.committed);
+      try { writeReviewSnapshot(storageKey, next); }
+      catch { throw new Error(s.reviewDraftStorageError); }
+    };
     try {
-      if (!committed && hasDrafts) {
-        const payload = submission || { requestId, photos: reviewBatchPhotos(drafts), people: peopleDrafts.filter(item => {
+      if (!submission && hasDrafts) {
+        if (invalidDraft) throw new Error(s.reviewIncompleteDraft);
+        const people = peopleDrafts.filter(item => {
           const person = library.people.find(p => p.id === item.id);
           return !person || !newPersonReviewHandled(person, drafts);
-        }) };
-        setSubmission(payload);
-        await photoRequest('reviews/batch', payload); setCommitted(true);
+        });
+        checkpoint({ ...state, peopleDrafts: people, submission: reviewSubmission({ requestId, photos: reviewBatchPhotos(drafts), people }) });
+      }
+      if (state.submission) {
+        setHistory([]); setDirty(false);
+        state = await saveReviewSubmission(state, {
+          send: payload => requestWithTimeout(signal => photoRequest('reviews/batch', payload, signal), 45000, { timeoutMessage: s.reviewSaveTimeout }),
+          receipt: id => requestWithTimeout(signal => photoRequest(`reviews/batch/${encodeURIComponent(id)}`, undefined, signal), 45000, { timeoutMessage: s.reviewSaveTimeout }),
+          checkpoint, paused: () => pauseSave.current,
+        });
+        if (state.submission.next < state.submission.total) { setNotice(s.reviewSavePaused); return; }
       }
       const fresh = await onRefresh();
       if (!fresh) throw new Error(s.reviewLoadingError);
-      setDrafts({}); setPeopleDrafts([]); setQueue([]); setCursor(0); setHistory([]); setDirty(false); setCommitted(false); setSubmission(null); setRequestId(createImportId());
-      setStep(stage === 2 ? 'no-faces-intro' : stage === 3 ? 'new-people-intro' : 'done');
-    } catch (e) { setError(e.message); if ([400, 409].includes(e.status) && !committed) setSubmission(null); }
+      const valid = new Map((stage === 4 ? newPeopleReviewQueue(fresh, false) : stage === 3 ? noFacesReviewQueue(fresh.reviews, fresh.photos) : faceReviewQueue(fresh.reviews, fresh.photos)).map(item => [item.id, item]));
+      const remaining = queue.slice(cursor).filter(item => valid.has(item.id)).map(item => valid.get(item.id));
+      const next = { ...state, drafts: {}, peopleDrafts: [], submission: null, committed: false, requestId: createImportId(), cursor: 0,
+        queue: moveNext ? [] : remaining,
+        step: moveNext ? stage === 2 ? 'no-faces-intro' : stage === 3 ? 'new-people-intro' : 'done' :
+          step.endsWith('-review') && !remaining.length ? stage === 2 ? 'faces-confirm' : stage === 3 ? 'no-faces-confirm' : 'new-people-confirm' : step };
+      checkpoint(next);
+      setQueue(next.queue); setCursor(0); setHistory([]); setDirty(false); setExpanded(false); setRequestId(next.requestId); setStep(next.step);
+      setNotice(s.reviewSavedCheckpoint);
+    } catch (e) { setError(`${e.status >= 500 || /^HTTP 5\d\d$/.test(e.message) ? s.reviewServerError : e.message} ${s.reviewSaveRetained}`); }
     finally { working.current = false; setBusy(false); }
   }
   const current = queue[cursor], photo = library.photos.find(photo => photo.id === current?.photoId);
@@ -381,7 +429,24 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
   return <Modal title={s.reviewWizard} s={s} busy={busy} onClose={() => { if (!busy && !closeLayer.current?.()) onClose(); }} wide={expanded}
     className={`photo-dialog--review-wizard${expanded ? ' is-expanded' : ''}${inlineEditor ? ' photo-dialog--inline-review' : ''}`}>
     <ReviewSteps step={step === 'done' ? 5 : stage} s={s} />
+    {stage > 1 && step !== 'done' && <section className="photo-review-checkpoint" aria-label={s.reviewCheckpoint}>
+      <div className="photo-review-checkpoint__buttons">
+        <button type="button" className="dialog-button dialog-button--accent" disabled={busy || editing || !hasDrafts && !submission || !submission && invalidDraft} onClick={() => commit(false)}>
+          {busy ? <><LoadingSpinner inline /> {s.reviewSaving}</> : submission ? s.reviewResumeSave : s.reviewApplyNow}</button>
+        {busy && <button type="button" className="dialog-button" disabled={pausing} onClick={() => { pauseSave.current = true; setPausing(true); }}>{pausing ? s.reviewSavePausing : s.reviewPauseSave}</button>}
+        <button type="button" className="dialog-button" disabled={busy || editing} onClick={nextStep}>{stage === 4 ? s.reviewLater : s.reviewSkipStep} →</button>
+        {(hasDrafts || submission) && <button type="button" className="dialog-button dialog-button--ghost" onClick={downloadDraft}>{s.reviewDownloadDraft}</button>}
+      </div>
+      <p>{s.reviewCheckpointHint}</p>
+      {submission?.version === 2 && <div className="photo-review-checkpoint__progress" role="status">
+        <span>{s.reviewSaveProgress.replace('{done}', submission.next).replace('{total}', submission.total)}</span>
+        <progress max={submission.total || 1} value={submission.next} aria-label={s.reviewSaving} />
+      </div>}
+      {editing && <p role="status">{s.reviewFinishEdit}</p>}
+      {!submission && invalidDraft && <p role="status">{s.reviewIncompleteDraft}</p>}
+    </section>}
     {hasDrafts && <p className="photo-review-draft" role="status">{s.reviewDraftCount.replace('{count}', Object.keys(drafts).length + peopleDrafts.length)}</p>}
+    {notice && <p className="photo-review-ready" role="status">{notice}</p>}
     {error && <p className="photo-alert" role="alert">{error}</p>}
     {step === 'scan' && <div className="photo-review-scan">
       <PeopleAnalysis faces={faces} peopleCount={library.people.filter(p => p.id !== UNKNOWN_PERSON_ID).length} s={s} busy={busy} onAction={scanAction} initialLimit={initialLimit} startLabel={s.reviewStartBatch} />
@@ -399,16 +464,16 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
     </div>}
     {step === 'new-people-intro' && <div className="photo-review-intro"><h3>{s.reviewStepNewPeople}</h3><strong>{s.reviewNewPeopleCount.replace('{count}', newPeople.length)}</strong>
       <p>{s.reviewNewPeopleHint}</p><button type="button" className="dialog-button dialog-button--accent" onClick={() => begin('new-people')}>{newPeople.length ? s.reviewBegin : s.done} →</button></div>}
-    {['faces-review', 'no-faces-review'].includes(step) && (current && photo ? <ReviewCard key={`${current.id}:${history.length}`} review={current} photo={photo} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos}
-      draft={drafts[photo.id]} onDraft={storeDraft} position={cursor + 1} total={queue.length} s={s} language={language} onAdvance={advance} onDirty={setDirty} onExpanded={setExpanded} closeLayer={closeLayer} /> :
+    {!submission && ['faces-review', 'no-faces-review'].includes(step) && (current && photo ? <ReviewCard key={`${current.id}:${history.length}:${requestId}`} review={current} photo={photo} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos}
+      draft={drafts[photo.id]} onDraft={storeDraft} position={cursor + 1} total={queue.length} s={s} language={language} onAdvance={advance} onDirty={setDirty} onEditing={setEditing} onExpanded={setExpanded} closeLayer={closeLayer} /> :
       <p role="alert">{s.reviewPhotoChanged}</p>)}
-    {step === 'new-people-review' && current && <NewPersonReview key={`${current.id}:${history.length}`} person={current} library={library} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos} drafts={drafts} peopleDrafts={peopleDrafts} onDraft={storeDraft}
+    {!submission && step === 'new-people-review' && current && <NewPersonReview key={`${current.id}:${history.length}:${requestId}`} person={current} library={library} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos} drafts={drafts} peopleDrafts={peopleDrafts} onDraft={storeDraft}
       showFaceBoxes={showFaceBoxes} onShowFaceBoxesChange={setShowFaceBoxes}
-      assignment={peopleDrafts.find(p => p.id === current.id)} onAssignment={item => setPeopleDrafts(previous => [...previous.filter(p => p.id !== item.id), item])}
-      onAdvance={advancePerson} onDirty={setDirty} onExpanded={setExpanded} closeLayer={closeLayer} s={s} language={language} position={cursor + 1} total={queue.length} />}
+      assignment={peopleDrafts.find(p => p.id === current.id)} onAssignment={item => { setNotice(''); setPeopleDrafts(previous => [...previous.filter(p => p.id !== item.id), item]); }}
+      onAdvance={advancePerson} onDirty={setDirty} onEditing={setEditing} onExpanded={setExpanded} closeLayer={closeLayer} s={s} language={language} position={cursor + 1} total={queue.length} />}
     {confirming && <div className="photo-review-intro"><h3>{s.reviewReadyToCommit}</h3><p>{s.reviewDeferredHint}</p>
       <strong>{s.reviewDraftCount.replace('{count}', Object.keys(drafts).length + peopleDrafts.length)}</strong>
-      <button type="button" className="dialog-button dialog-button--accent" disabled={busy} onClick={commit}>{busy ? <><LoadingSpinner inline /> {s.reviewSaving}</> : committed ? s.retry : s.reviewValidateAll} →</button></div>}
+      <button type="button" className="dialog-button dialog-button--accent" disabled={busy || !submission && invalidDraft} onClick={() => commit(true)}>{busy ? <><LoadingSpinner inline /> {s.reviewSaving}</> : committed ? s.retry : s.reviewValidateAll} →</button></div>}
     <div className="photo-review-history">{!!history.length && !busy && !committed && !submission && <button type="button" className="dialog-button" onClick={undo}>↶ {s.reviewUndoDecision}</button>}
     {(hasDrafts || queue.length > 0) && !busy && !committed && !submission && <button type="button" className="dialog-button" onClick={() => {
       setDrafts({}); setPeopleDrafts([]); setQueue([]); setHistory([]); setCursor(0); setRequestId(createImportId()); setError(''); setExpanded(false);

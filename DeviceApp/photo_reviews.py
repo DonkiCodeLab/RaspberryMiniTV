@@ -74,12 +74,12 @@ def pending(db, photo=None):
         ORDER BY r.created DESC, r.id''', (photo, photo))]
 
 
-def confirm(db, ids):
+def confirm(db, ids, photo=None):
     """Validate the entire selection before changing anything; tokens reject stale UI."""
     if not isinstance(ids, list) or not 1 <= len(ids) <= 5000 or any(not isinstance(i, str) or not i for i in ids):
         raise ValueError('Selecciona entre 1 y 5000 elementos para validar.')
     selection = set(ids)
-    rows = [row for row in pending(db) if row['id'] in selection]
+    rows = [row for row in pending(db, photo) if row['id'] in selection]
     if len(rows) != len(selection):
         raise LookupError('La selección ha cambiado. Actualiza la biblioteca y revisa los pendientes.')
     for row in rows:

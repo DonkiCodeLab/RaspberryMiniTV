@@ -105,6 +105,18 @@ Las versiones editadas se guardan en `Pictures/edited-photos`; los archivos
 anteriores se conservan y no se vuelven a importar al explorar la carpeta.
 Borrar una foto de Galería elimina también sus versiones conservadas.
 
+En los pasos 2–4, **Aplicar cambios ahora** guarda lo anotado sin terminar el paso.
+Cada foto o grupo se aplica en una transacción independiente y el contador muestra
+cuántos se han guardado. **Pausar guardado** termina el elemento en curso y permite
+continuar después. Si falla una petición, lo ya aplicado se conserva; reintentar
+usa los mismos identificadores para no duplicar caras, ediciones ni álbumes.
+**Pasar al siguiente paso** conserva el borrador y deja sin validar lo no revisado.
+El último paso permite **Continuar más tarde**. El borrador tiene copia en el
+almacenamiento persistente del navegador y puede descargarse como JSON desde
+**Descargar copia del borrador**, incluso después de un fallo. Los borradores
+anteriores guardados en la pestaña se recuperan; antes de dividir un envío antiguo
+se consulta su recibo en el servidor para comprobar si ya se había aplicado.
+
 Cada decisión avanza inmediatamente, sin guardar ni recargar toda la biblioteca.
 Los nombres nuevos del borrador aparecen en los selectores de las siguientes fotos
 con la etiqueta **pendiente de validar**. Puedes reutilizarlos también al corregir
@@ -116,8 +128,8 @@ Puedes vincular varios álbumes y deshacer las incorporaciones desde sus etiquet
 Los nuevos álbumes también aparecen como **pendiente de validar** en las siguientes
 fotos. Las referencias y la creación se guardan con el resto del paso, sin duplicar
 álbumes ni sustituir las referencias que ya tenía la foto.
-**Validar todo y continuar** aplica el paso completo en una transacción y después
-actualiza la biblioteca una sola vez. Los borradores se conservan en esta pestaña
+**Guardar cambios y continuar** aplica los pendientes por partes y después
+actualiza la biblioteca una sola vez. Los borradores se conservan en este navegador
 al cerrar/reabrir el asistente o recargar la página. Puedes volver a la decisión
 anterior durante el repaso o descartar los cambios del paso. Si falla el envío,
 el borrador permite reintentar sin duplicar caras ni aplicar dos veces las ediciones.

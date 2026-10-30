@@ -315,7 +315,7 @@
 .photo-face-box { position: absolute; z-index: 2; box-sizing: border-box; border: 2px solid #63e6c4; border-radius: 4px; background: transparent; padding: 0; pointer-events: auto; cursor: pointer; touch-action: manipulation; box-shadow: 0 0 0 1px #0008; }
 .photo-face-box.is-highlighted, .photo-face-box.is-selected { border-color: #ffdf52; border-width: 3px; background: #ffdf5218; }
 .photo-face-box:focus-visible { outline: 3px solid white; outline-offset: 3px; }
-.photo-face-box > span { position: absolute; left: -2px; bottom: 100%; max-width: 180px; padding: 2px 5px; border-radius: 3px 3px 0 0; background: #12392ff0; color: white; font: 600 11px/1.3 system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.photo-face-box > span { position: absolute; left: 0; top: 0; width: max-content; max-width: 240px; box-sizing: border-box; padding: 3px 6px; border-radius: 4px; background: #12392f; color: white; font: 600 12px/1.35 system-ui, sans-serif; white-space: normal; overflow-wrap: anywhere; text-align: left; transform-origin: top left; }
 .photo-face-box.is-highlighted > span, .photo-face-box.is-selected > span { background: #ffdf52; color: #17282c; }
 .photo-face-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin: .75rem 0; }
 .photo-dialog .photo-face-actions p { flex-basis: 100%; margin: 0; font-size: .8rem; color: #c0d0d9; }

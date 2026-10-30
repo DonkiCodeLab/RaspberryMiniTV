@@ -1,4 +1,4 @@
-"""One atomic, retryable commit for a complete wizard step, including image edits."""
+"""Atomic, retryable review checkpoints, including image edits."""
 import hashlib
 import json
 import math
@@ -13,6 +13,17 @@ def face_version(db, photo):
     rows = [tuple(row) for row in db.execute(
         'SELECT id, person, box, manual FROM face_detections WHERE photo=? ORDER BY id', (photo,))]
     return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
+
+
+def batch_receipt(library, request_id):
+    from photo_library import PhotoError
+    if not re.fullmatch(r'[a-zA-Z0-9_-]{16,100}', request_id):
+        raise PhotoError('Identificador de revisión inválido.')
+    # Wait for an already-running commit before reporting whether it finished.
+    with library.image_lock:
+        with library.db() as db:
+            row = db.execute('SELECT result FROM photo_review_batches WHERE id=?', (request_id,)).fetchone()
+            return {'found': bool(row), 'result': json.loads(row['result']) if row else None}
 
 
 def valid_box(box):
@@ -69,7 +80,9 @@ def save_image(library, db, photo, edits, created):
             set(edit) == {'scale'} and type(edit['scale']) in (float, int) and .1 <= edit['scale'] <= 2
         ): raise PhotoError('Edición de imagen inválida.')
     if not edits: return
-    source = library.safe_file(photo['path'])
+    # Reuse the write transaction: a second connection deadlocks after SQLite
+    # spills a large review batch's dirty pages and takes an exclusive lock.
+    source = library.safe_file(photo['path'], db=db)
     with Image.open(source) as original:
         image = ImageOps.exif_transpose(original).convert('RGB')
         for edit in edits:
@@ -126,7 +139,9 @@ def apply_batch(library, data):
                     raise PhotoError('Pausa el análisis antes de validar este paso.', 409)
                 if len(photos) > db.execute('SELECT count(*) FROM photos').fetchone()[0] or len(people) > db.execute('SELECT count(*) FROM people').fetchone()[0]:
                     raise PhotoError('La selección supera los elementos de la biblioteca.')
-                pending = {row['id']: row for row in photo_reviews.pending(db)}
+                # A checkpoint for one photo must not scan the entire review queue.
+                photo_scope = photos[0].get('photoId') if len(photos) == 1 and isinstance(photos[0], dict) else None
+                pending = {row['id']: row for row in photo_reviews.pending(db, photo_scope)} if photos else {}
                 seen, prepared = set(), []
                 for item in photos:
                     if not isinstance(item, dict) or set(item) - {'albums', 'metadata'} != {'photoId', 'expectedPath', 'version', 'reviewIds', 'changes', 'edits', 'delete'}:
@@ -168,7 +183,10 @@ def apply_batch(library, data):
                     if item['delete']:
                         library._delete_photo_rows(db, [photo['id']]); continue
                     add_review_albums(library, db, photo['id'], item.get('albums', []))
-                    if item['reviewIds']: photo_reviews.confirm(db, item['reviewIds'])
+                    if item['reviewIds']:
+                        try: photo_reviews.confirm(db, item['reviewIds'], photo['id'])
+                        except LookupError as error: raise PhotoError(str(error), 409) from error
+                        except ValueError as error: raise PhotoError(str(error)) from error
                     changed_faces = set()
                     for change in item['changes']:
                         if not isinstance(change, dict): raise PhotoError('Cambio de cara inválido.')
@@ -185,7 +203,10 @@ def apply_batch(library, data):
                         if action == 'add': library.add_face(photo['id'], assignment, db=db)
                         elif action == 'assign': library.assign_face(photo['id'], face, assignment, db=db)
                         else: library.remove_face(photo['id'], face, db=db)
-                    save_image(library, db, photo, item['edits'], created)
+                    try: save_image(library, db, photo, item['edits'], created)
+                    except PhotoError: raise
+                    except (OSError, ValueError, Image.DecompressionBombError) as error:
+                        raise PhotoError(f'No se pudo editar la foto «{photo["name"]}». Revisa el archivo y el espacio disponible.', 422) from error
                     if 'metadata' in item: library.update_photo_metadata(photo['id'], item['metadata'], db=db)
                     if item['reviewIds']:
                         batch = next((pending[i]['batchId'] for i in item['reviewIds']), None)

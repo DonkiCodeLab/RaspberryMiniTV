@@ -34,7 +34,45 @@ function FaceDrawing({ onChange, s, disabled, active }) {
   </div>;
 }
 
-export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s, disabled = false, readOnly = false }) {
+function FaceLabel({ children, box, view }) {
+  const label = useRef(null);
+  useLayoutEffect(() => {
+    const element = label.current, face = element.parentElement, image = face.parentElement;
+    const viewport = image.closest('.photo-viewer__image') || image;
+    const scale = view?.scale || 1;
+    const measure = () => {
+      const photo = image.getBoundingClientRect(), canvas = viewport.getBoundingClientRect();
+      const bounds = {
+        left: Math.max(photo.left, canvas.left) + 4, top: Math.max(photo.top, canvas.top) + 4,
+        right: Math.min(photo.right, canvas.right) - 4, bottom: Math.min(photo.bottom, canvas.bottom) - 4,
+      };
+      const rect = face.getBoundingClientRect();
+      if (bounds.right <= bounds.left || bounds.bottom <= bounds.top || rect.right < bounds.left ||
+        rect.left > bounds.right || rect.bottom < bounds.top || rect.top > bounds.bottom) {
+        element.style.visibility = 'hidden';
+        return;
+      }
+      // Measure the wrapped name at a readable size, independently of photo zoom.
+      element.style.maxWidth = `${Math.min(240, bounds.right - bounds.left)}px`;
+      element.style.transform = `scale(${1 / scale})`;
+      const width = element.offsetWidth, height = element.offsetHeight;
+      const above = rect.top - height - 3;
+      const top = above >= bounds.top ? above : rect.bottom + 3;
+      const left = Math.max(bounds.left, Math.min(rect.left, bounds.right - width));
+      const clampedTop = Math.max(bounds.top, Math.min(top, bounds.bottom - height));
+      element.style.left = `${(left - rect.left) / scale - face.clientLeft}px`;
+      element.style.top = `${(clampedTop - rect.top) / scale - face.clientTop}px`;
+      element.style.visibility = 'visible';
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(image); observer.observe(viewport); observer.observe(element);
+    measure();
+    return () => observer.disconnect();
+  }, [children, box, view]);
+  return <span ref={label}>{children}</span>;
+}
+
+export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s, disabled = false, readOnly = false, view }) {
   const Tag = readOnly ? 'span' : 'button';
   return faces.map((face, index) => face.box ? <Tag key={face.id}
     className={`photo-face-box${face.personId === highlightPersonId ? ' is-highlighted' : ''}${face.id === selectedFaceId ? ' is-selected' : ''}`}
@@ -44,7 +82,7 @@ export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, 
       onClick: event => { event.stopPropagation(); onSelect?.(face.id); },
     })}
     style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}>
-    <span>{index + 1} · {photoPersonName(face, s) || s.unnamedFace}</span>
+    <FaceLabel box={face.box} view={view}>{`${index + 1} · ${photoPersonName(face, s) || s.unnamedFace}`}</FaceLabel>
   </Tag> : null).filter(Boolean);
 }
 
@@ -79,7 +117,7 @@ export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl
             onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />}
           {!error && <img key={`${quality}:${attempt}:${sourceUrl || ''}`} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, quality === 'original' ? undefined : quality === 'thumb' ? 'thumb' : 'preview') || undefined}
             alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
-          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} readOnly={readOnlyFaces} />
+          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} readOnly={readOnlyFaces} view={view} />
           {addingFace && ready && <FaceDrawing onChange={box => { onFaceBoxChange?.(box); if (box) setDrawing(false); }} s={s} disabled={busy} active={drawing} />}
         </div>
         {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{quality === 'original' ? s.failedOriginal : s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{quality === 'original' ? s.loadingOriginal : s.loadingPhoto}</span></>}</div>}

@@ -304,7 +304,7 @@ class PhotoLibrary:
             finally:
                 connection.close()
 
-    def safe_file(self, relative):
+    def safe_file(self, relative, db=None):
         if not isinstance(relative, str) or not relative or '\\' in relative:
             raise PhotoError('Ruta de foto inválida.')
         path = Path(relative)
@@ -315,9 +315,11 @@ class PhotoLibrary:
             raise PhotoError('Ruta de foto inválida.')
         if not target.is_file():
             raise PhotoError('No se encuentra la foto.', 404)
-        with self.db() as db:
-            if db.execute('SELECT 1 FROM photo_deleted_files WHERE path=?', (target.relative_to(self.root).as_posix(),)).fetchone():
-                raise PhotoError('No se encuentra la foto.', 404)
+        if db is None:
+            with self.db() as connection:
+                return self.safe_file(relative, db=connection)
+        if db.execute('SELECT 1 FROM photo_deleted_files WHERE path=?', (target.relative_to(self.root).as_posix(),)).fetchone():
+            raise PhotoError('No se encuentra la foto.', 404)
         return target
 
     def folder(self, db, ident):
@@ -1569,6 +1571,10 @@ def create_photo_blueprint(get_library):
     @bp.post('/pictures/reviews/batch')
     def resolve_review_batch():
         return jsonify(photo_review_batch.apply_batch(get_library(), body()))
+
+    @bp.get('/pictures/reviews/batch/<request_id>')
+    def review_batch_receipt(request_id):
+        return jsonify(photo_review_batch.batch_receipt(get_library(), request_id))
 
     @bp.post('/pictures/reviews/confirm')
     def confirm_reviews():

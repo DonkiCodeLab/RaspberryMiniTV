@@ -95,6 +95,12 @@
 .photo-review-card__actions { display: grid; gap: .75rem; }
 .photo-review-history { display: flex; flex-wrap: wrap; gap: .5rem; }
 .photo-review-history:empty { display: none; }
+.photo-review-checkpoint { position: sticky; top: 0; z-index: 5; display: grid; gap: .5rem; padding: .75rem; border: 1px solid #a5c8d045; border-radius: 12px; background: #142d3e; }
+.photo-review-checkpoint__buttons { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.photo-review-checkpoint .dialog-button { min-height: 40px; padding: .55rem .8rem; font-size: .8rem; }
+.photo-dialog .photo-review-checkpoint p { margin: 0; color: #c4d4df; font-size: .75rem; line-height: 1.4; }
+.photo-review-checkpoint__progress { display: grid; gap: .35rem; color: #ffdf52; font-size: .85rem; }
+.photo-review-checkpoint__progress progress { width: 100%; height: 6px; }
 .photo-review-context { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; min-width: 0; }
 .photo-dialog .photo-review-context .photo-meta { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; gap: .4rem .8rem; margin: 0; }
 .photo-review-context .photo-location { margin: 0; }

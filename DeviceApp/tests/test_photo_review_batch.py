@@ -4,6 +4,8 @@ import json
 import sys
 import tempfile
 import unittest
+import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 from PIL import Image
@@ -42,6 +44,58 @@ class ReviewBatchTests(unittest.TestCase):
 
     def payload(self, photos=None, people=None):
         return {'requestId': 'test-batch-id-12345', 'photos': photos or [], 'people': people or []}
+
+    def test_receipt_distinguishes_failed_and_committed_legacy_saves(self):
+        data = self.payload([self.item(2)])
+        path = '/pictures/reviews/batch/' + data['requestId']
+        self.assertEqual(self.client.get(path).json, {'found': False, 'result': None})
+        result = self.client.post('/pictures/reviews/batch', json=data)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(self.client.get(path).json, {'found': True, 'result': result.json})
+        self.assertEqual(self.client.get('/pictures/reviews/batch/invalid').status_code, 400)
+
+    def test_failed_later_checkpoint_does_not_rollback_an_earlier_save(self):
+        first = self.payload([self.item(2, changes=[{'action': 'add', 'box': self.box, 'name': 'Eva'}])])
+        second = {**self.payload([self.item(1, edits=[{'rotate': 1}])]), 'requestId': 'test-batch-id-12346'}
+        self.assertEqual(self.client.post('/pictures/reviews/batch', json=first).status_code, 200)
+        before = self.store.snapshot()
+        with patch('photo_review_batch.Image.open', side_effect=OSError('decoder failed')):
+            response = self.client.post('/pictures/reviews/batch', json=second)
+        self.assertEqual(response.status_code, 422)
+        self.assertIn('No se pudo editar la foto', response.json['error'])
+        self.assertEqual(self.store.snapshot(), before)
+        self.assertFalse(self.client.get('/pictures/reviews/batch/' + second['requestId']).json['found'])
+        # Retrying either checkpoint does not duplicate the earlier manual face.
+        self.assertEqual(self.client.post('/pictures/reviews/batch', json=first).status_code, 200)
+        self.assertEqual(self.client.post('/pictures/reviews/batch', json=second).status_code, 200)
+        self.assertEqual(len(self.store.photo_faces(first['photos'][0]['photoId'])['faces']), 1)
+
+    def test_photo_checkpoint_queries_only_its_own_pending_reviews(self):
+        import photo_reviews
+        item = self.item(1)
+        with patch('photo_reviews.pending', wraps=photo_reviews.pending) as pending:
+            response = self.client.post('/pictures/reviews/batch', json=self.payload([item]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(pending.call_count, 2)
+        self.assertTrue(all(call.args[1] == item['photoId'] for call in pending.call_args_list))
+
+    def test_image_edit_reuses_the_transaction_when_a_large_batch_holds_an_exclusive_lock(self):
+        # Large SQLite transactions may spill dirty pages and acquire this lock.
+        # A second connection from safe_file would wait on our own transaction.
+        item = self.item(1, edits=[{'rotate': 1}])
+        original_db, original_connect = self.store.db, sqlite3.connect
+        @contextmanager
+        def exclusive_db():
+            with original_db() as db:
+                db.execute('BEGIN EXCLUSIVE')
+                yield db
+        def fast_connect(*args, **kwargs):
+            return original_connect(*args, **{**kwargs, 'timeout': .05})
+        with patch.object(self.store, 'db', side_effect=exclusive_db), patch('photo_library.sqlite3.connect', side_effect=fast_connect):
+            response = self.client.post('/pictures/reviews/batch', json=self.payload([item]))
+        self.assertEqual(response.status_code, 200, response.json)
+        photo = next(p for p in self.store.snapshot()['photos'] if p['id'] == item['photoId'])
+        self.assertEqual((photo['width'], photo['height']), (80, 120))
 
     def test_single_image_editor_preserves_album_references_and_pending_reviews(self):
         items = [self.item(i, reviewIds=[], edits=[{'rotate': 1}, {'scale': .5}]) for i in (1, 2)]
