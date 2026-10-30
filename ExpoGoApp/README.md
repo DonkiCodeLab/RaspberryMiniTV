@@ -48,6 +48,7 @@ La versión 1.1.0 usa SDK 58 / React Native 0.88 para abrirse en el Expo Go inst
 
 - Controles de exportación: TypeScript y 18 pruebas cubren contadores confirmados, pausa/reanudación, detención persistente, interrupciones al leer/preparar/guardar, confirmación en camino, fallo de disco, QR, duplicados, pérdida de respuesta y CSV. Actualización publicada el 30/10/2026 para iOS y Android; el enlace y el QR de arriba abren esta versión.
 - Interfaz de los controles comprobada en Expo Go / iPhone 17 Pro Simulator (iOS 26), con una cola sintética: contador actualizado, pausa, continuación y detención conservando el resumen. Paquetes de iOS y Android generados. Queda la prueba con fotos reales en el móvil.
+- Publicación del 30/10/2026: disponibilidad de iOS y Android verificada en EAS, QR generado y decodificado, y enlace remoto abierto en Expo Go iOS 26 mostrando la interfaz actualizada, sin Metro.
 - Prueba original en Android, Expo Go 57.0.9: emparejamiento real, selección de 3 imágenes sintéticas, subida al backend de MiniTV: **2 nuevas, 1 existente, 0 errores**. La reapertura conserva los contadores.
 - Prueba original en iOS 26, Expo Go 57.0.9: arranque desde enlace y prueba XCTest del formulario, teclado y rechazo de un QR incorrecto. La importación completa en iPhone físico queda para la prueba del usuario.
 - Paquetes Hermes de iOS y Android exportados y publicados con EAS Update. QR decodificado y comparado con el enlace oficial de Expo.
