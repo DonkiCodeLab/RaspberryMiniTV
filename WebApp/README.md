@@ -26,8 +26,8 @@ visor. **Editar caras** abre las herramientas
 para reasignar cualquier cara, incluida la principal, a una persona existente o
 a un nombre nuevo. **Validar cambio** guarda esa cara; **Añadir cara** permite
 dibujar otra y confirmarla. El visor conserva la foto abierta aunque la corrección
-la saque de la carpeta de la persona. Los controles están disponibles tanto al
-pulsar su retrato como al abrir una foto dentro de su carpeta; las vistas flotantes
+la saque de la carpeta de la persona. Los controles están disponibles al abrir
+una foto dentro de su ficha; las vistas flotantes
 del asistente de revisión ofrecen también acceso al editor.
 
 La rueda amplía o reduce la foto manteniendo el punto bajo el cursor; clic y
@@ -37,7 +37,7 @@ sigue ampliando; **Mover foto** permite desplazarla y **Dibujar recuadro** vuelv
 a la selección. Tras terminar el recuadro se puede mover la imagen sin perderlo.
 
 Todas las fotos usan el mismo visor, tanto en Galería, Mapa, álbumes personales,
-IA y Sin personas como al abrir el retrato de una persona.
+IA y Sin personas como al abrir una foto de la ficha de una persona.
 **Mostrar todas las caras detectadas** permite ocultar o mostrar sus recuadros;
 en las personas se conservan los dos controles independientes. **Editar caras**
 activa o desactiva sus herramientas. **Editar foto** permite girar a izquierda o
@@ -46,7 +46,7 @@ derecha, recortar, cambiar el tamaño entre 10 y 200 % y deshacer antes de pulsa
 conserva y se actualiza la misma foto en todos sus álbumes, sin validar revisiones
 pendientes. Cerrar una edición sin guardar ofrece seguir editando o descartarla.
 **Añadir a álbum** permite asignar la referencia a un álbum existente o crear
-otro, también desde los retratos, conservando las referencias anteriores.
+otro, también desde las fotos de una persona, conservando las referencias anteriores.
 
 El visor muestra la fecha y **Ver en el mapa**. **Editar fecha** abre un calendario;
 **Guardar fecha** conserva la hora y la zona horaria originales cuando existen.
@@ -70,7 +70,7 @@ lista, sin limitarse a una página, y cambia su escala según el criterio elegid
 Su flecha alterna entre ascendente y descendente. Las edades desconocidas siempre
 van al final y las personas con la misma edad se ordenan por nombre.
 Cada ficha muestra el nombre, el número de fotos y, si consta, cumpleaños y edad.
-El nombre abre el álbum y el retrato abre el visor. **Modo edición**, en el propio
+El nombre y el retrato abren la ficha con las fotos de la persona. **Modo edición**, en el propio
 slider, despliega las herramientas de las fichas y las acciones conjuntas.
 
 El asistente de análisis tiene cuatro pasos:
@@ -1001,8 +1001,8 @@ y conjuntas generan un ZIP de originales, sin duplicar fotos compartidas.
 Los grupos provisionales llamados Persona 1, Persona 2, etc. se revisan en el
 cuarto paso del asistente de análisis. Allí se les puede poner nombre o unirlos
 con una identidad existente, conservando los cambios en el borrador hasta guardar.
-Al pulsar la portada de una persona reconocida se abre su foto con el recuadro
-de su cara. Las flechas recorren sus imágenes y pulsar su nombre abre su álbum.
+Al pulsar la portada o el nombre de una persona reconocida se abre su ficha con
+sus fotos. Desde allí, pulsar una foto abre el visor con el recuadro de su cara.
 
 Pruebas: `node --test tests/photoLibrary.test.js`; desde la raíz,
 `python -m unittest discover -s DeviceApp/tests -p 'test_photo_library.py'`.

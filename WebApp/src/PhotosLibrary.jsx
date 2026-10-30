@@ -20,7 +20,6 @@ import { PeopleSortControl, PersonEditor } from './PhotoPeople.jsx';
 import LibraryScrollRail from './LibraryScrollRail.jsx';
 import { photoPeopleScrollLabel, sortPhotoPeople } from './photoPeopleSort.js';
 import { PeopleActionDialog, PeopleToolbar, PersonCardActions } from './PhotoPeopleActions.jsx';
-import PersonPhotoDialog from './PersonPhotoDialog.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { galleryWindow } from './photoTimeline.js';
 import { photoStrings } from './photoStrings.js';
@@ -148,7 +147,7 @@ function Modal({ title, titleActions, s, onClose, children, wide = false, busy =
   </dialog>, document.body);
 }
 
-export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, previewOnly = false, previewOpen = false, special, portraitPhoto, personActions, selected = false, libraryIndex, compact = false }) {
+export function AlbumCard({ folder, photos, s, language, onOpen, special, portraitPhoto, personActions, selected = false, libraryIndex, compact = false }) {
   const [active, setActive] = useState(false), [step, setStep] = useState(0);
   const isPerson = folder.id.startsWith('person:');
   const simpleCard = isPerson || compact;
@@ -167,27 +166,21 @@ export function AlbumCard({ folder, photos, s, language, onOpen, onPreview, prev
   const latest = photos.reduce((value, photo) => Math.max(value, photo.uploadedAt || 0), 0);
   return <article className={`movie-library__card photo-album photo-album--${isPerson ? 'person' : folder.id === 'withoutPeople' ? 'without-people' : special || 'folder'}${selected ? ' is-selected' : ''}`}
     data-library-index={libraryIndex}
-    data-person-review-card={previewOnly ? folder.id : undefined}
     onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(true); }} onPointerLeave={() => setActive(false)}
     onFocusCapture={() => setActive(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }}>
-    <button className={`movie-library__poster photo-album__cover${onPreview ? ' photo-album__cover--preview' : ''}`} type="button"
-      aria-label={`${onPreview ? s.personPhotoPreview : s.open}: ${folder.name}`} aria-haspopup={onPreview && !previewOnly ? 'dialog' : undefined}
-      aria-expanded={onPreview && previewOnly ? previewOpen : undefined} onClick={onPreview || onOpen}>
+    <button className="movie-library__poster photo-album__cover" type="button"
+      aria-label={`${s.open}: ${folder.name}`} onClick={onOpen}>
       {fixedIcon ? <span className="photo-album__art"><Icon type={fixedIcon} />{!simpleCard && <span>{folder.name}</span>}</span> : isPerson ? <PersonPortrait person={folder} photo={portraitPhoto || photos.find(photo => photo.id === personCoverPhotoId(folder))} s={s} /> :
         cover && (!special || active) ? <PhotoImage key={cover.id} photo={cover} loading="lazy" /> : <span className="photo-album__art"><Icon type={special || 'folder'} /><span>{folder.name}</span></span>}
       {!simpleCard && <span className="photo-album__badge"><Icon type={fixedIcon || special || 'folder'} /></span>}
-      {previewOnly && onPreview && <span className="photo-album__preview-hint" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="10" cy="10" r="6" /><path d="m15 15 6 6M10 7v6m-3-3h6" /></svg>
-        <span>{s.enlargePhoto}</span>{photos.length > 1 && <span className="photo-album__preview-count">{photos.length} {s.photos}</span>}
-      </span>}
     </button>
-    <div className="movie-library__info"><h2>{simpleCard && !previewOnly ? <button type="button" className="photo-person-name" onClick={onOpen} aria-label={`${s.open}: ${folder.name}`}>{folder.name}</button> : folder.name}</h2>
+    <div className="movie-library__info"><h2>{simpleCard ? <button type="button" className="photo-person-name" onClick={onOpen} aria-label={`${s.open}: ${folder.name}`}>{folder.name}</button> : folder.name}</h2>
       <div className="movie-library__meta"><span>{photos.length} {s.photos}</span></div>
       {age !== null && <div className="photo-person-card-birthday"><span>{s.personAge.replace('{age}', age)}</span><span><span aria-hidden="true">🎂</span> {birthday}</span></div>}
       {!simpleCard && <>
         {folder.reviewCount > 0 && <span className="photo-review-badge">{(folder.reviewCount === 1 ? s.pendingPhotoCount : s.pendingPhotosCount).replace('{count}', folder.reviewCount)}</span>}
         <small className="photo-album__date">{s.uploaded} · {dateLabel(latest || folder.created, language, '—')}</small>
-        {!previewOnly && <div className="movie-library__actions movie-library__actions--single"><button type="button" onClick={onOpen}>{s.open} <span aria-hidden="true">↗</span></button></div>}
+        <div className="movie-library__actions movie-library__actions--single"><button type="button" onClick={onOpen}>{s.open} <span aria-hidden="true">↗</span></button></div>
       </>}
       {personActions}
     </div>
@@ -323,9 +316,6 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
   const [peopleEditing, setPeopleEditing] = useState(false), [selectedPeople, setSelectedPeople] = useState(new Set());
-  const [previewPersonId, setPreviewPersonId] = useState(null);
-  const previewPersonSnapshot = useRef(null);
-  const closePersonPreview = useCallback(() => setPreviewPersonId(null), []);
   const [choosingCover, setChoosingCover] = useState(false);
   const actionPending = useRef(false);
   const [dialog, setDialog] = useState(null), [viewer, setViewer] = useState(null), [zone, setZone] = useState(null), [busy, setBusy] = useState(false);
@@ -354,15 +344,12 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const newPeople = useMemo(() => data.people.filter(isNewPhotoPerson), [data.people]);
   const recognizedPeople = useMemo(() => sortPhotoPeople(data.people.filter(person => !isNewPhotoPerson(person)), peopleOrder.field, peopleOrder.direction, language), [data.people, peopleOrder, language]);
   const selectedPersonList = recognizedPeople.filter(person => selectedPeople.has(person.id));
-  const previewPerson = data.people.find(person => person.id === previewPersonId) ||
-    (previewPersonSnapshot.current?.id === previewPersonId ? previewPersonSnapshot.current : null);
   useEffect(() => {
     setSelectedPeople(previous => {
       const valid = new Set(recognizedPeople.filter(person => previous.has(person.id)).map(person => person.id));
       return valid.size === previous.size ? previous : valid;
     });
   }, [recognizedPeople]);
-  useEffect(() => { if (previewPersonId && !previewPerson) setPreviewPersonId(null); }, [previewPersonId, previewPerson]);
   useEffect(() => { setPhotoNumber(1); setFolderNumber(1); setGalleryPosition(0); }, [current, zone]);
   useEffect(() => {
     onRootChange?.(SPECIAL_FOLDERS.includes(current) && !zone);
@@ -433,7 +420,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const originalIds = new Set(albumPhotos.map(p => p.id));
   const pending = isAi ? pendingVariants(data.photos.filter(p => originalIds.has(p.id) || originalIds.has(p.sourceId))) : 0;
   const job = data.jobs.find(j => j.folder === current);
-  const navigate = id => { setCurrent(id); setSelected(new Set()); setActionMode(false); setPeopleEditing(false); setSelectedPeople(new Set()); setChoosingCover(false); setZone(null); setNotice(''); setPreviewPersonId(null); };
+  const navigate = id => { setCurrent(id); setSelected(new Set()); setActionMode(false); setPeopleEditing(false); setSelectedPeople(new Set()); setChoosingCover(false); setZone(null); setNotice(''); };
   const goBack = () => {
     if (zone) { setZone(null); setSelected(new Set()); setActionMode(false); }
     else navigate(parentId);
@@ -480,11 +467,6 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     return <AlbumCard key={folder.id} folder={{ ...folder, name: (folder.id === 'albums' ? s.personalAlbums : s[folder.id]) || folder.name }} photos={photos.filter(visible)} special={special} libraryIndex={libraryIndex} compact={current === 'people'}
       portraitPhoto={index.byId.get(personCoverPhotoId(folder))}
       selected={!!cardPerson && selectedPeople.has(cardPerson.id)}
-      onPreview={cardPerson && photos.length ? () => {
-        previewPersonSnapshot.current = cardPerson;
-        setPreviewPersonId(previous => previous === cardPerson.id ? null : cardPerson.id);
-      } : undefined}
-      previewOpen={previewPersonId === cardPerson?.id}
       personActions={cardPerson && <PersonCardActions person={cardPerson} editing={peopleEditing}
         selected={selectedPeople.has(cardPerson.id)} s={s} busy={busy} onSelect={() => togglePerson(cardPerson.id)} onAction={peopleAction} />}
       s={s} language={language} onOpen={() => navigate(folder.id)} />;
@@ -577,8 +559,6 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       <PhotoPagination page={page} onChange={changePage} s={s} /></>}
     </div>}
     {!loading && current !== 'map' && !folders.length && !currentPhotos.length && <div className="photo-empty"><Icon type={current === 'people' ? 'people' : 'folder'} /><h2>{pendingNoFaces ? s.noNewWithoutPeople : current === 'people' ? s.peopleEmpty : s.empty}</h2><p>{reviewFolder ? s.reviewEmptyHint : s.mobileSyncHint}</p></div>}
-    {previewPerson && <PersonPhotoDialog key={previewPerson.id} Viewer={Viewer} person={previewPerson} photosById={index.byId} people={data.knownPeople || data.people} folders={data.folders}
-      globalFaces={data.faces} revision={data.revision} onChanged={refresh} s={s} language={language} onClose={closePersonPreview} />}
     {dialog?.mode === 'review-wizard' && <PhotoReviewWizard Modal={Modal} library={data} mode={dialog.start} initialLimit={dialog.initialLimit} s={s} language={language} onRefresh={refresh} onClose={() => { setReviewDraft(readPhotoReviewDraft()); setDialog(null); }} />}
     {dialog?.mode === 'upload' && <PhotoUploadDialog Modal={Modal} language={language} initialMode={dialog.files?.length ? 'files' : 'mac'} key="upload" initialFiles={dialog.files} folderId={dialog.folderId} parent={dialog.parent} s={s} onClose={closeDialog} onComplete={complete} />}
     {dialog?.mode === 'delete' && <DeleteDialog selected={dialog.ids ? new Set(dialog.ids) : selected} photo={dialog.photo}
