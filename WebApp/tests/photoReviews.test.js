@@ -51,6 +51,28 @@ test('pending previews show only pending faces with the correct person for each 
   assert.deepEqual(preview.faceBoxes.shared.map(face => [face.id, face.name]), [['ana-face', 'Ana'], ['luis-face', 'Luis']]);
 });
 
+test('preview rectangles show each person’s capture-time age and keep names without a birth date', () => {
+  const datedPeople = people.map(person => ({ ...person, ...(person.id === 'ana' ? { birthDate: '1990-05-10' } : {}) }));
+  const photo = { id: 'shared', name: 'Family', relativePath: 'family.jpg', width: 1200, height: 800, takenAt: '2014-05-10' };
+  for (const language of ['es', 'en', 'ca']) {
+    const s = photoStrings(language), label = `Ana (${s.personAge.replace('{age}', 24)})`;
+    const props = { page: { items: [photo], offset: 0 }, selected: new Set(), s, language };
+    const matches = renderToStaticMarkup(React.createElement(PhotoGrid, { ...props, reviewingMatches: true,
+      reviewItems: indexPhotoReviews(reviews).byPhoto, reviewPeople: datedPeople }));
+    assert.ok(matches.includes(`aria-label="${label}"`));
+    assert.ok(matches.includes(`<span>${label}</span>`));
+    assert.match(matches, /aria-label="Luis"/);
+    assert.match(matches, /<span>Luis<\/span>/);
+    assert.doesNotMatch(matches, /Luis \(/);
+    const album = renderToStaticMarkup(React.createElement(PhotoGrid, { ...props, person: datedPeople[0] }));
+    assert.ok(album.includes(`<span>${label}</span>`));
+    const undated = renderToStaticMarkup(React.createElement(PhotoGrid, { ...props,
+      page: { items: [{ ...photo, takenAt: null }], offset: 0 }, person: datedPeople[0] }));
+    assert.match(undated, /<span>Ana<\/span>/);
+    assert.doesNotMatch(undated, /Ana \(/);
+  }
+});
+
 test('photo and per-face confirmation send the exact review tokens and disable during saving', () => {
   const s = photoStrings('es');
   let confirmed;

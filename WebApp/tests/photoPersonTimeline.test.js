@@ -21,7 +21,7 @@ test('photo ages preserve the capture timezone and never invent an age for missi
   assert.equal(ageAtPhoto('1990-05-10', '2014-05-10T00:15:00+14:00'), 24);
   assert.equal(ageAtPhoto('1990-05-10', '2014-05-09T23:45:00-12:00'), 23);
   for (const birthDate of [null, '', 'unknown', '2000-02-30', '2020-01-01']) assert.equal(ageAtPhoto(birthDate, '2014-05-10'), null);
-  for (const date of [null, undefined, '', 'unknown', '2020-02-30', Infinity, '1989-12-31']) assert.equal(ageAtPhoto('1990-01-01', date), null);
+  for (const date of [null, undefined, '', 'unknown', '2020-02-30', Infinity, '1989-03-31']) assert.equal(ageAtPhoto('1990-01-01', date), null);
 });
 
 test('face labels use the assigned person and localized ages, preserving plain names when the age is unavailable', () => {
@@ -33,6 +33,60 @@ test('face labels use the assigned person and localized ages, preserving plain n
     assert.equal(photoFaceLabel(face, {}, undefined, s), 'Ana');
     assert.equal(photoFaceLabel(face, photo, { birthDate: '' }, s), 'Ana');
     assert.equal(photoFaceLabel({ personId: 'unknown', name: 'Unknown', birthDate: '1980-01-01' }, photo, undefined, s), s.unknownPerson);
+  }
+});
+
+test('face ages show completed years and months, using months alone before the first birthday', () => {
+  const face = { personId: 'baby', name: 'Leo', birthDate: '2020-05-10' }, s = photoStrings('es');
+  for (const [takenAt, expected] of [
+    ['2020-06-09', '31 días'], ['2020-06-10', '1 mes'], ['2021-01-10', '8 meses'],
+    ['2021-05-09', '11 meses'], ['2021-05-10', '1 año'], ['2021-06-10', '1 año y 1 mes'],
+    ['2022-05-10', '2 años'], ['2022-06-10', '2 años y 1 mes'], ['2022-08-10', '2 años y 3 meses'],
+    ['2022-08-09T23:59:00-12:00', '2 años y 2 meses'],
+  ]) assert.equal(photoFaceLabel(face, { takenAt }, undefined, s), `Leo (${expected})`, takenAt);
+});
+
+test('newborn days start at one and respect calendar days, leap days, ancient years and EXIF offsets', () => {
+  const s = photoStrings('es');
+  for (const [birthDate, takenAt, expected] of [
+    ['2024-02-28', '2024-02-28', '1 día'], ['2024-02-28', '2024-02-29', '2 días'],
+    ['2024-02-28', '2024-03-01', '3 días'], ['2023-02-28', '2023-03-01', '2 días'],
+    ['2026-03-28', '2026-03-30T00:15:00+02:00', '3 días'],
+    ['2026-10-24', '2026-10-26T23:45:00-12:00', '3 días'],
+    ['0099-12-31', '0100-01-01', '2 días'], ['0001-01-01', '0001-01-02', '2 días'],
+    ['2024-01-31', '2024-02-29', '30 días'], ['2024-01-31', '2024-03-01', '1 mes'],
+    ['2024-02-29', '2025-02-28', '11 meses'], ['2024-02-29', '2025-03-01', '1 año'],
+  ]) assert.equal(photoFaceLabel({ personId: 'baby', name: 'Leo', birthDate }, { takenAt }, undefined, s), `Leo (${expected})`);
+});
+
+test('prenatal labels estimate gestation only inside the nine-month window before the stored birthday', () => {
+  const face = { personId: 'baby', name: 'Leo', birthDate: '2026-10-31' }, s = photoStrings('es');
+  for (const [takenAt, expected] of [
+    ['2026-01-30', 'Leo'], ['2026-01-31', 'Leo (Menos de 1 mes de gestación (aprox.))'],
+    ['2026-02-28', 'Leo (≈ 1 mes de gestación)'], ['2026-07-31', 'Leo (≈ 6 meses de gestación)'],
+    ['2026-10-30T23:45:00-12:00', 'Leo (≈ 9 meses de gestación)'],
+    ['2026-10-31T00:15:00+14:00', 'Leo (1 día)'],
+    ['2026-11-01', 'Leo (2 días)'],
+  ]) assert.equal(photoFaceLabel(face, { takenAt }, undefined, s), expected, takenAt);
+  const monthEnd = { ...face, birthDate: '2026-11-30' };
+  assert.equal(photoFaceLabel(monthEnd, { takenAt: '2026-02-27' }, undefined, s), 'Leo');
+  assert.equal(photoFaceLabel(monthEnd, { takenAt: '2026-02-28' }, undefined, s), 'Leo (Menos de 1 mes de gestación (aprox.))');
+  const prenatal = { takenAt: '2026-07-31' };
+  assert.equal(photoFaceLabel(face, prenatal, { birthDate: '' }, s), 'Leo');
+  assert.equal(photoFaceLabel({ ...face, personId: 'unknown' }, prenatal, undefined, s), s.unknownPerson);
+});
+
+test('detailed face ages and gestation labels use the selected language and the latest assigned birthday', () => {
+  const face = { personId: 'baby', name: 'Leo', birthDate: '1980-01-01' }, person = { birthDate: '2020-05-10' };
+  const dates = ['2020-05-10', '2020-05-11', '2020-06-10', '2021-01-10', '2021-06-10', '2022-08-10', '2020-02-10'];
+  const cases = {
+    es: ['1 día', '2 días', '1 mes', '8 meses', '1 año y 1 mes', '2 años y 3 meses', '≈ 6 meses de gestación'],
+    en: ['1 day old', '2 days old', '1 month old', '8 months old', '1 year and 1 month old', '2 years and 3 months old', '≈ 6 months of gestation'],
+    ca: ['1 dia', '2 dies', '1 mes', '8 mesos', '1 any i 1 mes', '2 anys i 3 mesos', '≈ 6 mesos de gestació'],
+  };
+  for (const [language, expected] of Object.entries(cases)) {
+    const s = photoStrings(language);
+    dates.forEach((takenAt, index) => assert.equal(photoFaceLabel(face, { takenAt }, person, s), `Leo (${expected[index]})`));
   }
 });
 
@@ -49,6 +103,23 @@ test('person photos follow capture dates in either direction, independent of upl
     assert.deepEqual(sortPersonPhotos(photos, '1990-05-10', field, 'desc').map(p => p.id), ['late', 'early', 'before', 'missing', 'invalid']);
   }
   assert.equal(photos[0].id, 'late');
+});
+
+test('the age rail groups every gestation photo at -1 and orders them by capture date before birth', () => {
+  const birthDate = '2026-11-30';
+  const photos = [
+    { id: 'year', takenAt: '2027-11-30' }, { id: 'birth', takenAt: '2026-11-30T00:15:00+14:00' },
+    { id: 'late', takenAt: '2026-11-29T23:45:00-12:00' }, { id: 'early', takenAt: '2026-02-28' },
+    { id: 'middle', takenAt: '2026-08-30' }, { id: 'outside', takenAt: '2026-02-27' }, { id: 'missing' },
+  ];
+  const asc = sortPersonPhotos(photos, birthDate, 'age');
+  assert.deepEqual(asc.map(photo => photo.id), ['early', 'middle', 'late', 'birth', 'year', 'missing', 'outside']);
+  assert.deepEqual(asc.map(photo => personPhotoScrollLabel(photo, birthDate, 'age')), ['-1', '-1', '-1', '0', '1', '—', '—']);
+  const desc = sortPersonPhotos(photos, birthDate, 'age', 'desc');
+  assert.deepEqual(desc.map(photo => photo.id), ['year', 'birth', 'late', 'middle', 'early', 'outside', 'missing']);
+  assert.deepEqual(desc.map(photo => personPhotoScrollLabel(photo, birthDate, 'age')), ['1', '0', '-1', '-1', '-1', '—', '—']);
+  assert.equal(personPhotoScrollLabel(photos[3], birthDate, 'year'), '2026');
+  assert.equal(personPhotoScrollLabel(photos[3], '', 'age'), '—');
 });
 
 test('year and age labels span the whole collection, including targets beyond the first page', () => {

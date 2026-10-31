@@ -114,7 +114,7 @@ function RailScale({ ticks, currentTick, label, onSelect, onActive, ratingScale,
   // Keep long age timelines legible; every age remains reachable by pointer or keyboard.
   const markStep = maxMarks ? Math.max(1, Math.ceil(ticks.length / maxMarks)) : 1;
   const marks = ratingScale?.marks || ticks.map(([value], index) => [value, positions[index]])
-    .filter((_, index) => index % markStep === 0 || index === ticks.length - 1);
+    .filter(([value], index) => index % markStep === 0 || index === ticks.length - 1 || value === '-1');
   const select = index => {
     const entry = ticks[Math.max(0, Math.min(ticks.length - 1, index))];
     if (entry) onSelect(entry[1]);

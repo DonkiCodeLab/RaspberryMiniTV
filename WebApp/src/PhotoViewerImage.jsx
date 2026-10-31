@@ -34,7 +34,7 @@ function FaceDrawing({ onChange, s, disabled, active }) {
   </div>;
 }
 
-function FaceLabel({ children, box, view }) {
+export function FaceLabel({ children, box, view }) {
   const label = useRef(null);
   useLayoutEffect(() => {
     const element = label.current, face = element.parentElement, image = face.parentElement;

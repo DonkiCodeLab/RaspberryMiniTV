@@ -5,6 +5,8 @@ import LoadingSpinner from './LoadingSpinner.jsx';
 import useBrowserBack from './useBrowserBack.js';
 import { personPreviewFaces, personPreviewGeometry, personPreviewPhotos } from './photoPersonPreview.js';
 import { dateLabel } from './photoMetadata.js';
+import { photoFaceLabel } from './photoPersonTimeline.js';
+import { FaceLabel } from './PhotoViewerImage.jsx';
 
 export default function PersonPhotoPopover({ person, photosById, anchor, s, language, onClose, onEdit, onDetails }) {
   const photos = personPreviewPhotos(person, photosById);
@@ -55,9 +57,14 @@ export default function PersonPhotoPopover({ person, photosById, anchor, s, lang
       style={{ visibility: ready && !error ? 'visible' : 'hidden' }}
       onLoad={event => { setFailed(null); setLoaded({ src, width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight }); }}
       onError={() => setFailed(src)} />
-    {ready && !error && faces.map((face, faceIndex) => <span key={face.id || faceIndex} className="photo-person-preview__face"
-      role="img" aria-label={person.name} style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`,
-        width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }} />)}
+    {ready && !error && faces.map((face, faceIndex) => {
+      const label = photoFaceLabel(face, photo, undefined, s);
+      return <span key={face.id || faceIndex} className="photo-person-preview__face"
+        role="img" aria-label={label} style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`,
+          width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}>
+        <FaceLabel box={face.box}>{label}</FaceLabel>
+      </span>;
+    })}
     {(!ready || error) && <div className="photo-person-preview__loading" role="status">
       {error ? <><span>{s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setFailed(null); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{s.loadingPhoto}</span></>}
     </div>}

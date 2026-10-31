@@ -10,6 +10,7 @@ import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import { facePortraitLayout, personCoverPhotoId } from './photoFacePortrait.js';
 import PhotoFaceViewer, { PersonFaceControls, PhotoFaceControls } from './PhotoFaceViewer.jsx';
 import PhotoImageEditor from './PhotoImageEditor.jsx';
+import { FaceLabel } from './PhotoViewerImage.jsx';
 import { personPreviewFaces } from './photoPersonPreview.js';
 import PhotoReviewWizard, { readPhotoReviewDraft } from './PhotoReviewWizard.jsx';
 import PhotoDownloads, { PhotoDownloadDialog } from './PhotoDownloads.jsx';
@@ -19,7 +20,7 @@ import PhotoGallery from './PhotoGallery.jsx';
 import { PeopleSortControl, PersonPhotoSortControl, PersonEditor } from './PhotoPeople.jsx';
 import LibraryScrollRail from './LibraryScrollRail.jsx';
 import { photoPeopleScrollLabel, sortPhotoPeople } from './photoPeopleSort.js';
-import { personPhotoScrollLabel, sortPersonPhotos } from './photoPersonTimeline.js';
+import { photoFaceLabel, personPhotoScrollLabel, sortPersonPhotos } from './photoPersonTimeline.js';
 import { PeopleActionDialog, PeopleToolbar, PersonCardActions } from './PhotoPeopleActions.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { galleryWindow } from './photoTimeline.js';
@@ -89,9 +90,9 @@ export function PhotoPagination({ page, onChange, s, label = s.photos }) {
   </nav>;
 }
 
-export function PersonPhotoPreview({ photo, person }) {
+export function PersonPhotoPreview({ photo, person, s }) {
   const [ratio, setRatio] = useState(photo.width && photo.height ? photo.width / photo.height : null);
-  const faces = person.faceBoxes?.[photo.id] || [];
+  const faces = personPreviewFaces(person, photo.id);
   return <span className="photo-person-match" style={ratio ? {
     width: `${100 * Math.min(1, ratio / 1.12)}%`, height: `${100 * Math.min(1, 1.12 / ratio)}%`,
   } : { width: '100%', height: '100%' }}>
@@ -99,9 +100,13 @@ export function PersonPhotoPreview({ photo, person }) {
       const image = event.currentTarget;
       if (image.naturalWidth > 1 && image.naturalHeight > 1) setRatio(image.naturalWidth / image.naturalHeight);
     }} />
-    {ratio && faces.map(face => facePortraitLayout(face.box, 1, 1) && <span key={face.id}
-      className="photo-person-match__box" role="img" aria-label={face.name || person.name}
-      style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }} />)}
+    {ratio && faces.map(face => {
+      const label = photoFaceLabel(face, photo, undefined, s);
+      return <span key={face.id} className="photo-person-match__box" role="img" aria-label={label}
+        style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}>
+        <FaceLabel box={face.box}>{label}</FaceLabel>
+      </span>;
+    })}
   </span>;
 }
 
@@ -110,7 +115,7 @@ export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, langu
   return <div className={`photo-mosaic${dragSelection ? ' photo-mosaic--drag-select' : ''}`}>{page.items.map((photo, index) => <article key={photo.id} data-library-index={person ? page.offset + index : undefined} data-photo-select-id={dragSelection ? photo.id : undefined} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
     <button type="button" className="photo-tile__image" data-photo-select-start={dragSelection ? '' : undefined} aria-label={`${coverMode ? s.useCover : actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={coverMode ? coverPhotoId === photo.id : actionMode ? selected.has(photo.id) : undefined}
       disabled={coverMode && coverBusy || reviewingMatches && actionMode && reviewBusy} onClick={() => coverMode ? onCover(photo.id) : actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
-      {person || reviewingMatches ? <PersonPhotoPreview key={photo.id} photo={photo} person={person || pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople)} /> : <PhotoImage photo={photo} loading="lazy" decoding="async" />}{actionMode && !reviewingMatches && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
+      {person || reviewingMatches ? <PersonPhotoPreview key={photo.id} photo={photo} person={person || pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople)} s={s} /> : <PhotoImage photo={photo} loading="lazy" decoding="async" />}{actionMode && !reviewingMatches && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
       {photo.sourceId && <span className="photo-style">{STYLES[photo.style] || s.generated}</span>}
       {coverPhotoId === photo.id && <span className="photo-cover-label">{s.cover}</span>}
     </button><div className="photo-tile__info"><strong title={photo.name}>{photo.title || photo.name}</strong><PhotoMeta photo={photo} s={s} language={language} onChanged={person ? onChanged : undefined} disabled={coverBusy || reviewBusy} /></div>
@@ -298,7 +303,7 @@ export function Viewer({ photos, initial, onClose, onDelete, s, language, people
       {photo.keywords?.length > 0 && <p>{t.keywords}: {photo.keywords.join(' · ')}</p>}
     </div>}
   </Modal>
-    {imagePhoto && <PhotoImageEditor photo={imagePhoto} s={s} highlightPersonId={highlightPersonId}
+    {imagePhoto && <PhotoImageEditor photo={imagePhoto} people={knownPeople} s={s} highlightPersonId={highlightPersonId}
       showPersonFaces={showPersonFaces} showOtherFaces={showOtherFaces} onClose={() => setImagePhoto(null)}
       onSaved={async () => {
         if (onChanged && !await onChanged()) throw new Error(s.reviewLoadingError);

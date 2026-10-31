@@ -32,8 +32,17 @@ test('face boxes show capture-time ages in both browsing and editing, with the s
     assert.match(html, /aria-label="(?:Nombre de esta cara: )?Ana \(24 años\)"/);
     assert.doesNotMatch(html, /Sin asignar \(/);
   }
-  const html = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, photo: { id: 'photo', name: 'Family', takenAt: '2014-05-10' }, initialFaces: faces, editing: false }));
-  assert.match(html, /Ana \(24 años\)/);
+  for (const editing of [true, false]) {
+    for (const people of [props.people, []]) {
+      const viewer = { ...props, people, photo: { id: 'photo', name: 'Family', takenAt: '2014-05-10' },
+        initialFaces: faces.map(face => ({ ...face, birthDate: face.personId === 'ana' ? '1990-05-10' : undefined })), editing };
+      const shown = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...viewer, showOtherFaces: true }));
+      assert.match(shown, /Ana \(24 años\)/);
+      assert.doesNotMatch(shown, /Sin asignar \(/);
+      const hidden = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...viewer, showOtherFaces: false }));
+      assert.doesNotMatch(hidden, /photo-face-box|Ana \(24 años\)/);
+    }
+  }
 });
 
 test('person browsing hides other faces and editing actions until editing is enabled', () => {
@@ -63,6 +72,22 @@ test('face rectangles can be hidden in a general album while keeping face editin
   assert.match(shown, /Nombre de esta cara: Ana/);
   assert.doesNotMatch(hidden, /photo-face-box/);
   assert.ok(hidden.includes(s.addFace));
+});
+
+test('the shared photo viewer renders detailed baby and gestation ages in visible rectangles and accessible names', () => {
+  const props = { photo: { id: 'family', name: 'Family', takenAt: '2024-05-10' }, editing: false, showOtherFaces: true, s,
+    initialFaces: [
+      { ...faces[0], birthDate: '2023-01-10' },
+      { ...faces[0], id: 'baby-face', personId: 'baby', name: 'Leo', birthDate: '2024-05-09' },
+      { ...faces[0], id: 'bump-face', personId: 'unborn', name: 'Eva', birthDate: '2024-08-10' },
+    ] };
+  const html = renderToStaticMarkup(React.createElement(PhotoFaceViewer, props));
+  for (const label of ['Ana (1 año y 4 meses)', 'Leo (2 días)', 'Eva (≈ 6 meses de gestación)']) {
+    assert.ok(html.includes(`aria-label="${label}"`));
+    assert.ok(html.includes(` · ${label}</span>`));
+  }
+  const hidden = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, showOtherFaces: false }));
+  assert.doesNotMatch(hidden, /photo-face-box|meses de gestación|2 días/);
 });
 
 test('face visibility and edit controls expose their independent states and work in every language', () => {

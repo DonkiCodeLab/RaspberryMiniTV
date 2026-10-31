@@ -7,7 +7,7 @@ import PhotoDetailDialog from './PhotoDetailDialog.jsx';
 import PhotoViewerImage from './PhotoViewerImage.jsx';
 import './PhotoImageEditor.css';
 
-export default function PhotoImageEditor({ photo, s, highlightPersonId, showPersonFaces = true, showOtherFaces = true, onSaved, onClose }) {
+export default function PhotoImageEditor({ photo, people = [], s, highlightPersonId, showPersonFaces = true, showOtherFaces = true, onSaved, onClose }) {
   const [details, setDetails] = useState(null), [attempt, setAttempt] = useState(0);
   const [edits, setEdits] = useState([]), [scale, setScale] = useState(100);
   const [preview, setPreview] = useState(null), [previewError, setPreviewError] = useState('');
@@ -76,7 +76,7 @@ export default function PhotoImageEditor({ photo, s, highlightPersonId, showPers
     </div>
     {cropping && <p>{s.reviewCropHint} <button type="button" className="dialog-button dialog-button--accent" disabled={blocked || !box}
       onClick={() => updateEdits([...edits, { crop: box }])}>{s.reviewApplyCrop}</button></p>}
-    <PhotoViewerImage photo={photo} sourceUrl={edits.length ? preview?.url : undefined} faces={faces} readOnlyFaces highlightPersonId={highlightPersonId}
+    <PhotoViewerImage photo={photo} people={people} sourceUrl={edits.length ? preview?.url : undefined} faces={faces} readOnlyFaces highlightPersonId={highlightPersonId}
       s={cropping ? { ...s, drawFaceHint: s.reviewCropHint } : s} busy={blocked} addingFace={cropping} onFaceBoxChange={setBox} onReadyChange={setReady} />
     <p className="photo-image-editor__hint">{s.photoImageEditHint}</p>
     {previewBusy && <p role="status">{s.loading}</p>}

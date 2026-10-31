@@ -32,6 +32,19 @@ test('person photo cards expose their global positions for the right-hand rail a
   assert.equal((html.match(/data-library-index=/g) || []).length, 5);
 });
 
+test('long age rails keep the gestation mark visible in either direction, even before unknown dates', async () => {
+  const result = await build({ entryPoints: [new URL('../src/LibraryScrollRail.jsx', import.meta.url).pathname],
+    bundle: true, write: false, format: 'cjs', platform: 'node', external: ['react'] });
+  const module = { exports: {} };
+  new Function('require', 'module', 'exports', result.outputFiles[0].text)(require, module, module.exports);
+  const ages = Array.from({ length: 81 }, (_, index) => String(index - 1));
+  for (const labels of [[...ages, '—'], [...ages].reverse().concat('—')]) {
+    const html = renderToStaticMarkup(React.createElement(module.exports.default, { labels, sort: 'age', label: s.personPhotoBrowseAge }));
+    const marks = html.match(/<div class="library-scroll-rail__ticks"[^>]*>(.*?)<\/div>/)[1];
+    assert.match(marks, />-1<\/span>/);
+  }
+});
+
 test('all album viewers expose image, face, date, location and album tools in every language', () => {
   const photo = { id: 'shared', name: 'Shared.jpg', relativePath: 'shared.jpg', folderIds: ['holiday'] };
   for (const language of ['es', 'ca', 'en']) for (const person of [undefined, 'ana', 'unknown']) {

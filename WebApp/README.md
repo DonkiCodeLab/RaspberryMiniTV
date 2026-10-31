@@ -48,16 +48,28 @@ pendientes. Cerrar una edición sin guardar ofrece seguir editando o descartarla
 **Añadir a álbum** permite asignar la referencia a un álbum existente o crear
 otro, también desde las fotos de una persona, conservando las referencias anteriores.
 
-Los nombres sobre los recuadros de caras incluyen la edad en la fecha de captura,
-por ejemplo **Ana (24 años)**, cuando se conocen ambas fechas. Se cuentan años
-cumplidos y se conserva el día de la foto en su zona horaria. No se muestra edad
-si falta una fecha o la foto es anterior al nacimiento. Se actualiza al corregir
+Todos los recuadros de caras visibles muestran el nombre y, cuando se conocen ambas
+fechas, la edad en la fecha de captura, por ejemplo **Ana (24 años y 3 meses)**. Se aplica en
+Galería, Mapa, álbumes, Personas, miniaturas, vistas previas y editores, incluido
+el asistente de revisión. Sin nacimiento se muestra solo el nombre. Se cuentan años
+y meses cumplidos, omitiendo los meses cuando son cero. Antes del primer año se
+muestran solo meses; antes del primer mes, días: el nacimiento es **1 día** y el
+día siguiente **2 días**. Se conserva el día de la foto en su zona horaria.
+En los nueve meses anteriores al nacimiento se muestra una estimación, como
+**≈ 6 meses de gestación**, restando los meses completos que faltan para nacer
+a una referencia de nueve meses. El límite inicial indica **Menos de 1 mes de
+gestación (aprox.)**. Es una aproximación para las fotos, no una fecha de concepción
+conocida; la referencia habitual es de [unas 40 semanas, algo más de nueve meses](https://www.nichd.nih.gov/health/topics/factsheets/pregnancy).
+No se muestra edad si falta una fecha o la foto es anterior a ese intervalo.
+Se actualiza al corregir
 la fecha de la foto, el nacimiento o la identidad, también dentro del asistente.
 
 Dentro de una persona, las fotos se ordenan por fecha de captura. **Ordenar por**
 permite elegir **Año de la foto** o **Edad en la foto** (si tiene nacimiento).
 El slider derecho recorre toda la colección, incluso las fotos de otras páginas:
-en año muestra décadas y años, y en edad muestra años cumplidos. Su flecha alterna
+en año muestra décadas y años, y en edad muestra años cumplidos, con todas las fotos
+del intervalo estimado de gestación agrupadas en **-1**, antes de **0** en orden
+ascendente. Dentro del grupo se mantiene el orden de captura. Su flecha alterna
 el orden ascendente y descendente; las fotos sin fecha quedan al final. La elección
 se recuerda en este navegador y no depende del orden de subida de otros álbumes.
 

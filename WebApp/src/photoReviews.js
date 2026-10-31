@@ -24,7 +24,7 @@ export function pendingFacePreview(photoId, reviews, people) {
     if (!person) continue;
     names.add(person.name);
     const face = person.faceBoxes?.[photoId]?.find(face => face.id === review.faceId);
-    if (face) faces.push({ ...face, name: person.name });
+    if (face) faces.push({ ...face, personId: person.id, name: person.name, birthDate: person.birthDate });
   }
   return { name: [...names].join(', '), faceBoxes: { [photoId]: faces } };
 }
