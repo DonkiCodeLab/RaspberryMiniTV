@@ -99,6 +99,8 @@
 .photo-review-checkpoint__buttons { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
 .photo-review-checkpoint .dialog-button { min-height: 40px; padding: .55rem .8rem; font-size: .8rem; }
 .photo-dialog .photo-review-checkpoint p { margin: 0; color: #c4d4df; font-size: .75rem; line-height: 1.4; }
+.photo-dialog .photo-review-delete-preference { display: flex; align-items: center; gap: .6rem; color: #d5e1e7; font-size: .8rem; cursor: pointer; }
+.photo-dialog .photo-review-delete-preference input[type=checkbox] { flex-shrink: 0; width: 18px; height: 18px; min-height: 0; padding: 0; margin: 0; accent-color: #ffdf52; }
 .photo-review-checkpoint__progress { display: grid; gap: .35rem; color: #ffdf52; font-size: .85rem; }
 .photo-review-checkpoint__progress progress { width: 100%; height: 6px; }
 .photo-review-context { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; min-width: 0; }

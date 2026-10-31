@@ -157,7 +157,15 @@ paso al reabrir el asistente, también si solo quedan personas nuevas.
 **Sin personas → Pendientes de validar → Revisar fotos nuevas** abre el tercer paso.
 **Quitar de pendientes de validar** muestra la foto directamente en Sin personas,
 conservando el original.
-**Borrar de Galería** pide confirmación y anota el borrado para la validación final.
+**Borrar la imagen de Galería** está disponible en todas las fotos de los pasos 2–4,
+también al identificar personas nuevas y al ampliar la imagen. En el último paso,
+continúa con las fotos restantes del grupo, sin exigir un nombre para la foto que
+se borra; si ya no quedan caras pendientes, pasa al siguiente grupo.
+La casilla general **No pedir confirmación al borrar fotos durante la revisión**
+omite la confirmación individual en todos esos pasos. Está desactivada por defecto,
+se recuerda en este navegador y se puede desmarcar para recuperar las confirmaciones.
+El borrado queda anotado en el borrador hasta guardar los cambios y puede deshacerse
+con **Volver a la decisión anterior** antes de aplicarlo.
 Actualiza WebApp y DeviceApp juntos: el asistente usa `POST /pictures/reviews/batch`.
 
 Pruebas: `node --test tests/photoReviewWizard.test.js tests/photoImageEdits.test.js`

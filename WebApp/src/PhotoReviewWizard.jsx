@@ -18,6 +18,7 @@ import { reviewSubmission, saveReviewSubmission, readReviewSnapshot, writeReview
 import './PhotoReviewWizard.css';
 
 const reviewStorageKey = () => `minitv-review-draft:${getPictureContentUrl('review-session').split('?')[0]}`;
+const skipDeleteConfirmationKey = 'minitv-photo-review-skip-delete-confirmation';
 export function readPhotoReviewDraft() {
   return readReviewSnapshot(reviewStorageKey());
 }
@@ -29,7 +30,7 @@ export function ReviewSteps({ step, s }) {
   </ol>;
 }
 
-export function ReviewCard({ review, photo, people, albumOptions = [], nextPhotos = [], position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onEditing, onExpanded, onReadyChange, closeLayer, groupPerson, peopleDrafts = [], onUnknownRemainder, hideDecisions = false, showFaceBoxes = true, onShowFaceBoxesChange }) {
+export function ReviewCard({ review, photo, people, albumOptions = [], nextPhotos = [], position, total, s, language = 'es', draft, onDraft, onAdvance, onDirty, onEditing, onExpanded, onReadyChange, closeLayer, groupPerson, peopleDrafts = [], onUnknownRemainder, hideDecisions = false, showFaceBoxes = true, onShowFaceBoxesChange, skipDeleteConfirmation = false }) {
   const withoutFaces = !review.faceId && !groupPerson;
   const [details, setDetails] = useState(null), [attempt, setAttempt] = useState(0);
   const [assignments, setAssignments] = useState(() => Object.fromEntries((draft?.changes || []).filter(c => c.action === 'assign').map(({ faceId, action, ...a }) => [faceId, a])));
@@ -66,6 +67,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
   const primaryDraft = assignments[review.faceId];
   const target = identityTarget ?? (primaryDraft && 'name' in primaryDraft ? 'new' : primary?.personId || '');
   const canDecide = !blocked && !invalid && !adding && !cropping && !selectedId && !deleting && !albumEditing && ready;
+  const canRemove = !blocked && !adding && !cropping && !selectedId && !albumEditing;
   const pendingDraft = () => ({ photoId: photo.id, expectedPath: draft?.expectedPath || photo.relativePath, version: draft?.version || details?.version,
     reviewIds: draft?.reviewIds || [], changes: [...removals, ...reviewChanges(assignments, additions)], edits, albums, metadata, delete: false,
     sourceFaces: (details?.faces || []).map(({ id, personId }) => ({ id, personId })),
@@ -73,7 +75,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
   const remainingFaceIds = groupPerson ? remainingReviewFaceIds(details?.faces || [], pendingDraft(), peopleDrafts) : [];
   useEffect(() => { if (!groupPerson) heading.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => { callbacks.current.onDirty?.(changed || adding || cropping || !!selectedId || albumEditing); }, [changed, adding, cropping, selectedId, albumEditing]);
-  useEffect(() => { onEditing?.(adding || cropping || !!selectedId || albumEditing); return () => onEditing?.(false); }, [adding, cropping, selectedId, albumEditing, onEditing]);
+  useEffect(() => { onEditing?.(adding || cropping || !!selectedId || albumEditing || !!deleting); return () => onEditing?.(false); }, [adding, cropping, selectedId, albumEditing, deleting, onEditing]);
   useEffect(() => { onReadyChange?.(!!canDecide && !error); }, [canDecide, error, onReadyChange]);
   useEffect(() => {
     if (!closeLayer) return;
@@ -132,14 +134,20 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
     next.changes = [...next.changes, ...remainingFaceIds.map(faceId => ({ action: 'assign', faceId, personId: UNKNOWN_PERSON_ID }))];
     onUnknownRemainder(next);
   }
-  function remove() {
+  function remove(kind = deleting) {
+    if (!canRemove || !['gallery', 'reference'].includes(kind)) return;
     const next = pendingDraft();
-    if (deleting === 'gallery') next.delete = true;
+    if (kind === 'gallery') next.delete = true;
     else {
       next.reviewIds = [...new Set([...next.reviewIds, review.id])];
       if (!withoutFaces) next.changes = [...next.changes.filter(c => c.faceId !== review.faceId), { action: 'remove', faceId: review.faceId }];
     }
     onAdvance?.(next);
+  }
+  function requestRemoval(kind) {
+    if (!canRemove || deleting) return;
+    if (kind === 'gallery' && skipDeleteConfirmation) remove(kind);
+    else setDeleting(kind);
   }
   const startAdding = () => { if (!blocked) { closeEditor(); setAdding(true); } };
   const applyEdit = edit => { closeEditor(); setError(''); setEdits(previous => [...previous, edit]); };
@@ -225,25 +233,25 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
       {!stale && <button type="button" className="dialog-button" onClick={() => { setError(''); setAttempt(value => value + 1); }}>{s.retry}</button>}</div>}
     {groupPerson && onUnknownRemainder && <button type="button" className="dialog-button photo-review-unknown" disabled={!canDecide || !!error || !remainingFaceIds.length}
       title={s.reviewUnknownRemainderHint} onClick={markRemainderUnknown}>{s.reviewUnknownRemainder.replace('{count}', remainingFaceIds.length)} →</button>}
-    {!hideDecisions && <div className="photo-review-card__actions"><div className="photo-review-decisions">
+    <div className="photo-review-card__actions">{!hideDecisions && <div className="photo-review-decisions">
       {withoutFaces || changedFaces ? <button type="button" className="dialog-button dialog-button--accent" disabled={!canDecide || !!error} onClick={() => decide()}>✓ {withoutFaces ? changed ? s.reviewSaveReviewed : s.markReviewed : s.reviewSave} →</button> : <>
         <button type="button" className="dialog-button photo-review-unknown" disabled={!canDecide} onClick={() => decide('unknown')}>← {s.unknownPerson}</button>
         <button type="button" className="dialog-button dialog-button--accent" disabled={!canDecide} onClick={() => decide()}>{s.reviewApprove} →</button>
       </>}
-    </div>
+    </div>}
     {!deleting ? <div className="photo-review-removal">
-      <button type="button" disabled={!canDecide} onClick={() => setDeleting('reference')}>{withoutFaces ? s.reviewRemoveNewReference : s.reviewRemoveReference}</button>
-      <button type="button" disabled={!canDecide} onClick={() => setDeleting('gallery')}>{s.deleteGallery}</button>
+      {!groupPerson && <button type="button" disabled={!canDecide} onClick={() => requestRemoval('reference')}>{withoutFaces ? s.reviewRemoveNewReference : s.reviewRemoveReference}</button>}
+      <button type="button" disabled={!canRemove} onClick={() => requestRemoval('gallery')}>{s.deleteGallery}</button>
     </div> : <div className="photo-review-delete" role="alertdialog" aria-label={s.deletePhoto}>
       <strong>{photo.name}</strong><p>{deleting === 'gallery' ? s.deleteGalleryHint : withoutFaces ? s.reviewRemoveNewHint : s.reviewRemoveHint}</p>
       <p>{s.reviewDeferredHint}</p><div className="photo-dialog__actions"><button type="button" className="dialog-button" autoFocus onClick={() => setDeleting(null)}>{s.cancel}</button>
-        <button type="button" className="dialog-button dialog-button--danger" onClick={remove}>{deleting === 'gallery' ? s.reviewDeleteConfirm : withoutFaces ? s.reviewRemoveNewReference : s.reviewRemoveReference}</button></div>
-    </div>}</div>}
+        <button type="button" className="dialog-button dialog-button--danger" disabled={!canRemove} onClick={() => remove()}>{deleting === 'gallery' ? s.reviewDeleteConfirm : withoutFaces ? s.reviewRemoveNewReference : s.reviewRemoveReference}</button></div>
+    </div>}</div>
   </div>;
 }
 
-export function NewPersonReview({ person, library, people = library.knownPeople || library.people, albumOptions = [], nextPhotos = [], drafts, peopleDrafts = [], assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, onEditing, closeLayer, s, language, position, total, showFaceBoxes = true, onShowFaceBoxesChange }) {
-  const photos = person.photoIds.map(id => library.photos.find(p => p.id === id)).filter(Boolean);
+export function NewPersonReview({ person, library, people = library.knownPeople || library.people, albumOptions = [], nextPhotos = [], drafts, peopleDrafts = [], assignment, onAssignment, onDraft, onAdvance, onExpanded, onDirty, onEditing, closeLayer, s, language, position, total, showFaceBoxes = true, onShowFaceBoxesChange, skipDeleteConfirmation = false }) {
+  const photos = person.photoIds.filter(id => !drafts[id]?.delete).map(id => library.photos.find(p => p.id === id)).filter(Boolean);
   const [photoIndex, setPhotoIndex] = useState(() => Math.max(0, photos.findIndex(photo => !newPersonReviewHandled({ ...person, photoIds: [photo.id] }, drafts))));
   const [target, setTarget] = useState(assignment?.personId || 'new'), [name, setName] = useState(assignment?.name || '');
   const [ready, setReady] = useState(false);
@@ -259,6 +267,10 @@ export function NewPersonReview({ person, library, people = library.knownPeople 
     const resolved = newPersonReviewHandled(person, { ...drafts, [draft.photoId]: draft });
     onAdvance(resolved ? null : validAssignment ? currentAssignment() : null, draft, !resolved && !validAssignment);
   }
+  function removePhoto(draft) {
+    const resolved = newPersonReviewHandled(person, { ...drafts, [draft.photoId]: draft });
+    onAdvance(null, draft, !resolved);
+  }
   return <div className="photo-review-new-person"><h3>{person.name} · {position} / {total}</h3>
     <div className="photo-review-identity"><label>{s.choosePerson}<select ref={personSelect} autoFocus value={target} onChange={event => { setTarget(event.target.value); onAssignment({ id: person.id, ...(event.target.value === 'new' ? { name } : photoAssignmentValue(choices, event.target.value)) }); }}><option value="new">{s.newPerson}</option>
       {choices.map(p => <option key={p.id} value={p.id}>{photoAssignmentLabel(p, s)}</option>)}</select></label>
@@ -267,7 +279,7 @@ export function NewPersonReview({ person, library, people = library.knownPeople 
       onClick={() => onAdvance(handled ? null : currentAssignment())}>{s.reviewSave} →</button>
     {photo && <ReviewCard key={photo.id} photo={photo} review={{ id: `person-${person.id}`, faceId }} groupPerson={person} hideDecisions people={people} albumOptions={albumOptions}
       peopleDrafts={peopleDrafts} onUnknownRemainder={markRemainderUnknown}
-      showFaceBoxes={showFaceBoxes} onShowFaceBoxesChange={onShowFaceBoxesChange}
+      showFaceBoxes={showFaceBoxes} onShowFaceBoxesChange={onShowFaceBoxesChange} skipDeleteConfirmation={skipDeleteConfirmation} onAdvance={removePhoto}
       nextPhotos={[...photos.slice(photoIndex + 1).filter(item => !drafts[item.id]?.delete), ...nextPhotos]}
       draft={drafts[photo.id]} onDraft={onDraft} position={photoIndex + 1} total={photos.length} s={s} language={language} onExpanded={onExpanded} onDirty={onDirty} onEditing={onEditing} onReadyChange={setReady} closeLayer={closeLayer} />}
     <div className="photo-dialog__actions"><button type="button" className="dialog-button" disabled={photoIndex === 0 || !ready} onClick={() => changePhoto(photoIndex - 1)}>← {s.previous}</button>
@@ -288,6 +300,12 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
   const [dirty, setDirty] = useState(false), [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showFaceBoxes, setShowFaceBoxes] = useState(true);
+  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => {
+    try { return localStorage.getItem(skipDeleteConfirmationKey) === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(skipDeleteConfirmationKey, String(skipDeleteConfirmation)); } catch { /* Keep the preference for this session. */ }
+  }, [skipDeleteConfirmation]);
   const [batchOnly, setBatchOnly] = useState(saved.batchOnly ?? mode === 'scan');
   const [batchContext, setBatchContext] = useState(saved.batchContext || null);
   const [history, setHistory] = useState([]);
@@ -438,6 +456,8 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
         {(hasDrafts || submission) && <button type="button" className="dialog-button dialog-button--ghost" onClick={downloadDraft}>{s.reviewDownloadDraft}</button>}
       </div>
       <p>{s.reviewCheckpointHint}</p>
+      <label className="photo-review-delete-preference"><input type="checkbox" checked={skipDeleteConfirmation} disabled={busy || !!submission}
+        onChange={event => setSkipDeleteConfirmation(event.target.checked)} />{s.reviewSkipDeleteConfirmation}</label>
       {submission?.version === 2 && <div className="photo-review-checkpoint__progress" role="status">
         <span>{s.reviewSaveProgress.replace('{done}', submission.next).replace('{total}', submission.total)}</span>
         <progress max={submission.total || 1} value={submission.next} aria-label={s.reviewSaving} />
@@ -467,10 +487,11 @@ export default function PhotoReviewWizard({ Modal, library, mode = 'scan', initi
     {step === 'new-people-intro' && <div className="photo-review-intro"><h3>{s.reviewStepNewPeople}</h3><strong>{s.reviewNewPeopleCount.replace('{count}', newPeople.length)}</strong>
       <p>{s.reviewNewPeopleHint}</p><button type="button" className="dialog-button dialog-button--accent" onClick={() => begin('new-people')}>{newPeople.length ? s.reviewBegin : s.done} →</button></div>}
     {!submission && ['faces-review', 'no-faces-review'].includes(step) && (current && photo ? <ReviewCard key={`${current.id}:${history.length}:${requestId}`} review={current} photo={photo} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos}
+      skipDeleteConfirmation={skipDeleteConfirmation}
       draft={drafts[photo.id]} onDraft={storeDraft} position={cursor + 1} total={queue.length} s={s} language={language} onAdvance={advance} onDirty={setDirty} onEditing={setEditing} onExpanded={setExpanded} closeLayer={closeLayer} /> :
       <p role="alert">{s.reviewPhotoChanged}</p>)}
     {!submission && step === 'new-people-review' && current && <NewPersonReview key={`${current.id}:${history.length}:${requestId}`} person={current} library={library} people={assignmentPeople} albumOptions={albumOptions} nextPhotos={nextPhotos} drafts={drafts} peopleDrafts={peopleDrafts} onDraft={storeDraft}
-      showFaceBoxes={showFaceBoxes} onShowFaceBoxesChange={setShowFaceBoxes}
+      showFaceBoxes={showFaceBoxes} onShowFaceBoxesChange={setShowFaceBoxes} skipDeleteConfirmation={skipDeleteConfirmation}
       assignment={peopleDrafts.find(p => p.id === current.id)} onAssignment={item => { setNotice(''); setPeopleDrafts(previous => [...previous.filter(p => p.id !== item.id), item]); }}
       onAdvance={advancePerson} onDirty={setDirty} onEditing={setEditing} onExpanded={setExpanded} closeLayer={closeLayer} s={s} language={language} position={cursor + 1} total={queue.length} />}
     {confirming && <div className="photo-review-intro"><h3>{s.reviewReadyToCommit}</h3><p>{s.reviewDeferredHint}</p>

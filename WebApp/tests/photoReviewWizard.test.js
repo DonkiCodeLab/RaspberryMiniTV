@@ -197,7 +197,7 @@ test('wizard labels are translated and counters preserve their placeholders', ()
     assert.match(s.reviewNoFacesPosition, /\{current\}.*\{total\}/);
     assert.match(s.reviewUnknownRemainder, /\{count\}/);
     assert.ok(s.reviewUnknownRemainderHint);
-    for (const key of ['reviewSave', 'reviewApprove', 'reviewUnsaved', 'reviewRemoveHint', 'reviewStepNoFaces', 'reviewSaveReviewed', 'reviewRemoveNewHint', 'reviewResume', 'reviewResumeHint', 'reviewNewPeopleResolved', 'reviewNewPeopleNeedsIdentity']) assert.ok(s[key]);
+    for (const key of ['reviewSave', 'reviewApprove', 'reviewUnsaved', 'reviewRemoveHint', 'reviewStepNoFaces', 'reviewSaveReviewed', 'reviewRemoveNewHint', 'reviewResume', 'reviewResumeHint', 'reviewNewPeopleResolved', 'reviewNewPeopleNeedsIdentity', 'reviewSkipDeleteConfirmation']) assert.ok(s[key]);
   }
 });
 
@@ -243,7 +243,59 @@ const bundle = await build({ entryPoints: [new URL('../src/PhotoReviewWizard.jsx
   define: { 'import.meta.env': '{"VITE_WEB_DEV_MODE":"mock"}' } });
 const module = { exports: {} };
 new Function('require', 'module', 'exports', bundle.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
-const { default: Wizard, ReviewCard, ReviewSteps } = module.exports;
+const { default: Wizard, ReviewCard, ReviewSteps, NewPersonReview } = module.exports;
+
+test('every review mode exposes gallery deletion, including unnamed people with hidden identity decisions', () => {
+  const s = photoStrings('es');
+  for (const mode of ['faces', 'no-faces', 'new-person']) {
+    const html = renderToStaticMarkup(React.createElement(ReviewCard, {
+      review: { id: 'review', ...(mode === 'no-faces' ? {} : { faceId: 'face' }) },
+      groupPerson: mode === 'new-person' ? { id: 'new' } : undefined, hideDecisions: mode === 'new-person',
+      photo: { id: 'photo', name: 'Photo' }, people: [], position: 1, total: 1, s,
+    }));
+    assert.ok(html.includes(s.deleteGallery), mode);
+    if (mode === 'new-person') {
+      assert.ok(!html.includes(s.reviewRemoveReference));
+      assert.ok(!html.includes(s.reviewApprove));
+    }
+  }
+});
+
+test('new-person navigation excludes deleted photos when reopening or visiting another group sharing the image', () => {
+  const person = { id: 'new', name: 'Persona 1', photoIds: ['deleted', 'remaining'] };
+  const library = { people: [person], photos: [{ id: 'deleted', name: 'Deleted.png' }, { id: 'remaining', name: 'Remaining.png' }] };
+  const render = drafts => renderToStaticMarkup(React.createElement(NewPersonReview, {
+    person, library, drafts, position: 1, total: 2, s: photoStrings('es'),
+  }));
+  const html = render({ deleted: { delete: true } });
+  assert.match(html, /Remaining\.png/);
+  assert.doesNotMatch(html, /Deleted\.png/);
+  assert.match(html, /Foto 1 de 1/);
+  assert.match(render({}), /Deleted\.png/); // Undo restores the photo to the review.
+});
+
+test('the global deletion preference defaults to confirmation and remembers an explicit choice across review steps', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const s = photoStrings('es');
+  try {
+    for (const value of [null, 'true', 'false', 'invalid']) {
+      Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+        getItem: key => key === 'minitv-photo-review-skip-delete-confirmation' ? value : null,
+      } });
+      for (const mode of ['review', 'noFaces', 'newPeople']) {
+        const html = renderToStaticMarkup(React.createElement(Wizard, { s, mode,
+          Modal: ({ children }) => React.createElement('section', null, children),
+          library: { photos: [], reviews: [], people: [], faces: {} },
+        }));
+        assert.ok(html.includes(s.reviewSkipDeleteConfirmation));
+        assert.equal(/type="checkbox"[^>]*checked=""/.test(html), value === 'true');
+      }
+    }
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else delete globalThis.localStorage;
+  }
+});
 
 test('all three photo review modes expose personal albums and retain staged links on reopening', () => {
   for (const mode of ['faces', 'no-faces', 'new-person']) {
