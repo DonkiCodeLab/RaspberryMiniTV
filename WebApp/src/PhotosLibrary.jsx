@@ -35,6 +35,7 @@ import { indexPhotoReviews, reviewsForPhotos, pendingFacePreview } from './photo
 import { PhotoReviewAction } from './PhotoReviews.jsx';
 import './PhotosLibrary.css';
 const PhotoMap = lazy(() => import('./PhotoMap.jsx'));
+const PersonPhotoEvolution = lazy(() => import('./PersonPhotoEvolution.jsx'));
 const blank = { folders: [], photos: [], people: [], jobs: [], faces: {} };
 
 function PhotoLibraryLoading({ s }) {
@@ -138,7 +139,7 @@ export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, langu
   </article>)}</div>;
 }
 
-function Modal({ title, titleActions, s, onClose, children, wide = false, busy = false, onKeyDown, className = '' }) {
+export function Modal({ title, titleActions, s, onClose, children, wide = false, busy = false, onKeyDown, className = '' }) {
   const ref = useRef(null), titleId = useId();
   useBrowserBack(() => { if (!busy) onClose(); }, 40);
   useEffect(() => {
@@ -324,6 +325,8 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const [actionMode, setActionMode] = useState(false), [selected, setSelected] = useState(new Set());
   const [peopleEditing, setPeopleEditing] = useState(false), [selectedPeople, setSelectedPeople] = useState(new Set());
   const [choosingCover, setChoosingCover] = useState(false);
+  const [evolution, setEvolution] = useState(false);
+  useEffect(() => { setEvolution(false); }, [current]);
   const actionPending = useRef(false);
   const [dialog, setDialog] = useState(null), [viewer, setViewer] = useState(null), [zone, setZone] = useState(null), [busy, setBusy] = useState(false);
   const mapViewState = useRef(null);
@@ -541,6 +544,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
         {current === 'people' && !sortTarget && peopleSort}
         {person && !sortTarget && personPhotoSort}
         {person && <PersonPhotoViewControl value={cinema ? 'cinema' : 'mosaic'} onChange={changePersonView} s={s} />}
+        {person && person.id !== UNKNOWN_PERSON_ID && <button className="dialog-button" type="button" aria-haspopup="dialog" disabled={busy} onClick={() => setEvolution(true)}>{s.personEvolution}</button>}
         {(currentPhotos.length > 0 || actionMode) && <button className="dialog-button" type="button" aria-pressed={actionMode} disabled={busy} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}
         <button className="photo-refresh" type="button" title={s.refresh} aria-label={s.refresh} onClick={() => { setAttempt(n => n + 1); }}>↻</button>
       </div></header>
@@ -616,6 +620,9 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     {dialog?.mode === 'people-action' && <PeopleActionDialog Modal={Modal} {...dialog} s={s} onClose={closeDialog} onComplete={completePeopleAction} />}
     {dialog?.mode === 'download' && <PhotoDownloadDialog Modal={Modal} selected={selected} s={s} onClose={() => setDialog(null)} onComplete={() => { setDialog(null); setNotice(s.peopleDownloadStarted); }} />}
     {dialog && !['upload', 'delete', 'people-action', 'download', 'review-wizard'].includes(dialog.mode) && <FolderDialog mode={dialog.mode} folders={data.folders} current={current} selected={selected} person={person} s={s} onClose={closeDialog} onComplete={complete} />}
+    {evolution && person && <Suspense fallback={null}><PersonPhotoEvolution key={person.id} Modal={Modal} person={person} photos={currentPhotos}
+      localAlignment={data.faces.available && !data.demo} language={language} s={s} onClose={() => setEvolution(false)}
+      onOpen={photo => { setEvolution(false); setViewer({ photos: currentPhotos, initial: currentPhotos.findIndex(item => item.id === photo.id), highlightPersonId: person.id, highlightPersonName: person.name }); }} /></Suspense>}
     {viewer && <Viewer {...viewer} people={data.people} knownPeople={data.knownPeople || data.people} folders={data.folders} livePhotos={index.byId}
       faces={data.faces} revision={data.revision} onChanged={() => refresh()}
       onDelete={photo => setDialog({ mode: 'delete', ids: [photo.id], photo, origin: { album: isAlbum, person, current } })}

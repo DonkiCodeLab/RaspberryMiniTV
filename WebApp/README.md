@@ -19,6 +19,28 @@ No hay panel lateral ni botón para mostrar fotos del área.
 localhost. El fondo necesita conexión a Internet. Para un proveedor propio,
 configura `VITE_PHOTO_MAP_STYLE_URL` con la URL de un estilo MapLibre; se admite PMTiles.
 
+**Personas → [persona] → Ver evolución** prepara un recorrido local por sus
+fotos originales dentro de un rango de edades. Requiere nacimiento, fecha de
+captura válida y recuadro de esa persona. Selecciona una foto por mes antes de
+los dos años y una por edad después, priorizando el tamaño del rostro; permite
+cambiar cada selección o recorrer todas. Las secuencias largas se reparten en
+un máximo de 60 fotos conservando sus extremos. Excluye imágenes generadas,
+fechas futuras, fotos sin fecha/cara y anteriores al nacimiento.
+
+**Preparar evolución** carga los retratos de forma secuencial. El backend usa el
+predictor local de cinco puntos de dlib para alinear los ojos; si falta o falla,
+centra el recuadro facial. La vista muestra edad y fecha reales, fundidos,
+reproducción/pausa, velocidad, recorrido manual y acceso al original. Respeta
+movimiento reducido y avisa de los huecos entre edades. **Crear vídeo** genera
+un WebM o MP4 de 512 × 596 con las fechas en el navegador, según el formato
+soportado, con vista previa y descarga. Hay que mantener visible la pestaña;
+cerrarla o cancelar interrumpe el trabajo. No usa servicios externos, ni cambia
+fotos o identidades. No genera edades intermedias ni hace morphing.
+
+Para probar los controles sin escribir en la biblioteca: `npm run dev` y
+`/tests/evolution-preview.html`. Ese ejemplo usa ilustraciones y fechas
+ficticias; no valida la calidad del envejecimiento ni del detector facial.
+
 Al ver las fotos de una persona, **Mostrar cara de [nombre]** y **Mostrar otras caras**
 controlan sus recuadros de forma independiente: puedes ver solo esa persona, solo
 las demás, todas o ninguna. La elección se conserva al cambiar de foto dentro del

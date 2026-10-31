@@ -26,6 +26,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import Blueprint, jsonify, request, send_file
 from photo_import import validate_import_records
 from photo_previews import ImageWorkLock, PhotoPreviews
+from photo_evolution import PhotoEvolution
 from photo_places import PhotoPlaces
 from photo_faces import FacePaused, FaceEngineError, LocalFaceEngine, INSTALL_COMMAND
 import photo_face_matching as face_matching
@@ -172,6 +173,7 @@ class PhotoLibrary:
         # Full-resolution decoders can consume hundreds of MB per image.
         self.image_lock = ImageWorkLock()
         self.previews = PhotoPreviews(self.root, self.cache, self.image_lock)
+        self.evolution = PhotoEvolution(self.cache, self.image_lock)
         self.places = PhotoPlaces(self.cache)
         self.face_lock = threading.Lock()
         self.face_stop = threading.Event()
@@ -826,6 +828,17 @@ class PhotoLibrary:
                 db.execute("UPDATE face_analysis SET state='paused' WHERE id=1 AND state='running'")
                 db.execute("UPDATE face_photo_jobs SET state='paused' WHERE state='running'")
         return {'ok': True}
+
+    def evolution_eyes(self, photo_id, face_id):
+        with self.db() as db:
+            row = db.execute('''SELECT p.path, f.box FROM face_detections f
+                JOIN photos p ON p.id=f.photo WHERE f.id=? AND f.photo=? AND f.person IS NOT NULL''',
+                (face_id, photo_id)).fetchone()
+        if not row or not row['box']:
+            raise PhotoError('No se encuentra la cara.', 404)
+        path = self.safe_file(row['path'])
+        eyes = self.evolution.eyes(path, json.loads(row['box']))
+        return {'eyes': eyes, 'alignment': 'eyes' if eyes else 'box'}
 
     def photo_faces(self, photo_id):
         with self.db() as db:
@@ -1511,6 +1524,10 @@ def create_photo_blueprint(get_library):
     def detect_photo(ident):
         body()
         return jsonify(get_library().start_photo_faces(ident)), 202
+
+    @bp.get('/pictures/photos/<ident>/faces/<face>/evolution')
+    def evolution_eyes(ident, face):
+        return jsonify(get_library().evolution_eyes(ident, face))
 
     @bp.post('/pictures/photos/<ident>/faces/<face>/assign')
     def assign_face(ident, face):

@@ -1377,6 +1377,17 @@ la comprobación, no vuelve a instalar dependencias. Compila dlib con un único
 proceso y prioridad baja. La primera instalación descarga paquetes y modelos,
 puede tardar y necesitar memoria adicional en Raspberry antiguas. No analiza fotos.
 
+La vista web **Ver evolución** puede solicitar
+`GET /pictures/photos/<photoId>/faces/<faceId>/evolution`, con el PIN habitual.
+Devuelve solo los centros de los ojos normalizados para esa cara existente.
+`photo_evolution.py` carga únicamente el predictor de cinco puntos en un proceso
+local con prioridad baja, un núcleo y un límite de 20 segundos; las solicitudes
+se serializan y ceden a las vistas previas. Los puntos se guardan en `PhotoCache`,
+con invalidación por archivo, tamaño, modificación y recuadro. No modifica el
+catálogo ni las fotografías. Sin modelo o ante un fallo devuelve `alignment: box`
+para que el navegador centre el rostro por su recuadro. La preparación se hace
+solo al pedirla, sin volver a detectar ni agrupar la biblioteca.
+
 `photo_faces.py` usa CPU, imágenes reducidas a 800 px, un proceso separado con
 prioridad baja y afinidad a un solo núcleo en Linux, y limita los hilos de BLAS/OpenMP
 a uno. Solo carga el predictor de cinco puntos y ResNet; no carga modelos CNN ni

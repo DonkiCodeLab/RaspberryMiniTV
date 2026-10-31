@@ -1,6 +1,7 @@
 import { reviewWizardStrings } from './photoReviewWizardStrings.js';
 import { withLanguages } from "./i18n/index.js";
 const es = {
+  personEvolution: 'Ver evolución',
   personPhotoView: 'Vista de las fotos', personPhotoMosaic: 'Mosaico', personPhotoCinema: 'Cine',
   personPhotoStory: 'Una vida en imágenes', personPhotoCinemaHint: 'Desliza para viajar en el tiempo. Pulsa la foto para ampliarla.', personPhotoAgeUnknown: 'Edad no disponible',
   selectAllPeople: 'Seleccionar todas',
@@ -185,6 +186,7 @@ const es = {
   albumCreated: 'Carpeta creada.', folders: 'Carpetas', matches: 'No hay coincidencias.', noNew: 'Todas las variantes están completas.',
 };
 const en = {
+  personEvolution: 'View evolution',
   personPhotoView: 'Photo view', personPhotoMosaic: 'Mosaic', personPhotoCinema: 'Cinema',
   personPhotoStory: 'A life in pictures', personPhotoCinemaHint: 'Slide through time. Select the photo to enlarge it.', personPhotoAgeUnknown: 'Age unavailable',
   selectAllPeople: 'Select all',
@@ -363,6 +365,7 @@ const en = {
   albumCreated: 'Folder created.', folders: 'Folders', matches: 'No matches.', noNew: 'All variations are complete.',
 };
 const ca = {
+  personEvolution: 'Veure evolució',
   personPhotoView: 'Vista de les fotos', personPhotoMosaic: 'Mosaic', personPhotoCinema: 'Cinema',
   personPhotoStory: 'Una vida en imatges', personPhotoCinemaHint: 'Llisca per viatjar en el temps. Prem la foto per ampliar-la.', personPhotoAgeUnknown: 'Edat no disponible',
   selectAllPeople: 'Seleccionar-les totes',
