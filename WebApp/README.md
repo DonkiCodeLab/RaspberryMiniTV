@@ -913,7 +913,11 @@ generación. Se respeta el límite de consultas configurado entre imágenes.
 la Raspberry, sin consultar iCloud ni subirlas a un servicio externo. Los nombres iniciales son Persona 1, Persona 2, etc.; se
 pueden renombrar. Estos grupos provisionales siguen disponibles para revisarlos,
 pero no aparecen como destino al identificar una cara o unir personas: los
-selectores ofrecen únicamente nombres identificados y **Desconocido**. Al corregir
+selectores ofrecen únicamente nombres identificados y **Desconocido**. Los nombres
+se ordenan alfabéticamente por su primera palabra; cuando coincide, aparece primero
+la persona con más fotos distintas. Los apellidos solo desempatan si tienen el mismo
+número de fotos. Esta regla se comparte entre el visor, las fusiones y el asistente
+de revisión; **Desconocido** permanece al principio. Al corregir
 una cara de un grupo provisional se abre la entrada de nombre nuevo; también puedes
 elegir una identidad ya conocida. Las coincidencias son aproximadas: en Modo de acción,
 **Quitar de esta persona** corrige una asociación sin borrar la foto. Los rasgos

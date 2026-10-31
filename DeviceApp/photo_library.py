@@ -628,7 +628,8 @@ class PhotoLibrary:
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
             reviews = photo_reviews.pending(db)
-            known_people = [dict(row) for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY id=? DESC, name, id", (UNKNOWN_PERSON_ID,))
+            known_people = [{**dict(row), 'photoCount': len(person_photos.get(row['id'], []))}
+                            for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY id=? DESC, name, id", (UNKNOWN_PERSON_ID,))
                             if is_identified_person(row)]
         try:
             configured = self.settings.public() if self.settings else {}

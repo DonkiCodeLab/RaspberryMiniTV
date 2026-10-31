@@ -4,6 +4,7 @@ import { descendantIds, folderTrail, hasLocation, isIdentifiedPhotoPerson, UNKNO
 import { hashPhoto } from '../photoHash.js';
 import { validBirthday } from '../personBirthday.js';
 import { photoMetadataPatch } from '../photoMetadata.js';
+import { photoPersonPhotoCount } from '../photoPeopleSort.js';
 // Local demo albums persist in IndexedDB, including image blobs, without network uploads.
 const urls = new Map();
 let operation = Promise.resolve();
@@ -286,7 +287,8 @@ export function photoDemo(action, data = {}) {
       });
       const { metadata, importSessions, importBatches, importFiles, personReviewBatches, imageEditSources, imageEditBatches, ...publicLibrary } = library;
       return result || { ...publicLibrary, people: library.people.filter(p => !p.appleKey && (p.photoIds.length || p.id === UNKNOWN_PERSON_ID)),
-        knownPeople: library.people.filter(isIdentifiedPhotoPerson).map(({ id, name }) => ({ id, name })), photos };
+        knownPeople: library.people.filter(isIdentifiedPhotoPerson).map(person => ({ id: person.id, name: person.name,
+          photoCount: photoPersonPhotoCount(person) })), photos };
     } finally { db.close(); }
   };
   const next = operation.then(run, run); operation = next.catch(() => {}); return next;

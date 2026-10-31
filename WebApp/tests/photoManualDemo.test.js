@@ -32,6 +32,11 @@ test('manual boxes persist in the local demo and follow reassignment, merging an
     const library = await photoDemo('library');
     const ana = library.people.find(person => person.id === created.personId);
     assert.deepEqual(ana.photoIds, ['photo']);
+    assert.equal(library.knownPeople.find(person => person.id === created.personId).photoCount, 1);
+    await photoDemo('photos/photo/faces', { box, personId: created.personId });
+    assert.equal((await photoDemo('library')).knownPeople.find(person => person.id === created.personId).photoCount, 1);
+    const duplicate = (await photoDemo('photos/photo/faces')).faces.find(face => face.id !== created.faceId);
+    await photoDemo(`photos/photo/faces/${duplicate.id}/remove`, {});
     await photoDemo('photos/photo/metadata', { takenAt: '1960-02-29' });
     await photoDemo('photos/photo/metadata', { latitude: 0, longitude: -180 });
     const corrected = (await photoDemo('library')).photos[0];
@@ -51,6 +56,7 @@ test('manual boxes persist in the local demo and follow reassignment, merging an
     assert.ok(!detached.people.some(person => person.id === created.personId));
     assert.deepEqual(detached.people.find(person => person.id === 'unknown').photoIds, ['photo']);
     assert.deepEqual(stored.people.find(person => person.id === created.personId).photoIds, []);
+    assert.equal(detached.knownPeople.find(person => person.id === created.personId).photoCount, 0);
     assert.equal(stored.people.find(person => person.id === created.personId).coverPhotoId, null);
     await photoDemo(`photos/photo/faces/${created.faceId}/assign`, { personId: created.personId });
     const assigned = await photoDemo(`photos/photo/faces/${created.faceId}/assign`, { name: 'Luis' });

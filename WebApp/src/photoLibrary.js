@@ -1,3 +1,5 @@
+import { sortPhotoPeople } from './photoPeopleSort.js';
+
 export const SPECIAL_FOLDERS = ['gallery', 'map', 'people', 'albums', 'ai'];
 export const PHOTO_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif';
 export const STYLES = { lego: 'LEGO', foam: 'Gomaespuma', minecraft: 'Minecraft', ghibli: 'Studio Ghibli' };
@@ -37,9 +39,7 @@ export function photoPersonName(person, s) {
 
 export function photoPeopleOptions(people, s) {
   const unknown = people.find(person => person.id === UNKNOWN_PERSON_ID) || { id: UNKNOWN_PERSON_ID, photoIds: [] };
-  return [{ ...unknown, name: s.unknownPerson }, ...people.filter(person => person.id !== UNKNOWN_PERSON_ID)
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }) ||
-      (b.photoIds?.length ?? 0) - (a.photoIds?.length ?? 0))];
+  return [{ ...unknown, name: s.unknownPerson }, ...sortPhotoPeople(people.filter(person => person.id !== UNKNOWN_PERSON_ID))];
 }
 
 export function photoDeleteRequest(ids, scope, folderId, personId) {
