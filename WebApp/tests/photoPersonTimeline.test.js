@@ -1,9 +1,47 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ageAtPhoto, photoFaceLabel, personPhotoScrollLabel, sortPersonPhotos } from '../src/photoPersonTimeline.js';
+import { ageAtPhoto, photoAgeLabel, photoFaceLabel, personPhotoScrollLabel, personPhotoYearTicks, sortPersonPhotos } from '../src/photoPersonTimeline.js';
 import { photoStrings } from '../src/photoStrings.js';
 import { photoPage } from '../src/photoLibrary.js';
 import { buildDecadeTicks } from '../src/libraryScroll.js';
+
+test('cinema ages match face labels across gestation, newborn days, months and years', () => {
+  for (const language of ['es', 'ca', 'en']) {
+    const s = photoStrings(language), birthDate = '2020-05-10';
+    for (const takenAt of ['2020-02-10', '2020-05-10', '2020-05-13', '2020-07-10', '2022-08-10T00:15:00+14:00']) {
+      const age = photoAgeLabel(birthDate, takenAt, s);
+      assert.ok(age);
+      assert.equal(photoFaceLabel({ personId: 'ana', name: 'Ana', birthDate }, { takenAt }, undefined, s), `Ana (${age})`);
+    }
+    assert.equal(photoAgeLabel('', '2020-05-10', s), null);
+    assert.equal(photoAgeLabel(birthDate, null, s), null);
+    assert.equal(photoAgeLabel(birthDate, '2018-05-10', s), null);
+  }
+});
+
+test('cinema year marks cover empty, single, same-year and long collections in either direction', () => {
+  assert.deepEqual(personPhotoYearTicks([]), []);
+  assert.deepEqual(personPhotoYearTicks([{ takenAt: '2020-05-10' }]), [{ label: '2020', index: 0, position: 0 }]);
+  assert.deepEqual(personPhotoYearTicks([{}, {}]), [{ label: '—', index: 0, position: 0 }]);
+  const photos = Array.from({ length: 230 }, (_, id) => ({ id, takenAt: `${1800 + id}-05-10` }));
+  for (const direction of ['asc', 'desc']) {
+    const sorted = sortPersonPhotos([...photos, { id: 'undated' }], '1800-05-10', 'year', direction);
+    const ticks = personPhotoYearTicks(sorted);
+    assert.ok(ticks.length <= 8);
+    assert.equal(ticks[0].index, 0);
+    assert.equal(ticks[0].label, direction === 'asc' ? '1800' : '2029');
+    assert.deepEqual(ticks.at(-1), { label: '—', index: 230, position: 1 });
+    for (const [i, tick] of ticks.entries()) {
+      assert.equal(tick.label, personPhotoScrollLabel(sorted[tick.index]));
+      if (i) assert.ok(tick.position - ticks[i - 1].position >= .16);
+    }
+  }
+});
+
+test('cinema year marks stay separated when most photos belong to a single year', () => {
+  const photos = [...Array.from({ length: 1000 }, () => ({ takenAt: '2020-01-01' })), { takenAt: '2021-01-01' }, { takenAt: '2022-01-01' }, {}];
+  assert.deepEqual(personPhotoYearTicks(photos), [{ label: '2020', index: 0, position: 0 }, { label: '—', index: 1002, position: 1 }]);
+});
 
 test('photo ages count completed years on the capture day, including birthdays, leap days and old photos', () => {
   assert.equal(ageAtPhoto('1990-05-10', '2014-05-09'), 23);

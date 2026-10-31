@@ -73,6 +73,17 @@ ascendente. Dentro del grupo se mantiene el orden de captura. Su flecha alterna
 el orden ascendente y descendente; las fotos sin fecha quedan al final. La elección
 se recuerda en este navegador y no depende del orden de subida de otros álbumes.
 
+En la ficha de una persona, **Mosaico / Cine** permite cambiar entre las tarjetas
+y un carrusel de fotos en perspectiva, inspirado en las películas de los Óscar.
+**Cine** muestra las fotos completas y un slider inferior con los años de captura:
+al moverlo cambian la foto, la fecha y la edad (años y meses, meses, días o gestación
+aproximada). Recorre toda la colección, sin limitarse a una página; también admite
+arrastre horizontal, flechas y teclado. Pulsar la foto central o **Ampliar** abre
+el visor habitual. El orden se puede invertir; las fotos sin fecha siguen accesibles
+y no reciben una edad inventada. La vista se recuerda en este navegador y volver
+al mosaico abre la página de la foto seleccionada. **Acciones** y **Elegir portada**
+muestran el mosaico mientras se usan sus herramientas.
+
 El visor muestra la fecha y **Ver en el mapa**. **Editar fecha** abre un calendario;
 **Guardar fecha** conserva la hora y la zona horaria originales cuando existen.
 En el minimapa, **Editar ubicación** permite pulsar una nueva posición, arrastrar

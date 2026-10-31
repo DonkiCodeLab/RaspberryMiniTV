@@ -19,7 +19,7 @@ function gestationMonths(birthDate, day) {
   return day < birthDate && day >= start.toISOString().slice(0, 10) ? 9 - completedMonths(day, birthDate) : null;
 }
 
-function photoAgeLabel(birthDate, takenAt, s) {
+export function photoAgeLabel(birthDate, takenAt, s) {
   const day = photoDateValue(takenAt);
   if (!validPhotoDate(birthDate) || !validPhotoDate(day)) return null;
   if (day < birthDate) {
@@ -61,6 +61,26 @@ export function personPhotoScrollLabel(photo, birthDate, field = 'year') {
   if (field === 'age') return String(ageAtPhoto(birthDate, photo.takenAt) ?? '—');
   const date = photoDateValue(photo.takenAt);
   return validPhotoDate(date) ? date.slice(0, 4) : '—';
+}
+
+// Keep year marks legible even when one year contains most of the photos.
+// Positions refer to photos, so every capture remains reachable with the slider.
+export function personPhotoYearTicks(photos, minimumGap = .16) {
+  if (!photos.length) return [];
+  const ticks = [], seen = new Set(), lastIndex = photos.length - 1;
+  photos.forEach((photo, index) => {
+    const label = personPhotoScrollLabel(photo);
+    if (seen.has(label)) return;
+    seen.add(label);
+    const position = lastIndex ? index / lastIndex : 0;
+    if (!ticks.length || position - ticks.at(-1).position >= minimumGap) ticks.push({ label, index, position });
+  });
+  const lastLabel = personPhotoScrollLabel(photos[lastIndex]);
+  if (ticks.at(-1).label !== lastLabel) {
+    if (ticks.length > 1 && 1 - ticks.at(-1).position < minimumGap) ticks.pop();
+    ticks.push({ label: lastLabel, index: lastIndex, position: 1 });
+  }
+  return ticks;
 }
 
 export function sortPersonPhotos(photos, birthDate, field = 'year', direction = 'asc') {

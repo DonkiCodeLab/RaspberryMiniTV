@@ -28,6 +28,7 @@ import { photoStrings } from './photoStrings.js';
 import { photoImportStrings } from './photoImportStrings.js';
 import PhotoUploadDialog from './PhotoUploadDialog.jsx';
 import PhotoSectionCarousel from './PhotoSectionCarousel.jsx';
+import PersonPhotoCinema, { PersonPhotoViewControl } from './PersonPhotoCinema.jsx';
 import Icon from './PhotoIcon.jsx';
 import { watchPhotoLibrary } from './photoLibraryRefresh.js';
 import { indexPhotoReviews, reviewsForPhotos, pendingFacePreview } from './photoReviews.js';
@@ -342,6 +343,11 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     try { const saved = JSON.parse(localStorage.getItem('minitv-person-photo-order')); if (['year', 'age'].includes(saved?.field) && ['asc', 'desc'].includes(saved?.direction)) return saved; } catch {}
     return { field: 'year', direction: 'asc' };
   });
+  const [personPhotoView, setPersonPhotoView] = useState(() => {
+    try { return localStorage.getItem('minitv-person-photo-view') === 'cinema' ? 'cinema' : 'mosaic'; } catch { return 'mosaic'; }
+  });
+  const [cinemaPhoto, setCinemaPhoto] = useState(null);
+  useEffect(() => { try { localStorage.setItem('minitv-person-photo-view', personPhotoView); } catch {} }, [personPhotoView]);
   useEffect(() => { try { localStorage.setItem('minitv-person-photo-order', JSON.stringify(personPhotoOrder)); } catch {} }, [personPhotoOrder]);
   useEffect(() => { setPhotoNumber(1); setSelected(new Set()); }, [personPhotoOrder]);
   const [order, setOrder] = useState(() => {
@@ -427,6 +433,23 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     [data.photos, pendingNoFaces, noPeopleNew, noPeopleRest, person, personPhotoField, personPhotoOrder.direction, index, current, zone, visible, order]);
   const folders = current === 'gallery' || pendingNoFaces ? [] : current === 'people' ? [{ id: 'withoutPeople', name: s.withoutPeople, reviewCount: noPeopleNew.length }, ...recognizedPeople.map(p => ({ ...p, id: `person:${p.id}`, reviewCount: reviewIndex.byPerson.get(p.id)?.size || 0 }))] : current === 'withoutPeople' ? [{ id: 'withoutPeoplePending', name: s.pendingValidation }] : data.folders.filter(f => f.parent === current);
   const page = current === 'gallery' ? galleryWindow(currentPhotos, galleryPosition) : photoPage(currentPhotos, photoNumber);
+  const cinema = !!person && personPhotoView === 'cinema' && !actionMode && !choosingCover;
+  const cinemaSelection = cinemaPhoto?.personId === person?.id ? currentPhotos.findIndex(photo => photo.id === cinemaPhoto?.photoId) : -1;
+  const cinemaIndex = cinemaSelection < 0 ? page.offset : cinemaSelection;
+  useEffect(() => {
+    if (!cinema || !currentPhotos.length) return;
+    setPhotoNumber(Math.floor(cinemaIndex / PHOTO_PAGE_SIZE) + 1);
+    if (cinemaSelection < 0) setCinemaPhoto({ personId: person.id, photoId: currentPhotos[cinemaIndex].id });
+  }, [cinema, cinemaIndex, cinemaSelection, person?.id, currentPhotos]);
+  const selectCinemaPhoto = position => {
+    setCinemaPhoto({ personId: person.id, photoId: currentPhotos[position].id });
+    setPhotoNumber(Math.floor(position / PHOTO_PAGE_SIZE) + 1);
+  };
+  const changePersonView = view => {
+    if (view === 'cinema' && currentPhotos.length) selectCinemaPhoto(cinemaIndex < page.offset || cinemaIndex >= page.offset + page.items.length ? page.offset : cinemaIndex);
+    if (view === 'mosaic' && cinema && currentPhotos.length) setPhotoNumber(Math.floor(cinemaIndex / PHOTO_PAGE_SIZE) + 1);
+    setPersonPhotoView(view); setActionMode(false); setChoosingCover(false); setSelected(new Set());
+  };
   const folderPage = current === 'people' ? { items: folders, page: 1, pages: 1, offset: 0, total: folders.length } : photoPage(folders, folderNumber);
   const changePage = number => { setPhotoNumber(number); setSelected(new Set()); grid.current?.scrollIntoView({ block: 'start' }); };
   const isAi = current !== 'ai' && trail.some(f => f.id === 'ai');
@@ -488,11 +511,11 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   }
   const peopleSort = <PeopleSortControl value={peopleOrder.field} onChange={field => setPeopleOrder(value => ({ ...value, field }))} s={s} />;
   const personPhotoSort = person && <PersonPhotoSortControl value={personPhotoField} onChange={field => setPersonPhotoOrder(value => ({ ...value, field }))} person={person} s={s} />;
-  return <section className={`pictures-library seasons-section photo-library${current === 'people' || person ? ' library-with-scroll-rail' : ''}`} aria-label={s.root}>
+  return <section className={`pictures-library seasons-section photo-library${current === 'people' || person && !cinema ? ' library-with-scroll-rail' : ''}`} aria-label={s.root}>
     {headerTarget && createPortal(<PhotoSectionCarousel section={section} onChange={navigate} s={s} />, headerTarget)}
     {current === 'people' && sortTarget && createPortal(<div className="movie-library__browse-tools">{peopleSort}</div>, sortTarget)}
     {person && sortTarget && createPortal(<div className="movie-library__browse-tools">{personPhotoSort}</div>, sortTarget)}
-    {person && <LibraryScrollRail key={`timeline:${person.id}`} labels={currentPhotos.map(photo => personPhotoScrollLabel(photo, person.birthDate, personPhotoField))}
+    {person && !cinema && <LibraryScrollRail key={`timeline:${person.id}`} labels={currentPhotos.map(photo => personPhotoScrollLabel(photo, person.birthDate, personPhotoField))}
       language={language} sort={personPhotoField} label={personPhotoField === 'age' ? s.personPhotoBrowseAge : s.personPhotoBrowseYear}
       direction={personPhotoOrder.direction} onDirectionChange={direction => setPersonPhotoOrder(value => ({ ...value, direction }))}
       pageOffset={page.offset} onPageJump={index => changePage(Math.floor(index / PHOTO_PAGE_SIZE) + 1)} />}
@@ -517,6 +540,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       <div className="photo-toolbar">
         {current === 'people' && !sortTarget && peopleSort}
         {person && !sortTarget && personPhotoSort}
+        {person && <PersonPhotoViewControl value={cinema ? 'cinema' : 'mosaic'} onChange={changePersonView} s={s} />}
         {(currentPhotos.length > 0 || actionMode) && <button className="dialog-button" type="button" aria-pressed={actionMode} disabled={busy} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}
         <button className="photo-refresh" type="button" title={s.refresh} aria-label={s.refresh} onClick={() => { setAttempt(n => n + 1); }}>↻</button>
       </div></header>
@@ -571,7 +595,11 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       {person && <button type="button" disabled={!selected.size || busy} onClick={async () => { if (await act(`people/${person.id}/remove`, { ids: [...selected] })) { setSelected(new Set()); setNotice(s.removedMatches); } }}>{s.removeMatches}</button>}
     </div>}
     {currentPhotos.length > 0 && <div ref={grid} className="photo-page">
-      {current === 'gallery' ? <PhotoGallery key={order.direction} photos={currentPhotos} position={galleryPosition} onPosition={position => { setGalleryPosition(position); setSelected(new Set()); }} s={s} language={language}
+      {cinema ? <PersonPhotoCinema key={person.id} photos={currentPhotos} person={person} index={cinemaIndex} onIndexChange={selectCinemaPhoto}
+        onOpen={initial => setViewer({ photos: currentPhotos, initial, highlightPersonId: person.id, highlightPersonName: person.name })}
+        renderImage={(photo, focused) => <PhotoImage photo={photo} preview={focused} alt="" draggable={false} decoding="async" />}
+        language={language} s={s} direction={personPhotoOrder.direction} onDirectionChange={direction => setPersonPhotoOrder(value => ({ ...value, direction }))} /> :
+      current === 'gallery' ? <PhotoGallery key={order.direction} photos={currentPhotos} position={galleryPosition} onPosition={position => { setGalleryPosition(position); setSelected(new Set()); }} s={s} language={language}
         renderTiny={photo => <PhotoImage photo={photo} tiny loading="lazy" decoding="async" />}
         renderGrid={page => <PhotoGrid page={page} actionMode={actionMode} selected={selected} toggle={toggle} onOpen={initial => setViewer({ photos: currentPhotos, initial, highlightPersonId: person?.id, highlightPersonName: person?.name })} s={s} language={language} renderMarks={renderMarks} />} /> : <>
       <PhotoPagination page={page} onChange={changePage} s={s} />

@@ -1,0 +1,53 @@
+.person-photo-view { display: inline-flex; align-items: center; gap: 3px; padding: 4px; border: 1px solid #b7c8cf38; border-radius: 12px; background: #102631; }
+.person-photo-view button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 38px; padding: .5rem .85rem; border: 0; border-radius: 8px; background: transparent; color: #bacbd3; font: inherit; font-size: .8rem; cursor: pointer; }
+.person-photo-view button[aria-pressed=true] { background: #e8ce93; color: #18262b; box-shadow: 0 2px 10px #0002; }
+.person-photo-view svg { width: 16px; height: 16px; fill: currentColor; }
+.person-photo-cinema { --cinema-gold: #e8ce93; --frame-width: clamp(220px, 37vw, 490px); --frame-height: clamp(245px, 32vw, 355px); position: relative; isolation: isolate; overflow: hidden; border: 1px solid #e8ce9338; border-radius: 24px; color: #f7eedc; background: radial-gradient(ellipse at 50% 30%, #69583c47, transparent 65%), linear-gradient(145deg, #18252c, #0c171e 65%); box-shadow: 0 24px 65px #0004; }
+.person-photo-cinema::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: repeating-linear-gradient(90deg, transparent 0 79px, #e8ce9303 80px); }
+.person-photo-cinema__heading { position: relative; z-index: 1; padding: 1.7rem 1rem 0; text-align: center; }
+.person-photo-cinema__heading > span { color: var(--cinema-gold); font-size: .65rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.person-photo-cinema__heading h2 { margin: .4rem 0; color: #fff1d5; font: 400 clamp(1.7rem, 3vw, 2.5rem)/1.15 Georgia, serif; overflow-wrap: anywhere; }
+.person-photo-cinema__heading p { margin: .6rem 0 0; color: #b6c3c8; font-size: .8rem; line-height: 1.5; }
+.person-photo-cinema__stage { position: relative; height: calc(var(--frame-height) + 65px); margin-top: .8rem; perspective: 1200px; touch-action: pan-y; user-select: none; }
+.person-photo-cinema__ghost-year { position: absolute; left: 50%; top: -.3rem; transform: translateX(-50%); color: #e8ce930b; font: 400 clamp(130px, 26vw, 280px)/1 Georgia, serif; letter-spacing: -.06em; pointer-events: none; }
+.person-photo-cinema__frame { position: absolute; left: 50%; top: 22px; width: var(--frame-width); height: var(--frame-height); padding: 7px; border: 1px solid #e8ce9333; border-radius: 12px; background: #152129; color: #f7eedc; cursor: pointer; transform: translateX(calc(-50% + var(--offset) * var(--frame-width) * .68)) scale(var(--scale)) rotateY(var(--tilt)); transform-origin: center 60%; transition: transform .55s cubic-bezier(.22, 1, .36, 1), opacity .35s ease, border-color .3s; box-shadow: 0 16px 30px #0008; -webkit-box-reflect: below 8px linear-gradient(transparent 88%, #ffffff0c); }
+.person-photo-cinema__frame.is-selected { border-color: #e8ce93aa; box-shadow: 0 22px 55px #0009, 0 0 50px #e8ce9310; }
+.person-photo-cinema__frame img { display: block; width: 100%; height: 100%; border-radius: 6px; object-fit: contain; filter: saturate(.6) brightness(.7); transition: filter .4s ease; pointer-events: none; }
+.person-photo-cinema__frame.is-selected img { filter: none; }
+.person-photo-cinema__frame .photo-image-error { display: grid; place-items: center; height: 100%; font-size: .9rem; overflow-wrap: anywhere; }
+.person-photo-cinema__frame-date { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); max-width: 90%; padding: .35rem .65rem; border: 1px solid #ffffff1a; border-radius: 20px; background: #09151be6; color: #f7eedc; font-size: .7rem; white-space: nowrap; }
+.person-photo-cinema__enlarge { position: absolute; top: 15px; right: 15px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #fff1d5; background: #09151bbf; }
+.person-photo-cinema__selection { position: relative; padding: 0 1rem; text-align: center; }
+.person-photo-cinema__selection > span { color: #b4c0c5; font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; }
+.person-photo-cinema__selection h3 { margin: .4rem 0; color: var(--cinema-gold); font: 400 clamp(1.4rem, 2.8vw, 2.2rem)/1.15 Georgia, serif; overflow-wrap: anywhere; }
+.person-photo-cinema__selection p { margin: .6rem 0 0; color: #c2ccd0; font-size: .75rem; font-variant-numeric: tabular-nums; }
+.person-photo-cinema__navigation { display: flex; align-items: center; gap: 1.2rem; max-width: 1000px; margin: 0 auto; padding: 1.4rem 6% 0; }
+.person-photo-cinema__navigation > button { flex: 0 0 42px; height: 42px; border: 1px solid #e8ce9355; border-radius: 50%; background: #e8ce930a; color: var(--cinema-gold); font-size: 1.2rem; cursor: pointer; }
+.person-photo-cinema__navigation > button:disabled { opacity: .3; cursor: default; }
+.person-photo-cinema__timeline { flex: 1; min-width: 0; }
+.person-photo-cinema__timeline label { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; color: #b6c3c8; font-size: .66rem; }
+.person-photo-cinema__timeline output { color: var(--cinema-gold); font-size: 1rem; font-variant-numeric: tabular-nums; }
+.person-photo-cinema__timeline input { appearance: none; display: block; box-sizing: border-box; width: 100%; height: 36px; margin: 0; padding: 0; border: 0; border-radius: 0; background: linear-gradient(to right, var(--cinema-gold) var(--progress), #49565c var(--progress)) center / 100% 4px no-repeat; cursor: ew-resize; touch-action: pan-y; }
+.person-photo-cinema__timeline input::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; border: 3px solid #ffedc4; border-radius: 50%; background: #b39558; box-shadow: 0 0 0 5px #e8ce9310, 0 0 20px #e8ce9333; }
+.person-photo-cinema__timeline input::-moz-range-thumb { width: 14px; height: 14px; border: 3px solid #ffedc4; border-radius: 50%; background: #b39558; box-shadow: 0 0 0 5px #e8ce9310; }
+.person-photo-cinema__timeline input:disabled { opacity: .45; cursor: default; }
+.person-photo-cinema__ticks { position: relative; height: 22px; color: #aab9c0; font-size: .66rem; font-variant-numeric: tabular-nums; }
+.person-photo-cinema__ticks span { position: absolute; transform: translateX(-50%); }
+.person-photo-cinema__footer { display: flex; justify-content: center; flex-wrap: wrap; gap: .65rem; padding: .65rem 1rem 1.5rem; }
+.person-photo-cinema__footer button { display: inline-flex; align-items: center; gap: .55rem; min-height: 38px; padding: .5rem .9rem; border: 1px solid #e8ce9338; border-radius: 8px; background: #e8ce9308; color: #d5c6a9; font: inherit; font-size: .72rem; cursor: pointer; }
+.person-photo-cinema__footer button:first-child { background: var(--cinema-gold); color: #17242a; }
+.person-photo-view button:focus-visible, .person-photo-cinema button:focus-visible, .person-photo-cinema input:focus-visible { outline: 3px solid #ffdf83; outline-offset: 4px; }
+@media (max-width: 600px) {
+  .person-photo-cinema { --frame-width: 65vw; --frame-height: 68vw; border-radius: 18px; }
+  .person-photo-cinema__heading { padding-top: 1.3rem; }
+  .person-photo-cinema__heading p { max-width: 240px; margin-inline: auto; font-size: .72rem; }
+  .person-photo-cinema__frame { padding: 5px; }
+  .person-photo-cinema__navigation { gap: .75rem; padding: 1.2rem 1rem 0; }
+  .person-photo-cinema__navigation > button { flex-basis: 36px; height: 36px; }
+  .person-photo-cinema__timeline label { font-size: .58rem; }
+  .person-photo-cinema__ticks { font-size: .58rem; }
+  .person-photo-cinema__footer { padding-bottom: 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .person-photo-cinema__frame, .person-photo-cinema__frame img { transition: none; }
+}
