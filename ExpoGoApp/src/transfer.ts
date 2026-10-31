@@ -12,6 +12,8 @@ import { TransferEngine } from './engine.ts';
 import type { Job, Outcome, Pending } from './engine.ts';
 import { ServerError } from './protocol.ts';
 import { withUploadName } from './multipart.ts';
+import { photoCoordinates, pendingGps } from './gps.ts';
+import type { GpsStatus } from './gps.ts';
 import type { Connection } from './protocol.ts';
 export type { TransferState } from './engine.ts';
 
@@ -57,7 +59,7 @@ function checkInterrupted(signal: AbortSignal) {
 async function selectPhotos(signal: AbortSignal) {
   checkInterrupted(signal);
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true,
-    selectionLimit: 0, quality: 1, exif: false, preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Current });
+    selectionLimit: 0, quality: 1, exif: true, preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Current });
   if (result.canceled) throw new Error('Selección cancelada. Tu importación anterior se conserva.');
   const copied: File[] = [];
   try {
@@ -70,7 +72,10 @@ async function selectPhotos(signal: AbortSignal) {
       copied.push(file);
       await LegacyFileSystem.copyAsync({ from: asset.uri, to: file.uri });
       checkInterrupted(signal);
-      ids.push('picked:' + JSON.stringify({ uri: file.uri, name }));
+      const coordinates = photoCoordinates(null, asset.exif);
+      ids.push('picked:' + JSON.stringify({ uri: file.uri, name,
+        metadata: coordinates ? { locationKnown: true, ...coordinates } : {},
+        gps: coordinates ? 'with' : asset.exif ? 'without' : 'unknown' }));
     }
     return { ids, limited: true };
   } catch (e) { for (const file of copied) if (file.exists) file.delete(); throw e; }
@@ -141,10 +146,13 @@ const Transfer = new TransferEngine({
   async exportPhoto(id, index, signal) {
     checkInterrupted(signal);
     let name: string; let file: File | undefined;
+    let gps: GpsStatus = 'unknown';
     const metadata: Record<string, unknown> = { albums: [], keywords: [], people: [] };
     try {
       if (id.startsWith('picked:')) {
         const picked = JSON.parse(id.slice(7)); name = picked.name; file = new File(picked.uri);
+        Object.assign(metadata, picked.metadata);
+        gps = pendingGps(metadata, picked.gps);
       } else {
         const info = await MediaLibrary.getAssetInfoAsync(id, { shouldDownloadFromNetwork: true });
         checkInterrupted(signal);
@@ -154,8 +162,9 @@ const Transfer = new TransferEngine({
         file = new File(files, 'pending-' + Crypto.randomUUID());
         await LegacyFileSystem.copyAsync({ from: uri, to: file.uri });
         if (info.creationTime > 0) metadata.takenAt = new Date(info.creationTime).toISOString();
-        if (info.location && Number.isFinite(info.location.latitude) && Number.isFinite(info.location.longitude))
-          Object.assign(metadata, { locationKnown: true, latitude: info.location.latitude, longitude: info.location.longitude });
+        const coordinates = photoCoordinates(info.location, info.exif as Record<string, unknown> | undefined);
+        if (coordinates) Object.assign(metadata, { locationKnown: true, ...coordinates });
+        gps = coordinates ? 'with' : 'without';
         if (Platform.OS === 'ios') Object.assign(metadata, { appleId: id, appleFavorite: info.isFavorite === true });
       }
       checkInterrupted(signal);
@@ -165,7 +174,7 @@ const Transfer = new TransferEngine({
       checkInterrupted(signal);
       const digest = Array.from(new Uint8Array(await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, bytes))).map(b => b.toString(16).padStart(2, '0')).join('');
       checkInterrupted(signal);
-      return { index, name, uri: file.uri, digest, metadata };
+      return { index, name, uri: file.uri, digest, metadata, gps };
     } catch (e) {
       // A selected photo is the persistent source for a retry after pausing.
       if (file?.exists && !(signal.aborted && id.startsWith('picked:'))) file.delete();

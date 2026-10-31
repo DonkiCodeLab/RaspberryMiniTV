@@ -1,12 +1,15 @@
 import { manifest, parsePairing, ServerError, validateReceipt, csvCell } from './protocol.ts';
 import type { Connection } from './protocol.ts';
+import { gpsLabel, pendingGps } from './gps.ts';
+import type { GpsStatus } from './gps.ts';
 export type Job = { id: string; server: string; assetIDs: string[]; limited: boolean; stopped?: boolean };
-export type Outcome = { index: number; assetID: string; name: string; state: 'new' | 'existing' | 'failed'; detail: string };
-export type Pending = { index: number; name: string; uri: string; digest: string; metadata: Record<string, unknown> };
+export type Outcome = { index: number; assetID: string; name: string; state: 'new' | 'existing' | 'failed'; detail: string; gps?: GpsStatus };
+export type Pending = { index: number; name: string; uri: string; digest: string; metadata: Record<string, unknown>; gps?: GpsStatus };
 export type TransferState = {
   connected: boolean; server: string; running: boolean; preparing: boolean; limited: boolean;
   hasJob: boolean; canResume: boolean; message: string; error: string; total: number;
   imported: number; existing: number; failed: number; percentage: number; fileName: string;
+  importedWithGps: number; importedWithoutGps: number; importedGpsUnknown: number;
   fileProgress: number; recent: string[]; backgroundNotice: string;
   canPause: boolean; canStop: boolean; stopped: boolean; interruption: 'pause' | 'stop' | null;
 };
@@ -60,8 +63,11 @@ export class TransferEngine {
   }
   async getState(): Promise<TransferState> {
     await this.init();
-    const counts = { imported: 0, existing: 0, failed: 0 };
-    for (const o of this.outcomes.values()) counts[o.state === 'new' ? 'imported' : o.state === 'existing' ? 'existing' : 'failed']++;
+    const counts = { imported: 0, existing: 0, failed: 0, importedWithGps: 0, importedWithoutGps: 0, importedGpsUnknown: 0 };
+    for (const o of this.outcomes.values()) {
+      counts[o.state === 'new' ? 'imported' : o.state === 'existing' ? 'existing' : 'failed']++;
+      if (o.state === 'new') counts[o.gps === 'with' ? 'importedWithGps' : o.gps === 'without' ? 'importedWithoutGps' : 'importedGpsUnknown']++;
+    }
     const total = this.job?.assetIDs.length ?? 0;
     return { connected: !!this.connection && this.connection.expiresAt * 1000 > Date.now(), server: this.connection?.server ?? '',
       running: !!this.worker, preparing: this.preparing || this.connecting, limited: this.job?.limited ?? false,
@@ -70,7 +76,7 @@ export class TransferEngine {
       canStop: (!!this.worker || this.preparing || (!!this.job && !this.job.stopped && this.outcomes.size < total)) && this.interruption !== 'stop',
       stopped: this.job?.stopped === true, interruption: this.interruption,
       total, ...counts, percentage: total ? this.outcomes.size / total : 0, fileName: this.fileName, fileProgress: -1,
-      recent: [...this.outcomes.values()].slice(-12).reverse().map(o => `${label(o.state)} · ${o.name}${o.detail ? ' · ' + o.detail : ''}`),
+      recent: [...this.outcomes.values()].slice(-12).reverse().map(o => `${label(o.state)} · ${o.name}${o.state !== 'failed' ? ' · ' + gpsLabel(o.gps) : ''}${o.detail ? ' · ' + o.detail : ''}`),
       backgroundNotice: 'Mantén Expo Go abierto durante toda la importación. La pantalla permanecerá encendida. Si sales, la subida se pausa; vuelve y pulsa Continuar. El progreso se guarda en este móvil.' };
   }
   async previewPairing(qr: string) { return parsePairing(qr).server; }
@@ -208,7 +214,8 @@ export class TransferEngine {
       this.message = missing ? 'Enviando original…' : 'Confirmando foto existente…';
       const receipt = validateReceipt(await this.deps.upload(c, p, manifest(job.id, index, p.digest, p.metadata, missing), signal));
       const outcome: Outcome = { index, assetID, name: p.name,
-        state: receipt.imported ? 'new' : receipt.duplicates ? 'existing' : 'failed', detail: receipt.rejected?.[0]?.error ?? '' };
+        state: receipt.imported ? 'new' : receipt.duplicates ? 'existing' : 'failed', detail: receipt.rejected?.[0]?.error ?? '',
+        gps: pendingGps(p.metadata, p.gps) };
       // Saving outcome and deleting pending are one transaction. Network errors never
       // turn an unconfirmed upload into a completed/failed photo.
       await this.deps.saveOutcome(outcome); this.outcomes.set(index, outcome); this.pending = null;
@@ -218,7 +225,7 @@ export class TransferEngine {
   }
   async report() {
     await this.init();
-    const rows = [...this.outcomes.values()].sort((a,b) => a.index - b.index).map(o => [o.name,label(o.state),o.detail,o.assetID].map(csvCell).join(','));
-    return this.deps.writeReport('\uFEFFFoto,Resultado,Detalle,Identificador\r\n' + rows.join('\r\n'));
+    const rows = [...this.outcomes.values()].sort((a,b) => a.index - b.index).map(o => [o.name,label(o.state),o.detail,o.assetID,gpsLabel(o.gps)].map(csvCell).join(','));
+    return this.deps.writeReport('\uFEFFFoto,Resultado,Detalle,Identificador,GPS detectado en el móvil\r\n' + rows.join('\r\n'));
   }
 }

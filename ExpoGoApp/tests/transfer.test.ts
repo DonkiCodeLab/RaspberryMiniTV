@@ -204,3 +204,62 @@ test('abrir el selector del sistema no cancela automáticamente la selección', 
   release.resolve(); await preparing; await done(engine);
   assert.equal((await engine.getState()).imported, 1);
 });
+
+test('el desglose GPS solo cuenta exportadas confirmadas y sobrevive al reinicio y al CSV', async () => {
+  const f = fixture();
+  f.deps.listPhotos = async () => ({ ids: ['gps', 'no-gps', 'unknown', 'duplicate', 'broken'], limited: false });
+  f.deps.exportPhoto = async (id, index) => ({ index, name: id + '.jpg', uri: 'file://' + id, digest: id,
+    metadata: id === 'gps' || id === 'duplicate' ? { locationKnown: true, latitude: 0, longitude: 0 } : {},
+    gps: id === 'no-gps' ? 'without' : 'unknown' });
+  const original = f.deps.upload;
+  f.deps.upload = async (c, p, data, signal) => {
+    if (p.name === 'duplicate.jpg') return { imported: 0, duplicates: 1 };
+    if (p.name === 'broken.jpg') return { imported: 0, duplicates: 0, rejected: [{ index: 0, error: 'Imagen dañada' }] };
+    return original(c, p, data, signal);
+  };
+  const engine = new TransferEngine(f.deps); await engine.prepare(); await done(engine);
+  for (const instance of [engine, new TransferEngine(f.deps)]) {
+    const state = await instance.getState();
+    assert.deepEqual([state.imported, state.importedWithGps, state.importedWithoutGps, state.importedGpsUnknown], [3, 1, 1, 1]);
+    assert.equal(state.existing, 1); assert.equal(state.failed, 1); assert.equal(state.percentage, 1);
+    assert.ok(state.recent.some(row => row.includes('gps.jpg · Con GPS')));
+    const csv = await instance.report();
+    assert.match(csv, /GPS detectado en el móvil/);
+    assert.match(csv, /"gps.jpg","Nueva","","gps","Con GPS"/);
+    assert.match(csv, /"no-gps.jpg","Nueva","","no-gps","Sin GPS detectado"/);
+    assert.match(csv, /"unknown.jpg","Nueva","","unknown","Sin dato GPS"/);
+  }
+});
+
+test('las 6000 exportadas de una versión anterior conservan su total sin inventar un desglose GPS', async () => {
+  const f = fixture();
+  f.disk.job = { id: 'old', server, assetIDs: Array.from({ length: 6000 }, (_, i) => String(i)), limited: false };
+  f.disk.outcomes = f.disk.job.assetIDs.map((assetID, index) => ({ index, assetID, name: assetID + '.jpg', state: 'new', detail: '' }));
+  const state = await new TransferEngine(f.deps).getState();
+  assert.equal(state.imported, 6000); assert.equal(state.importedGpsUnknown, 6000);
+  assert.equal(state.importedWithGps, 0); assert.equal(state.importedWithoutGps, 0);
+  assert.equal(state.percentage, 1);
+});
+
+test('GPS pendiente se conserva al pausar y solo se cuenta tras confirmar y guardar la exportación', async () => {
+  const f = fixture(); const originalExport = f.deps.exportPhoto;
+  f.deps.exportPhoto = async (id, index, signal) => ({ ...await originalExport(id, index, signal),
+    metadata: index === 0 ? { locationKnown: true, latitude: 41, longitude: 2 } : {}, gps: index === 0 ? 'with' : 'without' });
+  f.loseReceipt(); const engine = new TransferEngine(f.deps); await engine.prepare(); await done(engine);
+  const before = await engine.getState();
+  assert.equal(before.importedWithGps, 0); assert.equal(before.importedWithoutGps, 0); assert.equal(f.disk.pending?.gps, 'with');
+  await engine.pause();
+  const restarted = new TransferEngine(f.deps); await restarted.start(); await done(restarted);
+  const after = await restarted.getState();
+  assert.equal(after.imported, 1); assert.equal(after.importedWithGps, 1); assert.equal(after.importedWithoutGps, 0);
+  assert.equal(after.existing, 1); assert.equal(f.exportCount, 2);
+});
+
+test('un fallo al guardar el resultado no incrementa los contadores GPS', async () => {
+  const f = fixture(); const original = f.deps.exportPhoto;
+  f.deps.exportPhoto = async (id, index, signal) => ({ ...await original(id, index, signal), gps: 'without' });
+  f.failSave(); const engine = new TransferEngine(f.deps); await engine.prepare(); await done(engine);
+  const state = await engine.getState();
+  assert.equal(state.importedWithoutGps, 0); assert.equal(state.imported, 0);
+  assert.equal(f.disk.pending?.gps, 'without');
+});

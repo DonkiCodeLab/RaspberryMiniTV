@@ -1,32 +1,32 @@
 {
-  "publishedAt": "2026-10-30T21:16:00.372Z",
+  "publishedAt": "2026-10-31T07:16:29.420Z",
   "projectId": "e4c22d26-4a55-4361-a102-9534467a9c2a",
-  "groupId": "579d79cd-7ac3-4e8c-a551-efe5aa38484a",
+  "groupId": "d545827f-b7fb-4135-8d06-c719649cf131",
   "sdkVersion": "58.0.0",
-  "expoGoUrl": "exp://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a/group/579d79cd-7ac3-4e8c-a551-efe5aa38484a",
-  "pageUrl": "https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/579d79cd-7ac3-4e8c-a551-efe5aa38484a",
-  "qrPath": "../output/minitv-expo-go-filename-fix-qr.png",
+  "expoGoUrl": "exp://u.expo.dev/e4c22d26-4a55-4361-a102-9534467a9c2a/group/d545827f-b7fb-4135-8d06-c719649cf131",
+  "pageUrl": "https://expo.dev/accounts/donkikochan/projects/minitv-fotos-go/updates/d545827f-b7fb-4135-8d06-c719649cf131",
+  "qrPath": "../output/minitv-expo-go-gps-qr.png",
   "updates": [
     {
-      "id": "01a18eab-67f4-750d-b7d6-7219270bf5fc",
-      "createdAt": "2026-10-30T21:16:00.372Z",
-      "group": "579d79cd-7ac3-4e8c-a551-efe5aa38484a",
+      "id": "01a190d1-2a6c-7be8-b5bb-82ede3906e2f",
+      "createdAt": "2026-10-31T07:16:29.420Z",
+      "group": "d545827f-b7fb-4135-8d06-c719649cf131",
       "branch": "expo-go",
-      "message": "Fix original photo filenames and resume pending uploads",
+      "message": "Show exported photos with and without GPS, preserving resumable counts",
       "runtimeVersion": "1.1.0",
       "platform": "android",
-      "manifestPermalink": "https://u.expo.dev/update/01a18eab-67f4-750d-b7d6-7219270bf5fc",
+      "manifestPermalink": "https://u.expo.dev/update/01a190d1-2a6c-7be8-b5bb-82ede3906e2f",
       "isRollBackToEmbedded": false
     },
     {
-      "id": "01a18eab-67f4-7431-ab9d-8514fd306d2d",
-      "createdAt": "2026-10-30T21:16:00.372Z",
-      "group": "579d79cd-7ac3-4e8c-a551-efe5aa38484a",
+      "id": "01a190d1-2a6c-7a64-a2a4-62e4c3c147cd",
+      "createdAt": "2026-10-31T07:16:29.420Z",
+      "group": "d545827f-b7fb-4135-8d06-c719649cf131",
       "branch": "expo-go",
-      "message": "Fix original photo filenames and resume pending uploads",
+      "message": "Show exported photos with and without GPS, preserving resumable counts",
       "runtimeVersion": "1.1.0",
       "platform": "ios",
-      "manifestPermalink": "https://u.expo.dev/update/01a18eab-67f4-7431-ab9d-8514fd306d2d",
+      "manifestPermalink": "https://u.expo.dev/update/01a190d1-2a6c-7a64-a2a4-62e4c3c147cd",
       "isRollBackToEmbedded": false
     }
   ]

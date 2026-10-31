@@ -113,6 +113,15 @@ function Home() {
           <View style={s.metrics}>
             {[[state?.imported ?? 0, 'Exportadas', C.green], [state?.existing ?? 0, 'Ya estaban', C.blue], [state?.failed ?? 0, 'Errores', C.yellow]].map(([count, label, color]) => <View key={label} style={s.metric}><Text style={[s.metricValue, { color: String(color) }]}>{count}</Text><Text style={s.metricLabel}>{label}</Text></View>)}
           </View>
+          <View style={s.gpsPanel}>
+            <Text style={s.gpsTitle}>GPS DE LAS EXPORTADAS</Text>
+            <View style={s.gpsMetrics}>
+              <Text accessibilityLiveRegion="polite" style={s.gpsMetric}><Text style={s.gpsNumber}>{state?.importedWithGps ?? 0}</Text>{'\n'}Con GPS</Text>
+              <Text accessibilityLiveRegion="polite" style={s.gpsMetric}><Text style={s.gpsNumber}>{state?.importedWithoutGps ?? 0}</Text>{'\n'}Sin GPS detectado</Text>
+            </View>
+            {!!state?.importedGpsUnknown && <Text style={s.notice}>{state.importedGpsUnknown} exportadas sin dato GPS registrado: son de una versión anterior o no se pudo leer ese dato.</Text>}
+            <Text style={s.small}>Según la ubicación leída en el móvil. Se exportan también las fotos sin GPS.</Text>
+          </View>
           <Text accessibilityLiveRegion="polite" style={s.message}>{state?.message ?? 'Leyendo el progreso guardado…'}</Text>
           {!!state?.fileName && state.running && <Text numberOfLines={2} style={s.file}>{state.fileName}{state.fileProgress >= 0 ? ' · ' + Math.round(state.fileProgress * 100) + '%' : ''}</Text>}
           {state?.limited && <Text style={s.notice}>Acceso limitado: solo se exportarán las fotos que has autorizado. El porcentaje corresponde a estas fotos autorizadas.</Text>}
@@ -137,6 +146,7 @@ function Home() {
           <Text accessibilityLiveRegion="polite" style={s.exportedCount}>{state.imported}<Text style={s.exportedLabel}> fotos exportadas</Text></Text>
           <Text style={s.count}>{done} de {state.total}{'\n'}comprobadas · {percent}%</Text>
         </View>
+        <Text accessibilityLiveRegion="polite" style={s.dockStatus}>{state.importedWithGps} con GPS · {state.importedWithoutGps} sin GPS detectado{state.importedGpsUnknown ? ` · ${state.importedGpsUnknown} sin dato` : ''}</Text>
         <View accessibilityRole="progressbar" accessibilityLabel="Fotos comprobadas" accessibilityValue={{ min: 0, max: state.total || 1, now: done }} style={s.track}><View style={[s.fill, { width: (percent + '%') as '0%' }]} /></View>
         <Text accessibilityLiveRegion="polite" style={s.dockStatus}>{state.interruption === 'stop' ? 'Deteniendo… Guardando el resumen.' : state.interruption === 'pause' ? 'Pausando… Guardando el progreso.' : state.preparing ? 'Leyendo las fotos autorizadas…' : state.running ? 'Exportación en curso' : state.stopped ? 'Detenida · Tus fotos enviadas se conservan' : state.canResume ? 'Pausada · Puedes continuar cuando quieras' : 'Exportación terminada'}</Text>
         {(state.canPause || state.canResume || state.canStop || state.interruption) && <View style={s.dockActions}>
@@ -156,6 +166,10 @@ function Home() {
 }
 export default function App() { return <SafeAreaProvider><Home /></SafeAreaProvider>; }
 const s = StyleSheet.create({
+  gpsPanel: { padding: 14, gap: 10, borderRadius: 14, backgroundColor: '#142132' },
+  gpsTitle: { color: C.muted, fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  gpsMetrics: { flexDirection: 'row', gap: 12 }, gpsMetric: { color: C.text, flex: 1, fontSize: 12, lineHeight: 24 },
+  gpsNumber: { fontSize: 24, fontWeight: '800', color: C.blue },
   transferDock: { backgroundColor: C.card, borderTopWidth: 1, borderTopColor: C.line, paddingHorizontal: 22, paddingVertical: 14 },
   dockContent: { width: '100%', maxWidth: 636, alignSelf: 'center', gap: 10 }, dockActions: { flexDirection: 'row', gap: 12 },
   exportedCount: { color: C.green, fontSize: 27, fontWeight: '800', flex: 1 }, exportedLabel: { color: C.text, fontSize: 14, fontWeight: '600' },
