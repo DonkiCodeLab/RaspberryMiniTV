@@ -24,6 +24,18 @@ const faces = [
   { id: 'legacy', personId: 'old', name: 'Old', box: null },
 ];
 
+test('face boxes show capture-time ages in both browsing and editing, with the same accessible label', () => {
+  const props = { faces, photo: { takenAt: '2014-05-10' }, people: [{ id: 'ana', birthDate: '1990-05-10' }], s };
+  for (const readOnly of [true, false]) {
+    const html = renderToStaticMarkup(React.createElement(FaceRectangles, { ...props, readOnly }));
+    assert.match(html, /1 · Ana \(24 años\)/);
+    assert.match(html, /aria-label="(?:Nombre de esta cara: )?Ana \(24 años\)"/);
+    assert.doesNotMatch(html, /Sin asignar \(/);
+  }
+  const html = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, photo: { id: 'photo', name: 'Family', takenAt: '2014-05-10' }, initialFaces: faces, editing: false }));
+  assert.match(html, /Ana \(24 años\)/);
+});
+
 test('person browsing hides other faces and editing actions until editing is enabled', () => {
   const props = { photo: { id: 'photo', name: 'Family', relativePath: 'family.jpg' }, initialFaces: faces, highlightPersonId: 'ana', s };
   const browsing = renderToStaticMarkup(React.createElement(PhotoFaceViewer, { ...props, editing: false, showOtherFaces: false }));

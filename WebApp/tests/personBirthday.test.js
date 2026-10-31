@@ -35,7 +35,19 @@ const bundle = await build({ entryPoints: [new URL('../src/PhotoPeople.jsx', imp
   bundle: true, write: false, format: 'cjs', platform: 'node', external: ['react'] });
 const loaded = { exports: {} };
 new Function('require', 'module', 'exports', bundle.outputFiles[0].text)(createRequire(import.meta.url), loaded, loaded.exports);
-const { PersonEditor } = loaded.exports;
+const { PersonEditor, PersonPhotoSortControl } = loaded.exports;
+
+test('person photo navigation offers year and age only when a valid birthday is available', () => {
+  for (const language of ['es', 'en', 'ca']) {
+    const s = photoStrings(language);
+    for (const birthDate of ['1990-05-10', '', undefined, '2020-02-30']) {
+      const html = renderToStaticMarkup(React.createElement(PersonPhotoSortControl, { person: { birthDate }, value: 'year', s }));
+      assert.ok(html.includes(s.personPhotoYear));
+      assert.equal(html.includes(s.personPhotoAge), birthDate === '1990-05-10');
+      assert.ok(!html.includes(s.uploadDate));
+    }
+  }
+});
 
 test('person profile offers a birth date picker with direct ancient year entry in each language', () => {
   for (const language of ['es', 'en', 'ca']) {

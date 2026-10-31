@@ -23,6 +23,15 @@ const { PhotoGrid, PhotoPagination, DeletePhotoChoices, AlbumCard, PersonPortrai
 const photos = Array.from({ length: 33091 }, (_, id) => ({ id: String(id), name: `Photo ${id}`, relativePath: `${id}.jpg` }));
 const s = photoStrings('es');
 
+test('person photo cards expose their global positions for the right-hand rail across pages', () => {
+  const html = renderToStaticMarkup(React.createElement(PhotoGrid, {
+    page: photoPage(photos.slice(0, 205), 3), selected: new Set(), person: { id: 'ana', name: 'Ana' }, s, language: 'es',
+  }));
+  assert.match(html, /data-library-index="200"/);
+  assert.match(html, /data-library-index="204"/);
+  assert.equal((html.match(/data-library-index=/g) || []).length, 5);
+});
+
 test('all album viewers expose image, face, date, location and album tools in every language', () => {
   const photo = { id: 'shared', name: 'Shared.jpg', relativePath: 'shared.jpg', folderIds: ['holiday'] };
   for (const language of ['es', 'ca', 'en']) for (const person of [undefined, 'ana', 'unknown']) {

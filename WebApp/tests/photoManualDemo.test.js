@@ -33,6 +33,9 @@ test('manual boxes persist in the local demo and follow reassignment, merging an
     const ana = library.people.find(person => person.id === created.personId);
     assert.deepEqual(ana.photoIds, ['photo']);
     assert.equal(library.knownPeople.find(person => person.id === created.personId).photoCount, 1);
+    await photoDemo(`people/${created.personId}/birthday`, { birthDate: '1950-05-10' });
+    assert.equal((await photoDemo('library')).knownPeople.find(person => person.id === created.personId).birthDate, '1950-05-10');
+    assert.equal((await photoDemo('photos/photo/faces')).faces[0].birthDate, '1950-05-10');
     await photoDemo('photos/photo/faces', { box, personId: created.personId });
     assert.equal((await photoDemo('library')).knownPeople.find(person => person.id === created.personId).photoCount, 1);
     const duplicate = (await photoDemo('photos/photo/faces')).faces.find(face => face.id !== created.faceId);
@@ -52,6 +55,7 @@ test('manual boxes persist in the local demo and follow reassignment, merging an
     await assert.rejects(photoDemo(`photos/photo/faces/${created.faceId}/assign`, { personId: 'auto' }));
     await photoDemo(`photos/photo/faces/${created.faceId}/assign`, { personId: 'unknown' });
     assert.equal((await photoDemo('photos/photo/faces')).faces[0].personId, 'unknown');
+    assert.equal((await photoDemo('photos/photo/faces')).faces[0].birthDate, '');
     const detached = await photoDemo('library');
     assert.ok(!detached.people.some(person => person.id === created.personId));
     assert.deepEqual(detached.people.find(person => person.id === 'unknown').photoIds, ['photo']);

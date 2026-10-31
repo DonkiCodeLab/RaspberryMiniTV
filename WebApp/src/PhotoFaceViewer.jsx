@@ -203,7 +203,7 @@ export default function PhotoFaceViewer({ photo, quality = 'preview', people = [
     selected ? <FaceNameEditor key={`${selected.id}:${selected.personId || ''}`} face={selected} people={people} s={{ ...s, save: s.validateFaceChange }} busy={busy}
       onSave={payload => perform(`photos/${photo.id}/faces/${selected.id}/assign`, payload, s.faceSaved)} onClose={closeEditor} /> : null;
   return <div className={`photo-face-viewer${editing ? '' : ' photo-face-viewer--browsing'}`}>
-    <PhotoViewerImage photo={photo} quality={quality} s={s} faces={visibleFaces} selectedFaceId={selectedId || removingId}
+    <PhotoViewerImage photo={photo} quality={quality} s={s} faces={visibleFaces} people={people} selectedFaceId={selectedId || removingId}
       highlightPersonId={highlightPersonId} onSelectFace={!editing || addingFace ? undefined : selectFace} readOnlyFaces={!editing}
       addingFace={addingFace} onAddFace={!editing || removingId ? undefined : startAddingFace} onFaceBoxChange={setFaceBox} busy={busy} editor={editor} editorBox={faceBox || selected?.box} />
     {editing ? <aside className="photo-face-sidebar" aria-label={s.people}>

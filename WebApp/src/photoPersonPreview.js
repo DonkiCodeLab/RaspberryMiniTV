@@ -23,7 +23,7 @@ export function personPreviewFaces(person, photoId) {
   const cover = person.coverFace;
   const candidates = faces.length ? faces : cover?.photoId === photoId ? [cover] : [];
   return candidates.filter(face => facePortraitLayout(face.box, 1, 1))
-    .map(face => ({ ...face, personId: person.id, name: person.name }));
+    .map(face => ({ ...face, personId: person.id, name: person.name, ...(person.birthDate ? { birthDate: person.birthDate } : {}) }));
 }
 
 export function visiblePersonFaces(faces, personId, showOtherFaces, selectedFaceId, showPersonFaces = true) {

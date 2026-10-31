@@ -2,7 +2,7 @@ import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'reac
 import { getPictureContentUrl } from './api/raspberryApi.js';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { attachPhotoZoom, MAX_PHOTO_ZOOM } from './photoZoom.js';
-import { photoPersonName } from './photoLibrary.js';
+import { photoFaceLabel } from './photoPersonTimeline.js';
 import { attachFaceDrawing } from './photoFaceDrawing.js';
 import { facePopoverPosition } from './photoFacePopover.js';
 import { attachPhotoFaceShortcut } from './photoFaceShortcut.js';
@@ -72,21 +72,24 @@ function FaceLabel({ children, box, view }) {
   return <span ref={label}>{children}</span>;
 }
 
-export function FaceRectangles({ faces = [], selectedFaceId, highlightPersonId, onSelect, s, disabled = false, readOnly = false, view }) {
+export function FaceRectangles({ faces = [], photo, people = [], selectedFaceId, highlightPersonId, onSelect, s, disabled = false, readOnly = false, view }) {
   const Tag = readOnly ? 'span' : 'button';
-  return faces.map((face, index) => face.box ? <Tag key={face.id}
+  const byId = new Map(people.map(person => [person.id, person]));
+  return faces.map((face, index) => {
+    const label = photoFaceLabel(face, photo, byId.get(face.personId), s);
+    return face.box ? <Tag key={face.id}
     className={`photo-face-box${face.personId === highlightPersonId ? ' is-highlighted' : ''}${face.id === selectedFaceId ? ' is-selected' : ''}`}
-    {...(readOnly ? { role: 'img', 'aria-label': photoPersonName(face, s) || s.unnamedFace } : {
-      type: 'button', 'aria-label': `${s.editFace}: ${photoPersonName(face, s) || s.unnamedFace}`,
+    {...(readOnly ? { role: 'img', 'aria-label': label } : {
+      type: 'button', 'aria-label': `${s.editFace}: ${label}`,
       'aria-pressed': face.id === selectedFaceId, disabled,
       onClick: event => { event.stopPropagation(); onSelect?.(face.id); },
     })}
     style={{ left: `${face.box.x * 100}%`, top: `${face.box.y * 100}%`, width: `${face.box.width * 100}%`, height: `${face.box.height * 100}%` }}>
-    <FaceLabel box={face.box} view={view}>{`${index + 1} · ${photoPersonName(face, s) || s.unnamedFace}`}</FaceLabel>
-  </Tag> : null).filter(Boolean);
+    <FaceLabel box={face.box} view={view}>{`${index + 1} · ${label}`}</FaceLabel>
+  </Tag> : null; }).filter(Boolean);
 }
 
-export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl, s, faces = [], selectedFaceId, highlightPersonId, onSelectFace, readOnlyFaces = false, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox, onReadyChange }) {
+export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl, s, faces = [], people = [], selectedFaceId, highlightPersonId, onSelectFace, readOnlyFaces = false, addingFace = false, onAddFace, onFaceBoxChange, busy = false, editor, editorBox, onReadyChange }) {
   const [ready, setReady] = useState(false), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [view, setView] = useState({ scale: 1, x: 0, y: 0, width: 1, height: 1 });
   const [drawing, setDrawing] = useState(true);
@@ -117,7 +120,7 @@ export default function PhotoViewerImage({ photo, quality = 'preview', sourceUrl
             onLoad={event => { if (!ready) size(event); }} draggable={false} alt="" aria-hidden="true" />}
           {!error && <img key={`${quality}:${attempt}:${sourceUrl || ''}`} className={`photo-viewer__full${ready ? ' is-ready' : ''}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, quality === 'original' ? undefined : quality === 'thumb' ? 'thumb' : 'preview') || undefined}
             alt={photo.name} draggable={false} decoding="async" fetchPriority="high" onLoad={event => { size(event); setReady(true); }} onError={() => setError(true)} />}
-          <FaceRectangles faces={faces} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} readOnly={readOnlyFaces} view={view} />
+          <FaceRectangles faces={faces} photo={photo} people={people} selectedFaceId={selectedFaceId} highlightPersonId={highlightPersonId} onSelect={onSelectFace} s={s} disabled={busy || addingFace || !ready} readOnly={readOnlyFaces} view={view} />
           {addingFace && ready && <FaceDrawing onChange={box => { onFaceBoxChange?.(box); if (box) setDrawing(false); }} s={s} disabled={busy} active={drawing} />}
         </div>
         {!ready && <div className="photo-viewer__loading" role="status">{error ? <><span>{quality === 'original' ? s.failedOriginal : s.failedImage}</span><button type="button" className="dialog-button" onClick={() => { setError(false); setAttempt(value => value + 1); }}>{s.retry}</button></> : <><LoadingSpinner inline /><span>{quality === 'original' ? s.loadingOriginal : s.loadingPhoto}</span></>}</div>}

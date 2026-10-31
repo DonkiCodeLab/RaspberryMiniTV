@@ -48,6 +48,19 @@ pendientes. Cerrar una edición sin guardar ofrece seguir editando o descartarla
 **Añadir a álbum** permite asignar la referencia a un álbum existente o crear
 otro, también desde las fotos de una persona, conservando las referencias anteriores.
 
+Los nombres sobre los recuadros de caras incluyen la edad en la fecha de captura,
+por ejemplo **Ana (24 años)**, cuando se conocen ambas fechas. Se cuentan años
+cumplidos y se conserva el día de la foto en su zona horaria. No se muestra edad
+si falta una fecha o la foto es anterior al nacimiento. Se actualiza al corregir
+la fecha de la foto, el nacimiento o la identidad, también dentro del asistente.
+
+Dentro de una persona, las fotos se ordenan por fecha de captura. **Ordenar por**
+permite elegir **Año de la foto** o **Edad en la foto** (si tiene nacimiento).
+El slider derecho recorre toda la colección, incluso las fotos de otras páginas:
+en año muestra décadas y años, y en edad muestra años cumplidos. Su flecha alterna
+el orden ascendente y descendente; las fotos sin fecha quedan al final. La elección
+se recuerda en este navegador y no depende del orden de subida de otros álbumes.
+
 El visor muestra la fecha y **Ver en el mapa**. **Editar fecha** abre un calendario;
 **Guardar fecha** conserva la hora y la zona horaria originales cuando existen.
 En el minimapa, **Editar ubicación** permite pulsar una nueva posición, arrastrar

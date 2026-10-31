@@ -1,6 +1,16 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { photoAssignmentOptions, UNKNOWN_PERSON_ID } from './photoLibrary.js';
 import PersonBirthday from './PersonBirthday.jsx';
+import { validBirthday } from './personBirthday.js';
+
+export function PersonPhotoSortControl({ value, onChange, person, s }) {
+  return <label className="movie-library__sort"><span>{s.sortBy}</span>
+    <select value={value} onChange={event => onChange(event.target.value)}>
+      <option value="year">{s.personPhotoYear}</option>
+      {validBirthday(person.birthDate) && <option value="age">{s.personPhotoAge}</option>}
+    </select>
+  </label>;
+}
 
 export function PeopleSortControl({ value, onChange, s }) {
   return <label className="movie-library__sort">

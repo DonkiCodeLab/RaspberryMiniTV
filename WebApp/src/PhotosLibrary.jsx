@@ -1,11 +1,11 @@
-import { currentAge } from './personBirthday.js';
+import { currentAge, validBirthday } from './personBirthday.js';
 import { intlLocale } from "./i18n/languages.js";
 import { lockBodyScroll } from "./bodyScrollLock.js";
 import React, { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import useBrowserBack from './useBrowserBack.js';
 import { createPortal } from 'react-dom';
 import { getPictureContentUrl, photoRequest } from './api/raspberryApi.js';
-import { descendantIds, folderTrail, hasLocation, indexPhotos, isNewPhotoPerson, photoPage, photoDeleteRequest, pendingVariants, photosWithoutPeople, photoPeopleOptions, sortPhotos, SPECIAL_FOLDERS, STYLES, UNKNOWN_PERSON_ID } from './photoLibrary.js';
+import { descendantIds, folderTrail, hasLocation, indexPhotos, isNewPhotoPerson, photoPage, photoDeleteRequest, pendingVariants, photosWithoutPeople, photoPeopleOptions, sortPhotos, SPECIAL_FOLDERS, STYLES, UNKNOWN_PERSON_ID, PHOTO_PAGE_SIZE } from './photoLibrary.js';
 import { PHOTO_PLACEHOLDER, requestThumbnail } from './photoThumbnails.js';
 import { facePortraitLayout, personCoverPhotoId } from './photoFacePortrait.js';
 import PhotoFaceViewer, { PersonFaceControls, PhotoFaceControls } from './PhotoFaceViewer.jsx';
@@ -16,9 +16,10 @@ import PhotoDownloads, { PhotoDownloadDialog } from './PhotoDownloads.jsx';
 import PhotoMeta from './PhotoMeta.jsx';
 import { dateLabel } from './photoMetadata.js';
 import PhotoGallery from './PhotoGallery.jsx';
-import { PeopleSortControl, PersonEditor } from './PhotoPeople.jsx';
+import { PeopleSortControl, PersonPhotoSortControl, PersonEditor } from './PhotoPeople.jsx';
 import LibraryScrollRail from './LibraryScrollRail.jsx';
 import { photoPeopleScrollLabel, sortPhotoPeople } from './photoPeopleSort.js';
+import { personPhotoScrollLabel, sortPersonPhotos } from './photoPersonTimeline.js';
 import { PeopleActionDialog, PeopleToolbar, PersonCardActions } from './PhotoPeopleActions.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 import { galleryWindow } from './photoTimeline.js';
@@ -106,7 +107,7 @@ export function PersonPhotoPreview({ photo, person }) {
 
 export function PhotoGrid({ page, actionMode, selected, toggle, onOpen, s, language, renderMarks, person, onDelete, onChanged, coverMode = false, coverPhotoId, onCover, coverBusy = false, reviewItems, reviewPeople = [], onReview, reviewBusy = false, reviewingMatches = false }) {
   const dragSelection = reviewingMatches && actionMode && !reviewBusy && !coverMode;
-  return <div className={`photo-mosaic${dragSelection ? ' photo-mosaic--drag-select' : ''}`}>{page.items.map((photo, index) => <article key={photo.id} data-photo-select-id={dragSelection ? photo.id : undefined} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
+  return <div className={`photo-mosaic${dragSelection ? ' photo-mosaic--drag-select' : ''}`}>{page.items.map((photo, index) => <article key={photo.id} data-library-index={person ? page.offset + index : undefined} data-photo-select-id={dragSelection ? photo.id : undefined} className={`photo-tile${selected.has(photo.id) ? ' is-selected' : ''}`}>
     <button type="button" className="photo-tile__image" data-photo-select-start={dragSelection ? '' : undefined} aria-label={`${coverMode ? s.useCover : actionMode ? s.select : s.open}: ${photo.name}`} aria-pressed={coverMode ? coverPhotoId === photo.id : actionMode ? selected.has(photo.id) : undefined}
       disabled={coverMode && coverBusy || reviewingMatches && actionMode && reviewBusy} onClick={() => coverMode ? onCover(photo.id) : actionMode ? toggle(photo.id) : onOpen(page.offset + index)}>
       {person || reviewingMatches ? <PersonPhotoPreview key={photo.id} photo={photo} person={person || pendingFacePreview(photo.id, reviewItems?.get(photo.id) || [], reviewPeople)} /> : <PhotoImage photo={photo} loading="lazy" decoding="async" />}{actionMode && !reviewingMatches && <span className="photo-check" aria-hidden="true">{selected.has(photo.id) ? '✓' : ''}</span>}
@@ -332,6 +333,12 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
     return { field: 'name', direction: 'asc' };
   });
   useEffect(() => { try { localStorage.setItem('minitv-photo-people-order', JSON.stringify(peopleOrder)); } catch {} }, [peopleOrder]);
+  const [personPhotoOrder, setPersonPhotoOrder] = useState(() => {
+    try { const saved = JSON.parse(localStorage.getItem('minitv-person-photo-order')); if (['year', 'age'].includes(saved?.field) && ['asc', 'desc'].includes(saved?.direction)) return saved; } catch {}
+    return { field: 'year', direction: 'asc' };
+  });
+  useEffect(() => { try { localStorage.setItem('minitv-person-photo-order', JSON.stringify(personPhotoOrder)); } catch {} }, [personPhotoOrder]);
+  useEffect(() => { setPhotoNumber(1); setSelected(new Set()); }, [personPhotoOrder]);
   const [order, setOrder] = useState(() => {
     try { const saved = JSON.parse(localStorage.getItem('minitv-photo-order')); if (['takenAt', 'uploadedAt'].includes(saved?.field) && ['asc', 'desc'].includes(saved?.direction)) return saved; } catch {}
     return { field: 'takenAt', direction: 'desc' };
@@ -389,6 +396,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   useEffect(() => { watcher.current?.sync(); }, [dialog?.mode]);
   useEffect(() => { if (initialFiles?.length) setDialog({ mode: 'upload', files: initialFiles, folderId: 'gallery', parent: 'gallery' }); }, [initialFiles]);
   const person = current.startsWith('person:') ? data.people.find(p => p.id === current.slice(7)) : null;
+  const personPhotoField = personPhotoOrder.field === 'age' && validBirthday(person?.birthDate) ? 'age' : 'year';
   useEffect(() => {
     // A face correction can move the last photo out of the open person.
     if (!loading && !busy && current.startsWith('person:') && !person) {
@@ -409,7 +417,9 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
   const visible = useCallback(photo => !matchesPicture || matchesPicture(photo), [matchesPicture]);
   const inFolder = id => [...new Set([...descendantIds(data.folders, id)].flatMap(folder => index.byFolder.get(folder) || []))];
   const mapPhotos = useMemo(() => data.photos.filter(visible), [data.photos, visible]);
-  const currentPhotos = useMemo(() => sortPhotos((current === 'gallery' ? data.photos : pendingNoFaces ? noPeopleNew : current === 'withoutPeople' ? noPeopleRest : person ? index.byPerson.get(person.id) || [] : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), current === 'gallery' ? 'takenAt' : order.field, order.direction), [data.photos, pendingNoFaces, noPeopleNew, noPeopleRest, person, index, current, zone, visible, order]);
+  const currentPhotos = useMemo(() => person ? sortPersonPhotos((index.byPerson.get(person.id) || []).filter(visible), person.birthDate, personPhotoField, personPhotoOrder.direction) :
+    sortPhotos((current === 'gallery' ? data.photos : pendingNoFaces ? noPeopleNew : current === 'withoutPeople' ? noPeopleRest : current === 'map' ? (zone ? zone.map(id => index.byId.get(id)).filter(Boolean) : []) : index.byFolder.get(current) || []).filter(visible), current === 'gallery' ? 'takenAt' : order.field, order.direction),
+    [data.photos, pendingNoFaces, noPeopleNew, noPeopleRest, person, personPhotoField, personPhotoOrder.direction, index, current, zone, visible, order]);
   const folders = current === 'gallery' || pendingNoFaces ? [] : current === 'people' ? [{ id: 'withoutPeople', name: s.withoutPeople, reviewCount: noPeopleNew.length }, ...recognizedPeople.map(p => ({ ...p, id: `person:${p.id}`, reviewCount: reviewIndex.byPerson.get(p.id)?.size || 0 }))] : current === 'withoutPeople' ? [{ id: 'withoutPeoplePending', name: s.pendingValidation }] : data.folders.filter(f => f.parent === current);
   const page = current === 'gallery' ? galleryWindow(currentPhotos, galleryPosition) : photoPage(currentPhotos, photoNumber);
   const folderPage = current === 'people' ? { items: folders, page: 1, pages: 1, offset: 0, total: folders.length } : photoPage(folders, folderNumber);
@@ -472,9 +482,15 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       s={s} language={language} onOpen={() => navigate(folder.id)} />;
   }
   const peopleSort = <PeopleSortControl value={peopleOrder.field} onChange={field => setPeopleOrder(value => ({ ...value, field }))} s={s} />;
-  return <section className={`pictures-library seasons-section photo-library${current === 'people' ? ' library-with-scroll-rail' : ''}`} aria-label={s.root}>
+  const personPhotoSort = person && <PersonPhotoSortControl value={personPhotoField} onChange={field => setPersonPhotoOrder(value => ({ ...value, field }))} person={person} s={s} />;
+  return <section className={`pictures-library seasons-section photo-library${current === 'people' || person ? ' library-with-scroll-rail' : ''}`} aria-label={s.root}>
     {headerTarget && createPortal(<PhotoSectionCarousel section={section} onChange={navigate} s={s} />, headerTarget)}
     {current === 'people' && sortTarget && createPortal(<div className="movie-library__browse-tools">{peopleSort}</div>, sortTarget)}
+    {person && sortTarget && createPortal(<div className="movie-library__browse-tools">{personPhotoSort}</div>, sortTarget)}
+    {person && <LibraryScrollRail key={`timeline:${person.id}`} labels={currentPhotos.map(photo => personPhotoScrollLabel(photo, person.birthDate, personPhotoField))}
+      language={language} sort={personPhotoField} label={personPhotoField === 'age' ? s.personPhotoBrowseAge : s.personPhotoBrowseYear}
+      direction={personPhotoOrder.direction} onDirectionChange={direction => setPersonPhotoOrder(value => ({ ...value, direction }))}
+      pageOffset={page.offset} onPageJump={index => changePage(Math.floor(index / PHOTO_PAGE_SIZE) + 1)} />}
     {current === 'people' && <LibraryScrollRail labels={recognizedPeople.map(person => photoPeopleScrollLabel(person, peopleOrder.field, language))}
       language={language} sort={peopleOrder.field} label={peopleOrder.field === 'age' ? s.peopleBrowseAge : peopleOrder.field === 'photoCount' ? s.peopleBrowsePhotos : undefined}
       direction={peopleOrder.direction} onDirectionChange={direction => setPeopleOrder(value => ({ ...value, direction }))}
@@ -495,6 +511,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
       </div><p>{current === 'gallery' ? `${currentPhotos.length} ${s.photos} · ${s.galleryHint}` : current ? `${currentPhotos.length} ${s.photos} · ${folders.length} ${s.albums}` : s.intro}</p></div>
       <div className="photo-toolbar">
         {current === 'people' && !sortTarget && peopleSort}
+        {person && !sortTarget && personPhotoSort}
         {(currentPhotos.length > 0 || actionMode) && <button className="dialog-button" type="button" aria-pressed={actionMode} disabled={busy} onClick={() => { setActionMode(!actionMode); setChoosingCover(false); setSelected(new Set()); }}>{actionMode ? s.done : s.actions}</button>}
         <button className="photo-refresh" type="button" title={s.refresh} aria-label={s.refresh} onClick={() => { setAttempt(n => n + 1); }}>↻</button>
       </div></header>
@@ -525,7 +542,7 @@ export default function PhotosLibrary({ language = 'es', renderMarks, initialFil
         {job && <div className="photo-job" role="status"><progress max={job.total} value={job.done} /><span>{job.done} / {job.total} · {job.state === 'complete' ? s.complete : job.state === 'running' ? s.running : job.error}</span></div>}
       </>}
     </div></div>}
-    {currentPhotos.length > 0 && <div className="photo-browse-tools"><div className="photo-sort">{current !== 'gallery' && <label>{s.sortBy}<select value={order.field} onChange={event => setOrder(value => ({ ...value, field: event.target.value }))}>
+    {currentPhotos.length > 0 && !person && <div className="photo-browse-tools"><div className="photo-sort">{current !== 'gallery' && <label>{s.sortBy}<select value={order.field} onChange={event => setOrder(value => ({ ...value, field: event.target.value }))}>
         <option value="takenAt">{s.photoDate}</option><option value="uploadedAt">{s.uploadDate}</option></select></label>}
         <label>{s.sortOrder}<select value={order.direction} onChange={event => setOrder(value => ({ ...value, direction: event.target.value }))}>
           <option value="desc">{s.newestFirst}</option><option value="asc">{s.oldestFirst}</option></select></label></div></div>}

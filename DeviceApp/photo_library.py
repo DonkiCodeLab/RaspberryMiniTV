@@ -628,8 +628,11 @@ class PhotoLibrary:
             jobs = [dict(row) for row in db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 20')]
             faces = self.face_status(db)
             reviews = photo_reviews.pending(db)
-            known_people = [{**dict(row), 'photoCount': len(person_photos.get(row['id'], []))}
-                            for row in db.execute("SELECT id, name FROM people WHERE id NOT LIKE 'apple-%' ORDER BY id=? DESC, name, id", (UNKNOWN_PERSON_ID,))
+            known_people = [{'id': row['id'], 'name': row['name'], 'photoCount': len(person_photos.get(row['id'], [])),
+                             **({'birthDate': row['birthDate']} if row['birthDate'] else {})}
+                            for row in db.execute("""SELECT p.id, p.name, b.birth_date AS birthDate FROM people p
+                                LEFT JOIN person_birthdays b ON b.person=p.id
+                                WHERE p.id NOT LIKE 'apple-%' ORDER BY p.id=? DESC, p.name, p.id""", (UNKNOWN_PERSON_ID,))
                             if is_identified_person(row)]
         try:
             configured = self.settings.public() if self.settings else {}
@@ -828,8 +831,9 @@ class PhotoLibrary:
         with self.db() as db:
             photo = db.execute('SELECT face_state, source FROM photos WHERE id=?', (photo_id,)).fetchone()
             if not photo: raise PhotoError('No se encuentra la foto.', 404)
-            detections = [dict(row) for row in db.execute('''SELECT f.id, f.person AS personId, p.name, f.box, f.manual
-                FROM face_detections f LEFT JOIN people p ON p.id=f.person WHERE f.photo=? ORDER BY f.rowid''', (photo_id,))]
+            detections = [dict(row) for row in db.execute('''SELECT f.id, f.person AS personId, p.name, f.box, f.manual, b.birth_date AS birthDate
+                FROM face_detections f LEFT JOIN people p ON p.id=f.person
+                LEFT JOIN person_birthdays b ON b.person=f.person WHERE f.photo=? ORDER BY f.rowid''', (photo_id,))]
             reviews = {row['faceId']: row['id'] for row in photo_reviews.pending(db, photo_id)}
             for face in detections:
                 face['box'] = json.loads(face['box']) if face['box'] else None

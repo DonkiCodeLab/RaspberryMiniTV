@@ -3,10 +3,11 @@ import { withLanguages } from "./i18n/index.js";
 import React, { useEffect, useRef, useState } from "react";
 import { scrollIndexAtPosition, buildDecadeTicks, buildRatingScale, nearestRailTick } from "./libraryScroll.js";
 
-export default function LibraryScrollRail({ labels, language = "es", sort = "name", label, ratingSource = "tmdb", direction = "asc", onDirectionChange, actionsVisible = false, onActionsChange, actionLabels }) {
+export default function LibraryScrollRail({ labels, language = "es", sort = "name", label, ratingSource = "tmdb", direction = "asc", onDirectionChange, actionsVisible = false, onActionsChange, actionLabels, pageOffset = 0, onPageJump }) {
   const host = useRef(null);
   const geometry = useRef({ positions: [], start: 0, end: 0 });
   const selectedEntry = useRef(null);
+  const pendingJump = useRef(null);
   const [state, setState] = useState({ index: 0, visible: false });
   const [active, setActive] = useState(false);
   const signature = JSON.stringify(labels);
@@ -23,12 +24,13 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
       const end = Math.max(start, Math.min(maxScroll, (positions.at(-1) || 0) - 90));
       geometry.current = { positions, start, end };
       update();
+      if (pendingJump.current !== null && positions[pendingJump.current - pageOffset] != null) jumpToEntry(pendingJump.current);
     }
     function update() {
       const { positions, start, end } = geometry.current;
       const progress = end > start ? Math.max(0, Math.min(1, (window.scrollY - start) / (end - start))) : 0;
       if (selectedEntry.current && Math.abs(window.scrollY - selectedEntry.current.top) > 1) selectedEntry.current = null;
-      const index = selectedEntry.current?.index ?? (progress === 1 ? Math.max(0, positions.length - 1) : scrollIndexAtPosition(positions, window.scrollY + 90));
+      const index = selectedEntry.current?.index ?? pageOffset + (progress === 1 ? Math.max(0, positions.length - 1) : scrollIndexAtPosition(positions, window.scrollY + 90));
       const visible = positions.length > 1 && end > start;
       // Scrolling within the same entry does not change anything on the rail.
       setState(current => current.index === index && current.visible === visible ? current : { index, visible });
@@ -43,10 +45,14 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
     window.addEventListener("resize", measure);
     measure();
     return () => { observer.disconnect(); cancelAnimationFrame(frame); window.removeEventListener("scroll", schedule); window.removeEventListener("resize", measure); };
-  }, [signature]);
+  }, [signature, pageOffset]);
   const jumpToEntry = index => {
-    const position = geometry.current.positions[index];
-    if (position == null) return;
+    const position = geometry.current.positions[index - pageOffset];
+    if (position == null) {
+      if (onPageJump) { pendingJump.current = index; onPageJump(index); }
+      return;
+    }
+    pendingJump.current = null;
     const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
     const top = Math.max(0, Math.min(maxScroll, position - 90));
     // Several initials may share a grid row or the final viewport. Keep the
@@ -90,7 +96,7 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
           onSelect={jumpToEntry} onActive={setActive} />
       </div> : null}
       <RailScale ticks={sort === "rating" ? ticks.map(([value, index]) => [value.replace(/^★\s*/, ""), index]) : ticks} currentTick={currentTick} label={yearMode ? decadeText : scrollLabel}
-        ratingScale={ratingScale} onSelect={jumpToEntry} onActive={setActive} />
+        ratingScale={ratingScale} maxMarks={sort === "age" ? 16 : undefined} onSelect={jumpToEntry} onActive={setActive} />
     </div>
     {onActionsChange ? <button className="library-scroll-rail__control library-scroll-rail__options" type="button"
       aria-pressed={actionsVisible} aria-label={actionsVisible ? actionLabels?.hideActions || controls.hide : actionLabels?.showActions || controls.show} title={actionsVisible ? actionLabels?.hideActions || controls.hide : actionLabels?.showActions || controls.show}
@@ -102,10 +108,13 @@ export default function LibraryScrollRail({ labels, language = "es", sort = "nam
 }
 
 // Both levels use the same pointer and keyboard navigation, with independent capture.
-function RailScale({ ticks, currentTick, label, onSelect, onActive, ratingScale }) {
+function RailScale({ ticks, currentTick, label, onSelect, onActive, ratingScale, maxMarks }) {
   const dragging = useRef(false);
   const positions = ratingScale?.positions || ticks.map((_, index) => ticks.length > 1 ? index / (ticks.length - 1) : 0);
-  const marks = ratingScale?.marks || ticks.map(([value], index) => [value, positions[index]]);
+  // Keep long age timelines legible; every age remains reachable by pointer or keyboard.
+  const markStep = maxMarks ? Math.max(1, Math.ceil(ticks.length / maxMarks)) : 1;
+  const marks = ratingScale?.marks || ticks.map(([value], index) => [value, positions[index]])
+    .filter((_, index) => index % markStep === 0 || index === ticks.length - 1);
   const select = index => {
     const entry = ticks[Math.max(0, Math.min(ticks.length - 1, index))];
     if (entry) onSelect(entry[1]);

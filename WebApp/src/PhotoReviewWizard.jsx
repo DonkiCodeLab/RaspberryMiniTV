@@ -56,6 +56,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
   const stale = details && (!groupPerson && !reviewIsCurrent(review, details) || draft?.version && details.version !== draft.version);
   const blocked = !details || previewBusy || stale;
   const faces = [...(details?.faces || []).filter(face => !removals.some(c => c.faceId === face.id)).map(face => ({ ...face, ...(assignments[face.id] || {}),
+    ...(assignments[face.id] ? { personId: assignments[face.id].personId || null, birthDate: undefined } : {}),
     name: assignments[face.id] ? assignments[face.id].name ?? choices.find(p => p.id === assignments[face.id].personId)?.name : face.name })),
     ...additions.map(face => ({ ...face, ...face.assignment, name: face.assignment.name ?? choices.find(p => p.id === face.assignment.personId)?.name }))]
     .flatMap(face => {
@@ -193,7 +194,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
       </div>
       {cropping && <p>{s.reviewCropHint} <button type="button" className="dialog-button dialog-button--accent" disabled={!box || blocked} onClick={() => applyEdit({ crop: box })}>{s.reviewApplyCrop}</button></p>}
       <div className={withoutFaces ? 'photo-review-workbench__content' : undefined}>
-        <PhotoViewerImage photo={photo} quality={REVIEW_IMAGE_RENDER} sourceUrl={sourceUrl || undefined} faces={visibleFaces} s={cropping || withoutFaces ? { ...s, drawFaceHint: cropping ? s.reviewCropHint : s.reviewDrawFaceHint } : s} selectedFaceId={selectedId || review.faceId} highlightPersonId={groupPerson?.id} busy={blocked}
+        <PhotoViewerImage photo={currentPhoto} people={people} quality={REVIEW_IMAGE_RENDER} sourceUrl={sourceUrl || undefined} faces={visibleFaces} s={cropping || withoutFaces ? { ...s, drawFaceHint: cropping ? s.reviewCropHint : s.reviewDrawFaceHint } : s} selectedFaceId={selectedId || review.faceId} highlightPersonId={groupPerson?.id} busy={blocked}
           onSelectFace={adding || cropping ? undefined : setSelectedId} addingFace={adding || cropping} onAddFace={cropping ? undefined : startAdding} onFaceBoxChange={setBox}
           editor={withoutFaces ? undefined : editor} editorBox={box || selected?.box} onReadyChange={setReady} />
         {withoutFaces && <aside className={`photo-review-workbench__people${editor ? ' is-editing' : ''}`} aria-label={s.facesInPhoto}>
@@ -202,7 +203,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
       </div>
       {withoutFaces ? <span className="photo-review-workbench__filename" title={photo.name}>{photo.title || photo.name}</span> : faceTabs}
     </div> : groupPerson ? <div className="photo-review-inspect">
-      <PhotoViewerImage photo={photo} quality={REVIEW_IMAGE_RENDER} sourceUrl={sourceUrl || undefined} faces={visibleFaces}
+      <PhotoViewerImage photo={currentPhoto} people={people} quality={REVIEW_IMAGE_RENDER} sourceUrl={sourceUrl || undefined} faces={visibleFaces}
         highlightPersonId={groupPerson.id} readOnlyFaces s={s} onReadyChange={setReady} />
       <div className="photo-review-photo__caption"><span>{photo.title || photo.name}</span>
         <button type="button" className="dialog-button" onClick={() => enlarge(true)}>⤢ {s.enlargePhoto}</button></div>
@@ -212,7 +213,7 @@ export function ReviewCard({ review, photo, people, albumOptions = [], nextPhoto
         <span className="photo-review-photo__image" style={{ aspectRatio: ratio, '--review-ratio': ratio }}>
           <img key={`${attempt}:${sourceUrl}`} src={sourceUrl || getPictureContentUrl(photo.relativePath, REVIEW_IMAGE_RENDER) || undefined} alt={photo.name} draggable={false} decoding="async" fetchPriority="high"
             onLoad={event => { setReady(true); setRatio(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight); }} onError={() => { setReady(false); setError(s.failedImage); }} />
-          {ready && <FaceRectangles faces={groupPerson ? visibleFaces : primary ? [primary] : faces} selectedFaceId={primary?.id} highlightPersonId={groupPerson?.id} s={s} readOnly />}
+          {ready && <FaceRectangles photo={currentPhoto} people={people} faces={groupPerson ? visibleFaces : primary ? [primary] : faces} selectedFaceId={primary?.id} highlightPersonId={groupPerson?.id} s={s} readOnly />}
         </span>
         <span className="photo-review-photo__caption">{photo.title || photo.name}<span>⤢ {s.enlargePhoto}</span></span>
         {Math.abs(offset) > 25 && <span className={`photo-review-stamp ${offset > 0 ? 'is-approved' : ''}`} aria-hidden="true">{offset > 0 ? s.reviewApprove : s.unknownPerson}</span>}

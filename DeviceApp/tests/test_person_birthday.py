@@ -1,4 +1,5 @@
 from pathlib import Path
+import io
 import sys
 import tempfile
 import unittest
@@ -6,6 +7,8 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from photo_library import PhotoLibrary, PhotoError, create_photo_blueprint
 from flask import Flask
+from PIL import Image
+from werkzeug.datastructures import FileStorage
 
 
 class PersonBirthdayTests(unittest.TestCase):
@@ -34,6 +37,27 @@ class PersonBirthdayTests(unittest.TestCase):
             self.assertEqual(self.client.post('/pictures/people/one/birthday', json={'birthDate': value}).status_code, 400, value)
         self.assertEqual(self.client.post('/pictures/people/unknown/birthday', json={'birthDate': '2000-01-01'}).status_code, 400)
         self.assertEqual(self.client.post('/pictures/people/missing/birthday', json={'birthDate': '2000-01-01'}).status_code, 404)
+
+    def test_capture_age_sources_follow_birthdays_and_face_reassignment(self):
+        self.store.set_person_birthday('one', '1990-05-10')
+        # Destinations without current photos must still include their birthday.
+        known = {person['id']: person for person in self.store.snapshot()['knownPeople']}
+        self.assertEqual(known['one']['birthDate'], '1990-05-10')
+        stream = io.BytesIO()
+        Image.new('RGB', (40, 40), 'orange').save(stream, 'PNG')
+        stream.seek(0)
+        self.store.upload([FileStorage(stream=stream, filename='birthday.png')])
+        photo = self.store.snapshot()['photos'][0]
+        added = self.store.add_face(photo['id'], {'personId': 'one', 'box': {'x': .1, 'y': .1, 'width': .5, 'height': .5}})
+        path = f"/pictures/photos/{photo['id']}/faces"
+        self.assertEqual(self.client.get(path).json['faces'][0]['birthDate'], '1990-05-10')
+        self.store.set_person_birthday('two', '1980-01-01')
+        response = self.client.post(f"{path}/{added['faceId']}/assign", json={'personId': 'two'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.client.get(path).json['faces'][0]['birthDate'], '1980-01-01')
+        self.store.set_person_birthday('two', '')
+        self.assertIsNone(self.client.get(path).json['faces'][0]['birthDate'])
+        self.assertNotIn('birthDate', next(p for p in self.store.snapshot()['knownPeople'] if p['id'] == 'two'))
 
     def test_merge_inherits_date_and_preserves_destination_date(self):
         self.store.set_person_birthday('one', '0001-01-01')
